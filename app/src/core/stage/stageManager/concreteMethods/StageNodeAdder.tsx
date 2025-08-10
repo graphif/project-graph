@@ -8,7 +8,8 @@ import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Direction } from "@/types/directions";
 import { MarkdownNode, parseMarkdownToJSON } from "@/utils/markdownParse";
-import { Color, MonoStack, ProgressNumber, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { MonoStack, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { v4 as uuidv4 } from "uuid";
 

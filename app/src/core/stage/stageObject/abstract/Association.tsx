@@ -1,6 +1,6 @@
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import { Color } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
 import { serializable } from "@graphif/serializer";
 
 /**

@@ -1,6 +1,7 @@
-import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Project } from "@/core/Project";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
 
 /**
  * 圆形光圈缩放特效

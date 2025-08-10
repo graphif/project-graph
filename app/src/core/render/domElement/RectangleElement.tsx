@@ -1,4 +1,4 @@
-import { Color } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
 import { Rectangle } from "@graphif/shapes";
 
 /**

@@ -15,7 +15,7 @@ import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import AutoCompleteWindow from "@/sub/AutoCompleteWindow";
 import { Direction } from "@/types/directions";
 import { isDesktop } from "@/utils/platform";
-import { colorInvert, Vector } from "@graphif/data-structures";
+import { Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
 
 /**
@@ -36,8 +36,8 @@ export class ControllerUtils {
     const rectView = this.project.renderer.transformWorld2View(rectWorld);
     const fontColor = (
       clickedNode.color.a === 1
-        ? colorInvert(clickedNode.color)
-        : colorInvert(this.project.stageStyleManager.currentStyle.Background)
+        ? clickedNode.color.invert()
+        : this.project.stageStyleManager.currentStyle.Background.invert()
     ).toHexStringWithoutAlpha();
     // 编辑节点
     clickedNode.isEditing = true;

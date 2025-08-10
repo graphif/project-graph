@@ -1,6 +1,7 @@
-import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Project } from "@/core/Project";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
 
 /**
  * 线段特效
@@ -38,7 +39,7 @@ export class LineCuttingEffect extends Effect {
       fromLocation,
       toLocation,
       this.lineWidth * (1 - this.timeProgress.rate),
-      mixColors(this.fromColor, this.toColor, this.timeProgress.rate),
+      this.fromColor.mix(this.toColor, this.timeProgress.rate),
     );
   }
 }

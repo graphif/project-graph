@@ -9,7 +9,8 @@ import { Section } from "@/core/stage/stageObject/entity/Section";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
-import { Color, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
 /**

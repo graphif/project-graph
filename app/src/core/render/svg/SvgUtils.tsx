@@ -1,4 +1,5 @@
-import { Color, Vector } from "@graphif/data-structures";
+import { Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
 import { Rectangle } from "@graphif/shapes";
 import { v4 } from "uuid";
 import { FONT, getTextSize } from "@/utils/font";

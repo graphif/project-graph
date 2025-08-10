@@ -16,15 +16,15 @@ relatedFile: app/src/core/render/canvas2d/entityRenderer/edge/concrete/SymmetryC
 
 生成当边被“切割”或移除时显示的视觉效果。
 
--   包含两个 `LineCuttingEffect`，分别从边的中点向起点和终点延伸。
--   包含一个 `CircleFlameEffect`，位于边的中点。
+- 包含两个 `LineCuttingEffect`，分别从边的中点向起点和终点延伸。
+- 包含一个 `CircleFlameEffect`，位于边的中点。
 
 #### `getConnectedEffects(startNode: ConnectableEntity, toNode: ConnectableEntity): Effect[]`
 
 生成当两个节点通过边连接时显示的视觉效果。
 
--   包含一个 `CircleFlameEffect`，位于起始节点的碰撞盒中心。
--   包含一个 `LineCuttingEffect`，从起始节点的碰撞盒中心延伸到目标节点的碰撞盒中心。
+- 包含一个 `CircleFlameEffect`，位于起始节点的碰撞盒中心。
+- 包含一个 `LineCuttingEffect`，从起始节点的碰撞盒中心延伸到目标节点的碰撞盒中心。
 
 ### 渲染 API
 
@@ -32,38 +32,38 @@ relatedFile: app/src/core/render/canvas2d/entityRenderer/edge/concrete/SymmetryC
 
 渲染边的正常状态。
 
--   基于边的起点、终点以及它们各自连接的节点的法线向量，计算并绘制一条 `SymmetryCurve`。
--   渲染曲线及其箭头。
--   渲染边上的文本。
+- 基于边的起点、终点以及它们各自连接的节点的法线向量，计算并绘制一条 `SymmetryCurve`。
+- 渲染曲线及其箭头。
+- 渲染边上的文本。
 
 #### `renderShiftingState(edge: LineEdge): void`
 
 渲染边在拖动或调整中（shifting）的状态。
 
--   根据拖动中的中点（`shiftingMidPoint`）和源/目标节点的碰撞盒，动态计算并绘制一条 `SymmetryCurve`。
--   渲染曲线及其箭头。
--   渲染边上的文本。
+- 根据拖动中的中点（`shiftingMidPoint`）和源/目标节点的碰撞盒，动态计算并绘制一条 `SymmetryCurve`。
+- 渲染曲线及其箭头。
+- 渲染边上的文本。
 
 #### `renderCycleState(edge: LineEdge): void`
 
 渲染自环边（即边的起点和终点是同一个节点）。
 
--   绘制一个弧形来表示自环。
--   在弧形上绘制一个箭头。
+- 绘制一个弧形来表示自环。
+- 在弧形上绘制一个箭头。
 
 #### `renderVirtualEdge(startNode: ConnectableEntity, mouseLocation: Vector): void`
 
 渲染从一个起始节点到鼠标当前位置的临时“虚拟”边。
 
--   计算从起始节点到鼠标位置的 `SymmetryCurve`。
--   渲染虚拟曲线及其箭头。
+- 计算从起始节点到鼠标位置的 `SymmetryCurve`。
+- 渲染虚拟曲线及其箭头。
 
 #### `renderVirtualConfirmedEdge(startNode: ConnectableEntity, endNode: ConnectableEntity): void`
 
 渲染两个已确认节点之间的临时“虚拟”边。
 
--   计算两个节点之间的 `SymmetryCurve`。
--   渲染虚拟曲线及其箭头。
+- 计算两个节点之间的 `SymmetryCurve`。
+- 渲染虚拟曲线及其箭头。
 
 ### SVG 生成 API
 
@@ -71,9 +71,9 @@ relatedFile: app/src/core/render/canvas2d/entityRenderer/edge/concrete/SymmetryC
 
 生成正常状态下边的 SVG 元素。
 
--   根据边是否有文本，生成不同的线体 SVG。
--   生成边上的文本 SVG。
--   生成箭头 SVG。
+- 根据边是否有文本，生成不同的线体 SVG。
+- 生成边上的文本 SVG。
+- 生成箭头 SVG。
 
 #### `getCycleStageSvg(): React.ReactNode`
 

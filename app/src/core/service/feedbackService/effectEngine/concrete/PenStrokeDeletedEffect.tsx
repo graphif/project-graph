@@ -1,7 +1,8 @@
-import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Project } from "@/core/Project";
-import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
 
 export class PenStrokeDeletedEffect extends Effect {
   private pathList: Vector[] = [];

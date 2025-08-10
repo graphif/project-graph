@@ -1,8 +1,8 @@
-import { mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
 import { Random } from "@/core/algorithm/random";
 import { Project } from "@/core/Project";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 
 /**
  *
@@ -85,11 +85,7 @@ export class NodeMoveShadowEffect extends Effect {
     }
     for (const point of this.pointList) {
       const viewLocation = project.renderer.transformWorld2View(point);
-      const color = mixColors(
-        project.stageStyleManager.currentStyle.effects.flash,
-        project.stageStyleManager.currentStyle.effects.flash.toTransparent(),
-        this.timeProgress.rate,
-      );
+      const color = project.stageStyleManager.currentStyle.effects.flash.with({ a: this.timeProgress.rate });
 
       project.renderUtils.renderPixel(viewLocation, color);
     }

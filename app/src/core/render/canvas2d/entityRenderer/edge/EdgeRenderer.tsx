@@ -1,4 +1,4 @@
-import { Color } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
 
 import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/CubicCatmullRomSplineEdge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";

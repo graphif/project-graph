@@ -1,7 +1,7 @@
 import { Field } from "@/components/ui/field";
 import { Settings } from "@/core/service/Settings";
 import { Themes } from "@/core/service/Themes";
-import { Color } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
 import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 

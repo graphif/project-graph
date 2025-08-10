@@ -7,7 +7,8 @@ import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Path } from "@/utils/path";
-import { Color, colorInvert, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import React from "react";
 import ReactDOMServer from "react-dom/server";
@@ -54,9 +55,7 @@ export class StageExportSvg {
             new Vector(0, Renderer.NODE_PADDING + Renderer.FONT_SIZE / 4),
           ),
           Renderer.FONT_SIZE,
-          node.color.a === 1
-            ? colorInvert(node.color)
-            : colorInvert(this.project.stageStyleManager.currentStyle.Background),
+          node.color.a === 1 ? node.color.invert() : this.project.stageStyleManager.currentStyle.Background.invert(),
         )}
       </>
     );

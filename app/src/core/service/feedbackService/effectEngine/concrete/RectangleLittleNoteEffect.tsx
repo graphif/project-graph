@@ -1,9 +1,10 @@
-import { Color, mixColors, ProgressNumber } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
 import { Random } from "@/core/algorithm/random";
 import { Project } from "@/core/Project";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { Color } from "@graphif/color";
+import { ProgressNumber } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 
 /**
  * 用于逻辑节点执行了一次效果
@@ -37,7 +38,7 @@ export class RectangleLittleNoteEffect extends Effect {
     project.shapeRenderer.renderRect(
       project.renderer.transformWorld2View(this.currentRect),
       Color.Transparent,
-      mixColors(Color.Transparent, this.strokeColor, 1 - this.timeProgress.rate),
+      this.strokeColor.with({ a: this.timeProgress.rate }),
       2 * project.camera.currentScale,
       8 * project.camera.currentScale,
     );

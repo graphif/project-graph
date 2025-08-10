@@ -2,7 +2,8 @@ import { Project } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
 /**

@@ -1,4 +1,5 @@
-import { Color, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { Vector } from "@graphif/data-structures";
 import { Line } from "@graphif/shapes";
 import { Serialized } from "@/types/node";
 import { Project } from "@/core/Project";

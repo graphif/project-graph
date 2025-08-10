@@ -3,7 +3,8 @@ import { Renderer } from "@/core/render/canvas2d/renderer";
 import { Settings } from "@/core/service/Settings";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { getTextSize } from "@/utils/font";
-import { Color, colorInvert, mixColors, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Rectangle } from "@graphif/shapes";
 
 @service("sectionRenderer")
@@ -20,7 +21,7 @@ export class SectionRenderer {
     this.project.shapeRenderer.renderRect(
       renderRectangle,
       section.color,
-      mixColors(this.project.stageStyleManager.currentStyle.StageObjectBorder, Color.Black, 0.5),
+      this.project.stageStyleManager.currentStyle.StageObjectBorder.mix(Color.Black, 0.5),
       2 * this.project.camera.currentScale,
       Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
     );
@@ -41,8 +42,8 @@ export class SectionRenderer {
         this.project.renderer.transformWorld2View(section.rectangle.location.add(Vector.same(Renderer.NODE_PADDING))),
         Renderer.FONT_SIZE * this.project.camera.currentScale,
         section.color.a === 1
-          ? colorInvert(section.color)
-          : colorInvert(this.project.stageStyleManager.currentStyle.Background),
+          ? section.color.invert()
+          : this.project.stageStyleManager.currentStyle.Background.invert(),
       );
     }
   }
@@ -78,8 +79,8 @@ export class SectionRenderer {
         this.project.renderer.transformWorld2View(section.rectangle.location.add(Vector.same(Renderer.NODE_PADDING))),
         Renderer.FONT_SIZE * this.project.camera.currentScale,
         section.color.a === 1
-          ? colorInvert(section.color)
-          : colorInvert(this.project.stageStyleManager.currentStyle.Background),
+          ? section.color.invert()
+          : this.project.stageStyleManager.currentStyle.Background.invert(),
       );
     }
   }
@@ -126,9 +127,7 @@ export class SectionRenderer {
       section.text,
       this.project.renderer.transformWorld2View(section.rectangle.center),
       fontHeight * this.project.camera.currentScale,
-      section.color.a === 1
-        ? colorInvert(section.color)
-        : colorInvert(this.project.stageStyleManager.currentStyle.Background),
+      section.color.a === 1 ? section.color.invert() : this.project.stageStyleManager.currentStyle.Background.invert(),
     );
   }
 
@@ -151,9 +150,7 @@ export class SectionRenderer {
         : section.color.toNewAlpha(0.5);
 
     const textColor =
-      section.color.a === 1
-        ? colorInvert(section.color)
-        : colorInvert(this.project.stageStyleManager.currentStyle.Background);
+      section.color.a === 1 ? section.color.invert() : this.project.stageStyleManager.currentStyle.Background.invert();
     const textSize = getTextSize(section.text, fontSize);
     this.project.shapeRenderer.renderRect(
       new Rectangle(leftTopFontViewLocation, textSize).expandFromCenter(2),

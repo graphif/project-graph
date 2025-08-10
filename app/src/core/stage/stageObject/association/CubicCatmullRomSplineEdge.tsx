@@ -1,4 +1,5 @@
-import { Color, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { Vector } from "@graphif/data-structures";
 import { CubicCatmullRomSpline, Rectangle } from "@graphif/shapes";
 import { v4 as uuidv4 } from "uuid";
 import { Serialized } from "@/types/node";

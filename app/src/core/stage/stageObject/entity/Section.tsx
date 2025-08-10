@@ -6,7 +6,8 @@ import { ConnectableEntity } from "@/core/stage/stageObject/abstract/Connectable
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { getTextSize } from "@/utils/font";
-import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
 import { passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Line, Rectangle, Shape } from "@graphif/shapes";
 

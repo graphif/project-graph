@@ -1,5 +1,5 @@
-import { Color } from "@graphif/data-structures";
 import { Project, service } from "@/core/Project";
+import { Color } from "@graphif/color";
 
 /**
  * 高亮渲染所有搜索结果

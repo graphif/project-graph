@@ -1,9 +1,10 @@
-import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
 import { Project } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
 import { RateFunctions } from "@/core/service/feedbackService/effectEngine/mathTools/rateFunctions";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 
 export class EntityJumpMoveEffect extends Effect {
   constructor(

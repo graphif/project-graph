@@ -1,0 +1,29 @@
+{
+  "name": "@graphif/color",
+  "description": "Just colors",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "type-check": "tsc"
+  },
+  "devDependencies": {
+    "tsdown": "^0.12.9",
+    "typescript": "~5.8.3"
+  },
+  "dependencies": {
+    "@graphif/serializer": "workspace:*"
+  }
+}

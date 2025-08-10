@@ -5,7 +5,8 @@ import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { EdgeCollisionBoxGetter } from "@/core/stage/stageObject/association/EdgeCollisionBoxGetter";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { getMultiLineTextSize } from "@/utils/font";
-import { Color, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { Vector } from "@graphif/data-structures";
 import { passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 

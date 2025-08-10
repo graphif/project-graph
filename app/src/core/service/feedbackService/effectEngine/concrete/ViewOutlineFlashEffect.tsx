@@ -1,7 +1,8 @@
-import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
 import { Project } from "@/core/Project";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 
 /**
  * 屏幕边缘闪颜色效果
@@ -28,7 +29,7 @@ export class ViewOutlineFlashEffect extends Effect {
     }
     const viewRect = project.renderer.getCoverWorldRectangle();
 
-    const currentColor = mixColors(this.color, new Color(0, 0, 0, 0), this.timeProgress.rate);
+    const currentColor = this.color.with({ a: this.timeProgress.rate });
     // 左侧边缘
 
     project.shapeRenderer.renderRectWithShadow(

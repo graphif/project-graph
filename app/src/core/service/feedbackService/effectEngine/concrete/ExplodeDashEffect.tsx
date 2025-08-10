@@ -1,8 +1,9 @@
-import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
 import { Random } from "@/core/algorithm/random";
 import { Project } from "@/core/Project";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 
 /**
  * 方块的爆炸粉尘效果
@@ -58,11 +59,9 @@ export class ExplodeDashEffect extends Effect {
     }
     for (const ashLocation of this.ashLocationArray) {
       const viewLocation = project.renderer.transformWorld2View(ashLocation);
-      const color = mixColors(
-        project.stageStyleManager.currentStyle.StageObjectBorder,
-        project.stageStyleManager.currentStyle.StageObjectBorder.toTransparent(),
-        this.timeProgress.rate,
-      );
+      const color = project.stageStyleManager.currentStyle.StageObjectBorder.with({
+        a: this.timeProgress.rate,
+      });
 
       project.renderUtils.renderPixel(viewLocation, color);
     }

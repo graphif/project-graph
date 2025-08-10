@@ -7,7 +7,8 @@ import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { getTextSize } from "@/utils/font";
 import { isFrame } from "@/utils/platform";
-import { Color, mixColors, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Rectangle } from "@graphif/shapes";
 
 /**
@@ -344,7 +345,7 @@ export class Renderer {
                 120 * this.project.camera.currentScale,
                 60 * this.project.camera.currentScale,
                 Color.Transparent,
-                mixColors(this.project.stageStyleManager.currentStyle.StageObjectBorder, Color.Transparent, 0.5),
+                this.project.stageStyleManager.currentStyle.StageObjectBorder.mix(Color.Transparent, 0.5),
                 2 * this.project.camera.currentScale,
                 Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
               );

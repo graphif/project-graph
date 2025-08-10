@@ -1,9 +1,10 @@
-import { Color, Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
-import { useEffect, useState } from "react";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import { SubWindow } from "@/core/service/SubWindow";
+import { Color } from "@graphif/color";
+import { Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
+import { useEffect, useState } from "react";
 
 /**
  * 上色盘面板

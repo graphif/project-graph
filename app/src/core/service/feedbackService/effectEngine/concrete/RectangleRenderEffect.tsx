@@ -1,8 +1,9 @@
-import { Color, mixColors, ProgressNumber } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
 import { Project } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Color } from "@graphif/color";
+import { ProgressNumber } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 
 export class RectangleRenderEffect extends Effect {
   constructor(
@@ -19,7 +20,7 @@ export class RectangleRenderEffect extends Effect {
     project.shapeRenderer.renderRect(
       project.renderer.transformWorld2View(this.rectangle),
       this.fillColor,
-      mixColors(this.strokeColor, this.strokeColor.toTransparent(), this.timeProgress.rate),
+      this.strokeColor.mix({ a: this.timeProgress.rate }),
       this.strokeWidth * project.camera.currentScale,
       Renderer.NODE_ROUNDED_RADIUS * project.camera.currentScale,
     );

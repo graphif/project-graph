@@ -1,15 +1,16 @@
-import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
-import { Line } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
+import { EdgeRendererClass } from "@/core/render/canvas2d/entityRenderer/edge/EdgeRendererClass";
+import { Renderer } from "@/core/render/canvas2d/renderer";
+import { SvgUtils } from "@/core/render/svg/SvgUtils";
 import { CircleFlameEffect } from "@/core/service/feedbackService/effectEngine/concrete/CircleFlameEffect";
 import { LineCuttingEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineCuttingEffect";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
-import { SvgUtils } from "@/core/render/svg/SvgUtils";
-import { Renderer } from "@/core/render/canvas2d/renderer";
-import { EdgeRendererClass } from "@/core/render/canvas2d/entityRenderer/edge/EdgeRendererClass";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
+import { Line } from "@graphif/shapes";
 
 /**
  * 折线渲染器
@@ -23,23 +24,9 @@ export class VerticalPolyEdgeRenderer extends EdgeRendererClass {
   getCuttingEffects(edge: LineEdge): Effect[] {
     const midLocation = edge.bodyLine.midPoint();
     return [
-      new LineCuttingEffect(
-        new ProgressNumber(0, 15),
-        midLocation,
-        edge.bodyLine.start,
-        new Color(255, 0, 0, 1),
-        new Color(255, 0, 0, 1),
-        20,
-      ),
-      new LineCuttingEffect(
-        new ProgressNumber(0, 15),
-        midLocation,
-        edge.bodyLine.end,
-        new Color(255, 0, 0, 1),
-        new Color(255, 0, 0, 1),
-        20,
-      ),
-      new CircleFlameEffect(new ProgressNumber(0, 15), edge.bodyLine.midPoint(), 50, new Color(255, 0, 0, 1)),
+      new LineCuttingEffect(new ProgressNumber(0, 15), midLocation, edge.bodyLine.start, Color.Red, Color.Red, 20),
+      new LineCuttingEffect(new ProgressNumber(0, 15), midLocation, edge.bodyLine.end, Color.Red, Color.Red, 20),
+      new CircleFlameEffect(new ProgressNumber(0, 15), edge.bodyLine.midPoint(), 50, Color.Red),
     ];
   }
 

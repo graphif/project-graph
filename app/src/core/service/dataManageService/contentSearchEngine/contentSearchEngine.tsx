@@ -6,7 +6,8 @@ import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
-import { Color, ProgressNumber } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { ProgressNumber } from "@graphif/data-structures";
 import { toast } from "sonner";
 
 @service("contentSearch")

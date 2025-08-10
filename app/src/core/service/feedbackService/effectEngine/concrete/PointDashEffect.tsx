@@ -1,7 +1,8 @@
-import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Project } from "@/core/Project";
 import { EffectParticle } from "@/core/service/feedbackService/effectEngine/effectElements/effectParticle";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
 
 /**
  * 在一个点迸发一些粒子效果
@@ -51,11 +52,7 @@ export class PointDashEffect extends Effect {
       if (isCollideWithEntity) {
         particle.color = Color.Green;
       } else {
-        particle.color = mixColors(
-          this.project.stageStyleManager.currentStyle.StageObjectBorder,
-          this.project.stageStyleManager.currentStyle.StageObjectBorder.toTransparent(),
-          this.timeProgress.rate,
-        );
+        particle.color = project.stageStyleManager.currentStyle.StageObjectBorder.with({ a: this.timeProgress.rate });
       }
       particle.acceleration = acceleration;
 

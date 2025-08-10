@@ -1,6 +1,7 @@
-import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Project } from "@/core/Project";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
 
 /**
  * 线段特效
@@ -33,8 +34,8 @@ export class LineEffect extends Effect {
     }
     const fromLocation = project.renderer.transformWorld2View(this.fromLocation);
     const toLocation = project.renderer.transformWorld2View(this.toLocation);
-    const fromColor = mixColors(this.fromColor, this.fromColor.toTransparent(), this.timeProgress.rate);
-    const toColor = mixColors(this.toColor, this.toColor.toTransparent(), this.timeProgress.rate);
+    const fromColor = this.fromColor.with({ a: this.timeProgress.rate });
+    const toColor = this.toColor.with({ a: this.timeProgress.rate });
     project.curveRenderer.renderGradientLine(
       fromLocation,
       toLocation,

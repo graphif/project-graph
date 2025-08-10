@@ -1,4 +1,5 @@
-import { Color, Vector } from "@graphif/data-structures";
+import { Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
 import { CubicBezierCurve, CubicCatmullRomSpline, Rectangle, SymmetryCurve } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
 

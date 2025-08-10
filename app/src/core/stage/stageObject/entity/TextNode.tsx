@@ -8,7 +8,8 @@ import { ResizeAble } from "@/core/stage/stageObject/abstract/StageObjectInterfa
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { getMultiLineTextSize } from "@/utils/font";
-import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
 import { passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 

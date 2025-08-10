@@ -1,4 +1,5 @@
-import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
 import { Line } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
 import { CircleFlameEffect } from "@/core/service/feedbackService/effectEngine/concrete/CircleFlameEffect";

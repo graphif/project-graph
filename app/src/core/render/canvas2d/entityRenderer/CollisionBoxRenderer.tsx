@@ -1,7 +1,8 @@
-import { Color, Vector } from "@graphif/data-structures";
-import { Circle, CubicCatmullRomSpline, Line, Rectangle, SymmetryCurve } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Color } from "@graphif/color";
+import { Vector } from "@graphif/data-structures";
+import { Circle, CubicCatmullRomSpline, Line, Rectangle, SymmetryCurve } from "@graphif/shapes";
 
 /**
  * 碰撞箱渲染器

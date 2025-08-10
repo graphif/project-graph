@@ -365,7 +365,3 @@ export default function App() {
     </div>
   );
 }
-
-export function Catch() {
-  return <></>;
-}

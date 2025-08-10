@@ -1,4 +1,4 @@
-import { Color } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
 import { Store } from "@tauri-apps/plugin-store";
 import { createStore } from "@/utils/store";
 

@@ -16,6 +16,7 @@
     "tauri:build:android": "tauri android build"
   },
   "dependencies": {
+    "@graphif/color": "workspace:*",
     "@graphif/data-structures": "workspace:*",
     "@graphif/serializer": "workspace:*",
     "@graphif/shapes": "workspace:*",

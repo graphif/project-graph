@@ -17,7 +17,8 @@ import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { CursorNameEnum } from "@/types/cursors";
 import { isMac } from "@/utils/platform";
-import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
 import { Line } from "@graphif/shapes";
 
 export class ControllerCuttingClass extends ControllerClass {

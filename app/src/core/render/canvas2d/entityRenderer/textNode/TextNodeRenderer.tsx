@@ -8,7 +8,8 @@ import {
 } from "@/core/service/dataGenerateService/autoComputeEngine/logicNodeNameEnum";
 import { Settings } from "@/core/service/Settings";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { Color, colorInvert, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
 @service("textNodeRenderer")
@@ -132,9 +133,7 @@ export class TextNodeRenderer {
         "undefined",
         this.project.renderer.transformWorld2View(node.rectangle.center),
         Renderer.FONT_SIZE * this.project.camera.currentScale,
-        node.color.a === 1
-          ? colorInvert(node.color)
-          : colorInvert(this.project.stageStyleManager.currentStyle.Background),
+        node.color.a === 1 ? node.color.invert() : this.project.stageStyleManager.currentStyle.Background.invert(),
       );
     } else if (this.project.autoComputeUtils.isNameIsLogicNode(node.text)) {
       // 检查下是不是逻辑节点
@@ -147,9 +146,7 @@ export class TextNodeRenderer {
             getLogicNodeRenderName(logicNodeName),
             this.project.renderer.transformWorld2View(node.rectangle.center),
             Renderer.FONT_SIZE * this.project.camera.currentScale,
-            node.color.a === 1
-              ? colorInvert(node.color)
-              : colorInvert(this.project.stageStyleManager.currentStyle.Background),
+            node.color.a === 1 ? node.color.invert() : this.project.stageStyleManager.currentStyle.Background.invert(),
           );
         }
       }
@@ -159,9 +156,7 @@ export class TextNodeRenderer {
           node.text,
           this.project.renderer.transformWorld2View(node.rectangle.center),
           Renderer.FONT_SIZE * this.project.camera.currentScale,
-          node.color.a === 1
-            ? colorInvert(node.color)
-            : colorInvert(this.project.stageStyleManager.currentStyle.Background),
+          node.color.a === 1 ? node.color.invert() : this.project.stageStyleManager.currentStyle.Background.invert(),
         );
         this.project.shapeRenderer.renderRect(
           new Rectangle(
@@ -187,9 +182,7 @@ export class TextNodeRenderer {
         node.sizeAdjust === "manual"
           ? (node.rectangle.size.x - Renderer.NODE_PADDING * 2) * this.project.camera.currentScale
           : Infinity,
-        node.color.a === 1
-          ? colorInvert(node.color)
-          : colorInvert(this.project.stageStyleManager.currentStyle.Background),
+        node.color.a === 1 ? node.color.invert() : this.project.stageStyleManager.currentStyle.Background.invert(),
         1.5,
       );
     }

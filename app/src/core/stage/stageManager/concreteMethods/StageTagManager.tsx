@@ -1,4 +1,5 @@
-import { Color, ProgressNumber } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { ProgressNumber } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
 import { LineCuttingEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineCuttingEffect";

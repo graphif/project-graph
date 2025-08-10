@@ -61,6 +61,9 @@ importers:
 
   app:
     dependencies:
+      "@graphif/color":
+        specifier: workspace:*
+        version: link:../packages/color
       "@graphif/data-structures":
         specifier: workspace:*
         version: link:../packages/data-structures
@@ -464,6 +467,19 @@ importers:
         version: 0.25.2
       typescript:
         specifier: ^5.8.3
+        version: 5.8.3
+
+  packages/color:
+    dependencies:
+      "@graphif/serializer":
+        specifier: workspace:*
+        version: link:../serializer
+    devDependencies:
+      tsdown:
+        specifier: ^0.12.9
+        version: 0.12.9(typescript@5.8.3)
+      typescript:
+        specifier: ~5.8.3
         version: 5.8.3
 
   packages/data-structures:

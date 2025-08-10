@@ -7,6 +7,7 @@ relatedFile: app/src/core/render/canvas2d/basicRenderer/textRenderer.tsx
 这个服务专门用于在 Canvas 上渲染文字，并支持缓存以优化性能。它基于 View 坐标系进行操作。
 
 该服务通过以下方式实现其功能：
+
 - 使用 LruCache 缓存已渲染的文字位图（ImageBitmap），缓存大小由 `Settings.textCacheSize` 控制。
 - 渲染文字时，优先从缓存中获取。如果缓存命中，则直接绘制缓存的位图。
 - 如果缓存未命中，则使用 `OffscreenCanvas` 创建新的文字位图。选择 `OffscreenCanvas` 是因为它具有潜在的性能优化，并且方便未来移植到 Web Worker 中进行渲染。
@@ -24,6 +25,7 @@ relatedFile: app/src/core/render/canvas2d/basicRenderer/textRenderer.tsx
 #### `renderText(text: string, location: Vector, size: number, color: Color = Color.White): void`
 
 从左上角位置开始绘制单行文本。
+
 - `text`: 要渲染的文本内容。
 - `location`: 文本的左上角坐标（Vector 对象）。
 - `size`: 文本的字体大小。
@@ -32,6 +34,7 @@ relatedFile: app/src/core/render/canvas2d/basicRenderer/textRenderer.tsx
 #### `renderTempText(text: string, location: Vector, size: number, color: Color = Color.White): void`
 
 渲染临时单行文本，不使用缓存也不构建缓存。
+
 - `text`: 要渲染的文本内容。
 - `location`: 文本的左上角坐标（Vector 对象）。
 - `size`: 文本的字体大小。
@@ -40,6 +43,7 @@ relatedFile: app/src/core/render/canvas2d/basicRenderer/textRenderer.tsx
 #### `renderTextFromCenter(text: string, centerLocation: Vector, size: number, color: Color = Color.White): void`
 
 从中心位置开始绘制单行文本。
+
 - `text`: 要渲染的文本内容。
 - `centerLocation`: 文本的中心坐标（Vector 对象）。
 - `size`: 文本的字体大小。
@@ -48,6 +52,7 @@ relatedFile: app/src/core/render/canvas2d/basicRenderer/textRenderer.tsx
 #### `renderTempTextFromCenter(text: string, centerLocation: Vector, size: number, color: Color = Color.White): void`
 
 从中心位置开始绘制临时单行文本，不使用缓存也不构建缓存。
+
 - `text`: 要渲染的文本内容。
 - `centerLocation`: 文本的中心坐标（Vector 对象）。
 - `size`: 文本的字体大小。
@@ -58,6 +63,7 @@ relatedFile: app/src/core/render/canvas2d/basicRenderer/textRenderer.tsx
 #### `renderMultiLineText(text: string, location: Vector, fontSize: number, limitWidth: number, color: Color = Color.White, lineHeight: number = 1.2, limitLines: number = Infinity): void`
 
 渲染多行文本，支持自动换行和行数限制。
+
 - `text`: 要渲染的文本内容。
 - `location`: 文本的左上角坐标（Vector 对象）。
 - `fontSize`: 文本的字体大小。
@@ -69,6 +75,7 @@ relatedFile: app/src/core/render/canvas2d/basicRenderer/textRenderer.tsx
 #### `renderTempMultiLineText(text: string, location: Vector, fontSize: number, limitWidth: number, color: Color = Color.White, lineHeight: number = 1.2, limitLines: number = Infinity): void`
 
 渲染临时多行文本，不使用缓存也不构建缓存，支持自动换行和行数限制。
+
 - `text`: 要渲染的文本内容。
 - `location`: 文本的左上角坐标（Vector 对象）。
 - `fontSize`: 文本的字体大小。
@@ -80,6 +87,7 @@ relatedFile: app/src/core/render/canvas2d/basicRenderer/textRenderer.tsx
 #### `renderMultiLineTextFromCenter(text: string, centerLocation: Vector, size: number, limitWidth: number, color: Color, lineHeight: number = 1.2, limitLines: number = Infinity): void`
 
 从中心位置开始绘制多行文本，支持自动换行和行数限制。
+
 - `text`: 要渲染的文本内容。
 - `centerLocation`: 文本的中心坐标（Vector 对象）。
 - `size`: 文本的字体大小。
@@ -91,6 +99,7 @@ relatedFile: app/src/core/render/canvas2d/basicRenderer/textRenderer.tsx
 #### `renderTempMultiLineTextFromCenter(text: string, centerLocation: Vector, size: number, limitWidth: number, color: Color, lineHeight: number = 1.2, limitLines: number = Infinity): void`
 
 从中心位置开始绘制临时多行文本，不使用缓存也不构建缓存，支持自动换行和行数限制。
+
 - `text`: 要渲染的文本内容。
 - `centerLocation`: 文本的中心坐标（Vector 对象）。
 - `size`: 文本的字体大小。
@@ -104,6 +113,7 @@ relatedFile: app/src/core/render/canvas2d/basicRenderer/textRenderer.tsx
 #### `measureMultiLineTextSize(text: string, fontSize: number, limitWidth: number, lineHeight: number = 1.2): Vector`
 
 测量多行文本在给定字体大小、限制宽度和行高下的总尺寸。
+
 - `text`: 要测量的文本内容。
 - `fontSize`: 文本的字体大小。
 - `limitWidth`: 文本的最大宽度。

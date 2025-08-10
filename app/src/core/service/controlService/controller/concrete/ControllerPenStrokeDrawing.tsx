@@ -8,7 +8,8 @@ import { PenStroke, PenStrokeSegment } from "@/core/stage/stageObject/entity/Pen
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { CursorNameEnum } from "@/types/cursors";
 import { isMac } from "@/utils/platform";
-import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
 import { v4 } from "uuid";
 
 /**
@@ -105,7 +106,7 @@ export class ControllerPenStrokeDrawingClass extends ControllerClass {
           const currentPenColor = this.getCurrentStrokeColor().clone();
           if (this.project.controller.pressingKeySet.has("shift")) {
             // 颜色叠加
-            entity.color = mixColors(entity.color, currentPenColor, 0.1);
+            entity.color = entity.color.mix(currentPenColor, 0.1);
           } else {
             entity.color = currentPenColor.clone();
           }

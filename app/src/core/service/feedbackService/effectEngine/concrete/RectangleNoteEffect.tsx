@@ -1,9 +1,10 @@
-import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
 import { Project } from "@/core/Project";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
 import { reverseAnimate } from "@/core/service/feedbackService/effectEngine/mathTools/animateFunctions";
 import { easeOutQuint } from "@/core/service/feedbackService/effectEngine/mathTools/easings";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 
 /**
  * 用于提示某个矩形区域的效果
@@ -48,7 +49,7 @@ export class RectangleNoteEffect extends Effect {
     project.shapeRenderer.renderRect(
       project.renderer.transformWorld2View(currentRect),
       Color.Transparent,
-      mixColors(Color.Transparent, this.strokeColor, reverseAnimate(this.timeProgress.rate)),
+      this.strokeColor.with({ a: 1 - reverseAnimate(this.timeProgress.rate) }),
       2,
       5,
     );

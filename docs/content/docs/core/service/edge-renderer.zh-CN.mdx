@@ -9,6 +9,7 @@ relatedFile: app/src/core/render/canvas2d/entityRenderer/edge/EdgeRenderer.tsx
 ## 内部机制
 
 这个服务维护一个 `currentRenderer` 实例，它是一个 `EdgeRendererClass` 的具体实现。
+
 - 基于 `Settings` 中 `lineStyle` 的变化，服务会切换 `currentRenderer` 到对应的具体渲染器，例如 `StraightEdgeRenderer`、`SymmetryCurveEdgeRenderer` 或 `VerticalPolyEdgeRenderer`。
 - 这种设计允许服务根据用户偏好或特定场景，灵活地使用不同的渲染算法来绘制边。
 
@@ -27,6 +28,7 @@ relatedFile: app/src/core/render/canvas2d/entityRenderer/edge/EdgeRenderer.tsx
 #### `renderLineEdge(edge: LineEdge): void`
 
 渲染一条直线边。
+
 - 处理源节点或目标节点被折叠隐藏的情况。
 - 根据边的状态（自循环、移动中、正常）调用相应渲染器的渲染方法。
 - 如果边被选中，还会渲染碰撞框、起始点和终止点的高亮效果，以及一条连接起始点的虚线。
@@ -34,6 +36,7 @@ relatedFile: app/src/core/render/canvas2d/entityRenderer/edge/EdgeRenderer.tsx
 #### `renderCrEdge(edge: CubicCatmullRomSplineEdge): void`
 
 渲染一条三次 Catmull-Rom 样条曲线边。
+
 - 绘制曲线本身。
 - 渲染曲线的控制点。
 - 如果边有文本，渲染文本内容。
@@ -57,11 +60,13 @@ relatedFile: app/src/core/render/canvas2d/entityRenderer/edge/EdgeRenderer.tsx
 #### `getEdgeView(edge: LineEdge): LineEdge`
 
 根据边的源节点和目标节点的折叠状态，返回一个用于渲染的 `LineEdge` 视图。
+
 - 如果源节点或目标节点被折叠，可能会创建一个新的 `LineEdge`，其端点连接到最近的非折叠父级 Section。
 
 #### `getEdgeSvg(edge: LineEdge): React.ReactNode`
 
 返回一个 `React.ReactNode`，表示直线边的 SVG 渲染结果。
+
 - 处理自循环边和移动中的边。
 
 ### 效果获取
@@ -79,11 +84,13 @@ relatedFile: app/src/core/render/canvas2d/entityRenderer/edge/EdgeRenderer.tsx
 #### `renderArrowHead(endPoint: Vector, direction: Vector, size: number, color: Color): void`
 
 在 Canvas 上绘制一个箭头。
+
 - 基于终点、方向、大小和颜色计算箭头的多边形顶点。
 - 将世界坐标转换为视图坐标后进行渲染。
 
 #### `generateArrowHeadSvg(endPoint: Vector, direction: Vector, size: number, edgeColor: Color): React.ReactNode`
 
 生成一个 `React.ReactNode`，表示箭头的 SVG 多边形。
+
 - 计算箭头的多边形顶点。
 - 返回一个 `<polygon>` SVG 元素字符串。

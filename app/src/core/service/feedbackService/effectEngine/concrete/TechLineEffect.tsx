@@ -1,7 +1,8 @@
-import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Random } from "@/core/algorithm/random";
 import { Project } from "@/core/Project";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
 
 /**
  * 一条富有科技感的连线特效
@@ -56,7 +57,7 @@ export class TechLineEffect extends Effect {
   }
 
   render(project: Project) {
-    const currentColor = mixColors(this.color, Color.Transparent, this.timeProgress.rate);
+    const currentColor = this.color.with({ a: this.timeProgress.rate });
     const viewLocations = this.currentPoints.map((p) => project.renderer.transformWorld2View(p));
     project.curveRenderer.renderSolidLineMultipleWithShadow(
       viewLocations,

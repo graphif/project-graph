@@ -1,6 +1,7 @@
-import { Color, Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
+import { Color } from "@graphif/color";
+import { Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 
 /**
  * 基础图形渲染器

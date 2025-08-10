@@ -1,7 +1,7 @@
-import { mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
-import { Line, Rectangle } from "@graphif/shapes";
 import { Project } from "@/core/Project";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
+import { Line, Rectangle } from "@graphif/shapes";
 
 /**
  * 实体对齐特效
@@ -91,8 +91,7 @@ export class EntityAlignEffect extends Effect {
       project.curveRenderer.renderDashedLine(
         project.renderer.transformWorld2View(line.start),
         project.renderer.transformWorld2View(line.end),
-        mixColors(
-          project.stageStyleManager.currentStyle.CollideBoxSelected.toSolid(),
+        project.stageStyleManager.currentStyle.CollideBoxSelected.toSolid().mix(
           project.stageStyleManager.currentStyle.CollideBoxSelected.clone().toTransparent(),
           1 - this.timeProgress.rate,
         ),

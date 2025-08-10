@@ -1,7 +1,8 @@
 import { Project, service } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { Settings } from "@/core/service/Settings";
-import { Color, Vector } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { Vector } from "@graphif/data-structures";
 
 /**
  * 绘画控制器

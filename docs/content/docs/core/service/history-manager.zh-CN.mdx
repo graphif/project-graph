@@ -8,10 +8,10 @@ relatedFile: app/src/core/stage/stageManager/StageHistoryManager.tsx
 
 ## 内部机制
 
-*   维护一个操作差异（Delta）列表，记录每次操作前后的状态变化。
-*   通过一个指针 `currentIndex` 来追踪当前所处的历史版本。
-*   限制历史记录的最大长度 `historySize`。
-*   保存初始舞台状态 `initialStage` 作为历史记录的起点。
+- 维护一个操作差异（Delta）列表，记录每次操作前后的状态变化。
+- 通过一个指针 `currentIndex` 来追踪当前所处的历史版本。
+- 限制历史记录的最大长度 `historySize`。
+- 保存初始舞台状态 `initialStage` 作为历史记录的起点。
 
 ## API 方法
 

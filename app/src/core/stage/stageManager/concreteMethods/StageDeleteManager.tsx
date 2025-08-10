@@ -11,7 +11,8 @@ import { Section } from "@/core/stage/stageObject/entity/Section";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
-import { Color, ProgressNumber } from "@graphif/data-structures";
+import { Color } from "@graphif/color";
+import { ProgressNumber } from "@graphif/data-structures";
 
 type DeleteHandler<T extends Entity> = (entity: T) => void;
 type Constructor<T> = { new (...args: any[]): T };
