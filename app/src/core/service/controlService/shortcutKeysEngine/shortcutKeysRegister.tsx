@@ -732,12 +732,7 @@ export class KeyBindsRegistrar {
       for (const obj of selectedStageObject) {
         if (obj instanceof TextNode) {
           if (obj.color.a === 0) continue;
-          obj.color = new Color(
-            Math.max(0, obj.color.r - 20),
-            Math.max(0, obj.color.b - 20),
-            Math.max(0, obj.color.g - 20),
-            obj.color.a,
-          );
+          obj.color = obj.color.with({ l: l - 0.2 });
         }
       }
     });

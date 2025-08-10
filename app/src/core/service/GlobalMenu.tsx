@@ -574,7 +574,7 @@ export async function onOpenFile(uri?: URI, source: string = "unknown") {
     if (!path) return;
     uri = URI.file(path);
   }
-  let stage;
+  let stage: Record<string, any>[];
   if (uri.fsPath.endsWith(".json")) {
     const content = await readTextFile(uri.fsPath);
     const json = JSON.parse(content);

@@ -1,10 +1,10 @@
-import { Vector } from "@graphif/data-structures";
-import { Color } from "@graphif/color";
-import { Line } from "@graphif/shapes";
 import { ConvexHull } from "@/core/algorithm/geometry/convexHull";
 import { Project, service } from "@/core/Project";
-import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { Renderer } from "@/core/render/canvas2d/renderer";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
+import { Color } from "@graphif/color";
+import { Vector } from "@graphif/data-structures";
+import { Line } from "@graphif/shapes";
 
 @service("multiTargetUndirectedEdgeRenderer")
 export class MultiTargetUndirectedEdgeRenderer {
@@ -122,7 +122,7 @@ export class MultiTargetUndirectedEdgeRenderer {
       convexPoints.push(convexPoints[0]);
       this.project.curveRenderer.renderSolidLineMultiple(
         convexPoints.map((point) => this.project.renderer.transformWorld2View(point)),
-        edgeColor.toNewAlpha(0.5),
+        edgeColor.with({ a: 0.5 }),
         8 * this.project.camera.currentScale,
       );
     }

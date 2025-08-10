@@ -47,11 +47,11 @@ import type { ComplexityDetector } from "@/core/service/dataManageService/Comple
 import type { ContentSearch } from "@/core/service/dataManageService/contentSearchEngine/contentSearchEngine";
 import type { CopyEngine } from "@/core/service/dataManageService/copyEngine/copyEngine";
 import type { Effects } from "@/core/service/feedbackService/effectEngine/effectMachine";
-import { StageStyleManager } from "@/core/service/feedbackService/stageStyle/StageStyleManager";
+import type { StageStyleManager } from "@/core/service/feedbackService/stageStyle/StageStyleManager";
 import type { Camera } from "@/core/stage/Camera";
 import type { Canvas } from "@/core/stage/Canvas";
-import { GraphMethods } from "@/core/stage/stageManager/basicMethods/GraphMethods";
-import { SectionMethods } from "@/core/stage/stageManager/basicMethods/SectionMethods";
+import type { GraphMethods } from "@/core/stage/stageManager/basicMethods/GraphMethods";
+import type { SectionMethods } from "@/core/stage/stageManager/basicMethods/SectionMethods";
 import type { LayoutManualAlign } from "@/core/stage/stageManager/concreteMethods/layoutManager/layoutManualAlignManager";
 import type { AutoAlign } from "@/core/stage/stageManager/concreteMethods/StageAutoAlignManager";
 import type { DeleteManager } from "@/core/stage/stageManager/concreteMethods/StageDeleteManager";
@@ -65,9 +65,8 @@ import type { StageObjectColorManager } from "@/core/stage/stageManager/concrete
 import type { StageObjectSelectCounter } from "@/core/stage/stageManager/concreteMethods/StageObjectSelectCounter";
 import type { SectionInOutManager } from "@/core/stage/stageManager/concreteMethods/StageSectionInOutManager";
 import type { SectionPackManager } from "@/core/stage/stageManager/concreteMethods/StageSectionPackManager";
-import type { SerializedDataAdder } from "@/core/stage/stageManager/concreteMethods/StageSerializedAdder";
 import type { TagManager } from "@/core/stage/stageManager/concreteMethods/StageTagManager";
-import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
+import type { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import type { StageManager } from "@/core/stage/stageManager/StageManager";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { nextProjectIdAtom, projectsAtom, store } from "@/state";
@@ -81,6 +80,7 @@ import { toast } from "sonner";
 import { getOriginalNameOf } from "virtual:original-class-name";
 import { URI } from "vscode-uri";
 import { Telemetry } from "./service/Telemetry";
+import type { LayoutResize } from "./stage/stageManager/concreteMethods/layoutManager/layoutResizeManager";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -471,11 +471,11 @@ declare module "./Project" {
     stageExportPng: StageExportPng;
     stageExportSvg: StageExportSvg;
     generateFromFolder: GenerateFromFolder;
-    serializedDataAdder: SerializedDataAdder;
     keyBindsRegistrar: KeyBindsRegistrar;
     sectionMethods: SectionMethods;
     graphMethods: GraphMethods;
     stageStyleManager: StageStyleManager;
+    layoutResize: LayoutResize;
   }
 }
 

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// FIXME: 移除上面的disable注释
 import MyContextMenuContent from "@/components/context-menu-content";
 import RenderSubWindows from "@/components/render-sub-windows";
 import { Button } from "@/components/ui/button";
@@ -19,7 +17,6 @@ import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/pl
 import { useAtom } from "jotai";
 import { CloudUpload, Copy, Dot, Minus, Square, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 export default function App() {
@@ -31,8 +28,6 @@ export default function App() {
   const [projects, setProjects] = useAtom(projectsAtom);
   const [activeProject, setActiveProject] = useAtom(activeProjectAtom);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
-  const [isWindowCollapsing, setIsWindowCollapsing] = useState(false);
-  const [isClassroomMode, setIsClassroomMode] = Settings.use("isClassroomMode");
   const [isWide, setIsWide] = useState(false);
   const [telemetryEventSent, setTelemetryEventSent] = useState(false);
 
@@ -40,7 +35,7 @@ export default function App() {
   const scrollPositionRef = useRef(0); // 用于保存滚动位置的 ref，防止切换标签页时滚动位置丢失
   const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
 
-  const { t } = useTranslation("app");
+  // const { t } = useTranslation("app");
 
   useEffect(() => {
     window.addEventListener("keyup", async (event) => {

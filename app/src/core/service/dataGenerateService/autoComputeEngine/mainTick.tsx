@@ -1,10 +1,4 @@
 import { Project, service } from "@/core/Project";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
-import { TextRaiseEffectLocated } from "@/core/service/feedbackService/effectEngine/concrete/TextRaiseEffectLocated";
 import { CompareFunctions } from "@/core/service/dataGenerateService/autoComputeEngine/functions/compareLogic";
 import { MathFunctions } from "@/core/service/dataGenerateService/autoComputeEngine/functions/mathLogic";
 import { NodeLogic } from "@/core/service/dataGenerateService/autoComputeEngine/functions/nodeLogic";
@@ -14,10 +8,20 @@ import {
   LogicNodeNameEnum,
   LogicNodeSimpleOperatorEnum,
 } from "@/core/service/dataGenerateService/autoComputeEngine/logicNodeNameEnum";
+import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
+import { TextRaiseEffectLocated } from "@/core/service/feedbackService/effectEngine/concrete/TextRaiseEffectLocated";
+import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
+import { Section } from "@/core/stage/stageObject/entity/Section";
+import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 
 type MathFunctionType = (args: number[]) => number[];
 type StringFunctionType = (args: string[]) => string[];
-type OtherFunctionType = (fatherNodes: ConnectableEntity[], childNodes: ConnectableEntity[]) => string[];
+type OtherFunctionType = (
+  project: Project,
+  fatherNodes: ConnectableEntity[],
+  childNodes: ConnectableEntity[],
+) => string[];
 type StringFunctionMap = Record<string, StringFunctionType>;
 type OtherFunctionMap = Record<string, OtherFunctionType>;
 
@@ -137,7 +141,7 @@ export class AutoCompute {
     [LogicNodeNameEnum.ADD_DATE_TIME]: NodeLogic.addDateTime,
     [LogicNodeNameEnum.PLAY_SOUND]: NodeLogic.playSound,
     [LogicNodeNameEnum.FPS]: NodeLogic.getFps,
-    [LogicNodeNameEnum.GET_NODE_RGBA]: NodeLogic.getNodeRGBA,
+    [LogicNodeNameEnum.GET_NODE_LCHA]: NodeLogic.getNodeLCHA,
     [LogicNodeNameEnum.GET_NODE_UUID]: NodeLogic.getNodeUUID,
     [LogicNodeNameEnum.COLLECT_NODE_DETAILS_BY_RGBA]: NodeLogic.collectNodeDetailsByRGBA,
     [LogicNodeNameEnum.COLLECT_NODE_NAME_BY_RGBA]: NodeLogic.collectNodeNameByRGBA,
@@ -280,6 +284,7 @@ export class AutoCompute {
         if (name === LogicNodeNameEnum.DELAY_COPY) {
           // 延迟复制要传逻辑节点本身的uuid
           const result = this.MapOtherFunction[name](
+            this.project,
             [...this.project.autoComputeUtils.getParentEntities(node), node],
             this.project.autoComputeUtils.getChildTextNodes(node),
           );
@@ -287,6 +292,7 @@ export class AutoCompute {
           continue;
         }
         const result = this.MapOtherFunction[name](
+          this.project,
           this.project.autoComputeUtils.getParentEntities(node),
           this.project.autoComputeUtils.getChildTextNodes(node),
         );

@@ -131,6 +131,9 @@ export class Color {
     }
     return new Color(l, c, h, alpha ?? 1);
   }
+  toArray(): [number, number, number, number] {
+    return [this.l, this.c, this.h, this.a];
+  }
   with(values: { l?: number; c?: number; h?: number; a?: number }) {
     return new Color(
       values.l !== undefined ? values.l : this.l,

@@ -69,6 +69,7 @@ import { SectionPackManager } from "@/core/stage/stageManager/concreteMethods/St
 import { TagManager } from "@/core/stage/stageManager/concreteMethods/StageTagManager";
 import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import { StageManager } from "@/core/stage/stageManager/StageManager";
+import { LayoutResize } from "./stage/stageManager/concreteMethods/layoutManager/layoutResizeManager";
 
 export function loadAllServices(project: Project): void {
   project.registerFileSystemProvider("file", FileSystemProviderFile);
@@ -141,4 +142,5 @@ export function loadAllServices(project: Project): void {
   project.loadService(StageExportSvg);
   project.loadService(GenerateFromFolder);
   project.loadService(KeyBindsRegistrar);
+  project.loadService(LayoutResize);
 }

@@ -260,7 +260,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
     // 画文本底色
     this.project.shapeRenderer.renderRect(
       this.project.renderer.transformWorld2View(edge.textRectangle),
-      this.project.stageStyleManager.currentStyle.Background.toNewAlpha(Settings.windowBackgroundAlpha),
+      this.project.stageStyleManager.currentStyle.Background.with({ a: Settings.windowBackgroundAlpha }),
       Color.Transparent,
       1,
     );

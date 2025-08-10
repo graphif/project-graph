@@ -284,7 +284,7 @@ export class EntityRenderer {
     if (penStroke.isSelected) {
       this.project.collisionBoxRenderer.render(
         penStroke.collisionBox,
-        this.project.stageStyleManager.currentStyle.CollideBoxSelected.toNewAlpha(0.5),
+        this.project.stageStyleManager.currentStyle.CollideBoxSelected.with({ a: 0.5 }),
       );
     }
   }

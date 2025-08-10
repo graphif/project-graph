@@ -15,9 +15,9 @@ export class SearchContentHighlightRenderer {
       this.project.shapeRenderer.renderRect(
         this.project.renderer.transformWorld2View(rect),
         Color.Transparent,
-        this.project.stageStyleManager.currentStyle.effects.warningShadow.toNewAlpha(
-          Math.sin(frameTickIndex * 0.25) * 0.25 + 0.5,
-        ),
+        this.project.stageStyleManager.currentStyle.effects.warningShadow.with({
+          a: Math.sin(frameTickIndex * 0.25) * 0.25 + 0.5,
+        }),
         4,
       );
     }

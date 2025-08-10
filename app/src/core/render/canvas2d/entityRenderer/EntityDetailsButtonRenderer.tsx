@@ -1,5 +1,6 @@
 import { NumberFunctions } from "@/core/algorithm/numberFunctions";
 import { Project, service } from "@/core/Project";
+import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { Vector } from "@graphif/data-structures";
 /**

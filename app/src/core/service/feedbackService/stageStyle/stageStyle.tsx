@@ -59,10 +59,10 @@ export class StageStyle {
     const style = new StageStyle();
     Object.assign(
       style,
-      Object.fromEntries(Object.entries(themeObj?.content.stage).map(([k, v]) => [k, Color.fromCss(v as string)])),
+      Object.fromEntries(Object.entries(themeObj?.content.stage).map(([k, v]) => [k, Color.fromCSS(v as string)])),
     );
     style.effects = Object.fromEntries(
-      Object.entries(themeObj?.content.effects).map(([k, v]) => [k, Color.fromCss(v as string)]),
+      Object.entries(themeObj?.content.effects).map(([k, v]) => [k, Color.fromCSS(v as string)]),
     ) as any as EffectColors;
     return style;
   }

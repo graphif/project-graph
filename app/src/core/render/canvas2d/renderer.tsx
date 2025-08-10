@@ -472,20 +472,20 @@ export class Renderer {
     for (const node of this.project.controller.cutting.warningEntity) {
       this.project.collisionBoxRenderer.render(
         node.collisionBox,
-        this.project.stageStyleManager.currentStyle.effects.warningShadow.toNewAlpha(0.5),
+        this.project.stageStyleManager.currentStyle.effects.warningShadow.with({ a: 0.5 }),
       );
     }
     // 待删除的边
     for (const association of this.project.controller.cutting.warningAssociations) {
       this.project.collisionBoxRenderer.render(
         association.collisionBox,
-        this.project.stageStyleManager.currentStyle.effects.warningShadow.toNewAlpha(0.5),
+        this.project.stageStyleManager.currentStyle.effects.warningShadow.with({ a: 0.5 }),
       );
     }
     for (const section of this.project.controller.cutting.warningSections) {
       this.project.collisionBoxRenderer.render(
         section.collisionBox,
-        this.project.stageStyleManager.currentStyle.effects.warningShadow.toNewAlpha(0.5),
+        this.project.stageStyleManager.currentStyle.effects.warningShadow.with({ a: 0.5 }),
       );
     }
   }

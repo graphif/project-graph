@@ -33,12 +33,8 @@ function getThemeGradient(theme: string) {
   const { content: colors } = Themes.getThemeById(theme)!;
   // 获取上面数组中定义的颜色
   const gradientColors = [colors.background, colors.popover, colors.secondary, colors.accent, colors.stage.Background]
-    .map((it) => Color.fromCss(it))
-    .sort((a, b) => {
-      const hslA = a.rgbToHsl();
-      const hslB = b.rgbToHsl();
-      return hslB.s - hslA.s;
-    });
+    .map((it) => Color.fromCSS(it))
+    .sort((a, b) => b.c - a.c);
   // 生成css渐变
   return `linear-gradient(to right,${gradientColors.join(",")})`;
 }

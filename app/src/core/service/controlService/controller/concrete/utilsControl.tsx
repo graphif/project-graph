@@ -99,7 +99,7 @@ export class ControllerUtils {
           fontSize: Renderer.FONT_SIZE * this.project.camera.currentScale + "px",
           backgroundColor: "transparent",
           color: fontColor,
-          outline: `solid ${2 * this.project.camera.currentScale}px ${this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.25).toString()}`,
+          outline: `solid ${2 * this.project.camera.currentScale}px ${this.project.stageStyleManager.currentStyle.effects.successShadow.with({ a: 0.25 }).toString()}`,
           borderRadius: `${Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale}px`,
         },
         selectAll,

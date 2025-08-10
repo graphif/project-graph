@@ -1,13 +1,16 @@
+import { Project, service } from "@/core/Project";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 
 /**
  * 统一修改大小的布局管理器
  */
-export namespace LayoutResizeManager {
+@service("layoutResize")
+export class LayoutResize {
+  constructor(private readonly project: Project) {}
   /**
    * 统一调整选中文本节点的宽度
    */
-  export function adjustSelectedTextNodeWidth(mode: "maxWidth" | "minWidth" | "average") {
+  adjustSelectedTextNodeWidth(mode: "maxWidth" | "minWidth" | "average") {
     const selectedTextNode = this.project.stageManager
       .getSelectedEntities()
       .filter((entity) => entity instanceof TextNode);

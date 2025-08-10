@@ -51,7 +51,7 @@ export class MouseTipFeedbackEffect extends Effect {
       project.curveRenderer.renderSolidLine(
         hintCenter.add(new Vector(-5, 0)),
         hintCenter.add(new Vector(5, 0)),
-        project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(1 - this.timeProgress.rate),
+        project.stageStyleManager.currentStyle.StageObjectBorder.with({ a: 1 - this.timeProgress.rate }),
         2,
       );
     } else if (this.type === "expand") {
@@ -59,13 +59,13 @@ export class MouseTipFeedbackEffect extends Effect {
       project.curveRenderer.renderSolidLine(
         hintCenter.add(new Vector(-5, 0)),
         hintCenter.add(new Vector(5, 0)),
-        project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(1 - this.timeProgress.rate),
+        project.stageStyleManager.currentStyle.StageObjectBorder.with({ a: 1 - this.timeProgress.rate }),
         2,
       );
       project.curveRenderer.renderSolidLine(
         hintCenter.add(new Vector(0, -5)),
         hintCenter.add(new Vector(0, 5)),
-        project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(1 - this.timeProgress.rate),
+        project.stageStyleManager.currentStyle.StageObjectBorder.with({ a: 1 - this.timeProgress.rate }),
         2,
       );
     } else if (this.type === "moveLeft") {
@@ -73,7 +73,7 @@ export class MouseTipFeedbackEffect extends Effect {
       project.curveRenderer.renderGradientLine(
         MouseLocation.vector().clone(),
         MouseLocation.vector().add(new Vector(100 * (1 - this.timeProgress.rate), 0)),
-        project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(1 - this.timeProgress.rate),
+        project.stageStyleManager.currentStyle.effects.successShadow.with({ a: 1 - this.timeProgress.rate }),
         project.stageStyleManager.currentStyle.effects.successShadow.toTransparent(),
         10 * (1 - this.timeProgress.rate),
       );
@@ -81,7 +81,7 @@ export class MouseTipFeedbackEffect extends Effect {
       project.curveRenderer.renderGradientLine(
         MouseLocation.vector().clone(),
         MouseLocation.vector().add(new Vector(-100 * (1 - this.timeProgress.rate), 0)),
-        project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(1 - this.timeProgress.rate),
+        project.stageStyleManager.currentStyle.effects.successShadow.with({ a: 1 - this.timeProgress.rate }),
         project.stageStyleManager.currentStyle.effects.successShadow.toTransparent(),
         10 * (1 - this.timeProgress.rate),
       );
@@ -89,7 +89,7 @@ export class MouseTipFeedbackEffect extends Effect {
       project.curveRenderer.renderGradientLine(
         MouseLocation.vector().clone(),
         MouseLocation.vector().add(new Vector(0, 100 * (1 - this.timeProgress.rate))),
-        project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(1 - this.timeProgress.rate),
+        project.stageStyleManager.currentStyle.effects.successShadow.with({ a: 1 - this.timeProgress.rate }),
         project.stageStyleManager.currentStyle.effects.successShadow.toTransparent(),
         10 * (1 - this.timeProgress.rate),
       );
@@ -97,7 +97,7 @@ export class MouseTipFeedbackEffect extends Effect {
       project.curveRenderer.renderGradientLine(
         MouseLocation.vector().clone(),
         MouseLocation.vector().add(new Vector(0, -100 * (1 - this.timeProgress.rate))),
-        project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(1 - this.timeProgress.rate),
+        project.stageStyleManager.currentStyle.effects.successShadow.with({ a: 1 - this.timeProgress.rate }),
         project.stageStyleManager.currentStyle.effects.successShadow.toTransparent(),
         10 * (1 - this.timeProgress.rate),
       );
@@ -105,7 +105,7 @@ export class MouseTipFeedbackEffect extends Effect {
       project.curveRenderer.renderGradientLine(
         MouseLocation.vector().clone(),
         MouseLocation.vector().add(this.direction.multiply(-5 * (1 - this.timeProgress.rate))),
-        project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(1 - this.timeProgress.rate),
+        project.stageStyleManager.currentStyle.StageObjectBorder.with({ a: 1 - this.timeProgress.rate }),
         project.stageStyleManager.currentStyle.StageObjectBorder.toTransparent(),
         2 * (1 - this.timeProgress.rate),
       );
@@ -114,14 +114,14 @@ export class MouseTipFeedbackEffect extends Effect {
         MouseLocation.vector().clone(),
         6 * (1 - this.timeProgress.rate),
         Color.Transparent,
-        project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(1 - this.timeProgress.rate),
+        project.stageStyleManager.currentStyle.StageObjectBorder.with({ a: 1 - this.timeProgress.rate }),
         1,
       );
     } else if (this.type === "cameraMoveToMouse") {
       project.curveRenderer.renderDashedLine(
         project.renderer.transformWorld2View(project.camera.location),
         MouseLocation.vector().clone(),
-        project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(1 - this.timeProgress.rate),
+        project.stageStyleManager.currentStyle.effects.successShadow.with({ a: 1 - this.timeProgress.rate }),
         1,
         8,
       );
@@ -132,7 +132,7 @@ export class MouseTipFeedbackEffect extends Effect {
       project.curveRenderer.renderDashedLine(
         project.renderer.transformWorld2View(project.camera.location),
         mouseBackLocation,
-        project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(1 - this.timeProgress.rate),
+        project.stageStyleManager.currentStyle.effects.successShadow.with({ a: 1 - this.timeProgress.rate }),
         1,
         8,
       );

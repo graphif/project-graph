@@ -1,7 +1,7 @@
-import { ProgressNumber, Vector } from "@graphif/data-structures";
-import { Color } from "@graphif/color";
-import { Line } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
+import { EdgeRendererClass } from "@/core/render/canvas2d/entityRenderer/edge/EdgeRendererClass";
+import { Renderer } from "@/core/render/canvas2d/renderer";
+import { SvgUtils } from "@/core/render/svg/SvgUtils";
 import { CircleFlameEffect } from "@/core/service/feedbackService/effectEngine/concrete/CircleFlameEffect";
 import { EdgeCutEffect } from "@/core/service/feedbackService/effectEngine/concrete/EdgeCutEffect";
 import { LineCuttingEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineCuttingEffect";
@@ -10,9 +10,9 @@ import { ConnectableEntity } from "@/core/stage/stageObject/abstract/Connectable
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { Section } from "@/core/stage/stageObject/entity/Section";
-import { SvgUtils } from "@/core/render/svg/SvgUtils";
-import { Renderer } from "@/core/render/canvas2d/renderer";
-import { EdgeRendererClass } from "@/core/render/canvas2d/entityRenderer/edge/EdgeRendererClass";
+import { Color } from "@graphif/color";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
+import { Line } from "@graphif/shapes";
 
 /**
  * 直线渲染器
@@ -277,7 +277,7 @@ export class StraightEdgeRenderer extends EdgeRendererClass {
     this.project.curveRenderer.renderGradientLine(
       this.project.renderer.transformWorld2View(startNode.collisionBox.getRectangle().getCenter()),
       this.project.renderer.transformWorld2View(endNode.collisionBox.getRectangle().getCenter()),
-      this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.5),
+      this.project.stageStyleManager.currentStyle.effects.successShadow.with({ a: 0.5 }),
       this.project.stageStyleManager.currentStyle.effects.successShadow.toSolid(),
       2,
     );

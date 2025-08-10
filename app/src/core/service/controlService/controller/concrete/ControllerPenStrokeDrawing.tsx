@@ -236,7 +236,7 @@ export class ControllerPenStrokeDrawingClass extends ControllerClass {
   public changeCurrentStrokeColorAlpha(dAlpha: number) {
     if (Settings.autoFillPenStrokeColorEnable) {
       const newAlpha = Math.max(Math.min(new Color(...Settings.autoFillPenStrokeColor).a + dAlpha, 1), 0.01);
-      Settings.autoFillPenStrokeColor = new Color(...Settings.autoFillPenStrokeColor).toNewAlpha(newAlpha).toArray();
+      Settings.autoFillPenStrokeColor = new Color(...Settings.autoFillPenStrokeColor).with({ a: newAlpha }).toArray();
     }
   }
 }
