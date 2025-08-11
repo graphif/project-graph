@@ -32,6 +32,8 @@ export class ControllerUtils {
    */
   editTextNode(clickedNode: TextNode, selectAll = true) {
     this.project.controller.isCameraLocked = true;
+    // Disable keyboard shortcuts during text editing to prevent conflicts
+    this.project.keyboardOnlyEngine.setOpenning(false);
     const rectWorld = clickedNode.collisionBox.getRectangle();
     const rectView = this.project.renderer.transformWorld2View(rectWorld);
     const fontColor = (
@@ -109,6 +111,8 @@ export class ControllerUtils {
         SubWindow.close(lastAutoCompleteWindowId);
         clickedNode!.isEditing = false;
         this.project.controller.isCameraLocked = false;
+        // Re-enable keyboard shortcuts after text editing finishes
+        this.project.keyboardOnlyEngine.setOpenning(true);
         // this.project.historyManager.recordStep();
         // 更新选中内容的数量
         this.project.stageObjectSelectCounter.update();
@@ -117,6 +121,8 @@ export class ControllerUtils {
 
   editEdgeText(clickedLineEdge: Edge, selectAll = true) {
     this.project.controller.isCameraLocked = true;
+    // Disable keyboard shortcuts during text editing to prevent conflicts
+    this.project.keyboardOnlyEngine.setOpenning(false);
 
     // clickedLineEdge.isEditing = true;
     const textAreaLocation = this.project.renderer
@@ -149,11 +155,15 @@ export class ControllerUtils {
         // clickedLineEdge!.isEditing = false;
         // 因为这里用的是不透明文本框，所以不需要停止节点上文字的渲染
         this.project.controller.isCameraLocked = false;
+        // Re-enable keyboard shortcuts after text editing finishes
+        this.project.keyboardOnlyEngine.setOpenning(true);
         this.project.historyManager.recordStep();
       });
   }
   editMultiTargetEdgeText(clickedEdge: MultiTargetUndirectedEdge, selectAll = true) {
     this.project.controller.isCameraLocked = true;
+    // Disable keyboard shortcuts during text editing to prevent conflicts
+    this.project.keyboardOnlyEngine.setOpenning(false);
 
     // clickedLineEdge.isEditing = true;
     const textAreaLocation = this.project.renderer
@@ -186,12 +196,16 @@ export class ControllerUtils {
         // clickedLineEdge!.isEditing = false;
         // 因为这里用的是不透明文本框，所以不需要停止节点上文字的渲染
         this.project.controller.isCameraLocked = false;
+        // Re-enable keyboard shortcuts after text editing finishes
+        this.project.keyboardOnlyEngine.setOpenning(true);
         this.project.historyManager.recordStep();
       });
   }
 
   editUrlNodeTitle(clickedUrlNode: UrlNode) {
     this.project.controller.isCameraLocked = true;
+    // Disable keyboard shortcuts during text editing to prevent conflicts
+    this.project.keyboardOnlyEngine.setOpenning(false);
     // 编辑节点
     clickedUrlNode.isEditingTitle = true;
     this.project.inputElement
@@ -215,12 +229,16 @@ export class ControllerUtils {
       .then(() => {
         clickedUrlNode!.isEditingTitle = false;
         this.project.controller.isCameraLocked = false;
+        // Re-enable keyboard shortcuts after text editing finishes
+        this.project.keyboardOnlyEngine.setOpenning(true);
         this.project.historyManager.recordStep();
       });
   }
 
   editSectionTitle(section: Section) {
     this.project.controller.isCameraLocked = true;
+    // Disable keyboard shortcuts during text editing to prevent conflicts
+    this.project.keyboardOnlyEngine.setOpenning(false);
     // 编辑节点
     section.isEditingTitle = true;
     this.project.inputElement
@@ -246,6 +264,8 @@ export class ControllerUtils {
       .then(() => {
         section.isEditingTitle = false;
         this.project.controller.isCameraLocked = false;
+        // Re-enable keyboard shortcuts after text editing finishes
+        this.project.keyboardOnlyEngine.setOpenning(true);
         this.project.historyManager.recordStep();
       });
   }
