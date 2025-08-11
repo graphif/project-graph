@@ -140,7 +140,7 @@ export function GlobalMenu() {
                   }}
                 >
                   <File />
-                  {file.uri.toString()}
+                  {file.uri.fsPath}
                 </Item>
               ))}
               <Separator />

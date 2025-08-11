@@ -50,7 +50,7 @@ export default function KeyboardRecentFilesWindow({ winId = "" }: { winId?: stri
       {isLoading && "loading"}
       {recentFiles.map((it, index) => (
         <span key={index}>
-          [{index + 1}] {it.uri.toString()}
+          [{index + 1}] {it.uri.fsPath}
         </span>
       ))}
     </div>
