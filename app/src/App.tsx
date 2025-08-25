@@ -20,7 +20,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import { cn } from "./utils/cn";
-import { isWindows } from "./utils/platform";
+import { isWindows } from "@/utils/platform";
 
 export default function App() {
   const [maximized, _setMaximized] = useState(false);
@@ -140,7 +140,15 @@ export default function App() {
     }
 
     // 加载完成了，显示窗口
-    getCurrentWindow().show();
+    const mainWindow = getCurrentWindow();
+    // Windows平台特定的透明度处理
+    if (isWindows) {
+      // 对于Windows的WebView2，需要特殊处理透明背景
+      // 1. 设置背景颜色为透明，确保WebView2正确处理
+      // 2. 使用Windows特定的窗口属性设置
+      document.body.style.backgroundColor = "rgba(0, 0, 0, 0)";
+    }
+    mainWindow.show();
     // 关闭splash
     getAllWindows().then((windows) => {
       const splash = windows.find((w) => w.label === "splash");

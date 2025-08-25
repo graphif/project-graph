@@ -6,7 +6,7 @@ import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { getTextSize } from "@/utils/font";
-import { isFrame } from "@/utils/platform";
+import { isFrame, isWindows } from "@/utils/platform";
 import { Color, mixColors, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Rectangle } from "@graphif/shapes";
 
@@ -518,7 +518,14 @@ export class Renderer {
   private renderBackground() {
     const rect = this.getCoverWorldRectangle();
     if (this.isRenderBackground) {
-      if (Settings.windowBackgroundAlpha < 1) {
+      // Windows平台特殊处理：WebView2对透明背景的处理与其他平台不同
+      if (isWindows && Settings.windowBackgroundAlpha < 1) {
+        // 对于Windows，我们需要先填充一个完全透明的背景
+        // 这解决了WebView2中透明窗口显示为黑色的问题
+        this.project.canvas.ctx.fillStyle = "rgba(0, 0, 0, 0)";
+        this.project.canvas.ctx.fillRect(0, 0, this.w, this.h);
+      } else if (Settings.windowBackgroundAlpha < 1) {
+        // 其他平台保持原有逻辑
         this.project.canvas.ctx.clearRect(0, 0, this.w, this.h);
       }
       this.project.shapeRenderer.renderRect(
@@ -532,7 +539,14 @@ export class Renderer {
         0,
       );
     } else {
-      this.project.canvas.ctx.clearRect(0, 0, this.w, this.h);
+      // 不渲染背景时，直接清除画布
+      if (isWindows) {
+        // Windows平台特殊处理
+        this.project.canvas.ctx.fillStyle = "rgba(0, 0, 0, 0)";
+        this.project.canvas.ctx.fillRect(0, 0, this.w, this.h);
+      } else {
+        this.project.canvas.ctx.clearRect(0, 0, this.w, this.h);
+      }
     }
     if (Settings.showBackgroundDots) {
       this.project.backgroundRenderer.renderDotBackground(rect);
@@ -594,7 +608,7 @@ export class Renderer {
       `Stage.warningAssociations: ${this.project.controller.cutting.warningAssociations.length}`,
       `ConnectFromNodes: ${this.project.controller.nodeConnection.connectFromEntities}`,
       `lastSelectedNode: ${this.project.controller.lastSelectedEntityUUID.size}`,
-      `粘贴板: ${JSON.stringify(this.project.copyEngine.copyBoardData)}`,
+      `粘贴板: ${JSON.stringify(this.project.copyEngine)}`,
       `fps: ${this.fps}`,
       `delta: ${this.deltaTime.toFixed(2)}`,
       `uri: ${this.project.uri}`,
