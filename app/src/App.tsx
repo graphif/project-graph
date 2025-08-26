@@ -139,16 +139,7 @@ export default function App() {
       })();
     }
 
-    // 加载完成了，显示窗口
-    const mainWindow = getCurrentWindow();
-    // Windows平台特定的透明度处理
-    if (isWindows) {
-      // 对于Windows的WebView2，需要特殊处理透明背景
-      // 1. 设置背景颜色为透明，确保WebView2正确处理
-      // 2. 使用Windows特定的窗口属性设置
-      document.body.style.backgroundColor = "rgba(0, 0, 0, 0)";
-    }
-    mainWindow.show();
+    getCurrentWindow().show();
     // 关闭splash
     getAllWindows().then((windows) => {
       const splash = windows.find((w) => w.label === "splash");
