@@ -131,7 +131,6 @@ export class ControllerNodeConnectionClass extends ControllerClass {
   }
 
   public mousedown: (event: MouseEvent) => void = (event) => {
-    console.log("Fuck", event.button);
     if (!(event.button == 2 || event.button == 0)) {
       return;
     }
@@ -313,6 +312,10 @@ export class ControllerNodeConnectionClass extends ControllerClass {
 
       this.project.controllerUtils.addTextNodeByLocation(releaseWorldLocation, true).then((uuid) => {
         const createdNode = this.project.stageManager.getTextNodeByUUID(uuid) as ConnectableEntity;
+
+        // 让这个新建的节点进入编辑状态
+        this.project.controllerUtils.textNodeInEditModeByUUID(uuid);
+
         for (const fromEntity of newConnectFromEntities) {
           const connectResult = this.project.stageManager.connectEntity(fromEntity, createdNode);
           if (connectResult) {
