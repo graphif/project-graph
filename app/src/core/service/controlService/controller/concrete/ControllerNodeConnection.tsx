@@ -1,6 +1,7 @@
 import { Project } from "@/core/Project";
 import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
+import { LineEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineEffect";
 import { RectangleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleNoteEffect";
 import { SoundService } from "@/core/service/feedbackService/SoundService";
 import { Settings } from "@/core/service/Settings";
@@ -472,8 +473,66 @@ export class ControllerNodeConnectionClass extends ControllerClass {
       targetRectRate,
     );
 
+    // 添加连接特效
     for (const entity of this.connectFromEntities) {
       this.addConnectEffect(entity, connectToEntity);
+    }
+
+    // 如果端点位置被调整，添加高亮特效
+    if (sourceDirection !== null) {
+      for (const entity of this.connectFromEntities) {
+        const rect = entity.collisionBox.getRectangle();
+        let fromLocation: Vector;
+        let toLocation: Vector;
+
+        switch (sourceDirection) {
+          case Direction.Left:
+            fromLocation = new Vector(rect.left, rect.top);
+            toLocation = new Vector(rect.left, rect.bottom);
+            break;
+          case Direction.Right:
+            fromLocation = new Vector(rect.right, rect.top);
+            toLocation = new Vector(rect.right, rect.bottom);
+            break;
+          case Direction.Up:
+            fromLocation = new Vector(rect.left, rect.top);
+            toLocation = new Vector(rect.right, rect.top);
+            break;
+          case Direction.Down:
+            fromLocation = new Vector(rect.left, rect.bottom);
+            toLocation = new Vector(rect.right, rect.bottom);
+            break;
+        }
+
+        this.project.effects.addEffect(LineEffect.rectangleEdgeTip(fromLocation, toLocation));
+      }
+    }
+
+    if (targetDirection !== null) {
+      const rect = connectToEntity.collisionBox.getRectangle();
+      let fromLocation: Vector;
+      let toLocation: Vector;
+
+      switch (targetDirection) {
+        case Direction.Left:
+          fromLocation = new Vector(rect.left, rect.top);
+          toLocation = new Vector(rect.left, rect.bottom);
+          break;
+        case Direction.Right:
+          fromLocation = new Vector(rect.right, rect.top);
+          toLocation = new Vector(rect.right, rect.bottom);
+          break;
+        case Direction.Up:
+          fromLocation = new Vector(rect.left, rect.top);
+          toLocation = new Vector(rect.right, rect.top);
+          break;
+        case Direction.Down:
+          fromLocation = new Vector(rect.left, rect.bottom);
+          toLocation = new Vector(rect.right, rect.bottom);
+          break;
+      }
+
+      this.project.effects.addEffect(LineEffect.rectangleEdgeTip(fromLocation, toLocation));
     }
   }
 

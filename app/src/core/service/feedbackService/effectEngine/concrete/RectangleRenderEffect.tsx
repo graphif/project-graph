@@ -4,6 +4,9 @@ import { Project } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
 
+/**
+ * 自动吸附对齐的时候闪烁一下实体矩形边框
+ */
 export class RectangleRenderEffect extends Effect {
   constructor(
     public override timeProgress: ProgressNumber,

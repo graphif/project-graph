@@ -17,16 +17,28 @@ export class LineEffect extends Effect {
   ) {
     super(timeProgress);
   }
-  static default(fromLocation: Vector, toLocation: Vector) {
+  static default(fromLocation: Vector, toLocation: Vector, width = 1) {
     return new LineEffect(
       new ProgressNumber(0, 30),
       fromLocation,
       toLocation,
-      this.project.stageStyleManager.currentStyle.StageObjectBorder,
-      this.project.stageStyleManager.currentStyle.StageObjectBorder,
-      1,
+      Color.Green.clone(),
+      Color.Green.clone(),
+      width,
     );
   }
+
+  static rectangleEdgeTip(fromLocation: Vector, toLocation: Vector) {
+    return new LineEffect(
+      new ProgressNumber(0, 70),
+      fromLocation,
+      toLocation,
+      Color.Green.clone(),
+      Color.Green.clone(),
+      15,
+    );
+  }
+
   render(project: Project) {
     if (this.timeProgress.isFull) {
       return;
