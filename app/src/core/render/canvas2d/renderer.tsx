@@ -620,7 +620,7 @@ export class Renderer {
       `粘贴板: ${this.project.copyEngine ? "存在" : "undefined"}`,
       `fps: ${this.fps}`,
       `delta: ${this.deltaTime.toFixed(2)}`,
-      `uri: ${this.project.uri}`,
+      `uri: ${decodeURI(this.project.uri.toString())}`,
       `isEnableEntityCollision: ${Settings.isEnableEntityCollision}`,
       ...this.project.historyManager.deltas.map((patch, index) => `history#${index}: ${JSON.stringify(patch)}`),
     ];

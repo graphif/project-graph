@@ -142,6 +142,9 @@ export class CopyEngine {
         // 开始遍历所有关联，更新uuid
         for (const stageObject2 of pasteData) {
           if (stageObject2 instanceof ConnectableAssociation) {
+            // 更新这个关系对象本身的uuid,因为目前还没有关系的关系，所以可以直接更新。
+            stageObject2.uuid = v4();
+
             if (stageObject2 instanceof Edge) {
               if (stageObject2.source.uuid === oldUUID) {
                 stageObject2.source.uuid = newUUID;

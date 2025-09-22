@@ -146,6 +146,14 @@ export class EntityRenderer {
     }
     // 渲染详细信息
     this.renderEntityDetails(entity);
+    // debug模式下, 左上角渲染一个uuid
+    if (Settings.showDebug) {
+      this.project.textRenderer.renderText(
+        entity.uuid,
+        this.project.renderer.transformWorld2View(entity.collisionBox.getRectangle().leftTop.add(new Vector(0, -10))),
+        4 * this.project.camera.currentScale,
+      );
+    }
   }
 
   private renderConnectPoint(connectPoint: ConnectPoint) {

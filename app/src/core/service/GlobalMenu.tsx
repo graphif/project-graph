@@ -96,6 +96,7 @@ import {
   Undo,
   VenetianMask,
   View,
+  Bug,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -887,6 +888,15 @@ export function GlobalMenu() {
               </Item>
             </SubContent>
           </Sub>
+          <Item
+            disabled={!activeProject}
+            onClick={() => {
+              Settings.showDebug = !Settings.showDebug;
+            }}
+          >
+            <Bug />
+            {activeProject ? <span>开启/关闭Debug 模式</span> : "请先打开工程文件才能使用此功能"}
+          </Item>
         </Content>
       </Menu>
 
