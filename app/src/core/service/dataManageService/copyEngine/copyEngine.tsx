@@ -168,13 +168,15 @@ export class CopyEngine {
       pasteData.filter((it) => it instanceof Entity) as Entity[],
     );
     shouldSelectedEntities.forEach((it) => (it.isSelected = true));
+    // 粘贴到舞台上（必须先粘贴到舞台上，再运行选择标准化、移动函数）
+    this.project.stage.push(...pasteData);
+    // 选中标准化
+    this.project.controllerUtils.selectedEntityNormalizing();
     this.project.stageObjectSelectCounter.update();
 
     // 将所有选中的实体，往右下角移动一点
     const rect = Rectangle.getBoundingRectangle(pasteData.map((it: StageObject) => it.collisionBox.getRectangle()));
-    shouldSelectedEntities.forEach((it) => {
-      it.move(new Vector(0, rect.height));
-    });
+    this.project.entityMoveManager.moveSelectedEntities(new Vector(0, rect.height));
     // 加特效
     const effectRect = Rectangle.getBoundingRectangle(
       shouldSelectedEntities.map((it) => it.collisionBox.getRectangle()),
@@ -187,8 +189,7 @@ export class CopyEngine {
         <p className="text-xs">已帮您自动选中该内容，按下默认快捷键 `F` 即可快速聚焦到该内容</p>
       </div>,
     );
-    // 粘贴到舞台上
-    this.project.stage.push(...pasteData);
+
     // 清空虚拟粘贴板
     VirtualClipboard.clear(); // TODO: 先暂时清空吧。连续两次ctrl + v会导致重叠问题，待排查
   }

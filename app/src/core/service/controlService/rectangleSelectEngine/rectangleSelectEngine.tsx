@@ -200,7 +200,7 @@ export class RectangleSelect {
         }
       }
     }
-    this.selectedEntityNormalizing();
+    this.project.controllerUtils.selectedEntityNormalizing();
   }
 
   /**
@@ -225,25 +225,6 @@ export class RectangleSelect {
       return Settings.rectangleSelectWhenRight;
     } else {
       return Settings.rectangleSelectWhenLeft;
-    }
-  }
-
-  selectedEntityNormalizing() {
-    const entities = this.project.stageManager.getSelectedEntities();
-    const shallowerSections = this.project.sectionMethods.shallowerSection(
-      entities.filter((entity) => entity instanceof Section),
-    );
-    const shallowerEntities = this.project.sectionMethods.shallowerNotSectionEntities(entities);
-    for (const entity of entities) {
-      if (entity instanceof Section) {
-        if (!shallowerSections.includes(entity)) {
-          entity.isSelected = false;
-        }
-      } else {
-        if (!shallowerEntities.includes(entity)) {
-          entity.isSelected = false;
-        }
-      }
     }
   }
 }

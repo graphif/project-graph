@@ -105,6 +105,7 @@ export class EntityRenderer {
         continue;
       }
       this.project.sectionRenderer.render(section);
+      this.renderEntityDebug(section);
     }
     // 4 遍历所有涂鸦实体
     for (const penStroke of this.project.stageManager.getPenStrokes()) {
@@ -117,7 +118,7 @@ export class EntityRenderer {
   }
 
   /**
-   * 父渲染函数
+   * 父渲染函数,这里在代码上游不会传入Section
    * @param entity
    */
   renderEntity(entity: Entity) {
@@ -125,9 +126,7 @@ export class EntityRenderer {
     if (entity.isHiddenBySectionCollapse) {
       return;
     }
-    if (entity instanceof Section) {
-      this.project.sectionRenderer.render(entity);
-    } else if (entity instanceof TextNode) {
+    if (entity instanceof TextNode) {
       this.project.textNodeRenderer.renderTextNode(entity);
     } else if (entity instanceof ConnectPoint) {
       this.renderConnectPoint(entity);
@@ -146,6 +145,10 @@ export class EntityRenderer {
     }
     // 渲染详细信息
     this.renderEntityDetails(entity);
+    this.renderEntityDebug(entity);
+  }
+
+  private renderEntityDebug(entity: Entity) {
     // debug模式下, 左上角渲染一个uuid
     if (Settings.showDebug) {
       this.project.textRenderer.renderText(

@@ -360,6 +360,28 @@ export class ControllerUtils {
     return false;
   }
 
+  /**
+   * 将选中的内容标准化，如果选中了外层的section，也选中了内层的物体，则取消选中内部的物体
+   */
+  public selectedEntityNormalizing() {
+    const selectedEntities = this.project.stageManager.getSelectedEntities();
+    const shallowerSections = this.project.sectionMethods.shallowerSection(
+      selectedEntities.filter((entity) => entity instanceof Section),
+    );
+    const shallowerEntities = this.project.sectionMethods.shallowerNotSectionEntities(selectedEntities);
+    for (const entity of selectedEntities) {
+      if (entity instanceof Section) {
+        if (!shallowerSections.includes(entity)) {
+          entity.isSelected = false;
+        }
+      } else {
+        if (!shallowerEntities.includes(entity)) {
+          entity.isSelected = false;
+        }
+      }
+    }
+  }
+
   // 实验性的双链
   public finishChangeTextNode(textNode: TextNode) {
     // 查找所有无向边，如果无向边的颜色 = (11, 45, 14, 0)，那么就找到了一个关联
