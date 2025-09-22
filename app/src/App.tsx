@@ -350,13 +350,13 @@ export default function App() {
         >
           <span className="text-sm">
             {project.uri.scheme === "draft"
-              ? `草稿 (${project.uri.path})`
+              ? `临时草稿 (${project.uri.path})`
               : project.uri.scheme === "file"
                 ? project.uri.path.split("/").pop()
                 : project.uri.toString()}
           </span>
           <div
-            className="overflow-hidden hover:opacity-75"
+            className="cursor-pointer overflow-hidden hover:opacity-75"
             onClick={async (e) => {
               e.stopPropagation();
               await closeProject(project);
