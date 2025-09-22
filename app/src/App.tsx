@@ -72,7 +72,7 @@ export default function App() {
 
     // 全局错误处理
     window.addEventListener("error", (event) => {
-      Telemetry.event("未知错误", event.error);
+      Telemetry.event("未知错误", String(event.error));
     });
 
     // 监听主题样式切换
