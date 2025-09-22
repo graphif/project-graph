@@ -19,6 +19,9 @@ const donations: DonationData[] = [
   { user: "域名 project-graph.top", note: "zty012", amount: -13.66 },
   // 以下为捐赠用户
 
+  { user: "Freaky Forward.", note: "软件及理念深得我心是我寻找已久的软件！希望能走得更远", amount: 25 },
+  { user: "至岸", note: "", amount: 2 },
+  { user: "MT-F不觉💯", note: "很棒的酷东西，不是吗？", amount: 100 },
   { user: "MT-F不觉💯", note: "非常牛逼的应用", amount: 6.66 },
   { user: "巴巴拉斯", note: "加油！", amount: 20 },
   { user: "丞相何故发笑", note: "", amount: 6.66 },
