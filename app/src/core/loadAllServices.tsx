@@ -69,6 +69,7 @@ import { SectionPackManager } from "@/core/stage/stageManager/concreteMethods/St
 import { TagManager } from "@/core/stage/stageManager/concreteMethods/StageTagManager";
 import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import { StageManager } from "@/core/stage/stageManager/StageManager";
+import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
 
 /**
  * 以下方法在项目初始化之前加载所有服务
@@ -145,6 +146,8 @@ export function loadAllServicesBeforeInit(project: Project): void {
   project.loadService(StageExportSvg);
   project.loadService(GenerateFromFolder);
   project.loadService(KeyBindsRegistrar);
+
+  project.loadService(AutoSaveBackupService);
 }
 
 export function loadAllServicesAfterInit(project: Project): void {

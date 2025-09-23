@@ -80,6 +80,7 @@ import { toast } from "sonner";
 import { getOriginalNameOf } from "virtual:original-class-name";
 import { URI } from "vscode-uri";
 import { Telemetry } from "./service/Telemetry";
+import md5 from "md5";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -354,6 +355,12 @@ export class Project extends EventEmitter<{
     // await writeFile(stashFilePath, encoded);
   }
   async save() {
+    await this.fs.write(this.uri, await this.getFileContent());
+    this.state = ProjectState.Saved;
+  }
+
+  // 备份也要用到这个
+  async getFileContent() {
     const serializedStage = serialize(this.stage);
     const encodedStage = this.encoder.encodeSharedRef(serializedStage);
     const uwriter = new Uint8ArrayWriter();
@@ -367,8 +374,18 @@ export class Project extends EventEmitter<{
     await writer.close();
 
     const fileContent = await uwriter.getData();
-    await this.fs.write(this.uri, fileContent);
-    this.state = ProjectState.Saved;
+    return fileContent;
+  }
+
+  /**
+   * 备份用：生成项目内容的哈希值，用于检测内容是否发生变化
+   */
+  get stageHash() {
+    const serializedStage = serialize(this.stage);
+    // 创建临时Encoder来编码数据
+    const tempEncoder = new Encoder();
+    const encodedStage = tempEncoder.encode(serializedStage);
+    return md5(encodedStage);
   }
 
   /**
