@@ -70,28 +70,38 @@ export class DetailsManager {
 
   /**
    * 将详细信息(platejs格式)转换为markdown字符串
+   * 可能用于：被搜索、渲染在舞台上、详略交换
    * @param details platejs的Value格式内容
    * @returns markdown字符串
    */
   public static detailsToMarkdown(details: Value) {
-    const editor = createPlateEditor({
-      plugins: [
-        ...FloatingToolbarKit,
-        ...FixedToolbarKit,
-        ...BasicMarksKit,
-        ...BasicBlocksKit,
-        ...FontKit,
-        ...TableKit,
-        ...MathKit,
-        ...CodeBlockKit,
-        ...ListKit,
-        ...LinkKit,
-        MarkdownPlugin,
-      ],
-    });
-    editor.children = details;
-    const markdown = editor.api.markdown.serialize();
-    return markdown;
+    try {
+      const editor = createPlateEditor({
+        plugins: [
+          ...FloatingToolbarKit,
+          ...FixedToolbarKit,
+          ...BasicMarksKit,
+          ...BasicBlocksKit,
+          ...FontKit,
+          ...TableKit,
+          ...MathKit,
+          ...CodeBlockKit,
+          ...ListKit,
+          ...LinkKit,
+          MarkdownPlugin,
+        ],
+      });
+      editor.children = details;
+      const markdown = editor.api.markdown.serialize();
+      return markdown;
+    } catch (error) {
+      // TODO: 先暂时这样处理一下，后面再看如何导出成更好的markdown字符串
+      // 这里先记录一个触发错误的情况，就是富文本
+      // [{"children":[{"text":"gfw的泄露","fontFamily":"\"PingFang SC\", HarmonyOS_Regular, \"Helvetica Neue\", \"Microsoft YaHei\", sans-serif","fontSize":"17px","backgroundColor":"rgb(255, 255, 255)","color":"rgb(47, 50, 56)"}],"type":"p","id":"EVpKUIdRu5"}]
+
+      console.error(error);
+      return JSON.stringify(details);
+    }
   }
 
   public static markdownToDetails(md: string) {

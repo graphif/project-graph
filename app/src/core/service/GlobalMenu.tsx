@@ -1088,6 +1088,16 @@ export function GlobalMenu() {
                 >
                   输出选中节点的详细信息
                 </Item>
+                <Item
+                  onClick={() => {
+                    const selectedEntity = activeProject!.stageManager.getSelectedEntities();
+                    for (const entity of selectedEntity) {
+                      console.log(entity.detailsManager.getBeSearchingText());
+                    }
+                  }}
+                >
+                  输出选中节点的详细信息转换成Markdown
+                </Item>
                 <Item onClick={() => LoginWindow.open()}>login</Item>
                 <Item onClick={() => UserWindow.open()}>user</Item>
               </SubContent>
