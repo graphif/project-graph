@@ -21,26 +21,41 @@ import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 export class TagManager {
   constructor(private readonly project: Project) {}
 
+  /**
+   * 和project.tags同步
+   * 用于提高性能
+   * 不要在外界修改
+   */
+  tagSet: Set<string> = new Set();
+
   reset(uuids: string[]) {
     this.project.tags = [];
     for (const uuid of uuids) {
       this.project.tags.push(uuid);
+      this.tagSet.add(uuid);
     }
   }
 
   addTag(uuid: string) {
     this.project.tags.push(uuid);
+    this.tagSet.add(uuid);
   }
 
   removeTag(uuid: string) {
     const index = this.project.tags.indexOf(uuid);
     if (index !== -1) {
       this.project.tags.splice(index, 1);
+      this.tagSet.delete(uuid);
     }
   }
 
+  /**
+   * O(1)查询某uuid是否是标签
+   * @param uuid
+   * @returns
+   */
   hasTag(uuid: string): boolean {
-    return this.project.tags.includes(uuid);
+    return this.tagSet.has(uuid);
   }
 
   /**
@@ -51,6 +66,7 @@ export class TagManager {
     for (const uuid of uuids) {
       if (!this.project.stage.some((stageObject) => stageObject.uuid === uuid)) {
         this.project.tags.splice(this.project.tags.indexOf(uuid), 1);
+        this.tagSet.delete(uuid);
       }
     }
   }
@@ -95,14 +111,9 @@ export class TagManager {
    */
   refreshTagNamesUI() {
     const res: { tagName: string; uuid: string; color: [number, number, number, number] }[] = [];
-    const tagUUIDs = this.project.tags;
-    const tagObjectList: StageObject[] = [];
-    for (const tagUUID of tagUUIDs) {
-      const stageObject = this.project.stageManager.get(tagUUID);
-      if (stageObject) {
-        tagObjectList.push(stageObject);
-      }
-    }
+    const tagObjectList: StageObject[] = this.project.tags
+      .map((tagUUID) => this.project.stageManager.get(tagUUID))
+      .filter((stageObject): stageObject is StageObject => stageObject !== undefined);
 
     for (const tagObject of tagObjectList) {
       let title = "";
