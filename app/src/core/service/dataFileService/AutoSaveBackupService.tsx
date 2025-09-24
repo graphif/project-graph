@@ -1,4 +1,4 @@
-import { Project, service } from "@/core/Project";
+import { Project, ProjectState, service } from "@/core/Project";
 import { appCacheDir } from "@tauri-apps/api/path";
 import { join } from "@tauri-apps/api/path";
 import { exists, writeFile, readDir, stat, remove, mkdir } from "@tauri-apps/plugin-fs";
@@ -20,6 +20,8 @@ export class AutoSaveBackupService {
   // 上次备份内容的哈希值
   private lastBackupHash = "";
 
+  private lastSaveTime = 0;
+
   constructor(private readonly project: Project) {
     this.lastBackupTime = Date.now();
   }
@@ -30,17 +32,28 @@ export class AutoSaveBackupService {
   tick() {
     const now = Date.now();
 
-    // 检查是否开启了自动备份
-    if (!Settings.autoBackup) {
+    // 检查是否达到备份间隔时间（转换为毫秒）
+    if (Settings.autoBackup) {
+      if (now - this.lastBackupTime >= Settings.autoBackupInterval * 1000) {
+        this.lastBackupTime = now;
+        this.autoBackup();
+      }
+    }
+    if (Settings.autoSave) {
+      if (now - this.lastSaveTime >= Settings.autoSaveInterval * 1000) {
+        this.lastSaveTime = now;
+        this.autoSave();
+      }
+    }
+  }
+
+  private async autoSave() {
+    if (!this.project.uri || this.project.isDraft) {
+      // 临时草稿先不备份
       return;
     }
-
-    // 检查是否达到备份间隔时间（转换为毫秒）
-    if (now - this.lastBackupTime >= Settings.autoBackupInterval * 1000) {
-      this.lastBackupTime = now;
-      this.autoBackup().catch((err) => {
-        console.error("自动备份失败:", err);
-      });
+    if (this.project.state === ProjectState.Unsaved) {
+      this.project.save();
     }
   }
 
