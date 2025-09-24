@@ -26,7 +26,7 @@ export default function TagWindow() {
   const [isPerspective, setIsPerspective] = React.useState(false);
 
   function refreshTagNameList() {
-    setTagNameList(project!.stageManager.refreshTags());
+    setTagNameList(project!.tagManager.refreshTagNamesUI());
   }
 
   React.useEffect(() => {
@@ -36,16 +36,16 @@ export default function TagWindow() {
   const handleMoveCameraToTag = (tagUUID: string) => {
     return () => {
       // 跳转到对应位置
-      project.stageManager.moveCameraToTag(tagUUID);
+      project.tagManager.moveCameraToTag(tagUUID);
+      project.controller.resetCountdownTimer();
     };
   };
 
   const handleMouseEnterTag = (tagUUID: string) => {
     return () => {
       if (isMouseEnterMoveCameraAble) {
-        project!.stageManager.moveCameraToTag(tagUUID);
-      } else {
-        console.warn("禁止滑动");
+        project.tagManager.moveCameraToTag(tagUUID);
+        project.controller.resetCountdownTimer();
       }
     };
   };
@@ -58,7 +58,8 @@ export default function TagWindow() {
     ) {
       toast.error("请先选中舞台上的物体, 选中后再点此按钮，即可添标签");
     }
-    project!.stageManager.addTagBySelected();
+    project.tagManager.changeTagBySelected();
+    project.controller.resetCountdownTimer();
     refreshTagNameList();
   };
 

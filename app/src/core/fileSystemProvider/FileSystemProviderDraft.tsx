@@ -15,6 +15,7 @@ export class FileSystemProviderDraft implements FileSystemProvider {
     const uwriter = new Uint8ArrayWriter();
     const writer = new ZipWriter(uwriter);
     writer.add("stage.msgpack", new Uint8ArrayReader(encodedStage));
+    writer.add("tags.msgpack", new Uint8ArrayReader(encode([])));
     await writer.close();
     const fileContent = await uwriter.getData();
     return fileContent;

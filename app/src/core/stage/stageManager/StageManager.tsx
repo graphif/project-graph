@@ -187,9 +187,6 @@ export class StageManager {
       }
       edge.isShifting = isShifting;
     }
-
-    // 对tags进行更新
-    // TODO: this.TagOptions.updateTags();
   }
 
   getTextNodeByUUID(uuid: string): TextNode | null {
@@ -631,17 +628,6 @@ export class StageManager {
     this.project.historyManager.recordStep();
   }
 
-  addTagBySelected() {
-    this.project.tagManager.changeTagBySelected();
-  }
-
-  refreshTags() {
-    return this.project.tagManager.refreshTagNamesUI();
-  }
-
-  moveCameraToTag(tag: string) {
-    this.project.tagManager.moveCameraToTag(tag);
-  }
   connectEntityByCrEdge(fromNode: ConnectableEntity, toNode: ConnectableEntity) {
     return this.project.nodeConnector.addCrEdge(fromNode, toNode);
   }

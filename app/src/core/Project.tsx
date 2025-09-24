@@ -133,6 +133,7 @@ export class Project extends EventEmitter<{
   private _uri: URI;
   private _state: ProjectState = ProjectState.Unsaved;
   public stage: StageObject[] = [];
+  public tags: string[] = [];
   /**
    * string：UUID
    * value: Blob
@@ -234,11 +235,14 @@ export class Project extends EventEmitter<{
       const reader = new ZipReader(new Uint8ArrayReader(fileContent));
       const entries = await reader.getEntries();
       let serializedStageObjects: any[] = [];
+      let tags: string[] = [];
       for (const entry of entries) {
         if (entry.filename === "stage.msgpack") {
           const stageRawData = await entry.getData!(new Uint8ArrayWriter());
           serializedStageObjects = this.decoder.decode(stageRawData) as any[];
-          // console.log(JSON.stringify(serializedStageObjects, null, 2));
+        } else if (entry.filename === "tags.msgpack") {
+          const tagsRawData = await entry.getData!(new Uint8ArrayWriter());
+          tags = this.decoder.decode(tagsRawData) as string[];
         } else if (entry.filename.startsWith("attachments/")) {
           const match = entry.filename.trim().match(/^attachments\/([a-zA-Z0-9-]+)\.([a-zA-Z0-9]+)$/);
           if (!match) {
@@ -253,7 +257,7 @@ export class Project extends EventEmitter<{
         }
       }
       this.stage = deserialize(serializedStageObjects, this);
-      console.log("stage deserialized!!!");
+      this.tags = tags;
     } catch (e) {
       console.warn(e);
     }
@@ -362,11 +366,12 @@ export class Project extends EventEmitter<{
   // 备份也要用到这个
   async getFileContent() {
     const serializedStage = serialize(this.stage);
-    const encodedStage = this.encoder.encodeSharedRef(serializedStage);
+    const encodedStage = this.encoder.encode(serializedStage);
     const uwriter = new Uint8ArrayWriter();
 
     const writer = new ZipWriter(uwriter); // zip writer用于把zip文件写入uint8array writer
     writer.add("stage.msgpack", new Uint8ArrayReader(encodedStage));
+    writer.add("tags.msgpack", new Uint8ArrayReader(this.encoder.encode(this.tags)));
     // 添加附件
     for (const [uuid, attachment] of this.attachments.entries()) {
       writer.add(`attachments/${uuid}.${mime.getExtension(attachment.type)}`, new BlobReader(attachment));

@@ -106,6 +106,7 @@ export class EntityRenderer {
       }
       this.project.sectionRenderer.render(section);
       this.renderEntityDebug(section);
+      this.renderEntityTagShap(section);
     }
     // 4 遍历所有涂鸦实体
     for (const penStroke of this.project.stageManager.getPenStrokes()) {
@@ -146,6 +147,7 @@ export class EntityRenderer {
     // 渲染详细信息
     this.renderEntityDetails(entity);
     this.renderEntityDebug(entity);
+    this.renderEntityTagShap(entity);
   }
 
   private renderEntityDebug(entity: Entity) {
@@ -299,6 +301,23 @@ export class EntityRenderer {
       this.project.stageStyleManager.currentStyle.NodeDetailsText,
       1.2,
       limitLiens,
+    );
+  }
+
+  renderEntityTagShap(entity: Entity) {
+    if (!this.project.tagManager.hasTag(entity.uuid)) {
+      return;
+    }
+    const rect = entity.collisionBox.getRectangle();
+    this.project.shapeRenderer.renderPolygonAndFill(
+      [
+        this.project.renderer.transformWorld2View(rect.leftTop.add(new Vector(0, 8))),
+        this.project.renderer.transformWorld2View(rect.leftCenter.add(new Vector(-15, 0))),
+        this.project.renderer.transformWorld2View(rect.leftBottom.add(new Vector(0, -8))),
+      ],
+      new Color(255, 0, 0, 0.5),
+      this.project.stageStyleManager.currentStyle.StageObjectBorder,
+      2 * this.project.camera.currentScale,
     );
   }
 }

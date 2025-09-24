@@ -20,61 +20,56 @@ import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 @service("tagManager")
 export class TagManager {
   constructor(private readonly project: Project) {}
-  private tags: string[] = [];
 
   reset(uuids: string[]) {
-    this.tags = [];
+    this.project.tags = [];
     for (const uuid of uuids) {
-      this.tags.push(uuid);
+      this.project.tags.push(uuid);
     }
   }
 
   addTag(uuid: string) {
-    this.tags.push(uuid);
+    this.project.tags.push(uuid);
   }
 
   removeTag(uuid: string) {
-    const index = this.tags.indexOf(uuid);
+    const index = this.project.tags.indexOf(uuid);
     if (index !== -1) {
-      this.tags.splice(index, 1);
+      this.project.tags.splice(index, 1);
     }
   }
 
   hasTag(uuid: string): boolean {
-    return this.tags.includes(uuid);
-  }
-
-  getTagUUIDs(): string[] {
-    return this.tags;
+    return this.project.tags.includes(uuid);
   }
 
   /**
    * 清理未引用的标签
    */
   updateTags() {
-    const uuids = this.tags.slice();
+    const uuids = this.project.tags.slice();
     for (const uuid of uuids) {
       if (!this.project.stage.some((stageObject) => stageObject.uuid === uuid)) {
-        this.tags.splice(this.tags.indexOf(uuid), 1);
+        this.project.tags.splice(this.project.tags.indexOf(uuid), 1);
       }
     }
   }
 
   moveUpTag(uuid: string) {
-    const index = this.tags.indexOf(uuid);
+    const index = this.project.tags.indexOf(uuid);
     if (index !== -1 && index > 0) {
-      const temp = this.tags[index - 1];
-      this.tags[index - 1] = uuid;
-      this.tags[index] = temp;
+      const temp = this.project.tags[index - 1];
+      this.project.tags[index - 1] = uuid;
+      this.project.tags[index] = temp;
     }
   }
 
   moveDownTag(uuid: string) {
-    const index = this.tags.indexOf(uuid);
-    if (index !== -1 && index < this.tags.length - 1) {
-      const temp = this.tags[index + 1];
-      this.tags[index + 1] = uuid;
-      this.tags[index] = temp;
+    const index = this.project.tags.indexOf(uuid);
+    if (index !== -1 && index < this.project.tags.length - 1) {
+      const temp = this.project.tags[index + 1];
+      this.project.tags[index + 1] = uuid;
+      this.project.tags[index] = temp;
     }
   }
 
@@ -100,7 +95,7 @@ export class TagManager {
    */
   refreshTagNamesUI() {
     const res: { tagName: string; uuid: string; color: [number, number, number, number] }[] = [];
-    const tagUUIDs = this.getTagUUIDs();
+    const tagUUIDs = this.project.tags;
     const tagObjectList: StageObject[] = [];
     for (const tagUUID of tagUUIDs) {
       const stageObject = this.project.stageManager.get(tagUUID);
@@ -108,14 +103,6 @@ export class TagManager {
         tagObjectList.push(stageObject);
       }
     }
-    // 排序，从上到下，从左到右
-    // tagObjectList.sort((a, b) => {
-    //   const topDiff = a.collisionBox.getRectangle().top - b.collisionBox.getRectangle().top;
-    //   if (topDiff === 0) {
-    //     return a.collisionBox.getRectangle().left - b.collisionBox.getRectangle().left;
-    //   }
-    //   return topDiff;
-    // });
 
     for (const tagObject of tagObjectList) {
       let title = "";
