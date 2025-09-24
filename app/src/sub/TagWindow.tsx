@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { SubWindow } from "@/core/service/SubWindow";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { Angry, MousePointerClick, RefreshCcw, Smile, Tags, Telescope } from "lucide-react";
+import { Angry, MousePointerClick, RefreshCcw, Smile, Table, Tags, Telescope } from "lucide-react";
 import React from "react";
 import { useAtom } from "jotai";
 import { activeProjectAtom } from "@/state";
@@ -114,6 +114,25 @@ export default function TagWindow() {
             <TooltipContent>{isPerspective ? "透视已开启" : "开启透视眼"}</TooltipContent>
           </Tooltip>
         )}
+        {tagNameList.length > 0 && (
+          <Tooltip>
+            <TooltipTrigger>
+              <Button
+                size="icon"
+                onClick={() => {
+                  let y = 0;
+                  for (const tag of tagNameList) {
+                    LittleTagWindow.open(tag.uuid, tag.tagName, 80, y);
+                    y += 80;
+                  }
+                }}
+              >
+                <Table />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>分裂每个标签为单独的小按钮</TooltipContent>
+          </Tooltip>
+        )}
       </div>
 
       {/* 标签列表 */}
@@ -153,6 +172,31 @@ TagWindow.open = () => {
   SubWindow.create({
     title: "标签管理器",
     children: <TagWindow />,
-    rect: new Rectangle(new Vector(100, 100), new Vector(150, 600)),
+    rect: new Rectangle(new Vector(100, 100), new Vector(300, 600)),
+  });
+};
+
+/**
+ * 单个的标签成一个子窗口
+ */
+function LittleTagWindow({ uuid, tagName }: { uuid: string; tagName: string }) {
+  const [project] = useAtom(activeProjectAtom);
+  if (!project) return <></>;
+  const onClick = () => {
+    project.tagManager.moveCameraToTag(uuid);
+    project.controller.resetCountdownTimer();
+  };
+  return (
+    <div className="cursor-pointer" onClick={onClick}>
+      {tagName}
+    </div>
+  );
+}
+
+LittleTagWindow.open = (uuid: string, tagName: string, height: number, y: number) => {
+  SubWindow.create({
+    title: "",
+    children: <LittleTagWindow uuid={uuid} tagName={tagName} />,
+    rect: new Rectangle(new Vector(100, y), new Vector(150, height)),
   });
 };

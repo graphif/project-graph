@@ -55,6 +55,11 @@ export type ChildCameraData = {
 export class StageManager {
   constructor(private readonly project: Project) {}
 
+  /**
+   * TODO: 这个get方法在2.0从O(1)变成O(N)了，可能是引起卡顿的原因，后面待排查
+   * @param uuid
+   * @returns
+   */
   get(uuid: string) {
     return this.project.stage.find((node) => node.uuid === uuid);
   }
