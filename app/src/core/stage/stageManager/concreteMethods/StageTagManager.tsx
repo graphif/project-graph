@@ -20,6 +20,63 @@ import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 @service("tagManager")
 export class TagManager {
   constructor(private readonly project: Project) {}
+  private tags: string[] = [];
+
+  reset(uuids: string[]) {
+    this.tags = [];
+    for (const uuid of uuids) {
+      this.tags.push(uuid);
+    }
+  }
+
+  addTag(uuid: string) {
+    this.tags.push(uuid);
+  }
+
+  removeTag(uuid: string) {
+    const index = this.tags.indexOf(uuid);
+    if (index !== -1) {
+      this.tags.splice(index, 1);
+    }
+  }
+
+  hasTag(uuid: string): boolean {
+    return this.tags.includes(uuid);
+  }
+
+  getTagUUIDs(): string[] {
+    return this.tags;
+  }
+
+  /**
+   * 清理未引用的标签
+   */
+  updateTags() {
+    const uuids = this.tags.slice();
+    for (const uuid of uuids) {
+      if (!this.project.stage.some((stageObject) => stageObject.uuid === uuid)) {
+        this.tags.splice(this.tags.indexOf(uuid), 1);
+      }
+    }
+  }
+
+  moveUpTag(uuid: string) {
+    const index = this.tags.indexOf(uuid);
+    if (index !== -1 && index > 0) {
+      const temp = this.tags[index - 1];
+      this.tags[index - 1] = uuid;
+      this.tags[index] = temp;
+    }
+  }
+
+  moveDownTag(uuid: string) {
+    const index = this.tags.indexOf(uuid);
+    if (index !== -1 && index < this.tags.length - 1) {
+      const temp = this.tags[index + 1];
+      this.tags[index + 1] = uuid;
+      this.tags[index] = temp;
+    }
+  }
 
   /**
    * 将所有选择的实体添加或移除标签
@@ -29,10 +86,10 @@ export class TagManager {
   changeTagBySelected() {
     for (const selectedEntities of this.project.stageManager.getSelectedStageObjects()) {
       // 若有则删，若无则加
-      if (this.project.stageManager.TagOptions.hasTag(selectedEntities.uuid)) {
-        this.project.stageManager.TagOptions.removeTag(selectedEntities.uuid);
+      if (this.hasTag(selectedEntities.uuid)) {
+        this.removeTag(selectedEntities.uuid);
       } else {
-        this.project.stageManager.TagOptions.addTag(selectedEntities.uuid);
+        this.addTag(selectedEntities.uuid);
       }
     }
   }
@@ -43,7 +100,7 @@ export class TagManager {
    */
   refreshTagNamesUI() {
     const res: { tagName: string; uuid: string; color: [number, number, number, number] }[] = [];
-    const tagUUIDs = this.project.stageManager.TagOptions.getTagUUIDs();
+    const tagUUIDs = this.getTagUUIDs();
     const tagObjectList: StageObject[] = [];
     for (const tagUUID of tagUUIDs) {
       const stageObject = this.project.stageManager.get(tagUUID);
@@ -82,10 +139,7 @@ export class TagManager {
           colorItem = tagObject.color.toArray();
         }
       } else if (tagObject instanceof ConnectPoint) {
-        title = tagObject.details.slice(0, 20).trim();
-        if (title.length === 0) {
-          title = "Connect Point: " + tagObject.uuid.slice(0, 4);
-        }
+        title = "Connect Point: " + tagObject.uuid.slice(0, 4);
       } else {
         title = "Unknown: " + tagObject.uuid.slice(0, 4);
       }

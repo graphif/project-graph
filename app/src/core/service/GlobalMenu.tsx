@@ -110,6 +110,7 @@ import { DragFileIntoStageEngine } from "./dataManageService/dragFileIntoStageEn
 import { FeatureFlags } from "./FeatureFlags";
 import { Settings } from "./Settings";
 import { Telemetry } from "./Telemetry";
+import TagWindow from "@/sub/TagWindow";
 
 const Content = MenubarContent;
 const Item = MenubarItem;
@@ -445,8 +446,7 @@ export function GlobalMenu() {
           <Item
             disabled={!activeProject}
             onClick={() => {
-              toast.warning("还没做好");
-              // TagWindow.open()
+              TagWindow.open();
             }}
             className="*:text-destructive! text-destructive!"
           >
@@ -947,11 +947,19 @@ export function GlobalMenu() {
               </Item>
               <Item
                 onClick={() => {
+                  shellOpen("https://www.bilibili.com/video/BV1VVpEe4EXG");
+                }}
+              >
+                <Tv />
+                pyqt 版本更新后使用教程（考古用 2024.9）
+              </Item>
+              <Item
+                onClick={() => {
                   shellOpen("https://www.bilibili.com/video/BV1hmHKeDE9D");
                 }}
               >
                 <Tv />
-                pyqt 版本使用教程（考古用）
+                pyqt 版本使用教程（考古用 2024.8）
               </Item>
             </SubContent>
           </Sub>

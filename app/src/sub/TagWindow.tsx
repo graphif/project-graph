@@ -7,6 +7,7 @@ import React from "react";
 import { useAtom } from "jotai";
 import { activeProjectAtom } from "@/state";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 /**
  * 标签相关面板
@@ -30,7 +31,7 @@ export default function TagWindow() {
 
   React.useEffect(() => {
     refreshTagNameList();
-  }, [open]);
+  }, []);
 
   const handleMoveCameraToTag = (tagUUID: string) => {
     return () => {
@@ -64,41 +65,53 @@ export default function TagWindow() {
   return (
     <div className="flex flex-col">
       <div className="flex justify-center gap-2">
-        <Button
-          size="icon"
-          onClick={handleClickAddTag}
-          // tooltip="选中节点并添加到标签，如果选中了已经是标签的节点，则会移出标签"
-        >
-          <Tags />
-        </Button>
-        <Button
-          size="icon"
-          onClick={refreshTagNameList}
-          // tooltip="如果舞台上的标签发生变更但此处未更新，可以手动刷新"
-        >
-          <RefreshCcw />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger>
+            <Button size="icon" onClick={handleClickAddTag}>
+              <Tags />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>将选中的节点添加到标签，如果选中了已经是标签的节点，则会移出标签</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger>
+            <Button size="icon" onClick={refreshTagNameList}>
+              <RefreshCcw />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>如果舞台上的标签发生变更但此处未更新，可以手动刷新</TooltipContent>
+        </Tooltip>
+
         {tagNameList.length >= 3 && (
-          <Button
-            size="icon"
-            onClick={() => {
-              setIsMouseEnterMoveCameraAble(!isMouseEnterMoveCameraAble);
-            }}
-            // tooltip={isMouseEnterMoveCameraAble ? "快速瞭望模式" : "点击跳转模式"}
-          >
-            {isMouseEnterMoveCameraAble ? <Telescope /> : <MousePointerClick />}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger>
+              <Button
+                size="icon"
+                onClick={() => {
+                  setIsMouseEnterMoveCameraAble(!isMouseEnterMoveCameraAble);
+                }}
+              >
+                {isMouseEnterMoveCameraAble ? <Telescope /> : <MousePointerClick />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{isMouseEnterMoveCameraAble ? "快速瞭望模式" : "点击跳转模式"}</TooltipContent>
+          </Tooltip>
         )}
         {tagNameList.length > 0 && (
-          <Button
-            size="icon"
-            onClick={() => {
-              setIsPerspective(!isPerspective);
-            }}
-            // tooltip={isPerspective ? "透视已开启" : "开启透视眼"}
-          >
-            {isPerspective ? <Angry /> : <Smile />}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger>
+              <Button
+                size="icon"
+                onClick={() => {
+                  setIsPerspective(!isPerspective);
+                }}
+              >
+                {isPerspective ? <Angry /> : <Smile />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{isPerspective ? "透视已开启" : "开启透视眼"}</TooltipContent>
+          </Tooltip>
         )}
       </div>
 
@@ -137,8 +150,8 @@ export default function TagWindow() {
 
 TagWindow.open = () => {
   SubWindow.create({
-    title: "标签",
+    title: "标签管理器",
     children: <TagWindow />,
-    rect: new Rectangle(new Vector(100, 100), new Vector(150, 500)),
+    rect: new Rectangle(new Vector(100, 100), new Vector(150, 600)),
   });
 };
