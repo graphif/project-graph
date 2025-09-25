@@ -22,6 +22,7 @@
     "core:window:allow-set-skip-taskbar",
     "core:window:allow-set-size",
     "core:window:allow-set-always-on-top",
+    "core:window:allow-set-ignore-cursor-events",
     "core:webview:deny-set-webview-zoom",
     "clipboard-manager:allow-clear",
     "clipboard-manager:allow-read-image",

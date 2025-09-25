@@ -15,7 +15,7 @@ import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
 import { arch, platform, version } from "@tauri-apps/plugin-os";
 import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
 import { useAtom } from "jotai";
-import { CloudUpload, Copy, Dot, Minus, Pin, PinOff, Square, X } from "lucide-react";
+import { CloudUpload, Copy, Dot, Minus, Mouse, Pin, PinOff, Square, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
@@ -35,6 +35,7 @@ export default function App() {
   const [dropState, setDropState] = useState<"none" | "open" | "append">("none");
   const [ignoreMouseEvents, setIgnoreMouseEvents] = useState(false);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
+  const [isClickThroughEnabled, setIsClickThroughEnabled] = useState(false);
 
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef(0); // 用于保存滚动位置的 ref，防止切换标签页时滚动位置丢失
@@ -392,8 +393,21 @@ export default function App() {
         {isWide && <ProjectTabs />}
         <div className="h-full flex-1 cursor-grab active:cursor-grabbing" data-tauri-drag-region></div>
         <div className="bg-background shadow-xs flex h-full items-center rounded-md border">
+          {/* 开启穿透点击 */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={async (e) => {
+              //
+              e.stopPropagation();
+              const newState = !isClickThroughEnabled;
+              setIsClickThroughEnabled(newState);
+              await getCurrentWindow().setIgnoreCursorEvents(newState);
+            }}
+          >
+            <Mouse strokeWidth={3} />
+          </Button>
           {/* 钉住 */}
-
           <Button
             variant="ghost"
             size="icon"
