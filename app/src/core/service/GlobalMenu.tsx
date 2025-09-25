@@ -97,6 +97,8 @@ import {
   VenetianMask,
   View,
   Bug,
+  BookOpenText,
+  Globe,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -448,11 +450,9 @@ export function GlobalMenu() {
             onClick={() => {
               TagWindow.open();
             }}
-            className="*:text-destructive! text-destructive!"
           >
             <Tag />
             {t("file.tags")}
-            <Frown />
           </Item>
         </Content>
       </Menu>
@@ -911,6 +911,22 @@ export function GlobalMenu() {
             <MessageCircleWarning />
             {t("about.title")}
           </Item>
+          <Sub>
+            <SubTrigger>
+              <BookOpenText />
+              图文教程
+            </SubTrigger>
+            <SubContent>
+              <Item
+                onClick={() => {
+                  shellOpen("https://project-graph.top/docs/app/features/feature/camera");
+                }}
+              >
+                <Globe />
+                官网文档
+              </Item>
+            </SubContent>
+          </Sub>
           <Sub>
             <SubTrigger>
               <Tv />

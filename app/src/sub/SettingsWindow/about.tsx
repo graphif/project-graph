@@ -3,10 +3,12 @@ import { Dialog } from "@/components/ui/dialog";
 import { getVersion } from "@tauri-apps/api/app";
 import { open } from "@tauri-apps/plugin-shell";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function AboutTab() {
   const [appVersion, setAppVersion] = useState("unknown");
   const [logoClickCount, setLogoClickCount] = useState(0);
+  const { t } = useTranslation("welcome");
 
   useEffect(() => {
     (async () => {
@@ -41,13 +43,14 @@ export default function AboutTab() {
 
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold">Project Graph</h1>
-          <p className="text-sm opacity-50">图形化思维与知识管理桌面应用</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="border-border inline-flex items-center rounded-md border px-2 py-1 text-xs">
-            v{appVersion}
-          </span>
+          <h1 className="flex items-center gap-2 text-3xl font-semibold">
+            <span>Project Graph</span>
+            {/* 把版本号调大一些，因为一些用户录屏反馈的时候会主动打开这个页面，展示版本号。如果字太小了，在手机上看用户录屏视频就看不清了 */}
+            <span className="border-border inline-flex items-center rounded-md border bg-gray-800 px-2 py-1 text-xl">
+              v{appVersion}
+            </span>
+          </h1>
+          <p className="text-sm opacity-50">{t("slogan")}</p>
         </div>
       </header>
 
