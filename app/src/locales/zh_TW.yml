@@ -234,6 +234,11 @@ settings:
     title: 開啟自動儲存間隔（秒）
     description: |
       注意：目前計時時間僅在軟體視窗啟用時計時，軟體最小化後不會計時。
+  clearHistoryWhenManualSave:
+    title: 使用快捷鍵手動儲存時，自動清空歷史記錄
+    description: |
+      當使用Ctrl+S快捷鍵手動儲存檔案時，自動清空操作歷史記錄。
+      開啟此選項可以減少記憶體佔用並保持介面整潔。
   autoBackup:
     title: 開啟自動備份
     description: |

@@ -149,4 +149,5 @@ export const settingsIcons = {
   enableRightClickConnect: MousePointerClick,
   isStealthModeEnabled: Crosshair,
   stealthModeScopeRadius: ScanEye,
+  clearHistoryWhenManualSave: Undo,
 };

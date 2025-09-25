@@ -285,6 +285,11 @@ settings:
     title: Auto-Save Interval (Seconds)
     description: |
       Note: The timer only counts when the software window is active and will not count when the software is minimized.
+  clearHistoryWhenManualSave:
+    title: Clear History When Manually Saving
+    description: |
+      Automatically clear operation history when manually saving files using Ctrl+S shortcut.
+      Enabling this option can reduce memory usage and keep the interface clean.
   autoBackup:
     title: Enable Auto-Backup
     description: |

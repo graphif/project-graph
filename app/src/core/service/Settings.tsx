@@ -154,6 +154,7 @@ export const settingsSchema = z.object({
   telemetry: z.boolean().default(true),
   isStealthModeEnabled: z.boolean().default(false),
   stealthModeScopeRadius: z.number().min(10).max(500).int().default(150),
+  clearHistoryWhenManualSave: z.boolean().default(true),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

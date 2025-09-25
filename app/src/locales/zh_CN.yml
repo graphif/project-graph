@@ -357,6 +357,11 @@ settings:
     title: 开启自动保存间隔（秒）
     description: |
       注意：目前计时时间仅在软件窗口激活时计时，软件最小化后不会计时。
+  clearHistoryWhenManualSave:
+    title: 使用快捷键手动保存时，自动清空历史记录
+    description: |
+      当使用Ctrl+S快捷键手动保存文件时，自动清空操作历史记录。
+      开启此选项可以减少内存占用并保持界面整洁。
   autoBackup:
     title: 开启自动备份
     description: |

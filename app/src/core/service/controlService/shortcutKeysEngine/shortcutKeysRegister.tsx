@@ -398,7 +398,9 @@ export class KeyBindsRegistrar {
       const activeProject = store.get(activeProjectAtom);
       if (activeProject) {
         activeProject.save();
-        activeProject.historyManager.clearHistory();
+        if (Settings.clearHistoryWhenManualSave) {
+          activeProject.historyManager.clearHistory();
+        }
       }
     });
     await this.project.keyBinds.create("newDraft", "C-n", () => {
