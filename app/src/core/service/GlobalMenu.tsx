@@ -99,6 +99,7 @@ import {
   Bug,
   BookOpenText,
   Globe,
+  BugPlay,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -130,6 +131,7 @@ export function GlobalMenu() {
   const [recentFiles, setRecentFiles] = useState<RecentFileManager.RecentFile[]>([]);
   const [version, setVersion] = useState<string>("");
   const [isUnstableVersion, setIsUnstableVersion] = useState(false);
+  const [isDev, setIsDev] = useState(false);
   const { t } = useTranslation("globalMenu");
 
   useEffect(() => {
@@ -139,6 +141,7 @@ export function GlobalMenu() {
   async function refresh() {
     setRecentFiles(await RecentFileManager.getRecentFiles());
     const ver = await getVersion();
+    console.log("version", ver);
     setVersion(ver);
     setIsUnstableVersion(
       ver.includes("alpha") ||
@@ -147,6 +150,7 @@ export function GlobalMenu() {
         ver.includes("dev") ||
         ver.includes("nightly"),
     );
+    setIsDev(ver.includes("dev"));
   }
 
   return (
@@ -1013,9 +1017,10 @@ export function GlobalMenu() {
 
       {isUnstableVersion && (
         <Menu>
-          <Trigger className="*:text-destructive! text-destructive!">
-            <MessageCircleWarning />
-            {t("unstable.title")}
+          <Trigger className={isDev ? "text-green-500" : "*:text-destructive! text-destructive!"}>
+            {/* 增加辨识度，让开发者更容易分辨dev和nightly版本 */}
+            {isDev ? <BugPlay /> : <MessageCircleWarning />}
+            {isDev ? "本地开发模式" : t("unstable.title")}
           </Trigger>
           <Content>
             <Item variant="destructive">v{version}</Item>
