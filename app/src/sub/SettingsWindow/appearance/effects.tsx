@@ -5,7 +5,11 @@ import { Check, Stars, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { getOriginalNameOf } from "virtual:original-class-name";
 
-const effects = Object.values(
+/**
+ * 实测log一下发现它是：
+ * ["CircleChangeRadiusEffect", ...] 这样的格式
+ */
+const effects: string[] = Object.values(
   import.meta.glob("../../../core/service/feedbackService/effectEngine/concrete/*.tsx", {
     eager: true,
   }),
@@ -49,6 +53,7 @@ export default function EffectsPage() {
         }}
         label="全关"
       />
+      <Field color="warning" title="如果修改了效果设置，需要重启软件才能生效。" />
       {effects.map((effectName) => (
         <Field
           key={effectName}
