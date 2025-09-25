@@ -301,9 +301,10 @@ export class Camera {
     // this.currentScale = 0.01;
     const allEntitiesSize = this.project.stageManager.getSize();
     allEntitiesSize.multiply(Settings.cameraResetViewPaddingRate);
+    // 添加缩放上限，与resetByRectangle方法保持一致
     this.currentScale = Math.min(
-      this.project.renderer.h / allEntitiesSize.y,
-      this.project.renderer.w / allEntitiesSize.x,
+      Settings.cameraResetViewPaddingRate,
+      Math.min(this.project.renderer.h / allEntitiesSize.y, this.project.renderer.w / allEntitiesSize.x),
     );
     this.targetScale = this.currentScale;
   }
