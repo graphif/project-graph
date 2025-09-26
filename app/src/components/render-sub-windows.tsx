@@ -23,7 +23,7 @@ export default function RenderSubWindows() {
               height: win.rect.height + "px",
             }}
             className={cn(
-              "pointer-events-auto absolute flex flex-col overflow-hidden transition",
+              "shadow-ring pointer-events-auto absolute flex flex-col overflow-hidden shadow-md transition",
               "data-closed:scale-90 data-closed:opacity-0",
             )}
             onClick={() => {
@@ -80,7 +80,10 @@ export default function RenderSubWindows() {
                 win.titleBarOverlay && "pointer-events-none absolute left-0 top-0 z-[100] w-full",
               )}
             >
-              <div className="flex-1 px-1" data-pg-drag-region={win.titleBarOverlay ? undefined : ""}>
+              <div
+                className="hover:bg-sidebar-accent hover:outline-sidebar-ring flex-1 cursor-grab rounded-sm px-1 transition-all hover:outline hover:outline-dashed active:cursor-grabbing"
+                data-pg-drag-region={win.titleBarOverlay ? undefined : ""}
+              >
                 {win.title}
               </div>
               {win.closable && (
