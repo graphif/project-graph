@@ -39,6 +39,8 @@ import {
   Copy,
   Dot,
   ExternalLink,
+  FlaskConical,
+  ListEnd,
   Grip,
   LayoutDashboard,
   Maximize2,
@@ -60,6 +62,11 @@ import {
   Trash,
   Undo,
   Waypoints,
+  SquaresUnite,
+  SquareSplitHorizontal,
+  Repeat2,
+  ArrowLeftFromLine,
+  Check,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -71,6 +78,7 @@ import { openBrowserOrFile } from "@/utils/externalOpen";
 import { useEffect, useState } from "react";
 import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import ColorWindow from "@/sub/ColorWindow";
+import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
 
 const Content = ContextMenuContent;
 const Item = ContextMenuItem;
@@ -469,17 +477,54 @@ export default function MyContextMenuContent() {
       {/* 存在选中 TextNode */}
       {p.stageManager.getSelectedEntities().filter((it) => it instanceof TextNode).length > 0 && (
         <>
-          <Item
-            onClick={() =>
-              p.stageManager
-                .getSelectedEntities()
-                .filter((it) => it instanceof TextNode)
-                .map((it) => p.sectionPackManager.targetTextNodeToSection(it))
-            }
-          >
-            <Package />
-            {t("convertToSection")}
-          </Item>
+          <Sub>
+            <SubTrigger>
+              <FlaskConical />
+              文本节点妙招
+            </SubTrigger>
+            <SubContent>
+              <Item onClick={() => TextNodeSmartTools.ttt(p)}>
+                <ListEnd />
+                切换换行模式
+              </Item>
+              <Item onClick={() => TextNodeSmartTools.rua(p)}>
+                <SquaresUnite />
+                ruá成一个
+              </Item>
+              <Item onClick={() => TextNodeSmartTools.kei(p)}>
+                <SquareSplitHorizontal />
+                kēi成多个
+              </Item>
+              <Item onClick={() => TextNodeSmartTools.exchangeTextAndDetails(p)}>
+                <Repeat2 />
+                详略交换
+              </Item>
+              <Item onClick={() => TextNodeSmartTools.removeFirstCharFromSelectedTextNodes(p)}>
+                <ArrowLeftFromLine />
+                削头
+              </Item>
+              <Item onClick={() => TextNodeSmartTools.removeLastCharFromSelectedTextNodes(p)}>
+                <ArrowRightFromLine />
+                剃尾
+              </Item>
+              <Item onClick={() => TextNodeSmartTools.okk(p)}>
+                <Check />
+                打勾勾
+              </Item>
+              <Item
+                onClick={() =>
+                  p.stageManager
+                    .getSelectedEntities()
+                    .filter((it) => it instanceof TextNode)
+                    .map((it) => p.sectionPackManager.targetTextNodeToSection(it))
+                }
+              >
+                <Package />
+                {t("convertToSection")}
+              </Item>
+            </SubContent>
+          </Sub>
+
           <Item onClick={() => openBrowserOrFile(p)}>
             <ExternalLink />
             将内容视为路径并打开
