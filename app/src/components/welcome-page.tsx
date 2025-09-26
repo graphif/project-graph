@@ -34,9 +34,7 @@ export default function WelcomePage() {
             <span className="rounded-lg px-2 py-1 text-sm opacity-50 ring">{appVersion}</span>
           </div>
           <div className="text-lg opacity-50">{t("slogan")}</div>
-          <span className="text-xs">
-            此 2.0.x 版本无自动保存功能，注意随手保存，2.1版将会补全所有1.8版本功能并修复所有已知问题，请耐心等待
-          </span>
+          <span className="text-xs">2.1版将会补全所有1.8版本功能并修复所有已知问题，请耐心等待</span>
         </div>
         <div className="flex gap-16">
           <div className="flex flex-col gap-8">

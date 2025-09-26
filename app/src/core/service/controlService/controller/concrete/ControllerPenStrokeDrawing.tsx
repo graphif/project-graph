@@ -119,6 +119,7 @@ export class ControllerPenStrokeDrawingClass extends ControllerClass {
       });
       this.project.stageManager.add(stroke);
     }
+    this.project.historyManager.recordStep();
 
     this.releaseMouseAndClear();
   };
