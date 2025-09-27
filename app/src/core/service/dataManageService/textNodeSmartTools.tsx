@@ -32,32 +32,40 @@ export namespace TextNodeSmartTools {
       toast.error("rua的节点数量不能小于2");
       return;
     }
-    selectedTextNodes = selectedTextNodes.sort(
-      (a, b) => a.collisionBox.getRectangle().location.y - b.collisionBox.getRectangle().location.y,
-    );
-    let mergeText = "";
-    const detailsList = [];
-    for (const textNode of selectedTextNodes) {
-      mergeText += textNode.text + "\n";
-      detailsList.push(textNode.details);
-    }
-    mergeText = mergeText.trim();
-    const leftTop = Rectangle.getBoundingRectangle(
-      selectedTextNodes.map((node) => node.collisionBox.getRectangle()),
-    ).leftTop;
-    const avgColor = averageColors(selectedTextNodes.map((node) => node.color));
-    const newTextNode = new TextNode(project, {
-      uuid: v4(),
-      text: mergeText,
-      collisionBox: new CollisionBox([new Rectangle(new Vector(leftTop.x, leftTop.y), new Vector(400, 1))]),
-      color: avgColor.clone(),
-      sizeAdjust: "manual",
-      details: DetailsManager.mergeDetails(detailsList),
+    setTimeout(() => {
+      project.camera.clearMoveCommander();
+      Dialog.input("请输入连接符（n代表一个换行符，t代表一个制表符）").then((userInput) => {
+        if (userInput === undefined) return;
+        userInput = userInput.replaceAll("n", "\n");
+        userInput = userInput.replaceAll("t", "\t");
+        selectedTextNodes = selectedTextNodes.sort(
+          (a, b) => a.collisionBox.getRectangle().location.y - b.collisionBox.getRectangle().location.y,
+        );
+        let mergeText = "";
+        const detailsList = [];
+        for (const textNode of selectedTextNodes) {
+          mergeText += textNode.text + userInput;
+          detailsList.push(textNode.details);
+        }
+        mergeText = mergeText.trim();
+        const leftTop = Rectangle.getBoundingRectangle(
+          selectedTextNodes.map((node) => node.collisionBox.getRectangle()),
+        ).leftTop;
+        const avgColor = averageColors(selectedTextNodes.map((node) => node.color));
+        const newTextNode = new TextNode(project, {
+          uuid: v4(),
+          text: mergeText,
+          collisionBox: new CollisionBox([new Rectangle(new Vector(leftTop.x, leftTop.y), new Vector(400, 1))]),
+          color: avgColor.clone(),
+          sizeAdjust: userInput.includes("\n") ? "manual" : "auto",
+          details: DetailsManager.mergeDetails(detailsList),
+        });
+        project.stageManager.add(newTextNode);
+        // 选中新的节点
+        newTextNode.isSelected = true;
+        project.stageManager.deleteEntities(selectedTextNodes);
+      });
     });
-    project.stageManager.add(newTextNode);
-    // 选中新的节点
-    newTextNode.isSelected = true;
-    project.stageManager.deleteEntities(selectedTextNodes);
   }
 
   export function kei(project: Project) {
