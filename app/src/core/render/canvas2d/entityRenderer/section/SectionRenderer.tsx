@@ -108,8 +108,6 @@ export class SectionRenderer {
     if (this.project.camera.currentScale >= Section.bigTitleCameraScale) {
       return;
     }
-    const fontSizeVector = this.getFontSizeBySectionSize(section);
-    const fontHeight = fontSizeVector.y;
     this.project.shapeRenderer.renderRect(
       new Rectangle(
         this.project.renderer.transformWorld2View(section.rectangle.location),
@@ -122,10 +120,12 @@ export class SectionRenderer {
       2 * this.project.camera.currentScale,
     );
     // 缩放过小了，显示巨大化文字
-    this.project.textRenderer.renderTextFromCenter(
+    this.project.textRenderer.renderTextInRectangle(
       section.text,
-      this.project.renderer.transformWorld2View(section.rectangle.center),
-      fontHeight * this.project.camera.currentScale,
+      new Rectangle(
+        this.project.renderer.transformWorld2View(section.rectangle.location),
+        section.rectangle.size.multiply(this.project.camera.currentScale),
+      ),
       section.color.a === 1
         ? colorInvert(section.color)
         : colorInvert(this.project.stageStyleManager.currentStyle.Background),

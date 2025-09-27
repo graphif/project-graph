@@ -2,6 +2,7 @@ import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { FONT, getTextSize, replaceTextWhenProtect } from "@/utils/font";
 import { Color, LruCache, Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 import md5 from "md5";
 
 /**
@@ -160,6 +161,37 @@ export class TextRenderer {
     }
     const textSize = getTextSize(text, size);
     this.renderTempText(text, centerLocation.subtract(textSize.divide(2)), size, color);
+  }
+
+  renderTextInRectangle(text: string, rectangle: Rectangle, color: Color): void {
+    if (text.trim().length === 0) return;
+    this.renderTextFromCenter(text, rectangle.center, this.getFontSizeByRectangleSize(text, rectangle).y, color);
+  }
+
+  private getFontSizeByRectangleSize(text: string, rectangle: Rectangle): Vector {
+    // 使用getTextSize获取准确的文本尺寸
+    const baseFontSize = 100;
+    const measuredSize = getTextSize(text, baseFontSize);
+    const ratio = measuredSize.x / measuredSize.y;
+    const sectionRatio = rectangle.size.x / rectangle.size.y;
+
+    // 计算最大可用字体高度
+    let fontHeight;
+    const paddingRatio = 0.9; // 增加边距比例，确保文字不会贴边
+    if (sectionRatio < ratio) {
+      // 宽度受限
+      fontHeight = (rectangle.size.x / ratio) * paddingRatio;
+    } else {
+      // 高度受限
+      fontHeight = rectangle.size.y * paddingRatio;
+    }
+
+    // 确保字体大小合理
+    const minFontSize = 8;
+    const maxFontSize = Math.max(rectangle.size.x, rectangle.size.y) * 0.8; // 限制最大字体
+    fontHeight = Math.max(minFontSize, Math.min(fontHeight, maxFontSize));
+
+    return new Vector(ratio * fontHeight, fontHeight);
   }
 
   /**

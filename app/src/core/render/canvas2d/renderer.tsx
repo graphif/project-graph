@@ -6,7 +6,7 @@ import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { getTextSize } from "@/utils/font";
-import { isFrame } from "@/utils/platform";
+import { isFrame, isMac } from "@/utils/platform";
 import { Color, mixColors, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Rectangle } from "@graphif/shapes";
 
@@ -235,6 +235,24 @@ export class Renderer {
   private renderSelectingRectangle() {
     const rectangle = this.project.rectangleSelect.getRectangle();
     if (rectangle) {
+      if (
+        isMac
+          ? this.project.controller.pressingKeySet.has("meta")
+          : this.project.controller.pressingKeySet.has("control")
+      ) {
+        this.project.textRenderer.renderTextInRectangle(
+          "!",
+          this.transformWorld2View(rectangle),
+          this.project.stageStyleManager.currentStyle.SelectRectangleBorder,
+        );
+      }
+      if (this.project.controller.pressingKeySet.has("shift")) {
+        this.project.textRenderer.renderTextInRectangle(
+          "+",
+          this.transformWorld2View(rectangle),
+          this.project.stageStyleManager.currentStyle.SelectRectangleBorder,
+        );
+      }
       const selectMode = this.project.rectangleSelect.getSelectMode();
       if (selectMode === "intersect") {
         this.project.shapeRenderer.renderRect(
