@@ -1,5 +1,9 @@
 mod cmd;
 
+// 这两行可能不能去掉，否则会导致linux打包软件报错
+use std::path::Path;
+use tauri::Manager;
+
 #[tauri::command]
 fn write_stdout(content: String) {
     println!("{}", content);
