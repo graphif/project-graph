@@ -1,8 +1,5 @@
 mod cmd;
 
-use std::path::Path;
-use tauri::Manager;
-
 #[tauri::command]
 fn write_stdout(content: String) {
     println!("{}", content);
@@ -54,6 +51,8 @@ pub fn run() {
                     .plugin(tauri_plugin_window_state::Builder::new().build())?;
                 app.handle()
                     .plugin(tauri_plugin_updater::Builder::new().build())?;
+                app.handle()
+                    .plugin(tauri_plugin_global_shortcut::Builder::new().build())?;
             }
             Ok(())
         })

@@ -22,6 +22,7 @@ import { URI } from "vscode-uri";
 import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { cn } from "./utils/cn";
 import { isWindows } from "./utils/platform";
+import { register } from "@tauri-apps/plugin-global-shortcut";
 
 export default function App() {
   const [maximized, _setMaximized] = useState(false);
@@ -112,6 +113,25 @@ export default function App() {
       const splash = windows.find((w) => w.label === "splash");
       if (splash) {
         splash.close();
+      }
+    });
+
+    // TODO: 以后整一个全局快捷键系统
+    register("Alt+2", async (event) => {
+      if (event.state === "Pressed") {
+        console.log(isClickThroughEnabled, "isClickThroughEnabled");
+        setIsClickThroughEnabled((prev) => {
+          console.log("prev", prev);
+          if (!prev) {
+            // 开启了穿透点击
+            Settings.windowBackgroundAlpha = 0.2;
+            setIsWindowAlwaysOnTop(true);
+            getCurrentWindow().setAlwaysOnTop(true);
+            toast.warning("您开启了穿透点击，已自动为您打开窗口透明与始终至于顶层");
+          }
+          getCurrentWindow().setIgnoreCursorEvents(!prev);
+          return !prev;
+        });
       }
     });
 
@@ -396,7 +416,7 @@ export default function App() {
           {/* 开启穿透点击 */}
           <Button
             variant="ghost"
-            size="icon"
+            // size="icon"
             className={isClickThroughEnabled ? "" : "opacity-50"}
             onClick={async (e) => {
               //
@@ -409,11 +429,17 @@ export default function App() {
                 Settings.windowBackgroundAlpha = 0.2;
                 setIsWindowAlwaysOnTop(true);
                 await getCurrentWindow().setAlwaysOnTop(true);
-                toast.warning("您开启了穿透点击，已自动为您打开窗口透明与始终至于顶层");
+                toast.warning(
+                  "您开启了穿透点击，已自动为您打开窗口透明与始终至于顶层，用全局快捷键Alt+2可以切换穿透点击状态",
+                );
               }
             }}
           >
-            <Layers2 strokeWidth={3} />
+            {isClickThroughEnabled ? (
+              <span className="text-destructive!">Alt + 2关闭窗口穿透</span>
+            ) : (
+              <Layers2 strokeWidth={3} />
+            )}
           </Button>
           {/* 钉住 */}
           <Button
