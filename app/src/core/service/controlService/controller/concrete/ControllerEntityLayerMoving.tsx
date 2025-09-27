@@ -103,13 +103,14 @@ export class ControllerLayerMovingClass extends ControllerClass {
 
     // 1 计算所有节点应该移动的 delta
     // 1.0 计算当前框选的所有实体的中心位置
-    const centerLocation = Rectangle.getBoundingRectangle(
-      selectedEntities.map((entity) => {
-        return entity.collisionBox.getRectangle();
-      }),
-    ).center;
 
-    const delta = mouseLocation.subtract(centerLocation);
+    const delta = mouseLocation.subtract(
+      Rectangle.getBoundingRectangle(
+        selectedEntities.map((entity) => {
+          return entity.collisionBox.getRectangle();
+        }),
+      ).leftTop,
+    );
     // 4 特效(要先加特效，否则位置已经被改了)
     for (const entity of selectedEntities) {
       this.project.effects.addEffect(new EntityJumpMoveEffect(15, entity.collisionBox.getRectangle(), delta));

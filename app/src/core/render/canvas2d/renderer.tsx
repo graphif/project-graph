@@ -414,64 +414,113 @@ export class Renderer {
     if (this.project.stageManager.getSelectedEntities().length === 0) {
       return;
     }
-    let lineWidth = 8;
-    if (this.project.controller.isMouseDown[0]) {
-      lineWidth = 16;
+
+    const boundingRectangle = Rectangle.getBoundingRectangle(
+      this.project.stageManager.getSelectedEntities().map((entity) => {
+        return entity.collisionBox.getRectangle();
+      }),
+    );
+    const targetBoundingRectangle = new Rectangle(
+      boundingRectangle.location.add(this.project.controller.mouseLocation.subtract(boundingRectangle.location)),
+      boundingRectangle.size.clone(),
+    );
+    const targetSections = this.project.sectionMethods.getSectionsByInnerLocation(
+      this.project.controller.mouseLocation,
+    );
+    for (const targetSection of targetSections) {
+      const sectionAndSelectedBoundingRectagnle = Rectangle.getBoundingRectangle([
+        targetBoundingRectangle,
+        targetSection.collisionBox.getRectangle(),
+      ]);
+      this.project.shapeRenderer.renderDashedRect(
+        new Rectangle(
+          this.transformWorld2View(sectionAndSelectedBoundingRectagnle.location),
+          sectionAndSelectedBoundingRectagnle.size.multiply(this.project.camera.currentScale),
+        ),
+        Color.Transparent,
+        this.project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(0.8),
+        2 * this.project.camera.currentScale,
+        Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+      );
     }
 
-    const selectedEntities = this.project.stageManager.getSelectedEntities();
-    for (const selectedEntity of selectedEntities) {
-      const startLocation = selectedEntity.collisionBox.getRectangle().center;
-      const endLocation = this.project.controller.mouseLocation;
-      const distance = startLocation.distance(endLocation);
-      const height = distance / 2;
-      // 影子
-      this.project.curveRenderer.renderGradientLine(
-        this.transformWorld2View(startLocation),
-        this.transformWorld2View(endLocation),
-        Color.Transparent,
-        new Color(0, 0, 0, 0.2),
-        lineWidth * this.project.camera.currentScale,
-      );
-      this.project.curveRenderer.renderGradientBezierCurve(
-        new CubicBezierCurve(
-          this.transformWorld2View(startLocation),
-          this.transformWorld2View(startLocation.add(new Vector(0, -height))),
-          this.transformWorld2View(endLocation.add(new Vector(0, -height))),
-          this.transformWorld2View(endLocation),
-        ),
-        this.project.stageStyleManager.currentStyle.CollideBoxPreSelected.toTransparent(),
-        this.project.stageStyleManager.currentStyle.CollideBoxPreSelected.toSolid(),
-        lineWidth * this.project.camera.currentScale,
-      );
-      // 画箭头
-      const arrowLen = 10 + distance * 0.01;
-      this.project.curveRenderer.renderBezierCurve(
-        new CubicBezierCurve(
-          this.transformWorld2View(endLocation),
-          this.transformWorld2View(endLocation),
-          this.transformWorld2View(endLocation),
-          this.transformWorld2View(endLocation.add(new Vector(-arrowLen, -arrowLen * 2))),
-        ),
-        this.project.stageStyleManager.currentStyle.CollideBoxPreSelected.toSolid(),
-        lineWidth * this.project.camera.currentScale,
-      );
-      this.project.curveRenderer.renderBezierCurve(
-        new CubicBezierCurve(
-          this.transformWorld2View(endLocation),
-          this.transformWorld2View(endLocation),
-          this.transformWorld2View(endLocation),
-          this.transformWorld2View(endLocation.add(new Vector(arrowLen, -arrowLen * 2))),
-        ),
-        this.project.stageStyleManager.currentStyle.CollideBoxPreSelected.toSolid(),
-        lineWidth * this.project.camera.currentScale,
-      );
-    }
+    this.project.shapeRenderer.renderDashedRect(
+      new Rectangle(
+        this.transformWorld2View(boundingRectangle.location),
+        boundingRectangle.size.multiply(this.project.camera.currentScale),
+      ),
+      Color.Transparent,
+      Color.Green.toNewAlpha(0.5),
+      2 * this.project.camera.currentScale,
+      Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+    );
+    this.project.shapeRenderer.renderDashedRect(
+      new Rectangle(
+        this.transformWorld2View(targetBoundingRectangle.location),
+        targetBoundingRectangle.size.multiply(this.project.camera.currentScale),
+      ),
+      Color.Transparent,
+      Color.Green.toNewAlpha(0.5),
+      2 * this.project.camera.currentScale,
+      Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+    );
+
+    this.renderJumpLine(boundingRectangle.leftTop, targetBoundingRectangle.leftTop);
     this.project.textRenderer.renderTextFromCenter(
       "Jump To",
       this.transformWorld2View(this.project.controller.mouseLocation).subtract(new Vector(0, -30)),
       16,
       this.project.stageStyleManager.currentStyle.CollideBoxPreSelected.toSolid(),
+    );
+  }
+
+  private renderJumpLine(startLocation: Vector, endLocation: Vector) {
+    let lineWidth = 8;
+    if (this.project.controller.isMouseDown[0]) {
+      lineWidth = 16;
+    }
+    const distance = startLocation.distance(endLocation);
+    const height = distance / 2;
+    // 影子
+    this.project.curveRenderer.renderGradientLine(
+      this.transformWorld2View(startLocation),
+      this.transformWorld2View(endLocation),
+      Color.Transparent,
+      new Color(0, 0, 0, 0.2),
+      lineWidth * this.project.camera.currentScale,
+    );
+    this.project.curveRenderer.renderGradientBezierCurve(
+      new CubicBezierCurve(
+        this.transformWorld2View(startLocation),
+        this.transformWorld2View(startLocation.add(new Vector(0, -height))),
+        this.transformWorld2View(endLocation.add(new Vector(0, -height))),
+        this.transformWorld2View(endLocation),
+      ),
+      this.project.stageStyleManager.currentStyle.CollideBoxPreSelected.toTransparent(),
+      this.project.stageStyleManager.currentStyle.CollideBoxPreSelected.toSolid(),
+      lineWidth * this.project.camera.currentScale,
+    );
+    // 画箭头
+    const arrowLen = 10 + distance * 0.01;
+    this.project.curveRenderer.renderBezierCurve(
+      new CubicBezierCurve(
+        this.transformWorld2View(endLocation),
+        this.transformWorld2View(endLocation),
+        this.transformWorld2View(endLocation),
+        this.transformWorld2View(endLocation.add(new Vector(-arrowLen, -arrowLen * 2))),
+      ),
+      this.project.stageStyleManager.currentStyle.CollideBoxPreSelected.toSolid(),
+      lineWidth * this.project.camera.currentScale,
+    );
+    this.project.curveRenderer.renderBezierCurve(
+      new CubicBezierCurve(
+        this.transformWorld2View(endLocation),
+        this.transformWorld2View(endLocation),
+        this.transformWorld2View(endLocation),
+        this.transformWorld2View(endLocation.add(new Vector(arrowLen, -arrowLen * 2))),
+      ),
+      this.project.stageStyleManager.currentStyle.CollideBoxPreSelected.toSolid(),
+      lineWidth * this.project.camera.currentScale,
     );
   }
 

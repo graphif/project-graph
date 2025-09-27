@@ -106,6 +106,26 @@ export class ShapeRenderer {
     this.project.canvas.ctx.stroke();
   }
 
+  renderDashedRect(
+    rect: Rectangle,
+    color: Color,
+    strokeColor: Color,
+    strokeWidth: number,
+    radius: number = 0,
+    dashLength = 5,
+  ) {
+    this.project.canvas.ctx.setLineDash([dashLength, dashLength]);
+    this.project.canvas.ctx.beginPath();
+    this.project.canvas.ctx.roundRect(rect.location.x, rect.location.y, rect.size.x, rect.size.y, radius);
+    this.project.canvas.ctx.fillStyle = color.toString();
+    this.project.canvas.ctx.fill();
+    this.project.canvas.ctx.lineWidth = strokeWidth;
+    this.project.canvas.ctx.strokeStyle = strokeColor.toString();
+    this.project.canvas.ctx.stroke();
+    // 重置线型
+    this.project.canvas.ctx.setLineDash([]);
+  }
+
   /**
    * 画一个带阴影的矩形
    * @param rect
