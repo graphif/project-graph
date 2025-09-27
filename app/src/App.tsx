@@ -15,7 +15,7 @@ import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
 import { arch, platform, version } from "@tauri-apps/plugin-os";
 import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
 import { useAtom } from "jotai";
-import { CloudUpload, Copy, Dot, Minus, Mouse, Pin, PinOff, Square, X } from "lucide-react";
+import { CloudUpload, Copy, Dot, Layers2, Minus, Pin, PinOff, Square, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
@@ -397,15 +397,23 @@ export default function App() {
           <Button
             variant="ghost"
             size="icon"
+            className={isClickThroughEnabled ? "" : "opacity-50"}
             onClick={async (e) => {
               //
               e.stopPropagation();
               const newState = !isClickThroughEnabled;
               setIsClickThroughEnabled(newState);
               await getCurrentWindow().setIgnoreCursorEvents(newState);
+              if (newState) {
+                // 开启了穿透点击
+                Settings.windowBackgroundAlpha = 0.2;
+                setIsWindowAlwaysOnTop(true);
+                await getCurrentWindow().setAlwaysOnTop(true);
+                toast.warning("您开启了穿透点击，已自动为您打开窗口透明与始终至于顶层");
+              }
             }}
           >
-            <Mouse strokeWidth={3} />
+            <Layers2 strokeWidth={3} />
           </Button>
           {/* 钉住 */}
           <Button
@@ -415,11 +423,9 @@ export default function App() {
               e.stopPropagation();
               const tauriWindow = getCurrentWindow();
               if (isWindowAlwaysOnTop) {
-                // 展开
                 setIsWindowAlwaysOnTop(false);
                 await tauriWindow.setAlwaysOnTop(false);
               } else {
-                // 收起
                 setIsWindowAlwaysOnTop(true);
                 await tauriWindow.setAlwaysOnTop(true);
               }
