@@ -13,7 +13,6 @@ import { CollisionBox } from "../../stageObject/collisionBox/collisionBox";
 export class SectionInOutManager {
   constructor(private readonly project: Project) {}
 
-  // 可能存在bug
   goInSection(entities: Entity[], section: Section) {
     for (const entity of entities) {
       if (section.children.includes(entity)) {

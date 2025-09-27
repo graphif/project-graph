@@ -103,18 +103,17 @@ export class ControllerLayerMovingClass extends ControllerClass {
 
     // 1 计算所有节点应该移动的 delta
     // 1.0 计算当前框选的所有实体的中心位置
-    const selectedRectangles = selectedEntities.map((entity) => {
-      return entity.collisionBox.getRectangle();
-    });
-    const centerLocation = Rectangle.getBoundingRectangle(selectedRectangles).center;
+    const centerLocation = Rectangle.getBoundingRectangle(
+      selectedEntities.map((entity) => {
+        return entity.collisionBox.getRectangle();
+      }),
+    ).center;
 
     const delta = mouseLocation.subtract(centerLocation);
     // 4 特效(要先加特效，否则位置已经被改了)
     for (const entity of selectedEntities) {
       this.project.effects.addEffect(new EntityJumpMoveEffect(15, entity.collisionBox.getRectangle(), delta));
     }
-    // 3 移动所有选中的实体 的位置
-    this.project.entityMoveManager.moveSelectedEntities(delta);
 
     // 改变层级
     if (targetSections.length === 0) {
@@ -125,13 +124,15 @@ export class ControllerLayerMovingClass extends ControllerClass {
           this.project.stageManager.goOutSection([entity], currentFatherSection);
 
           // 特效
-          this.project.effects.addEffect(
-            RectanglePushInEffect.sectionGoInGoOut(
-              entity.collisionBox.getRectangle(),
-              currentFatherSection.collisionBox.getRectangle(),
-              true,
-            ),
-          );
+          setTimeout(() => {
+            this.project.effects.addEffect(
+              RectanglePushInEffect.sectionGoInGoOut(
+                entity.collisionBox.getRectangle(),
+                currentFatherSection.collisionBox.getRectangle(),
+                true,
+              ),
+            );
+          });
         }
       }
     } else {
@@ -143,15 +144,20 @@ export class ControllerLayerMovingClass extends ControllerClass {
         // this.project.stageManager.goInSection(selectedEntities, section);
 
         // 特效
-        for (const entity of selectedEntities) {
-          this.project.effects.addEffect(
-            RectanglePushInEffect.sectionGoInGoOut(
-              entity.collisionBox.getRectangle(),
-              section.collisionBox.getRectangle(),
-            ),
-          );
-        }
+        setTimeout(() => {
+          for (const entity of selectedEntities) {
+            this.project.effects.addEffect(
+              RectanglePushInEffect.sectionGoInGoOut(
+                entity.collisionBox.getRectangle(),
+                section.collisionBox.getRectangle(),
+              ),
+            );
+          }
+        });
       }
     }
+
+    // 3 移动所有选中的实体 的位置
+    this.project.entityMoveManager.moveSelectedEntities(delta);
   };
 }
