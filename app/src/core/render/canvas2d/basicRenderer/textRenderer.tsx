@@ -186,8 +186,8 @@ export class TextRenderer {
       fontHeight = rectangle.size.y * paddingRatio;
     }
 
-    // 确保字体大小合理
-    const minFontSize = 8;
+    // 最小字体
+    const minFontSize = 0.1;
     const maxFontSize = Math.max(rectangle.size.x, rectangle.size.y) * 0.8; // 限制最大字体
     fontHeight = Math.max(minFontSize, Math.min(fontHeight, maxFontSize));
 
