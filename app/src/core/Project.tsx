@@ -75,12 +75,12 @@ import { deserialize, serialize } from "@graphif/serializer";
 import { Decoder, Encoder } from "@msgpack/msgpack";
 import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, ZipWriter } from "@zip.js/zip.js";
 import { EventEmitter } from "events";
+import md5 from "md5";
 import mime from "mime";
 import { toast } from "sonner";
 import { getOriginalNameOf } from "virtual:original-class-name";
 import { URI } from "vscode-uri";
 import { Telemetry } from "./service/Telemetry";
-import md5 from "md5";
 
 if (import.meta.hot) {
   import.meta.hot.accept();

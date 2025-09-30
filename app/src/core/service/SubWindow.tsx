@@ -105,6 +105,12 @@ export namespace SubWindow {
     }, 500);
   }
   export function focus(id: string) {
+    // 先把所有窗口的focused设为false
+    store.set(
+      subWindowsAtom,
+      store.get(subWindowsAtom).map((window) => ({ ...window, focused: false })),
+    );
+    // 再把当前窗口的focused设为true，并且把zIndex设为最大
     update(id, { focused: true, zIndex: getMaxZIndex() + 1 });
   }
   export function get(id: string) {
