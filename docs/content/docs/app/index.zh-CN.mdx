@@ -3,26 +3,33 @@ title: 快速开始
 icon: Album
 ---
 
-## 介绍
+import Link from "fumadocs-core/link";
+import { Download, Code, Cloud } from "lucide-react";
 
 Project Graph 是一款专注于快速绘制节点图的桌面工具，旨在帮助用户高效地创建项目拓扑图和进行头脑风暴。用户可以通过简单的拖拽操作来创建和连接节点，从而轻松构建复杂的图结构。该工具还具备层级清晰的结构，能够直观地呈现项目关系或数据关系。
 
-## 安装
+<Link
+  href="/release/latest"
+  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-white no-underline shadow-lg shadow-blue-600/50 transition hover:opacity-90 hover:shadow-xl active:scale-95"
+>
+  <Download />
+  <span>立即下载</span>
+</Link>
 
-### 直接下载安装包
+其他下载方式
 
-[点击此处前往下载页面](/release/latest)
+<Link
+  href="https://github.com/graphif/project-graph/releases"
+  className="bg-fd-accent inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm no-underline transition hover:opacity-90 active:scale-95"
+>
+  <Code size={18} />
+  <span>GitHub Releases</span>
+</Link>
 
-### 从Github Release下载
-
-[点击此处跳转到Github Release页面](https://github.com/LiRenTech/project-graph/releases)
-
-若上方安装包加载失败，请在Github Release页面下载对应系统的安装包
-
-### 从网盘下载
-
-如果github或官网下载链接出了问题，可以尝试从网盘下载安装包。
-
-https://pan.quark.cn/s/d4a90dba9491
-
-由于网盘是手动备份，所以可能版本会落后于最新发布版本。
+<Link
+  href="https://pan.quark.cn/s/d4a90dba9491"
+  className="bg-fd-accent inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm no-underline transition hover:opacity-90 active:scale-95"
+>
+  <Cloud size={18} />
+  <span>夸克网盘 (版本会落后于最新版本)</span>
+</Link>
