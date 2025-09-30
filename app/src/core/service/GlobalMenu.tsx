@@ -23,6 +23,7 @@ import LoginWindow from "@/sub/LoginWindow";
 import NodeDetailsWindow from "@/sub/NodeDetailsWindow";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
 import SettingsWindow from "@/sub/SettingsWindow";
+import TagWindow from "@/sub/TagWindow";
 import TestWindow from "@/sub/TestWindow";
 import UserWindow from "@/sub/UserWindow";
 import { getDeviceId } from "@/utils/otherApi";
@@ -41,9 +42,13 @@ import {
   Airplay,
   AppWindow,
   Axe,
+  BookOpenText,
   Bot,
+  Bug,
+  BugPlay,
   CircleAlert,
   CircleDot,
+  Columns4,
   Dumbbell,
   ExternalLink,
   File,
@@ -63,6 +68,7 @@ import {
   Frown,
   Fullscreen,
   GitCompareArrows,
+  Globe,
   Grip,
   Images,
   Keyboard,
@@ -83,7 +89,6 @@ import {
   Redo,
   RefreshCcwDot,
   Rows4,
-  Columns4,
   Save,
   Scaling,
   Search,
@@ -96,10 +101,6 @@ import {
   Undo,
   VenetianMask,
   View,
-  Bug,
-  BookOpenText,
-  Globe,
-  BugPlay,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -113,7 +114,6 @@ import { DragFileIntoStageEngine } from "./dataManageService/dragFileIntoStageEn
 import { FeatureFlags } from "./FeatureFlags";
 import { Settings } from "./Settings";
 import { Telemetry } from "./Telemetry";
-import TagWindow from "@/sub/TagWindow";
 
 const Content = MenubarContent;
 const Item = MenubarItem;
@@ -461,44 +461,6 @@ export function GlobalMenu() {
         </Content>
       </Menu>
 
-      {/* 位置 */}
-      <Menu>
-        <Trigger>
-          <Folder />
-          {t("location.title")}
-        </Trigger>
-        <Content>
-          <Item
-            onClick={async () => {
-              const path = await join(await dataDir(), "liren.project-graph");
-              await shellOpen(path);
-            }}
-          >
-            <FolderCog />
-            {t("location.openConfigFolder")}
-          </Item>
-          <Item
-            onClick={async () => {
-              const path = await appCacheDir();
-              await shellOpen(path);
-            }}
-          >
-            <FolderClock />
-            {t("location.openCacheFolder")}
-          </Item>
-          <Item
-            disabled={!activeProject || activeProject.isDraft}
-            onClick={async () => {
-              const path = await join(activeProject!.uri.fsPath, "..");
-              await shellOpen(path);
-            }}
-          >
-            <FolderOpen />
-            {t("location.openCurrentProjectFolder")}
-          </Item>
-        </Content>
-      </Menu>
-
       {/* 视野 */}
       <Menu>
         <Trigger disabled={!activeProject}>
@@ -739,6 +701,42 @@ export function GlobalMenu() {
             <Radiation />
             重置全部快捷键
           </Item>
+          <Sub>
+            <SubTrigger>
+              <Folder />
+              打开配置目录
+            </SubTrigger>
+            <SubContent>
+              <Item
+                onClick={async () => {
+                  const path = await join(await dataDir(), "liren.project-graph");
+                  await shellOpen(path);
+                }}
+              >
+                <FolderCog />
+                配置文件夹
+              </Item>
+              <Item
+                onClick={async () => {
+                  const path = await appCacheDir();
+                  await shellOpen(path);
+                }}
+              >
+                <FolderClock />
+                缓存文件夹
+              </Item>
+              <Item
+                disabled={!activeProject || activeProject.isDraft}
+                onClick={async () => {
+                  const path = await join(activeProject!.uri.fsPath, "..");
+                  await shellOpen(path);
+                }}
+              >
+                <FolderOpen />
+                打开当前工程文件所在文件夹
+              </Item>
+            </SubContent>
+          </Sub>
         </Content>
       </Menu>
 

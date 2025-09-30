@@ -31,11 +31,6 @@ globalMenu:
     exportSuccess: 导出成功
     attachments: 附件管理器
     tags: 标签管理器
-  location:
-    title: 位置
-    openConfigFolder: 打开软件配置文件夹
-    openCacheFolder: 打开软件缓存文件夹
-    openCurrentProjectFolder: 打开当前项目文件夹
   view:
     title: 视野
     resetViewAll: 根据全部内容重置视野
@@ -61,8 +56,8 @@ globalMenu:
       generateNodeTreeByTextPlaceholder: 输入树状结构文本...
       indention: 缩进字符数
       generateNodeGraphByText: 根据纯文本生成网状结构
-      generateNodeGraphByTextDescription: 请输入网状结构文本，每行代表一个关系，每一行的格式为 `XXX --> XXX` 
-      generateNodeGraphByTextPlaceholder: | 
+      generateNodeGraphByTextDescription: 请输入网状结构文本，每行代表一个关系，每一行的格式为 `XXX --> XXX`
+      generateNodeGraphByTextPlaceholder: |
         张三 -喜欢-> 李四
         李四 -讨厌-> 王五
         王五 -欣赏-> 张三
@@ -705,7 +700,7 @@ settings:
     title: 潜行模式范围半径
     description: |
       狙击镜的半径
-    
+
 
 effects:
   CircleChangeRadiusEffect:
