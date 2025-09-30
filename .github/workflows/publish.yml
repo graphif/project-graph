@@ -128,7 +128,7 @@ jobs:
           name: ${{ inputs.release_name }}
           branch: ${{ github.ref_name }}
         run: |
-          notes=$(node ./.github/scripts/generate-changelog.mjs)
+          notes=$(GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" node ./.github/scripts/generate-changelog.mjs)
           gh release create "$tag" --target "$branch" --title "$name" --notes "$notes" ${{ inputs.prerelease == true && '--prerelease' || '' }}
 
   publish-tauri:
