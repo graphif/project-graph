@@ -124,7 +124,7 @@ export class KeyboardOnlyTreeEngine {
           new Vector(rootNode instanceof TextNode ? rootNode.collisionBox.getRectangle().width : 100, 100),
         ),
       ]),
-      sizeAdjust: rootNode instanceof TextNode ? rootNode.sizeAdjust : "auto",
+      sizeAdjust: (rootNode instanceof TextNode ? rootNode.sizeAdjust : "auto") as "auto" | "manual",
     });
     this.project.stageManager.add(newNode);
 

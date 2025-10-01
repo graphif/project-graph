@@ -1,7 +1,7 @@
-import { Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 
 /**
  * 瞬间树形布局算法
@@ -73,7 +73,7 @@ export class AutoLayoutFastTree {
    * @returns 排序后的子节点数组
    */
   private getSortedChildNodes(
-    node: ConnectableEntity,
+    _node: ConnectableEntity,
     childNodes: ConnectableEntity[],
     direction: "col" | "row" = "col",
   ): ConnectableEntity[] {

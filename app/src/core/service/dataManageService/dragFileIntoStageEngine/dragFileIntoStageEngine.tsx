@@ -1,13 +1,13 @@
+import { Random } from "@/core/algorithm/random";
 import { Project } from "@/core/Project";
-import { Vector } from "@graphif/data-structures";
-import { readFile } from "@tauri-apps/plugin-fs";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { Rectangle } from "@graphif/shapes";
-import { toast } from "sonner";
-import { Random } from "@/core/algorithm/random";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
+import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
+import { readFile } from "@tauri-apps/plugin-fs";
+import { toast } from "sonner";
 
 /**
  * 处理文件拖拽到舞台的引擎
@@ -43,7 +43,7 @@ export namespace DragFileIntoStageEngine {
     const fileData = await readFile(filePath);
 
     // 创建Blob对象
-    const blob = new Blob([fileData], { type: "image/png" });
+    const blob = new Blob([new Uint8Array(fileData)], { type: "image/png" });
 
     // 添加到项目的attachments中
     const attachmentId = project.addAttachment(blob);

@@ -1,7 +1,12 @@
 import { Project, service } from "@/core/Project";
+import { SetFunctions } from "@/core/algorithm/setFunctions";
+import { ConnectableAssociation } from "@/core/stage/stageObject/abstract/Association";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import { Edge } from "@/core/stage/stageObject/association/Edge";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Serialized } from "@/types/node";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
@@ -9,18 +14,13 @@ import { deserialize, serialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import { Image } from "@tauri-apps/api/image";
 import { readText, writeImage, writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { toast } from "sonner";
+import { v4 } from "uuid";
 import { RectangleNoteEffect } from "../../feedbackService/effectEngine/concrete/RectangleNoteEffect";
 import { RectangleNoteReversedEffect } from "../../feedbackService/effectEngine/concrete/RectangleNoteReversedEffect";
 import { VirtualClipboard } from "./VirtualClipboard";
 import { CopyEngineImage } from "./copyEngineImage";
 import { CopyEngineText } from "./copyEngineText";
-import { toast } from "sonner";
-import { ConnectableAssociation } from "@/core/stage/stageObject/abstract/Association";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
-import { SetFunctions } from "@/core/algorithm/setFunctions";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { v4 } from "uuid";
 
 /**
  * 专门用来管理节点复制的引擎
@@ -135,7 +135,8 @@ export class CopyEngine {
     // 粘贴的时候刷新UUID
     for (const stageObject of pasteData) {
       if (stageObject instanceof Entity) {
-        stageObject.project = this.project; // 没办法，只能这么做了，否则会出现移动速度2倍甚至n倍的bug
+        // @ts-expect-error 没办法，只能这么做了，否则会出现移动速度2倍甚至n倍的bug
+        stageObject.project = this.project;
         const newUUID = v4();
         const oldUUID = stageObject.uuid;
         stageObject.uuid = newUUID;

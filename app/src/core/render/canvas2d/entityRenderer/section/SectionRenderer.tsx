@@ -166,31 +166,31 @@ export class SectionRenderer {
     this.project.textRenderer.renderText(section.text, leftTopFontViewLocation, fontSize, textColor);
   }
 
-  private getFontSizeBySectionSize(section: Section): Vector {
-    // 使用getTextSize获取准确的文本尺寸
-    const baseFontSize = 100;
-    const measuredSize = getTextSize(section.text, baseFontSize);
-    const ratio = measuredSize.x / measuredSize.y;
-    const sectionRatio = section.rectangle.size.x / section.rectangle.size.y;
+  // private getFontSizeBySectionSize(section: Section): Vector {
+  //   // 使用getTextSize获取准确的文本尺寸
+  //   const baseFontSize = 100;
+  //   const measuredSize = getTextSize(section.text, baseFontSize);
+  //   const ratio = measuredSize.x / measuredSize.y;
+  //   const sectionRatio = section.rectangle.size.x / section.rectangle.size.y;
 
-    // 计算最大可用字体高度
-    let fontHeight;
-    const paddingRatio = 0.9; // 增加边距比例，确保文字不会贴边
-    if (sectionRatio < ratio) {
-      // 宽度受限
-      fontHeight = (section.rectangle.size.x / ratio) * paddingRatio;
-    } else {
-      // 高度受限
-      fontHeight = section.rectangle.size.y * paddingRatio;
-    }
+  //   // 计算最大可用字体高度
+  //   let fontHeight;
+  //   const paddingRatio = 0.9; // 增加边距比例，确保文字不会贴边
+  //   if (sectionRatio < ratio) {
+  //     // 宽度受限
+  //     fontHeight = (section.rectangle.size.x / ratio) * paddingRatio;
+  //   } else {
+  //     // 高度受限
+  //     fontHeight = section.rectangle.size.y * paddingRatio;
+  //   }
 
-    // 确保字体大小合理
-    const minFontSize = 8;
-    const maxFontSize = Math.max(section.rectangle.size.x, section.rectangle.size.y) * 0.8; // 限制最大字体
-    fontHeight = Math.max(minFontSize, Math.min(fontHeight, maxFontSize));
+  //   // 确保字体大小合理
+  //   const minFontSize = 8;
+  //   const maxFontSize = Math.max(section.rectangle.size.x, section.rectangle.size.y) * 0.8; // 限制最大字体
+  //   fontHeight = Math.max(minFontSize, Math.min(fontHeight, maxFontSize));
 
-    return new Vector(ratio * fontHeight, fontHeight);
-  }
+  //   return new Vector(ratio * fontHeight, fontHeight);
+  // }
 
   render(section: Section): void {
     if (section.isHiddenBySectionCollapse) {

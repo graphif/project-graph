@@ -95,7 +95,7 @@ export namespace AITools {
         text,
         color: new Color(...(color as [number, number, number, number])),
         collisionBox: new CollisionBox([new Rectangle(new Vector(x, y), new Vector(width, 50))]),
-        sizeAdjust: sizeAdjust ?? "auto",
+        sizeAdjust: (sizeAdjust ?? "auto") as "auto" | "manual",
       });
       project.stageManager.add(node);
       project.historyManager.recordStep();

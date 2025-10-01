@@ -55,7 +55,7 @@ export default function AttachmentsWindow() {
             });
             if (!uuid) return;
             const u8a = await readFile(path);
-            const blob = new Blob([u8a], { type: mime.getType(path) || "application/octet-stream" });
+            const blob = new Blob([new Uint8Array(u8a)], { type: mime.getType(path) || "application/octet-stream" });
             project.attachments.set(uuid, blob);
             refresh();
           }}

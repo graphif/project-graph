@@ -309,7 +309,6 @@ declare module "./Controller" {
   interface Controller {
     associationReshape: ControllerAssociationReshapeClass;
     camera: ControllerCameraClass;
-    copy: ControllerCopyClass;
     cutting: ControllerCuttingClass;
     edgeEdit: ControllerEdgeEditClass;
     entityClickSelectAndMove: ControllerEntityClickSelectAndMoveClass;

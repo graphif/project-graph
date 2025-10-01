@@ -1,4 +1,4 @@
-import { Project, service } from "@/core/Project";
+import { service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { AITools } from "@/core/service/dataManageService/aiEngine/AITools";
 import { fetch } from "@tauri-apps/plugin-http";
@@ -12,7 +12,7 @@ export class AIEngine {
     fetch,
   });
 
-  constructor(private readonly project: Project) {}
+  // constructor(private readonly project: Project) {}
 
   async updateConfig() {
     this.openai.baseURL = Settings.aiApiBaseUrl;

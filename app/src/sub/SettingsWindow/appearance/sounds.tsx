@@ -1,11 +1,11 @@
-import { Settings } from "@/core/service/Settings";
-import { SoundService } from "@/core/service/feedbackService/SoundService";
-import { ExternalLink, Volume2, VolumeX } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { Switch } from "@/components/ui/switch";
 import FileChooser from "@/components/ui/file-chooser";
 import { Popover } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
+import { Settings } from "@/core/service/Settings";
+import { SoundService } from "@/core/service/feedbackService/SoundService";
 import { open } from "@tauri-apps/plugin-shell";
+import { ExternalLink, Volume2, VolumeX } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // 音效配置列表
 const SOUND_CONFIGS = [
@@ -84,7 +84,8 @@ export default function SoundEffectsPage() {
                     kind="file"
                     value={filePath || ""}
                     onChange={(value) => {
-                      Settings[settingKey as keyof typeof Settings] = value;
+                      // @ts-expect-error settingKey is keyof Settings
+                      Settings[settingKey] = value;
                     }}
                   />
                 </div>
