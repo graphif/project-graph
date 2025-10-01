@@ -15,7 +15,7 @@ import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
 import { arch, platform, version } from "@tauri-apps/plugin-os";
 import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
 import { useAtom } from "jotai";
-import { CloudUpload, Copy, Dot, Layers2, Minus, Pin, PinOff, Square, X } from "lucide-react";
+import { CloudUpload, Copy, Dot, Minus, Pin, PinOff, Square, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
@@ -414,7 +414,7 @@ export default function App() {
         <div className="h-full flex-1 cursor-grab active:cursor-grabbing" data-tauri-drag-region></div>
         <div className="bg-background shadow-xs flex h-full items-center rounded-md border">
           {/* 开启穿透点击 */}
-          <Button
+          {/* <Button
             variant="ghost"
             // size="icon"
             className={isClickThroughEnabled ? "" : "opacity-50"}
@@ -440,7 +440,7 @@ export default function App() {
             ) : (
               <Layers2 strokeWidth={3} />
             )}
-          </Button>
+          </Button> */}
           {/* 钉住 */}
           <Button
             variant="ghost"
