@@ -1,6 +1,11 @@
+import { Vector } from "@graphif/data-structures";
 import { Graphics, RenderTexture, TilingSprite } from "pixi.js";
 import { Project } from "../Project";
 
+/**
+ * 背景网格
+ * 同时还用于处理画布的鼠标事件
+ */
 export class BackgroundGrid extends TilingSprite {
   constructor(private project: Project) {
     const patternGraphics = new Graphics();
@@ -19,6 +24,15 @@ export class BackgroundGrid extends TilingSprite {
       this.redraw();
     });
     this.update();
+
+    let lastClickTime = 0;
+    this.project.viewport.on("click", (e) => {
+      const now = Date.now();
+      if (now - lastClickTime < 300) {
+        this.project.nodeAdder.addTextNodeByClick(new Vector(this.project.viewport.toWorld(e.client)), [], true);
+      }
+      lastClickTime = now;
+    });
   }
 
   private update() {

@@ -226,6 +226,7 @@ export class Project extends EventEmitter<{
       console.warn(e);
     }
     this.state = ProjectState.Saved;
+
     // 添加固定的元素
     this.viewport = new Viewport({
       screenWidth: window.innerWidth,
@@ -239,6 +240,7 @@ export class Project extends EventEmitter<{
       })
       .pinch()
       .wheel();
+    this.viewport.moveCenter(500, 500);
     this.pixi.stage.addChild(this.viewport);
     this.viewport.addChild(new BackgroundGrid(this));
     // 在[0,0]渲染一个红色的圆点，表示原点位置
@@ -270,6 +272,7 @@ export class Project extends EventEmitter<{
         this.stage.push(new TextNode(this, { text: "hello world" }));
       }),
     );
+
     // 后初始化服务
     for (const service of postInitServices) {
       this.loadService(service);

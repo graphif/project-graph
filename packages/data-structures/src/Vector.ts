@@ -1,4 +1,5 @@
 import { serializable } from "@graphif/serializer";
+import { Point } from "pixi.js";
 
 export class Vector {
   @serializable
@@ -6,9 +7,18 @@ export class Vector {
   @serializable
   y: number;
 
-  constructor(x: number, y: number) {
-    this.x = x;
-    this.y = y;
+  constructor(x: number, y: number);
+  constructor(pixiPoint: Point);
+  constructor(arg1: number | Point, arg2?: number) {
+    if (typeof arg1 === "number" && typeof arg2 === "number") {
+      this.x = arg1;
+      this.y = arg2;
+    } else if (arg1 instanceof Point) {
+      this.x = arg1.x;
+      this.y = arg1.y;
+    } else {
+      throw new Error("Invalid arguments");
+    }
   }
 
   static getZero(): Vector {

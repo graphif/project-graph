@@ -692,6 +692,9 @@ importers:
       "@graphif/unplugin-original-class-name":
         specifier: workspace:*
         version: link:../unplugin-original-class-name
+      pixi.js:
+        specifier: ^8.13.2
+        version: 8.13.2
     devDependencies:
       tsdown:
         specifier: "catalog:"
