@@ -38,9 +38,6 @@ export const settingsSchema = z.object({
   textScalingBehavior: z
     .union([z.literal("temp"), z.literal("nearestCache"), z.literal("cacheEveryTick")])
     .default("temp"),
-  antialiasing: z
-    .union([z.literal("disabled"), z.literal("low"), z.literal("medium"), z.literal("high")])
-    .default("low"),
   textIntegerLocationAndSizeRender: z.boolean().default(false),
   compatibilityMode: z.boolean().default(false),
   isEnableEntityCollision: z.boolean().default(false),
@@ -155,6 +152,9 @@ export const settingsSchema = z.object({
   isStealthModeEnabled: z.boolean().default(false),
   stealthModeScopeRadius: z.number().min(10).max(500).int().default(150),
   clearHistoryWhenManualSave: z.boolean().default(true),
+  powerPreference: z
+    .union([z.literal("unspecified"), z.literal("highPerformance"), z.literal("lowPower")])
+    .default("unspecified"),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

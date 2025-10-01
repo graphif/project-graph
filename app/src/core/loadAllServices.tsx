@@ -75,81 +75,82 @@ import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupS
  * 以下方法在项目初始化之前加载所有服务
  * @param project
  */
-export function loadAllServicesBeforeInit(project: Project): void {
-  project.registerFileSystemProvider("file", FileSystemProviderFile);
-  project.registerFileSystemProvider("draft", FileSystemProviderDraft);
-  project.loadService(Canvas);
-  project.loadService(InputElement);
-  project.loadService(StageStyleManager);
-  project.loadService(KeyBinds);
-  project.loadService(ControllerUtils);
-  project.loadService(SectionMethods);
-  project.loadService(GraphMethods);
-  project.loadService(Controller);
-  project.loadService(AutoComputeUtils);
-  project.loadService(RenderUtils);
-  project.loadService(WorldRenderUtils);
-  project.loadService(StageManager);
-  project.loadService(AutoCompute); // 自动计算引擎应该早于Camera，因为它会操作摄像机
-  project.loadService(Camera);
-  project.loadService(Renderer);
-  project.loadService(Effects); // Effects必须在Renderer之后
-
-  project.loadService(RectangleSelect);
-  project.loadService(StageNodeRotate);
-  project.loadService(ComplexityDetector);
-  project.loadService(AIEngine);
-  project.loadService(CopyEngine);
-  project.loadService(AutoLayout);
-  project.loadService(AutoLayoutFastTree);
-  project.loadService(LayoutManager);
-  project.loadService(AutoAlign);
-  project.loadService(MouseInteraction);
-  project.loadService(ContentSearch);
-  project.loadService(DeleteManager);
-  project.loadService(NodeAdder);
-  project.loadService(EntityMoveManager);
-  project.loadService(StageUtils);
-  project.loadService(MultiTargetEdgeMove);
-  project.loadService(NodeConnector);
-  project.loadService(StageObjectColorManager);
-  project.loadService(StageObjectSelectCounter);
-  project.loadService(SectionInOutManager);
-  project.loadService(SectionPackManager);
-  project.loadService(TagManager);
-  project.loadService(KeyboardOnlyEngine);
-  project.loadService(KeyboardOnlyGraphEngine);
-  project.loadService(KeyboardOnlyTreeEngine);
-  project.loadService(SelectChangeEngine);
-  project.loadService(TextRenderer);
-  project.loadService(ImageRenderer);
-  project.loadService(ShapeRenderer);
-  project.loadService(EntityRenderer);
-  project.loadService(MultiTargetUndirectedEdgeRenderer);
-  project.loadService(CurveRenderer);
-  project.loadService(SvgRenderer);
-  project.loadService(DrawingControllerRenderer);
-  project.loadService(CollisionBoxRenderer);
-  project.loadService(EntityDetailsButtonRenderer);
-  project.loadService(StraightEdgeRenderer);
-  project.loadService(SymmetryCurveEdgeRenderer);
-  project.loadService(VerticalPolyEdgeRenderer);
-  project.loadService(EdgeRenderer);
-  project.loadService(SectionRenderer);
-  project.loadService(SvgNodeRenderer);
-  project.loadService(TextNodeRenderer);
-  project.loadService(UrlNodeRenderer);
-  project.loadService(BackgroundRenderer);
-  project.loadService(SearchContentHighlightRenderer);
-  project.loadService(StageExport);
-  project.loadService(StageExportPng);
-  project.loadService(StageExportSvg);
-  project.loadService(GenerateFromFolder);
-  project.loadService(KeyBindsRegistrar);
-
-  project.loadService(AutoSaveBackupService);
-}
-
-export function loadAllServicesAfterInit(project: Project): void {
-  project.loadService(HistoryManager);
+export function initProjectWithAllServices(project: Project) {
+  return project.init(
+    {
+      file: FileSystemProviderFile,
+      draft: FileSystemProviderDraft,
+    },
+    [
+      Canvas,
+      InputElement,
+      StageStyleManager,
+      KeyBinds,
+      ControllerUtils,
+      SectionMethods,
+      GraphMethods,
+      Controller,
+      AutoComputeUtils,
+      RenderUtils,
+      WorldRenderUtils,
+      StageManager,
+      AutoCompute,
+      Camera,
+      Renderer,
+      Effects,
+      RectangleSelect,
+      StageNodeRotate,
+      ComplexityDetector,
+      AIEngine,
+      CopyEngine,
+      AutoLayout,
+      AutoLayoutFastTree,
+      LayoutManager,
+      AutoAlign,
+      MouseInteraction,
+      ContentSearch,
+      DeleteManager,
+      NodeAdder,
+      EntityMoveManager,
+      StageUtils,
+      MultiTargetEdgeMove,
+      NodeConnector,
+      StageObjectColorManager,
+      StageObjectSelectCounter,
+      SectionInOutManager,
+      SectionPackManager,
+      TagManager,
+      KeyboardOnlyEngine,
+      KeyboardOnlyGraphEngine,
+      KeyboardOnlyTreeEngine,
+      SelectChangeEngine,
+      TextRenderer,
+      ImageRenderer,
+      ShapeRenderer,
+      EntityRenderer,
+      MultiTargetUndirectedEdgeRenderer,
+      CurveRenderer,
+      SvgRenderer,
+      DrawingControllerRenderer,
+      CollisionBoxRenderer,
+      EntityDetailsButtonRenderer,
+      StraightEdgeRenderer,
+      SymmetryCurveEdgeRenderer,
+      VerticalPolyEdgeRenderer,
+      EdgeRenderer,
+      SectionRenderer,
+      SvgNodeRenderer,
+      TextNodeRenderer,
+      UrlNodeRenderer,
+      BackgroundRenderer,
+      SearchContentHighlightRenderer,
+      StageExport,
+      StageExportPng,
+      StageExportSvg,
+      GenerateFromFolder,
+      KeyBindsRegistrar,
+      AutoSaveBackupService,
+    ],
+    [HistoryManager],
+  );
 }

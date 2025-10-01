@@ -12,6 +12,7 @@ import { Themes } from "@/core/service/Themes";
 import { activeProjectAtom, isClassroomModeAtom, isWindowAlwaysOnTopAtom, projectsAtom } from "@/state";
 import { getVersion } from "@tauri-apps/api/app";
 import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
+import { register } from "@tauri-apps/plugin-global-shortcut";
 import { arch, platform, version } from "@tauri-apps/plugin-os";
 import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
 import { useAtom } from "jotai";
@@ -22,7 +23,6 @@ import { URI } from "vscode-uri";
 import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { cn } from "./utils/cn";
 import { isWindows } from "./utils/platform";
-import { register } from "@tauri-apps/plugin-global-shortcut";
 
 export default function App() {
   const [maximized, _setMaximized] = useState(false);
@@ -74,6 +74,7 @@ export default function App() {
 
     // 全局错误处理
     window.addEventListener("error", (event) => {
+      console.error("捕获到全局错误：", event.error);
       Telemetry.event("未知错误", String(event.error));
     });
 
@@ -160,9 +161,7 @@ export default function App() {
   useEffect(() => {
     if (!canvasWrapperRef.current) return;
     if (!activeProject) return;
-    activeProject.canvas.mount(canvasWrapperRef.current);
-    activeProject.loop();
-    projects.filter((p) => p.uri.toString() !== activeProject.uri.toString()).forEach((p) => p.pause());
+    activeProject.mount(canvasWrapperRef.current);
     activeProject.canvas.element.addEventListener("pointerdown", () => {
       setIgnoreMouseEvents(true);
     });

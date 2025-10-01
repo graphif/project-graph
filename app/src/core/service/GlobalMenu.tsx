@@ -11,7 +11,7 @@ import {
   MenubarTrigger,
 } from "@/components/ui/menubar";
 
-import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
+import { initProjectWithAllServices } from "@/core/loadAllServices";
 import { Project } from "@/core/Project";
 import { activeProjectAtom, isClassroomModeAtom, projectsAtom, store } from "@/state";
 import AIWindow from "@/sub/AIWindow";
@@ -1140,9 +1140,7 @@ export function GlobalMenu() {
 
 export async function onNewDraft() {
   const project = Project.newDraft();
-  loadAllServicesBeforeInit(project);
-  await project.init();
-  loadAllServicesAfterInit(project);
+  await initProjectWithAllServices(project);
   store.set(projectsAtom, [...store.get(projectsAtom), project]);
   store.set(activeProjectAtom, project);
 }
@@ -1212,24 +1210,16 @@ export async function onOpenFile(uri?: URI, source: string = "unknown") {
 
   if (store.get(projectsAtom).some((p) => p.uri.toString() === uri.toString())) {
     store.set(activeProjectAtom, store.get(projectsAtom).find((p) => p.uri.toString() === uri.toString())!);
-    store.get(activeProjectAtom)?.loop();
-    // 把其他项目pause
-    store
-      .get(projectsAtom)
-      .filter((p) => p.uri.toString() !== uri.toString())
-      .forEach((p) => p.pause());
     toast.success("切换到已打开的标签页");
     return;
   }
   const project = new Project(uri);
   const t = performance.now();
-  loadAllServicesBeforeInit(project);
   const loadServiceTime = performance.now() - t;
   await RecentFileManager.addRecentFileByUri(uri);
   toast.promise(
     async () => {
-      await project.init();
-      loadAllServicesAfterInit(project);
+      await initProjectWithAllServices(project);
     },
     {
       loading: "正在打开文件...",

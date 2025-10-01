@@ -13,6 +13,7 @@
     "isolatedModules": true,
     "noEmit": true, // 因为vite使用esbuild打包，tsc只负责类型检查，所以不需要生成js文件
     "jsx": "react-jsx",
+    "esModuleInterop": true,
 
     // 类型检查
     "strict": true,

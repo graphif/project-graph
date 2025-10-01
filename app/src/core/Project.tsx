@@ -1,4 +1,3 @@
-import { Dialog } from "@/components/ui/dialog";
 import { FileSystemProvider, Service } from "@/core/interfaces/Service";
 import type { CurveRenderer } from "@/core/render/canvas2d/basicRenderer/curveRenderer";
 import type { ImageRenderer } from "@/core/render/canvas2d/basicRenderer/ImageRenderer";
@@ -77,10 +76,11 @@ import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, 
 import { EventEmitter } from "events";
 import md5 from "md5";
 import mime from "mime";
-import { toast } from "sonner";
-import { getOriginalNameOf } from "virtual:original-class-name";
+import { Viewport } from "pixi-viewport";
+import { Application } from "pixi.js";
 import { URI } from "vscode-uri";
-import { Telemetry } from "./service/Telemetry";
+import { Settings } from "./service/Settings";
+import { BackgroundGrid } from "./sprites/BackgroundGrid";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -97,8 +97,10 @@ export class Project extends EventEmitter<{
 }> {
   static readonly latestVersion = 18;
 
+  public readonly pixi = new Application();
+  public viewport!: Viewport;
+
   private readonly services = new Map<string, Service>();
-  private readonly tickableServices: Service[] = [];
   /**
    * 工程文件的URI
    * key: 服务ID
@@ -150,7 +152,7 @@ export class Project extends EventEmitter<{
   /**
    * 立刻加载一个新的服务
    */
-  loadService(service: { id?: string; new (...args: any[]): any }) {
+  private loadService(service: { id?: string; new (...args: any[]): any }) {
     if (!service.id) {
       service.id = crypto.randomUUID();
       console.warn("[Project] 服务 %o 未指定 ID，自动生成：%s", service, service.id);
@@ -158,28 +160,37 @@ export class Project extends EventEmitter<{
     const inst = new service(this);
     this.services.set(service.id, inst);
     if ("tick" in inst) {
-      this.tickableServices.push(inst);
+      this.pixi.ticker.add(inst.tick, inst);
     }
     this[service.id as keyof this] = inst as this[keyof this];
   }
-  /**
-   * 立刻销毁一个服务
-   */
-  disposeService(serviceId: string) {
-    const service = this.services.get(serviceId);
-    if (service) {
-      service.dispose?.();
-      this.services.delete(serviceId);
-      this.tickableServices.splice(this.tickableServices.indexOf(service), 1);
-    }
-  }
 
-  /**
-   * 服务加载完成后再调用
-   */
-  async init() {
-    if (!(await this.fs.exists(this.uri))) {
-      return;
+  async init(
+    fileSystemProviders: Record<string, { new (...args: any[]): FileSystemProvider }> = {},
+    services: { id?: string; new (...args: any[]): any }[] = [],
+    postInitServices: { id?: string; new (...args: any[]): any }[] = [],
+  ) {
+    await this.pixi.init({
+      backgroundAlpha: Settings.windowBackgroundAlpha,
+      powerPreference: (
+        {
+          highPerformance: "high-performance",
+          lowPower: "low-power",
+          unspecified: undefined,
+        } as const
+      )[Settings.powerPreference],
+      resizeTo: window,
+    });
+    // 注册文件系统
+    for (const scheme in fileSystemProviders) {
+      this.fileSystemProviders.set(scheme, new fileSystemProviders[scheme](this));
+    }
+    if (!this.fs) {
+      throw new Error(`[Project] 未注册 ${this.uri.scheme} 协议的文件系统提供器`);
+    }
+    // 注册服务
+    for (const service of services) {
+      this.loadService(service);
     }
     try {
       const fileContent = await this.fs.read(this.uri);
@@ -213,50 +224,25 @@ export class Project extends EventEmitter<{
       console.warn(e);
     }
     this.state = ProjectState.Saved;
-  }
-
-  loop() {
-    if (this.rafHandle !== -1) return;
-    const animationFrame = () => {
-      this.tick();
-      this.rafHandle = requestAnimationFrame(animationFrame.bind(this));
-    };
-    animationFrame();
-  }
-  pause() {
-    if (this.rafHandle === -1) return;
-    cancelAnimationFrame(this.rafHandle);
-    this.rafHandle = -1;
-  }
-  private tick() {
-    for (const service of this.tickableServices) {
-      try {
-        service.tick?.();
-      } catch (e) {
-        console.error("[%s] %o", service, e);
-        this.tickableServices.splice(this.tickableServices.indexOf(service), 1);
-        Dialog.buttons(`${getOriginalNameOf(service.constructor)} 发生未知错误`, String(e), [
-          { id: "cancel", label: "取消", variant: "ghost" },
-          { id: "save", label: "保存文件" },
-        ]).then((result) => {
-          if (result === "save") {
-            this.save();
-          }
-        });
-        if (e !== null && typeof e === "object" && "message" in e && e.message === "test") {
-          continue;
-        }
-        toast.promise(
-          Telemetry.event("服务tick方法报错", { service: getOriginalNameOf(service.constructor), error: String(e) }),
-          {
-            loading: "正在上报错误",
-            success: "错误信息已发送给开发者",
-            error: "上报失败",
-          },
-        );
-      }
+    // 添加固定的元素
+    this.viewport = new Viewport({
+      screenWidth: window.innerWidth,
+      screenHeight: window.innerHeight,
+      worldWidth: 1000,
+      worldHeight: 1000,
+      events: this.pixi.renderer.events,
+    })
+      .drag()
+      .pinch()
+      .wheel();
+    this.pixi.stage.addChild(this.viewport);
+    this.viewport.addChild(new BackgroundGrid(this));
+    // 后初始化服务
+    for (const service of postInitServices) {
+      this.loadService(service);
     }
   }
+
   /**
    * 用户关闭标签页时，销毁工程
    */
@@ -271,7 +257,6 @@ export class Project extends EventEmitter<{
     }
     await Promise.allSettled(promises);
     this.services.clear();
-    this.tickableServices.length = 0;
   }
 
   /**
@@ -344,14 +329,6 @@ export class Project extends EventEmitter<{
     return md5(encodedStage);
   }
 
-  /**
-   * 注册一个文件管理器
-   * @param scheme 目前有 "file" | "draft"， 以后可能有其他的协议
-   */
-  registerFileSystemProvider(scheme: string, provider: { new (...args: any[]): FileSystemProvider }) {
-    this.fileSystemProviders.set(scheme, new provider(this));
-  }
-
   get fs(): FileSystemProvider {
     return this.fileSystemProviders.get(this.uri.scheme)!;
   }
@@ -367,13 +344,16 @@ export class Project extends EventEmitter<{
     this._state = state;
     this.emit("state-change", state);
   }
-
   get state(): ProjectState {
     return this._state;
   }
 
   get isRunning(): boolean {
     return this.rafHandle !== -1;
+  }
+
+  mount(wrapper: HTMLElement) {
+    wrapper.appendChild(this.pixi.canvas);
   }
 }
 

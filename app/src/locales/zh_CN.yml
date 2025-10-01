@@ -199,7 +199,7 @@ settings:
   windowBackgroundAlpha:
     title: 窗口背景透明度
     description: |
-      *从1改到小于1的值需要重新打开文件才能生效
+      需要重新打开文件才能生效
   showDebug:
     title: 显示调试信息
     description: |
@@ -700,6 +700,12 @@ settings:
     title: 潜行模式范围半径
     description: |
       狙击镜的半径
+  powerPreference:
+    title: 性能偏好
+    options:
+      unspecified: 未指定
+      lowPower: 低功耗
+      highPerformance: 高性能
 
 
 effects:
