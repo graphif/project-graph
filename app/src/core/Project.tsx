@@ -96,30 +96,6 @@ export class Project extends EventEmitter<{
   contextmenu: [location: Vector];
 }> {
   static readonly latestVersion = 18;
-  /**
-   * 仅开发环境有效，用于热重载服务
-   */
-  static readonly serviceId2ModulePathMap = new Map<string, string>();
-  static {
-    if (import.meta.hot) {
-      Object.entries(
-        import.meta.glob("./**/*.tsx", {
-          eager: true,
-          import: "default",
-          // 每个服务类上面都会有@service装饰器，所以只要用正则匹配一下就可以了，所有不用解析模块
-          query: "?raw",
-        }),
-      ).forEach(([k, v]) => {
-        const idMatch = (v as string).match(/^@service\("([a-zA-Z]+)"\)$/m);
-        if (!idMatch) {
-          return;
-        }
-        const id = idMatch[1];
-        // console.debug("[Project] 发现服务: %s (%s)", id, k);
-        this.serviceId2ModulePathMap.set(id, k);
-      });
-    }
-  }
 
   private readonly services = new Map<string, Service>();
   private readonly tickableServices: Service[] = [];
@@ -185,31 +161,6 @@ export class Project extends EventEmitter<{
       this.tickableServices.push(inst);
     }
     this[service.id as keyof this] = inst as this[keyof this];
-    // TODO: 现在的热重载用不了
-    if (import.meta.hot) {
-      // 获取服务所在的模块路径
-      // 这也是为什么要求传递一个类而不是实例的原因
-      const modulePath = Project.serviceId2ModulePathMap.get(service.id);
-      if (!modulePath) {
-        console.warn("[Project] 未找到服务 %s 的模块路径，将无法热重载该服务", service.id);
-        return;
-      }
-      import.meta.hot.accept(modulePath, (module) => {
-        console.debug("[Project] 热重载服务: %s (%s)", service.id, modulePath);
-        // 先卸载原来的服务
-        if (service.id) {
-          this.disposeService(service.id);
-        }
-        // 找到模块中包含id属性的对象
-        const newService = Object.values(module!).find((v) => v.id === service.id);
-        if (!newService) {
-          console.warn("[Project] %s 热重载无效: 新的模块中未找到服务类", service.id);
-          return;
-        }
-        // 重新加载服务
-        this.loadService(newService);
-      });
-    }
   }
   /**
    * 立刻销毁一个服务
