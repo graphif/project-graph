@@ -67,6 +67,7 @@ import {
   Repeat2,
   ArrowLeftFromLine,
   Check,
+  GitPullRequestCreateArrow,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -480,7 +481,7 @@ export default function MyContextMenuContent() {
           <Sub>
             <SubTrigger>
               <FlaskConical />
-              文本节点妙招
+              文本节点 巧妙操作
             </SubTrigger>
             <SubContent>
               <Item onClick={() => TextNodeSmartTools.ttt(p)}>
@@ -506,6 +507,10 @@ export default function MyContextMenuContent() {
               <Item onClick={() => TextNodeSmartTools.removeLastCharFromSelectedTextNodes(p)}>
                 <ArrowRightFromLine />
                 剃尾
+              </Item>
+              <Item onClick={() => TextNodeSmartTools.insertNodeToTree(p)}>
+                <GitPullRequestCreateArrow />
+                接入树
               </Item>
               <Item onClick={() => TextNodeSmartTools.okk(p)}>
                 <Check />

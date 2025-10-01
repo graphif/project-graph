@@ -1,5 +1,6 @@
 import { Dialog } from "@/components/ui/dialog";
 import { Project } from "@/core/Project";
+import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
@@ -258,5 +259,41 @@ export namespace TextNodeSmartTools {
       project.controllerUtils.finishChangeTextNode(node);
     }
     project.stageManager.updateReferences();
+  }
+
+  /**
+   * 把节点叠在父节点下游的一堆连线上，使用这个方法，就能把节点给插入这个地方
+   * @param project
+   */
+  export function insertNodeToTree(project: Project) {
+    const selectedTextNodes = project.stageManager.getSelectedEntities().filter((node) => node instanceof TextNode);
+    if (selectedTextNodes.length !== 1) {
+      toast.error("树形接入时，选中的节点数量必须为1");
+    }
+    const selectedNode = selectedTextNodes[0];
+    // 遍历所有LineEdge，检测碰撞
+    const collideEdges: LineEdge[] = [];
+    for (const lineEdge of project.stageManager.getLineEdges()) {
+      if (lineEdge.collisionBox.isIntersectsWithRectangle(selectedNode.collisionBox.getRectangle())) {
+        collideEdges.push(lineEdge);
+      }
+    }
+    // 再检测一下，收集到的所有LineEdge是否是同一个
+    const sourceUUIDList = collideEdges.map((edge) => edge.source.uuid);
+    if (new Set(sourceUUIDList).size === 1) {
+      const sourceNode = collideEdges[0].source;
+      const targetNodes = collideEdges.map((edge) => edge.target);
+      // 删除所有已有的连线
+      collideEdges.forEach((edge) => project.stageManager.deleteAssociation(edge));
+      // source -> selected
+      project.stageManager.connectEntity(sourceNode, selectedNode);
+      // selected ===> targetNodes
+      targetNodes.forEach((targetNode) => {
+        project.stageManager.connectEntity(selectedNode, targetNode);
+      });
+      project.historyManager.recordStep();
+    } else {
+      toast.error("树形接入时，这个选中的节点没有与任何连线相碰，或者所有相碰的连线源头不唯一");
+    }
   }
 }
