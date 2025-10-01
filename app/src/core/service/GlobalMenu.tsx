@@ -21,6 +21,7 @@ import FindWindow from "@/sub/FindWindow";
 import GenerateNodeTree, { GenerateNodeGraph } from "@/sub/GenerateNodeWindow";
 import LoginWindow from "@/sub/LoginWindow";
 import NodeDetailsWindow from "@/sub/NodeDetailsWindow";
+import OnboardingWindow from "@/sub/OnboardingWindow";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
 import SettingsWindow from "@/sub/SettingsWindow";
 import TagWindow from "@/sub/TagWindow";
@@ -1031,7 +1032,7 @@ export function GlobalMenu() {
             </Item>*/}
             <Separator />
             <Sub>
-              <SubTrigger disabled={!activeProject}>
+              <SubTrigger>
                 <TestTube2 />
                 {t("unstable.test")}
               </SubTrigger>
@@ -1127,6 +1128,7 @@ export function GlobalMenu() {
                 </Item>
                 <Item onClick={() => LoginWindow.open()}>login</Item>
                 <Item onClick={() => UserWindow.open()}>user</Item>
+                <Item onClick={() => OnboardingWindow.open()}>onboarding</Item>
               </SubContent>
             </Sub>
           </Content>
