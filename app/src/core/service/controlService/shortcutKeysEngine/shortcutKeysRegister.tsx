@@ -393,6 +393,8 @@ export class KeyBindsRegistrar {
     // });
     await this.project.keyBinds.create("saveFile", "C-s", () => {
       const activeProject = store.get(activeProjectAtom);
+      // 提前清理动力，防止保存的时候无限向下滚动
+      activeProject?.camera.clearMoveCommander();
       if (activeProject) {
         activeProject.save();
         if (Settings.clearHistoryWhenManualSave) {
