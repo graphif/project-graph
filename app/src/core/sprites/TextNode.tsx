@@ -11,7 +11,7 @@ import { getMultiLineTextSize } from "@/utils/font";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
-import { Text } from "pixi.js";
+import { Point, Text } from "pixi.js";
 import { Value } from "platejs";
 
 /**
@@ -131,6 +131,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       borderWidth: 2,
       borderColor: 0xffffff,
     };
+    let pressed = false;
     this.addChild(
       new Text({
         text: this.text,
@@ -141,13 +142,23 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
         resolution: Settings.textResolution,
         layout: true,
       })
-        .on("pointerenter", (e) => {
-          (e.target as Text).style.fill = "green";
-        })
-        .on("pointerout", (e) => {
-          (e.target as Text).style.fill = "white";
+        .on("pointerdown", () => (pressed = true))
+        .on("pointerup", () => (pressed = false))
+        .on("pointerupoutside", () => (pressed = false))
+        .on("globalpointermove", (e) => {
+          if (pressed) {
+            this.move(new Vector(e.movementX, e.movementY));
+          }
         }),
     );
+    let lastClickTime = 0;
+    this.on("click", () => {
+      const currentTime = Date.now();
+      if (currentTime - lastClickTime < 300) {
+        // 双击事件
+      }
+      lastClickTime = currentTime;
+    });
   }
 
   /**
@@ -227,6 +238,8 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     this.updateFatherSectionByMove();
     // 移动其他实体，递归碰撞
     this.updateOtherEntityLocationByMove();
+
+    this.position = new Point(...this.collisionBox.getRectangle().location.toArray());
   }
 
   protected override collideWithOtherEntity(other: Entity): void {

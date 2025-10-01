@@ -234,7 +234,9 @@ export class Project extends EventEmitter<{
       worldHeight: 1000,
       events: this.pixi.renderer.events,
     })
-      .drag()
+      .drag({
+        mouseButtons: "middle",
+      })
       .pinch()
       .wheel();
     this.pixi.stage.addChild(this.viewport);

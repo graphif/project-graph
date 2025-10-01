@@ -120,6 +120,9 @@ importers:
       "@pixi/layout":
         specifier: ^3.2.0
         version: 3.2.0(@types/react@19.1.8)(pixi.js@8.13.2)(react@19.1.0)(yoga-layout@3.2.1)
+      "@pixi/ui":
+        specifier: ^2.2.7
+        version: 2.2.7(pixi.js@8.13.2)
       "@platejs/ai":
         specifier: ^49.2.14
         version: 49.2.14(platejs@49.2.12(@types/react@19.1.8)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)(slate-dom@0.116.0(slate@0.117.0))(slate@0.117.0)(use-sync-external-store@1.5.0(react@19.1.0)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6))
@@ -2589,6 +2592,12 @@ packages:
     peerDependencies:
       pixi.js: ^8.2.6
       react: ">=19.0.0"
+
+  "@pixi/ui@2.2.7":
+    resolution:
+      { integrity: sha512-YMVx3WImhOc/8Navqj+d4SKVNAjyuHecvMGFIdh8NPIfzwgV3MoxIkwswHcuGpxQAljG1psMbMHVIAEKznN9oA== }
+    peerDependencies:
+      pixi.js: ^8.6.2
 
   "@pkgr/core@0.2.9":
     resolution:
@@ -10200,6 +10209,10 @@ packages:
     resolution:
       { integrity: sha512-9dy0R9UsYEGmgf26L8UcHiLmSFTHa9+D7+dAt/G/sF5dCnPePZbfgDYinc7/UzAM7g/baVrmS6m9yEpU46d+LA== }
 
+  tweedle.js@2.1.0:
+    resolution:
+      { integrity: sha512-0ReQgVjepoZkE6t0upWNgCRbplHkQJQYk1LStXugwSR728GLFmGDRuaQJlxeC/iBlxud6+P1RdODjaO25vHAqw== }
+
   twitch-video-element@0.1.4:
     resolution:
       { integrity: sha512-SDpZ4f7sZmwHF6XG5PF0KWuP18pH/kNG04MhTcpqJby7Lk/D3TS/lCYd+RSg0rIAAVi1LDgSIo1yJs9kmHlhgw== }
@@ -10243,6 +10256,10 @@ packages:
     resolution:
       { integrity: sha512-3KS2b+kL7fsuk/eJZ7EQdnEmQoaho/r6KUef7hxvltNA5DR8NAUM+8wJMbJyZ4G9/7i3v5zPBIMN5aybAh2/Jg== }
     engines: { node: ">= 0.4" }
+
+  typed-signals@2.5.0:
+    resolution:
+      { integrity: sha512-m9lHc3eBCJerXYdx+G0uWZihyUXdqTzzgOdqiDDsoUo75WjhFJH6vP5/6w/xhyu04zoxHUqgYhf9FEt85dk/Ng== }
 
   typescript-eslint@8.38.0:
     resolution:
@@ -12342,6 +12359,12 @@ snapshots:
     transitivePeerDependencies:
       - "@types/react"
     optional: true
+
+  "@pixi/ui@2.2.7(pixi.js@8.13.2)":
+    dependencies:
+      pixi.js: 8.13.2
+      tweedle.js: 2.1.0
+      typed-signals: 2.5.0
 
   "@pkgr/core@0.2.9": {}
 
@@ -19292,6 +19315,8 @@ snapshots:
 
   tw-animate-css@1.3.6: {}
 
+  tweedle.js@2.1.0: {}
+
   twitch-video-element@0.1.4: {}
 
   type-check@0.4.0:
@@ -19341,6 +19366,8 @@ snapshots:
       is-typed-array: 1.1.15
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
+
+  typed-signals@2.5.0: {}
 
   typescript-eslint@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6)):
     dependencies:
