@@ -5,7 +5,7 @@ import { ConnectableEntity } from "@/core/stage/stageObject/abstract/Connectable
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { TextNode } from "@/core/sprites/TextNode";
 import { Direction } from "@/types/directions";
 import { MarkdownNode, parseMarkdownToJSON } from "@/utils/markdownParse";
 import { Color, MonoStack, ProgressNumber, Vector } from "@graphif/data-structures";

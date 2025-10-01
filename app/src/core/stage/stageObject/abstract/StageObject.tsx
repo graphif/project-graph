@@ -1,6 +1,6 @@
 import { Project } from "@/core/Project";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { Sprite } from "pixi.js";
+import { LayoutContainer } from "@pixi/layout/components";
 
 /**
  * 注：关于舞台上的东西的这一部分的
@@ -12,7 +12,7 @@ import { Sprite } from "pixi.js";
  * 一切舞台上的东西
  * 都具有碰撞箱，uuid
  */
-export abstract class StageObject extends Sprite {
+export abstract class StageObject extends LayoutContainer {
   protected abstract readonly project: Project;
 
   // 舞台对象，必定有 uuid

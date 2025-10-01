@@ -2,7 +2,7 @@ import { Project } from "@/core/Project";
 import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
 import { Settings } from "@/core/service/Settings";
 import { PenStroke, PenStrokeSegment } from "@/core/stage/stageObject/entity/PenStroke";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { TextNode } from "@/core/sprites/TextNode";
 import { isMac } from "@/utils/platform";
 import { Color, mixColors, Vector } from "@graphif/data-structures";
 import { toast } from "sonner";

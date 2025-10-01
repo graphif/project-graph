@@ -1,7 +1,7 @@
 import { Project, service } from "@/core/Project";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { TextNode } from "@/core/sprites/TextNode";
 import { EntityDetailsTool } from "../../dataManageService/entityDetailsService/entityDetailsTool";
 
 /**

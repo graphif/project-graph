@@ -1,15 +1,11 @@
-import { Dialog } from "@/components/ui/dialog";
 import { NumberFunctions } from "@/core/algorithm/numberFunctions";
 import { Project, service } from "@/core/Project";
 import { easeOutExpo } from "@/core/service/feedbackService/effectEngine/mathTools/easings";
 import { Settings } from "@/core/service/Settings";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { Direction } from "@/types/directions";
-import { isMac } from "@/utils/platform";
 import { Queue, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { toast } from "sonner";
-import { Telemetry } from "../service/Telemetry";
 
 /**
  * 摄像机
@@ -115,99 +111,89 @@ export class Camera {
   }
 
   tick() {
-    // 计算摩擦力 与速度方向相反,固定值,但速度为0摩擦力就不存在
-    // 获得速度的大小和方向
-
-    if (Number.isNaN(this.location.x) || Number.isNaN(this.location.y)) {
-      // 实测只有把摩擦力和动力都拉满时才会瞬间触发NaN，当玩家正常数据状态下有意识地向远处飞时反而不会触发
-      // 因此这个彩蛋可能是个bug。先暂时改成正常的提示语
-      // this.project.effects.addEffect(new TextRiseEffect("派蒙：前面的区域以后再来探索吧？"));
-      toast.error("数值溢出了，已自动重置视野");
-      this.speed = Vector.getZero();
-      this.reset();
-      return;
-    }
-
-    // 回弹效果
-    if (this.currentScale < 0.0005) {
-      this.targetScale = 0.001;
-    }
-    // 彩蛋
-    if (this.currentScale > 100) {
-      this.currentScale = 0.001;
-      this.targetScale = 0.01;
-      if (isMac) {
-        toast(
-          "视野已经放大到极限了！默认快捷键F可根据内容重置视野，mac在刚启动软件的若干秒内鼠标滚轮可能过于灵敏，导致缩放过快",
-        );
-      } else {
-        toast("您已抵达微观的尽头，世界就此反转，现在回归到了宏观。默认快捷键F可根据内容重置视野", {
-          action: {
-            label: "我有更好的idea",
-            onClick: async () => {
-              const idea = await Dialog.input(
-                "发送反馈：微观尽头彩蛋",
-                "您输入的内容将发送到服务器，请勿包含敏感信息",
-                {
-                  multiline: true,
-                },
-              );
-              if (!idea) return;
-              Telemetry.event("微观尽头更好的idea", { idea });
-            },
-          },
-        });
-      }
-    }
-    // 冲击式移动
-    if (!this.shockMoveDiffLocationsQueue.isEmpty()) {
-      const diffLocation = this.shockMoveDiffLocationsQueue.dequeue();
-      if (diffLocation !== undefined) {
-        this.location = this.location.add(diffLocation);
-      }
-    }
-
-    // 计算摩擦力
-    let friction = Vector.getZero();
-
-    if (!this.speed.isZero()) {
-      const speedSize = this.speed.magnitude();
-
-      friction = this.speed
-        .normalize()
-        .multiply(-1)
-        .multiply(Settings.moveFriction * speedSize ** this.frictionExponent);
-    }
-
-    // 计算动力
-    const power = this.accelerateCommander
-      /** 摄像机 >1放大 <1缩小，为了让放大的时候移动速度慢，所以取倒数 */
-      .multiply(Settings.moveAmplitude * (1 / this.currentScale));
-
-    // if (isFastMovingMode) {
-    //   power = power.multiply(10);
+    // // 计算摩擦力 与速度方向相反,固定值,但速度为0摩擦力就不存在
+    // // 获得速度的大小和方向
+    // if (Number.isNaN(this.location.x) || Number.isNaN(this.location.y)) {
+    //   // 实测只有把摩擦力和动力都拉满时才会瞬间触发NaN，当玩家正常数据状态下有意识地向远处飞时反而不会触发
+    //   // 因此这个彩蛋可能是个bug。先暂时改成正常的提示语
+    //   // this.project.effects.addEffect(new TextRiseEffect("派蒙：前面的区域以后再来探索吧？"));
+    //   toast.error("数值溢出了，已自动重置视野");
+    //   this.speed = Vector.getZero();
+    //   this.reset();
+    //   return;
     // }
-
-    // 速度 = 速度 + 加速度（动力+摩擦力）
-    this.speed = this.speed.add(power).add(friction);
-    this.location = this.location.add(this.speed);
-
-    // 处理缩放
-    // 缩放的过程中应该维持摄像机中心点和鼠标滚轮交互位置的相对视野坐标的 不变性
-
-    /** 鼠标交互位置的view坐标系相对于画面左上角的坐标 */
-    const diffViewVector = this.project.renderer.transformWorld2View(this.targetLocationByScale);
-    this.dealCameraScaleInTick();
-    if (Settings.scaleCameraByMouseLocation) {
-      if (this.tickNumber > this.allowScaleFollowMouseLocationTicks) {
-        this.setLocationByOtherLocation(this.targetLocationByScale, diffViewVector);
-      }
-    }
-    // 循环空间
-    if (Settings.limitCameraInCycleSpace) {
-      this.dealCycleSpace();
-    }
-    this.tickNumber++;
+    // // 回弹效果
+    // if (this.currentScale < 0.0005) {
+    //   this.targetScale = 0.001;
+    // }
+    // // 彩蛋
+    // if (this.currentScale > 100) {
+    //   this.currentScale = 0.001;
+    //   this.targetScale = 0.01;
+    //   if (isMac) {
+    //     toast(
+    //       "视野已经放大到极限了！默认快捷键F可根据内容重置视野，mac在刚启动软件的若干秒内鼠标滚轮可能过于灵敏，导致缩放过快",
+    //     );
+    //   } else {
+    //     toast("您已抵达微观的尽头，世界就此反转，现在回归到了宏观。默认快捷键F可根据内容重置视野", {
+    //       action: {
+    //         label: "我有更好的idea",
+    //         onClick: async () => {
+    //           const idea = await Dialog.input(
+    //             "发送反馈：微观尽头彩蛋",
+    //             "您输入的内容将发送到服务器，请勿包含敏感信息",
+    //             {
+    //               multiline: true,
+    //             },
+    //           );
+    //           if (!idea) return;
+    //           Telemetry.event("微观尽头更好的idea", { idea });
+    //         },
+    //       },
+    //     });
+    //   }
+    // }
+    // // 冲击式移动
+    // if (!this.shockMoveDiffLocationsQueue.isEmpty()) {
+    //   const diffLocation = this.shockMoveDiffLocationsQueue.dequeue();
+    //   if (diffLocation !== undefined) {
+    //     this.location = this.location.add(diffLocation);
+    //   }
+    // }
+    // // 计算摩擦力
+    // let friction = Vector.getZero();
+    // if (!this.speed.isZero()) {
+    //   const speedSize = this.speed.magnitude();
+    //   friction = this.speed
+    //     .normalize()
+    //     .multiply(-1)
+    //     .multiply(Settings.moveFriction * speedSize ** this.frictionExponent);
+    // }
+    // // 计算动力
+    // const power = this.accelerateCommander
+    //   /** 摄像机 >1放大 <1缩小，为了让放大的时候移动速度慢，所以取倒数 */
+    //   .multiply(Settings.moveAmplitude * (1 / this.currentScale));
+    // // if (isFastMovingMode) {
+    // //   power = power.multiply(10);
+    // // }
+    // // 速度 = 速度 + 加速度（动力+摩擦力）
+    // this.speed = this.speed.add(power).add(friction);
+    // this.location = this.location.add(this.speed);
+    // // 处理缩放
+    // // 缩放的过程中应该维持摄像机中心点和鼠标滚轮交互位置的相对视野坐标的 不变性
+    // /** 鼠标交互位置的view坐标系相对于画面左上角的坐标 */
+    // const diffViewVector = this.project.renderer.transformWorld2View(this.targetLocationByScale);
+    // this.dealCameraScaleInTick();
+    // if (Settings.scaleCameraByMouseLocation) {
+    //   if (this.tickNumber > this.allowScaleFollowMouseLocationTicks) {
+    //     this.setLocationByOtherLocation(this.targetLocationByScale, diffViewVector);
+    //   }
+    // }
+    // // 循环空间
+    // if (Settings.limitCameraInCycleSpace) {
+    //   this.dealCycleSpace();
+    // }
+    // this.tickNumber++;
   }
   /**
    * 当前的帧编号

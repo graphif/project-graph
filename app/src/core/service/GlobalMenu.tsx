@@ -109,7 +109,7 @@ import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import { ProjectUpgrader } from "../stage/ProjectUpgrader";
 import { LineEdge } from "../stage/stageObject/association/LineEdge";
-import { TextNode } from "../stage/stageObject/entity/TextNode";
+import { TextNode } from "../sprites/TextNode";
 import { RecentFileManager } from "./dataFileService/RecentFileManager";
 import { DragFileIntoStageEngine } from "./dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { FeatureFlags } from "./FeatureFlags";

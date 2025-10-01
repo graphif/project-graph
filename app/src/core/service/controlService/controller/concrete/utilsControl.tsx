@@ -9,7 +9,7 @@ import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { TextNode } from "@/core/sprites/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import AutoCompleteWindow from "@/sub/AutoCompleteWindow";
 import NodeDetailsWindow from "@/sub/NodeDetailsWindow";

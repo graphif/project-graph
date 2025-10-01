@@ -4,7 +4,7 @@ import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import { SubWindow } from "@/core/service/SubWindow";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { TextNode } from "@/core/sprites/TextNode";
 import { activeProjectAtom } from "@/state";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";

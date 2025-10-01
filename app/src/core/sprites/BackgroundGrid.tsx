@@ -7,7 +7,7 @@ export class BackgroundGrid extends TilingSprite {
   constructor(project: Project) {
     const patternGraphics = new Graphics();
     patternGraphics.rect(0, 0, BackgroundGrid.GRID_SIZE, BackgroundGrid.GRID_SIZE);
-    patternGraphics.stroke({ width: 1, color: 0xcccccc });
+    patternGraphics.stroke({ width: 1, color: 0x333333 });
     const texture = RenderTexture.create({
       width: BackgroundGrid.GRID_SIZE,
       height: BackgroundGrid.GRID_SIZE,

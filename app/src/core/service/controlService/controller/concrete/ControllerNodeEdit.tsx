@@ -1,7 +1,7 @@
 import { Project } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { TextNode } from "@/core/sprites/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";

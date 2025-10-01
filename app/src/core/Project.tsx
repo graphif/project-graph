@@ -15,7 +15,7 @@ import type { EntityRenderer } from "@/core/render/canvas2d/entityRenderer/Entit
 import type { MultiTargetUndirectedEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/multiTargetUndirectedEdge/MultiTargetUndirectedEdgeRenderer";
 import type { SectionRenderer } from "@/core/render/canvas2d/entityRenderer/section/SectionRenderer";
 import type { SvgNodeRenderer } from "@/core/render/canvas2d/entityRenderer/svgNode/SvgNodeRenderer";
-import type { TextNodeRenderer } from "@/core/render/canvas2d/entityRenderer/textNode/TextNodeRenderer";
+import { TextNodeRenderer } from "@/core/render/canvas2d/entityRenderer/textNode/TextNodeRenderer";
 import type { UrlNodeRenderer } from "@/core/render/canvas2d/entityRenderer/urlNode/urlNodeRenderer";
 import type { Renderer } from "@/core/render/canvas2d/renderer";
 import type { BackgroundRenderer } from "@/core/render/canvas2d/utilsRenderer/backgroundRenderer";
@@ -69,18 +69,20 @@ import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import type { StageManager } from "@/core/stage/stageManager/StageManager";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { nextProjectIdAtom, projectsAtom, store } from "@/state";
-import { Vector } from "@graphif/data-structures";
+import { ObservableArray, Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Decoder, Encoder } from "@msgpack/msgpack";
+import "@pixi/layout";
 import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, ZipWriter } from "@zip.js/zip.js";
 import { EventEmitter } from "events";
 import md5 from "md5";
 import mime from "mime";
 import { Viewport } from "pixi-viewport";
-import { Application } from "pixi.js";
+import { Application, Graphics, Text } from "pixi.js";
 import { URI } from "vscode-uri";
 import { Settings } from "./service/Settings";
 import { BackgroundGrid } from "./sprites/BackgroundGrid";
+import { TextNode } from "./sprites/TextNode";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -110,7 +112,7 @@ export class Project extends EventEmitter<{
   private rafHandle = -1;
   private _uri: URI;
   private _state: ProjectState = ProjectState.Unsaved;
-  public stage: StageObject[] = [];
+  private _stage: StageObject[] = [];
   public tags: string[] = [];
   /**
    * string：UUID
@@ -237,6 +239,35 @@ export class Project extends EventEmitter<{
       .wheel();
     this.pixi.stage.addChild(this.viewport);
     this.viewport.addChild(new BackgroundGrid(this));
+    // 在[0,0]渲染一个红色的圆点，表示原点位置
+    const origin = new Graphics();
+    origin.circle(0, 0, 5);
+    origin.fill(0xff0000);
+    this.viewport.addChild(origin);
+    for (let i = 0; i < 20; i++) {
+      this.viewport.addChild(
+        new Text({
+          text: `耄耋${i}`,
+          style: {
+            fill: "white",
+            fontSize: 32,
+          },
+          x: (i % 5) * 100,
+          y: 100 + Math.floor(i / 5) * 32,
+          resolution: i,
+        }),
+      );
+    }
+    this.viewport.addChild(
+      new Text({
+        text: "创建TextNode",
+        interactive: true,
+        style: { fill: 0x00ff00 },
+        y: -100,
+      }).on("click", () => {
+        this.stage.push(new TextNode(this, { text: "hello world" }));
+      }),
+    );
     // 后初始化服务
     for (const service of postInitServices) {
       this.loadService(service);
@@ -353,7 +384,23 @@ export class Project extends EventEmitter<{
   }
 
   mount(wrapper: HTMLElement) {
+    wrapper.innerHTML = "";
     wrapper.appendChild(this.pixi.canvas);
+  }
+
+  private onStageAdd(it: StageObject) {
+    this.viewport?.addChild(it);
+  }
+  private onStageRemove(it: StageObject) {
+    this.viewport?.removeChild(it);
+  }
+  get stage(): StageObject[] {
+    return new ObservableArray(this.onStageAdd.bind(this), this.onStageRemove.bind(this), this._stage);
+  }
+  set stage(value: StageObject[]) {
+    this.viewport?.removeChild(...this._stage);
+    this._stage = value;
+    this.viewport?.addChild(...this._stage);
   }
 }
 

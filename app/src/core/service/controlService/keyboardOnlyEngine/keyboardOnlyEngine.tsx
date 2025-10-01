@@ -2,7 +2,7 @@ import { Project, service } from "@/core/Project";
 import { EntityDashTipEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityDashTipEffect";
 import { EntityShakeEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityShakeEffect";
 import { Settings } from "@/core/service/Settings";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { TextNode } from "@/core/sprites/TextNode";
 import { getEnterKey } from "@/utils/keyboardFunctions";
 
 /**

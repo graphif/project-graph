@@ -2,7 +2,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Project } from "@/core/Project";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { TextNode } from "@/core/sprites/TextNode";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
 import { averageColors, Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";

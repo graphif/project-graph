@@ -2,7 +2,7 @@ import { Color, Vector } from "@graphif/data-structures";
 import { Project, service } from "@/core/Project";
 import { invoke } from "@tauri-apps/api/core";
 import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { TextNode } from "@/core/sprites/TextNode";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Rectangle } from "@graphif/shapes";

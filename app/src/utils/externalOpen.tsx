@@ -1,6 +1,6 @@
 import { Project } from "@/core/Project";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { TextNode } from "@/core/sprites/TextNode";
 import { open } from "@tauri-apps/plugin-shell";
 import { toast } from "sonner";
 import { PathString } from "./pathString";

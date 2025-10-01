@@ -27,6 +27,7 @@
     "@modyfi/vite-plugin-yaml": "^1.1.1",
     "@msgpack/msgpack": "^3.1.2",
     "@octokit/rest": "^22.0.0",
+    "@pixi/layout": "^3.2.0",
     "@platejs/ai": "^49.2.14",
     "@platejs/basic-nodes": "^49.0.0",
     "@platejs/basic-styles": "^49.0.0",

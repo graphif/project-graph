@@ -7,7 +7,7 @@ import {
   LogicNodeNameToRenderNameMap,
 } from "@/core/service/dataGenerateService/autoComputeEngine/logicNodeNameEnum";
 import { Settings } from "@/core/service/Settings";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { TextNode } from "@/core/sprites/TextNode";
 import { Color, colorInvert, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 

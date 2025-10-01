@@ -117,6 +117,9 @@ importers:
       "@octokit/rest":
         specifier: ^22.0.0
         version: 22.0.0
+      "@pixi/layout":
+        specifier: ^3.2.0
+        version: 3.2.0(@types/react@19.1.8)(pixi.js@8.13.2)(react@19.1.0)(yoga-layout@3.2.1)
       "@platejs/ai":
         specifier: ^49.2.14
         version: 49.2.14(platejs@49.2.12(@types/react@19.1.8)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)(slate-dom@0.116.0(slate@0.117.0))(slate@0.117.0)(use-sync-external-store@1.5.0(react@19.1.0)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6))
@@ -2572,6 +2575,20 @@ packages:
   "@pixi/colord@2.9.6":
     resolution:
       { integrity: sha512-nezytU2pw587fQstUu1AsJZDVEynjskwOL+kibwcdxsMBFqPsFFNA7xl0ii/gXuDi6M0xj3mfRJj8pBSc2jCfA== }
+
+  "@pixi/layout@3.2.0":
+    resolution:
+      { integrity: sha512-7TtDLHfaF65sTnYjrvRNqNJSQHMH109b04RtNgoy//BjR+pKWFUCgDMnUhs13fdNM0AkGccQW3UqCdylHuGvbA== }
+    peerDependencies:
+      pixi.js: ^8
+      yoga-layout: ^3
+
+  "@pixi/react@8.0.3":
+    resolution:
+      { integrity: sha512-k0feY0Vj4WIWpaLaRQY8NBKlDqVCPPyEUu5EibQVqdtgdMx1brRWeJC+ruq7Im08vtZWx7iZwNGhgHNubO/OMQ== }
+    peerDependencies:
+      pixi.js: ^8.2.6
+      react: ">=19.0.0"
 
   "@pkgr/core@0.2.9":
     resolution:
@@ -7279,6 +7296,12 @@ packages:
       { integrity: sha512-H0dkQoCa3b2VEeKQBOxFph+JAbcrQdE7KC0UkqwpLmv2EC4P41QXP+rqo9wYodACiG5/WM5s9oDApTU8utwj9g== }
     engines: { node: ">= 0.4" }
 
+  its-fine@2.0.0:
+    resolution:
+      { integrity: sha512-KLViCmWx94zOvpLwSlsx6yOCeMhZYaxrJV87Po5k/FoZzcPSahvK5qJ7fYhS61sZi5ikmh2S3Hz55A2l3U69ng== }
+    peerDependencies:
+      react: ^19.0.0
+
   jest-worker@27.5.1:
     resolution:
       { integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg== }
@@ -8836,6 +8859,13 @@ packages:
       react: ^17.0.2 || ^18 || ^19
       react-dom: ^17.0.2 || ^18 || ^19
 
+  react-reconciler@0.31.0:
+    resolution:
+      { integrity: sha512-7Ob7Z+URmesIsIVRjnLoDGwBEG/tVitidU0nMsqX/eeJaLY89RISO/10ERe0MqmzuKUUB1rmY+h1itMbUHg9BQ== }
+    engines: { node: ">=0.10.0" }
+    peerDependencies:
+      react: ^19.0.0
+
   react-remove-scroll-bar@2.3.8:
     resolution:
       { integrity: sha512-9r+yi9+mgU33AKcj6IbT9oRCO78WriSj6t/cF8DWBZJ9aOGPOTEDvdUDz1FwKim7QXWwmHqtdHnRJfhAxEG46Q== }
@@ -9486,6 +9516,10 @@ packages:
     resolution:
       { integrity: sha512-xAg7SOnEhrm5zI3puOOKyy1OMcMlIJZYNJY7xLBwSze0UjhPLnWfj2GF2EpT0jmzaJKIWKHLsaSSajf35bcYnA== }
     engines: { node: ">=v12.22.7" }
+
+  scheduler@0.25.0:
+    resolution:
+      { integrity: sha512-xFVuu11jh+xcO7JOAGJNOXld8/TcEHK/4CituBUeUb5hqxJLj9YuemAEuvm9gQ/+pgXYfbQuqAkiYu+u7YEsNA== }
 
   scheduler@0.26.0:
     resolution:
@@ -10769,6 +10803,10 @@ packages:
       { integrity: sha512-cYVsTjKl8b+FrnidjibDWskAv7UKOfcwaVZdp/it9n1s9fU3IkgDbhdIRKCW4JDsAlECJY0ytoVPT3sK6kideA== }
     engines: { node: ">=18" }
 
+  yoga-layout@3.2.1:
+    resolution:
+      { integrity: sha512-0LPOt3AxKqMdFBZA3HBAt/t/8vIKq7VaQYbuA8WxCgung+p9TVyKRYdpvCb80HcdTN2NkbIKbhNwKUfm3tQywQ== }
+
   youtube-video-element@1.6.2:
     resolution:
       { integrity: sha512-YHDIOAqgRpfl1Ois9HcB8UFtWOxK8KJrV5TXpImj4BKYP1rWT04f/fMM9tQ9SYZlBKukT7NR+9wcI3UpB5BMDQ== }
@@ -11877,7 +11915,7 @@ snapshots:
 
   "@img/sharp-wasm32@0.34.3":
     dependencies:
-      "@emnapi/runtime": 1.4.5
+      "@emnapi/runtime": 1.5.0
     optional: true
 
   "@img/sharp-win32-arm64@0.34.3":
@@ -12284,6 +12322,26 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
 
   "@pixi/colord@2.9.6": {}
+
+  "@pixi/layout@3.2.0(@types/react@19.1.8)(pixi.js@8.13.2)(react@19.1.0)(yoga-layout@3.2.1)":
+    dependencies:
+      pixi.js: 8.13.2
+      yoga-layout: 3.2.1
+    optionalDependencies:
+      "@pixi/react": 8.0.3(@types/react@19.1.8)(pixi.js@8.13.2)(react@19.1.0)
+    transitivePeerDependencies:
+      - "@types/react"
+      - react
+
+  "@pixi/react@8.0.3(@types/react@19.1.8)(pixi.js@8.13.2)(react@19.1.0)":
+    dependencies:
+      its-fine: 2.0.0(@types/react@19.1.8)(react@19.1.0)
+      pixi.js: 8.13.2
+      react: 19.1.0
+      react-reconciler: 0.31.0(react@19.1.0)
+    transitivePeerDependencies:
+      - "@types/react"
+    optional: true
 
   "@pkgr/core@0.2.9": {}
 
@@ -16488,6 +16546,14 @@ snapshots:
       has-symbols: 1.1.0
       set-function-name: 2.0.2
 
+  its-fine@2.0.0(@types/react@19.1.8)(react@19.1.0):
+    dependencies:
+      "@types/react-reconciler": 0.28.9(@types/react@19.1.8)
+      react: 19.1.0
+    transitivePeerDependencies:
+      - "@types/react"
+    optional: true
+
   jest-worker@27.5.1:
     dependencies:
       "@types/node": 24.1.0
@@ -17974,6 +18040,12 @@ snapshots:
     transitivePeerDependencies:
       - "@types/react-dom"
 
+  react-reconciler@0.31.0(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+      scheduler: 0.25.0
+    optional: true
+
   react-remove-scroll-bar@2.3.8(@types/react@19.1.8)(react@19.1.0):
     dependencies:
       react: 19.1.0
@@ -18284,9 +18356,9 @@ snapshots:
 
   rfdc@1.4.1: {}
 
-  rolldown-plugin-dts@0.13.13(rolldown@1.0.0-beta.30)(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6)):
+  rolldown-plugin-dts@0.13.13(rolldown@1.0.0-beta.37)(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6)):
     dependencies:
-      "@babel/generator": 7.28.0
+      "@babel/generator": 7.28.3
       "@babel/parser": 7.28.4
       "@babel/types": 7.28.4
       ast-kit: 2.1.1
@@ -18294,7 +18366,7 @@ snapshots:
       debug: 4.4.1
       dts-resolver: 2.1.1
       get-tsconfig: 4.10.1
-      rolldown: 1.0.0-beta.30
+      rolldown: 1.0.0-beta.37
     optionalDependencies:
       typescript: 5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6)
     transitivePeerDependencies:
@@ -18618,6 +18690,9 @@ snapshots:
   saxes@6.0.0:
     dependencies:
       xmlchars: 2.2.0
+
+  scheduler@0.25.0:
+    optional: true
 
   scheduler@0.26.0: {}
 
@@ -19161,11 +19236,11 @@ snapshots:
       diff: 8.0.2
       empathic: 2.0.0
       hookable: 5.5.3
-      rolldown: 1.0.0-beta.30
-      rolldown-plugin-dts: 0.13.13(rolldown@1.0.0-beta.30)(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6))
+      rolldown: 1.0.0-beta.37
+      rolldown-plugin-dts: 0.13.13(rolldown@1.0.0-beta.37)(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6))
       semver: 7.7.2
       tinyexec: 1.0.1
-      tinyglobby: 0.2.14
+      tinyglobby: 0.2.15
       unconfig: 7.3.2
     optionalDependencies:
       typescript: 5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6)
@@ -19834,6 +19909,8 @@ snapshots:
 
   yoctocolors-cjs@2.1.2:
     optional: true
+
+  yoga-layout@3.2.1: {}
 
   youtube-video-element@1.6.2: {}
 

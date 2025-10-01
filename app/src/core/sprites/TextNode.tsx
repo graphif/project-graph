@@ -11,6 +11,7 @@ import { getMultiLineTextSize } from "@/utils/font";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
+import { Text } from "pixi.js";
 import { Value } from "platejs";
 
 /**
@@ -124,6 +125,29 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     } else if (this.sizeAdjust === "manual") {
       this.resizeHandle(Vector.getZero());
     }
+    this.layout = {
+      borderRadius: 8,
+      padding: 8,
+      borderWidth: 2,
+      borderColor: 0xffffff,
+    };
+    this.addChild(
+      new Text({
+        text: this.text,
+        style: {
+          fill: "white",
+        },
+        interactive: true,
+        resolution: Settings.textResolution,
+        layout: true,
+      })
+        .on("pointerenter", (e) => {
+          (e.target as Text).style.fill = "green";
+        })
+        .on("pointerout", (e) => {
+          (e.target as Text).style.fill = "white";
+        }),
+    );
   }
 
   /**

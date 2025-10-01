@@ -706,7 +706,11 @@ settings:
       unspecified: 未指定
       lowPower: 低功耗
       highPerformance: 高性能
-
+  textResolution:
+    title: 文本质量
+    description: |
+      越大越清晰，越小越流畅
+      需要重新打开文件才能生效
 
 effects:
   CircleChangeRadiusEffect:

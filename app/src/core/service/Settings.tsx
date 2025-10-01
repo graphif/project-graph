@@ -155,6 +155,7 @@ export const settingsSchema = z.object({
   powerPreference: z
     .union([z.literal("unspecified"), z.literal("highPerformance"), z.literal("lowPower")])
     .default("unspecified"),
+  textResolution: z.number().min(0).max(20).default(5),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;
