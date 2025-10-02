@@ -68,6 +68,7 @@ import {
   ArrowLeftFromLine,
   Check,
   GitPullRequestCreateArrow,
+  LayoutPanelTop,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -303,60 +304,73 @@ export default function MyContextMenuContent() {
       {/* 树形面板 */}
       {isSelectedTreeRoots() && (
         <Item className="bg-transparent!">
-          <div>
-            <ContextMenuTooltip keyId="autoLayoutSelectedFastTreeModeRight">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-6"
-                onClick={() =>
-                  p.autoAlign.autoLayoutSelectedFastTreeModeRight(
-                    p.stageManager.getSelectedEntities()[0] as ConnectableEntity,
-                  )
+          <ContextMenuTooltip keyId="autoLayoutSelectedFastTreeModeRight">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6"
+              onClick={() =>
+                p.autoAlign.autoLayoutSelectedFastTreeModeRight(
+                  p.stageManager.getSelectedEntities()[0] as ConnectableEntity,
+                )
+              }
+            >
+              <Network className="-rotate-90" />
+            </Button>
+          </ContextMenuTooltip>
+          <ContextMenuTooltip keyId="treeReverseX">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6"
+              onClick={() =>
+                p.autoLayoutFastTree.treeReverseX(p.stageManager.getSelectedEntities()[0] as ConnectableEntity)
+              }
+            >
+              <ArrowLeftRight />
+            </Button>
+          </ContextMenuTooltip>
+          <ContextMenuTooltip keyId="autoLayoutSelectedFastTreeModeDown">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6"
+              onClick={() =>
+                p.autoAlign.autoLayoutSelectedFastTreeModeDown(
+                  p.stageManager.getSelectedEntities()[0] as ConnectableEntity,
+                )
+              }
+            >
+              <Network />
+            </Button>
+          </ContextMenuTooltip>
+          <ContextMenuTooltip keyId="treeReverseY">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6"
+              onClick={() =>
+                p.autoLayoutFastTree.treeReverseY(p.stageManager.getSelectedEntities()[0] as ConnectableEntity)
+              }
+            >
+              <ArrowDownUp />
+            </Button>
+          </ContextMenuTooltip>
+          <ContextMenuTooltip keyId="textNodeTreeToSection">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6"
+              onClick={() => {
+                const textNodes = p.stageManager.getSelectedEntities().filter((it) => it instanceof TextNode);
+                for (const textNode of textNodes) {
+                  p.sectionPackManager.textNodeTreeToSection(textNode);
                 }
-              >
-                <Network className="-rotate-90" />
-              </Button>
-            </ContextMenuTooltip>
-            <ContextMenuTooltip keyId="treeReverseX">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-6"
-                onClick={() =>
-                  p.autoLayoutFastTree.treeReverseX(p.stageManager.getSelectedEntities()[0] as ConnectableEntity)
-                }
-              >
-                <ArrowLeftRight />
-              </Button>
-            </ContextMenuTooltip>
-            <ContextMenuTooltip keyId="autoLayoutSelectedFastTreeModeDown">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-6"
-                onClick={() =>
-                  p.autoAlign.autoLayoutSelectedFastTreeModeDown(
-                    p.stageManager.getSelectedEntities()[0] as ConnectableEntity,
-                  )
-                }
-              >
-                <Network />
-              </Button>
-            </ContextMenuTooltip>
-            <ContextMenuTooltip keyId="treeReverseY">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-6"
-                onClick={() =>
-                  p.autoLayoutFastTree.treeReverseY(p.stageManager.getSelectedEntities()[0] as ConnectableEntity)
-                }
-              >
-                <ArrowDownUp />
-              </Button>
-            </ContextMenuTooltip>
-          </div>
+              }}
+            >
+              <LayoutPanelTop />
+            </Button>
+          </ContextMenuTooltip>
         </Item>
       )}
 

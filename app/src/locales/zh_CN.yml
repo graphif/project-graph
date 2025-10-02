@@ -1381,3 +1381,6 @@ keyBinds:
   treeReverseX:
     title: 横向反转树形结构
     description: 选中树形结构的根节点，将其横向反转
+  textNodeTreeToSection:
+    title: 将文本节点树转换为框嵌套结构
+    description: 将选中的文本节点树结构转换为框嵌套结构
