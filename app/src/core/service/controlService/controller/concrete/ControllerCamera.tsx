@@ -28,7 +28,7 @@ export class ControllerCameraClass extends ControllerClass {
   // 是否正在使用
   public isUsingMouseGrabMove = false;
   private lastMousePressLocation: Vector[] = [Vector.getZero(), Vector.getZero(), Vector.getZero()];
-  private isPressingCtrl = false;
+  private isPressingCtrlOrMeta = false;
   /**
    * 是否正在使用空格+左键 拖动视野
    */
@@ -42,9 +42,9 @@ export class ControllerCameraClass extends ControllerClass {
     }
     const key = event.key.toLowerCase();
     if (ControllerCameraClass.keyMap[key] && Settings.allowMoveCameraByWSAD) {
-      if (this.project.controller.pressingKeySet.has("control")) {
+      if (this.project.controller.pressingKeySet.has("control") || this.project.controller.pressingKeySet.has("meta")) {
         // ctrl按下时，可能在按 ctrl+s 保存，防止出现冲突
-        this.isPressingCtrl = true;
+        this.isPressingCtrlOrMeta = true;
         return;
       }
 
@@ -80,13 +80,13 @@ export class ControllerCameraClass extends ControllerClass {
     // 解决ctrl+s 冲突
     if (isMac ? key === "meta" : key === "control") {
       setTimeout(() => {
-        this.isPressingCtrl = false;
+        this.isPressingCtrlOrMeta = false;
       }, 500);
     }
     // ------
 
     if (ControllerCameraClass.keyMap[key] && Settings.allowMoveCameraByWSAD) {
-      if (this.isPressingCtrl) {
+      if (this.isPressingCtrlOrMeta) {
         // ctrl按下时，可能在按 ctrl+s 保存，防止出现冲突
         return;
       }
