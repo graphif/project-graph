@@ -72,27 +72,6 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
     setCurrentShowTime(new Date(recentFilesFiltered[currentPreselect].time).toLocaleString());
   }, [currentPreselect, isLoading]);
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "ArrowUp") {
-      setCurrentPreselect((prev) => Math.max(0, prev - 1));
-    } else if (e.key === "ArrowDown") {
-      setCurrentPreselect((prev) => Math.min(recentFilesFiltered.length - 1, prev + 1));
-    } else if (e.key === "Enter") {
-      const file = recentFilesFiltered[currentPreselect];
-      checkoutFile(file);
-    }
-  };
-  useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [recentFilesFiltered]); // isRecentFilePanelOpen, recentFiles, currentPreselect
-
-  const openFile = (file: RecentFileManager.RecentFile) => {
-    checkoutFile(file);
-  };
-
   const checkoutFile = async (file: RecentFileManager.RecentFile) => {
     try {
       await onOpenFile(file.uri, "历史界面-最近打开的文件");
@@ -134,7 +113,7 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
               },
             )}
             onMouseEnter={() => setCurrentPreselect(index)}
-            onClick={() => openFile(file)}
+            onClick={() => checkoutFile(file)}
           >
             {PathString.absolute2file(decodeURI(file.uri.toString()))}
           </div>
