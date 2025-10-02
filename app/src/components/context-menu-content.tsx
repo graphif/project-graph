@@ -12,7 +12,7 @@ import { ConnectableEntity } from "@/core/stage/stageObject/abstract/Connectable
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { activeProjectAtom } from "@/state";
+import { activeProjectAtom, contextMenuTooltipWordsAtom } from "@/state";
 import { Color } from "@graphif/data-structures";
 import { useAtom } from "jotai";
 import {
@@ -76,10 +76,11 @@ import KeyTooltip from "./key-tooltip";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { Direction } from "@/types/directions";
 import { openBrowserOrFile } from "@/utils/externalOpen";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import ColorWindow from "@/sub/ColorWindow";
 import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
+import { parseEmacsKey } from "@/utils/emacs";
 
 const Content = ContextMenuContent;
 const Item = ContextMenuItem;
@@ -94,13 +95,17 @@ const SubContent = ContextMenuSubContent;
  */
 export default function MyContextMenuContent() {
   const [p] = useAtom(activeProjectAtom);
+  const [contextMenuTooltipWords] = useAtom(contextMenuTooltipWordsAtom);
   const { t } = useTranslation("contextMenu");
   if (!p) return <></>;
 
-  const selectedTreeRoot =
-    p.stageManager.getSelectedEntities().length === 1 &&
-    p.stageManager.getSelectedEntities()[0] instanceof ConnectableEntity &&
-    p.graphMethods.isTree(p.stageManager.getSelectedEntities()[0] as ConnectableEntity);
+  const isSelectedTreeRoots = () => {
+    const selectedEntities = p.stageManager.getSelectedEntities();
+    if (selectedEntities.length === 0) return false;
+    return selectedEntities.every((entity) => {
+      return entity instanceof ConnectableEntity && p.graphMethods.isTree(entity);
+    });
+  };
 
   return (
     <Content>
@@ -141,12 +146,12 @@ export default function MyContextMenuContent() {
       <Item className="bg-transparent! gap-0 p-0">
         {p.stageManager.getSelectedEntities().length >= 2 && (
           <div className="grid grid-cols-3 grid-rows-3">
-            <KeyTooltip keyId="alignTop">
+            <ContextMenuTooltip keyId="alignTop">
               <Button variant="ghost" size="icon" className="size-6" onClick={() => p.layoutManager.alignTop()}>
                 <AlignStartHorizontal />
               </Button>
-            </KeyTooltip>
-            <KeyTooltip keyId="alignTopToBottomNoSpace">
+            </ContextMenuTooltip>
+            <ContextMenuTooltip keyId="alignTopToBottomNoSpace">
               <Button
                 variant="ghost"
                 size="icon"
@@ -155,9 +160,9 @@ export default function MyContextMenuContent() {
               >
                 <AlignVerticalJustifyStart />
               </Button>
-            </KeyTooltip>
+            </ContextMenuTooltip>
             <div />
-            <KeyTooltip keyId="alignCenterHorizontal">
+            <ContextMenuTooltip keyId="alignCenterHorizontal">
               <Button
                 variant="ghost"
                 size="icon"
@@ -166,9 +171,9 @@ export default function MyContextMenuContent() {
               >
                 <AlignCenterHorizontal />
               </Button>
-            </KeyTooltip>
+            </ContextMenuTooltip>
 
-            <KeyTooltip keyId="alignVerticalSpaceBetween">
+            <ContextMenuTooltip keyId="alignVerticalSpaceBetween">
               <Button
                 variant="ghost"
                 size="icon"
@@ -177,8 +182,8 @@ export default function MyContextMenuContent() {
               >
                 <AlignVerticalSpaceBetween />
               </Button>
-            </KeyTooltip>
-            <KeyTooltip keyId="layoutToSquare">
+            </ContextMenuTooltip>
+            <ContextMenuTooltip keyId="layoutToSquare">
               <Button
                 variant="ghost"
                 size="icon"
@@ -187,14 +192,14 @@ export default function MyContextMenuContent() {
               >
                 <Grip />
               </Button>
-            </KeyTooltip>
+            </ContextMenuTooltip>
 
-            <KeyTooltip keyId="alignBottom">
+            <ContextMenuTooltip keyId="alignBottom">
               <Button variant="ghost" size="icon" className="size-6" onClick={() => p.layoutManager.alignBottom()}>
                 <AlignEndHorizontal />
               </Button>
-            </KeyTooltip>
-            <KeyTooltip keyId="layoutToTightSquare">
+            </ContextMenuTooltip>
+            <ContextMenuTooltip keyId="layoutToTightSquare">
               <Button
                 variant="ghost"
                 size="icon"
@@ -203,8 +208,8 @@ export default function MyContextMenuContent() {
               >
                 <LayoutDashboard />
               </Button>
-            </KeyTooltip>
-            <KeyTooltip keyId="layoutToTightSquareDeep">
+            </ContextMenuTooltip>
+            <ContextMenuTooltip keyId="layoutToTightSquareDeep">
               <Button
                 variant="ghost"
                 size="icon"
@@ -213,17 +218,17 @@ export default function MyContextMenuContent() {
               >
                 <SquareSquare />
               </Button>
-            </KeyTooltip>
+            </ContextMenuTooltip>
           </div>
         )}
         {p.stageManager.getSelectedEntities().length >= 2 && (
           <div className="grid grid-cols-3 grid-rows-3">
-            <KeyTooltip keyId="alignLeft">
+            <ContextMenuTooltip keyId="alignLeft">
               <Button variant="ghost" size="icon" className="size-6" onClick={() => p.layoutManager.alignLeft()}>
                 <AlignStartVertical />
               </Button>
-            </KeyTooltip>
-            <KeyTooltip keyId="alignCenterVertical">
+            </ContextMenuTooltip>
+            <ContextMenuTooltip keyId="alignCenterVertical">
               <Button
                 variant="ghost"
                 size="icon"
@@ -232,13 +237,13 @@ export default function MyContextMenuContent() {
               >
                 <AlignCenterVertical />
               </Button>
-            </KeyTooltip>
-            <KeyTooltip keyId="alignRight">
+            </ContextMenuTooltip>
+            <ContextMenuTooltip keyId="alignRight">
               <Button variant="ghost" size="icon" className="size-6" onClick={() => p.layoutManager.alignRight()}>
                 <AlignEndVertical />
               </Button>
-            </KeyTooltip>
-            <KeyTooltip keyId="alignLeftToRightNoSpace">
+            </ContextMenuTooltip>
+            <ContextMenuTooltip keyId="alignLeftToRightNoSpace">
               <Button
                 variant="ghost"
                 size="icon"
@@ -247,9 +252,9 @@ export default function MyContextMenuContent() {
               >
                 <AlignHorizontalJustifyStart />
               </Button>
-            </KeyTooltip>
+            </ContextMenuTooltip>
 
-            <KeyTooltip keyId="alignHorizontalSpaceBetween">
+            <ContextMenuTooltip keyId="alignHorizontalSpaceBetween">
               <Button
                 variant="ghost"
                 size="icon"
@@ -258,11 +263,11 @@ export default function MyContextMenuContent() {
               >
                 <AlignHorizontalSpaceBetween />
               </Button>
-            </KeyTooltip>
+            </ContextMenuTooltip>
 
             <div />
 
-            <KeyTooltip keyId="adjustSelectedTextNodeWidthMin">
+            <ContextMenuTooltip keyId="adjustSelectedTextNodeWidthMin">
               <Button
                 variant="ghost"
                 size="icon"
@@ -271,8 +276,8 @@ export default function MyContextMenuContent() {
               >
                 <ChevronsRightLeft />
               </Button>
-            </KeyTooltip>
-            <KeyTooltip keyId="adjustSelectedTextNodeWidthAverage">
+            </ContextMenuTooltip>
+            <ContextMenuTooltip keyId="adjustSelectedTextNodeWidthAverage">
               <Button
                 variant="ghost"
                 size="icon"
@@ -281,8 +286,8 @@ export default function MyContextMenuContent() {
               >
                 <MoveHorizontal />
               </Button>
-            </KeyTooltip>
-            <KeyTooltip keyId="adjustSelectedTextNodeWidthMax">
+            </ContextMenuTooltip>
+            <ContextMenuTooltip keyId="adjustSelectedTextNodeWidthMax">
               <Button
                 variant="ghost"
                 size="icon"
@@ -291,14 +296,15 @@ export default function MyContextMenuContent() {
               >
                 <Code />
               </Button>
-            </KeyTooltip>
+            </ContextMenuTooltip>
           </div>
         )}
       </Item>
-      <Item className="bg-transparent!">
-        <div>
-          {selectedTreeRoot ? (
-            <KeyTooltip keyId="autoLayoutSelectedFastTreeModeRight">
+      {/* 树形面板 */}
+      {isSelectedTreeRoots() && (
+        <Item className="bg-transparent!">
+          <div>
+            <ContextMenuTooltip keyId="autoLayoutSelectedFastTreeModeRight">
               <Button
                 variant="ghost"
                 size="icon"
@@ -311,13 +317,8 @@ export default function MyContextMenuContent() {
               >
                 <Network className="-rotate-90" />
               </Button>
-            </KeyTooltip>
-          ) : (
-            <div />
-          )}
-
-          {selectedTreeRoot ? (
-            <KeyTooltip keyId="treeReverseX">
+            </ContextMenuTooltip>
+            <ContextMenuTooltip keyId="treeReverseX">
               <Button
                 variant="ghost"
                 size="icon"
@@ -328,12 +329,8 @@ export default function MyContextMenuContent() {
               >
                 <ArrowLeftRight />
               </Button>
-            </KeyTooltip>
-          ) : (
-            <div />
-          )}
-          {selectedTreeRoot ? (
-            <KeyTooltip keyId="autoLayoutSelectedFastTreeModeDown">
+            </ContextMenuTooltip>
+            <ContextMenuTooltip keyId="autoLayoutSelectedFastTreeModeDown">
               <Button
                 variant="ghost"
                 size="icon"
@@ -346,12 +343,8 @@ export default function MyContextMenuContent() {
               >
                 <Network />
               </Button>
-            </KeyTooltip>
-          ) : (
-            <div />
-          )}
-          {selectedTreeRoot ? (
-            <KeyTooltip keyId="treeReverseY">
+            </ContextMenuTooltip>
+            <ContextMenuTooltip keyId="treeReverseY">
               <Button
                 variant="ghost"
                 size="icon"
@@ -362,12 +355,12 @@ export default function MyContextMenuContent() {
               >
                 <ArrowDownUp />
               </Button>
-            </KeyTooltip>
-          ) : (
-            <div />
-          )}
-        </div>
-      </Item>
+            </ContextMenuTooltip>
+          </div>
+        </Item>
+      )}
+
+      <p className="pl-1 text-xs opacity-50">{contextMenuTooltipWords}</p>
 
       {/* 存在选中实体 */}
       {p.stageManager.getSelectedStageObjects().length > 0 &&
@@ -808,6 +801,65 @@ export default function MyContextMenuContent() {
         </KeyTooltip>
       </Item>
     </Content>
+  );
+}
+
+function ContextMenuTooltip({ keyId, children = <></> }: { keyId: string; children: ReactNode }) {
+  const [keySeq, setKeySeq] = useState<ReturnType<typeof parseEmacsKey>[number][]>();
+  const [activeProject] = useAtom(activeProjectAtom);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_, setContextMenuTooltipWords] = useAtom(contextMenuTooltipWordsAtom);
+  const { t } = useTranslation("keyBinds");
+
+  useEffect(() => {
+    activeProject?.keyBinds.get(keyId)?.then((key) => {
+      if (key) {
+        const parsed = parseEmacsKey(key);
+        if (parsed.length > 0) {
+          setKeySeq(parsed);
+        } else {
+          setKeySeq(undefined);
+        }
+      } else {
+        setKeySeq(undefined);
+      }
+    });
+  }, [keyId, activeProject]);
+
+  const onMouseEnter = () => {
+    const title = t(`${keyId}.title`);
+    let keyTips = "";
+    if (keySeq) {
+      keyTips = keySeq
+        .map((seq) => {
+          let res = "";
+          if (seq.control) {
+            res += "Ctrl+";
+          } else if (seq.meta) {
+            res += "Meta+";
+          } else if (seq.shift) {
+            res += "Shift+";
+          } else if (seq.alt) {
+            res += "Alt+";
+          }
+          return res + seq.key.toUpperCase();
+        })
+        .join(",");
+    } else {
+      keyTips = "[未绑定快捷键]";
+    }
+    setContextMenuTooltipWords(`${title} [${keyTips}]`);
+  };
+
+  const onMouseLeave = () => {
+    setContextMenuTooltipWords("");
+  };
+
+  return (
+    <span onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+      {children}
+    </span>
   );
 }
 

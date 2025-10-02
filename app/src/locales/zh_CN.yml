@@ -1369,3 +1369,15 @@ keyBinds:
   reverseImageColors:
     title: 反转图片颜色
     description: 反转选中图片的颜色（将白色背景变为黑色，反之亦然）
+  autoLayoutSelectedFastTreeModeRight:
+    title: 快速向右树形排列
+    description: 选中树形结构的跟节点，向右排列树形结构
+  autoLayoutSelectedFastTreeModeDown:
+    title: 快速向下树形排列
+    description: 选中树形结构的跟节点，向下排列树形结构
+  treeReverseY:
+    title: 纵向反转树形结构
+    description: 选中树形结构的根节点，将其纵向反转
+  treeReverseX:
+    title: 横向反转树形结构
+    description: 选中树形结构的根节点，将其横向反转
