@@ -1,6 +1,5 @@
 import { Project } from "@/core/Project";
-import { Renderer } from "@/core/render/canvas2d/renderer";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { EdgeCollisionBoxGetter } from "@/core/stage/stageObject/association/EdgeCollisionBoxGetter";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
@@ -39,7 +38,7 @@ export class LineEdge extends Edge {
   constructor(
     protected readonly project: Project,
     {
-      associationList = [] as ConnectableEntity[],
+      associationList = [] as Entity[],
       text = "",
       uuid = crypto.randomUUID() as string,
       color = Color.Transparent,
@@ -61,7 +60,7 @@ export class LineEdge extends Edge {
   }
 
   // warn: 暂时无引用
-  static fromTwoEntity(project: Project, source: ConnectableEntity, target: ConnectableEntity): LineEdge {
+  static fromTwoEntity(project: Project, source: Entity, target: Entity): LineEdge {
     const result = new LineEdge(project, {
       associationList: [source, target],
     });

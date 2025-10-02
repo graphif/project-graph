@@ -1,5 +1,5 @@
 import { Project } from "@/core/Project";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Color, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
@@ -10,7 +10,7 @@ import { Rectangle } from "@graphif/shapes";
  */
 @passExtraAtArg1
 @passObject
-export class SvgNode extends ConnectableEntity {
+export class SvgNode extends Entity {
   @serializable
   color: Color = Color.Transparent;
   @id

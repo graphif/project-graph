@@ -7,12 +7,18 @@ import {
   ContextMenuSubTrigger,
 } from "@/components/ui/context-menu";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
+import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
+import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import { Settings } from "@/core/service/Settings";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { TextNode } from "@/core/sprites/TextNode";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/sprites/TextNode";
 import { activeProjectAtom } from "@/state";
+import ColorWindow from "@/sub/ColorWindow";
+import { Direction } from "@/types/directions";
+import { openBrowserOrFile } from "@/utils/externalOpen";
 import { Color } from "@graphif/data-structures";
 import { useAtom } from "jotai";
 import {
@@ -27,12 +33,14 @@ import {
   AlignVerticalJustifyStart,
   AlignVerticalSpaceBetween,
   ArrowDownUp,
+  ArrowLeftFromLine,
   ArrowLeftRight,
   ArrowRightFromLine,
   ArrowUpRight,
   ArrowUpToLine,
   Asterisk,
   Box,
+  Check,
   ChevronsRightLeft,
   Clipboard,
   Code,
@@ -40,9 +48,10 @@ import {
   Dot,
   ExternalLink,
   FlaskConical,
-  ListEnd,
+  GitPullRequestCreateArrow,
   Grip,
   LayoutDashboard,
+  ListEnd,
   Maximize2,
   Minimize2,
   MousePointer,
@@ -53,33 +62,24 @@ import {
   Palette,
   Pencil,
   RefreshCcw,
+  Repeat2,
   Slash,
   Spline,
   SquareDot,
   SquareRoundCorner,
+  SquareSplitHorizontal,
   SquareSquare,
+  SquaresUnite,
   TextSelect,
   Trash,
   Undo,
   Waypoints,
-  SquaresUnite,
-  SquareSplitHorizontal,
-  Repeat2,
-  ArrowLeftFromLine,
-  Check,
-  GitPullRequestCreateArrow,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import tailwindColors from "tailwindcss/colors";
 import KeyTooltip from "./key-tooltip";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { Direction } from "@/types/directions";
-import { openBrowserOrFile } from "@/utils/externalOpen";
-import { useEffect, useState } from "react";
-import { ColorManager } from "@/core/service/feedbackService/ColorManager";
-import ColorWindow from "@/sub/ColorWindow";
-import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
 
 const Content = ContextMenuContent;
 const Item = ContextMenuItem;
@@ -99,8 +99,8 @@ export default function MyContextMenuContent() {
 
   const selectedTreeRoot =
     p.stageManager.getSelectedEntities().length === 1 &&
-    p.stageManager.getSelectedEntities()[0] instanceof ConnectableEntity &&
-    p.graphMethods.isTree(p.stageManager.getSelectedEntities()[0] as ConnectableEntity);
+    p.stageManager.getSelectedEntities()[0] instanceof Entity &&
+    p.graphMethods.isTree(p.stageManager.getSelectedEntities()[0] as Entity);
 
   return (
     <Content>
@@ -304,9 +304,7 @@ export default function MyContextMenuContent() {
                 size="icon"
                 className="size-6"
                 onClick={() =>
-                  p.autoAlign.autoLayoutSelectedFastTreeModeRight(
-                    p.stageManager.getSelectedEntities()[0] as ConnectableEntity,
-                  )
+                  p.autoAlign.autoLayoutSelectedFastTreeModeRight(p.stageManager.getSelectedEntities()[0] as Entity)
                 }
               >
                 <Network className="-rotate-90" />
@@ -322,9 +320,7 @@ export default function MyContextMenuContent() {
                 variant="ghost"
                 size="icon"
                 className="size-6"
-                onClick={() =>
-                  p.autoLayoutFastTree.treeReverseX(p.stageManager.getSelectedEntities()[0] as ConnectableEntity)
-                }
+                onClick={() => p.autoLayoutFastTree.treeReverseX(p.stageManager.getSelectedEntities()[0] as Entity)}
               >
                 <ArrowLeftRight />
               </Button>
@@ -339,9 +335,7 @@ export default function MyContextMenuContent() {
                 size="icon"
                 className="size-6"
                 onClick={() =>
-                  p.autoAlign.autoLayoutSelectedFastTreeModeDown(
-                    p.stageManager.getSelectedEntities()[0] as ConnectableEntity,
-                  )
+                  p.autoAlign.autoLayoutSelectedFastTreeModeDown(p.stageManager.getSelectedEntities()[0] as Entity)
                 }
               >
                 <Network />
@@ -356,9 +350,7 @@ export default function MyContextMenuContent() {
                 variant="ghost"
                 size="icon"
                 className="size-6"
-                onClick={() =>
-                  p.autoLayoutFastTree.treeReverseY(p.stageManager.getSelectedEntities()[0] as ConnectableEntity)
-                }
+                onClick={() => p.autoLayoutFastTree.treeReverseY(p.stageManager.getSelectedEntities()[0] as Entity)}
               >
                 <ArrowDownUp />
               </Button>
@@ -423,9 +415,7 @@ export default function MyContextMenuContent() {
           </Item>
           <Item
             onClick={() => {
-              const selectedNodes = p.stageManager
-                .getSelectedEntities()
-                .filter((node) => node instanceof ConnectableEntity);
+              const selectedNodes = p.stageManager.getSelectedEntities().filter((node) => node instanceof Entity);
               if (selectedNodes.length <= 1) {
                 toast.error("至少选择两个可连接节点");
                 return;
@@ -439,9 +429,7 @@ export default function MyContextMenuContent() {
           </Item>
           <Item
             onClick={() => {
-              const selectedNodes = p.stageManager
-                .getSelectedEntities()
-                .filter((node) => node instanceof ConnectableEntity);
+              const selectedNodes = p.stageManager.getSelectedEntities().filter((node) => node instanceof Entity);
               if (selectedNodes.length <= 1) {
                 toast.error("至少选择两个可连接节点");
                 return;

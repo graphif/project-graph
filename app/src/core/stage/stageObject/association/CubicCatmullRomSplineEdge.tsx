@@ -1,14 +1,13 @@
+import { Project } from "@/core/Project";
+import { TextNode } from "@/core/sprites/TextNode";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Edge } from "@/core/stage/stageObject/association/Edge";
+import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Serialized } from "@/types/node";
+import { getMultiLineTextSize } from "@/utils/font";
 import { Color, Vector } from "@graphif/data-structures";
 import { CubicCatmullRomSpline, Rectangle } from "@graphif/shapes";
 import { v4 as uuidv4 } from "uuid";
-import { Serialized } from "@/types/node";
-import { getMultiLineTextSize } from "@/utils/font";
-import { Project } from "@/core/Project";
-import { Renderer } from "@/core/render/canvas2d/renderer";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { TextNode } from "@/core/sprites/TextNode";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
 
 /**
  * CR曲线连线
@@ -19,8 +18,8 @@ import { Edge } from "@/core/stage/stageObject/association/Edge";
 export class CubicCatmullRomSplineEdge extends Edge {
   public uuid: string;
   public text: string;
-  protected _source: ConnectableEntity;
-  protected _target: ConnectableEntity;
+  protected _source: Entity;
+  protected _target: Entity;
   public color: Color = Color.Transparent;
   public alpha = 0.5;
   public tension = 0;
@@ -48,11 +47,7 @@ export class CubicCatmullRomSplineEdge extends Edge {
     return this._collisionBox;
   }
 
-  static fromTwoEntity(
-    project: Project,
-    source: ConnectableEntity,
-    target: ConnectableEntity,
-  ): CubicCatmullRomSplineEdge {
+  static fromTwoEntity(project: Project, source: Entity, target: Entity): CubicCatmullRomSplineEdge {
     // 处理控制点，控制点必须有四个，1 2 3 4，12可重叠，34可重叠
     const startLocation = source.geometryCenter.clone();
     const endLocation = target.geometryCenter.clone();

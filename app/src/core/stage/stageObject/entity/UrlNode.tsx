@@ -1,7 +1,5 @@
 import { Project } from "@/core/Project";
-import { Renderer } from "@/core/render/canvas2d/renderer";
-import { NodeMoveShadowEffect } from "@/core/service/feedbackService/effectEngine/concrete/NodeMoveShadowEffect";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { getTextSize } from "@/utils/font";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
@@ -15,7 +13,7 @@ import { Rectangle } from "@graphif/shapes";
  */
 @passExtraAtArg1
 @passObject
-export class UrlNode extends ConnectableEntity {
+export class UrlNode extends Entity {
   @id
   @serializable
   uuid: string;

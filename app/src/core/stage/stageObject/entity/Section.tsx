@@ -1,8 +1,5 @@
 import { Project } from "@/core/Project";
-import { Renderer } from "@/core/render/canvas2d/renderer";
-import { NodeMoveShadowEffect } from "@/core/service/feedbackService/effectEngine/concrete/NodeMoveShadowEffect";
 import { Settings } from "@/core/service/Settings";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { getTextSize } from "@/utils/font";
@@ -12,7 +9,7 @@ import { Line, Rectangle, Shape } from "@graphif/shapes";
 
 @passExtraAtArg1
 @passObject
-export class Section extends ConnectableEntity {
+export class Section extends Entity {
   /**
    * 节点是否被选中
    */

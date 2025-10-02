@@ -1,7 +1,6 @@
 import { Project } from "@/core/Project";
-import { Renderer } from "@/core/render/canvas2d/renderer";
-import { ConnectableAssociation } from "@/core/stage/stageObject/abstract/Association";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Association } from "@/core/stage/stageObject/abstract/Association";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { getMultiLineTextSize } from "@/utils/font";
 import { Color, Vector } from "@graphif/data-structures";
@@ -31,7 +30,7 @@ export type MultiTargetUndirectedEdgeRenderType = "line" | "convex" | "circle";
  */
 @passExtraAtArg1
 @passObject
-export class MultiTargetUndirectedEdge extends ConnectableAssociation {
+export class MultiTargetUndirectedEdge extends Association {
   @id
   @serializable
   public uuid: string;
@@ -70,7 +69,7 @@ export class MultiTargetUndirectedEdge extends ConnectableAssociation {
   constructor(
     protected readonly project: Project,
     {
-      associationList = [] as ConnectableEntity[],
+      associationList = [] as Entity[],
       text = "",
       uuid = crypto.randomUUID() as string,
       color = Color.Transparent,
@@ -80,7 +79,7 @@ export class MultiTargetUndirectedEdge extends ConnectableAssociation {
       padding = 10,
       renderType = "line" as MultiTargetUndirectedEdgeRenderType,
     }: {
-      associationList?: ConnectableEntity[];
+      associationList?: Entity[];
       text?: string;
       uuid?: string;
       color?: Color;
@@ -130,7 +129,7 @@ export class MultiTargetUndirectedEdge extends ConnectableAssociation {
     return new Rectangle(this.centerLocation.subtract(textSize.divide(2)), textSize);
   }
 
-  static createFromSomeEntity(project: Project, entities: ConnectableEntity[]) {
+  static createFromSomeEntity(project: Project, entities: Entity[]) {
     // 自动计算padding
     let padding = 10;
     for (const entity of entities) {

@@ -1,9 +1,7 @@
 import { Color, ProgressNumber } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
-import { LineCuttingEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineCuttingEffect";
-import { RectangleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleNoteEffect";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
@@ -156,7 +154,7 @@ export class TagManager {
     if (!tagObject) {
       return;
     }
-    if (tagObject instanceof ConnectableEntity) {
+    if (tagObject instanceof Entity) {
       const childNodes = this.project.graphMethods.getSuccessorSet(tagObject);
       const boundingRect = Rectangle.getBoundingRectangle(
         childNodes.map((childNode) => childNode.collisionBox.getRectangle()),

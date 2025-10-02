@@ -1,6 +1,6 @@
 import { Project, service } from "@/core/Project";
 import { ProgramFunctions } from "@/core/service/dataGenerateService/autoComputeEngine/functions/programLogic";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/sprites/TextNode";
@@ -30,7 +30,7 @@ export class AutoComputeUtils {
     return parents;
   }
 
-  getParentEntities(node: TextNode): ConnectableEntity[] {
+  getParentEntities(node: TextNode): Entity[] {
     const parents = this.project.graphMethods.nodeParentArray(node);
     // 将parents按x的坐标排序，小的在前面
     parents.sort((a, b) => {
@@ -210,7 +210,7 @@ export class AutoComputeUtils {
    * 同时判断是否有逻辑节点的父节点或子节点
    * @param node
    */
-  isNodeConnectedWithLogicNode(node: ConnectableEntity): boolean {
+  isNodeConnectedWithLogicNode(node: Entity): boolean {
     for (const fatherNode of this.project.graphMethods.nodeParentArray(node)) {
       if (fatherNode instanceof TextNode && this.isNameIsLogicNode(fatherNode.text)) {
         return true;

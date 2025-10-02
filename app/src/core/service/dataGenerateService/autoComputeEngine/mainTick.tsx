@@ -8,20 +8,14 @@ import {
   LogicNodeNameEnum,
   LogicNodeSimpleOperatorEnum,
 } from "@/core/service/dataGenerateService/autoComputeEngine/logicNodeNameEnum";
-import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
-import { TextRaiseEffectLocated } from "@/core/service/feedbackService/effectEngine/concrete/TextRaiseEffectLocated";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/sprites/TextNode";
 
 type MathFunctionType = (args: number[]) => number[];
 type StringFunctionType = (args: string[]) => string[];
-type OtherFunctionType = (
-  project: Project,
-  fatherNodes: ConnectableEntity[],
-  childNodes: ConnectableEntity[],
-) => string[];
+type OtherFunctionType = (project: Project, fatherNodes: Entity[], childNodes: Entity[]) => string[];
 type VariableFunctionType = (project: Project, args: string[]) => string[];
 type StringFunctionMap = Record<string, StringFunctionType>;
 type OtherFunctionMap = Record<string, OtherFunctionType>;
@@ -250,7 +244,7 @@ export class AutoCompute {
    * @param entities
    * @returns
    */
-  private sortEntityByLocation(entities: ConnectableEntity[]): ConnectableEntity[] {
+  private sortEntityByLocation(entities: Entity[]): Entity[] {
     // 按照y坐标排序
     // 太草了，2025.1.18 周六晚上littlefean发现y轴排序不能只传递一个对象，要传递两个对象然后相互减
     // 否则就拍了个寂寞……

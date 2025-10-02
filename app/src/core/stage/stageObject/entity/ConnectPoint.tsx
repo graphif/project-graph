@@ -1,6 +1,5 @@
 import { Project } from "@/core/Project";
-// import { CircleChangeRadiusEffect } from "@/core/service/feedbackService/effectEngine/concrete/CircleChangeRadiusEffect";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
@@ -11,7 +10,7 @@ import { Rectangle } from "@graphif/shapes";
  */
 @passExtraAtArg1
 @passObject
-export class ConnectPoint extends ConnectableEntity {
+export class ConnectPoint extends Entity {
   // 坍缩状态半径
   static CONNECT_POINT_SHRINK_RADIUS = 15;
   // 膨胀状态半径

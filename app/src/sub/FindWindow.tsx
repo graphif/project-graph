@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 import { SubWindow } from "@/core/service/SubWindow";
 import { activeProjectAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";

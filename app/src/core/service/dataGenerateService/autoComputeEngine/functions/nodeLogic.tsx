@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Project } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { PenStrokeDeletedEffect } from "@/core/service/feedbackService/effectEngine/concrete/PenStrokeDeletedEffect";
 import { SoundService } from "@/core/service/feedbackService/SoundService";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
@@ -30,11 +29,7 @@ export namespace NodeLogic {
    * @param childNodes
    * @returns
    */
-  export function setColorByRGB(
-    _project: Project,
-    fatherNodes: ConnectableEntity[],
-    childNodes: ConnectableEntity[],
-  ): string[] {
+  export function setColorByRGB(_project: Project, fatherNodes: Entity[], childNodes: Entity[]): string[] {
     if (fatherNodes.length !== 3) {
       return [];
     }
@@ -54,11 +49,7 @@ export namespace NodeLogic {
     return [];
   }
 
-  export function setColorByRGBA(
-    _project: Project,
-    fatherNodes: ConnectableEntity[],
-    childNodes: ConnectableEntity[],
-  ): string[] {
+  export function setColorByRGBA(_project: Project, fatherNodes: Entity[], childNodes: Entity[]): string[] {
     if (fatherNodes.length !== 4) {
       return [];
     }
@@ -85,11 +76,7 @@ export namespace NodeLogic {
     return [];
   }
 
-  export function getLocation(
-    _project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function getLocation(_project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     // 只获取第一个父节点元素
     if (fatherNodes.length < 1) {
       return [];
@@ -99,11 +86,7 @@ export namespace NodeLogic {
     return [location.x.toString(), location.y.toString()];
   }
 
-  export function setLocation(
-    _project: Project,
-    fatherNodes: ConnectableEntity[],
-    childNodes: ConnectableEntity[],
-  ): string[] {
+  export function setLocation(_project: Project, fatherNodes: Entity[], childNodes: Entity[]): string[] {
     if (fatherNodes.length < 2) {
       return [];
     }
@@ -123,11 +106,7 @@ export namespace NodeLogic {
     return [];
   }
 
-  export function setLocationByUUID(
-    project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function setLocationByUUID(project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     if (fatherNodes.length < 3) {
       return [];
     }
@@ -154,11 +133,7 @@ export namespace NodeLogic {
     return [];
   }
 
-  export function getLocationByUUID(
-    project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function getLocationByUUID(project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     const fatherNode1 = fatherNodes[0];
     if (fatherNode1 instanceof TextNode) {
       const findEntity = project.stageManager.getEntitiesByUUIDs([fatherNode1.text])[0];
@@ -172,11 +147,7 @@ export namespace NodeLogic {
     return ["输入不是TextNode节点"];
   }
 
-  export function getSize(
-    _project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function getSize(_project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     // 只获取第一个父节点元素
     if (fatherNodes.length < 1) {
       return [];
@@ -186,39 +157,23 @@ export namespace NodeLogic {
     return [size.x.toString(), size.y.toString()];
   }
 
-  export function getMouseLocation(
-    _project: Project,
-    _fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function getMouseLocation(_project: Project, _fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     const mouseLocation = MouseLocation.vector();
     return [mouseLocation.x.toString(), mouseLocation.y.toString()];
   }
 
-  export function getMouseWorldLocation(
-    project: Project,
-    _fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function getMouseWorldLocation(project: Project, _fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     const mouseLocation = MouseLocation.vector();
     const worldLocation = project.renderer.transformView2World(mouseLocation);
     return [worldLocation.x.toString(), worldLocation.y.toString()];
   }
 
-  export function getCameraLocation(
-    project: Project,
-    _fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function getCameraLocation(project: Project, _fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     const cameraLocation = project.camera.location;
     return [cameraLocation.x.toString(), cameraLocation.y.toString()];
   }
 
-  export function setCameraLocation(
-    project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function setCameraLocation(project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     if (fatherNodes.length < 2) {
       return [];
     }
@@ -232,20 +187,12 @@ export namespace NodeLogic {
     return [];
   }
 
-  export function getCameraScale(
-    project: Project,
-    _fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function getCameraScale(project: Project, _fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     const cameraScale = project.camera.currentScale;
     return [cameraScale.toString()];
   }
 
-  export function setCameraScale(
-    project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function setCameraScale(project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     if (fatherNodes.length < 1) {
       return [];
     }
@@ -257,11 +204,7 @@ export namespace NodeLogic {
     return [];
   }
 
-  export function isCollision(
-    _project: Project,
-    fatherNodes: ConnectableEntity[],
-    childNodes: ConnectableEntity[],
-  ): string[] {
+  export function isCollision(_project: Project, fatherNodes: Entity[], childNodes: Entity[]): string[] {
     if (fatherNodes.length < 1) {
       return ["0"];
     }
@@ -272,20 +215,12 @@ export namespace NodeLogic {
     return [isCollision ? "1" : "0"];
   }
 
-  export function getTime(
-    _project: Project,
-    _fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function getTime(_project: Project, _fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     const time = new Date().getTime();
     return [time.toString()];
   }
 
-  export function getDateTime(
-    _project: Project,
-    _fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function getDateTime(_project: Project, _fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     const date = new Date();
     const result = [
       date.getFullYear(),
@@ -301,11 +236,7 @@ export namespace NodeLogic {
     });
   }
 
-  export function addDateTime(
-    _project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function addDateTime(_project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     if (fatherNodes.length < 8) {
       return ["Error: input node contains less than 7 nodes"];
     } else {
@@ -360,11 +291,7 @@ export namespace NodeLogic {
    * @param fatherNodes
    * @param _childNodes
    */
-  export function playSound(
-    _project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function playSound(_project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     if (fatherNodes.length < 1) {
       return [];
     }
@@ -379,19 +306,11 @@ export namespace NodeLogic {
     }
     return [];
   }
-  export function getFps(
-    project: Project,
-    _fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function getFps(project: Project, _fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     return [project.renderer.fps.toString()];
   }
 
-  export function collectNodeNameByRGBA(
-    project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function collectNodeNameByRGBA(project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     if (fatherNodes.length < 4) {
       return ["Error: input node contains less than 4 nodes"];
     }
@@ -433,11 +352,7 @@ export namespace NodeLogic {
    * @param fatherNodes
    * @param _childNodes
    */
-  export function collectNodeDetailsByRGBA(
-    project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function collectNodeDetailsByRGBA(project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     if (fatherNodes.length < 4) {
       return ["Error: input node contains less than 4 nodes"];
     }
@@ -474,11 +389,7 @@ export namespace NodeLogic {
     return ["Error: input node is not valid"];
   }
 
-  export function getNodeRGBA(
-    _project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function getNodeRGBA(_project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     if (fatherNodes.length < 1) {
       return ["Error: input node contains less than 1 nodes"];
     }
@@ -490,11 +401,7 @@ export namespace NodeLogic {
     return ["Error: input node is not valid"];
   }
 
-  export function getNodeUUID(
-    _project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function getNodeUUID(_project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     if (fatherNodes.length < 1) {
       return ["Error: input node contains less than 1 nodes"];
     }
@@ -509,11 +416,7 @@ export namespace NodeLogic {
    * @param _childNodes
    * @returns
    */
-  export function createTextNodeOnLocation(
-    project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function createTextNodeOnLocation(project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     if (fatherNodes.length < 4) {
       return ["Error: input node contains less than 4 nodes"];
     }
@@ -550,11 +453,7 @@ export namespace NodeLogic {
    * @param fatherNodes
    * @param _childNodes
    */
-  export function isHaveEntityOnLocation(
-    project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function isHaveEntityOnLocation(project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     if (fatherNodes.length < 2) {
       return ["Error: input node contains less than 2 nodes"];
     }
@@ -578,11 +477,7 @@ export namespace NodeLogic {
     }
   }
 
-  export function replaceGlobalContent(
-    project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function replaceGlobalContent(project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     if (fatherNodes.length !== 2) {
       return ["输入数量不正确"];
     }
@@ -609,11 +504,7 @@ export namespace NodeLogic {
    * @param fatherNodes 被搜索字符串，是否大小写敏感
    * @param _childNodes
    */
-  export function searchContent(
-    project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function searchContent(project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     if (fatherNodes.length !== 2) {
       return ["输入数量不正确，第一个参数为被搜索字符串，第二个是否大小写敏感（0/1）"];
     }
@@ -640,11 +531,7 @@ export namespace NodeLogic {
     return ["输入的节点格式必须都是TextNode"];
   }
 
-  export function deletePenStrokeByColor(
-    project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function deletePenStrokeByColor(project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     if (fatherNodes.length < 4) {
       return ["Error: input node contains less than 4 nodes"];
     }
@@ -681,11 +568,7 @@ export namespace NodeLogic {
    *   - 如果当前步数有对应的输出，返回该输出字符串。
    *   - 如果当前步数没有输出，返回默认字符串。
    */
-  export function delayCopy(
-    _project: Project,
-    fatherNodes: ConnectableEntity[],
-    _childNodes: ConnectableEntity[],
-  ): string[] {
+  export function delayCopy(_project: Project, fatherNodes: Entity[], _childNodes: Entity[]): string[] {
     if (fatherNodes.length < 4) {
       // 多了一个逻辑节点本身，所以实际进来的节点比延迟复制需要的节点节点多一个
       return ["Error: input node contains less than 3 nodes"];

@@ -1,16 +1,15 @@
 import { Project } from "@/core/Project";
+import { TextNode } from "@/core/sprites/TextNode";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
-import { TextNode } from "@/core/sprites/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { PathString } from "@/utils/pathString";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { MouseLocation } from "../../controlService/MouseLocation";
-import { RectanglePushInEffect } from "../../feedbackService/effectEngine/concrete/RectanglePushInEffect";
-import { isMermaidGraphString, isSvgString } from "./stringValidTools";
 import { toast } from "sonner";
+import { MouseLocation } from "../../controlService/MouseLocation";
+import { isMermaidGraphString, isSvgString } from "./stringValidTools";
 
 /**
  * 专门处理文本粘贴的服务

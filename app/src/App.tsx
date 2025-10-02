@@ -1,4 +1,3 @@
-import MyContextMenuContent from "@/components/context-menu-content";
 import RenderSubWindows from "@/components/render-sub-windows";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
@@ -34,7 +33,6 @@ export default function App() {
   const [isWide, setIsWide] = useState(false);
   const [telemetryEventSent, setTelemetryEventSent] = useState(false);
   const [dropState, setDropState] = useState<"none" | "open" | "append">("none");
-  const [ignoreMouseEvents, setIgnoreMouseEvents] = useState(false);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
   const [isClickThroughEnabled, setIsClickThroughEnabled] = useState(false);
 
@@ -162,12 +160,6 @@ export default function App() {
     if (!canvasWrapperRef.current) return;
     if (!activeProject) return;
     activeProject.mount(canvasWrapperRef.current);
-    activeProject.canvas.element.addEventListener("pointerdown", () => {
-      setIgnoreMouseEvents(true);
-    });
-    activeProject.canvas.element.addEventListener("pointerup", () => {
-      setIgnoreMouseEvents(false);
-    });
     const unlisten2 = getCurrentWindow().onDragDropEvent((event) => {
       if (event.payload.type === "over") {
         if (event.payload.position.y <= 96) {
@@ -342,7 +334,6 @@ export default function App() {
       className={cn(
         "scrollbar-hide z-10 flex h-9 gap-2 overflow-x-auto whitespace-nowrap hover:opacity-100",
         isClassroomMode && "opacity-0",
-        ignoreMouseEvents && "pointer-events-none",
       )}
     >
       {projects.map((project) => (
@@ -392,13 +383,7 @@ export default function App() {
       onContextMenu={(e) => e.preventDefault()}
     >
       {/* 菜单 | 标签页 | ...移动窗口区域... | 窗口控制按钮 */}
-      <div
-        className={cn(
-          "z-10 flex h-9 gap-2 transition-all hover:opacity-100",
-          isClassroomMode && "opacity-0",
-          ignoreMouseEvents && "pointer-events-none",
-        )}
-      >
+      <div className={cn("z-10 flex h-9 gap-2 transition-all hover:opacity-100", isClassroomMode && "opacity-0")}>
         {/* <div className=" flex h-8 shrink-0 items-center overflow-hidden rounded-xl border"></div> */}
         <GlobalMenu />
         {isWide && <ProjectTabs />}
@@ -488,7 +473,7 @@ export default function App() {
         <ContextMenuTrigger>
           <div ref={contextMenuTriggerRef} />
         </ContextMenuTrigger>
-        <MyContextMenuContent />
+        {/*<MyContextMenuContent />*/}
       </ContextMenu>
 
       {/* ======= */}

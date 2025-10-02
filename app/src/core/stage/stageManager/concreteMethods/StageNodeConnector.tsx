@@ -1,5 +1,5 @@
 import { Project, service } from "@/core/Project";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/CubicCatmullRomSplineEdge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
@@ -17,7 +17,7 @@ export class NodeConnector {
    * @param fromNode
    * @param toNode
    */
-  private isConnectable(fromNode: ConnectableEntity, toNode: ConnectableEntity): boolean {
+  private isConnectable(fromNode: Entity, toNode: Entity): boolean {
     if (
       this.project.stageManager.isEntityExists(fromNode.uuid) &&
       this.project.stageManager.isEntityExists(toNode.uuid)
@@ -43,8 +43,8 @@ export class NodeConnector {
    * @returns
    */
   connectConnectableEntity(
-    fromNode: ConnectableEntity,
-    toNode: ConnectableEntity,
+    fromNode: Entity,
+    toNode: Entity,
     text: string = "",
     targetRectRate?: [number, number],
     sourceRectRate?: [number, number],
@@ -64,7 +64,7 @@ export class NodeConnector {
     this.project.stageManager.updateReferences();
   }
 
-  addCrEdge(fromNode: ConnectableEntity, toNode: ConnectableEntity): void {
+  addCrEdge(fromNode: Entity, toNode: Entity): void {
     if (!this.isConnectable(fromNode, toNode)) {
       return;
     }
@@ -94,7 +94,7 @@ export class NodeConnector {
    * @param newTarget
    * @returns
    */
-  private changeEdgeTarget(edge: LineEdge, newTarget: ConnectableEntity) {
+  private changeEdgeTarget(edge: LineEdge, newTarget: Entity) {
     if (edge.target.uuid === newTarget.uuid) {
       return;
     }
@@ -106,7 +106,7 @@ export class NodeConnector {
    * 改变所有选中的连线的目标节点
    * @param newTarget
    */
-  changeSelectedEdgeTarget(newTarget: ConnectableEntity) {
+  changeSelectedEdgeTarget(newTarget: Entity) {
     const selectedEdges = this.project.stageManager.getSelectedStageObjects().filter((obj) => obj instanceof LineEdge);
     for (const edge of selectedEdges) {
       if (edge instanceof LineEdge) {

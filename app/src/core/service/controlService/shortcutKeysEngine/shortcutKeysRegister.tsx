@@ -1,13 +1,10 @@
 import { Dialog } from "@/components/ui/dialog";
 import { Project, service } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { RectangleSlideEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleSlideEffect";
-import { ViewFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewFlashEffect";
-import { ViewOutlineFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewOutlineFlashEffect";
 import { Settings } from "@/core/service/Settings";
 import { Themes } from "@/core/service/Themes";
 import { PenStrokeMethods } from "@/core/stage/stageManager/basicMethods/PenStrokeMethods";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { TextNode } from "@/core/sprites/TextNode";
@@ -144,9 +141,7 @@ export class KeyBindsRegistrar {
     });
     await this.project.keyBinds.create("createUndirectedEdgeFromEntities", "S-g", () => {
       // 构建无向边
-      const selectedNodes = this.project.stageManager
-        .getSelectedEntities()
-        .filter((node) => node instanceof ConnectableEntity);
+      const selectedNodes = this.project.stageManager.getSelectedEntities().filter((node) => node instanceof Entity);
       if (selectedNodes.length <= 1) {
         toast.error("至少选择两个可连接节点");
         return;
@@ -576,9 +571,7 @@ export class KeyBindsRegistrar {
     await this.project.keyBinds.create("treeGraphAdjust", "A-S-f", () => {
       if (!this.project.keyboardOnlyEngine.isOpenning()) return;
       // 获取所有的选中节点
-      const entities = this.project.stageManager
-        .getSelectedEntities()
-        .filter((entity) => entity instanceof ConnectableEntity);
+      const entities = this.project.stageManager.getSelectedEntities().filter((entity) => entity instanceof Entity);
       // 调整所有节点的树形结构
       for (const entity of entities) {
         this.project.keyboardOnlyTreeEngine.adjustTreeNode(entity);
@@ -714,7 +707,7 @@ export class KeyBindsRegistrar {
           const fromNode = selectedNodes[i];
           const toNode = selectedNodes[j];
           if (fromNode === toNode) continue;
-          if (fromNode instanceof ConnectableEntity && toNode instanceof ConnectableEntity) {
+          if (fromNode instanceof Entity && toNode instanceof Entity) {
             this.project.stageManager.connectEntity(fromNode, toNode, false);
           }
         }
@@ -725,7 +718,7 @@ export class KeyBindsRegistrar {
     await this.project.keyBinds.create("connectLeftToRight", "- - r i g h t", () => {
       const selectedNodes = this.project.stageManager
         .getSelectedEntities()
-        .filter((entity) => entity instanceof ConnectableEntity);
+        .filter((entity) => entity instanceof Entity);
       if (selectedNodes.length <= 1) return;
       selectedNodes.sort((a, b) => a.collisionBox.getRectangle().location.x - b.collisionBox.getRectangle().location.x);
       for (let i = 0; i < selectedNodes.length - 1; i++) {
@@ -739,7 +732,7 @@ export class KeyBindsRegistrar {
     await this.project.keyBinds.create("connectTopToBottom", "- - d o w n", () => {
       const selectedNodes = this.project.stageManager
         .getSelectedEntities()
-        .filter((entity) => entity instanceof ConnectableEntity);
+        .filter((entity) => entity instanceof Entity);
       if (selectedNodes.length <= 1) return;
       selectedNodes.sort((a, b) => a.collisionBox.getRectangle().location.y - b.collisionBox.getRectangle().location.y);
       for (let i = 0; i < selectedNodes.length - 1; i++) {

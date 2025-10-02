@@ -1,9 +1,6 @@
 import { ArrayFunctions } from "@/core/algorithm/arrayFunctions";
 import { Project, service } from "@/core/Project";
-import { EntityAlignEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityAlignEffect";
-import { RectangleRenderEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleRenderEffect";
 import { SoundService } from "@/core/service/feedbackService/SoundService";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -266,7 +263,7 @@ export class AutoAlign {
    * 自动布局树形结构
    * @param selectedRootEntity
    */
-  autoLayoutSelectedFastTreeModeRight(selectedRootEntity: ConnectableEntity) {
+  autoLayoutSelectedFastTreeModeRight(selectedRootEntity: Entity) {
     // 检测树形结构
     if (!this.project.graphMethods.isTree(selectedRootEntity)) {
       // 不是树形结构，不做任何处理
@@ -276,7 +273,7 @@ export class AutoAlign {
     this.project.autoLayoutFastTree.autoLayoutFastTreeModeRight(selectedRootEntity);
   }
 
-  autoLayoutSelectedFastTreeModeDown(selectedRootEntity: ConnectableEntity) {
+  autoLayoutSelectedFastTreeModeDown(selectedRootEntity: Entity) {
     // 检测树形结构
     if (!this.project.graphMethods.isTree(selectedRootEntity)) {
       // 不是树形结构，不做任何处理

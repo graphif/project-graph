@@ -1,9 +1,7 @@
 import { Project, service } from "@/core/Project";
-import { EntityShrinkEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityShrinkEffect";
-import { PenStrokeDeletedEffect } from "@/core/service/feedbackService/effectEngine/concrete/PenStrokeDeletedEffect";
 import { Settings } from "@/core/service/Settings";
+import { TextNode } from "@/core/sprites/TextNode";
 import { Association } from "@/core/stage/stageObject/abstract/Association";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/CubicCatmullRomSplineEdge";
@@ -14,9 +12,6 @@ import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
 import { Section } from "@/core/stage/stageObject/entity/Section";
-import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
-import { TextNode } from "@/core/sprites/TextNode";
-import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { Direction } from "@/types/directions";
 import { Serialized } from "@/types/node";
 import { Vector } from "@graphif/data-structures";
@@ -64,44 +59,6 @@ export class StageManager {
     return this.project.stage.find((node) => node.uuid === uuid);
   }
 
-  isEmpty(): boolean {
-    return this.project.stage.length === 0;
-  }
-  getTextNodes(): TextNode[] {
-    return this.project.stage.filter((node) => node instanceof TextNode);
-  }
-  getConnectableEntity(): ConnectableEntity[] {
-    return this.project.stage.filter((node) => node instanceof ConnectableEntity);
-  }
-  isEntityExists(uuid: string): boolean {
-    return this.project.stage.filter((node) => node.uuid === uuid).length > 0;
-  }
-  getSections(): Section[] {
-    return this.project.stage.filter((node) => node instanceof Section);
-  }
-  getImageNodes(): ImageNode[] {
-    return this.project.stage.filter((node) => node instanceof ImageNode);
-  }
-  getConnectPoints(): ConnectPoint[] {
-    return this.project.stage.filter((node) => node instanceof ConnectPoint);
-  }
-  getUrlNodes(): UrlNode[] {
-    return this.project.stage.filter((node) => node instanceof UrlNode);
-  }
-  getPortalNodes(): PortalNode[] {
-    return this.project.stage.filter((node) => node instanceof PortalNode);
-  }
-  getPenStrokes(): PenStroke[] {
-    return this.project.stage.filter((node) => node instanceof PenStroke);
-  }
-  getSvgNodes(): SvgNode[] {
-    return this.project.stage.filter((node) => node instanceof SvgNode);
-  }
-
-  getStageObjects(): StageObject[] {
-    return this.project.stage;
-  }
-
   /**
    * 获取场上所有的实体
    * @returns
@@ -136,64 +93,6 @@ export class StageManager {
     this.project.stage.push(stageObject);
   }
 
-  /**
-   * 更新节点的引用，将unknown的节点替换为真实的节点，保证对象在内存中的唯一性
-   * 节点什么情况下会是unknown的？
-   *
-   * 包含了对Section框的更新
-   * 包含了对Edge双向线偏移状态的更新
-   */
-  updateReferences() {
-    for (const entity of this.getEntities()) {
-      // 实体是可连接类型
-      if (entity instanceof ConnectableEntity) {
-        for (const edge of this.getAssociations()) {
-          if (edge instanceof Edge) {
-            if (edge.source.unknown && edge.source.uuid === entity.uuid) {
-              edge.source = entity;
-            }
-            if (edge.target.unknown && edge.target.uuid === entity.uuid) {
-              edge.target = entity;
-            }
-          }
-        }
-      }
-    }
-    // 以下是Section框的更新，y值降序排序，从下往上排序，因为下面的往往是内层的Section
-    for (const section of this.getSections().sort(
-      (a, b) => b.collisionBox.getRectangle().location.y - a.collisionBox.getRectangle().location.y,
-    )) {
-      // 更新孩子数组，并调整位置和大小
-      const newChildList = [];
-
-      for (const child of section.children) {
-        if (this.project.stage.find((node) => node.uuid === child.uuid)) {
-          const childObject = this.project.stage.find(
-            (node) => node.uuid === child.uuid && node instanceof Entity,
-          ) as Entity;
-          if (childObject) {
-            newChildList.push(childObject);
-          }
-        }
-      }
-      section.children = newChildList;
-      section.adjustLocationAndSize();
-      section.adjustChildrenStateByCollapse();
-    }
-
-    // 以下是LineEdge双向线偏移状态的更新
-    for (const edge of this.getLineEdges()) {
-      let isShifting = false;
-      for (const otherEdge of this.getLineEdges()) {
-        if (edge.source === otherEdge.target && edge.target === otherEdge.source) {
-          isShifting = true;
-          break;
-        }
-      }
-      edge.isShifting = isShifting;
-    }
-  }
-
   getTextNodeByUUID(uuid: string): TextNode | null {
     for (const node of this.getTextNodes()) {
       if (node.uuid === uuid) {
@@ -202,7 +101,7 @@ export class StageManager {
     }
     return null;
   }
-  getConnectableEntityByUUID(uuid: string): ConnectableEntity | null {
+  getConnectableEntityByUUID(uuid: string): Entity | null {
     for (const node of this.getConnectableEntity()) {
       if (node.uuid === uuid) {
         return node;
@@ -312,7 +211,7 @@ export class StageManager {
     return null;
   }
 
-  findConnectableEntityByLocation(location: Vector): ConnectableEntity | null {
+  findConnectableEntityByLocation(location: Vector): Entity | null {
     for (const entity of this.getConnectableEntity()) {
       if (entity.isHiddenBySectionCollapse) {
         continue;
@@ -477,7 +376,7 @@ export class StageManager {
     但如果您既要右键点击节点创建连线功能，又想要在节点上右键展开右键菜单操作，很抱歉，这两个功能在逻辑上冲突了。
     `;
 
-  connectEntity(fromNode: ConnectableEntity, toNode: ConnectableEntity, isCrEdge: boolean = false) {
+  connectEntity(fromNode: Entity, toNode: Entity, isCrEdge: boolean = false) {
     if (fromNode === toNode && !Settings.allowAddCycleEdge) {
       toast.warning(
         <div>
@@ -504,8 +403,8 @@ export class StageManager {
    * @returns
    */
   connectMultipleEntities(
-    fromNodes: ConnectableEntity[],
-    toNode: ConnectableEntity,
+    fromNodes: Entity[],
+    toNode: Entity,
     isCrEdge: boolean = false,
     sourceRectRate?: [number, number],
     targetRectRate?: [number, number],
@@ -537,7 +436,7 @@ export class StageManager {
    * 反转一个节点与他相连的所有连线方向
    * @param connectEntity
    */
-  private reverseNodeEdges(connectEntity: ConnectableEntity) {
+  private reverseNodeEdges(connectEntity: Entity) {
     const prepareReverseEdges = [];
     for (const edge of this.getLineEdges()) {
       if (edge.target === connectEntity || edge.source === connectEntity) {
@@ -551,7 +450,7 @@ export class StageManager {
    * 反转所有选中的节点的每个节点的连线
    */
   reverseSelectedNodeEdge() {
-    const entities = this.getSelectedEntities().filter((entity) => entity instanceof ConnectableEntity);
+    const entities = this.getSelectedEntities().filter((entity) => entity instanceof Entity);
     for (const entity of entities) {
       this.reverseNodeEdges(entity);
     }
@@ -633,7 +532,7 @@ export class StageManager {
     this.project.historyManager.recordStep();
   }
 
-  connectEntityByCrEdge(fromNode: ConnectableEntity, toNode: ConnectableEntity) {
+  connectEntityByCrEdge(fromNode: Entity, toNode: Entity) {
     return this.project.nodeConnector.addCrEdge(fromNode, toNode);
   }
 
@@ -757,7 +656,7 @@ export class StageManager {
       }
 
       const [fromNode, toNode] = edge.associationList;
-      if (fromNode && toNode && fromNode instanceof ConnectableEntity && toNode instanceof ConnectableEntity) {
+      if (fromNode && toNode && fromNode instanceof Entity && toNode instanceof Entity) {
         const lineEdge = LineEdge.fromTwoEntity(this.project, fromNode, toNode);
         lineEdge.text = edge.text;
         lineEdge.color = edge.color.clone();

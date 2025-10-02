@@ -1,8 +1,8 @@
 import { Dialog } from "@/components/ui/dialog";
 import { Project } from "@/core/Project";
+import { TextNode } from "@/core/sprites/TextNode";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { TextNode } from "@/core/sprites/TextNode";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
 import { averageColors, Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -34,14 +34,11 @@ export namespace TextNodeSmartTools {
       return;
     }
     setTimeout(() => {
-      project.camera.clearMoveCommander();
       Dialog.input("请输入连接符（n代表一个换行符，t代表一个制表符）").then((userInput) => {
         if (userInput === undefined) return;
         userInput = userInput.replaceAll("n", "\n");
         userInput = userInput.replaceAll("t", "\t");
-        selectedTextNodes = selectedTextNodes.sort(
-          (a, b) => a.collisionBox.getRectangle().location.y - b.collisionBox.getRectangle().location.y,
-        );
+        selectedTextNodes = selectedTextNodes.sort((a, b) => a.y - b.y);
         let mergeText = "";
         const detailsList = [];
         for (const textNode of selectedTextNodes) {

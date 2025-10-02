@@ -1,5 +1,5 @@
 import { Project, service } from "@/core/Project";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { MultiTargetUndirectedEdge } from "../../stageObject/association/MutiTargetUndirectedEdge";
 
@@ -7,8 +7,8 @@ import { MultiTargetUndirectedEdge } from "../../stageObject/association/MutiTar
 export class GraphMethods {
   constructor(protected readonly project: Project) {}
 
-  isTree(node: ConnectableEntity): boolean {
-    const dfs = (node: ConnectableEntity, visited: ConnectableEntity[]): boolean => {
+  isTree(node: Entity): boolean {
+    const dfs = (node: Entity, visited: Entity[]): boolean => {
       if (visited.includes(node)) {
         return false;
       }
@@ -25,8 +25,8 @@ export class GraphMethods {
   }
 
   /** 获取节点连接的子节点数组，未排除自环 */
-  nodeChildrenArray(node: ConnectableEntity): ConnectableEntity[] {
-    const res: ConnectableEntity[] = [];
+  nodeChildrenArray(node: Entity): Entity[] {
+    const res: Entity[] = [];
     for (const edge of this.project.stageManager.getLineEdges()) {
       if (edge.source.uuid === node.uuid) {
         res.push(edge.target);
@@ -39,8 +39,8 @@ export class GraphMethods {
    * 获取一个节点的所有父亲节点，排除自环
    * 性能有待优化！！
    */
-  nodeParentArray(node: ConnectableEntity): ConnectableEntity[] {
-    const res: ConnectableEntity[] = [];
+  nodeParentArray(node: Entity): Entity[] {
+    const res: Entity[] = [];
     for (const edge of this.project.stageManager.getLineEdges()) {
       if (edge.target.uuid === node.uuid && edge.target.uuid !== edge.source.uuid) {
         res.push(edge.source);
@@ -65,7 +65,7 @@ export class GraphMethods {
    * 获取自己的祖宗节点
    * @param node 节点
    */
-  getRoots(node: ConnectableEntity): ConnectableEntity[] {
+  getRoots(node: Entity): Entity[] {
     const reverseEdges = this.getReversedEdgeDict();
     let rootUUID = node.uuid;
     const visited: Set<string> = new Set(); // 用于记录已经访问过的节点，避免重复访问
@@ -87,7 +87,7 @@ export class GraphMethods {
     }
   }
 
-  isConnected(node: ConnectableEntity, target: ConnectableEntity): boolean {
+  isConnected(node: Entity, target: Entity): boolean {
     for (const edge of this.project.stageManager.getLineEdges()) {
       if (edge.source === node && edge.target === target) {
         return true;
@@ -101,12 +101,12 @@ export class GraphMethods {
    * 包括它自己
    * @param node
    */
-  getSuccessorSet(node: ConnectableEntity, isHaveSelf: boolean = true): ConnectableEntity[] {
-    let result: ConnectableEntity[] = []; // 存储可达节点的结果集
+  getSuccessorSet(node: Entity, isHaveSelf: boolean = true): Entity[] {
+    let result: Entity[] = []; // 存储可达节点的结果集
     const visited: Set<string> = new Set(); // 用于记录已经访问过的节点，避免重复访问
 
     // 深度优先搜索 (DFS) 实现
-    const dfs = (currentNode: ConnectableEntity): void => {
+    const dfs = (currentNode: Entity): void => {
       if (visited.has(currentNode.uuid)) {
         return; // 如果节点已经被访问过，直接返回
       }
@@ -134,8 +134,8 @@ export class GraphMethods {
    * 排除自环
    * @param node
    */
-  getOneStepSuccessorSet(node: ConnectableEntity): ConnectableEntity[] {
-    const result: ConnectableEntity[] = []; // 存储可达节点的结果集
+  getOneStepSuccessorSet(node: Entity): Entity[] {
+    const result: Entity[] = []; // 存储可达节点的结果集
     for (const edge of this.project.stageManager.getLineEdges()) {
       if (edge.source === node && edge.target.uuid !== edge.source.uuid) {
         result.push(edge.target);
@@ -144,7 +144,7 @@ export class GraphMethods {
     return result;
   }
 
-  getEdgesBetween(node1: ConnectableEntity, node2: ConnectableEntity): Edge[] {
+  getEdgesBetween(node1: Entity, node2: Entity): Edge[] {
     const result: Edge[] = []; // 存储连接两个节点的边的结果集
     for (const edge of this.project.stageManager.getEdges()) {
       if (edge.source === node1 && edge.target === node2) {
@@ -154,7 +154,7 @@ export class GraphMethods {
     return result;
   }
 
-  getEdgeFromTwoEntity(fromNode: ConnectableEntity, toNode: ConnectableEntity): Edge | null {
+  getEdgeFromTwoEntity(fromNode: Entity, toNode: Entity): Edge | null {
     for (const edge of this.project.stageManager.getEdges()) {
       if (edge.source === fromNode && edge.target === toNode) {
         return edge;
@@ -168,7 +168,7 @@ export class GraphMethods {
    * @param node
    * @returns
    */
-  getHyperEdgesByNode(node: ConnectableEntity): MultiTargetUndirectedEdge[] {
+  getHyperEdgesByNode(node: Entity): MultiTargetUndirectedEdge[] {
     const edges: MultiTargetUndirectedEdge[] = [];
     const hyperEdges = this.project.stageManager
       .getAssociations()
@@ -186,7 +186,7 @@ export class GraphMethods {
    * @param node 源节点
    * @returns 节点的所有出边数组
    */
-  public getOutgoingEdges(node: ConnectableEntity): Edge[] {
+  public getOutgoingEdges(node: Entity): Edge[] {
     const result: Edge[] = [];
     for (const edge of this.project.stageManager.getEdges()) {
       if (edge.source === node) {
@@ -201,7 +201,7 @@ export class GraphMethods {
    * @param node 目标节点
    * @returns 节点的所有入边数组
    */
-  public getIncomingEdges(node: ConnectableEntity): Edge[] {
+  public getIncomingEdges(node: Entity): Edge[] {
     const result: Edge[] = [];
     for (const edge of this.project.stageManager.getEdges()) {
       if (edge.target === node) {
@@ -217,12 +217,12 @@ export class GraphMethods {
    * @param node 指定节点
    * @returns 通过超边连接的所有其他节点集合（排除节点自身）
    */
-  public getNodesConnectedByHyperEdges(node: ConnectableEntity): ConnectableEntity[] {
+  public getNodesConnectedByHyperEdges(node: Entity): Entity[] {
     // 获取与节点相连的所有超边
     const hyperEdges = this.getHyperEdgesByNode(node);
 
     // 创建一个Set来存储结果，确保没有重复节点
-    const connectedNodes = new Set<ConnectableEntity>();
+    const connectedNodes = new Set<Entity>();
 
     // 遍历所有超边，收集连接的节点
     for (const hyperEdge of hyperEdges) {

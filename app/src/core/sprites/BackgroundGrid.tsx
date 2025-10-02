@@ -1,6 +1,6 @@
-import { Vector } from "@graphif/data-structures";
 import { Graphics, RenderTexture, TilingSprite } from "pixi.js";
 import { Project } from "../Project";
+import { TextNode } from "./TextNode";
 
 /**
  * 背景网格
@@ -29,7 +29,9 @@ export class BackgroundGrid extends TilingSprite {
     this.project.viewport.on("click", (e) => {
       const now = Date.now();
       if (now - lastClickTime < 300) {
-        this.project.nodeAdder.addTextNodeByClick(new Vector(this.project.viewport.toWorld(e.client)), [], true);
+        this.project.stage.push(
+          new TextNode(this.project, { text: "...", position: this.project.viewport.toWorld(e.client) }),
+        );
       }
       lastClickTime = now;
     });

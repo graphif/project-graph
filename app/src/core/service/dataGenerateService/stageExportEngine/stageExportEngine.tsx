@@ -1,7 +1,6 @@
 import { Project, service } from "@/core/Project";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { TextNode } from "@/core/sprites/TextNode";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { EntityDetailsTool } from "../../dataManageService/entityDetailsService/entityDetailsTool";
 
 /**
@@ -93,7 +92,7 @@ export class StageExport {
    * issue: #276 【细节优化】导出功能的排序逻辑，从连接顺序变为角度判断
    * @param node
    */
-  private getNodeChildrenArray(node: TextNode): ConnectableEntity[] {
+  private getNodeChildrenArray(node: TextNode): Entity[] {
     const result = this.project.graphMethods.nodeChildrenArray(node);
     // 如果全都在右侧或者左侧
     if (

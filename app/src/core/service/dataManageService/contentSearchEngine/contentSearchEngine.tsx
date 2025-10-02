@@ -1,10 +1,9 @@
 import { Project, service } from "@/core/Project";
-import { RectangleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleNoteEffect";
+import { TextNode } from "@/core/sprites/TextNode";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/sprites/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { Color, ProgressNumber } from "@graphif/data-structures";
 import { toast } from "sonner";

@@ -1,63 +1,22 @@
 import { FileSystemProvider, Service } from "@/core/interfaces/Service";
-import type { CurveRenderer } from "@/core/render/canvas2d/basicRenderer/curveRenderer";
-import type { ImageRenderer } from "@/core/render/canvas2d/basicRenderer/ImageRenderer";
-import type { ShapeRenderer } from "@/core/render/canvas2d/basicRenderer/shapeRenderer";
-import type { SvgRenderer } from "@/core/render/canvas2d/basicRenderer/svgRenderer";
-import type { TextRenderer } from "@/core/render/canvas2d/basicRenderer/textRenderer";
-import type { DrawingControllerRenderer } from "@/core/render/canvas2d/controllerRenderer/drawingRenderer";
-import type { CollisionBoxRenderer } from "@/core/render/canvas2d/entityRenderer/CollisionBoxRenderer";
-import type { StraightEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/edge/concrete/StraightEdgeRenderer";
-import type { SymmetryCurveEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/edge/concrete/SymmetryCurveEdgeRenderer";
-import type { VerticalPolyEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/edge/concrete/VerticalPolyEdgeRenderer";
-import type { EdgeRenderer } from "@/core/render/canvas2d/entityRenderer/edge/EdgeRenderer";
-import type { EntityDetailsButtonRenderer } from "@/core/render/canvas2d/entityRenderer/EntityDetailsButtonRenderer";
-import type { EntityRenderer } from "@/core/render/canvas2d/entityRenderer/EntityRenderer";
-import type { MultiTargetUndirectedEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/multiTargetUndirectedEdge/MultiTargetUndirectedEdgeRenderer";
-import type { SectionRenderer } from "@/core/render/canvas2d/entityRenderer/section/SectionRenderer";
-import type { SvgNodeRenderer } from "@/core/render/canvas2d/entityRenderer/svgNode/SvgNodeRenderer";
-import { TextNodeRenderer } from "@/core/render/canvas2d/entityRenderer/textNode/TextNodeRenderer";
-import type { UrlNodeRenderer } from "@/core/render/canvas2d/entityRenderer/urlNode/urlNodeRenderer";
-import type { Renderer } from "@/core/render/canvas2d/renderer";
-import type { BackgroundRenderer } from "@/core/render/canvas2d/utilsRenderer/backgroundRenderer";
-import type { RenderUtils } from "@/core/render/canvas2d/utilsRenderer/RenderUtils";
-import type { SearchContentHighlightRenderer } from "@/core/render/canvas2d/utilsRenderer/searchContentHighlightRenderer";
-import type { WorldRenderUtils } from "@/core/render/canvas2d/utilsRenderer/WorldRenderUtils";
-import type { InputElement } from "@/core/render/domElement/inputElement";
-import type { AutoLayoutFastTree } from "@/core/service/controlService/autoLayoutEngine/autoLayoutFastTreeMode";
-import type { AutoLayout } from "@/core/service/controlService/autoLayoutEngine/mainTick";
-import type { ControllerUtils } from "@/core/service/controlService/controller/concrete/utilsControl";
-import type { Controller } from "@/core/service/controlService/controller/Controller";
-import type { KeyboardOnlyEngine } from "@/core/service/controlService/keyboardOnlyEngine/keyboardOnlyEngine";
-import type { KeyboardOnlyGraphEngine } from "@/core/service/controlService/keyboardOnlyEngine/keyboardOnlyGraphEngine";
-import type { KeyboardOnlyTreeEngine } from "@/core/service/controlService/keyboardOnlyEngine/keyboardOnlyTreeEngine";
-import type { SelectChangeEngine } from "@/core/service/controlService/keyboardOnlyEngine/selectChangeEngine";
-import type { RectangleSelect } from "@/core/service/controlService/rectangleSelectEngine/rectangleSelectEngine";
 import type { KeyBinds } from "@/core/service/controlService/shortcutKeysEngine/KeyBinds";
 import type { KeyBindsRegistrar } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
-import type { MouseInteraction } from "@/core/service/controlService/stageMouseInteractionCore/stageMouseInteractionCore";
 import type { AutoComputeUtils } from "@/core/service/dataGenerateService/autoComputeEngine/AutoComputeUtils";
 import type { AutoCompute } from "@/core/service/dataGenerateService/autoComputeEngine/mainTick";
 import type { GenerateFromFolder } from "@/core/service/dataGenerateService/generateFromFolderEngine/GenerateFromFolderEngine";
 import type { StageExport } from "@/core/service/dataGenerateService/stageExportEngine/stageExportEngine";
 import type { StageExportPng } from "@/core/service/dataGenerateService/stageExportEngine/StageExportPng";
-import type { StageExportSvg } from "@/core/service/dataGenerateService/stageExportEngine/StageExportSvg";
 import type { AIEngine } from "@/core/service/dataManageService/aiEngine/AIEngine";
 import type { ComplexityDetector } from "@/core/service/dataManageService/ComplexityDetector";
 import type { ContentSearch } from "@/core/service/dataManageService/contentSearchEngine/contentSearchEngine";
 import type { CopyEngine } from "@/core/service/dataManageService/copyEngine/copyEngine";
-import type { Effects } from "@/core/service/feedbackService/effectEngine/effectMachine";
-import { StageStyleManager } from "@/core/service/feedbackService/stageStyle/StageStyleManager";
-import type { Camera } from "@/core/stage/Camera";
-import type { Canvas } from "@/core/stage/Canvas";
-import { GraphMethods } from "@/core/stage/stageManager/basicMethods/GraphMethods";
-import { SectionMethods } from "@/core/stage/stageManager/basicMethods/SectionMethods";
+import type { StageStyleManager } from "@/core/service/feedbackService/stageStyle/StageStyleManager";
+import type { GraphMethods } from "@/core/stage/stageManager/basicMethods/GraphMethods";
+import type { SectionMethods } from "@/core/stage/stageManager/basicMethods/SectionMethods";
 import type { LayoutManager } from "@/core/stage/stageManager/concreteMethods/LayoutManager";
 import type { AutoAlign } from "@/core/stage/stageManager/concreteMethods/StageAutoAlignManager";
-import type { DeleteManager } from "@/core/stage/stageManager/concreteMethods/StageDeleteManager";
-import type { EntityMoveManager } from "@/core/stage/stageManager/concreteMethods/StageEntityMoveManager";
 import type { StageUtils } from "@/core/stage/stageManager/concreteMethods/StageManagerUtils";
 import type { MultiTargetEdgeMove } from "@/core/stage/stageManager/concreteMethods/StageMultiTargetEdgeMove";
-import type { NodeAdder } from "@/core/stage/stageManager/concreteMethods/StageNodeAdder";
 import type { NodeConnector } from "@/core/stage/stageManager/concreteMethods/StageNodeConnector";
 import type { StageNodeRotate } from "@/core/stage/stageManager/concreteMethods/stageNodeRotate";
 import type { StageObjectColorManager } from "@/core/stage/stageManager/concreteMethods/StageObjectColorManager";
@@ -65,28 +24,24 @@ import type { StageObjectSelectCounter } from "@/core/stage/stageManager/concret
 import type { SectionInOutManager } from "@/core/stage/stageManager/concreteMethods/StageSectionInOutManager";
 import type { SectionPackManager } from "@/core/stage/stageManager/concreteMethods/StageSectionPackManager";
 import type { TagManager } from "@/core/stage/stageManager/concreteMethods/StageTagManager";
-import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
+import type { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import type { StageManager } from "@/core/stage/stageManager/StageManager";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { nextProjectIdAtom, projectsAtom, store } from "@/state";
 import { ObservableArray, Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
-import { Rectangle } from "@graphif/shapes";
 import { Decoder, Encoder } from "@msgpack/msgpack";
 import "@pixi/layout";
 import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, ZipWriter } from "@zip.js/zip.js";
 import { EventEmitter } from "events";
 import md5 from "md5";
 import mime from "mime";
-import { AsciiFilter } from "pixi-filters";
 import { Viewport } from "pixi-viewport";
 import { Application, Graphics, Point, Text } from "pixi.js";
 import "pixi.js/math-extras";
 import { URI } from "vscode-uri";
 import { Settings } from "./service/Settings";
 import { BackgroundGrid } from "./sprites/BackgroundGrid";
-import { TextNode } from "./sprites/TextNode";
-import { CollisionBox } from "./stage/stageObject/collisionBox/collisionBox";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -271,66 +226,6 @@ export class Project extends EventEmitter<{
     origin.circle(0, 0, 5);
     origin.fill(0xff0000);
     this.viewport.addChild(origin);
-    for (let i = 0; i < 20; i++) {
-      this.viewport.addChild(
-        new Text({
-          text: `耄耋${i}`,
-          style: {
-            fill: "white",
-            fontSize: 32,
-          },
-          x: (i % 5) * 100,
-          y: 100 + Math.floor(i / 5) * 32,
-          resolution: i,
-        }),
-      );
-    }
-    this.viewport.addChild(
-      new Text({
-        text: "创建TextNode",
-        interactive: true,
-        style: { fill: 0x00ff00 },
-        y: -100,
-      }).on("click", () => {
-        this.stage.push(new TextNode(this, { text: "hello world" }));
-      }),
-    );
-    this.viewport.addChild(
-      new Text({
-        text: "创建100个",
-        interactive: true,
-        style: { fill: 0x00ff00 },
-        x: 200,
-        y: -100,
-      }).on("click", (e) => {
-        for (let i = 0; i < 100; i++) {
-          this.stage.push(
-            new TextNode(this, {
-              text: `node${i}`,
-              collisionBox: new CollisionBox([
-                new Rectangle(
-                  // 在原点半径2000内，随机位置
-                  new Vector(Math.random() * 4000 - 2000, Math.random() * 4000 - 2000),
-                  Vector.getZero(),
-                ),
-              ]),
-            }),
-          );
-        }
-        console.log(this.stage);
-        (e.target as Text).text = `当前节点数${this.stage.length}`;
-      }),
-    );
-    this.viewport.addChild(
-      new Text({
-        text: "???",
-        interactive: true,
-        style: { fill: 0x00ff00 },
-        y: -50,
-      }).on("click", () => {
-        this.viewport.filters = [new AsciiFilter()];
-      }),
-    );
     const positionText = this.pixi.stage.addChild(
       new Text({
         text: "0,0",
@@ -499,32 +394,18 @@ declare module "./Project" {
    * 服务加载的顺序在调用registerService()时确定
    */
   interface Project {
-    canvas: Canvas;
-    inputElement: InputElement;
     keyBinds: KeyBinds;
-    controllerUtils: ControllerUtils;
     autoComputeUtils: AutoComputeUtils;
-    renderUtils: RenderUtils;
-    worldRenderUtils: WorldRenderUtils;
     historyManager: HistoryManager;
     stageManager: StageManager;
-    camera: Camera;
-    effects: Effects;
     autoCompute: AutoCompute;
-    rectangleSelect: RectangleSelect;
     stageNodeRotate: StageNodeRotate;
     complexityDetector: ComplexityDetector;
     aiEngine: AIEngine;
     copyEngine: CopyEngine;
-    autoLayout: AutoLayout;
-    autoLayoutFastTree: AutoLayoutFastTree;
     layoutManager: LayoutManager;
     autoAlign: AutoAlign;
-    mouseInteraction: MouseInteraction;
     contentSearch: ContentSearch;
-    deleteManager: DeleteManager;
-    nodeAdder: NodeAdder;
-    entityMoveManager: EntityMoveManager;
     stageUtils: StageUtils;
     multiTargetEdgeMove: MultiTargetEdgeMove;
     nodeConnector: NodeConnector;
@@ -533,35 +414,8 @@ declare module "./Project" {
     sectionInOutManager: SectionInOutManager;
     sectionPackManager: SectionPackManager;
     tagManager: TagManager;
-    keyboardOnlyEngine: KeyboardOnlyEngine;
-    keyboardOnlyGraphEngine: KeyboardOnlyGraphEngine;
-    keyboardOnlyTreeEngine: KeyboardOnlyTreeEngine;
-    selectChangeEngine: SelectChangeEngine;
-    textRenderer: TextRenderer;
-    imageRenderer: ImageRenderer;
-    shapeRenderer: ShapeRenderer;
-    entityRenderer: EntityRenderer;
-    edgeRenderer: EdgeRenderer;
-    multiTargetUndirectedEdgeRenderer: MultiTargetUndirectedEdgeRenderer;
-    curveRenderer: CurveRenderer;
-    svgRenderer: SvgRenderer;
-    drawingControllerRenderer: DrawingControllerRenderer;
-    collisionBoxRenderer: CollisionBoxRenderer;
-    entityDetailsButtonRenderer: EntityDetailsButtonRenderer;
-    straightEdgeRenderer: StraightEdgeRenderer;
-    symmetryCurveEdgeRenderer: SymmetryCurveEdgeRenderer;
-    verticalPolyEdgeRenderer: VerticalPolyEdgeRenderer;
-    sectionRenderer: SectionRenderer;
-    svgNodeRenderer: SvgNodeRenderer;
-    textNodeRenderer: TextNodeRenderer;
-    urlNodeRenderer: UrlNodeRenderer;
-    backgroundRenderer: BackgroundRenderer;
-    searchContentHighlightRenderer: SearchContentHighlightRenderer;
-    renderer: Renderer;
-    controller: Controller;
     stageExport: StageExport;
     stageExportPng: StageExportPng;
-    stageExportSvg: StageExportSvg;
     generateFromFolder: GenerateFromFolder;
     keyBindsRegistrar: KeyBindsRegistrar;
     sectionMethods: SectionMethods;

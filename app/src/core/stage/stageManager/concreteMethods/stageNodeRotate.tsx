@@ -1,7 +1,6 @@
-import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Project, service } from "@/core/Project";
-import { LineEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineEffect";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 
 /**
  * 所有和旋转相关的操作
@@ -53,12 +52,7 @@ export class StageNodeRotate {
    * @param degrees 旋转角度
    * @param visitedUUIDs 已经访问过的节点的uuid列表，用于避免死循环
    */
-  rotateNodeDfs(
-    rotateCenterNode: ConnectableEntity,
-    currentNode: ConnectableEntity,
-    degrees: number,
-    visitedUUIDs: string[],
-  ): void {
+  rotateNodeDfs(rotateCenterNode: Entity, currentNode: Entity, degrees: number, visitedUUIDs: string[]): void {
     const rotateCenterLocation = rotateCenterNode.geometryCenter;
     // 先旋转自己
 
