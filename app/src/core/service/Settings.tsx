@@ -33,13 +33,7 @@ export const settingsSchema = z.object({
   isPauseRenderWhenManipulateOvertime: z.boolean().default(false),
   renderOverTimeWhenNoManipulateTime: z.number().min(1).max(10).int().default(5),
   ignoreTextNodeTextRenderLessThanCameraScale: z.number().min(0.01).max(0.3).default(0.065),
-  cacheTextAsBitmap: z.boolean().default(false),
-  textCacheSize: z.number().default(100),
-  textScalingBehavior: z
-    .union([z.literal("temp"), z.literal("nearestCache"), z.literal("cacheEveryTick")])
-    .default("temp"),
   textIntegerLocationAndSizeRender: z.boolean().default(false),
-  compatibilityMode: z.boolean().default(false),
   isEnableEntityCollision: z.boolean().default(false),
   autoNamerTemplate: z.string().default("..."),
   autoNamerSectionTemplate: z.string().default("Section_{{i}}"),
@@ -120,8 +114,6 @@ export const settingsSchema = z.object({
   autoLayoutWhenTreeGenerate: z.boolean().default(true),
   gamepadDeadzone: z.number().min(0).max(1).default(0.1),
   showGrid: z.boolean().default(true),
-  maxFps: z.number().default(60),
-  maxFpsUnfocused: z.number().default(30),
   effectsPerferences: z.record(z.boolean()).default({}),
   autoFillNodeColor: z.tuple([z.number(), z.number(), z.number(), z.number()]).default([0, 0, 0, 0]),
   autoFillNodeColorEnable: z.boolean().default(true),
@@ -156,6 +148,8 @@ export const settingsSchema = z.object({
     .union([z.literal("unspecified"), z.literal("highPerformance"), z.literal("lowPower")])
     .default("unspecified"),
   textResolution: z.number().min(0).max(20).default(5),
+  maxFps: z.number().min(1).max(360).int().default(60),
+  minFps: z.number().min(1).max(360).int().default(30),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

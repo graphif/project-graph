@@ -252,30 +252,22 @@ export default function App() {
   // }, []);
 
   useEffect(() => {
-    let unlisten1: () => void;
-    /**
-     * 关闭窗口时的事件监听
-     */
-    getCurrentWindow()
-      .onCloseRequested(async (e) => {
-        e.preventDefault();
-        try {
-          for (const project of projects) {
-            console.log("尝试关闭", project);
-            await closeProject(project);
-          }
-        } catch {
-          Telemetry.event("关闭应用提示是否保存文件选择了取消");
-          return;
+    const unlisten1 = getCurrentWindow().onCloseRequested(async (e) => {
+      e.preventDefault();
+      try {
+        for (const project of projects) {
+          console.log("尝试关闭", project);
+          await closeProject(project);
         }
-        Telemetry.event("关闭应用");
-        // 保存窗口位置
-        await saveWindowState(StateFlags.SIZE | StateFlags.POSITION | StateFlags.MAXIMIZED);
-        await getCurrentWindow().destroy();
-      })
-      .then((it) => {
-        unlisten1 = it;
-      });
+      } catch {
+        Telemetry.event("关闭应用提示是否保存文件选择了取消");
+        return;
+      }
+      Telemetry.event("关闭应用");
+      // 保存窗口位置
+      await saveWindowState(StateFlags.SIZE | StateFlags.POSITION | StateFlags.MAXIMIZED);
+      await getCurrentWindow().destroy();
+    });
 
     for (const project of projects) {
       project.on("state-change", () => {
@@ -295,7 +287,7 @@ export default function App() {
     }
 
     return () => {
-      unlisten1?.();
+      unlisten1?.then((f) => f());
       for (const project of projects) {
         project.removeAllListeners("state-change");
         project.removeAllListeners("contextmenu");

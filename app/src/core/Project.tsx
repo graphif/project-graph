@@ -109,7 +109,6 @@ export class Project extends EventEmitter<{
    * value: 服务实例
    */
   private readonly fileSystemProviders = new Map<string, FileSystemProvider>();
-  private rafHandle = -1;
   private _uri: URI;
   private _state: ProjectState = ProjectState.Unsaved;
   private _stage: StageObject[] = [];
@@ -137,6 +136,11 @@ export class Project extends EventEmitter<{
   constructor(uri: URI) {
     super();
     this._uri = uri;
+    if (import.meta.hot) {
+      import.meta.hot.on("vite:beforeUpdate", () => {
+        this.dispose();
+      });
+    }
   }
   /**
    * 创建一个草稿工程
@@ -183,6 +187,8 @@ export class Project extends EventEmitter<{
       )[Settings.powerPreference],
       resizeTo: window,
     });
+    this.pixi.ticker.maxFPS = Settings.maxFps;
+    this.pixi.ticker.minFPS = Settings.minFps;
     // 注册文件系统
     for (const scheme in fileSystemProviders) {
       this.fileSystemProviders.set(scheme, new fileSystemProviders[scheme](this));
@@ -228,6 +234,16 @@ export class Project extends EventEmitter<{
     this.state = ProjectState.Saved;
 
     // 添加固定的元素
+    const fpsText = new Text({
+      text: "0",
+      style: { fill: "white", fontSize: 12 },
+      x: 10,
+      y: 50,
+    });
+    this.pixi.stage.addChild(fpsText);
+    this.pixi.ticker.add(() => {
+      fpsText.text = Math.round(this.pixi.ticker.FPS).toString();
+    });
     this.viewport = new Viewport({
       screenWidth: window.innerWidth,
       screenHeight: window.innerHeight,
@@ -283,7 +299,7 @@ export class Project extends EventEmitter<{
    * 用户关闭标签页时，销毁工程
    */
   async dispose() {
-    cancelAnimationFrame(this.rafHandle);
+    // 释放所有服务
     const promises: Promise<void>[] = [];
     for (const service of this.services.values()) {
       const result = service.dispose?.();
@@ -292,7 +308,11 @@ export class Project extends EventEmitter<{
       }
     }
     await Promise.allSettled(promises);
-    this.services.clear();
+    // 销毁pixi
+    this.pixi.destroy(true, {
+      children: true,
+      context: true,
+    });
   }
 
   /**
@@ -384,9 +404,14 @@ export class Project extends EventEmitter<{
     return this._state;
   }
 
+  /** @deprecated */
   get isRunning(): boolean {
-    return this.rafHandle !== -1;
+    return true;
   }
+  /** @deprecated */
+  loop() {}
+  /** @deprecated */
+  pause() {}
 
   mount(wrapper: HTMLElement) {
     wrapper.innerHTML = "";

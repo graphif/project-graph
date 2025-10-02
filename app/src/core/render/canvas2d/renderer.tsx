@@ -688,7 +688,7 @@ export class Renderer {
       `delta: ${this.deltaTime.toFixed(2)}`,
       `uri: ${decodeURI(this.project.uri.toString())}`,
       `isEnableEntityCollision: ${Settings.isEnableEntityCollision}`,
-      ...this.project.historyManager.deltas.map((patch, index) => `history#${index}: ${JSON.stringify(patch)}`),
+      // ...this.project.historyManager.deltas.map((patch, index) => `history#${index}: ${JSON.stringify(patch)}`),
     ];
     for (const [k, v] of Object.entries(this.timings)) {
       detailsData.push(`render time:${k}: ${v.toFixed(2)}`);
