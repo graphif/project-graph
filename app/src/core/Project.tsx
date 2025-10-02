@@ -72,17 +72,21 @@ import { nextProjectIdAtom, projectsAtom, store } from "@/state";
 import { ObservableArray, Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Decoder, Encoder } from "@msgpack/msgpack";
-import "@pixi/layout";
 import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, ZipWriter } from "@zip.js/zip.js";
 import { EventEmitter } from "events";
 import md5 from "md5";
 import mime from "mime";
+import { AsciiFilter } from "pixi-filters";
 import { Viewport } from "pixi-viewport";
-import { Application, Graphics, Text } from "pixi.js";
 import { URI } from "vscode-uri";
 import { Settings } from "./service/Settings";
 import { BackgroundGrid } from "./sprites/BackgroundGrid";
 import { TextNode } from "./sprites/TextNode";
+
+import { Application, Graphics, Point, Text } from "pixi.js";
+// 导入pixi扩展，顺序不能变
+import "@pixi/layout";
+import "pixi.js/math-extras";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -234,29 +238,31 @@ export class Project extends EventEmitter<{
     this.state = ProjectState.Saved;
 
     // 添加固定的元素
-    const fpsText = new Text({
-      text: "0",
-      style: { fill: "white", fontSize: 12 },
-      x: 10,
-      y: 50,
-    });
-    this.pixi.stage.addChild(fpsText);
+    const fpsText = this.pixi.stage.addChild(
+      new Text({
+        text: "0",
+        style: { fill: "white", fontSize: 12 },
+        x: 10,
+        y: 50,
+      }),
+    );
     this.pixi.ticker.add(() => {
       fpsText.text = Math.round(this.pixi.ticker.FPS).toString();
     });
     this.viewport = new Viewport({
       screenWidth: window.innerWidth,
       screenHeight: window.innerHeight,
-      worldWidth: 1000,
-      worldHeight: 1000,
+      worldWidth: Infinity,
+      worldHeight: Infinity,
       events: this.pixi.renderer.events,
     })
       .drag({
         mouseButtons: "middle",
       })
       .pinch()
-      .wheel();
-    this.viewport.moveCenter(500, 500);
+      .wheel({
+        smooth: 5,
+      });
     this.pixi.stage.addChild(this.viewport);
     this.viewport.addChild(new BackgroundGrid(this));
     // 在[0,0]渲染一个红色的圆点，表示原点位置
@@ -288,6 +294,29 @@ export class Project extends EventEmitter<{
         this.stage.push(new TextNode(this, { text: "hello world" }));
       }),
     );
+    this.viewport.addChild(
+      new Text({
+        text: "???",
+        interactive: true,
+        style: { fill: 0x00ff00 },
+        y: -50,
+      }).on("click", () => {
+        this.viewport.filters = [new AsciiFilter()];
+      }),
+    );
+    const positionText = this.pixi.stage.addChild(
+      new Text({
+        text: "0,0",
+        style: { fill: "white", fontSize: 12 },
+        x: 10,
+        y: 30,
+      }),
+    );
+    this.viewport.on("pointermove", (e) => {
+      const worldPos = this.viewport.toWorld(e.client);
+      positionText.text = `${worldPos.x.toFixed(0)},${worldPos.y.toFixed(0)}`;
+      positionText.position = e.client.add(new Point(30, 30));
+    });
 
     // 后初始化服务
     for (const service of postInitServices) {

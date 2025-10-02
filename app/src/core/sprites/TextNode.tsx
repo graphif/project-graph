@@ -147,7 +147,8 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
         .on("pointerupoutside", () => (pressed = false))
         .on("globalpointermove", (e) => {
           if (pressed) {
-            this.move(new Vector(e.movementX, e.movementY));
+            console.log(e.movement, this.project.viewport.scale);
+            this.move(new Vector(e.movement).divide(this.project.viewport.scale.x));
           }
         }),
     );
