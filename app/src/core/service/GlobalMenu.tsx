@@ -140,6 +140,7 @@ export function GlobalMenu() {
   }, []);
 
   async function refresh() {
+    await RecentFileManager.sortTimeRecentFiles();
     setRecentFiles(await RecentFileManager.getRecentFiles());
     const ver = await getVersion();
     console.log("version", ver);
@@ -177,26 +178,28 @@ export function GlobalMenu() {
             {t("file.open")}
           </Item>
           <Sub>
-            <SubTrigger>
+            <SubTrigger
+              onMouseEnter={() => {
+                // 刷新最近打开的文件列表
+                refresh();
+              }}
+            >
               <FileClock />
               {t("file.recentFiles")}
             </SubTrigger>
             <SubContent>
-              {recentFiles
-                .toReversed()
-                .slice(0, 12)
-                .map((file) => (
-                  <Item
-                    key={file.uri.toString()}
-                    onClick={async () => {
-                      await onOpenFile(file.uri, "GlobalMenu最近打开的文件");
-                      await refresh();
-                    }}
-                  >
-                    <File />
-                    {PathString.absolute2file(decodeURI(file.uri.toString()))}
-                  </Item>
-                ))}
+              {recentFiles.slice(0, 12).map((file) => (
+                <Item
+                  key={file.uri.toString()}
+                  onClick={async () => {
+                    await onOpenFile(file.uri, "GlobalMenu最近打开的文件");
+                    await refresh();
+                  }}
+                >
+                  <File />
+                  {PathString.absolute2file(decodeURI(file.uri.toString()))}
+                </Item>
+              ))}
               {recentFiles.length > 12 && (
                 <>
                   <Separator />
@@ -245,6 +248,7 @@ export function GlobalMenu() {
               });
               if (!path) return;
               activeProject!.uri = URI.file(path);
+              RecentFileManager.addRecentFileByUri(activeProject!.uri);
               await activeProject!.save();
             }}
           >
@@ -1225,7 +1229,7 @@ export async function onOpenFile(uri?: URI, source: string = "unknown") {
   const t = performance.now();
   loadAllServicesBeforeInit(project);
   const loadServiceTime = performance.now() - t;
-  await RecentFileManager.addRecentFileByUri(uri);
+
   toast.promise(
     async () => {
       await project.init();
@@ -1244,6 +1248,7 @@ export async function onOpenFile(uri?: URI, source: string = "unknown") {
         setTimeout(() => {
           project.camera.reset();
         }, 100);
+        RecentFileManager.addRecentFileByUri(uri);
         Telemetry.event("打开文件", {
           loadServiceTime,
           readFileTime,

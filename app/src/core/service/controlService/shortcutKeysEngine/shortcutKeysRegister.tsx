@@ -25,6 +25,7 @@ import { Color, Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
 import { onNewDraft, onOpenFile } from "../../GlobalMenu";
 import { TextNodeSmartTools } from "../../dataManageService/textNodeSmartTools";
+import { RecentFileManager } from "../../dataFileService/RecentFileManager";
 
 /**
  * 快捷键注册函数
@@ -400,6 +401,7 @@ export class KeyBindsRegistrar {
         if (Settings.clearHistoryWhenManualSave) {
           activeProject.historyManager.clearHistory();
         }
+        RecentFileManager.addRecentFileByUri(activeProject.uri);
       }
     });
     await this.project.keyBinds.create("newDraft", "C-n", () => {
