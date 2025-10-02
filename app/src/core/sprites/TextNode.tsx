@@ -160,6 +160,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       }
       lastClickTime = currentTime;
     });
+    this.updatePixiPosition();
   }
 
   /**
@@ -240,7 +241,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     // 移动其他实体，递归碰撞
     this.updateOtherEntityLocationByMove();
 
-    this.position = new Point(...this.collisionBox.getRectangle().location.toArray());
+    this.updatePixiPosition();
   }
 
   protected override collideWithOtherEntity(other: Entity): void {
@@ -266,6 +267,10 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     newRectangle.location = location.clone();
     this.collisionBox.shapes[0] = newRectangle;
     this.updateFatherSectionByMove();
+    this.updatePixiPosition();
+  }
+
+  updatePixiPosition() {
     this.position = new Point(...this.collisionBox.getRectangle().location.toArray());
   }
 }

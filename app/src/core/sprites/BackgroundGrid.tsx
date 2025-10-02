@@ -42,7 +42,6 @@ export class BackgroundGrid extends TilingSprite {
     this.position.set(this.project.viewport.left, this.project.viewport.top);
   }
   private redraw() {
-    console.log(this.project.viewport.scale.x);
     let gridSize = 50;
     let lineWidth = 1;
     if (this.project.viewport.scale.x < 1) {

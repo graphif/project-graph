@@ -71,22 +71,22 @@ import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { nextProjectIdAtom, projectsAtom, store } from "@/state";
 import { ObservableArray, Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
+import { Rectangle } from "@graphif/shapes";
 import { Decoder, Encoder } from "@msgpack/msgpack";
+import "@pixi/layout";
 import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, ZipWriter } from "@zip.js/zip.js";
 import { EventEmitter } from "events";
 import md5 from "md5";
 import mime from "mime";
 import { AsciiFilter } from "pixi-filters";
 import { Viewport } from "pixi-viewport";
+import { Application, Graphics, Point, Text } from "pixi.js";
+import "pixi.js/math-extras";
 import { URI } from "vscode-uri";
 import { Settings } from "./service/Settings";
 import { BackgroundGrid } from "./sprites/BackgroundGrid";
 import { TextNode } from "./sprites/TextNode";
-
-import { Application, Graphics, Point, Text } from "pixi.js";
-// 导入pixi扩展，顺序不能变
-import "@pixi/layout";
-import "pixi.js/math-extras";
+import { CollisionBox } from "./stage/stageObject/collisionBox/collisionBox";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -115,7 +115,7 @@ export class Project extends EventEmitter<{
   private readonly fileSystemProviders = new Map<string, FileSystemProvider>();
   private _uri: URI;
   private _state: ProjectState = ProjectState.Unsaved;
-  private _stage: StageObject[] = [];
+  private _stage = new ObservableArray<StageObject>(this.onStageAdd.bind(this), this.onStageRemove.bind(this), []);
   public tags: string[] = [];
   /**
    * string：UUID
@@ -259,10 +259,11 @@ export class Project extends EventEmitter<{
       .drag({
         mouseButtons: "middle",
       })
-      .pinch()
       .wheel({
         smooth: 5,
       });
+    this.viewport.cullable = true;
+    this.viewport.cullableChildren = true;
     this.pixi.stage.addChild(this.viewport);
     this.viewport.addChild(new BackgroundGrid(this));
     // 在[0,0]渲染一个红色的圆点，表示原点位置
@@ -292,6 +293,32 @@ export class Project extends EventEmitter<{
         y: -100,
       }).on("click", () => {
         this.stage.push(new TextNode(this, { text: "hello world" }));
+      }),
+    );
+    this.viewport.addChild(
+      new Text({
+        text: "创建100个",
+        interactive: true,
+        style: { fill: 0x00ff00 },
+        x: 200,
+        y: -100,
+      }).on("click", (e) => {
+        for (let i = 0; i < 100; i++) {
+          this.stage.push(
+            new TextNode(this, {
+              text: `node${i}`,
+              collisionBox: new CollisionBox([
+                new Rectangle(
+                  // 在原点半径2000内，随机位置
+                  new Vector(Math.random() * 4000 - 2000, Math.random() * 4000 - 2000),
+                  Vector.getZero(),
+                ),
+              ]),
+            }),
+          );
+        }
+        console.log(this.stage);
+        (e.target as Text).text = `当前节点数${this.stage.length}`;
       }),
     );
     this.viewport.addChild(
@@ -448,18 +475,19 @@ export class Project extends EventEmitter<{
   }
 
   private onStageAdd(it: StageObject) {
+    console.log("add", it);
     this.viewport?.addChild(it);
   }
-  private onStageRemove(it: StageObject) {
+  private onStageRemove(it: StageObject, index: number) {
+    console.log("remove", index);
     this.viewport?.removeChild(it);
   }
   get stage(): StageObject[] {
-    return new ObservableArray(this.onStageAdd.bind(this), this.onStageRemove.bind(this), this._stage);
+    return this._stage;
   }
   set stage(value: StageObject[]) {
     this.viewport?.removeChild(...this._stage);
-    this._stage = value;
-    this.viewport?.addChild(...this._stage);
+    this._stage = new ObservableArray(this.onStageAdd.bind(this), this.onStageRemove.bind(this), value);
   }
 }
 
