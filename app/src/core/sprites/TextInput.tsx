@@ -45,10 +45,12 @@ export class TextInput extends Text {
       }, 10);
       el.addEventListener("input", () => {
         this.text = el.value;
+        this.emit("textchange", this.text);
         el.rows = Math.max(1, el.value.split("\n").length);
       });
       el.addEventListener("blur", () => {
         this.text = el.value;
+        this.emit("textchange", this.text);
         el.remove();
         this.style.fill = oldStyleFill;
       });

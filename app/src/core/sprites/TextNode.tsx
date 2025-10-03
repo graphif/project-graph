@@ -64,7 +64,9 @@ export class TextNode extends Entity {
         },
         // padding8+border2
         10,
-      ),
+      ).on("textchange", (value) => {
+        this.text = value;
+      }),
     );
   }
 }
