@@ -1,7 +1,7 @@
 import { FileSystemProvider, Service } from "@/core/interfaces/Service";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { nextProjectIdAtom, projectsAtom, store } from "@/state";
-import { ObservableArray, Vector } from "@graphif/data-structures";
+import { ObservableArray } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Decoder, Encoder } from "@msgpack/msgpack";
 import "@pixi/layout";
@@ -20,7 +20,7 @@ if (import.meta.hot) {
 
 export class Project extends EventEmitter<{
   "state-change": [state: ProjectState];
-  contextmenu: [location: Vector];
+  "context-menu": [location: Point];
 }> {
   static readonly latestVersion = 18;
 

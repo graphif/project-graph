@@ -19,6 +19,7 @@ import { CloudUpload, Copy, Dot, Layers2, Minus, Pin, PinOff, Square, X } from "
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
+import MyContextMenuContent from "./components/context-menu-content";
 import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { cn } from "./utils/cn";
 import { isWindows } from "./utils/platform";
@@ -38,7 +39,6 @@ export default function App() {
 
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef(0); // 用于保存滚动位置的 ref，防止切换标签页时滚动位置丢失
-  const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
 
   // const { t } = useTranslation("app");
 
@@ -266,23 +266,13 @@ export default function App() {
         // 强制重新渲染一次
         setProjects([...projects]);
       });
-      project.on("contextmenu", ({ x, y }) => {
-        contextMenuTriggerRef.current?.dispatchEvent(
-          new MouseEvent("contextmenu", {
-            bubbles: true,
-            clientX: x,
-            clientY: y,
-          }),
-        );
-        setProjects([...projects]);
-      });
     }
 
     return () => {
       unlisten1?.then((f) => f());
       for (const project of projects) {
         project.removeAllListeners("state-change");
-        project.removeAllListeners("contextmenu");
+        project.removeAllListeners("context-menu");
       }
     };
   }, [projects.length]);
@@ -458,22 +448,19 @@ export default function App() {
 
       {!isWide && <ProjectTabs />}
 
-      {/* canvas */}
-      <div className="absolute inset-0 overflow-hidden" ref={canvasWrapperRef}></div>
-
-      {/* 没有项目处于打开状态时，显示欢迎页面 */}
-      {projects.length === 0 && (
-        <div className="absolute inset-0 overflow-hidden *:h-full *:w-full">
-          <Welcome />
-        </div>
-      )}
-
       {/* 右键菜单 */}
       <ContextMenu>
         <ContextMenuTrigger>
-          <div ref={contextMenuTriggerRef} />
+          {/* canvas */}
+          <div className="absolute inset-0 overflow-hidden" ref={canvasWrapperRef}></div>
+          {/* 没有项目处于打开状态时，显示欢迎页面 */}
+          {projects.length === 0 && (
+            <div className="absolute inset-0 overflow-hidden *:h-full *:w-full">
+              <Welcome />
+            </div>
+          )}
         </ContextMenuTrigger>
-        {/*<MyContextMenuContent />*/}
+        <MyContextMenuContent />
       </ContextMenu>
 
       {/* ======= */}

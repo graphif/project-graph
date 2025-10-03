@@ -33,6 +33,8 @@ export abstract class Entity extends StageObject {
       const world = this.project.viewport.toWorld(e.global.x, e.global.y);
       startWorldPoint = world;
       startPoint = this.position.clone();
+
+      this.selected = true;
     })
       .on("pointerup", () => {
         pressed = false;

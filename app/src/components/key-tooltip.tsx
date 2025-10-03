@@ -7,23 +7,24 @@ import { useTranslation } from "react-i18next";
 import { RenderKey } from "./ui/key-bind";
 
 export default function KeyTooltip({ keyId, children = <></> }: { keyId: string; children: ReactNode }) {
-  const [keySeq, setKeySeq] = useState<ReturnType<typeof parseEmacsKey>[number][]>();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [keySeq, _setKeySeq] = useState<ReturnType<typeof parseEmacsKey>[number][]>();
   const [activeProject] = useAtom(activeProjectAtom);
   const { t } = useTranslation("keyBinds");
 
   useEffect(() => {
-    activeProject?.keyBinds.get(keyId)?.then((key) => {
-      if (key) {
-        const parsed = parseEmacsKey(key);
-        if (parsed.length > 0) {
-          setKeySeq(parsed);
-        } else {
-          setKeySeq(undefined);
-        }
-      } else {
-        setKeySeq(undefined);
-      }
-    });
+    // activeProject?.keyBinds.get(keyId)?.then((key) => {
+    //   if (key) {
+    //     const parsed = parseEmacsKey(key);
+    //     if (parsed.length > 0) {
+    //       setKeySeq(parsed);
+    //     } else {
+    //       setKeySeq(undefined);
+    //     }
+    //   } else {
+    //     setKeySeq(undefined);
+    //   }
+    // });
   }, [keyId, activeProject]);
 
   return (

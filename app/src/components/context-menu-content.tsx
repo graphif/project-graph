@@ -11,6 +11,7 @@ import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSma
 import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import { Settings } from "@/core/service/Settings";
 import { TextNode } from "@/core/sprites/TextNode";
+import { Association } from "@/core/stage/stageObject/abstract/Association";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
@@ -95,15 +96,28 @@ const SubContent = ContextMenuSubContent;
 export default function MyContextMenuContent() {
   const [p] = useAtom(activeProjectAtom);
   const { t } = useTranslation("contextMenu");
+  const [, setUseless] = useState(0);
+
+  useEffect(() => {
+    const onPointerDown = () => {
+      setUseless(Date.now());
+    };
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, []);
+
   if (!p) return <></>;
 
-  const selectedTreeRoot =
-    p.stageManager.getSelectedEntities().length === 1 &&
-    p.stageManager.getSelectedEntities()[0] instanceof Entity &&
-    p.graphMethods.isTree(p.stageManager.getSelectedEntities()[0] as Entity);
+  const selected = p.stage.filter((it) => it.selected);
+  const selectedEntities = selected.filter((it) => it instanceof Entity);
+  const selectedAssociations = selected.filter((it) => it instanceof Association);
+  const selectedTreeRoot = false;
 
   return (
     <Content>
+      selected{selected.length}
       {/* 第一行 Ctrl+c/v/x del */}
       <Item className="bg-transparent! gap-0 p-0">
         <KeyTooltip keyId="copy">
@@ -116,7 +130,7 @@ export default function MyContextMenuContent() {
             <Clipboard />
           </Button>
         </KeyTooltip>
-        {p.stageManager.getSelectedStageObjects().length > 0 && (
+        {selected.length > 0 && (
           <KeyTooltip keyId="deleteSelectedStageObjects">
             <Button variant="ghost" size="icon" onClick={() => p.stageManager.deleteSelectedStageObjects()}>
               <Trash className="text-destructive" />
@@ -136,10 +150,9 @@ export default function MyContextMenuContent() {
           </Button>
         </KeyTooltip> */}
       </Item>
-
       {/* 对齐面板 */}
       <Item className="bg-transparent! gap-0 p-0">
-        {p.stageManager.getSelectedEntities().length >= 2 && (
+        {selectedEntities.length >= 2 && (
           <div className="grid grid-cols-3 grid-rows-3">
             <KeyTooltip keyId="alignTop">
               <Button variant="ghost" size="icon" className="size-6" onClick={() => p.layoutManager.alignTop()}>
@@ -183,7 +196,7 @@ export default function MyContextMenuContent() {
                 variant="ghost"
                 size="icon"
                 className="size-6"
-                onClick={() => p.layoutManager.layoutToSquare(p.stageManager.getSelectedEntities())}
+                onClick={() => p.layoutManager.layoutToSquare(selectedEntities)}
               >
                 <Grip />
               </Button>
@@ -199,7 +212,7 @@ export default function MyContextMenuContent() {
                 variant="ghost"
                 size="icon"
                 className="size-6"
-                onClick={() => p.layoutManager.layoutToTightSquare(p.stageManager.getSelectedEntities())}
+                onClick={() => p.layoutManager.layoutToTightSquare(selectedEntities)}
               >
                 <LayoutDashboard />
               </Button>
@@ -216,7 +229,7 @@ export default function MyContextMenuContent() {
             </KeyTooltip>
           </div>
         )}
-        {p.stageManager.getSelectedEntities().length >= 2 && (
+        {selectedEntities.length >= 2 && (
           <div className="grid grid-cols-3 grid-rows-3">
             <KeyTooltip keyId="alignLeft">
               <Button variant="ghost" size="icon" className="size-6" onClick={() => p.layoutManager.alignLeft()}>
@@ -303,9 +316,7 @@ export default function MyContextMenuContent() {
                 variant="ghost"
                 size="icon"
                 className="size-6"
-                onClick={() =>
-                  p.autoAlign.autoLayoutSelectedFastTreeModeRight(p.stageManager.getSelectedEntities()[0] as Entity)
-                }
+                onClick={() => p.autoAlign.autoLayoutSelectedFastTreeModeRight(selectedEntities[0] as Entity)}
               >
                 <Network className="-rotate-90" />
               </Button>
@@ -320,7 +331,7 @@ export default function MyContextMenuContent() {
                 variant="ghost"
                 size="icon"
                 className="size-6"
-                onClick={() => p.autoLayoutFastTree.treeReverseX(p.stageManager.getSelectedEntities()[0] as Entity)}
+                onClick={() => p.autoLayoutFastTree.treeReverseX(selectedEntities[0] as Entity)}
               >
                 <ArrowLeftRight />
               </Button>
@@ -334,9 +345,7 @@ export default function MyContextMenuContent() {
                 variant="ghost"
                 size="icon"
                 className="size-6"
-                onClick={() =>
-                  p.autoAlign.autoLayoutSelectedFastTreeModeDown(p.stageManager.getSelectedEntities()[0] as Entity)
-                }
+                onClick={() => p.autoAlign.autoLayoutSelectedFastTreeModeDown(selectedEntities[0] as Entity)}
               >
                 <Network />
               </Button>
@@ -350,7 +359,7 @@ export default function MyContextMenuContent() {
                 variant="ghost"
                 size="icon"
                 className="size-6"
-                onClick={() => p.autoLayoutFastTree.treeReverseY(p.stageManager.getSelectedEntities()[0] as Entity)}
+                onClick={() => p.autoLayoutFastTree.treeReverseY(selectedEntities[0] as Entity)}
               >
                 <ArrowDownUp />
               </Button>
@@ -360,54 +369,52 @@ export default function MyContextMenuContent() {
           )}
         </div>
       </Item>
-
       {/* 存在选中实体 */}
-      {p.stageManager.getSelectedStageObjects().length > 0 &&
-        p.stageManager.getSelectedStageObjects().some((it) => "color" in it) && (
-          <>
-            {/* 更改更简单的颜色 */}
-            <ColorLine />
-            {/* 更改更详细的颜色 */}
-            <Sub>
-              <SubTrigger>
-                <Palette />
-                {t("changeColor")}
-              </SubTrigger>
-              <SubContent>
-                <Item onClick={() => p.stageObjectColorManager.setSelectedStageObjectColor(Color.Transparent)}>
-                  <Slash />
-                  {t("resetColor")}
-                </Item>
-                <Item className="bg-transparent! grid grid-cols-11 gap-0">
-                  {Object.values(tailwindColors)
-                    .filter((it) => typeof it !== "string")
-                    .slice(4)
-                    .flatMap((it) => Object.values(it).map(Color.fromCss))
-                    .map((color, index) => (
-                      <div
-                        key={index}
-                        className="hover:outline-accent-foreground size-4 -outline-offset-2 hover:outline-2"
-                        style={{ backgroundColor: color.toString() }}
-                        onMouseEnter={() => p.stageObjectColorManager.setSelectedStageObjectColor(color)}
-                      />
-                    ))}
-                </Item>
-                <Item onClick={() => p.stageObjectColorManager.setSelectedStageObjectColor(new Color(11, 45, 14, 0))}>
-                  改为强制特殊透明色
-                </Item>
-                <Item
-                  onClick={() => {
-                    ColorWindow.open();
-                  }}
-                >
-                  打开调色板
-                </Item>
-              </SubContent>
-            </Sub>
-          </>
-        )}
+      {selected.length > 0 && selected.some((it) => "color" in it) && (
+        <>
+          {/* 更改更简单的颜色 */}
+          <ColorLine />
+          {/* 更改更详细的颜色 */}
+          <Sub>
+            <SubTrigger>
+              <Palette />
+              {t("changeColor")}
+            </SubTrigger>
+            <SubContent>
+              <Item onClick={() => p.stageObjectColorManager.setSelectedStageObjectColor(Color.Transparent)}>
+                <Slash />
+                {t("resetColor")}
+              </Item>
+              <Item className="bg-transparent! grid grid-cols-11 gap-0">
+                {Object.values(tailwindColors)
+                  .filter((it) => typeof it !== "string")
+                  .slice(4)
+                  .flatMap((it) => Object.values(it).map(Color.fromCss))
+                  .map((color, index) => (
+                    <div
+                      key={index}
+                      className="hover:outline-accent-foreground size-4 -outline-offset-2 hover:outline-2"
+                      style={{ backgroundColor: color.toString() }}
+                      onMouseEnter={() => p.stageObjectColorManager.setSelectedStageObjectColor(color)}
+                    />
+                  ))}
+              </Item>
+              <Item onClick={() => p.stageObjectColorManager.setSelectedStageObjectColor(new Color(11, 45, 14, 0))}>
+                改为强制特殊透明色
+              </Item>
+              <Item
+                onClick={() => {
+                  ColorWindow.open();
+                }}
+              >
+                打开调色板
+              </Item>
+            </SubContent>
+          </Sub>
+        </>
+      )}
       {/* 存在两个及以上选中实体 */}
-      {p.stageManager.getSelectedEntities().length >= 2 && (
+      {selectedEntities.length >= 2 && (
         <>
           <Item onClick={() => p.stageManager.packEntityToSectionBySelected()}>
             <Box />
@@ -415,7 +422,7 @@ export default function MyContextMenuContent() {
           </Item>
           <Item
             onClick={() => {
-              const selectedNodes = p.stageManager.getSelectedEntities().filter((node) => node instanceof Entity);
+              const selectedNodes = selectedEntities.filter((node) => node instanceof Entity);
               if (selectedNodes.length <= 1) {
                 toast.error("至少选择两个可连接节点");
                 return;
@@ -429,7 +436,7 @@ export default function MyContextMenuContent() {
           </Item>
           <Item
             onClick={() => {
-              const selectedNodes = p.stageManager.getSelectedEntities().filter((node) => node instanceof Entity);
+              const selectedNodes = selectedEntities.filter((node) => node instanceof Entity);
               if (selectedNodes.length <= 1) {
                 toast.error("至少选择两个可连接节点");
                 return;
@@ -445,7 +452,7 @@ export default function MyContextMenuContent() {
         </>
       )}
       {/* 没有选中实体，提示用户可以创建实体 */}
-      {p.stageManager.getSelectedStageObjects().length === 0 && (
+      {selected.length === 0 && (
         <>
           <Item
             onClick={() =>
@@ -464,7 +471,7 @@ export default function MyContextMenuContent() {
         </>
       )}
       {/* 存在选中 TextNode */}
-      {p.stageManager.getSelectedEntities().filter((it) => it instanceof TextNode).length > 0 && (
+      {selectedEntities.filter((it) => it instanceof TextNode).length > 0 && (
         <>
           <Sub>
             <SubTrigger>
@@ -525,7 +532,7 @@ export default function MyContextMenuContent() {
         </>
       )}
       {/* 存在选中 Section */}
-      {p.stageManager.getSelectedEntities().filter((it) => it instanceof Section).length > 0 && (
+      {selectedEntities.filter((it) => it instanceof Section).length > 0 && (
         <>
           <Item onClick={() => p.stageManager.sectionSwitchCollapse()}>
             <Package />
@@ -534,7 +541,7 @@ export default function MyContextMenuContent() {
         </>
       )}
       {/* 存在选中的 Edge */}
-      {p.stageManager.getSelectedAssociations().filter((it) => it instanceof Edge).length > 0 && (
+      {selectedAssociations.filter((it) => it instanceof Edge).length > 0 && (
         <>
           <Item
             onClick={() => {
@@ -641,9 +648,8 @@ export default function MyContextMenuContent() {
           </Item>
         </>
       )}
-
       {/* 存在选中的 MTUEdge */}
-      {p.stageManager.getSelectedAssociations().filter((it) => it instanceof MultiTargetUndirectedEdge).length > 0 && (
+      {selectedAssociations.filter((it) => it instanceof MultiTargetUndirectedEdge).length > 0 && (
         <>
           <Sub>
             <SubTrigger>
@@ -728,7 +734,6 @@ export default function MyContextMenuContent() {
           </Item>
         </>
       )}
-
       {/* 涂鸦模式增加修改画笔颜色 */}
       {Settings.mouseLeftMode === "draw" && (
         <Sub>
@@ -757,7 +762,6 @@ export default function MyContextMenuContent() {
           </SubContent>
         </Sub>
       )}
-
       {/* 鼠标模式 */}
       <Item className="bg-transparent! gap-0 p-0">
         <KeyTooltip keyId="checkoutLeftMouseToSelectAndMove">
