@@ -273,7 +273,7 @@ export class AutoAlign {
       toast.error("选择的节点必须是树形结构的根节点");
       return;
     }
-    this.project.autoLayoutFastTree.autoLayoutFastTreeModeRight(selectedRootEntity);
+    this.project.autoLayoutFastTree.autoLayoutFastTreeMode(selectedRootEntity);
   }
 
   autoLayoutSelectedFastTreeModeDown(selectedRootEntity: ConnectableEntity) {

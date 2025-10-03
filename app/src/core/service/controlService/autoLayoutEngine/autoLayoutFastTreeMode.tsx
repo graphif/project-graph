@@ -186,9 +186,9 @@ export class AutoLayoutFastTree {
    * 向右树形节点的根节点
    * @param rootNode
    */
-  public autoLayoutFastTreeModeRight(rootNode: ConnectableEntity) {
+  public autoLayoutFastTreeMode(rootNode: ConnectableEntity) {
     // 树形结构的根节点 矩形左上角位置固定不动
-    const initLocation = rootNode.collisionBox.getRectangle().leftTop.clone();
+    const rootLeftTopLocation = rootNode.collisionBox.getRectangle().leftTop.clone();
 
     const dfs = (node: ConnectableEntity) => {
       const outEdges = this.project.graphMethods.getOutgoingEdges(node);
@@ -196,7 +196,7 @@ export class AutoLayoutFastTree {
       const outLeftEdges = outEdges.filter((edge) => edge.isRightToLeft());
       const outTopEdges = outEdges.filter((edge) => edge.isBottomToTop());
       const outBottomEdges = outEdges.filter((edge) => edge.isTopToBottom());
-      console.log(outEdges, outRightEdges, outLeftEdges, outTopEdges, outBottomEdges);
+      const outUnknownEdges = outEdges.filter((edge) => edge.isUnknownDirection());
 
       // 获取排序后的子节点列表
       // const childList = outEdges.map((edge) => edge.target);
@@ -204,6 +204,7 @@ export class AutoLayoutFastTree {
       let leftChildList = outLeftEdges.map((edge) => edge.target);
       let topChildList = outTopEdges.map((edge) => edge.target);
       let bottomChildList = outBottomEdges.map((edge) => edge.target);
+      const unknownChildList = outUnknownEdges.map((edge) => edge.target);
 
       rightChildList = this.getSortedChildNodes(node, rightChildList, "col");
       leftChildList = this.getSortedChildNodes(node, leftChildList, "col");
@@ -222,13 +223,19 @@ export class AutoLayoutFastTree {
       for (const child of leftChildList) {
         dfs(child); // 递归口
       }
+      for (const child of unknownChildList) {
+        dfs(child); // 递归口
+      }
       // 排列这些子节点，然后更改当前根节点在所有子节点中的相对位置
       this.alignTrees(rightChildList, "col", 20);
       this.adjustRootNodeLocationByChildren(node, rightChildList, 150, "leftCenter");
+
       this.alignTrees(topChildList, "row", 20);
       this.adjustRootNodeLocationByChildren(node, topChildList, 150, "bottomCenter");
+
       this.alignTrees(bottomChildList, "row", 20);
       this.adjustRootNodeLocationByChildren(node, bottomChildList, 150, "topCenter");
+
       this.alignTrees(leftChildList, "col", 20);
       this.adjustRootNodeLocationByChildren(node, leftChildList, 150, "rightCenter");
     };
@@ -237,7 +244,7 @@ export class AutoLayoutFastTree {
 
     // ------- 恢复根节点的位置
     // 矩形左上角是矩形的标志位
-    const delta = initLocation.subtract(rootNode.collisionBox.getRectangle().leftTop);
+    const delta = rootLeftTopLocation.subtract(rootNode.collisionBox.getRectangle().leftTop);
     // 选中根节点
     this.project.stageManager.clearSelectAll();
     rootNode.isSelected = true;
