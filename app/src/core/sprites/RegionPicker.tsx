@@ -41,9 +41,9 @@ export class RegionPicker extends Graphics {
           });
           // 选中区域内的节点
           project.stage.forEach((it) => {
-            if (rect[isCoverMode ? "containsRect" : "intersects"](new Rectangle(it.x, it.y, it.width, it.height))) {
-              it.selected = true;
-            }
+            it.selected = rect[isCoverMode ? "containsRect" : "intersects"](
+              new Rectangle(it.x, it.y, it.width, it.height),
+            );
           });
         }
       });
