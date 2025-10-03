@@ -66,7 +66,8 @@ export class TextNode extends Entity {
         // padding8+border2
         10,
       )
-        .on("pointerdown", () => {
+        .on("pointerdown", (e) => {
+          e.stopImmediatePropagation();
           pressed = true;
         })
         .on("pointerup", () => {
@@ -77,7 +78,6 @@ export class TextNode extends Entity {
         })
         .on("globalpointermove", (e) => {
           if (pressed) {
-            e.stopImmediatePropagation();
             this.position.add(e.movement.multiplyScalar(1 / this.project.viewport.scale.x), this.position);
           }
         }),
