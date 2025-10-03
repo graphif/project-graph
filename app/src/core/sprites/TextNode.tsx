@@ -49,7 +49,6 @@ export class TextNode extends Entity {
       borderWidth: 2,
       borderColor: 0xffffff,
     };
-    let pressed = false;
     this.addChild(
       new TextInput(
         this.project.viewport,
@@ -65,22 +64,7 @@ export class TextNode extends Entity {
         },
         // padding8+border2
         10,
-      )
-        .on("pointerdown", (e) => {
-          e.stopImmediatePropagation();
-          pressed = true;
-        })
-        .on("pointerup", () => {
-          pressed = false;
-        })
-        .on("pointerupoutside", () => {
-          pressed = false;
-        })
-        .on("globalpointermove", (e) => {
-          if (pressed) {
-            this.position.add(e.movement.multiplyScalar(1 / this.project.viewport.scale.x), this.position);
-          }
-        }),
+      ),
     );
   }
 }
