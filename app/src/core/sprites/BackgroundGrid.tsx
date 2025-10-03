@@ -1,10 +1,8 @@
 import { Graphics, RenderTexture, TilingSprite } from "pixi.js";
 import { Project } from "../Project";
-import { TextNode } from "./TextNode";
 
 /**
  * 背景网格
- * 同时还用于处理画布的鼠标事件
  */
 export class BackgroundGrid extends TilingSprite {
   constructor(private project: Project) {
@@ -24,17 +22,6 @@ export class BackgroundGrid extends TilingSprite {
       this.redraw();
     });
     this.update();
-
-    let lastClickTime = 0;
-    this.project.viewport.on("click", (e) => {
-      const now = Date.now();
-      if (now - lastClickTime < 300) {
-        this.project.stage.push(
-          new TextNode(this.project, { text: "...", position: this.project.viewport.toWorld(e.client) }),
-        );
-      }
-      lastClickTime = now;
-    });
   }
 
   private update() {

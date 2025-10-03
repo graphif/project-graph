@@ -7,11 +7,6 @@ import { Point, PointData } from "pixi.js";
 import { Value } from "platejs";
 import { TextInput } from "./TextInput";
 
-/**
- *
- * 文字节点类
- * 2024年10月20日：Node 改名为 TextNode，防止与 原生 Node 类冲突
- */
 @passExtraAtArg1
 @passObject
 export class TextNode extends Entity {
@@ -82,6 +77,7 @@ export class TextNode extends Entity {
         })
         .on("globalpointermove", (e) => {
           if (pressed) {
+            e.stopImmediatePropagation();
             this.position.add(e.movement.multiplyScalar(1 / this.project.viewport.scale.x), this.position);
           }
         }),

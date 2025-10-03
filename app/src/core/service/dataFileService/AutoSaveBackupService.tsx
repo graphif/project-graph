@@ -138,7 +138,7 @@ export class AutoSaveBackupService {
   private async createBackupFile(backupFilePath: string): Promise<void> {
     try {
       // 复制项目保存逻辑，但写入到备份文件路径
-      const fileContent = await this.project.getFileContent();
+      const fileContent = await this.project.dump();
 
       // 写入备份文件
       await writeFile(backupFilePath, fileContent);

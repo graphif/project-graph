@@ -40,7 +40,9 @@ export class TextInput extends Text {
       el.style.lineHeight = (this.style.lineHeight || this.height / lines) * viewport.scale.x + "px";
       el.rows = lines;
       document.body.appendChild(el);
-      setTimeout(() => el.focus(), 10);
+      setTimeout(() => {
+        el.focus();
+      }, 10);
       el.addEventListener("input", () => {
         this.text = el.value;
         el.rows = Math.max(1, el.value.split("\n").length);

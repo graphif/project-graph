@@ -1,31 +1,4 @@
 import { FileSystemProvider, Service } from "@/core/interfaces/Service";
-import type { KeyBinds } from "@/core/service/controlService/shortcutKeysEngine/KeyBinds";
-import type { KeyBindsRegistrar } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
-import type { AutoComputeUtils } from "@/core/service/dataGenerateService/autoComputeEngine/AutoComputeUtils";
-import type { AutoCompute } from "@/core/service/dataGenerateService/autoComputeEngine/mainTick";
-import type { GenerateFromFolder } from "@/core/service/dataGenerateService/generateFromFolderEngine/GenerateFromFolderEngine";
-import type { StageExport } from "@/core/service/dataGenerateService/stageExportEngine/stageExportEngine";
-import type { StageExportPng } from "@/core/service/dataGenerateService/stageExportEngine/StageExportPng";
-import type { AIEngine } from "@/core/service/dataManageService/aiEngine/AIEngine";
-import type { ComplexityDetector } from "@/core/service/dataManageService/ComplexityDetector";
-import type { ContentSearch } from "@/core/service/dataManageService/contentSearchEngine/contentSearchEngine";
-import type { CopyEngine } from "@/core/service/dataManageService/copyEngine/copyEngine";
-import type { StageStyleManager } from "@/core/service/feedbackService/stageStyle/StageStyleManager";
-import type { GraphMethods } from "@/core/stage/stageManager/basicMethods/GraphMethods";
-import type { SectionMethods } from "@/core/stage/stageManager/basicMethods/SectionMethods";
-import type { LayoutManager } from "@/core/stage/stageManager/concreteMethods/LayoutManager";
-import type { AutoAlign } from "@/core/stage/stageManager/concreteMethods/StageAutoAlignManager";
-import type { StageUtils } from "@/core/stage/stageManager/concreteMethods/StageManagerUtils";
-import type { MultiTargetEdgeMove } from "@/core/stage/stageManager/concreteMethods/StageMultiTargetEdgeMove";
-import type { NodeConnector } from "@/core/stage/stageManager/concreteMethods/StageNodeConnector";
-import type { StageNodeRotate } from "@/core/stage/stageManager/concreteMethods/stageNodeRotate";
-import type { StageObjectColorManager } from "@/core/stage/stageManager/concreteMethods/StageObjectColorManager";
-import type { StageObjectSelectCounter } from "@/core/stage/stageManager/concreteMethods/StageObjectSelectCounter";
-import type { SectionInOutManager } from "@/core/stage/stageManager/concreteMethods/StageSectionInOutManager";
-import type { SectionPackManager } from "@/core/stage/stageManager/concreteMethods/StageSectionPackManager";
-import type { TagManager } from "@/core/stage/stageManager/concreteMethods/StageTagManager";
-import type { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
-import type { StageManager } from "@/core/stage/stageManager/StageManager";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { nextProjectIdAtom, projectsAtom, store } from "@/state";
 import { ObservableArray, Vector } from "@graphif/data-structures";
@@ -34,24 +7,17 @@ import { Decoder, Encoder } from "@msgpack/msgpack";
 import "@pixi/layout";
 import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, ZipWriter } from "@zip.js/zip.js";
 import { EventEmitter } from "events";
-import md5 from "md5";
 import mime from "mime";
 import { Viewport } from "pixi-viewport";
-import { Application, Graphics, Point, Text } from "pixi.js";
+import { Application, Container, Graphics, Point, Text } from "pixi.js";
 import "pixi.js/math-extras";
 import { URI } from "vscode-uri";
 import { Settings } from "./service/Settings";
-import { BackgroundGrid } from "./sprites/BackgroundGrid";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
 }
 
-/**
- * “工程”
- * 一个标签页对应一个工程，一个工程只能对应一个URI
- * 一个工程可以加载不同的服务，类似vscode的扩展（Extensions）机制
- */
 export class Project extends EventEmitter<{
   "state-change": [state: ProjectState];
   contextmenu: [location: Vector];
@@ -84,14 +50,6 @@ export class Project extends EventEmitter<{
   private encoder = new Encoder();
   private decoder = new Decoder();
 
-  /**
-   * 创建一个项目
-   * @param uri 工程文件的URI
-   * 之所以从“路径”改为了“URI”，是因为要为后面的云同步功能做铺垫。
-   * 普通的“路径”无法表示云盘中的文件，而URI可以。
-   * 同时，草稿文件也从硬编码的“Project Graph”特殊文件路径改为了协议为draft、内容为UUID的URI。
-   * @see https://code.visualstudio.com/api/references/vscode-api#workspace.workspaceFile
-   */
   constructor(uri: URI) {
     super();
     this._uri = uri;
@@ -133,7 +91,7 @@ export class Project extends EventEmitter<{
   async init(
     fileSystemProviders: Record<string, { new (...args: any[]): FileSystemProvider }> = {},
     services: { id?: string; new (...args: any[]): any }[] = [],
-    postInitServices: { id?: string; new (...args: any[]): any }[] = [],
+    sprites: { new (...args: any[]): Container }[] = [],
   ) {
     await this.pixi.init({
       backgroundAlpha: Settings.windowBackgroundAlpha,
@@ -154,10 +112,6 @@ export class Project extends EventEmitter<{
     }
     if (!this.fs) {
       throw new Error(`[Project] 未注册 ${this.uri.scheme} 协议的文件系统提供器`);
-    }
-    // 注册服务
-    for (const service of services) {
-      this.loadService(service);
     }
     try {
       const fileContent = await this.fs.read(this.uri);
@@ -220,7 +174,6 @@ export class Project extends EventEmitter<{
     this.viewport.cullable = true;
     this.viewport.cullableChildren = true;
     this.pixi.stage.addChild(this.viewport);
-    this.viewport.addChild(new BackgroundGrid(this));
     // 在[0,0]渲染一个红色的圆点，表示原点位置
     const origin = new Graphics();
     origin.circle(0, 0, 5);
@@ -240,8 +193,12 @@ export class Project extends EventEmitter<{
       positionText.position = e.client.add(new Point(30, 30));
     });
 
-    // 后初始化服务
-    for (const service of postInitServices) {
+    // 添加传入的sprites
+    for (const sprite of sprites) {
+      this.viewport.addChild(new sprite(this));
+    }
+    // 注册服务
+    for (const service of services) {
       this.loadService(service);
     }
   }
@@ -284,30 +241,13 @@ export class Project extends EventEmitter<{
     this.state = ProjectState.Unsaved;
   }
 
-  /**
-   * 将文件暂存到数据目录中（通常为~/.local/share）
-   * ~/.local/share/liren.project-graph/stash/<normalizedUri>
-   * @see https://code.visualstudio.com/blogs/2016/11/30/hot-exit-in-insiders
-   *
-   * 频繁用msgpack序列化不会卡吗？
-   * 虽然JSON.stringify()在V8上面速度和msgpack差不多
-   * 但是要考虑跨平台，目前linux和macos用的都是webkit，目前还没有JavaScriptCore相关的benchmark
-   * 而且考虑到以后会把图片也放进文件里面，JSON肯定不合适了
-   * @see https://github.com/msgpack/msgpack-javascript#benchmark
-   */
-  async stash() {
-    // TODO: stash
-    // const stashFilePath = await join(await appLocalDataDir(), "stash", Base64.encode(this.uri.toString()));
-    // const encoded = this.encoder.encodeSharedRef(this.data);
-    // await writeFile(stashFilePath, encoded);
-  }
   async save() {
-    await this.fs.write(this.uri, await this.getFileContent());
+    await this.fs.write(this.uri, await this.dump());
     this.state = ProjectState.Saved;
   }
 
   // 备份也要用到这个
-  async getFileContent() {
+  async dump() {
     const serializedStage = serialize(this.stage);
     const encodedStage = this.encoder.encode(serializedStage);
     const uwriter = new Uint8ArrayWriter();
@@ -323,17 +263,6 @@ export class Project extends EventEmitter<{
 
     const fileContent = await uwriter.getData();
     return fileContent;
-  }
-
-  /**
-   * 备份用：生成项目内容的哈希值，用于检测内容是否发生变化
-   */
-  get stageHash() {
-    const serializedStage = serialize(this.stage);
-    // 创建临时Encoder来编码数据
-    const tempEncoder = new Encoder();
-    const encodedStage = tempEncoder.encode(serializedStage);
-    return md5(encodedStage);
   }
 
   get fs(): FileSystemProvider {
@@ -370,11 +299,9 @@ export class Project extends EventEmitter<{
   }
 
   private onStageAdd(it: StageObject) {
-    console.log("add", it);
     this.viewport?.addChild(it);
   }
-  private onStageRemove(it: StageObject, index: number) {
-    console.log("remove", index);
+  private onStageRemove(it: StageObject) {
     this.viewport?.removeChild(it);
   }
   get stage(): StageObject[] {
@@ -393,35 +320,8 @@ declare module "./Project" {
    * 在这里用语法糖定义就能优雅的绕过这个限制
    * 服务加载的顺序在调用registerService()时确定
    */
-  interface Project {
-    keyBinds: KeyBinds;
-    autoComputeUtils: AutoComputeUtils;
-    historyManager: HistoryManager;
-    stageManager: StageManager;
-    autoCompute: AutoCompute;
-    stageNodeRotate: StageNodeRotate;
-    complexityDetector: ComplexityDetector;
-    aiEngine: AIEngine;
-    copyEngine: CopyEngine;
-    layoutManager: LayoutManager;
-    autoAlign: AutoAlign;
-    contentSearch: ContentSearch;
-    stageUtils: StageUtils;
-    multiTargetEdgeMove: MultiTargetEdgeMove;
-    nodeConnector: NodeConnector;
-    stageObjectColorManager: StageObjectColorManager;
-    stageObjectSelectCounter: StageObjectSelectCounter;
-    sectionInOutManager: SectionInOutManager;
-    sectionPackManager: SectionPackManager;
-    tagManager: TagManager;
-    stageExport: StageExport;
-    stageExportPng: StageExportPng;
-    generateFromFolder: GenerateFromFolder;
-    keyBindsRegistrar: KeyBindsRegistrar;
-    sectionMethods: SectionMethods;
-    graphMethods: GraphMethods;
-    stageStyleManager: StageStyleManager;
-  }
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  interface Project {}
 }
 
 export enum ProjectState {
