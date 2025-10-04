@@ -41,7 +41,7 @@ export default function NodeDetailsWindow({
   return (
     <Plate editor={editor} onChange={({ value }) => onChange(value)}>
       <EditorContainer>
-        <Editor />
+        <Editor variant="nodeDetails" />
       </EditorContainer>
     </Plate>
   );
