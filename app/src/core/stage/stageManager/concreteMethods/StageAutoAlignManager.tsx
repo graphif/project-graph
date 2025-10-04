@@ -1,7 +1,7 @@
 import { ArrayFunctions } from "@/core/algorithm/arrayFunctions";
 import { Project, service } from "@/core/Project";
 import { SoundService } from "@/core/service/feedbackService/SoundService";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Entity } from "@/core/sprites/abstract/Entity";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";

@@ -10,9 +10,9 @@ import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
 import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import { Settings } from "@/core/service/Settings";
+import { Association } from "@/core/sprites/abstract/Association";
+import { Entity } from "@/core/sprites/abstract/Entity";
 import { TextNode } from "@/core/sprites/TextNode";
-import { Association } from "@/core/stage/stageObject/abstract/Association";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
@@ -133,7 +133,7 @@ export default function MyContextMenuContent() {
         </KeyTooltip>
         {selected.length > 0 && (
           <KeyTooltip keyId="deleteSelectedStageObjects">
-            <Button variant="ghost" size="icon" onClick={() => p.stageManager.deleteSelectedStageObjects()}>
+            <Button variant="ghost" size="icon" onClick={() => selected.forEach((it) => it.destroy())}>
               <Trash className="text-destructive" />
             </Button>
           </KeyTooltip>

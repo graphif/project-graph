@@ -2,7 +2,7 @@
 // import { Entity } from "@/core/stageObject/StageEntity";
 import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Entity } from "@/core/sprites/abstract/Entity";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/sprites/TextNode";

@@ -1,5 +1,5 @@
 import { FileSystemProvider, Service } from "@/core/interfaces/Service";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import { StageObject } from "@/core/sprites/abstract/StageObject";
 import { nextProjectIdAtom, projectsAtom, store } from "@/state";
 import { ObservableArray } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";

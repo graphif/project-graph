@@ -1,5 +1,5 @@
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import { Entity } from "@/core/sprites/abstract/Entity";
+import { StageObject } from "@/core/sprites/abstract/StageObject";
 import { Color } from "@graphif/data-structures";
 import { serializable } from "@graphif/serializer";
 

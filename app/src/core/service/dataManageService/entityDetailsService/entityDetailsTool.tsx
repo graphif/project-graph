@@ -1,4 +1,4 @@
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Entity } from "@/core/sprites/abstract/Entity";
 
 export class EntityDetailsTool {
   private entity: Entity;

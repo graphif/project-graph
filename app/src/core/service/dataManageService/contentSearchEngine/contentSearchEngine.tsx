@@ -1,7 +1,7 @@
 import { Project, service } from "@/core/Project";
 import { TextNode } from "@/core/sprites/TextNode";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import { Entity } from "@/core/sprites/abstract/Entity";
+import { StageObject } from "@/core/sprites/abstract/StageObject";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";

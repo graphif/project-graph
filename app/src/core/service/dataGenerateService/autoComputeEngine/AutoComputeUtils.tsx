@@ -1,6 +1,6 @@
 import { Project, service } from "@/core/Project";
 import { ProgramFunctions } from "@/core/service/dataGenerateService/autoComputeEngine/functions/programLogic";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Entity } from "@/core/sprites/abstract/Entity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/sprites/TextNode";

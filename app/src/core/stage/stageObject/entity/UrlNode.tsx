@@ -1,5 +1,5 @@
 import { Project } from "@/core/Project";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Entity } from "@/core/sprites/abstract/Entity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { getTextSize } from "@/utils/font";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";

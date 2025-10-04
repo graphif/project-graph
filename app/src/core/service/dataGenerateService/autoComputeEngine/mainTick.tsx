@@ -8,7 +8,7 @@ import {
   LogicNodeNameEnum,
   LogicNodeSimpleOperatorEnum,
 } from "@/core/service/dataGenerateService/autoComputeEngine/logicNodeNameEnum";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Entity } from "@/core/sprites/abstract/Entity";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/sprites/TextNode";

@@ -1,6 +1,6 @@
 import { Project } from "@/core/Project";
-import { Association } from "@/core/stage/stageObject/abstract/Association";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Association } from "@/core/sprites/abstract/Association";
+import { Entity } from "@/core/sprites/abstract/Entity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { getMultiLineTextSize } from "@/utils/font";
 import { Color, Vector } from "@graphif/data-structures";

@@ -1,5 +1,5 @@
 import { Project } from "@/core/Project";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Entity } from "@/core/sprites/abstract/Entity";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { EdgeCollisionBoxGetter } from "@/core/stage/stageObject/association/EdgeCollisionBoxGetter";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";

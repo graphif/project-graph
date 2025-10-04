@@ -1,6 +1,6 @@
 import { Vector } from "@graphif/data-structures";
 import { Project, service } from "@/core/Project";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Entity } from "@/core/sprites/abstract/Entity";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 
 @service("sectionMethods")

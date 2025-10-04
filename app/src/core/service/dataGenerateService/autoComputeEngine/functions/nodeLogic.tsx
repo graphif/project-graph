@@ -2,7 +2,7 @@
 import { Project } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { SoundService } from "@/core/service/feedbackService/SoundService";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Entity } from "@/core/sprites/abstract/Entity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";

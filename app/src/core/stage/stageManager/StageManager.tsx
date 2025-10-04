@@ -1,9 +1,9 @@
 import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { TextNode } from "@/core/sprites/TextNode";
-import { Association } from "@/core/stage/stageObject/abstract/Association";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import { Association } from "@/core/sprites/abstract/Association";
+import { Entity } from "@/core/sprites/abstract/Entity";
+import { StageObject } from "@/core/sprites/abstract/StageObject";
 import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/CubicCatmullRomSplineEdge";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";

@@ -1,5 +1,5 @@
 import { Project, service } from "@/core/Project";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Entity } from "@/core/sprites/abstract/Entity";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/sprites/TextNode";
 import { Edge } from "@/core/stage/stageObject/association/Edge";

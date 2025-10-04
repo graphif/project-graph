@@ -1,8 +1,8 @@
 import { Color, ProgressNumber } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import { Entity } from "@/core/sprites/abstract/Entity";
+import { StageObject } from "@/core/sprites/abstract/StageObject";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";

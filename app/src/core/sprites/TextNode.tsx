@@ -1,6 +1,6 @@
 import { Project } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Entity } from "@/core/sprites/abstract/Entity";
 import { Color } from "@graphif/data-structures";
 import { passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Point, PointData } from "pixi.js";

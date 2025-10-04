@@ -1,4 +1,4 @@
-import { Association } from "@/core/stage/stageObject/abstract/Association";
+import { Association } from "@/core/sprites/abstract/Association";
 import { serializable } from "@graphif/serializer";
 
 type Side = "top" | "bottom" | "left" | "right" | "unknown";

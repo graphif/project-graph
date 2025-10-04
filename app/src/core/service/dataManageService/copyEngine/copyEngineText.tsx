@@ -1,6 +1,6 @@
 import { Project } from "@/core/Project";
 import { TextNode } from "@/core/sprites/TextNode";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Entity } from "@/core/sprites/abstract/Entity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";

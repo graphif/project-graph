@@ -1,8 +1,8 @@
 import { Project, service } from "@/core/Project";
 import { SetFunctions } from "@/core/algorithm/setFunctions";
 import { TextNode } from "@/core/sprites/TextNode";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import { Entity } from "@/core/sprites/abstract/Entity";
+import { StageObject } from "@/core/sprites/abstract/StageObject";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
