@@ -197,6 +197,14 @@ Dialog.input = (
                     setTimeout(() => {
                       SubWindow.close(winId!);
                     }, 500);
+                  } else if (e.key === "Escape") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    resolve(undefined);
+                    setOpen(false);
+                    setTimeout(() => {
+                      SubWindow.close(winId!);
+                    }, 500);
                   }
                 }}
               />
@@ -211,7 +219,7 @@ Dialog.input = (
                     }, 500);
                   }}
                 >
-                  取消
+                  取消（Esc）
                 </Button>
                 <Button
                   variant={destructive ? "destructive" : "default"}
@@ -223,7 +231,7 @@ Dialog.input = (
                     }, 500);
                   }}
                 >
-                  确定
+                  确定（Enter）
                 </Button>
               </DialogFooter>
             </DialogHeader>
