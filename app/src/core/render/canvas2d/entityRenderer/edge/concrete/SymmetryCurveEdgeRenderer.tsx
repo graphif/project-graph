@@ -11,6 +11,7 @@ import { Renderer } from "@/core/render/canvas2d/renderer";
 import { SvgUtils } from "@/core/render/svg/SvgUtils";
 import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 
 /**
  * 贝塞尔曲线
@@ -65,11 +66,20 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
   public renderNormalState(edge: LineEdge): void {
     const start = edge.bodyLine.start;
     const end = edge.bodyLine.end;
+    const startDirection =
+      edge.source instanceof ConnectPoint
+        ? Vector.getZero()
+        : edge.source.collisionBox.getRectangle().getNormalVectorAt(start);
+    const endDirection =
+      edge.target instanceof ConnectPoint
+        ? Vector.getZero()
+        : edge.target.collisionBox.getRectangle().getNormalVectorAt(end);
+
     const curve = new SymmetryCurve(
       start,
-      edge.source.collisionBox.getRectangle().getNormalVectorAt(start),
+      startDirection,
       end,
-      edge.target.collisionBox.getRectangle().getNormalVectorAt(end),
+      endDirection,
       Math.min(300, Math.abs(end.subtract(start).magnitude()) / 2),
     );
     // 曲线模式先不屏蔽箭头，有点不美观，空出来一段距离

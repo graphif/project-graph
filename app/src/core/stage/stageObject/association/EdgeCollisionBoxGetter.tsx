@@ -2,6 +2,8 @@ import { Settings } from "@/core/service/Settings";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Circle, Line, SymmetryCurve } from "@graphif/shapes";
+import { ConnectPoint } from "../entity/ConnectPoint";
+import { Vector } from "@graphif/data-structures";
 
 export namespace EdgeCollisionBoxGetter {
   /**
@@ -69,13 +71,22 @@ export namespace EdgeCollisionBoxGetter {
     } else {
       const start = edge.bodyLine.start;
       const end = edge.bodyLine.end;
-      const endNormal = edge.target.collisionBox.getRectangle().getNormalVectorAt(end);
+      const startDirection =
+        edge.source instanceof ConnectPoint
+          ? Vector.getZero()
+          : edge.source.collisionBox.getRectangle().getNormalVectorAt(start);
+      const endDirection =
+        edge.target instanceof ConnectPoint
+          ? Vector.getZero()
+          : edge.target.collisionBox.getRectangle().getNormalVectorAt(end);
+
+      // const endNormal = edge.target.collisionBox.getRectangle().getNormalVectorAt(end);
       return new CollisionBox([
         new SymmetryCurve(
           start,
-          edge.source.collisionBox.getRectangle().getNormalVectorAt(start),
-          end.add(endNormal.multiply(15 / 2)),
-          endNormal,
+          startDirection,
+          end.add(endDirection.multiply(15 / 2)),
+          endDirection,
           Math.min(300, Math.abs(end.subtract(start).magnitude()) / 2),
         ),
       ]);
