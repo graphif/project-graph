@@ -80,7 +80,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       startDirection,
       end,
       endDirection,
-      Math.min(300, Math.abs(end.subtract(start).magnitude()) / 2),
+      Math.max(50, Math.abs(Math.min(Math.abs(start.x - end.x), Math.abs(start.y - end.y))) / 2),
     );
     // 曲线模式先不屏蔽箭头，有点不美观，空出来一段距离
     this.renderArrowCurve(
@@ -262,6 +262,39 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
     // 画箭头
     const endPoint = end.add(curve.endDirection.multiply(2));
     this.project.edgeRenderer.renderArrowHead(endPoint, curve.endDirection.multiply(-1), size, color);
+
+    if (Settings.showDebug) {
+      const controlPoint1 = curve.bezier.ctrlPt1;
+      const controlPoint2 = curve.bezier.ctrlPt2;
+      this.project.shapeRenderer.renderCircle(
+        this.project.renderer.transformWorld2View(controlPoint1),
+        2 * this.project.camera.currentScale,
+        Color.Transparent,
+        this.project.stageStyleManager.currentStyle.StageObjectBorder,
+        1 * this.project.camera.currentScale,
+      );
+      this.project.shapeRenderer.renderCircle(
+        this.project.renderer.transformWorld2View(controlPoint2),
+        2 * this.project.camera.currentScale,
+        Color.Transparent,
+        this.project.stageStyleManager.currentStyle.StageObjectBorder,
+        1 * this.project.camera.currentScale,
+      );
+      this.project.curveRenderer.renderDashedLine(
+        this.project.renderer.transformWorld2View(curve.start),
+        this.project.renderer.transformWorld2View(controlPoint1),
+        this.project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(0.2),
+        1 * this.project.camera.currentScale,
+        10 * this.project.camera.currentScale,
+      );
+      this.project.curveRenderer.renderDashedLine(
+        this.project.renderer.transformWorld2View(curve.end),
+        this.project.renderer.transformWorld2View(controlPoint2),
+        this.project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(0.2),
+        1 * this.project.camera.currentScale,
+        10 * this.project.camera.currentScale,
+      );
+    }
   }
   // /**
   //  * 仅仅绘制曲线

@@ -87,7 +87,7 @@ export namespace EdgeCollisionBoxGetter {
           startDirection,
           end.add(endDirection.multiply(15 / 2)),
           endDirection,
-          Math.min(300, Math.abs(end.subtract(start).magnitude()) / 2),
+          Math.max(50, Math.abs(Math.min(Math.abs(start.x - end.x), Math.abs(start.y - end.y))) / 2),
         ),
       ]);
     }
