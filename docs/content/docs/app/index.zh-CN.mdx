@@ -1,5 +1,5 @@
 ---
-title: 快速开始
+title: 序
 icon: Album
 ---
 
@@ -33,3 +33,45 @@ Project Graph 是一款专注于快速绘制节点图的桌面工具，旨在帮
   <Cloud size={18} />
   <span>夸克网盘 (版本会落后于最新版本)</span>
 </Link>
+
+## 功能亮点
+
+- 🚀 基于 [Pixi.js](https://pixijs.com/) 构建，性能卓越，支持大规模节点图的绘制
+- 🎨 快速简单的操作方法
+- 💻 跨平台支持，适用于 Windows、macOS 和 Linux
+- 📁 特有的文件格式 [`.prg` (Media Type: `application/vnd.project-graph`)](/docs/spec/prg)，便于存储和分享
+
+## 功能对比
+
+<style>{"td:nth-child(1),td:nth-child(2){background-color:var(--color-fd-muted)}"}</style>
+
+|                                                  功能 | Project Graph | Xmind    | Drawnix | Excalidraw |
+| ----------------------------------------------------: | ------------- | -------- | ------- | ---------- |
+|                                                  平台 | Tauri         | Electron | Web     | Web        |
+|                                              渲染引擎 | Pixi.js       | SVG      | SVG     | Canvas 2D  |
+|                                      无需登录即可使用 | ✅            | ❌       | ✅      | ✅         |
+|                                    **可绘制的图类型** |               |          |         |            |
+|                                    树形图（思维导图） | ✅            | ✅       | ✅      | ✅         |
+|                                                流程图 | ✅            | ✅       | ✅      | ✅         |
+|                                                拓扑图 | ✅            | ❌       | ✅      | ✅         |
+|                                      鱼骨图（时间轴） | ✅            | ✅       | ✅      | ✅         |
+|                                          **节点类型** |               |          |         |            |
+|                                              文本节点 | ✅            | ✅       | ✅      | ✅         |
+|                                    LaTeX 数学公式节点 | ✅            | 💰       | ❌      | ❌         |
+|                                          **连线样式** |               |          |         |            |
+|                                                  直线 | ✅            | ✅       | ❌      | ✅         |
+|                                                  曲线 | ✅            | ✅       | ❌      | ❌         |
+|                                                  折线 | ✅            | ✅       | ✅      | ✅         |
+|                                                **UI** |               |          |         |            |
+|                                              深色主题 | ✅            | ✅       | ✅      | ✅         |
+|                                        其他颜色的主题 | ✅            | ❌       | ✅      | ❌         |
+|                                    用户自定义主题颜色 | ✅            | ❌       | ❌      | ❌         |
+|                                          **高级功能** |               |          |         |            |
+| [自动计算](/docs/app/features/feature/compute-engine) | ✅            | ❌       | ❌      | ❌         |
+|                                由多个按键组成的快捷键 | ✅            | ❌       | ❌      | ❌         |
+
+- ✅: 完全支持
+- ❌: 不支持
+- 💰: 付费功能
+
+<Callout>Drawnix 正在快速迭代中，此页面的信息可能会过时。</Callout>
