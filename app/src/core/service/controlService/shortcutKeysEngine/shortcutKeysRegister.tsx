@@ -26,6 +26,8 @@ import { toast } from "sonner";
 import { onNewDraft, onOpenFile } from "../../GlobalMenu";
 import { TextNodeSmartTools } from "../../dataManageService/textNodeSmartTools";
 import { RecentFileManager } from "../../dataFileService/RecentFileManager";
+import { ConnectNodeSmartTools } from "../../dataManageService/connectNodeSmartTools";
+import { ColorSmartTools } from "../../dataManageService/colorSmartTools";
 
 /**
  * 快捷键注册函数
@@ -712,46 +714,16 @@ export class KeyBindsRegistrar {
 
     // 全连接
     await this.project.keyBinds.create("connectAllSelectedEntities", "- - a l l", () => {
-      const selectedNodes = this.project.stageManager.getSelectedEntities();
-      for (let i = 0; i < selectedNodes.length; i++) {
-        for (let j = 0; j < selectedNodes.length; j++) {
-          const fromNode = selectedNodes[i];
-          const toNode = selectedNodes[j];
-          if (fromNode === toNode) continue;
-          if (fromNode instanceof ConnectableEntity && toNode instanceof ConnectableEntity) {
-            this.project.stageManager.connectEntity(fromNode, toNode, false);
-          }
-        }
-      }
+      ConnectNodeSmartTools.connectAll(this.project);
     });
 
     // 向右连接
     await this.project.keyBinds.create("connectLeftToRight", "- - r i g h t", () => {
-      const selectedNodes = this.project.stageManager
-        .getSelectedEntities()
-        .filter((entity) => entity instanceof ConnectableEntity);
-      if (selectedNodes.length <= 1) return;
-      selectedNodes.sort((a, b) => a.collisionBox.getRectangle().location.x - b.collisionBox.getRectangle().location.x);
-      for (let i = 0; i < selectedNodes.length - 1; i++) {
-        const fromNode = selectedNodes[i];
-        const toNode = selectedNodes[i + 1];
-        if (fromNode === toNode) continue;
-        this.project.stageManager.connectEntity(fromNode, toNode, false);
-      }
+      ConnectNodeSmartTools.connectRight(this.project);
     });
 
     await this.project.keyBinds.create("connectTopToBottom", "- - d o w n", () => {
-      const selectedNodes = this.project.stageManager
-        .getSelectedEntities()
-        .filter((entity) => entity instanceof ConnectableEntity);
-      if (selectedNodes.length <= 1) return;
-      selectedNodes.sort((a, b) => a.collisionBox.getRectangle().location.y - b.collisionBox.getRectangle().location.y);
-      for (let i = 0; i < selectedNodes.length - 1; i++) {
-        const fromNode = selectedNodes[i];
-        const toNode = selectedNodes[i + 1];
-        if (fromNode === toNode) continue;
-        this.project.stageManager.connectEntity(fromNode, toNode, false);
-      }
+      ConnectNodeSmartTools.connectDown(this.project);
     });
 
     await this.project.keyBinds.create("selectAllEdges", "+ e d g e", () => {
@@ -773,89 +745,28 @@ export class KeyBindsRegistrar {
     });
 
     await this.project.keyBinds.create("increaseBrightness", "b .", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
-      for (const obj of selectedStageObject) {
-        if (obj instanceof TextNode) {
-          if (obj.color.a === 0) continue;
-          obj.color = new Color(
-            Math.min(255, obj.color.r + 20),
-            Math.min(255, obj.color.b + 20),
-            Math.min(255, obj.color.g + 20),
-            obj.color.a,
-          );
-        }
-      }
+      ColorSmartTools.increaseBrightness(this.project);
     });
 
     await this.project.keyBinds.create("decreaseBrightness", "b ,", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
-      for (const obj of selectedStageObject) {
-        if (obj instanceof TextNode) {
-          if (obj.color.a === 0) continue;
-          obj.color = new Color(
-            Math.max(0, obj.color.r - 20),
-            Math.max(0, obj.color.b - 20),
-            Math.max(0, obj.color.g - 20),
-            obj.color.a,
-          );
-        }
-      }
+      ColorSmartTools.decreaseBrightness(this.project);
     });
 
     await this.project.keyBinds.create("gradientColor", "; ,", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
-      for (const obj of selectedStageObject) {
-        if (obj instanceof TextNode) {
-          if (obj.color.a === 0) continue;
-          const oldColor = obj.color.clone();
-          obj.color = new Color(Math.max(oldColor.a - 20, 0), Math.min(255, oldColor.g + 20), oldColor.b, oldColor.a);
-        }
-      }
+      ColorSmartTools.gradientColor(this.project);
     });
 
     await this.project.keyBinds.create("changeColorHueUp", "A-S-arrowup", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
-      for (const obj of selectedStageObject) {
-        if (obj instanceof TextNode) {
-          if (obj.color.a === 0) continue;
-          const oldColor = obj.color.clone();
-          obj.color = oldColor.changeHue(30);
-        }
-      }
+      ColorSmartTools.changeColorHueUp(this.project);
     });
     await this.project.keyBinds.create("changeColorHueDown", "A-S-arrowdown", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
-      for (const obj of selectedStageObject) {
-        if (obj instanceof TextNode) {
-          if (obj.color.a === 0) continue;
-          const oldColor = obj.color.clone();
-          console.log(obj.color);
-          obj.color = oldColor.changeHue(-30);
-          console.log(obj.color);
-        }
-      }
+      ColorSmartTools.changeColorHueDown(this.project);
     });
     await this.project.keyBinds.create("changeColorHueMajorUp", "A-S-home", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
-      for (const obj of selectedStageObject) {
-        if (obj instanceof TextNode) {
-          if (obj.color.a === 0) continue;
-          const oldColor = obj.color.clone();
-          obj.color = oldColor.changeHue(90);
-        }
-      }
+      ColorSmartTools.changeColorHueMajorUp(this.project);
     });
     await this.project.keyBinds.create("changeColorHueMajorDown", "A-S-end", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
-      for (const obj of selectedStageObject) {
-        if (obj instanceof TextNode) {
-          if (obj.color.a === 0) continue;
-          const oldColor = obj.color.clone();
-          console.log(obj.color);
-          obj.color = oldColor.changeHue(-90);
-          console.log(obj.color);
-        }
-      }
+      ColorSmartTools.changeColorHueMajorDown(this.project);
     });
 
     await this.project.keyBinds.create("toggleTextNodeSizeMode", "t t t", () => {

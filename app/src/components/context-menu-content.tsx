@@ -39,7 +39,6 @@ import {
   Copy,
   Dot,
   ExternalLink,
-  FlaskConical,
   ListEnd,
   Grip,
   LayoutDashboard,
@@ -69,6 +68,15 @@ import {
   Check,
   GitPullRequestCreateArrow,
   LayoutPanelTop,
+  Rabbit,
+  MoveDown,
+  MoveRight,
+  PaintBucket,
+  ChevronUp,
+  MoveUp,
+  ChevronDown,
+  Sun,
+  SunDim,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -82,6 +90,8 @@ import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import ColorWindow from "@/sub/ColorWindow";
 import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
 import { parseEmacsKey } from "@/utils/emacs";
+import { ConnectNodeSmartTools } from "@/core/service/dataManageService/connectNodeSmartTools";
+import { ColorSmartTools } from "@/core/service/dataManageService/colorSmartTools";
 
 const Content = ContextMenuContent;
 const Item = ContextMenuItem;
@@ -375,7 +385,7 @@ export default function MyContextMenuContent() {
         </Item>
       )}
 
-      <p className="pl-1 text-xs opacity-50">{contextMenuTooltipWords}</p>
+      <p className="pl-1 text-xs opacity-50">{contextMenuTooltipWords || "暂无提示"}</p>
 
       {/* 存在选中实体 */}
       {p.stageManager.getSelectedStageObjects().length > 0 &&
@@ -488,42 +498,47 @@ export default function MyContextMenuContent() {
         <>
           <Sub>
             <SubTrigger>
-              <FlaskConical />
+              <Rabbit />
               文本节点 巧妙操作
             </SubTrigger>
             <SubContent>
               <Item onClick={() => TextNodeSmartTools.ttt(p)}>
                 <ListEnd />
                 切换换行模式
+                <span className="text-xs opacity-50">[t, t, t]</span>
               </Item>
               <Item onClick={() => TextNodeSmartTools.rua(p)}>
                 <SquaresUnite />
                 ruá成一个
+                <span className="text-xs opacity-50">[r, u, a]</span>
               </Item>
               <Item onClick={() => TextNodeSmartTools.kei(p)}>
                 <SquareSplitHorizontal />
                 kēi成多个
+                <span className="text-xs opacity-50">[k, e, i]</span>
               </Item>
               <Item onClick={() => TextNodeSmartTools.exchangeTextAndDetails(p)}>
                 <Repeat2 />
                 详略交换
+                <span className="text-xs opacity-50">[e, e, e, e, e]</span>
               </Item>
               <Item onClick={() => TextNodeSmartTools.removeFirstCharFromSelectedTextNodes(p)}>
                 <ArrowLeftFromLine />
                 削头
+                <span className="text-xs opacity-50">[ctrl+backspace]</span>
               </Item>
               <Item onClick={() => TextNodeSmartTools.removeLastCharFromSelectedTextNodes(p)}>
                 <ArrowRightFromLine />
                 剃尾
+                <span className="text-xs opacity-50">[ctrl+delete]</span>
               </Item>
-              <Item onClick={() => TextNodeSmartTools.insertNodeToTree(p)}>
-                <GitPullRequestCreateArrow />
-                接入树
-              </Item>
+
               <Item onClick={() => TextNodeSmartTools.okk(p)}>
                 <Check />
                 打勾勾
+                <span className="text-xs opacity-50">[o, k, k]</span>
               </Item>
+
               <Item
                 onClick={() =>
                   p.stageManager
@@ -534,7 +549,74 @@ export default function MyContextMenuContent() {
               >
                 <Package />
                 {t("convertToSection")}
+                <span className="text-xs opacity-50">[ctrl+shift+G]</span>
               </Item>
+              <Sub>
+                <SubTrigger>
+                  <Network />
+                  连接相关
+                </SubTrigger>
+                <SubContent>
+                  <Item onClick={() => TextNodeSmartTools.insertNodeToTree(p)}>
+                    <GitPullRequestCreateArrow />
+                    嫁接
+                    <span className="text-xs opacity-50">需要叠放在线上</span>
+                  </Item>
+                  <Item onClick={() => ConnectNodeSmartTools.connectDown(p)}>
+                    <MoveDown />
+                    向下连一串
+                    <span className="text-xs opacity-50">[-, -, d, o, w, n]</span>
+                  </Item>
+                  <Item onClick={() => ConnectNodeSmartTools.connectRight(p)}>
+                    <MoveRight />
+                    向右连一串
+                    <span className="text-xs opacity-50">[-, -, r, i, g, h, t]</span>
+                  </Item>
+                  <Item onClick={() => ConnectNodeSmartTools.connectAll(p)}>
+                    <Asterisk />
+                    全连接
+                    <span className="text-xs opacity-50">[-, -, a, l, l]</span>
+                  </Item>
+                </SubContent>
+              </Sub>
+              <Sub>
+                <SubTrigger>
+                  <PaintBucket />
+                  颜色相关
+                </SubTrigger>
+                <SubContent>
+                  <Item onClick={() => ColorSmartTools.increaseBrightness(p)}>
+                    <Sun />
+                    增加亮度
+                    <span className="text-xs opacity-50">[b, .]</span>
+                  </Item>
+                  <Item onClick={() => ColorSmartTools.decreaseBrightness(p)}>
+                    <SunDim />
+                    降低亮度
+                    <span className="text-xs opacity-50">[b, ,]</span>
+                  </Item>
+                  <Item onClick={() => ColorSmartTools.changeColorHueUp(p)}>
+                    <ChevronUp />
+                    增加色相值
+                    <span className="text-xs opacity-50">[Alt+Shift+⬆]</span>
+                  </Item>
+                  <Item onClick={() => ColorSmartTools.changeColorHueDown(p)}>
+                    <ChevronDown />
+                    降低色相值
+                    <span className="text-xs opacity-50">[Alt+Shift+⬇]</span>
+                  </Item>
+                  <Item onClick={() => ColorSmartTools.changeColorHueMajorUp(p)}>
+                    <MoveUp />
+                    大幅度增加色相值
+                    <span className="text-xs opacity-50">[Alt+Shift+Home]</span>
+                  </Item>
+                  <Item onClick={() => ColorSmartTools.changeColorHueMajorDown(p)}>
+                    <MoveDown />
+                    大幅度降低色相值
+                    <span className="text-xs opacity-50">[Alt+Shift+End]</span>
+                  </Item>
+                </SubContent>
+              </Sub>
             </SubContent>
           </Sub>
 
@@ -780,7 +862,7 @@ export default function MyContextMenuContent() {
 
       {/* 鼠标模式 */}
       <Item className="bg-transparent! gap-0 p-0">
-        <KeyTooltip keyId="checkoutLeftMouseToSelectAndMove">
+        <ContextMenuTooltip keyId="checkoutLeftMouseToSelectAndMove">
           <Button
             variant="ghost"
             size="icon"
@@ -790,9 +872,9 @@ export default function MyContextMenuContent() {
           >
             <MousePointer />
           </Button>
-        </KeyTooltip>
+        </ContextMenuTooltip>
 
-        <KeyTooltip keyId="checkoutLeftMouseToDrawing">
+        <ContextMenuTooltip keyId="checkoutLeftMouseToDrawing">
           <Button
             variant="ghost"
             size="icon"
@@ -802,8 +884,8 @@ export default function MyContextMenuContent() {
           >
             <Pencil />
           </Button>
-        </KeyTooltip>
-        <KeyTooltip keyId="checkoutLeftMouseToConnectAndCutting">
+        </ContextMenuTooltip>
+        <ContextMenuTooltip keyId="checkoutLeftMouseToConnectAndCutting">
           <Button
             variant="ghost"
             size="icon"
@@ -813,7 +895,7 @@ export default function MyContextMenuContent() {
           >
             <Waypoints />
           </Button>
-        </KeyTooltip>
+        </ContextMenuTooltip>
       </Item>
     </Content>
   );
