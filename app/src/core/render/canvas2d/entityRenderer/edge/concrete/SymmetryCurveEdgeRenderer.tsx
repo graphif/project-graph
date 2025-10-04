@@ -12,6 +12,7 @@ import { SvgUtils } from "@/core/render/svg/SvgUtils";
 import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
+import { Section } from "@/core/stage/stageObject/entity/Section";
 
 /**
  * 贝塞尔曲线
@@ -74,7 +75,15 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       edge.target instanceof ConnectPoint
         ? Vector.getZero()
         : edge.target.collisionBox.getRectangle().getNormalVectorAt(end);
-
+    let edgeWidth = 2;
+    if (edge.target instanceof Section && edge.source instanceof Section) {
+      const rect1 = edge.source.collisionBox.getRectangle();
+      const rect2 = edge.target.collisionBox.getRectangle();
+      edgeWidth = Math.min(
+        Math.min(Math.max(rect1.width, rect1.height), Math.max(rect2.width, rect2.height)) / 100,
+        100,
+      );
+    }
     const curve = new SymmetryCurve(
       start,
       startDirection,
@@ -86,6 +95,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
     this.renderArrowCurve(
       curve,
       edge.color.equals(Color.Transparent) ? this.project.stageStyleManager.currentStyle.StageObjectBorder : edge.color,
+      edgeWidth,
     );
     this.renderText(curve, edge);
   }
@@ -239,11 +249,11 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
    * 渲染curve及箭头,curve.end即箭头头部
    * @param curve
    */
-  private renderArrowCurve(curve: SymmetryCurve, color: Color): void {
+  private renderArrowCurve(curve: SymmetryCurve, color: Color, width = 2): void {
     // 绘制曲线本体
     curve.endDirection = curve.endDirection.normalize();
     const end = curve.end.clone();
-    const size = 15; // 箭头大小
+    const size = 8 * width; // 箭头大小
     curve.end = curve.end.subtract(curve.endDirection.multiply(size / -2));
     // 绘制碰撞箱
     // const segment = 40;
@@ -258,7 +268,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
     //   )
     //   lastPoint = line.end;
     // }
-    this.project.worldRenderUtils.renderSymmetryCurve(curve, color, 2);
+    this.project.worldRenderUtils.renderSymmetryCurve(curve, color, width);
     // 画箭头
     const endPoint = end.add(curve.endDirection.multiply(2));
     this.project.edgeRenderer.renderArrowHead(endPoint, curve.endDirection.multiply(-1), size, color);
