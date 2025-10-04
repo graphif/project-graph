@@ -7,20 +7,23 @@ import { DestroyOptions, Graphics } from "pixi.js";
  * 一切舞台上的东西
  */
 export abstract class StageObject extends LayoutContainer {
-  private static SELECTION_OUTLINE_LABEL = "selection-outline";
-  private static SELECTION_OUTLINE_PADDING = 8;
+  static SELECTION_OUTLINE_LABEL = "selection-outline";
+  static SELECTION_OUTLINE_PADDING = 8;
+
+  interactive = true;
 
   protected abstract readonly project: Project;
   @id
   @serializable
   public uuid: string = crypto.randomUUID();
 
-  private _selected: boolean = false;
+  protected _selected: boolean = false;
   public get selected() {
     return this._selected;
   }
   public set selected(value: boolean) {
     if (value === this._selected) return;
+    this._selected = value;
     if (value) {
       const g = new Graphics({
         label: StageObject.SELECTION_OUTLINE_LABEL,
@@ -29,8 +32,8 @@ export abstract class StageObject extends LayoutContainer {
       g.roundRect(
         -StageObject.SELECTION_OUTLINE_PADDING,
         -StageObject.SELECTION_OUTLINE_PADDING,
-        this.width + StageObject.SELECTION_OUTLINE_PADDING * 2,
-        this.height + StageObject.SELECTION_OUTLINE_PADDING * 2,
+        this.width / this.scale.x + StageObject.SELECTION_OUTLINE_PADDING * 2,
+        this.height / this.scale.y + StageObject.SELECTION_OUTLINE_PADDING * 2,
         StageObject.SELECTION_OUTLINE_PADDING + 8,
       );
       g.stroke({
@@ -44,7 +47,6 @@ export abstract class StageObject extends LayoutContainer {
         this.removeChild(e);
       }
     }
-    this._selected = value;
   }
 
   destroy(options?: DestroyOptions): void {

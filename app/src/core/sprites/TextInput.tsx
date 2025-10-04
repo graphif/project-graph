@@ -1,6 +1,6 @@
 import { Text } from "@pixi/layout/components";
 import { Viewport } from "pixi-viewport";
-import { Color, ColorSource, FederatedEventHandler, FederatedPointerEvent, TextOptions } from "pixi.js";
+import { Color, ColorSource, TextOptions } from "pixi.js";
 
 export class TextInput extends Text {
   interactive = true;
@@ -11,22 +11,21 @@ export class TextInput extends Text {
     private offset: number = 0,
   ) {
     super(opts);
-    this.on("activate", this.activate, this);
-  }
 
-  private lastClickTime = 0;
-  onclick?: FederatedEventHandler<FederatedPointerEvent> | null | undefined = (e) => {
-    const now = Date.now();
-    if (now - this.lastClickTime < 300) {
-      // 双击
-      this.lastClickTime = 0;
-    } else {
-      this.lastClickTime = now;
-      return;
-    }
-    e.stopPropagation();
-    this.activate();
-  };
+    let lastClickTime = 0;
+    this.on("activate", this.activate, this).on("click", (e) => {
+      const now = Date.now();
+      if (now - lastClickTime < 300) {
+        // 双击
+        lastClickTime = 0;
+      } else {
+        lastClickTime = now;
+        return;
+      }
+      e.stopPropagation();
+      this.activate();
+    });
+  }
 
   activate() {
     const el = document.createElement("textarea");

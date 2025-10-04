@@ -1,11 +1,13 @@
 import { Project } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { Entity } from "@/core/sprites/abstract/Entity";
+import { isSvgString } from "@/utils/svg";
 import { Color } from "@graphif/data-structures";
 import { passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Point, PointData } from "pixi.js";
 import { Value } from "platejs";
 import { LatexNode } from "./LatexNode";
+import { SvgNode } from "./SvgNode";
 import { TextInput } from "./TextInput";
 
 @passExtraAtArg1
@@ -75,6 +77,18 @@ export class TextNode extends Entity {
               new LatexNode(this.project, {
                 latex: this.text.slice(2, -2).trim(),
                 position: this.position,
+                color: this.color,
+              }),
+            );
+            this.destroy();
+          }
+          if (isSvgString(this.text)) {
+            // 转换为SvgNode
+            this.project.stage.push(
+              new SvgNode(this.project, {
+                svg: this.text,
+                position: this.position,
+                color: this.color,
               }),
             );
             this.destroy();

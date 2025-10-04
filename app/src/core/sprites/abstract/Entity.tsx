@@ -1,14 +1,12 @@
 import { StageObject } from "@/core/sprites/abstract/StageObject";
 import { serializable } from "@graphif/serializer";
-import { FederatedEventHandler, FederatedPointerEvent, Point } from "pixi.js";
+import { Point } from "pixi.js";
 import type { Value } from "platejs";
 /**
  * 实体
  * 一切独立存在、能被移动的东西，且放在框里能被连带移动的东西
  */
 export abstract class Entity extends StageObject {
-  interactive = true;
-
   public allowAssociation: boolean = true;
 
   /**
@@ -22,33 +20,32 @@ export abstract class Entity extends StageObject {
 
   constructor() {
     super();
-  }
 
-  // HACK: 如果直接用event.movement处理移动可能会漂移，暂时没有找到原因
-  private pressed = false;
-  private startWorldPoint = new Point(0, 0);
-  private startPoint = new Point(0, 0);
-  onpointerdown?: FederatedEventHandler<FederatedPointerEvent> | null | undefined = (e) => {
-    e.stopImmediatePropagation();
-    this.pressed = true;
-    const world = this.project.viewport.toWorld(e.global.x, e.global.y);
-    this.startWorldPoint = world;
-    this.startPoint = this.position.clone();
-
-    this.selected = true;
-  };
-  onpointerup?: FederatedEventHandler<FederatedPointerEvent> | null | undefined = () => {
-    this.pressed = false;
-  };
-  onpointerupoutside?: FederatedEventHandler<FederatedPointerEvent> | null | undefined = () => {
-    this.pressed = false;
-  };
-  onglobalpointermove?: FederatedEventHandler<FederatedPointerEvent> | null | undefined = (e) => {
-    if (this.pressed) {
+    // HACK: 如果直接用event.movement处理移动可能会漂移，暂时没有找到原因
+    let pressed = false;
+    let startWorldPoint = new Point(0, 0);
+    let startPoint = new Point(0, 0);
+    this.on("pointerdown", (e) => {
+      e.stopPropagation();
+      pressed = true;
       const world = this.project.viewport.toWorld(e.global.x, e.global.y);
-      const dx = world.x - this.startWorldPoint.x;
-      const dy = world.y - this.startWorldPoint.y;
-      this.position.set(this.startPoint.x + dx, this.startPoint.y + dy);
-    }
-  };
+      startWorldPoint = world;
+      startPoint = this.position.clone();
+      this.selected = true;
+    })
+      .on("pointerup", () => {
+        pressed = false;
+      })
+      .on("pointerupoutside", () => {
+        pressed = false;
+      })
+      .on("globalpointermove", (e) => {
+        if (pressed) {
+          const world = this.project.viewport.toWorld(e.global.x, e.global.y);
+          const dx = world.x - startWorldPoint.x;
+          const dy = world.y - startWorldPoint.y;
+          this.position.set(startPoint.x + dx, startPoint.y + dy);
+        }
+      });
+  }
 }

@@ -19,7 +19,7 @@ import { exists } from "@tauri-apps/plugin-fs";
 import "driver.js/dist/driver.css";
 import i18next from "i18next";
 import { Provider } from "jotai";
-import { Color, Container, Point } from "pixi.js";
+import { Color, Container, ObservablePoint, Point } from "pixi.js";
 import { createRoot } from "react-dom/client";
 import { initReactI18next } from "react-i18next";
 import { toast } from "sonner";
@@ -31,6 +31,8 @@ import "./css/index.css";
 
 serializable(Point, "x");
 serializable(Point, "y");
+serializable(ObservablePoint, "x");
+serializable(ObservablePoint, "y");
 serializable(Container, "position");
 serializable(Color, "value");
 
