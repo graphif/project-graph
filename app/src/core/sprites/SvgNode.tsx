@@ -3,7 +3,7 @@ import { serializable } from "@graphif/serializer";
 import { Assets, Color, type ColorSource, Point } from "pixi.js";
 import { Value } from "platejs";
 import { Project } from "../Project";
-import { TextureNode } from "./TextureNode";
+import { TextureNode } from "./abstract/TextureNode";
 
 export class SvgNode extends TextureNode {
   private _svg: string = "";

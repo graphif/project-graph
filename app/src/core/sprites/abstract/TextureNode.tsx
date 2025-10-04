@@ -1,9 +1,9 @@
 import { serializable } from "@graphif/serializer";
 import { LayoutContainer } from "@pixi/layout/components";
 import { ObservablePoint, Sprite, Texture } from "pixi.js";
-import { Project } from "../Project";
-import { Entity } from "./abstract/Entity";
-import { StageObject } from "./abstract/StageObject";
+import { Project } from "../../Project";
+import { Entity } from "./Entity";
+import { StageObject } from "./StageObject";
 
 export abstract class TextureNode extends Entity {
   static RESIZE_HANDLE_SIZE = 16;
