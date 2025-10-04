@@ -1,7 +1,7 @@
 import { Project } from "@/core/Project";
 import { id, serializable } from "@graphif/serializer";
 import { LayoutContainer } from "@pixi/layout/components";
-import { Graphics } from "pixi.js";
+import { DestroyOptions, Graphics } from "pixi.js";
 
 /**
  * 一切舞台上的东西
@@ -45,5 +45,14 @@ export abstract class StageObject extends LayoutContainer {
       }
     }
     this._selected = value;
+  }
+
+  destroy(options?: DestroyOptions): void {
+    super.destroy(options);
+    this.project.stage = this.project.stage.filter((s) => s !== this);
+  }
+  removeFromParent(): void {
+    super.removeFromParent();
+    this.project.stage = this.project.stage.filter((s) => s !== this);
   }
 }

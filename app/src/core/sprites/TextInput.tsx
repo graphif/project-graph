@@ -51,6 +51,7 @@ export class TextInput extends Text {
       el.addEventListener("blur", () => {
         this.text = el.value;
         this.emit("textchange", this.text);
+        this.emit("finishedit", this.text);
         el.remove();
         this.style.fill = oldStyleFill;
       });

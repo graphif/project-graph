@@ -5,6 +5,7 @@ import { Color } from "@graphif/data-structures";
 import { passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Point, PointData } from "pixi.js";
 import { Value } from "platejs";
+import { LatexNode } from "./LatexNode";
 import { TextInput } from "./TextInput";
 
 @passExtraAtArg1
@@ -34,7 +35,6 @@ export class TextNode extends Entity {
       sizeAdjust?: "auto" | "manual";
       position?: PointData;
     },
-    public unknown = false,
   ) {
     super();
     this.uuid = uuid;
@@ -64,9 +64,22 @@ export class TextNode extends Entity {
         },
         // padding8+border2
         10,
-      ).on("textchange", (value) => {
-        this.text = value;
-      }),
+      )
+        .on("textchange", (value) => {
+          this.text = value;
+        })
+        .on("finishedit", () => {
+          if (this.text.startsWith("$$") && this.text.endsWith("$$")) {
+            // 转换为LatexNode
+            this.project.stage.push(
+              new LatexNode(this.project, {
+                latex: this.text.slice(2, -2).trim(),
+                position: this.position,
+              }),
+            );
+            this.destroy();
+          }
+        }),
     );
   }
 }
