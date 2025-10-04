@@ -210,16 +210,7 @@ export default function MyContextMenuContent() {
                 <LayoutDashboard />
               </Button>
             </ContextMenuTooltip>
-            <ContextMenuTooltip keyId="layoutToTightSquareDeep">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-6"
-                onClick={() => p.layoutManager.layoutBySelected(p.layoutManager.layoutToTightSquare, true)}
-              >
-                <SquareSquare />
-              </Button>
-            </ContextMenuTooltip>
+            <div />
           </div>
         )}
         {p.stageManager.getSelectedEntities().length >= 2 && (
@@ -303,7 +294,7 @@ export default function MyContextMenuContent() {
       </Item>
       {/* 树形面板 */}
       {isSelectedTreeRoots() && (
-        <Item className="bg-transparent!">
+        <Item className="bg-transparent! gap-0 p-0">
           <ContextMenuTooltip keyId="autoLayoutSelectedFastTreeModeRight">
             <Button
               variant="ghost"
@@ -369,6 +360,16 @@ export default function MyContextMenuContent() {
               }}
             >
               <LayoutPanelTop />
+            </Button>
+          </ContextMenuTooltip>
+          <ContextMenuTooltip keyId="layoutToTightSquareDeep">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6"
+              onClick={() => p.layoutManager.layoutBySelected(p.layoutManager.layoutToTightSquare, true)}
+            >
+              <SquareSquare />
             </Button>
           </ContextMenuTooltip>
         </Item>
@@ -861,7 +862,7 @@ function ContextMenuTooltip({ keyId, children = <></> }: { keyId: string; childr
         })
         .join(",");
     } else {
-      keyTips = "[未绑定快捷键]";
+      keyTips = "未绑定快捷键";
     }
     setContextMenuTooltipWords(`${title} [${keyTips}]`);
   };
