@@ -4,6 +4,7 @@ import { Project } from "@/core/Project";
 import { BackgroundGrid } from "./sprites/BackgroundGrid";
 import { NodeAdder } from "./sprites/NodeAdder";
 import { RegionPicker } from "./sprites/RegionPicker";
+import { GlobalContextMenuTrigger } from "./sprites/GlobalContextMenuTrigger";
 
 /**
  * 以下方法在项目初始化之前加载所有服务
@@ -16,6 +17,6 @@ export function initProjectWithAllServices(project: Project) {
       draft: FileSystemProviderDraft,
     },
     [],
-    [BackgroundGrid, NodeAdder, RegionPicker],
+    [BackgroundGrid, NodeAdder, RegionPicker, GlobalContextMenuTrigger],
   );
 }

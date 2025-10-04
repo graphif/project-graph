@@ -9,7 +9,7 @@ import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, 
 import { EventEmitter } from "events";
 import mime from "mime";
 import { Viewport } from "pixi-viewport";
-import { Application, Container, Graphics, Point, Text } from "pixi.js";
+import { Application, Container, FederatedPointerEvent, Graphics, Point, Text } from "pixi.js";
 import "pixi.js/math-extras";
 import { URI } from "vscode-uri";
 import { Settings } from "./service/Settings";
@@ -21,6 +21,8 @@ if (import.meta.hot) {
 export class Project extends EventEmitter<{
   "state-change": [state: ProjectState];
   "context-menu": [location: Point];
+  "pointer-enter-stage-object": [so: StageObject | null, event: FederatedPointerEvent];
+  "pointer-leave-stage-object": [so: StageObject | null, event: FederatedPointerEvent];
 }> {
   static readonly latestVersion = 18;
 
@@ -57,6 +59,9 @@ export class Project extends EventEmitter<{
       import.meta.hot.on("vite:beforeUpdate", () => {
         this.dispose();
       });
+    }
+    if (import.meta.env.DEV) {
+      (window as any).project = this;
     }
   }
   /**

@@ -2,9 +2,8 @@ import { Project } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { Entity } from "@/core/sprites/abstract/Entity";
 import { isSvgString } from "@/utils/svg";
-import { Color } from "@graphif/data-structures";
 import { passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
-import { Point, PointData } from "pixi.js";
+import { Color, ColorSource, Point, PointData } from "pixi.js";
 import { Value } from "platejs";
 import { LatexNode } from "./LatexNode";
 import { SvgNode } from "./SvgNode";
@@ -16,7 +15,7 @@ export class TextNode extends Entity {
   @serializable
   text: string;
   @serializable
-  color: Color = Color.Transparent;
+  color: Color = new Color("transparent");
   @serializable
   public sizeAdjust: string = "auto";
 
@@ -26,14 +25,14 @@ export class TextNode extends Entity {
       uuid = crypto.randomUUID() as string,
       text = "",
       details = [],
-      color = Color.Transparent,
+      color = new Color("transparent"),
       sizeAdjust = "auto",
       position = new Point(0, 0),
     }: {
       uuid?: string;
       text?: string;
       details?: Value;
-      color?: Color;
+      color?: ColorSource;
       sizeAdjust?: "auto" | "manual";
       position?: PointData;
     },
@@ -42,7 +41,7 @@ export class TextNode extends Entity {
     this.uuid = uuid;
     this.text = text;
     this.details = details;
-    this.color = color;
+    this.color = new Color(color);
     this.sizeAdjust = sizeAdjust;
     this.position.copyFrom(position);
     this.layout = {

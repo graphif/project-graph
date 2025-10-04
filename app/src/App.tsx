@@ -39,6 +39,7 @@ export default function App() {
 
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef(0); // 用于保存滚动位置的 ref，防止切换标签页时滚动位置丢失
+  const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
 
   // const { t } = useTranslation("app");
 
@@ -266,6 +267,16 @@ export default function App() {
         // 强制重新渲染一次
         setProjects([...projects]);
       });
+      project.on("context-menu", ({ x, y }) => {
+        contextMenuTriggerRef.current?.dispatchEvent(
+          new MouseEvent("contextmenu", {
+            bubbles: true,
+            clientX: x,
+            clientY: y,
+          }),
+        );
+        setProjects([...projects]);
+      });
     }
 
     return () => {
@@ -447,19 +458,18 @@ export default function App() {
       </div>
 
       {!isWide && <ProjectTabs />}
+      {/* canvas */}
+      <div className="absolute inset-0 overflow-hidden" ref={canvasWrapperRef}></div>
+      {/* 没有项目处于打开状态时，显示欢迎页面 */}
+      {projects.length === 0 && (
+        <div className="absolute inset-0 overflow-hidden *:h-full *:w-full">
+          <Welcome />
+        </div>
+      )}
 
       {/* 右键菜单 */}
       <ContextMenu>
-        <ContextMenuTrigger>
-          {/* canvas */}
-          <div className="absolute inset-0 overflow-hidden" ref={canvasWrapperRef}></div>
-          {/* 没有项目处于打开状态时，显示欢迎页面 */}
-          {projects.length === 0 && (
-            <div className="absolute inset-0 overflow-hidden *:h-full *:w-full">
-              <Welcome />
-            </div>
-          )}
-        </ContextMenuTrigger>
+        <ContextMenuTrigger ref={contextMenuTriggerRef} />
         <MyContextMenuContent />
       </ContextMenu>
 

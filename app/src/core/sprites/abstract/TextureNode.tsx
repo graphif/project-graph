@@ -42,7 +42,7 @@ export abstract class TextureNode extends Entity {
     });
   }
 
-  private refresh(showResizeHandle = false) {
+  refresh(showResizeHandle = false) {
     for (const child of this.children) {
       if (child.label !== StageObject.SELECTION_OUTLINE_LABEL) {
         child.removeFromParent();

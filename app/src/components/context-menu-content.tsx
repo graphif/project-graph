@@ -118,7 +118,6 @@ export default function MyContextMenuContent() {
 
   return (
     <Content>
-      selected{selected.length}
       {/* 第一行 Ctrl+c/v/x del */}
       <Item className="bg-transparent! gap-0 p-0">
         <KeyTooltip keyId="copy">
