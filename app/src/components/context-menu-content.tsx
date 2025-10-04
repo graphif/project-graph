@@ -20,7 +20,7 @@ import { activeProjectAtom } from "@/state";
 import ColorWindow from "@/sub/ColorWindow";
 import { Direction } from "@/types/directions";
 import { openBrowserOrFile } from "@/utils/externalOpen";
-import { Color } from "@graphif/data-structures";
+import { parseOklch } from "@/utils/oklch";
 import { useAtom } from "jotai";
 import {
   AlignCenterHorizontal,
@@ -76,6 +76,7 @@ import {
   Undo,
   Waypoints,
 } from "lucide-react";
+import { Color } from "pixi.js";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -381,7 +382,15 @@ export default function MyContextMenuContent() {
               {t("changeColor")}
             </SubTrigger>
             <SubContent>
-              <Item onClick={() => p.stageObjectColorManager.setSelectedStageObjectColor(Color.Transparent)}>
+              <Item
+                onClick={() =>
+                  selected.map((it) => {
+                    if ("color" in it) {
+                      it.color = new Color("transparent");
+                    }
+                  })
+                }
+              >
                 <Slash />
                 {t("resetColor")}
               </Item>
@@ -389,19 +398,27 @@ export default function MyContextMenuContent() {
                 {Object.values(tailwindColors)
                   .filter((it) => typeof it !== "string")
                   .slice(4)
-                  .flatMap((it) => Object.values(it).map(Color.fromCss))
+                  .flatMap((it) =>
+                    Object.values(it).map((it) => new Color(it.startsWith("oklch") ? parseOklch(it) : it)),
+                  )
                   .map((color, index) => (
                     <div
                       key={index}
                       className="hover:outline-accent-foreground size-4 -outline-offset-2 hover:outline-2"
-                      style={{ backgroundColor: color.toString() }}
-                      onMouseEnter={() => p.stageObjectColorManager.setSelectedStageObjectColor(color)}
+                      style={{ backgroundColor: color.toHex() }}
+                      onMouseEnter={() =>
+                        selected.map((it) => {
+                          if ("color" in it) {
+                            it.color = color;
+                          }
+                        })
+                      }
                     />
                   ))}
               </Item>
-              <Item onClick={() => p.stageObjectColorManager.setSelectedStageObjectColor(new Color(11, 45, 14, 0))}>
+              {/*<Item onClick={() => p.stageObjectColorManager.setSelectedStageObjectColor(new Color(11, 45, 14, 0))}>
                 改为强制特殊透明色
-              </Item>
+              </Item>*/}
               <Item
                 onClick={() => {
                   ColorWindow.open();

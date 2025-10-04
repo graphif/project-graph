@@ -117,6 +117,9 @@ importers:
       "@octokit/rest":
         specifier: ^22.0.0
         version: 22.0.0
+      "@pixi/colord":
+        specifier: ^2.9.6
+        version: 2.9.6
       "@pixi/core":
         specifier: ^7.4.3
         version: 7.4.3
