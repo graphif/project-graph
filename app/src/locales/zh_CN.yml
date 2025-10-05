@@ -10,7 +10,7 @@ welcome:
 globalMenu:
   file:
     title: 文件
-    new: 新建
+    new: 新建临时草稿
     open: 打开
     recentFiles: 最近打开的文件
     clear: 清空
