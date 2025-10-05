@@ -8,6 +8,12 @@
   @apply hover:bg-fd-accent/80 cursor-pointer;
 }
 
+@layer base {
+  * {
+    font-family: MiSans;
+  }
+}
+
 @layer components {
   .prose blockquote {
     margin: 0;
@@ -20,4 +26,8 @@
       content: "" !important;
     }
   }
+}
+
+@theme {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }

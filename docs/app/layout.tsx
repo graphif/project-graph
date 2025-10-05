@@ -25,6 +25,9 @@ export default async function RootLayout({
 
   return (
     <html suppressHydrationWarning>
+      <head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/misans-vf@1.0.0/lib/MiSans.min.css" />
+      </head>
       <body className="flex min-h-screen flex-col">
         <RootProvider
           search={{
