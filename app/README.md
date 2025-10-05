@@ -3,8 +3,6 @@
 <img src="app/src/assets/logo-animated.svg" height="150" alt="banner">
 <h1>Project Graph</h1>
 
-次世代的节点图绘制工具
-
 </div>
 
 ![License](https://img.shields.io/badge/License-MIT%20and%20GPL%203.0-green.svg)
@@ -12,58 +10,24 @@
 
 ---
 
-**Draw fast, think efficiently** — Unleash creativity and streamline workflows with AI-powered graph design.
+Project Graph 是一款专注于快速绘制节点图的桌面工具，旨在帮助用户高效地创建项目拓扑图和进行头脑风暴。用户可以通过简单的拖拽操作来创建和连接节点，从而轻松构建复杂的图结构。该工具还具备层级清晰的结构，能够直观地呈现项目关系或数据关系。
 
-## 🚀 Features
+## 功能亮点
 
-- **Blazing-Fast Drawing**
-  Create complex node diagrams in seconds with drag-and-drop simplicity. Optimized with Tauri framework for seamless performance, even with thousands of nodes.
+- 🚀 基于 [Pixi.js](https://pixijs.com/) 构建，性能卓越，支持大规模节点图的绘制
+- 🎨 快速简单的操作方法
+- 💻 跨平台支持，适用于 Windows、macOS 和 Linux
+- 📁 特有的文件格式 [`.prg` (Media Type: `application/vnd.project-graph`)](/docs/spec/prg)，便于存储和分享
 
-- **AI-Powered Intelligence**
-  Auto-generate tree structures and suggest node relationships using integrated large language models (e.g., ChatGPT), accelerating brainstorming and system design.
-
-- **Dynamic Compute Engine**
-  Analyze dependencies, optimize paths, and derive logic trees in real time through a powerful graph engine.
-
-- **Cross-Platform & Multi-Modal**
-  Native support for Windows, Linux, and experimental macOS/Android builds. Export diagrams as PNG, SVG, or JSON for diverse use cases.
-
-- **Open Ecosystem**
-  Built with React and ~~extensible APIs~~ (WIP). MIT-licensed for unlimited customization.
-
----
-
-## 📥 Installation
-
-Refer to [Documentation](https://project-graph.top/docs/app#%E5%AE%89%E8%A3%85)
-
-**System Requirements**:
-
-- Windows 10+
-- Linux
-- macOS 14+
-
-## 🎮 Quick Start
-
-1. **Create Nodes**: Double-click canvas to add nodes.
-2. **Edit Content**: Double-click nodes to rename; Ctrl+double-click for descriptions.
-3. **Connect Nodes**: Right-drag between nodes to create links.
-
-For advanced features like compute engine, see [Full Documentation](https://project-graph.top).
-
-## 🛠 Technical Highlights
-
-- **Architecture**: Tauri-based desktop app with Rust backend for maximum performance.
-- ~~**AI Integration**: Leverage LLMs for context-aware diagram generation and knowledge graph enhancement.~~ (WIP)
-- ~~**Real-Time Collaboration**: Sync edits across teams via shared project files or Git integration.~~ (WIP)
-
-## 社区和贡献
+## 社区
 
 加入社群: https://project-graph.top/docs/app/community
 
 贡献代码: https://project-graph.top/docs/contribute
 
 ## 鸣谢
+
+![contributors](https://contrib.rocks/image?repo=LiRenTech/project-graph)
 
 所有捐赠的用户（[见此处](https://github.com/graphif/project-graph/blob/master/app/src/sub/SettingsWindow/credits.tsx#L15)）
 
@@ -72,8 +36,6 @@ For advanced features like compute engine, see [Full Documentation](https://proj
 [慕乐云](https://muleyun.com/aff/HLONILNH)
 
 [YXVM](https://yxvm.com/)
-
-![yxvm](https://beisudianxueuser.oss-cn-beijing.aliyuncs.com/storage/user_avatar/ciallo/2025/04/06/1818c0770e94a4257af5eb7d5530f5fd/Screenshot%202025-04-06%20at%2016-23-03%20NodeSupport%20Promotion.png)
 
 [ZMTO](https://console.zmto.com/?affid=1574)
 
