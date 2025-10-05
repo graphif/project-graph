@@ -674,7 +674,6 @@ export class Renderer {
       `node count: ${this.renderedNodes} , ${this.project.stageManager.getTextNodes().length}`,
       `edge count: ${this.renderedEdges} , ${this.project.stageManager.getLineEdges().length}`,
       `section count: ${this.project.stageManager.getSections().length}`,
-      `selected count: ${this.project.stageObjectSelectCounter.toDebugString()}`,
       `pressingKeys: ${this.project.controller.pressingKeysString()}`,
       `鼠标按下情况: ${this.project.controller.isMouseDown}`,
       `框选框: ${JSON.stringify(this.project.rectangleSelect.getRectangle())}`,

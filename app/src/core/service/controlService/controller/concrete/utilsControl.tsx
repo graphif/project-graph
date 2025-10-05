@@ -116,8 +116,6 @@ export class ControllerUtils {
         clickedNode!.isEditing = false;
         this.project.controller.isCameraLocked = false;
         // this.project.historyManager.recordStep();
-        // 更新选中内容的数量
-        this.project.stageObjectSelectCounter.update();
 
         // 实验
         this.finishChangeTextNode(clickedNode);

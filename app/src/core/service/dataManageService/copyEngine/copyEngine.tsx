@@ -173,7 +173,6 @@ export class CopyEngine {
     this.project.stage.push(...pasteData);
     // 选中标准化
     this.project.controllerUtils.selectedEntityNormalizing();
-    this.project.stageObjectSelectCounter.update();
 
     // 将所有选中的实体，往右下角移动一点
     const rect = Rectangle.getBoundingRectangle(pasteData.map((it: StageObject) => it.collisionBox.getRectangle()));

@@ -46,8 +46,6 @@ export class ControllerEntityCreateClass extends ControllerClass {
       // 双击创建节点
       this.project.controllerUtils.addTextNodeByLocation(pressLocation, true);
     }
-    // 更新选中内容的数量
-    this.project.stageObjectSelectCounter.update();
   };
 
   createConnectPoint(pressLocation: Vector, addToSections: Section[]) {

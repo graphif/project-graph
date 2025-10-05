@@ -208,17 +208,19 @@ export class ControllerCuttingClass extends ControllerClass {
       //   }
       // }
     }
-    // 删除实体
+    // 删除实体 （消耗性功能）
     this.project.stageManager.deleteEntities(this.warningEntity);
-    // 删除产生的孤立质点
+    // 删除产生的孤立质点（消耗性能）
     this.clearIsolationPoint();
     // 特效
     this.addEffectByWarningEntity();
 
+    if (this.warningEntity.length !== 0 || this.warningAssociations.length !== 0) {
+      this.project.stageManager.updateReferences();
+    }
+
     this.warningEntity = [];
     this.warningSections = [];
-
-    this.project.stageManager.updateReferences();
 
     this.warningAssociations = [];
 

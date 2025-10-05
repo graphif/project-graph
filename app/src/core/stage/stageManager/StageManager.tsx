@@ -420,10 +420,12 @@ export class StageManager {
   // 每个操作函数尾部都要加一个记录历史的操作
 
   deleteEntities(deleteNodes: Entity[]) {
+    if (deleteNodes.length === 0) {
+      // 此处return 性能优化60ms
+      return;
+    }
     this.project.deleteManager.deleteEntities(deleteNodes);
     this.project.historyManager.recordStep();
-    // 更新选中节点计数
-    this.project.stageObjectSelectCounter.update();
   }
 
   /**
@@ -453,8 +455,6 @@ export class StageManager {
     } else if (deleteAssociation instanceof MultiTargetUndirectedEdge) {
       const res = this.project.deleteManager.deleteMultiTargetUndirectedEdge(deleteAssociation);
       this.project.historyManager.recordStep();
-      // 更新选中边计数
-      this.project.stageObjectSelectCounter.update();
       return res;
     }
     toast.error("无法删除未知类型的关系");
@@ -464,8 +464,6 @@ export class StageManager {
   deleteEdge(deleteEdge: Edge): boolean {
     const res = this.project.deleteManager.deleteEdge(deleteEdge);
     this.project.historyManager.recordStep();
-    // 更新选中边计数
-    this.project.stageObjectSelectCounter.update();
     return res;
   }
 
@@ -738,7 +736,6 @@ export class StageManager {
       // undirectedEdge.isSelected = true;
       this.add(undirectedEdge);
     }
-    this.project.stageObjectSelectCounter.update();
   }
   /**
    * 无向边转有向边

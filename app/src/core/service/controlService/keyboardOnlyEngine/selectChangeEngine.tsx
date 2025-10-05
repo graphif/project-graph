@@ -183,9 +183,6 @@ export class SelectChangeEngine {
     }
 
     this.addEffect(selectedNodeRect.collisionBox.getRectangle(), newSelectNodeRect);
-
-    // 更新选中内容的数量
-    this.project.stageObjectSelectCounter.update();
   }
 
   private getCurrentSelectedNode(): ConnectableEntity | null {

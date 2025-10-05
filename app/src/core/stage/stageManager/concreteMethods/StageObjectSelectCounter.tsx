@@ -11,6 +11,8 @@ import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 /**
  * 实时记录选中的各种类型的对象的数量
  * 用于工具栏实时切换按钮的显示
+ *
+ * 现在2.0已经废弃了，因为有右键菜单了
  */
 @service("stageObjectSelectCounter")
 export class StageObjectSelectCounter {
@@ -27,10 +29,6 @@ export class StageObjectSelectCounter {
   selectedSectionCount = 0;
   selectedMultiTargetUndirectedEdgeCount = 0;
 
-  toDebugString(): string {
-    return `entity: ${this.selectedEntityCount}, edge: ${this.selectedEdgeCount}, cr-edge: ${this.selectedCREdgeCount}, imageNode: ${this.selectedImageNodeCount}, textNode: ${this.selectedTextNodeCount}, section: ${this.selectedSectionCount}`;
-  }
-
   /**
    * 上次更新时间
    * 防止频繁更新，影响性能
@@ -38,6 +36,7 @@ export class StageObjectSelectCounter {
   private lastUpdateTimestamp = 0;
 
   update() {
+    console.time("updateCount");
     if (Date.now() - this.lastUpdateTimestamp < 10) {
       return;
     }
@@ -81,5 +80,6 @@ export class StageObjectSelectCounter {
         }
       }
     }
+    console.timeEnd("updateCount");
   }
 }

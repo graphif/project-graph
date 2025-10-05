@@ -89,8 +89,6 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
     } else {
       // 未点击到节点
     }
-    // 更新选中状态
-    this.project.stageObjectSelectCounter.update();
   };
 
   public mousemove: (event: MouseEvent) => void = (event: MouseEvent) => {

@@ -72,9 +72,6 @@ export class RectangleSelect {
     this.selectingRectangle = new Rectangle(worldLocation.clone(), Vector.getZero());
     this.selectStartLocation = worldLocation.clone();
     this.selectEndLocation = worldLocation.clone();
-
-    // 更新选中内容的数量
-    this.project.stageObjectSelectCounter.update();
   }
 
   moveSelecting(newEndLocation: Vector) {
@@ -98,8 +95,6 @@ export class RectangleSelect {
 
     this.updateStageObjectByMove();
     this.project.controller.isMovingEdge = false;
-    // 更新选中内容的数量
-    this.project.stageObjectSelectCounter.update();
   }
 
   /**
@@ -120,8 +115,6 @@ export class RectangleSelect {
         this.project.controller.lastSelectedEdgeUUID.add(edge.uuid);
       }
     }
-    // 更新选中数量
-    this.project.stageObjectSelectCounter.update();
     this.selectingRectangle = null;
   }
 

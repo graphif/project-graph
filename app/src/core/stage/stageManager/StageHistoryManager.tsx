@@ -49,6 +49,7 @@ export class HistoryManager {
    * @param file
    */
   recordStep() {
+    console.time("recordStep");
     // console.trace("recordStep");
     // this.deltas = this.deltas.splice(this.currentIndex + 1);
     this.deltas.splice(this.currentIndex + 1);
@@ -100,6 +101,7 @@ export class HistoryManager {
       this.currentIndex = this.deltas.length - 1;
     }
     this.project.state = ProjectState.Unsaved;
+    console.timeEnd("recordStep");
   }
 
   /**
