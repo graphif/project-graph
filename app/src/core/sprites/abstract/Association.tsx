@@ -8,12 +8,13 @@ import { Color, ObservablePoint, Point } from "pixi.js";
  * 一切连接关系的抽象
  */
 export abstract class Association extends StageObject {
+  private handleMemberMoved = () => {
+    this.onMembersChange();
+  };
+
   private _members = new ObservableArray<AssociationMember>(
-    (it) => {
-      it.entity.on("move", this.onMembersChange.bind(this));
-      this.onMembersChange();
-    },
-    this.onMembersChange.bind(this),
+    (it) => it.entity.on("_moved", this.handleMemberMoved),
+    (it) => it.entity.off("_moved", this.handleMemberMoved),
     [],
   );
   @serializable
@@ -21,12 +22,11 @@ export abstract class Association extends StageObject {
     return this._members;
   }
   set members(value: AssociationMember[]) {
+    // Remove listeners from old members
+    this._members.forEach((it) => it.entity.off("_moved", this.handleMemberMoved));
     this._members = new ObservableArray(
-      (it) => {
-        it.entity.on("move", this.onMembersChange.bind(this));
-        this.onMembersChange();
-      },
-      this.onMembersChange.bind(this),
+      (it) => it.entity.on("_moved", this.handleMemberMoved),
+      (it) => it.entity.off("_moved", this.handleMemberMoved),
       value,
     );
     this.onMembersChange();
@@ -95,7 +95,8 @@ export class AssociationMember {
 
   /** 锚点的世界坐标 */
   get position(): Point {
-    const pos = this.entity.position.clone();
+    // HACK: 2025/10/6 发现ObservablePoint.clone不会把observer去掉
+    const pos = this.entity.position.clone({ _onUpdate() {} });
     // pos是左上角坐标
     switch (this.anchor) {
       case "center":

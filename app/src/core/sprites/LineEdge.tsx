@@ -53,6 +53,5 @@ export class LineEdge extends Association {
     g.lineTo(t.x, t.y);
     g.stroke({ width: 2, color: 0xff0000 });
     this.addChild(g);
-    console.log(this.x, this.y, this.width, this.height);
   }
 }

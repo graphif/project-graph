@@ -25,15 +25,15 @@ export abstract class Entity extends StageObject {
 
     // HACK: 如果直接用event.movement处理移动可能会漂移，暂时没有找到原因
     let moving = false;
-    let startWorldPoint = new Point(0, 0);
-    let startPoint = new Point(0, 0);
+    const startWorldPoint = new Point(0, 0);
+    const startPoint = new Point(0, 0);
     let linking = false;
     this.on("pointerdown", (e) => {
       e.stopPropagation();
       this.selected = true;
       const world = this.project.viewport.toWorld(e.client);
-      startWorldPoint = world;
-      startPoint = this.position.clone();
+      startWorldPoint.copyFrom(world);
+      startPoint.copyFrom(this.position);
       if (e.button === 0) {
         moving = true;
       } else if (e.button === 2) {
@@ -66,12 +66,17 @@ export abstract class Entity extends StageObject {
       .on("globalpointermove", (e) => {
         if (moving) {
           const world = this.project.viewport.toWorld(e.client);
-          const dx = world.x - startWorldPoint.x;
-          const dy = world.y - startWorldPoint.y;
-          this.position = { x: startPoint.x + dx, y: startPoint.y + dy };
-          this.refresh();
-          this.emit("move");
+          const x = startPoint.x + world.x - startWorldPoint.x;
+          const y = startPoint.y + world.y - startWorldPoint.y;
+          this.position.set(x, y);
+          this.emit("_moved");
+          // this.project.pixi.renderer.render(this);
         }
       });
   }
+
+  // _onUpdate(point?: ObservablePoint): void {
+  //   super._onUpdate(point);
+  //   console.trace("update", point?.x, point?.y);
+  // }
 }
