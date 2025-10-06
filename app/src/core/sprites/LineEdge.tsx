@@ -45,7 +45,6 @@ export class LineEdge extends Association {
 
   refresh() {
     if (this.members.length !== 2) return;
-    this.removeChildren();
     const g = new Graphics();
     // 原始位置
     const os = this.source.position;
@@ -53,43 +52,100 @@ export class LineEdge extends Association {
     // source和target的矩形
     const sb = this.source.entity.getBounds().rectangle;
     const tb = this.target.entity.getBounds().rectangle;
-    // 分别计算「线段os ot」与「矩形sb」/「矩形tb」的交点
-    const dir = ot.subtract(os);
-    const startPoint = this.rayRectIntersection(os, dir, sb)?.subtract(this.position);
-    const endPoint = this.rayRectIntersection(ot, dir.multiplyScalar(-1), tb)?.subtract(this.position);
-    if (startPoint && endPoint) {
-      g.moveTo(startPoint.x, startPoint.y);
-      g.lineTo(endPoint.x, endPoint.y);
-      g.stroke({ width: 1, color: this.color });
-    }
+    // 分别计算「线段os ot」与「矩形sb」/「矩形tb」的交点，作为sp和ep
+    const dx = ot.x - os.x;
+    const dy = ot.y - os.y;
+    type IntersectionCandidate = { t: number; x: number; y: number };
+    const getExitPoint = (rect: Rectangle, p: Point): Point => {
+      const candidates: IntersectionCandidate[] = [];
+      // Check left side
+      if (dx !== 0) {
+        const t = (rect.x - p.x) / dx;
+        const y = p.y + t * dy;
+        if (t >= 0 && t <= 1 && y >= rect.y && y <= rect.y + rect.height) {
+          candidates.push({ t, x: p.x + t * dx, y });
+        }
+      }
+      // Check right side
+      if (dx !== 0) {
+        const t = (rect.x + rect.width - p.x) / dx;
+        const y = p.y + t * dy;
+        if (t >= 0 && t <= 1 && y >= rect.y && y <= rect.y + rect.height) {
+          candidates.push({ t, x: p.x + t * dx, y });
+        }
+      }
+      // Check top side
+      if (dy !== 0) {
+        const t = (rect.y - p.y) / dy;
+        const x = p.x + t * dx;
+        if (t >= 0 && t <= 1 && x >= rect.x && x <= rect.x + rect.width) {
+          candidates.push({ t, x, y: p.y + t * dy });
+        }
+      }
+      // Check bottom side
+      if (dy !== 0) {
+        const t = (rect.y + rect.height - p.y) / dy;
+        const x = p.x + t * dx;
+        if (t >= 0 && t <= 1 && x >= rect.x && x <= rect.x + rect.width) {
+          candidates.push({ t, x, y: p.y + t * dy });
+        }
+      }
+      if (candidates.length === 0) return new Point(p.x, p.y);
+      candidates.sort((a, b) => b.t - a.t);
+      return new Point(candidates[0].x, candidates[0].y);
+    };
+    const getEntryPoint = (rect: Rectangle, p: Point, q: Point): Point => {
+      const candidates: IntersectionCandidate[] = [];
+      // Check left side
+      if (dx !== 0) {
+        const t = (rect.x - p.x) / dx;
+        const y = p.y + t * dy;
+        if (t >= 0 && t <= 1 && y >= rect.y && y <= rect.y + rect.height) {
+          candidates.push({ t, x: p.x + t * dx, y });
+        }
+      }
+      // Check right side
+      if (dx !== 0) {
+        const t = (rect.x + rect.width - p.x) / dx;
+        const y = p.y + t * dy;
+        if (t >= 0 && t <= 1 && y >= rect.y && y <= rect.y + rect.height) {
+          candidates.push({ t, x: p.x + t * dx, y });
+        }
+      }
+      // Check top side
+      if (dy !== 0) {
+        const t = (rect.y - p.y) / dy;
+        const x = p.x + t * dx;
+        if (t >= 0 && t <= 1 && x >= rect.x && x <= rect.x + rect.width) {
+          candidates.push({ t, x, y: p.y + t * dy });
+        }
+      }
+      // Check bottom side
+      if (dy !== 0) {
+        const t = (rect.y + rect.height - p.y) / dy;
+        const x = p.x + t * dx;
+        if (t >= 0 && t <= 1 && x >= rect.x && x <= rect.x + rect.width) {
+          candidates.push({ t, x, y: p.y + t * dy });
+        }
+      }
+      if (candidates.length === 0) return new Point(q.x, q.y);
+      candidates.sort((a, b) => a.t - b.t);
+      return new Point(candidates[0].x, candidates[0].y);
+    };
+    const sp = getExitPoint(sb, os).subtract(this.position);
+    const ep = getEntryPoint(tb, os, ot).subtract(this.position);
+    g.moveTo(sp.x, sp.y);
+    g.lineTo(ep.x, ep.y);
+    g.stroke({ width: 1, color: this.color });
+    // 画一个实心的箭头
+    const arrowSize = 8;
+    const angle = Math.atan2(ep.y - sp.y, ep.x - sp.x);
+    g.moveTo(ep.x, ep.y);
+    g.lineTo(ep.x - arrowSize * Math.cos(angle - Math.PI / 6), ep.y - arrowSize * Math.sin(angle - Math.PI / 6));
+    g.lineTo(ep.x - arrowSize * Math.cos(angle + Math.PI / 6), ep.y - arrowSize * Math.sin(angle + Math.PI / 6));
+    g.closePath();
+    g.fill({ color: this.color });
+    this.removeChildren();
     this.addChild(g);
-  }
-  private rayRectIntersection(origin: Point, dir: Point, rect: Rectangle): Point | null {
-    let tMin = -Infinity;
-    let tMax = Infinity;
-    if (dir.x !== 0) {
-      const t1 = (rect.x - origin.x) / dir.x;
-      const t2 = (rect.x + rect.width - origin.x) / dir.x;
-      const tNear = Math.min(t1, t2);
-      const tFar = Math.max(t1, t2);
-      tMin = Math.max(tMin, tNear);
-      tMax = Math.min(tMax, tFar);
-    } else {
-      if (origin.x < rect.x || origin.x > rect.x + rect.width) return null;
-    }
-    if (dir.y !== 0) {
-      const t1 = (rect.y - origin.y) / dir.y;
-      const t2 = (rect.y + rect.height - origin.y) / dir.y;
-      const tNear = Math.min(t1, t2);
-      const tFar = Math.max(t1, t2);
-      tMin = Math.max(tMin, tNear);
-      tMax = Math.min(tMax, tFar);
-    } else {
-      if (origin.y < rect.y || origin.y > rect.y + rect.height) return null;
-    }
-    if (tMin > tMax || tMax < 0) return null;
-    const t = tMin > 0 ? tMin : tMax;
-    const result = origin.add(dir.multiplyScalar(t));
-    return new Point(result.x, result.y);
   }
 }
