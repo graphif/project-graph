@@ -36,7 +36,8 @@ import { getVersion } from "@tauri-apps/api/app";
 import { appCacheDir, dataDir, join } from "@tauri-apps/api/path";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { readFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { exists, readFile, writeFile, writeTextFile, mkdir } from "@tauri-apps/plugin-fs";
+import { fetch } from "@tauri-apps/plugin-http";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import { useAtom } from "jotai";
 import {
@@ -66,7 +67,6 @@ import {
   FolderCog,
   FolderOpen,
   FolderTree,
-  Frown,
   Fullscreen,
   GitCompareArrows,
   Globe,
@@ -914,6 +914,43 @@ export function GlobalMenu() {
             <MessageCircleWarning />
             {t("about.title")}
           </Item>
+          <Item
+            onClick={async () => {
+              // 显示加载提示并存储ID
+              const toastId = toast.loading("正在从Github仓库下载新手引导文件...");
+              try {
+                // 1. 下载文件 - 使用raw路径获取原始文件内容
+                const response = await fetch("https://github.com/graphif/tutorials/raw/master/tutorial-2.0.prg");
+
+                if (!response.ok) {
+                  throw new Error(`下载失败，状态码: ${response.status}`);
+                }
+
+                // 2. 获取缓存目录
+                const cacheDir = await appCacheDir();
+                const tutorialDir = await join(cacheDir, "tutorials");
+
+                // 3. 确保目录存在
+                if (!(await exists(tutorialDir))) {
+                  await mkdir(tutorialDir);
+                }
+
+                // 4. 写入文件
+                const tutorialPath = await join(tutorialDir, "tutorial-2.0.prg");
+                const fileContent = await response.arrayBuffer();
+                await writeFile(tutorialPath, new Uint8Array(fileContent));
+
+                // 5. 打开文件
+                toast.success("新手引导文件下载成功，正在打开...", { id: toastId });
+                await onOpenFile(URI.file(tutorialPath), "新手引导");
+              } catch (error) {
+                toast.error(`无法访问GitHub或下载文件失败: ${String(error)}`, { id: toastId });
+              }
+            }}
+          >
+            <PersonStanding />
+            {t("about.guide")}
+          </Item>
           <Sub>
             <SubTrigger>
               <BookOpenText />
@@ -982,18 +1019,6 @@ export function GlobalMenu() {
               </Item>
             </SubContent>
           </Sub>
-          <Item
-            onClick={() => {
-              toast.warning(
-                "由于2.0文件类型变更为了prg，因此新手引导文件无法正常加载，但整体内容与1.8版本几乎一致，请参考1.8版本的新手引导文件。此新手引导文件将在2.1版补充完整。如果您是新用户，建议在github历史中下载1.8版本。github链接在关于页面",
-              );
-            }}
-            className="*:text-destructive! text-destructive!"
-          >
-            <PersonStanding />
-            {t("about.guide")}
-            <Frown />
-          </Item>
           <Item
             onClick={() =>
               Dialog.confirm(
