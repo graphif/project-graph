@@ -30,7 +30,6 @@ export abstract class Entity extends StageObject {
     let linking = false;
     this.on("pointerdown", (e) => {
       e.stopPropagation();
-      this.selected = true;
       const world = this.project.viewport.toWorld(e.client);
       startWorldPoint.copyFrom(world);
       startPoint.copyFrom(this.position);

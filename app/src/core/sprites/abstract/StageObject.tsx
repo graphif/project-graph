@@ -64,8 +64,13 @@ export abstract class StageObject extends LayoutContainer {
     super();
     this.on("pointerenter", (e) => {
       this.project.emit("pointer-enter-stage-object", this, e);
-    }).on("pointerleave", (e) => {
-      this.project.emit("pointer-leave-stage-object", this, e);
-    });
+    })
+      .on("pointerleave", (e) => {
+        this.project.emit("pointer-leave-stage-object", this, e);
+      })
+      .on("pointerdown", () => {
+        this.project.stage.forEach((it) => (it.selected = false));
+        this.selected = true;
+      });
   }
 }
