@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@graphif/serializer": "workspace:*",
-    "@graphif/unplugin-original-class-name": "workspace:*",
+    "unplugin-original-class-name": "^1.0.0",
     "pixi.js": "^8.13.2"
   }
 }
