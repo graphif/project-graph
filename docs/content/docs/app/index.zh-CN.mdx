@@ -6,6 +6,11 @@ icon: Album
 import Link from "fumadocs-core/link";
 import { Download, Code, Cloud } from "lucide-react";
 
+<style>{"#nd-toc{display:none}p:first-child,h2:first-child{margin-top:0}"}</style>
+
+<div className="flex gap-2 mt-8 flex-col xl:flex-row">
+
+<div>
 Project Graph 是一款专注于快速绘制节点图的桌面工具，旨在帮助用户高效地创建项目拓扑图和进行头脑风暴。用户可以通过简单的拖拽操作来创建和连接节点，从而轻松构建复杂的图结构。该工具还具备层级清晰的结构，能够直观地呈现项目关系或数据关系。
 
 <Link
@@ -18,22 +23,34 @@ Project Graph 是一款专注于快速绘制节点图的桌面工具，旨在帮
 
 其他下载方式
 
-<Link
-  href="https://github.com/graphif/project-graph/releases"
-  className="bg-fd-accent inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm no-underline transition hover:opacity-90 active:scale-95"
->
-  <Code size={18} />
-  <span>GitHub Releases</span>
-</Link>
+<div className="flex flex-wrap gap-2">
+  <Link
+    href="https://github.com/graphif/project-graph/releases"
+    className="bg-fd-accent inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm no-underline transition hover:opacity-90 active:scale-95"
+  >
+    <Code size={18} />
+    <span>GitHub Releases</span>
+  </Link>
+  <Link
+    href="https://pan.quark.cn/s/d4a90dba9491"
+    className="bg-fd-accent inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm no-underline transition hover:opacity-90 active:scale-95"
+  >
+    <Cloud size={18} />
+    <span>夸克网盘 (版本会落后于最新版本)</span>
+  </Link>
+</div>
 
-<Link
-  href="https://pan.quark.cn/s/d4a90dba9491"
-  className="bg-fd-accent inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm no-underline transition hover:opacity-90 active:scale-95"
->
-  <Cloud size={18} />
-  <span>夸克网盘 (版本会落后于最新版本)</span>
-</Link>
+## 宣传片 / 教程视频
 
+<div className="flex flex-wrap gap-4 xl:flex-col">
+  <Bilibili bvid="BV1W4k7YqEgU" />
+  <Bilibili bvid="BV19B5WzyEiZ" />
+  <Bilibili bvid="BV1MM5WzKESm" />
+</div>
+
+</div>
+
+<div>
 ## 功能亮点
 
 - 🚀 基于 [Pixi.js](https://pixijs.com/) 构建，性能卓越，支持大规模节点图的绘制
@@ -43,7 +60,9 @@ Project Graph 是一款专注于快速绘制节点图的桌面工具，旨在帮
 
 ## 功能对比
 
-<style>{"td:nth-child(1),td:nth-child(2){background-color:var(--color-fd-muted)}"}</style>
+<style>
+  {"td:nth-child(1),td:nth-child(2){background-color:var(--color-fd-muted)}table{font-size:0.75rem;width:max-content}"}
+</style>
 
 |                                                  功能 | Project Graph | Xmind    | 幕布         | Drawnix | Excalidraw | Obsidian Canvas |
 | ----------------------------------------------------: | ------------- | -------- | ------------ | ------- | ---------- | --------------- |
@@ -76,3 +95,7 @@ Project Graph 是一款专注于快速绘制节点图的桌面工具，旨在帮
 - 💰: 付费功能
 
 <Callout>Drawnix 正在快速迭代中，此页面的信息可能会过时。</Callout>
+
+</div>
+
+</div>

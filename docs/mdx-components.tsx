@@ -4,6 +4,7 @@ import { AutoTypeTable } from "fumadocs-typescript/ui";
 import * as TabsComponents from "fumadocs-ui/components/tabs";
 import defaultComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
+import Bilibili from "./app/components/Bilibili";
 
 const generator = createGenerator();
 
@@ -14,5 +15,6 @@ export function getMDXComponents(extraComponents?: MDXComponents): MDXComponents
     AutoTypeTable: (props) => <AutoTypeTable {...props} generator={generator} />,
     ...TabsComponents,
     ...extraComponents,
+    Bilibili,
   };
 }
