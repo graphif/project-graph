@@ -73,4 +73,16 @@ export abstract class StageObject extends LayoutContainer {
         this.selected = true;
       });
   }
+
+  getBounds() {
+    const bounds = super.getBounds();
+    // 如果是选中状态，要把选中框的大小减掉
+    if (this.selected) {
+      bounds.x += StageObject.SELECTION_OUTLINE_PADDING;
+      bounds.y += StageObject.SELECTION_OUTLINE_PADDING;
+      bounds.width -= StageObject.SELECTION_OUTLINE_PADDING * 2;
+      bounds.height -= StageObject.SELECTION_OUTLINE_PADDING * 2;
+    }
+    return bounds;
+  }
 }

@@ -13,8 +13,8 @@ export abstract class Association extends StageObject {
   };
 
   private _members = new ObservableArray<AssociationMember>(
-    (it) => it.entity.on("_moved", this.handleMemberMoved),
-    (it) => it.entity.off("_moved", this.handleMemberMoved),
+    (it) => it.entity.on("update", this.handleMemberMoved),
+    (it) => it.entity.off("update", this.handleMemberMoved),
     [],
   );
   @serializable
@@ -23,10 +23,10 @@ export abstract class Association extends StageObject {
   }
   set members(value: AssociationMember[]) {
     // Remove listeners from old members
-    this._members.forEach((it) => it.entity.off("_moved", this.handleMemberMoved));
+    this._members.forEach((it) => it.entity.off("update", this.handleMemberMoved));
     this._members = new ObservableArray(
-      (it) => it.entity.on("_moved", this.handleMemberMoved),
-      (it) => it.entity.off("_moved", this.handleMemberMoved),
+      (it) => it.entity.on("update", this.handleMemberMoved),
+      (it) => it.entity.off("update", this.handleMemberMoved),
       value,
     );
     this.onMembersChange();

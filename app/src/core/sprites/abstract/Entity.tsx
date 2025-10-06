@@ -1,6 +1,6 @@
 import { StageObject } from "@/core/sprites/abstract/StageObject";
 import { serializable } from "@graphif/serializer";
-import { Point } from "pixi.js";
+import { ObservablePoint, Point } from "pixi.js";
 import type { Value } from "platejs";
 import { LineEdge } from "../LineEdge";
 import { AssociationMember } from "./Association";
@@ -65,17 +65,18 @@ export abstract class Entity extends StageObject {
       .on("globalpointermove", (e) => {
         if (moving) {
           const world = this.project.viewport.toWorld(e.client);
-          const x = startPoint.x + world.x - startWorldPoint.x;
-          const y = startPoint.y + world.y - startWorldPoint.y;
-          this.position.set(x, y);
-          this.emit("_moved");
+          // const x = startPoint.x + world.x - startWorldPoint.x;
+          // const y = startPoint.y + world.y - startWorldPoint.y;
+          const pos = startPoint.add(world).subtract(startWorldPoint);
+          this.position.copyFrom(pos);
+          // this.emit("_moved");
           // this.project.pixi.renderer.render(this);
         }
       });
   }
 
-  // _onUpdate(point?: ObservablePoint): void {
-  //   super._onUpdate(point);
-  //   console.trace("update", point?.x, point?.y);
-  // }
+  _onUpdate(point?: ObservablePoint): void {
+    super._onUpdate(point);
+    this.emit("update");
+  }
 }
