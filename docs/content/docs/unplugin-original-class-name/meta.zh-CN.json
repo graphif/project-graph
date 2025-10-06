@@ -1,6 +1,0 @@
-{
-  "title": "unplugin-original-class-name",
-  "description": "在编译后的代码中获取原始类名",
-  "root": true,
-  "icon": "Code"
-}

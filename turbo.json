@@ -16,10 +16,6 @@
       "outputs": ["dist/**"],
       "dependsOn": ["^build"]
     },
-    "@graphif/docs#build": {
-      "inputs": ["**/*"],
-      "outputs": ["out"]
-    },
     "@graphif/project-graph#tauri:build": {
       "dependsOn": ["build"],
       "inputs": ["src-tauri/**/*"],

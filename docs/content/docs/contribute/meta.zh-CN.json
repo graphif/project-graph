@@ -1,7 +1,0 @@
-{
-  "title": "开发",
-  "description": "参与项目开发",
-  "root": true,
-  "icon": "GitPullRequestArrow",
-  "pages": ["index", "---开发---", "env", "dev", "---翻译---", "weblate", "---文档---", "docs-style-guide"]
-}

@@ -17,7 +17,7 @@ Project Graph 是一款专注于快速绘制节点图的桌面工具，旨在帮
 - 🚀 基于 [Pixi.js](https://pixijs.com/) 构建，性能卓越，支持大规模节点图的绘制
 - 🎨 快速简单的操作方法
 - 💻 跨平台支持，适用于 Windows、macOS 和 Linux
-- 📁 特有的文件格式 [`.prg` (Media Type: `application/vnd.project-graph`)](/docs/spec/prg)，便于存储和分享
+- 📁 特有的文件格式 `.prg` (Media Type: `application/vnd.project-graph`)，便于存储和分享
 
 ## 社区
 

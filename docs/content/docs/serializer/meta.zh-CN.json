@@ -1,6 +1,0 @@
-{
-  "title": "序列化工具库",
-  "description": "将实例序列化成对象",
-  "root": true,
-  "icon": "Braces"
-}
