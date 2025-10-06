@@ -71,6 +71,12 @@ export abstract class StageObject extends LayoutContainer {
       .on("pointerdown", () => {
         this.project.stage.forEach((it) => (it.selected = false));
         this.selected = true;
+      })
+      .on("update", () => {
+        if (this.selected) {
+          this.selected = false;
+          this.selected = true;
+        }
       });
   }
 
