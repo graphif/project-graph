@@ -21,8 +21,8 @@ if (import.meta.hot) {
 export class Project extends EventEmitter<{
   "state-change": [state: ProjectState];
   "context-menu": [location: Point];
-  "pointer-enter-stage-object": [so: StageObject | null, event: FederatedPointerEvent];
-  "pointer-leave-stage-object": [so: StageObject | null, event: FederatedPointerEvent];
+  "pointer-enter-stage-object": [so: StageObject, event: FederatedPointerEvent];
+  "pointer-leave-stage-object": [so: StageObject, event: FederatedPointerEvent];
 }> {
   static readonly latestVersion = 18;
 

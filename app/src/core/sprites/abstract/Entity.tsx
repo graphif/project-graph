@@ -1,8 +1,10 @@
+import { Project } from "@/core/Project";
 import { StageObject } from "@/core/sprites/abstract/StageObject";
 import { serializable } from "@graphif/serializer";
 import { ObservablePoint, Point } from "pixi.js";
 import type { Value } from "platejs";
 import { LineEdge } from "../LineEdge";
+import { TempLineEdge } from "../TempLineEdge";
 import { AssociationMember } from "./Association";
 /**
  * 实体
@@ -20,14 +22,34 @@ export abstract class Entity extends StageObject {
   @serializable
   public details: Value = [];
 
-  constructor() {
-    super();
+  constructor(project: Project) {
+    super(project);
 
     // HACK: 如果直接用event.movement处理移动可能会漂移，暂时没有找到原因
     let moving = false;
     const startWorldPoint = new Point(0, 0);
     const startPoint = new Point(0, 0);
     let linking = false;
+    const tempLineEdge = new TempLineEdge(this.project, {
+      members: [new AssociationMember(this, "right")],
+      endPoint: new Point(0, 0),
+    });
+    const onPointerEnterStageObject = (so: StageObject) => {
+      if (linking && so instanceof Entity) {
+        const onPointerUp = () => {
+          linking = false;
+          this.project.stage.push(
+            new LineEdge(this.project, {
+              members: [new AssociationMember(this, "right"), new AssociationMember(so, "left")],
+            }),
+          );
+        };
+        so.once("pointerup", onPointerUp);
+        so.once("pointerleave", () => {
+          so.off("pointerup", onPointerUp);
+        });
+      }
+    };
     this.on("pointerdown", (e) => {
       e.stopPropagation();
       const world = this.project.viewport.toWorld(e.client);
@@ -37,16 +59,9 @@ export abstract class Entity extends StageObject {
         moving = true;
       } else if (e.button === 2) {
         linking = true;
-        this.project.once("pointer-enter-stage-object", (so) => {
-          if (linking && so instanceof Entity) {
-            linking = false;
-            this.project.stage.push(
-              new LineEdge(this.project, {
-                members: [new AssociationMember(this), new AssociationMember(so)],
-              }),
-            );
-          }
-        });
+        tempLineEdge.endPoint.copyFrom(world);
+        this.project.stage.push(tempLineEdge);
+        this.project.on("pointer-enter-stage-object", onPointerEnterStageObject);
       }
     })
       .on("pointerup", (e) => {
@@ -57,10 +72,14 @@ export abstract class Entity extends StageObject {
           this.project.emit("context-menu", e.client);
         }
         linking = false;
+        tempLineEdge.removeFromParent();
+        this.project.off("pointer-enter-stage-object", onPointerEnterStageObject);
       })
       .on("pointerupoutside", () => {
         moving = false;
         linking = false;
+        tempLineEdge.removeFromParent();
+        this.project.off("pointer-enter-stage-object", onPointerEnterStageObject);
       })
       .on("globalpointermove", (e) => {
         if (moving) {
@@ -71,6 +90,23 @@ export abstract class Entity extends StageObject {
           this.position.copyFrom(pos);
           // this.emit("_moved");
           // this.project.pixi.renderer.render(this);
+        }
+        if (linking) {
+          // 检测是否碰到了自己的边缘2px,如果碰到了就设置anchor
+          const pos = this.project.viewport.toWorld(e.client);
+          const bounds = this.getBounds();
+          if (pos.x >= bounds.x - 2 && pos.x <= bounds.x + 2) {
+            tempLineEdge.source.anchor = "left";
+          } else if (pos.x >= bounds.x + bounds.width - 2 && pos.x <= bounds.x + bounds.width + 2) {
+            tempLineEdge.source.anchor = "right";
+          } else if (pos.y >= bounds.y - 2 && pos.y <= bounds.y + 2) {
+            tempLineEdge.source.anchor = "top";
+          } else if (pos.y >= bounds.y + bounds.height - 2 && pos.y <= bounds.y + bounds.height + 2) {
+            tempLineEdge.source.anchor = "bottom";
+          }
+          // 把临时线段的终点设置为当前鼠标位置
+          const world = this.project.viewport.toWorld(e.client);
+          tempLineEdge.endPoint.copyFrom(world);
         }
       });
   }

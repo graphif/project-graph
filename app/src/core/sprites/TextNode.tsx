@@ -37,7 +37,7 @@ export class TextNode extends Entity {
       position?: PointData;
     },
   ) {
-    super();
+    super(project);
     this.uuid = uuid;
     this.text = text;
     this.details = details;

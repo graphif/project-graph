@@ -120,4 +120,26 @@ export class AssociationMember {
     }
     return pos;
   }
+
+  /** 往anchor的方向偏移150px */
+  get bezierControlPoint(): Point {
+    const pos = this.position.clone();
+    switch (this.anchor) {
+      case "center":
+        break;
+      case "top":
+        pos.y -= 150;
+        break;
+      case "bottom":
+        pos.y += 150;
+        break;
+      case "left":
+        pos.x -= 150;
+        break;
+      case "right":
+        pos.x += 150;
+        break;
+    }
+    return pos;
+  }
 }

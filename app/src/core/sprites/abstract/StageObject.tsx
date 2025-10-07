@@ -12,7 +12,6 @@ export abstract class StageObject extends LayoutContainer {
 
   interactive = true;
 
-  protected abstract readonly project: Project;
   @id
   @serializable
   public uuid: string = crypto.randomUUID();
@@ -23,7 +22,6 @@ export abstract class StageObject extends LayoutContainer {
   }
   public set selected(value: boolean) {
     if (value === this._selected) return;
-    this._selected = value;
     if (value) {
       const g = new Graphics({
         label: StageObject.SELECTION_OUTLINE_LABEL,
@@ -47,6 +45,7 @@ export abstract class StageObject extends LayoutContainer {
         this.removeChild(e);
       }
     }
+    this._selected = value;
   }
 
   destroy(options?: DestroyOptions): void {
@@ -60,7 +59,7 @@ export abstract class StageObject extends LayoutContainer {
 
   refresh() {}
 
-  constructor() {
+  constructor(protected readonly project: Project) {
     super();
     this.on("pointerenter", (e) => {
       this.project.emit("pointer-enter-stage-object", this, e);
@@ -80,9 +79,9 @@ export abstract class StageObject extends LayoutContainer {
       });
   }
 
+  // 如果是选中状态，要把选中框的大小减掉
   getBounds() {
     const bounds = super.getBounds();
-    // 如果是选中状态，要把选中框的大小减掉
     if (this.selected) {
       bounds.x += StageObject.SELECTION_OUTLINE_PADDING;
       bounds.y += StageObject.SELECTION_OUTLINE_PADDING;
@@ -90,5 +89,29 @@ export abstract class StageObject extends LayoutContainer {
       bounds.height -= StageObject.SELECTION_OUTLINE_PADDING * 2;
     }
     return bounds;
+  }
+  get x() {
+    if (this.selected) {
+      return super.x + StageObject.SELECTION_OUTLINE_PADDING;
+    }
+    return super.x;
+  }
+  get y() {
+    if (this.selected) {
+      return super.y + StageObject.SELECTION_OUTLINE_PADDING;
+    }
+    return super.y;
+  }
+  get width() {
+    if (this.selected) {
+      return super.width - StageObject.SELECTION_OUTLINE_PADDING * 2;
+    }
+    return super.width;
+  }
+  get height() {
+    if (this.selected) {
+      return super.height - StageObject.SELECTION_OUTLINE_PADDING * 2;
+    }
+    return super.height;
   }
 }
