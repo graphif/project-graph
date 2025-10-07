@@ -1,3 +1,4 @@
+import starVideo from "@/assets/star.mp4";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { FlipWords } from "@/components/ui/flip-words";
@@ -5,8 +6,9 @@ import { Settings } from "@/core/service/Settings";
 import { SubWindow } from "@/core/service/SubWindow";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
+import { open } from "@tauri-apps/plugin-shell";
 import i18next from "i18next";
-import { Languages, MessageCircleWarning, Moon, Palette, SettingsIcon, Sun } from "lucide-react";
+import { ExternalLink, Languages, MessageCircleWarning, Moon, Palette, SettingsIcon, Sun } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import SettingsWindow from "./SettingsWindow";
@@ -137,17 +139,28 @@ export default function OnboardingWindow() {
           <Button>{t("next")}</Button>
         </div>
       </div>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col items-end gap-4">
         <div className="flex w-56 flex-col gap-1 rounded-xl border p-4" onClick={() => SettingsWindow.open("credits")}>
           <h2 className="text-lg">{t("donation.title", { users: donations.length })}</h2>
           <p className="opacity-50">{t("donation.more")}</p>
         </div>
-        <div className="flex w-56 flex-col gap-1 rounded-xl border p-4">
-          <h2 className="text-lg">{t("star.title")}</h2>
-          video...
-        </div>
-        <div className="flex w-56 flex-col gap-1 rounded-xl border p-4">
-          <h2 className="text-lg">这里没有广告位</h2>
+        <div className="grow" />
+        <div className="flex w-96 flex-col items-end gap-4">
+          <div onClick={() => open("https://github.com/graphif/project-graph")} className="flex gap-2 *:cursor-pointer">
+            <ExternalLink />
+            <span>打开 Github 仓库页面</span>
+          </div>
+          <h2 className="text-2xl">{t("star.title")}</h2>
+          <video
+            src={starVideo}
+            autoPlay
+            muted
+            className="rounded-xl"
+            onPointerEnter={(e) => {
+              e.currentTarget.currentTime = 0;
+              e.currentTarget.play();
+            }}
+          />
         </div>
       </div>
     </div>
