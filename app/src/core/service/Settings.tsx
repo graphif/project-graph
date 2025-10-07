@@ -139,7 +139,7 @@ export const settingsSchema = z.object({
   uiSwitchButtonOffSoundFile: z.string().default(""),
   githubToken: z.string().default(""),
   githubUser: z.string().default(""),
-  theme: z.string().default("dark-blue"),
+  theme: z.string().default("dark"),
   telemetry: z.boolean().default(true),
   isStealthModeEnabled: z.boolean().default(false),
   stealthModeScopeRadius: z.number().min(10).max(500).int().default(150),

@@ -106,88 +106,92 @@ export default function RenderSubWindows() {
                   }
                 : win.children}
             </div>
-            {/* 添加一个可调整大小的边缘，这里以右下角为例 */}
-            <div
-              className="bg-sub-window-resize-bg absolute bottom-0 right-0 h-4 w-4 cursor-se-resize"
-              onMouseDown={(e) => {
-                const start = new Vector(e.clientX, e.clientY);
-                const onMouseUp = () => {
-                  window.removeEventListener("mouseup", onMouseUp);
-                  window.removeEventListener("mousemove", onMouseMove);
-                };
-                const onMouseMove = (e: MouseEvent) => {
-                  const delta = new Vector(e.clientX, e.clientY).subtract(start);
-                  SubWindow.update(win.id, {
-                    rect: new Rectangle(win.rect.location, win.rect.size.add(delta)),
-                  });
-                };
-                window.addEventListener("mouseup", onMouseUp);
-                window.addEventListener("mousemove", onMouseMove);
-              }}
-              onTouchStart={(e) => {
-                if (e.touches.length > 1) return;
-                const touch = e.touches[0];
-                const start = new Vector(touch.clientX, touch.clientY);
-                const onTouchEnd = () => {
-                  window.removeEventListener("touchend", onTouchEnd);
-                  window.removeEventListener("touchmove", onTouchMove);
-                };
-                const onTouchMove = (e: TouchEvent) => {
-                  if (e.touches.length > 1) return;
-                  const touch = e.touches[0];
-                  const delta = new Vector(touch.clientX, touch.clientY).subtract(start);
-                  SubWindow.update(win.id, {
-                    rect: new Rectangle(win.rect.location, win.rect.size.add(delta)),
-                  });
-                };
-                window.addEventListener("touchend", onTouchEnd);
-                window.addEventListener("touchmove", onTouchMove);
-              }}
-            />
-            {/* 左下角 */}
-            <div
-              className="bg-sub-window-resize-bg absolute bottom-0 left-0 h-4 w-4 cursor-sw-resize"
-              onMouseDown={(e) => {
-                const start = new Vector(e.clientX, e.clientY);
-                const onMouseUp = () => {
-                  window.removeEventListener("mouseup", onMouseUp);
-                  window.removeEventListener("mousemove", onMouseMove);
-                };
-                const onMouseMove = (e: MouseEvent) => {
-                  const delta = new Vector(e.clientX, e.clientY).subtract(start);
-                  SubWindow.update(win.id, {
-                    rect: new Rectangle(
-                      new Vector(win.rect.left + delta.x, win.rect.top),
-                      new Vector(win.rect.width - delta.x, win.rect.height + delta.y),
-                    ),
-                  });
-                };
-                window.addEventListener("mouseup", onMouseUp);
-                window.addEventListener("mousemove", onMouseMove);
-              }}
-              onTouchStart={(e) => {
-                if (e.touches.length > 1) return;
-                const touch = e.touches[0];
-                const start = new Vector(touch.clientX, touch.clientY);
-                const onTouchEnd = () => {
-                  window.removeEventListener("touchend", onTouchEnd);
-                  window.removeEventListener("touchmove", onTouchMove);
-                };
-                const onTouchMove = (e: TouchEvent) => {
-                  if (e.touches.length > 1) return;
-                  const touch = e.touches[0];
-                  const delta = new Vector(touch.clientX, touch.clientY).subtract(start);
-                  SubWindow.update(win.id, {
-                    rect: new Rectangle(
-                      new Vector(win.rect.left + delta.x, win.rect.top),
-                      new Vector(win.rect.width - delta.x, win.rect.height + delta.y),
-                    ),
-                  });
-                };
-                window.addEventListener("touchend", onTouchEnd);
-                window.addEventListener("touchmove", onTouchMove);
-              }}
-            />
+            {/* 添加一个可调整大小的边缘 */}
+            {win.resizable && (
+              <>
+                <div
+                  className="bg-sub-window-resize-bg absolute bottom-0 right-0 h-4 w-4 cursor-se-resize"
+                  onMouseDown={(e) => {
+                    const start = new Vector(e.clientX, e.clientY);
+                    const onMouseUp = () => {
+                      window.removeEventListener("mouseup", onMouseUp);
+                      window.removeEventListener("mousemove", onMouseMove);
+                    };
+                    const onMouseMove = (e: MouseEvent) => {
+                      const delta = new Vector(e.clientX, e.clientY).subtract(start);
+                      SubWindow.update(win.id, {
+                        rect: new Rectangle(win.rect.location, win.rect.size.add(delta)),
+                      });
+                    };
+                    window.addEventListener("mouseup", onMouseUp);
+                    window.addEventListener("mousemove", onMouseMove);
+                  }}
+                  onTouchStart={(e) => {
+                    if (e.touches.length > 1) return;
+                    const touch = e.touches[0];
+                    const start = new Vector(touch.clientX, touch.clientY);
+                    const onTouchEnd = () => {
+                      window.removeEventListener("touchend", onTouchEnd);
+                      window.removeEventListener("touchmove", onTouchMove);
+                    };
+                    const onTouchMove = (e: TouchEvent) => {
+                      if (e.touches.length > 1) return;
+                      const touch = e.touches[0];
+                      const delta = new Vector(touch.clientX, touch.clientY).subtract(start);
+                      SubWindow.update(win.id, {
+                        rect: new Rectangle(win.rect.location, win.rect.size.add(delta)),
+                      });
+                    };
+                    window.addEventListener("touchend", onTouchEnd);
+                    window.addEventListener("touchmove", onTouchMove);
+                  }}
+                />
+                {/* 左下角 */}
+                <div
+                  className="bg-sub-window-resize-bg absolute bottom-0 left-0 h-4 w-4 cursor-sw-resize"
+                  onMouseDown={(e) => {
+                    const start = new Vector(e.clientX, e.clientY);
+                    const onMouseUp = () => {
+                      window.removeEventListener("mouseup", onMouseUp);
+                      window.removeEventListener("mousemove", onMouseMove);
+                    };
+                    const onMouseMove = (e: MouseEvent) => {
+                      const delta = new Vector(e.clientX, e.clientY).subtract(start);
+                      SubWindow.update(win.id, {
+                        rect: new Rectangle(
+                          new Vector(win.rect.left + delta.x, win.rect.top),
+                          new Vector(win.rect.width - delta.x, win.rect.height + delta.y),
+                        ),
+                      });
+                    };
+                    window.addEventListener("mouseup", onMouseUp);
+                    window.addEventListener("mousemove", onMouseMove);
+                  }}
+                  onTouchStart={(e) => {
+                    if (e.touches.length > 1) return;
+                    const touch = e.touches[0];
+                    const start = new Vector(touch.clientX, touch.clientY);
+                    const onTouchEnd = () => {
+                      window.removeEventListener("touchend", onTouchEnd);
+                      window.removeEventListener("touchmove", onTouchMove);
+                    };
+                    const onTouchMove = (e: TouchEvent) => {
+                      if (e.touches.length > 1) return;
+                      const touch = e.touches[0];
+                      const delta = new Vector(touch.clientX, touch.clientY).subtract(start);
+                      SubWindow.update(win.id, {
+                        rect: new Rectangle(
+                          new Vector(win.rect.left + delta.x, win.rect.top),
+                          new Vector(win.rect.width - delta.x, win.rect.height + delta.y),
+                        ),
+                      });
+                    };
+                    window.addEventListener("touchend", onTouchEnd);
+                    window.addEventListener("touchmove", onTouchMove);
+                  }}
+                />
+              </>
+            )}
           </SimpleCard>
         </Transition>
       ))}

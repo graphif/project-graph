@@ -1,3 +1,19 @@
+metadata:
+  name: English
+
+onboarding:
+  slogan:
+    line1pre: Think
+    line1flip:
+      - faster
+      - further
+      - smoother
+      - better
+      - easier
+    line1post: ""
+    line2pre: with Project Graph
+    line2flip: []
+
 welcome:
   language: Language
   next: Next
@@ -13,7 +29,7 @@ about:
     available: New Version
     downloading: Downloading
     checkingUpdate: Checking for updates…
-    checkUpdateFail: Failed to retrieve the latest version information, please 
+    checkUpdateFail: Failed to retrieve the latest version information, please
       check your network connection
   links:
     documentation: Documentation
@@ -24,22 +40,22 @@ about:
     website: Official Website
     community:
       title: Community
-      description: Join the community, including the QQ Group, forum, Discord, 
-        Telegram, and share your ideas, experiences, tutorials, resources, 
+      description: Join the community, including the QQ Group, forum, Discord,
+        Telegram, and share your ideas, experiences, tutorials, resources,
         problems, suggestions, etc.
     importantAnnouncement: Important Announcement
   intro:
   - Software Introduction
-  - This is a tool based on the Tauri framework for quickly drawing node 
-    diagrams, which can be used for project topology diagrams and quick 
+  - This is a tool based on the Tauri framework for quickly drawing node
+    diagrams, which can be used for project topology diagrams and quick
     brainstorming drafts
-  - Xmind can only be used to draw tree-structured diagrams. FigJam and draw.io 
+  - Xmind can only be used to draw tree-structured diagrams. FigJam and draw.io
     can be used, but the web pages load a bit slowly
   - That's why this software was created
   contact:
   - Contact Us
-  - We are committed to designing the fastest and most convenient drawing 
-    methodology for "graph theory" and also exploring innovations in visual 
+  - We are committed to designing the fastest and most convenient drawing
+    methodology for "graph theory" and also exploring innovations in visual
     thinking and topological to-do lists.
   - "If you want to get quick feedback, provide suggestions, or have any ideas or
     questions, please join our QQ Group: 1018716404"
@@ -69,10 +85,10 @@ about:
   - Inspiration Sources
   - FigJam without dark mode support
   - Analysis framework video by Lin Chao
-  - Topological sorting, graph theory, state machines, and set theory concepts 
+  - Topological sorting, graph theory, state machines, and set theory concepts
     from "Data Structures and Algorithms"
   - Brainstorming methods, cognitive load theory, and card creativity methods
-  - The Command blocks in the game "Minecraft" and the Nether portal mod for 
+  - The Command blocks in the game "Minecraft" and the Nether portal mod for
     cross-world previews
   - The slicing animation effect in the game "Fruit Ninja"
   - The logical node design of factory assembly lines in the game "Mindustry"
@@ -80,16 +96,16 @@ about:
   - Team Introduction
   - LiRen Tech is a small team founded by Littlefean and Rutubet on May 1, 2017,
     with ZTY joining later.
-  - Known for its youthful atmosphere, emphasis on innovation and creativity, 
+  - Known for its youthful atmosphere, emphasis on innovation and creativity,
     and rational thinking and cultural inclusiveness, it stands out in the field
     of software development.
-  - It focuses not only on developing tool software and games but also on 
-    developing Minecraft game plugins, operating game servers, and building 
+  - It focuses not only on developing tool software and games but also on
+    developing Minecraft game plugins, operating game servers, and building
     websites.
-  - Representative works include the rich content tower defense game CannonWar, 
-    the algorithm competition website BitMountain, the desktop software Watch, 
+  - Representative works include the rich content tower defense game CannonWar,
+    the algorithm competition website BitMountain, the desktop software Watch,
     and the Minecraft PvP professional war server.
-  - The team's representative colors are light blue and code green, symbolizing 
+  - The team's representative colors are light blue and code green, symbolizing
     a team culture that combines logical rationality with humor and fun.
 
 settings:
@@ -156,7 +172,7 @@ settings:
     title: Show Background Cartesian Coordinates
     description: |
       When enabled, the x-axis, y-axis, and scale numbers will be displayed.
-      This can be used to observe the absolute coordinates of some nodes 
+      This can be used to observe the absolute coordinates of some nodes
       and intuitively understand the current zoom level.
   windowBackgroundAlpha:
     title: Window Background Transparency
@@ -169,7 +185,7 @@ settings:
   enableTagTextNodesBigDisplay:
     title: Enlarge Tag Text Nodes Display
     description: |
-      When enabled, tag text nodes will be enlarged when the canvas is zoomed out to a global view 
+      When enabled, tag text nodes will be enlarged when the canvas is zoomed out to a global view
       to make it easier to recognize the layout of the entire file.
   alwaysShowDetails:
     title: Always Show Node Details
@@ -207,7 +223,7 @@ settings:
     description: |
       When enabled, the camera can only move within a rectangular area.
       This prevents the camera from moving too far and getting lost.
-      The rectangular area forms a cycle space, similar to the map in the game "Snake," 
+      The rectangular area forms a cycle space, similar to the map in the game "Snake,"
       where moving to the top will bring you to the bottom, and moving to the left will bring you to the right.
       Note: This feature is still in the experimental stage.
   cameraCycleSpaceSizeX:
@@ -220,7 +236,7 @@ settings:
       The height of the cycle space, measured in pixels.
   renderEffect:
     title: Render Effects
-    description: Whether to render effects. If experiencing lag, this can be 
+    description: Whether to render effects. If experiencing lag, this can be
       disabled
   historySize:
     title: History Size
@@ -234,7 +250,7 @@ settings:
       However, this may cause text jittering. It is recommended to use this with a zoom speed of 1.
       If your computer is very laggy, especially when zooming and panning, you can enable this option.
   isPauseRenderWhenManipulateOvertime:
-    title: Pause rendering if the stage has not been operated for a certain 
+    title: Pause rendering if the stage has not been operated for a certain
       period of time
     description: |
       When enabled, rendering will pause after a certain number of seconds without stage manipulation to save CPU/GPU resources.
@@ -244,7 +260,7 @@ settings:
       Rendering will stop after a certain number of seconds without stage manipulation to save CPU/GPU resources.
       This will only take effect if the "Pause Rendering When Idle" option is enabled.
   ignoreTextNodeTextRenderLessThanCameraScale:
-    title: Hide Text and Details of Text Nodes When Camera Zoom Is Less Than a 
+    title: Hide Text and Details of Text Nodes When Camera Zoom Is Less Than a
       Certain Value
     description: |
       When enabled, text and details of text nodes will not be rendered when the camera zooming is less than a certain value (i.e., when observing the macro view).
@@ -299,7 +315,7 @@ settings:
   autoBackupInterval:
     title: Auto-Backup Interval (Seconds)
     description: |
-      Too frequent auto-backups may generate a large number of backup files, 
+      Too frequent auto-backups may generate a large number of backup files,
       which can occupy disk space.
   autoBackupDraftPath:
     title: Auto-Backup Path for Drafts
@@ -402,7 +418,7 @@ settings:
       altEnter: Alt + Enter
       shiftEnter: Shift + Enter
     description: |
-      Do not set this to the same key as the one used to exit text node editing mode, 
+      Do not set this to the same key as the one used to exit text node editing mode,
       as this will cause conflicts and prevent line breaks.
   textNodeStartEditMode:
     title: Enter Text Node Editing Mode
@@ -570,8 +586,8 @@ settings:
       adjustWindowOpacity: adjust window opacity
       adjustPenStrokeWidth: Adjust brush thickness
   macMouseWheelIsSmoothed:
-    description: Some MacBook mouse wheels are smooth, while others trigger a 
-      scroll with each click, which may depend on whether you have installed 
+    description: Some MacBook mouse wheels are smooth, while others trigger a
+      scroll with each click, which may depend on whether you have installed
       mouse modification software like Mos
     title: Is the mouse scroll wheel of MacBook smooth
   sectionBitTitleRenderType:
@@ -582,17 +598,17 @@ settings:
     title: The rendering type of the abbreviated main title in the frame
   macTrackpadAndMouseWheelDifference:
     options:
-      tarckpadFloatAndWheelInt: The value of the trackpad is a decimal, while 
+      tarckpadFloatAndWheelInt: The value of the trackpad is a decimal, while
         the value of the mouse scroll is an integer
-      trackpadIntAndWheelFloat: The trackpad value is an integer and the mouse 
+      trackpadIntAndWheelFloat: The trackpad value is an integer and the mouse
         scroll value is a decimal
-    title: The differentiation logic between the trackpad of MacBook and the 
+    title: The differentiation logic between the trackpad of MacBook and the
       mouse scroll wheel
-    description: For some MacBooks, the mouse scroll wheel value is an integer 
+    description: For some MacBooks, the mouse scroll wheel value is an integer
       and the trackpad value is a decimal; for others, it's reversed. Select the
-      differentiation logic based on the actual situation. To differentiate, 
-      click the software logo in the "About" interface seven times to enter the 
-      "Test Interface", then scroll the wheel and trackpad to view the data 
+      differentiation logic based on the actual situation. To differentiate,
+      click the software logo in the "About" interface seven times to enter the
+      "Test Interface", then scroll the wheel and trackpad to view the data
       feedback
   compressPastedImages:
     title: Compress Pasted Images
@@ -728,7 +744,7 @@ appMenu:
     title: Location
     items:
       openDataFolder:
-        description: Open the user configuration data folder, which stores 
+        description: Open the user configuration data folder, which stores
           user-customized settings, etc
         title: Configuration Data
       openProjectFolder:
@@ -736,8 +752,8 @@ appMenu:
         description: Open the current editing project file's folder
       openCacheFolder:
         title: Cache Folder
-        description: Open the software cache folder, which stores cache data 
-          generated during software operation, as well as default draft backup 
+        description: Open the software cache folder, which stores cache data
+          generated during software operation, as well as default draft backup
           files
   export:
     title: Export
@@ -779,7 +795,7 @@ appMenu:
     items:
       generateSectionByFolder:
         title: Generate a block diagram from the local folder
-        description: After selecting a local folder, generate a nested box 
+        description: After selecting a local folder, generate a nested box
           diagram of all files in the folder
 toolbar:
   pinnedTools:
@@ -790,7 +806,7 @@ toolbar:
   stageObjects:
     title: Stage Objects
     items:
-      setColor: Set Color of Selected Stage Object, Note to Select First and 
+      setColor: Set Color of Selected Stage Object, Note to Select First and
         Then Click Color (F6)
       delete: Delete Selected Stage Object
       tag: Add or Remove Tags from Stage Object
@@ -824,12 +840,12 @@ toolbar:
       packSection: Pack Selected Node into Section (Customizable Shortcut)
       createMultiTargetEdgeConvex: Create Undirected Edge (Convex Hull Type)
       createMultiTargetEdgeLine: Create Undirected Edge (Line Type)
-      openPathByContent: Open File/Folder Based on First Line of Entity Details 
+      openPathByContent: Open File/Folder Based on First Line of Entity Details
         as Local Absolute Path
   imageNode:
     title: Image Node
     items:
-      refresh: Refresh Selected Content (Click this Button if Image Loading 
+      refresh: Refresh Selected Content (Click this Button if Image Loading
         Fails)
       openImage: Open Selected Image
   textNode:
@@ -1327,4 +1343,3 @@ visualSettingsGroup:
     title: Basic Settings
   background:
     title: Background Settings
-

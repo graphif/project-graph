@@ -1,3 +1,18 @@
+metadata:
+  name: 繁體中文 (台灣)
+
+onboarding:
+  slogan:
+    line1pre: Project Graph
+    line1flip: []
+    line1post: ""
+    line2pre: 讓你的思維
+    line2flip:
+      - 瞬息啟動 # 对应 Faster
+      - 洞察先機 # 对应 Further/Smarter
+      - 化繁為簡 # 对应 Easier/Smoother
+      - 運籌帷幄 # 强调 Smarter/Better 的策略感
+
 welcome:
   language: 語言
   next: 下一步

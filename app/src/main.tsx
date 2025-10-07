@@ -88,6 +88,7 @@ async function loadLanguageFiles() {
     defaultNS: "",
     fallbackLng: false,
     saveMissing: false,
+    supportedLngs: ["en", "zh_CN", "zh_TW"],
     resources: {
       en: await import("./locales/en.yml").then((m) => m.default),
       zh_CN: await import("./locales/zh_CN.yml").then((m) => m.default),

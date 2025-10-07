@@ -11,7 +11,7 @@ import KeyBindsPage from "./keybinds";
 import SettingsTab from "./settings";
 import ThemesTab from "./themes";
 
-type TabName = "settings" | "keybinds" | "appearance" | "about";
+type TabName = "settings" | "keybinds" | "appearance" | "themes" | "about" | "credits";
 
 export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab?: TabName }) {
   const [currentTab, setCurrentTab] = useState<TabName>(defaultTab);

@@ -25,6 +25,7 @@ export namespace SubWindow {
      * 可以给窗口内元素添加data-pg-drag-region属性，使其成为可拖动区域
      */
     titleBarOverlay: boolean;
+    resizable: boolean;
     /**
      * 只是隐藏关闭按钮，不影响下面的closeWhen方法
      */
@@ -52,6 +53,7 @@ export namespace SubWindow {
       focused: false,
       zIndex: getMaxZIndex() + 1,
       titleBarOverlay: false,
+      resizable: true,
       closable: true,
       closing: false,
       closeWhenClickOutside: false,

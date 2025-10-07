@@ -1,3 +1,32 @@
+metadata:
+  name: 简体中文
+
+onboarding:
+  slogan:
+    line1pre: Project Graph
+    line1flip: []
+    line1post: ""
+    line2pre: 让你的思考
+    line2flip:
+      - 一触即发
+      - 预见未来
+      - 行云流水
+      - 从容驾驭
+  language:
+    title: 语言
+    lowCompleteness: 当前选择语言完成度不足 90%，可能出现大量显示异常
+  theme:
+    title: 主题
+    dark: 黑夜
+    light: 明亮
+    other: 其他
+  donation:
+    title: 感谢 {{users}} 位用户的支持
+    more: 点击查看详细信息
+  star:
+    title: 为我们点亮一颗星星⭐
+  next: 下一步
+
 welcome:
   slogan: 基于图论的嵌套网状思维导图软件
   newDraft: 新建文件

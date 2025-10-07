@@ -12,11 +12,11 @@ interface DonationData {
 }
 
 // 新的在前
-const donations: DonationData[] = [
-  { user: "购买服务器", note: "zty012", amount: -480 },
+export const donations: DonationData[] = [
+  // { user: "购买服务器", note: "zty012", amount: -480 },
   // { user: "域名 2y.nz", note: "zty012", amount: -151.8 },
   // { user: "MacBook", note: "littlefean", amount: -7599.2 },
-  { user: "域名 project-graph.top", note: "zty012", amount: -13.66 },
+  // { user: "域名 project-graph.top", note: "zty012", amount: -13.66 },
   // 以下为捐赠用户
 
   { user: "荔枝2333", note: "好东西，期待更完善的功能", amount: 50 },
