@@ -118,7 +118,7 @@ contextMenu:
   createTextNode: 创建文本节点
   createConnectPoint: 创建质点
   packToSection: 打包为框
-  createMTUEdgeLine: 创建无源多向边
+  createMTUEdgeLine: 创建无向边
   createMTUEdgeConvex: 创建凸包
   convertToSection: 转换为框
   toggleSectionCollapse: 切换折叠状态
