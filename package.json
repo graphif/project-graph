@@ -4,12 +4,8 @@
   "description": "An open-source project that aims to provide a next-generation node diagram tool for visual thinking.",
   "type": "module",
   "scripts": {
-    "dev": "turbo run dev",
-    "tauri:dev": "turbo run tauri:dev",
-    "tauri:dev:android": "turbo run tauri:dev:android",
-    "build": "turbo run build",
-    "tauri:build": "turbo run tauri:build",
-    "tauri:build:android": "turbo run tauri:build:android",
+    "dev": "nx run-many -t dev tauri:dev",
+    "build": "nx run-many -t build tauri:build",
     "prepare": "husky",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
@@ -34,7 +30,8 @@
     "prettier-plugin-tailwindcss": "^0.6.14",
     "turbo": "^2.5.5-canary.1",
     "typescript-eslint": "^8.38.0",
-    "vitest": "3.2.4"
+    "vitest": "3.2.4",
+    "nx": "21.6.3"
   },
   "pnpm": {
     "peerDependencyRules": {

@@ -23,9 +23,8 @@ jobs:
       prerelease: true
       release_name: Nightly ${{ inputs.version }}
       release_tag: nightly
-      task_build: "tauri:build"
-      task_build_android: "tauri:build:android"
-      turbo_team: "zty012"
+      task_build: build
+      # task_build_android: build
       include_devtools: true
     secrets:
       ANDROID_KEYSTORE: ${{ secrets.ANDROID_RELEASE_KEYSTORE }}
@@ -33,5 +32,4 @@ jobs:
       AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

@@ -35,9 +35,8 @@ jobs:
       prerelease: ${{ inputs.prerelease }}
       release_name: "v${{ inputs.version }}"
       release_tag: "v${{ inputs.version }}"
-      task_build: "tauri:build"
-      task_build_android: "tauri:build:android"
-      turbo_team: "zty012"
+      task_build: build
+      # task_build_android: "tauri:build:android"
     secrets:
       ANDROID_KEYSTORE: ${{ secrets.ANDROID_RELEASE_KEYSTORE }}
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_PASSWORD }}
@@ -47,5 +46,4 @@ jobs:
         LR_GITHUB_CLIENT_SECRET=${{ secrets.ENV_GITHUB_CLIENT_SECRET }}
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

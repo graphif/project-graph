@@ -11,9 +11,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:dev:android": "adb reverse tcp:1420 tcp:1420 && adb reverse tcp:1421 tcp:1421 && tauri android dev --host 0.0.0.0",
-    "tauri:build": "node ./scripts/tauri_build.js",
-    "tauri:build:android": "tauri android build"
+    "tauri:build": "node ./scripts/tauri_build.js"
   },
   "dependencies": {
     "@ariakit/react": "^0.4.18",
