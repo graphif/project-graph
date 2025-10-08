@@ -1,0 +1,30 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["{projectRoot}/dist/**"],
+      "cache": true
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "continuous": true
+    },
+    "tauri:dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "continuous": true
+    },
+    "tauri:build": {
+      "dependsOn": ["build", "^build"],
+      "outputs": ["{projectRoot}/src-tauri/target/release/bundle/**"],
+      "cache": true
+    },
+    "type-check": {
+      "inputs": ["{projectRoot}/src/**/*.{ts,tsx}"],
+      "cache": true
+    }
+  },
+  "defaultBase": "next"
+}

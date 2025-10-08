@@ -31,10 +31,6 @@ on:
         description: Whether to delete the release.
         required: false
         default: true
-      turbo_team:
-        type: string
-        description: The team to use for Turbo.
-        required: true
       android_key_path:
         type: string
         description: The path to the Android key file, relative to app_root
@@ -75,9 +71,6 @@ on:
         required: false
         default: false
     secrets:
-      TURBO_TOKEN:
-        description: Authenticate Turbo to enable Remote Cache.
-        required: false
       TAURI_SIGNING_PRIVATE_KEY:
         description: Sign app binaries for updater support.
         required: false
@@ -235,25 +228,10 @@ jobs:
         if: matrix.variant != 'foss'
         run: |
           echo "${{ secrets.BUILD_ENV }}" > app/.env
-      - name: Linux Macos - Build
-        if: matrix.platform != 'windows-latest'
+      - name: Build
         run: |
-          pnpm turbo run ${{ matrix.android && inputs.task_build_android || inputs.task_build }}
+          pnpm run ${{ matrix.android && inputs.task_build_android || inputs.task_build }}
         env:
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_TEAM: ${{ inputs.turbo_team }}
-          TAURI_BUILD_ARGS: ${{ matrix.args }}
-          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.11902837
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-      - name: Windows - Build
-        if: matrix.platform == 'windows-latest'
-        run: |
-          pnpm turbo run ${{ inputs.task_build }}
-        env:
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_TEAM: ${{ inputs.turbo_team }}
           TAURI_BUILD_ARGS: ${{ matrix.args }}
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.11902837
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
