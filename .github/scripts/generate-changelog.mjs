@@ -104,7 +104,9 @@ response
   .then((res) => res.json())
   .then((data) => {
     const changelog = data.candidates[0].content.parts[0].text;
-    const finalChangelog = `${changelog}
+    const finalChangelog = `以下内容为AI根据git历史自动生成总结，不保证完全准确
+
+${changelog}
 `;
     console.log(finalChangelog);
   })
