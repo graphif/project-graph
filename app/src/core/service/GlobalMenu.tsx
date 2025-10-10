@@ -33,11 +33,10 @@ import { Color } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Decoder } from "@msgpack/msgpack";
 import { getVersion } from "@tauri-apps/api/app";
-import { appCacheDir, dataDir, join } from "@tauri-apps/api/path";
+import { appCacheDir, dataDir, join, tempDir } from "@tauri-apps/api/path";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { exists, readFile, writeFile, writeTextFile, mkdir } from "@tauri-apps/plugin-fs";
-import { fetch } from "@tauri-apps/plugin-http";
+import { readFile, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import { useAtom } from "jotai";
 import {
@@ -110,6 +109,7 @@ import { URI } from "vscode-uri";
 import { TextNode } from "../sprites/TextNode";
 import { ProjectUpgrader } from "../stage/ProjectUpgrader";
 import { LineEdge } from "../stage/stageObject/association/LineEdge";
+import { AssetsRepository } from "./AssetsRepository";
 import { RecentFileManager } from "./dataFileService/RecentFileManager";
 import { DragFileIntoStageEngine } from "./dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { FeatureFlags } from "./FeatureFlags";
@@ -916,36 +916,18 @@ export function GlobalMenu() {
           </Item>
           <Item
             onClick={async () => {
-              // 显示加载提示并存储ID
-              const toastId = toast.loading("正在从Github仓库下载新手引导文件...");
-              try {
-                // 1. 下载文件 - 使用raw路径获取原始文件内容
-                const response = await fetch("https://github.com/graphif/tutorials/raw/master/tutorial-2.0.prg");
-
-                if (!response.ok) {
-                  throw new Error(`下载失败，状态码: ${response.status}`);
-                }
-
-                // 2. 获取缓存目录
-                const cacheDir = await appCacheDir();
-                const tutorialDir = await join(cacheDir, "tutorials");
-
-                // 3. 确保目录存在
-                if (!(await exists(tutorialDir))) {
-                  await mkdir(tutorialDir);
-                }
-
-                // 4. 写入文件
-                const tutorialPath = await join(tutorialDir, "tutorial-2.0.prg");
-                const fileContent = await response.arrayBuffer();
-                await writeFile(tutorialPath, new Uint8Array(fileContent));
-
-                // 5. 打开文件
-                toast.success("新手引导文件下载成功，正在打开...", { id: toastId });
-                await onOpenFile(URI.file(tutorialPath), "新手引导");
-              } catch (error) {
-                toast.error(`无法访问GitHub或下载文件失败: ${String(error)}`, { id: toastId });
-              }
+              toast.promise(
+                async () => {
+                  const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-2.0.prg");
+                  const dir = await tempDir();
+                  const path = await join(dir, `tutorial-${crypto.randomUUID()}.prg`);
+                  await writeFile(path, u8a);
+                  await onOpenFile(URI.file(path), "新手引导");
+                },
+                {
+                  loading: "正在下载新手引导文件",
+                },
+              );
             }}
           >
             <PersonStanding />
