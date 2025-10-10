@@ -52,10 +52,12 @@ export class TempLineEdge extends Association {
     const g = new Graphics();
     const sp = this.source.position.subtract(this.position);
     const ep = this.endPoint.subtract(this.position);
+    const distance = Math.hypot(ep.x - sp.x, ep.y - sp.y);
 
     // 画曲线
-    const cp1 = this.source.bezierControlPoint.subtract(this.position);
-    const cp2 = this.endPoint.subtract(this.position);
+    const offset = 6.25 * Math.sqrt(distance);
+    const cp1 = this.source.offset(offset).subtract(this.position);
+    const cp2 = this.endPoint.subtract(this.source.position);
     g.moveTo(sp.x, sp.y);
     g.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, ep.x, ep.y);
     g.stroke({ width: 2, color: this.color });

@@ -121,23 +121,23 @@ export class AssociationMember {
     return pos;
   }
 
-  /** 往anchor的方向偏移150px */
-  get bezierControlPoint(): Point {
+  /** 往旁边偏移 */
+  offset(distance: number): Point {
     const pos = this.position.clone();
     switch (this.anchor) {
       case "center":
         break;
       case "top":
-        pos.y -= 150;
+        pos.y -= distance;
         break;
       case "bottom":
-        pos.y += 150;
+        pos.y += distance;
         break;
       case "left":
-        pos.x -= 150;
+        pos.x -= distance;
         break;
       case "right":
-        pos.x += 150;
+        pos.x += distance;
         break;
     }
     return pos;
