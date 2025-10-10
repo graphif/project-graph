@@ -73,7 +73,6 @@ import {
   Images,
   Keyboard,
   LayoutGrid,
-  Loader,
   MapPin,
   MessageCircleWarning,
   MousePointer2,
@@ -654,6 +653,16 @@ export function GlobalMenu() {
                 <GitCompareArrows />
                 {t("actions.generate.generateNodeGraphByText")}
               </Item>
+              <Item
+                onClick={async () => {
+                  const result = await Dialog.confirm("详见官网文档：“自动计算引擎”部分", "即将打开网页，是否继续");
+                  if (result) {
+                    shellOpen("https://graphif.dev/docs/app/features/feature/compute-engine");
+                  }
+                }}
+              >
+                逻辑节点
+              </Item>
             </SubContent>
           </Sub>
           {/* 清空舞台最不常用，放在最后一个 */}
@@ -1039,9 +1048,13 @@ export function GlobalMenu() {
               视频教程
             </SubTrigger>
             <SubContent>
-              <Item className="*:text-destructive! text-destructive!">
+              <Item
+                onClick={() => {
+                  shellOpen("https://www.bilibili.com/video/BV1y2xdzUEXa");
+                }}
+              >
                 <Tv />
-                2.1 版本使用教程（筹备中） <Loader />
+                2.0 版本使用教程
               </Item>
               <Item
                 onClick={() => {
