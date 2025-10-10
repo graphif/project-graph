@@ -119,15 +119,19 @@ export default function App() {
     // TODO: 以后整一个全局快捷键系统
     register("Alt+2", async (event) => {
       if (event.state === "Pressed") {
-        console.log(isClickThroughEnabled, "isClickThroughEnabled");
         setIsClickThroughEnabled((prev) => {
-          console.log("prev", prev);
+          if (!Settings.allowGlobalHotKeys) {
+            toast.warning("已禁用全局快捷键");
+            return prev;
+          }
           if (!prev) {
             // 开启了穿透点击
             Settings.windowBackgroundAlpha = 0.2;
             setIsWindowAlwaysOnTop(true);
             getCurrentWindow().setAlwaysOnTop(true);
             toast.warning("您开启了穿透点击，已自动为您打开窗口透明与始终至于顶层");
+          } else {
+            toast.info("您关闭了穿透点击");
           }
           getCurrentWindow().setIgnoreCursorEvents(!prev);
           return !prev;
@@ -413,34 +417,7 @@ export default function App() {
         {isWide && <ProjectTabs />}
         <div className="h-full flex-1 cursor-grab active:cursor-grabbing" data-tauri-drag-region></div>
         <div className="bg-background shadow-xs flex h-full items-center rounded-md border">
-          {/* 开启穿透点击 */}
-          {/* <Button
-            variant="ghost"
-            // size="icon"
-            className={isClickThroughEnabled ? "" : "opacity-50"}
-            onClick={async (e) => {
-              //
-              e.stopPropagation();
-              const newState = !isClickThroughEnabled;
-              setIsClickThroughEnabled(newState);
-              await getCurrentWindow().setIgnoreCursorEvents(newState);
-              if (newState) {
-                // 开启了穿透点击
-                Settings.windowBackgroundAlpha = 0.2;
-                setIsWindowAlwaysOnTop(true);
-                await getCurrentWindow().setAlwaysOnTop(true);
-                toast.warning(
-                  "您开启了穿透点击，已自动为您打开窗口透明与始终至于顶层，用全局快捷键Alt+2可以切换穿透点击状态",
-                );
-              }
-            }}
-          >
-            {isClickThroughEnabled ? (
-              <span className="text-destructive!">Alt + 2关闭窗口穿透</span>
-            ) : (
-              <Layers2 strokeWidth={3} />
-            )}
-          </Button> */}
+          {isClickThroughEnabled && <span className="text-destructive!">Alt + 2关闭窗口穿透点击</span>}
           {/* 钉住 */}
           <Button
             variant="ghost"

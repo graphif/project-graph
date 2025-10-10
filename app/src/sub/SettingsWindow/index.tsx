@@ -10,6 +10,7 @@ import CreditsTab from "./credits";
 import KeyBindsPage from "./keybinds";
 import SettingsTab from "./settings";
 import ThemesTab from "./themes";
+import KeyBindsGlobalPage from "./keybindsGlobal";
 
 type TabName = "settings" | "keybinds" | "appearance" | "about";
 
@@ -22,6 +23,7 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
         <TabsList>
           <TabsTrigger value="settings">设置</TabsTrigger>
           <TabsTrigger value="keybinds">快捷键</TabsTrigger>
+          <TabsTrigger value="keybindsGlobal">全局快捷键</TabsTrigger>
           <TabsTrigger value="appearance">个性化</TabsTrigger>
           <TabsTrigger value="themes">主题</TabsTrigger>
           <TabsTrigger value="about">关于</TabsTrigger>
@@ -34,6 +36,9 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
       </TabsContent>
       <TabsContent value="keybinds" className="overflow-auto">
         <KeyBindsPage />
+      </TabsContent>
+      <TabsContent value="keybindsGlobal" className="overflow-auto">
+        <KeyBindsGlobalPage />
       </TabsContent>
       <TabsContent value="appearance" className="overflow-auto">
         <AppearanceTab />
