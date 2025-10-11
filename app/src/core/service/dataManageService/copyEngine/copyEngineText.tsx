@@ -11,6 +11,7 @@ import { MouseLocation } from "../../controlService/MouseLocation";
 import { RectanglePushInEffect } from "../../feedbackService/effectEngine/concrete/RectanglePushInEffect";
 import { isMermaidGraphString, isSvgString } from "./stringValidTools";
 import { toast } from "sonner";
+import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
 
 /**
  * 专门处理文本粘贴的服务
@@ -74,16 +75,24 @@ export class CopyEngineText {
         // 只是普通的文本
         if (item.length > 3000) {
           entity = new TextNode(this.project, {
-            text: "粘贴板文字过长（超过3000字符），已写入节点详细信息，但详细信息目前还在重构中",
+            text: "粘贴板文字过长（超过3000字符），已写入节点详细信息",
             collisionBox,
-            // [ { type: 'p', children: [{ text: 'Serialize just this paragraph.' }] },
-            // details: item.split("\n").map((line) => ({ type: "p", children: [{ text: line }] })),
-            // TODO: 将超长文本写入详细信息
+            details: DetailsManager.markdownToDetails(item),
           });
         } else {
+          let collisionBox = new CollisionBox([
+            new Rectangle(this.project.renderer.transformView2World(MouseLocation.vector()), Vector.getZero()),
+          ]);
+          const isBigContent = item.length > 20;
+          if (isBigContent) {
+            collisionBox = new CollisionBox([
+              new Rectangle(this.project.renderer.transformView2World(MouseLocation.vector()), new Vector(400, 100)),
+            ]);
+          }
           entity = new TextNode(this.project, {
             text: item,
             collisionBox,
+            sizeAdjust: isBigContent ? "manual" : "auto",
           });
           entity.move(
             new Vector(-entity.collisionBox.getRectangle().width / 2, -entity.collisionBox.getRectangle().height / 2),
