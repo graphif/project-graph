@@ -1,7 +1,7 @@
 import { Project } from "@/core/Project";
 import { id, serializable } from "@graphif/serializer";
 import { LayoutContainer } from "@pixi/layout/components";
-import { DestroyOptions, Graphics } from "pixi.js";
+import { Bounds, DestroyOptions, Graphics } from "pixi.js";
 
 /**
  * 一切舞台上的东西
@@ -79,17 +79,6 @@ export abstract class StageObject extends LayoutContainer {
       });
   }
 
-  // 如果是选中状态，要把选中框的大小减掉
-  getBounds() {
-    const bounds = super.getBounds();
-    if (this.selected) {
-      bounds.x += StageObject.SELECTION_OUTLINE_PADDING;
-      bounds.y += StageObject.SELECTION_OUTLINE_PADDING;
-      bounds.width -= StageObject.SELECTION_OUTLINE_PADDING * 2;
-      bounds.height -= StageObject.SELECTION_OUTLINE_PADDING * 2;
-    }
-    return bounds;
-  }
   get x() {
     if (this.selected) {
       return super.x + StageObject.SELECTION_OUTLINE_PADDING;
@@ -113,5 +102,19 @@ export abstract class StageObject extends LayoutContainer {
       return super.height - StageObject.SELECTION_OUTLINE_PADDING * 2;
     }
     return super.height;
+  }
+  getWorldBounds() {
+    return new Bounds(this.x, this.y, this.x + this.width, this.y + this.height);
+  }
+  /** 注意是view坐标系 */
+  getBounds() {
+    const bounds = super.getBounds();
+    if (this.selected) {
+      bounds.x += StageObject.SELECTION_OUTLINE_PADDING;
+      bounds.y += StageObject.SELECTION_OUTLINE_PADDING;
+      bounds.width -= StageObject.SELECTION_OUTLINE_PADDING * 2;
+      bounds.height -= StageObject.SELECTION_OUTLINE_PADDING * 2;
+    }
+    return bounds;
   }
 }

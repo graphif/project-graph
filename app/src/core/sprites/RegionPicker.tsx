@@ -8,6 +8,7 @@ export class RegionPicker extends Graphics {
     let startPoint = new Point(0, 0);
     project.viewport
       .on("pointerdown", (e) => {
+        if (e.button !== 0) return;
         pressed = true;
         startPoint = project.viewport.toWorld(e.client);
         // 取消所有节点的选中状态
@@ -41,9 +42,7 @@ export class RegionPicker extends Graphics {
           });
           // 选中区域内的节点
           project.stage.forEach((it) => {
-            it.selected = rect[isCoverMode ? "containsRect" : "intersects"](
-              new Rectangle(it.x, it.y, it.width, it.height),
-            );
+            it.selected = rect[isCoverMode ? "containsRect" : "intersects"](it.getWorldBounds().rectangle);
           });
         }
       });
