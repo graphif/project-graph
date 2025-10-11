@@ -31,6 +31,11 @@ export class StageObjectColorManager {
         entity.changeColor(color);
       }
     }
+    for (const entity of this.project.stageManager.getUrlNodes()) {
+      if (entity.isSelected) {
+        entity.color = color;
+      }
+    }
     for (const edge of this.project.stageManager.getAssociations()) {
       if (edge.isSelected) {
         edge.color = color;

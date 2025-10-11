@@ -2,7 +2,7 @@ import { Project, service } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
-import { Vector } from "@graphif/data-structures";
+import { colorInvert, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
 @service("urlNodeRenderer")
@@ -34,7 +34,9 @@ export class UrlNodeRenderer {
         urlNode.title,
         this.project.renderer.transformWorld2View(urlNode.rectangle.location.add(Vector.same(Renderer.NODE_PADDING))),
         Renderer.FONT_SIZE * this.project.camera.currentScale,
-        this.project.stageStyleManager.currentStyle.StageObjectBorder,
+        urlNode.color.a === 1
+          ? colorInvert(urlNode.color)
+          : colorInvert(this.project.stageStyleManager.currentStyle.Background),
       );
     }
     // 绘制分界线
@@ -43,7 +45,9 @@ export class UrlNodeRenderer {
       this.project.renderer.transformWorld2View(
         urlNode.rectangle.location.add(new Vector(urlNode.rectangle.size.x, UrlNode.titleHeight)),
       ),
-      this.project.stageStyleManager.currentStyle.StageObjectBorder,
+      urlNode.color.a === 1
+        ? colorInvert(urlNode.color)
+        : colorInvert(this.project.stageStyleManager.currentStyle.Background),
       1 * this.project.camera.currentScale,
       4 * this.project.camera.currentScale,
     );
@@ -54,7 +58,9 @@ export class UrlNodeRenderer {
         urlNode.rectangle.location.add(new Vector(Renderer.NODE_PADDING, UrlNode.titleHeight + Renderer.NODE_PADDING)),
       ),
       Renderer.FONT_SIZE * 0.5 * this.project.camera.currentScale,
-      this.project.stageStyleManager.currentStyle.StageObjectBorder,
+      urlNode.color.a === 1
+        ? colorInvert(urlNode.color)
+        : colorInvert(this.project.stageStyleManager.currentStyle.Background),
     );
     // 绘制特效
     this.renderHoverState(urlNode);
