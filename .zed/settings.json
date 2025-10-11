@@ -14,5 +14,14 @@
         }
       }
     }
+  },
+  "context_servers": {
+    "gitmcp": {
+      "source": "custom",
+      "enabled": true,
+      "command": "npx",
+      "args": ["mcp-remote", "https://gitmcp.io/graphif/project-graph"],
+      "env": {}
+    }
   }
 }
