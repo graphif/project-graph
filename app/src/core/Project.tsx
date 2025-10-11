@@ -9,10 +9,11 @@ import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, 
 import { EventEmitter } from "events";
 import mime from "mime";
 import { Viewport } from "pixi-viewport";
-import { Application, Container, FederatedPointerEvent, Graphics, Point, Text } from "pixi.js";
+import { Application, Container, FederatedPointerEvent, Graphics, Point } from "pixi.js";
 import "pixi.js/math-extras";
 import { URI } from "vscode-uri";
 import { Settings } from "./service/Settings";
+import { MyText } from "./sprites/MyText";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -154,9 +155,8 @@ export class Project extends EventEmitter<{
 
     // 添加固定的元素
     const fpsText = this.pixi.stage.addChild(
-      new Text({
-        text: "0",
-        style: { fill: "white", fontSize: 12 },
+      new MyText("0", {
+        style: { fontSize: 12 },
         x: 10,
         y: 50,
       }),
@@ -186,9 +186,8 @@ export class Project extends EventEmitter<{
     origin.fill(0xff0000);
     this.viewport.addChild(origin);
     const positionText = this.pixi.stage.addChild(
-      new Text({
-        text: "0,0",
-        style: { fill: "white", fontSize: 12 },
+      new MyText("0,0", {
+        style: { fontSize: 12 },
         x: 10,
         y: 30,
       }),

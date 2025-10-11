@@ -9,6 +9,7 @@ import { Fulcrum } from "./Fulcrum";
 import { LatexNode } from "./LatexNode";
 import { SvgNode } from "./SvgNode";
 import { TextInput } from "./TextInput";
+import { UrlNode } from "./UrlNode";
 
 @passExtraAtArg1
 @passObject
@@ -97,6 +98,17 @@ export class TextNode extends Entity {
             // 转换为Fulcrum
             this.project.stage.push(
               new Fulcrum(this.project, {
+                position: this.position,
+              }),
+            );
+            this.destroy();
+          }
+          // TODO: 可以换成正则匹配
+          if (this.text.startsWith("https://")) {
+            // 转换为UrlNode
+            this.project.stage.push(
+              new UrlNode(this.project, {
+                url: this.text,
                 position: this.position,
               }),
             );

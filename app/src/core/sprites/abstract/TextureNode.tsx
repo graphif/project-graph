@@ -26,7 +26,7 @@ export abstract class TextureNode extends Entity {
   }
 
   constructor(protected readonly project: Project) {
-    super();
+    super(project);
     let lastClickTime = 0;
     this.on("click", (e) => {
       e.stopPropagation();

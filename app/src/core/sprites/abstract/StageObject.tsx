@@ -32,7 +32,7 @@ export abstract class StageObject extends LayoutContainer {
         -StageObject.SELECTION_OUTLINE_PADDING,
         this.width / this.scale.x + StageObject.SELECTION_OUTLINE_PADDING * 2,
         this.height / this.scale.y + StageObject.SELECTION_OUTLINE_PADDING * 2,
-        StageObject.SELECTION_OUTLINE_PADDING + 8,
+        StageObject.SELECTION_OUTLINE_PADDING + (this.layout?._styles?.custom.borderRadius ?? 8),
       );
       g.stroke({
         width: 2,
