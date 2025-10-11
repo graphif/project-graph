@@ -5,6 +5,7 @@ import { isSvgString } from "@/utils/svg";
 import { passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Color, ColorSource, Point, PointData } from "pixi.js";
 import { Value } from "platejs";
+import { Fulcrum } from "./Fulcrum";
 import { LatexNode } from "./LatexNode";
 import { SvgNode } from "./SvgNode";
 import { TextInput } from "./TextInput";
@@ -88,6 +89,15 @@ export class TextNode extends Entity {
                 svg: this.text,
                 position: this.position,
                 color: this.color,
+              }),
+            );
+            this.destroy();
+          }
+          if (this.text === "`") {
+            // 转换为Fulcrum
+            this.project.stage.push(
+              new Fulcrum(this.project, {
+                position: this.position,
               }),
             );
             this.destroy();
