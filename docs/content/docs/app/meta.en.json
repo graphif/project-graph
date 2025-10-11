@@ -1,7 +1,0 @@
-{
-  "title": "Project Graph",
-  "description": "The software",
-  "root": true,
-  "icon": "AppWindowMac",
-  "pages": ["index", "---Features---", "...features", "---Miscellaneous---", "...misc"]
-}

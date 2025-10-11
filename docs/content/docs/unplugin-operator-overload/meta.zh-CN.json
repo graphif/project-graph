@@ -1,6 +1,0 @@
-{
-  "title": "unplugin-operator-overload",
-  "description": "为 TS 添加运算符重载",
-  "root": true,
-  "icon": "Code"
-}

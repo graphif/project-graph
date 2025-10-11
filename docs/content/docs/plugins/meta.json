@@ -1,7 +1,0 @@
-{
-  "title": "插件系统",
-  "description": "编写 Project Graph 插件",
-  "root": true,
-  "icon": "Blocks",
-  "pages": ["index", "---开发插件---", "develop-directly", "use-template"]
-}
