@@ -35,7 +35,7 @@ jobs:
       prerelease: ${{ inputs.prerelease }}
       release_name: "v${{ inputs.version }}"
       release_tag: "v${{ inputs.version }}"
-      task_build: build
+      task_build: build:ci
       # task_build_android: "tauri:build:android"
     secrets:
       ANDROID_KEYSTORE: ${{ secrets.ANDROID_RELEASE_KEYSTORE }}
