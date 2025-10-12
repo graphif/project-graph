@@ -6,6 +6,8 @@ import { Project } from "../Project";
 import { TextureNode } from "./abstract/TextureNode";
 
 export class ImageNode extends TextureNode {
+  private lastObjectUrl: string | null = null;
+
   private _attachmentId: string = "";
   @serializable
   get attachmentId() {
@@ -13,13 +15,22 @@ export class ImageNode extends TextureNode {
   }
   set attachmentId(value: string) {
     this._attachmentId = value;
-    Assets.load(this.blob).then((texture) => {
+    if (!this.blob) return;
+    if (this.lastObjectUrl) {
+      URL.revokeObjectURL(this.lastObjectUrl);
+    }
+    this.lastObjectUrl = URL.createObjectURL(this.blob);
+    Assets.load({
+      src: this.lastObjectUrl,
+      parser: "texture",
+    }).then((texture) => {
+      console.log(this.lastObjectUrl, texture);
       this.texture = texture;
     });
   }
 
   get blob() {
-    return this.project.attachments.get(this.attachmentId)!;
+    return this.project.attachments.get(this.attachmentId);
   }
 
   constructor(

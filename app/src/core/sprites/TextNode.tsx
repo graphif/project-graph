@@ -6,6 +6,7 @@ import { passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Color, ColorSource, Point, PointData } from "pixi.js";
 import { Value } from "platejs";
 import { Fulcrum } from "./Fulcrum";
+import { ImageNode } from "./ImageNode";
 import { LatexNode } from "./LatexNode";
 import { SvgNode } from "./SvgNode";
 import { TextInput } from "./TextInput";
@@ -109,6 +110,17 @@ export class TextNode extends Entity {
             this.project.stage.push(
               new UrlNode(this.project, {
                 url: this.text,
+                position: this.position,
+              }),
+            );
+            this.destroy();
+          }
+          if (this.text.startsWith("%")) {
+            // 转换为ImageNode，%后面是attachmentId
+            const attachmentId = this.text.slice(1).trim();
+            this.project.stage.push(
+              new ImageNode(this.project, {
+                attachmentId,
                 position: this.position,
               }),
             );
