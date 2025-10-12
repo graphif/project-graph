@@ -1,7 +1,7 @@
 import { Project } from "@/core/Project";
 import { StageObject } from "@/core/sprites/abstract/StageObject";
 import { serializable } from "@graphif/serializer";
-import { ObservablePoint, Point } from "pixi.js";
+import { FederatedPointerEvent, ObservablePoint, Point } from "pixi.js";
 import type { Value } from "platejs";
 import { LineEdge } from "../LineEdge";
 import { TempLineEdge } from "../TempLineEdge";
@@ -34,7 +34,7 @@ export abstract class Entity extends StageObject {
       members: [new AssociationMember(this, "right")],
       endPoint: new Point(0, 0),
     });
-    const onPointerEnterStageObject = (so: StageObject) => {
+    this.project.on("pointer-enter-stage-object", (so) => {
       if (linking && so instanceof Entity) {
         const onPointerUp = () => {
           linking = false;
@@ -49,6 +49,27 @@ export abstract class Entity extends StageObject {
           so.off("pointerup", onPointerUp);
         });
       }
+    });
+    const onPointerUp = (e: FederatedPointerEvent) => {
+      moving = false;
+      const world = this.project.viewport.toWorld(e.client);
+      if (e.button === 2 && world.equals(startWorldPoint) && !linking) {
+        // 触发右键菜单
+        this.project.emit("context-menu", e.client);
+      }
+      linking = false;
+      tempLineEdge.removeFromParent();
+      // 检测是否碰到了Section
+      const pos = this.project.viewport.toWorld(e.client);
+      this.project.stage
+        .filter((so) => so !== this)
+        .forEach((so) => {
+          const rect = so.getWorldBounds().rectangle;
+          if (rect.contains(pos.x, pos.y)) {
+            this.removeFromParent();
+            so.addChild(this);
+          }
+        });
     };
     this.on("pointerdown", (e) => {
       e.stopPropagation();
@@ -61,26 +82,10 @@ export abstract class Entity extends StageObject {
         linking = true;
         tempLineEdge.endPoint.copyFrom(world);
         this.project.stage.push(tempLineEdge);
-        this.project.on("pointer-enter-stage-object", onPointerEnterStageObject);
       }
     })
-      .on("pointerup", (e) => {
-        moving = false;
-        const world = this.project.viewport.toWorld(e.client);
-        if (e.button === 2 && world.equals(startWorldPoint) && !linking) {
-          // 触发右键菜单
-          this.project.emit("context-menu", e.client);
-        }
-        linking = false;
-        tempLineEdge.removeFromParent();
-        this.project.off("pointer-enter-stage-object", onPointerEnterStageObject);
-      })
-      .on("pointerupoutside", () => {
-        moving = false;
-        linking = false;
-        tempLineEdge.removeFromParent();
-        this.project.off("pointer-enter-stage-object", onPointerEnterStageObject);
-      })
+      .on("pointerup", onPointerUp)
+      .on("pointerupoutside", onPointerUp)
       .on("globalpointermove", (e) => {
         if (moving) {
           const world = this.project.viewport.toWorld(e.client);
