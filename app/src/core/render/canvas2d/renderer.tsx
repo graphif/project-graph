@@ -469,7 +469,7 @@ export class Renderer {
       ),
       Color.Transparent,
       Color.Green.toNewAlpha(0.5),
-      2 * this.project.camera.currentScale,
+      2,
       Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
     );
     this.project.shapeRenderer.renderDashedRect(
@@ -479,7 +479,7 @@ export class Renderer {
       ),
       Color.Transparent,
       Color.Green.toNewAlpha(0.5),
-      2 * this.project.camera.currentScale,
+      2,
       Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
     );
 
