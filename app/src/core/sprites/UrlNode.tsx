@@ -60,9 +60,7 @@ export class UrlNode extends Entity {
     this.removeChildren();
     this.addChild(
       new MyText(meta.openGraph.title ?? meta.meta.title),
-      new MyText(meta.openGraph.description ?? meta.meta.description, {
-        style: { fontSize: 16, wordWrap: true, wordWrapWidth: 350, breakWords: true },
-      }),
+      new MyText(meta.openGraph.description ?? meta.meta.description, { style: { fontSize: 16 } }),
       new MyText(meta.openGraph.site_name ?? this.url.split("/")[2], { style: { fontSize: 14, fill: "#fff8" } }),
     );
     if (meta.openGraph.image) {
