@@ -36,13 +36,14 @@ import { getVersion } from "@tauri-apps/api/app";
 import { appCacheDir, dataDir, join, tempDir } from "@tauri-apps/api/path";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { readFile, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { exists, readFile, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import { useAtom } from "jotai";
 import {
   Airplay,
   AppWindow,
   Axe,
+  BookOpen,
   BookOpenText,
   Bot,
   Bug,
@@ -100,6 +101,7 @@ import {
   Undo,
   VenetianMask,
   View,
+  Workflow,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -114,6 +116,7 @@ import { DragFileIntoStageEngine } from "./dataManageService/dragFileIntoStageEn
 import { FeatureFlags } from "./FeatureFlags";
 import { Settings } from "./Settings";
 import { Telemetry } from "./Telemetry";
+import LogicNodePanel from "@/sub/AutoComputeWindow";
 
 const Content = MenubarContent;
 const Item = MenubarItem;
@@ -654,6 +657,14 @@ export function GlobalMenu() {
                 {t("actions.generate.generateNodeGraphByText")}
               </Item>
               <Item
+                onClick={() => {
+                  LogicNodePanel.open();
+                }}
+              >
+                <Workflow />
+                打开逻辑节点面板
+              </Item>
+              <Item
                 onClick={async () => {
                   const result = await Dialog.confirm("详见官网文档：“自动计算引擎”部分", "即将打开网页，是否继续");
                   if (result) {
@@ -661,7 +672,8 @@ export function GlobalMenu() {
                   }
                 }}
               >
-                逻辑节点
+                <BookOpen />
+                逻辑节点详细文档
               </Item>
             </SubContent>
           </Sub>
