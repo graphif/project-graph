@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nx run-many -t dev tauri:dev",
     "build": "nx run-many -t build tauri:build",
-    "build:ci": "nx run-many -t build --skipNxCache tauri:build",
+    "build:ci": "nx run-many --skipNxCache -t build tauri:build",
     "prepare": "husky",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
