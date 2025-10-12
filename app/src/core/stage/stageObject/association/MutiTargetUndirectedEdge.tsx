@@ -110,14 +110,6 @@ export class MultiTargetUndirectedEdge extends ConnectableAssociation {
    * 获取中心点
    */
   public get centerLocation(): Vector {
-    if (this.associationList.length === 2) {
-      // 和lineEdge保持一样的逻辑
-      const line = new Line(
-        this.associationList[0].collisionBox.getRectangle().center,
-        this.associationList[1].collisionBox.getRectangle().center,
-      );
-      return line.midPoint();
-    }
     const boundingRectangle = Rectangle.getBoundingRectangle(
       this.associationList.map((n) => n.collisionBox.getRectangle()),
     );
