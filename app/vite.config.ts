@@ -1,7 +1,7 @@
 /// <reference types="vitest/config" />
 
-import operatorOverload from "@graphif/unplugin-operator-overload/vite";
-import originalClassName from "@graphif/unplugin-original-class-name/vite";
+import operatorOverload from "unplugin-operator-overload/vite";
+import originalClassName from "unplugin-original-class-name/vite";
 import ViteYaml from "@modyfi/vite-plugin-yaml";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-oxc";
