@@ -20,7 +20,7 @@ export class TextNode extends Entity {
   @serializable
   color: Color = new Color("transparent");
   @serializable
-  public sizeAdjust: string = "auto";
+  sizeAdjust: "auto" | "manual" = "auto";
 
   constructor(
     protected readonly project: Project,
