@@ -147,7 +147,7 @@ export const settingsSchema = z.object({
   powerPreference: z
     .union([z.literal("unspecified"), z.literal("highPerformance"), z.literal("lowPower")])
     .default("unspecified"),
-  textResolution: z.number().min(0).max(20).default(5),
+  textResolution: z.number().min(0).max(20).int().default(5),
   maxFps: z.number().min(1).max(360).int().default(60),
   minFps: z.number().min(1).max(360).int().default(30),
 });

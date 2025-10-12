@@ -54,31 +54,50 @@ export class UrlNode extends Entity {
       borderWidth: 2,
       borderColor: 0xffffff,
       flexDirection: "column",
+      maxWidth: 400,
     };
     this.addChild(new MyText("Loading..."), new MyText(this.url));
     const meta = await (await fetch(`https://url-meta.graphif.dev/v1/meta?url=${encodeURIComponent(this.url)}`)).json();
-    this.removeChildren();
-    this.addChild(
-      new MyText(meta.openGraph.title ?? meta.meta.title),
-      new MyText(meta.openGraph.description ?? meta.meta.description, { style: { fontSize: 16 } }),
-      new MyText(meta.openGraph.site_name ?? this.url.split("/")[2], { style: { fontSize: 14, fill: "#fff8" } }),
-    );
     if (meta.openGraph.image) {
-      const loadingText = this.addChildAt(new MyText("正在加载图片...", { style: { fill: "#fff8" } }), 0);
       const texture = await Assets.load({
         src: `https://url-meta.graphif.dev/v1/proxy?url=${encodeURIComponent(meta.openGraph.image)}`,
         parser: "texture",
       });
+      const w = texture.width > 400 - 32 ? 400 - 32 : texture.width;
       const img = new Sprite({
         texture,
         layout: {
-          width: this.width - 32,
-          height: (this.width - 32) * (texture.height / texture.width),
+          width: w,
+          height: w * (texture.height / texture.width),
           borderRadius: 16,
         },
       });
-      loadingText.removeFromParent();
+      this.removeChildren();
       this.addChildAt(img, 0);
+    } else {
+      this.removeChildren();
     }
+    this.addChild(
+      new MyText(meta.openGraph.title ?? meta.meta.title, {
+        style: {
+          wordWrap: true,
+          breakWords: true,
+        },
+        layout: {
+          width: "100%",
+        },
+      }),
+      new MyText(meta.openGraph.description ?? meta.meta.description, {
+        style: {
+          fontSize: 16,
+          wordWrap: true,
+          breakWords: true,
+        },
+        layout: {
+          width: "100%",
+        },
+      }),
+      new MyText(meta.openGraph.site_name ?? this.url.split("/")[2], { style: { fontSize: 14, fill: "#fff8" } }),
+    );
   }
 }
