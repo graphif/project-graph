@@ -23,7 +23,7 @@ jobs:
       prerelease: true
       release_name: Nightly ${{ inputs.version }}
       release_tag: nightly
-      task_build: build
+      task_build: build:ci
       # task_build_android: build
       include_devtools: true
     secrets:
