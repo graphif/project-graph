@@ -243,15 +243,15 @@ settings:
   entityDetailsFontSize:
     title: 实体详细信息字体大小
     description: |
-      单位为像素
+      设置舞台上渲染的实体详细信息的文字大小，单位为像素
   entityDetailsLinesLimit:
     title: 实体详细信息行数限制
     description: |
-      限制实体详细信息的最大行数，超过限制的部分将被省略
+      限制舞台上渲染的实体详细信息的最大行数，超过限制的部分将被省略
   entityDetailsWidthLimit:
     title: 实体详细信息宽度限制
     description: |
-      限制实体详细信息的最大宽度，超过限制的部分将被换行
+      限制舞台上渲染的实体详细信息的最大宽度（单位为px像素，可参考背景网格坐标轴），超过限制的部分将被换行
   windowCollapsingWidth:
     title: 迷你窗口的宽度
     description: |

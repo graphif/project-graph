@@ -19,22 +19,9 @@ export class Renderer {
    * 节点上的文字大小
    */
   static FONT_SIZE = 32;
-  /**
-   * 节点详细信息的文字大小
-   */
-  static FONT_SIZE_DETAILS = 18;
-  /**
-   * 节点详细信息的文字行数限制
-   */
-  static ENTITY_DETAILS_LIENS_LIMIT = 4;
   static NODE_PADDING = 14;
   /// 节点的圆角半径
   static NODE_ROUNDED_RADIUS = 8;
-
-  /**
-   * 节点详细信息最大宽度
-   */
-  static ENTITY_DETAILS_WIDTH = 200;
 
   w = 0;
   h = 0;
