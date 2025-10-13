@@ -50,6 +50,8 @@ import {
   BugPlay,
   CircleAlert,
   CircleDot,
+  CircleMinus,
+  CirclePlus,
   Columns4,
   Dumbbell,
   ExternalLink,
@@ -908,15 +910,6 @@ export function GlobalMenu() {
             <VenetianMask />
             {activeProject ? "进入/退出 隐私模式" : "请先打开工程文件才能使用此功能"}
           </Item>
-          <Item
-            disabled={!activeProject}
-            onClick={() => {
-              Settings.isStealthModeEnabled = !Settings.isStealthModeEnabled;
-            }}
-          >
-            <CircleDot />
-            {activeProject ? <span>开启/关闭狙击镜</span> : "请先打开工程文件才能使用此功能"}
-          </Item>
           <Sub>
             <SubTrigger>
               <LayoutGrid />
@@ -1005,6 +998,44 @@ export function GlobalMenu() {
             <Bug />
             {activeProject ? <span>开启/关闭Debug 模式</span> : "请先打开工程文件才能使用此功能"}
           </Item>
+          <Sub>
+            <SubTrigger>
+              <CircleDot />
+              狙击镜设置
+            </SubTrigger>
+            <SubContent>
+              <Item
+                disabled={!activeProject}
+                onClick={() => {
+                  Settings.isStealthModeEnabled = !Settings.isStealthModeEnabled;
+                }}
+              >
+                <CircleDot />
+                {activeProject ? <span>开启/关闭狙击镜</span> : "请先打开工程文件才能使用此功能"}
+              </Item>
+              <Item
+                disabled={!activeProject}
+                onClick={() => {
+                  const newRadius = Math.max(10, Math.min(500, Settings.stealthModeScopeRadius + 50));
+                  Settings.stealthModeScopeRadius = newRadius;
+                }}
+              >
+                <CirclePlus />
+                {activeProject ? <span>放大狙击镜</span> : "请先打开工程文件才能使用此功能"}
+              </Item>
+              <Item
+                disabled={!activeProject}
+                onClick={() => {
+                  const newRadius = Math.max(10, Math.min(500, Settings.stealthModeScopeRadius - 50));
+                  Settings.stealthModeScopeRadius = newRadius;
+                }}
+              >
+                <CircleMinus />
+                {activeProject ? <span>减小狙击镜</span> : "请先打开工程文件才能使用此功能"}
+              </Item>
+              <Item>提示：可以在设置界面中详细设置大小</Item>
+            </SubContent>
+          </Sub>
         </Content>
       </Menu>
 
