@@ -63,6 +63,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             cmd::device::get_device_id,
             cmd::fs::read_folder_structure,
+            cmd::fs::read_folder_recursive,
             write_stdout,
             write_stderr,
             exit,

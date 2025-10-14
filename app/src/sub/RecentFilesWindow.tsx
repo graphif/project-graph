@@ -8,15 +8,20 @@ import { PathString } from "@/utils/pathString";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 // import { useAtom } from "jotai";
-import { LoaderPinwheel } from "lucide-react";
+import { Import, LoaderPinwheel } from "lucide-react";
 import React, { ChangeEventHandler, useEffect } from "react";
 import { toast } from "sonner";
 import { onOpenFile } from "@/core/service/GlobalMenu";
+import { open } from "@tauri-apps/plugin-dialog";
+import { invoke } from "@tauri-apps/api/core";
+import { URI } from "vscode-uri";
+
 /**
  * 最近文件面板按钮
  * @returns
  */
 export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
+  // const containerRef = useRef<HTMLDivElement>(null);
   /**
    * 数据中有多少就是多少
    */
@@ -36,6 +41,45 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
 
   const [currentShowPath, setCurrentShowPath] = React.useState<string>("");
   const [currentShowTime, setCurrentShowTime] = React.useState<string>("");
+
+  // 选择文件夹并导入PRG文件
+  const importPrgFilesFromFolder = async () => {
+    try {
+      // 打开文件夹选择对话框
+      const folderPath = await open({
+        directory: true,
+        multiple: false,
+      });
+
+      if (!folderPath) return;
+
+      // 递归读取文件夹中的所有.prg文件
+      setIsLoading(true);
+      const files: string[] = await invoke("read_folder_recursive", {
+        path: folderPath,
+        fileExts: [".prg"],
+      });
+
+      if (files.length === 0) {
+        toast.info("未找到.prg文件");
+        return;
+      }
+
+      // 转换文件路径为URI并添加到最近文件历史
+      const uris = files.map((filePath) => URI.file(filePath));
+      await RecentFileManager.addRecentFilesByUris(uris);
+
+      // 更新列表
+      await updateRecentFiles();
+
+      toast.success(`成功导入 ${files.length} 个.prg文件`);
+    } catch (error) {
+      console.error("导入文件失败:", error);
+      toast.error("导入文件失败");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   /**
    * 用于刷新页面显示
@@ -83,7 +127,23 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
 
   return (
     <div className={cn("flex h-full flex-col items-center gap-2")}>
-      <Input placeholder="请输入要筛选的文件" onChange={onInputChange} value={searchString} autoFocus />
+      <div className="flex w-full items-center gap-2 p-4">
+        <Input
+          placeholder="请输入要筛选的文件"
+          onChange={onInputChange}
+          value={searchString}
+          autoFocus
+          className="max-w-96 flex-1"
+        />
+
+        <button
+          onClick={importPrgFilesFromFolder}
+          className="bg-primary/10 hover:bg-primary/20 rounded-md p-2 transition-colors"
+          title="递归导入文件夹中的所有.prg文件"
+        >
+          <Import />
+        </button>
+      </div>
       <div className="flex w-full flex-col items-baseline justify-center px-4 text-xs">
         <p>{currentShowPath}</p>
         <p>{currentShowTime}</p>
