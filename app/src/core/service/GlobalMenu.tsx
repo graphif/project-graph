@@ -303,16 +303,14 @@ export function GlobalMenu() {
               </Item> */}
             </SubContent>
           </Sub>
-          {recentFiles.length > 12 && (
-            <Item
-              onClick={() => {
-                RecentFilesWindow.open();
-              }}
-            >
-              <LayoutGrid />
-              查看全部历史文件
-            </Item>
-          )}
+          <Item
+            onClick={() => {
+              RecentFilesWindow.open();
+            }}
+          >
+            <LayoutGrid />
+            查看全部历史文件
+          </Item>
           <Separator />
           <Item
             disabled={!activeProject}

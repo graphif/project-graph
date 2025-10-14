@@ -8,8 +8,9 @@ import { PathString } from "@/utils/pathString";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 // import { useAtom } from "jotai";
-import { Import, LoaderPinwheel } from "lucide-react";
+import { Import, LoaderPinwheel, Trash2 } from "lucide-react";
 import React, { ChangeEventHandler, useEffect } from "react";
+import { Dialog } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { onOpenFile } from "@/core/service/GlobalMenu";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -111,10 +112,12 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
   }, []);
 
   useEffect(() => {
-    if (isLoading) return;
-    setCurrentShowPath(decodeURI(recentFilesFiltered[currentPreselect].uri.toString()));
-    setCurrentShowTime(new Date(recentFilesFiltered[currentPreselect].time).toLocaleString());
-  }, [currentPreselect, isLoading]);
+    if (isLoading || recentFilesFiltered.length === 0) return;
+    // 确保currentPreselect在有效范围内
+    const validIndex = Math.min(currentPreselect, recentFilesFiltered.length - 1);
+    setCurrentShowPath(decodeURI(recentFilesFiltered[validIndex].uri.toString()));
+    setCurrentShowTime(new Date(recentFilesFiltered[validIndex].time).toLocaleString());
+  }, [currentPreselect, isLoading, recentFilesFiltered]);
 
   const checkoutFile = async (file: RecentFileManager.RecentFile) => {
     try {
@@ -122,6 +125,32 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
       SubWindow.close(winId);
     } catch (error) {
       toast.error(error as string);
+    }
+  };
+
+  // 清空所有历史记录
+  const clearAllRecentHistory = async () => {
+    try {
+      // 弹出确认框
+      const confirmed = await Dialog.confirm(
+        "确认清空",
+        "此操作不可撤销，确定要清空历史记录吗？仅仅是清空此列表，不是删除文件本身。",
+        {
+          destructive: true,
+        },
+      );
+
+      if (!confirmed) {
+        return; // 用户取消操作
+      }
+
+      await RecentFileManager.clearAllRecentFiles();
+      // 清空后重置currentPreselect以避免访问无效索引
+      setCurrentPreselect(0);
+      await updateRecentFiles();
+      toast.success("已清空所有历史记录");
+    } catch (error) {
+      toast.error(`清空历史记录失败 ${error}`);
     }
   };
 
@@ -142,6 +171,14 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
           title="递归导入文件夹中的所有.prg文件"
         >
           <Import />
+        </button>
+
+        <button
+          onClick={clearAllRecentHistory}
+          className="bg-destructive/10 hover:bg-destructive/20 rounded-md p-2 transition-colors"
+          title="清空所有历史记录"
+        >
+          <Trash2 />
         </button>
       </div>
       <div className="flex w-full flex-col items-baseline justify-center px-4 text-xs">
