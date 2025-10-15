@@ -9,6 +9,10 @@ import { useAtom } from "jotai";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+/**
+ * 根据纯文本生成树状结构
+ * @returns
+ */
 export default function GenerateNodeTree() {
   const [text, setText] = useState("");
   const [indention, setIndention] = useState("4");
@@ -21,6 +25,7 @@ export default function GenerateNodeTree() {
       <div>
         <h3 className="mb-2 text-xl font-semibold">{t("actions.generate.generateNodeTreeByText")}</h3>
         <p className="text-muted-foreground mb-4">{t("actions.generate.generateNodeTreeByTextDescription")}</p>
+        <p className="text-xs opacity-50">提示：若想让节点内容本身换行，可以输入\n</p>
         <p className="text-xs opacity-50">
           注意：2.0.20+版本，生成树形结构后，先框选所有节点，再按ctrl键+框选所有节点，变成选中所有连线，将所有树内的连线改为从右侧发出，左侧接收，然后再alt
           shift f

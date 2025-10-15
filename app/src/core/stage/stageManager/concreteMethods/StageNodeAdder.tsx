@@ -320,7 +320,7 @@ export class NodeAdder {
       const textContent = line.trim();
 
       const node = new TextNode(this.project, {
-        text: textContent,
+        text: textContent.replaceAll("\\t", "\t").replaceAll("\\n", "\n"),
         collisionBox: new CollisionBox([
           new Rectangle(diffLocation.add(new Vector(indent * 50, yIndex * 100)), Vector.same(100)),
         ]),
