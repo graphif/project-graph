@@ -6,12 +6,23 @@ import type { Value } from "platejs";
 import { LineEdge } from "../LineEdge";
 import { TempLineEdge } from "../TempLineEdge";
 import { AssociationMember } from "./Association";
+
 /**
  * 实体
  * 一切独立存在、能被移动的东西，且放在框里能被连带移动的东西
  */
 export abstract class Entity extends StageObject {
-  public allowAssociation: boolean = true;
+  /*
+   * 这两个是实例属性而不是静态属性
+   * 一方面，保持和pixi的风格一致
+   * 另一方面，这样方便通过一个实例判断是否能有子节点，比如stageObject.allowGraphChildren，而不需要获取构造函数
+   * pixi用实例属性的原因如下:
+   * zty012: Why is Container.allowChildren an instance property? Shouldn't it be a static property instead?
+   * LunarRaid: Really it should be a per-class getter, but it's basically being treated as such.
+   * LunarRaid: It's utilized to determine if Container subclasses can have children or not. Most can't.
+   */
+  allowAssociation: boolean = true;
+  allowGraphChildren: boolean = false;
 
   /**
    * [
@@ -62,10 +73,11 @@ export abstract class Entity extends StageObject {
       // 检测是否碰到了Section
       const pos = this.project.viewport.toWorld(e.client);
       this.project.stage
-        .filter((so) => so !== this)
+        .filter((so) => so !== this && so instanceof Entity && so.allowGraphChildren)
         .forEach((so) => {
           const rect = so.getWorldBounds().rectangle;
           if (rect.contains(pos.x, pos.y)) {
+            console.log("碰到了", so);
             this.removeFromParent();
             so.addChild(this);
           }

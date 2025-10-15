@@ -8,7 +8,6 @@ import { Value } from "platejs";
 import { Fulcrum } from "./Fulcrum";
 import { ImageNode } from "./ImageNode";
 import { LatexNode } from "./LatexNode";
-import { Section } from "./Section";
 import { SvgNode } from "./SvgNode";
 import { TextInput } from "./TextInput";
 import { UrlNode } from "./UrlNode";
@@ -16,6 +15,8 @@ import { UrlNode } from "./UrlNode";
 @passExtraAtArg1
 @passObject
 export class TextNode extends Entity {
+  allowGraphChildren = true;
+
   @serializable
   text: string;
   @serializable
@@ -125,11 +126,6 @@ export class TextNode extends Entity {
                 position: this.position,
               }),
             );
-            this.destroy();
-          }
-          if (this.text === "$") {
-            // 临时：转换为Section
-            this.project.stage.push(new Section(this.project, this));
             this.destroy();
           }
         }),
