@@ -278,7 +278,14 @@ export class ControllerCameraClass extends ControllerClass {
   private dealStealthMode(event: WheelEvent) {
     if (Settings.isStealthModeEnabled && this.project.controller.pressingKeySet.has("shift")) {
       console.log(event);
-      const delta = event.deltaX > 0 ? -10 : 10; // 上滚增大半径，下滚减小半径
+      let delta;
+
+      // 有点问题，先赌一下
+      if (isMac) {
+        delta = event.deltaX > 0 ? -10 : 10;
+      } else {
+        delta = event.deltaY > 0 ? -10 : 10;
+      }
       const newRadius = Math.max(10, Math.min(500, Settings.stealthModeScopeRadius + delta));
       Settings.stealthModeScopeRadius = newRadius;
       this.project.effects.addEffect(MouseTipFeedbackEffect.default(delta > 0 ? "expand" : "shrink"));
