@@ -24,6 +24,13 @@ export namespace ProgramFunctions {
       return ["error", "参数数量错误，必须保证两个"];
     }
     const varName = args[0];
+    if (varName.includes(" ")) {
+      return ["error", "变量名不能包含空格"];
+    }
+    // 变量名不能以数字开头
+    if (/^\d/.test(varName)) {
+      return ["error", "变量名不能以数字开头"];
+    }
     project.autoCompute.variables.set(varName, args[1]);
     return ["success"];
   }
