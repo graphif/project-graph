@@ -53,8 +53,8 @@ stage:
   SelectRectangleFill: "rgba(255, 255, 255, 0.08)"
   StageObjectBorder: "#cccccc"
   NodeDetailsText: "#ffffff"
-  CollideBoxSelected: "rgba(34, 217, 110, 0.5)"
-  CollideBoxPreSelected: "rgba(0, 255, 0, 0.2)"
+  CollideBoxSelected: "rgba(70, 185, 255, 0.8)"
+  CollideBoxPreSelected: "rgba(70, 185, 255, 0.8)"
   CollideBoxPreDelete: "rgba(255, 255, 0, 0.2)"
 
 effects:
@@ -62,4 +62,4 @@ effects:
   dash: "#fff"
   windowFlash: "#fff"
   warningShadow: "#f00"
-  successShadow: "#0f0"
+  successShadow: oklch(0.546 0.245 262.881)

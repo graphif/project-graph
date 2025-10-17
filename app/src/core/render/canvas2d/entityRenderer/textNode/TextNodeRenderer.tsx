@@ -17,6 +17,9 @@ export class TextNodeRenderer {
   constructor(private readonly project: Project) {}
 
   renderTextNode(node: TextNode) {
+    // 检查是否是逻辑节点
+    const isLogicNode = this.project.autoComputeUtils.isNameIsLogicNode(node.text);
+
     // 节点身体矩形
     let fillColor = node.color;
     if (this.project.camera.currentScale < Settings.ignoreTextNodeTextRenderLessThanCameraScale && fillColor.a === 0) {
@@ -27,6 +30,8 @@ export class TextNodeRenderer {
     const borderColor = Settings.showTextNodeBorder
       ? this.project.stageStyleManager.currentStyle.StageObjectBorder
       : Color.Transparent;
+
+    // 渲染节点背景（逻辑节点和非逻辑节点都使用相同的背景）
     this.project.shapeRenderer.renderRect(
       new Rectangle(
         this.project.renderer.transformWorld2View(node.rectangle.location),
@@ -37,6 +42,11 @@ export class TextNodeRenderer {
       2 * this.project.camera.currentScale,
       Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
     );
+
+    // 如果是逻辑节点，在内部边缘绘制标记
+    if (isLogicNode) {
+      this.renderLogicNodeWarningTrap(node);
+    }
 
     // 视野缩放过小就不渲染内部文字
     if (this.project.camera.currentScale > Settings.ignoreTextNodeTextRenderLessThanCameraScale) {
@@ -103,6 +113,65 @@ export class TextNodeRenderer {
       //   }
       // }
     }
+  }
+
+  /**
+   * 画节点文字层信息
+   * @param node
+   */
+  /**
+   * 为逻辑节点在内部边缘绘制「」标记
+   */
+  private renderLogicNodeWarningTrap(node: TextNode) {
+    const scale = this.project.camera.currentScale;
+    const nodeViewRect = new Rectangle(
+      this.project.renderer.transformWorld2View(node.rectangle.location),
+      node.rectangle.size.multiply(scale),
+    );
+
+    // 使用样式管理器中的边框颜色
+    const markerColor = this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.5);
+    const lineWidth = 6 * scale;
+
+    // 计算内边缘的位置（距离边界有一定间距）
+    const padding = 10 * scale;
+    const innerLeft = nodeViewRect.left + padding;
+    const innerRight = nodeViewRect.right - padding;
+    const innerTop = nodeViewRect.top + padding;
+    const innerBottom = nodeViewRect.bottom - padding;
+    const middleX = (innerLeft + innerRight) / 2;
+
+    // 左侧标记「
+    // |
+    this.project.curveRenderer.renderSolidLine(
+      new Vector(innerLeft, innerTop),
+      new Vector(innerLeft, innerBottom),
+      markerColor,
+      lineWidth,
+    );
+    // 绘制左侧横线
+    this.project.curveRenderer.renderSolidLine(
+      new Vector(innerLeft, innerTop),
+      new Vector(middleX, innerTop),
+      markerColor,
+      lineWidth,
+    );
+
+    // 右侧标记」
+    // |
+    this.project.curveRenderer.renderSolidLine(
+      new Vector(innerRight, innerTop),
+      new Vector(innerRight, innerBottom),
+      markerColor,
+      lineWidth,
+    );
+    // 绘制右侧横线
+    this.project.curveRenderer.renderSolidLine(
+      new Vector(innerRight, innerBottom),
+      new Vector(middleX, innerBottom),
+      markerColor,
+      lineWidth,
+    );
   }
 
   /**
