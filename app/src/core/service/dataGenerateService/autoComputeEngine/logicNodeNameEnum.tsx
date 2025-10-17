@@ -155,7 +155,7 @@ export const LogicNodeNameToRenderNameMap: {
   [LogicNodeNameEnum.RANDOM_INT]: "随机整数",
   [LogicNodeNameEnum.RANDOM_ITEM]: "随机选项",
   [LogicNodeNameEnum.RANDOM_ITEMS]: "随机选项组",
-  [LogicNodeNameEnum.RANDOM_POISSON]: "泊松分布",
+  [LogicNodeNameEnum.RANDOM_POISSON]: "泊松分布随机数",
 
   [LogicNodeNameEnum.RGB]: "通过RGB设置节点颜色",
   [LogicNodeNameEnum.RGBA]: "通过RGBA设置节点颜色",
