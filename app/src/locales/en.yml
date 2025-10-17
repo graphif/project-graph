@@ -380,6 +380,9 @@ settings:
     options:
       cut: Cut and Delete Objects
       moveCamera: Move Viewport
+  enableSpaceKeyMouseLeftDrag:
+    title: Enable Space + Left Mouse Drag Move
+    description: Press space bar and drag with left mouse button to move the viewport
   mouseLeftMode:
     title: Mouse Left Button Mode
     options:

@@ -216,6 +216,7 @@ const categories = {
     mouse: [
       "mouseRightDragBackground",
       "mouseLeftMode",
+      "enableSpaceKeyMouseLeftDrag",
       "enableDragAutoAlign",
       "mouseWheelMode",
       "mouseWheelWithShiftMode",

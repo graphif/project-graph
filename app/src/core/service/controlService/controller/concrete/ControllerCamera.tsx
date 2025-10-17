@@ -59,7 +59,7 @@ export class ControllerCameraClass extends ControllerClass {
         .limitX(-1, 1)
         .limitY(-1, 1);
     }
-    if (key === " ") {
+    if (key === " " && Settings.enableSpaceKeyMouseLeftDrag) {
       if (!this.isPreGrabbingWhenSpace) {
         this.isPreGrabbingWhenSpace = true;
         this.project.controller.setCursorNameHook(CursorNameEnum.Grab);
@@ -113,7 +113,7 @@ export class ControllerCameraClass extends ControllerClass {
     if (this.project.controller.isCameraLocked) {
       return;
     }
-    if (event.button === 0 && this.project.controller.pressingKeySet.has(" ")) {
+    if (event.button === 0 && this.project.controller.pressingKeySet.has(" ") && Settings.enableSpaceKeyMouseLeftDrag) {
       this.project.controller.setCursorNameHook(CursorNameEnum.Grabbing);
       this.isUsingMouseGrabMove = true;
     }
@@ -156,7 +156,11 @@ export class ControllerCameraClass extends ControllerClass {
       return;
     }
     // 空格+左键 拖动视野
-    if (this.project.controller.pressingKeySet.has(" ") && this.project.controller.isMouseDown[0]) {
+    if (
+      this.project.controller.pressingKeySet.has(" ") &&
+      this.project.controller.isMouseDown[0] &&
+      Settings.enableSpaceKeyMouseLeftDrag
+    ) {
       this.moveCameraByMouseMove(event.clientX, event.clientY, 0);
       return;
     }

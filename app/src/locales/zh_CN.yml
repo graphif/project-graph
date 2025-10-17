@@ -460,6 +460,9 @@ settings:
     options:
       cut: 斩断并删除物体
       moveCamera: 移动视野
+  enableSpaceKeyMouseLeftDrag:
+    title: 启用空格键+鼠标左键拖拽移动
+    description: 按下空格键并使用鼠标左键拖拽来移动视野
   mouseLeftMode:
     title: 左键模式切换
     options:

@@ -88,6 +88,7 @@ export const settingsIcons = {
   macTrackpadScaleSensitivity: HandMetal,
   allowMoveCameraByWSAD: Keyboard,
   allowGlobalHotKeys: Keyboard,
+  enableSpaceKeyMouseLeftDrag: MousePointerClick,
   cameraFollowsSelectedNodeOnArrowKeys: Crosshair,
   cameraKeyboardMoveReverse: Keyboard,
   moveAmplitude: Move,

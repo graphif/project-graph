@@ -58,6 +58,7 @@ export const settingsSchema = z.object({
   aiModel: z.string().default("gemini-2.5-flash"),
   aiShowTokenCount: z.boolean().default(false),
   mouseRightDragBackground: z.union([z.literal("cut"), z.literal("moveCamera")]).default("cut"),
+  enableSpaceKeyMouseLeftDrag: z.boolean().default(true),
   enableDragAutoAlign: z.boolean().default(true),
   mouseWheelMode: z
     .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none")])
