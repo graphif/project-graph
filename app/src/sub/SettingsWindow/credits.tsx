@@ -18,6 +18,11 @@ const donations: DonationData[] = [
   // { user: "MacBook", note: "littlefean", amount: -7599.2 },
   { user: "域名 project-graph.top", note: "zty012", amount: -13.66 },
   // 以下为捐赠用户
+  { user: "虹色之梦", note: "超棒的软件，开发速度超乎想象，我喜欢这个", amount: 10 },
+  { user: "狸猫", note: "自由思维，自由记录记录思绪的自然律动，捕捉灵感的无限扩散", amount: 20 },
+  { user: "季不是鸡", note: "蛙趣……？原来这里才是捐赠界面……", amount: 10 },
+  { user: "隔壁小王", note: "老哥能不能构建个Linux arm版本的呢？", amount: 50 },
+  { user: "田子", note: "优秀的开源项目！", amount: 20 },
   { user: "", note: "非常感谢，软件真的很好用！！", amount: 20 },
   { user: "", note: "请你喝瓶好的", amount: 20 },
   { user: "葉谋", note: "软件很棒，加油", amount: 5 },
