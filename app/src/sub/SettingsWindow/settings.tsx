@@ -13,6 +13,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import { SoundService } from "@/core/service/feedbackService/SoundService";
 import { settingsSchema } from "@/core/service/Settings";
 import Fuse from "fuse.js";
 import {
@@ -102,7 +103,14 @@ export default function SettingsTab() {
                     <Collapsible key={category} defaultOpen className="group/collapsible">
                       <SidebarMenuItem>
                         <SidebarMenuButton asChild>
-                          <CollapsibleTrigger>
+                          <CollapsibleTrigger
+                            onMouseEnter={() => {
+                              SoundService.play.mouseEnterButton();
+                            }}
+                            onMouseDown={() => {
+                              SoundService.play.mouseClickButton();
+                            }}
+                          >
                             <CategoryIcon />
                             <span>{t(`categories.${category}.title`)}</span>
                             <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
@@ -116,6 +124,12 @@ export default function SettingsTab() {
                               return (
                                 <SidebarMenuSubItem key={group}>
                                   <SidebarMenuSubButton
+                                    onMouseEnter={() => {
+                                      SoundService.play.mouseEnterButton();
+                                    }}
+                                    onMouseDown={() => {
+                                      SoundService.play.mouseClickButton();
+                                    }}
                                     asChild
                                     isActive={category === currentCategory && group === currentGroup}
                                     onClick={() => {
