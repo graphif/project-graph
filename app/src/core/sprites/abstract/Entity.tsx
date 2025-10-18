@@ -45,13 +45,36 @@ export abstract class Entity extends StageObject {
       members: [new AssociationMember(this, "right")],
       endPoint: new Point(0, 0),
     });
-    this.project.on("pointer-enter-stage-object", (so) => {
+    this.project.on("pointer-enter-stage-object", (so, e) => {
       if (linking && so instanceof Entity) {
+        // 检测鼠标在舞台对象的哪个1/4区域，即上/下/左/右四个三角形的区域
+        const pos = this.project.viewport.toWorld(e.client);
+        const bounds = so.getBounds().rectangle;
+        let anchor: "left" | "right" | "top" | "bottom";
+        const centerX = bounds.x + bounds.width / 2;
+        const centerY = bounds.y + bounds.height / 2;
+        const dx = pos.x - centerX;
+        const dy = pos.y - centerY;
+        if (Math.abs(dx) > Math.abs(dy)) {
+          // 左右区域
+          if (dx < 0) {
+            anchor = "left";
+          } else {
+            anchor = "right";
+          }
+        } else {
+          // 上下区域
+          if (dy < 0) {
+            anchor = "top";
+          } else {
+            anchor = "bottom";
+          }
+        }
         const onPointerUp = () => {
           linking = false;
           this.project.stage.push(
             new LineEdge(this.project, {
-              members: [new AssociationMember(this, "right"), new AssociationMember(so, "left")],
+              members: [new AssociationMember(this, tempLineEdge.source.anchor), new AssociationMember(so, anchor)],
             }),
           );
         };
@@ -78,7 +101,6 @@ export abstract class Entity extends StageObject {
           .forEach((so) => {
             const rect = so.getWorldBounds().rectangle;
             if (rect.contains(pos.x, pos.y)) {
-              console.log("碰到了", so);
               this.removeFromParent();
               so.addChild(this);
             }
@@ -111,17 +133,39 @@ export abstract class Entity extends StageObject {
           // this.project.pixi.renderer.render(this);
         }
         if (linking) {
-          // 检测是否碰到了自己的边缘2px,如果碰到了就设置anchor
           const pos = this.project.viewport.toWorld(e.client);
           const bounds = this.getBounds();
-          if (pos.x >= bounds.x - 2 && pos.x <= bounds.x + 2) {
-            tempLineEdge.source.anchor = "left";
-          } else if (pos.x >= bounds.x + bounds.width - 2 && pos.x <= bounds.x + bounds.width + 2) {
-            tempLineEdge.source.anchor = "right";
-          } else if (pos.y >= bounds.y - 2 && pos.y <= bounds.y + 2) {
-            tempLineEdge.source.anchor = "top";
-          } else if (pos.y >= bounds.y + bounds.height - 2 && pos.y <= bounds.y + bounds.height + 2) {
-            tempLineEdge.source.anchor = "bottom";
+          // 检测鼠标位置是否在「自己的边缘～边缘向外扩展2px」,如果碰到了就设置anchor，否则什么都不做
+          if (
+            pos.x >= bounds.left - 2 &&
+            pos.x <= bounds.right + 2 &&
+            pos.y >= bounds.top - 2 &&
+            pos.y <= bounds.bottom + 2
+          ) {
+            // 碰到了
+            let anchor: "left" | "right" | "top" | "bottom";
+            const leftDist = Math.abs(pos.x - bounds.left);
+            const rightDist = Math.abs(pos.x - bounds.right);
+            const topDist = Math.abs(pos.y - bounds.top);
+            const bottomDist = Math.abs(pos.y - bounds.bottom);
+            const minDist = Math.min(leftDist, rightDist, topDist, bottomDist);
+            switch (minDist) {
+              case leftDist:
+                anchor = "left";
+                break;
+              case rightDist:
+                anchor = "right";
+                break;
+              case topDist:
+                anchor = "top";
+                break;
+              case bottomDist:
+                anchor = "bottom";
+                break;
+              default:
+                anchor = "right";
+            }
+            tempLineEdge.source.anchor = anchor;
           }
           // 把临时线段的终点设置为当前鼠标位置
           const world = this.project.viewport.toWorld(e.client);

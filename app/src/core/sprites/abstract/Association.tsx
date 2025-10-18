@@ -71,7 +71,7 @@ export abstract class Association extends StageObject {
     return this.position.y;
   }
   set position(value: ObservablePoint) {
-    super.position = value;
+    super.position?.copyFrom(value);
   }
 
   onMembersChange() {

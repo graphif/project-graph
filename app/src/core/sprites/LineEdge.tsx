@@ -55,8 +55,8 @@ export class LineEdge extends Association {
     g.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, ep.x, ep.y);
     g.stroke({ width: 2, color: this.color });
     // debug:画出控制点
-    g.circle(cp1.x, cp1.y, 2).fill({ color: 0xff0000 });
-    g.circle(cp2.x, cp2.y, 2).fill({ color: 0x00ff00 });
+    // g.circle(cp1.x, cp1.y, 2).fill({ color: 0xff0000 });
+    // g.circle(cp2.x, cp2.y, 2).fill({ color: 0x00ff00 });
 
     // 画箭头
     const arrowSize = 8;
