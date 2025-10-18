@@ -136,23 +136,6 @@ export default function SoundEffectsPage() {
   return (
     <div className="space-y-4">
       <p>提示：目前此页面有一个bug：需要切换一下页面再切回来，才能看到改动的效果</p>
-      <Popover.Confirm
-        title="提示"
-        description="即将跳转github页面。如果github页面无法打开，请自行解决或使用自定义音效。"
-        onConfirm={() => open("https://github.com/LiRenTech/project-graph-cdn")}
-      >
-        <div className="bg-muted/50 **:cursor-pointer group flex flex-1 cursor-pointer flex-col justify-center gap-2 rounded-lg border p-4">
-          <div className="flex items-center justify-center gap-2">
-            <ExternalLink className="h-5 w-5" />
-            <span className="text-lg">前往官方音效库Github仓库:</span>
-          </div>
-          <div className="flex items-end justify-center gap-2 text-center">
-            <span className="underline-offset-4 group-hover:underline">
-              https://github.com/LiRenTech/project-graph-cdn
-            </span>
-          </div>
-        </div>
-      </Popover.Confirm>
       <div className="bg-muted flex items-center justify-between rounded-lg p-4">
         <div className="flex items-center gap-2">
           {soundEnabled ? <Volume2 /> : <VolumeX />}
@@ -176,36 +159,51 @@ export default function SoundEffectsPage() {
             <Download className="h-4 w-4" />
             <span>一键下载并设置所有官方音效</span>
           </button>
-          {SOUND_CONFIGS.map(({ settingKey, name, testFunction }) => {
-            const filePath = soundFilePaths[settingKey];
-            return (
-              <div key={settingKey} className="bg-muted flex items-center justify-between rounded-lg p-4">
-                <div className="flex w-full flex-col">
-                  <span>{name}</span>
-                  <FileChooser
-                    kind="file"
-                    value={filePath || ""}
-                    onChange={(value) => {
-                      // @ts-expect-error settingKey is keyof Settings
-                      Settings[settingKey] = value;
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    className="hover:bg-accent rounded-full p-2"
-                    onClick={() => handleTestSound(testFunction)}
-                    disabled={!filePath}
-                    title={t("testSound")}
-                  >
-                    {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
         </div>
       )}
+      <Popover.Confirm
+        title="提示"
+        description="即将跳转github页面。如果github页面无法打开，请自行解决或使用自定义音效。"
+        onConfirm={() => open("https://github.com/graphif/assets")}
+      >
+        <div className="bg-muted/50 **:cursor-pointer group flex flex-1 cursor-pointer flex-col justify-center gap-2 rounded-lg border p-4">
+          <div className="flex items-center justify-center gap-2">
+            <ExternalLink className="h-5 w-5" />
+            <span className="text-lg">前往官方静态资源Github仓库:</span>
+          </div>
+          <div className="flex items-end justify-center gap-2 text-center">
+            <span className="underline-offset-4 group-hover:underline">https://github.com/graphif/assets</span>
+          </div>
+        </div>
+      </Popover.Confirm>
+      {SOUND_CONFIGS.map(({ settingKey, name, testFunction }) => {
+        const filePath = soundFilePaths[settingKey];
+        return (
+          <div key={settingKey} className="bg-muted flex items-center justify-between rounded-lg p-4">
+            <div className="flex w-full flex-col">
+              <span>{name}</span>
+              <FileChooser
+                kind="file"
+                value={filePath || ""}
+                onChange={(value) => {
+                  // @ts-expect-error settingKey is keyof Settings
+                  Settings[settingKey] = value;
+                }}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                className="hover:bg-accent rounded-full p-2"
+                onClick={() => handleTestSound(testFunction)}
+                disabled={!filePath}
+                title={t("testSound")}
+              >
+                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+              </button>
+            </div>
+          </div>
+        );
+      })}
 
       {!soundEnabled && (
         <div className="bg-muted/50 text-muted-foreground rounded-lg p-4 text-center">
