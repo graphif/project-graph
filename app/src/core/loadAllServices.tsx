@@ -1,9 +1,11 @@
 import { FileSystemProviderDraft } from "@/core/fileSystemProvider/FileSystemProviderDraft";
 import { FileSystemProviderFile } from "@/core/fileSystemProvider/FileSystemProviderFile";
 import { Project } from "@/core/Project";
+import { Settings } from "./service/Settings";
 import { BackgroundGrid } from "./sprites/BackgroundGrid";
 import { Cutter } from "./sprites/Cutter";
 import { GlobalContextMenuTrigger } from "./sprites/GlobalContextMenuTrigger";
+import { MouseTrail } from "./sprites/MouseTrail";
 import { NodeAdder } from "./sprites/NodeAdder";
 import { RegionPicker } from "./sprites/RegionPicker";
 
@@ -18,6 +20,6 @@ export function initProjectWithAllServices(project: Project) {
       draft: FileSystemProviderDraft,
     },
     [],
-    [BackgroundGrid, NodeAdder, RegionPicker, GlobalContextMenuTrigger, Cutter],
+    [BackgroundGrid, Settings.mouseTrail && MouseTrail, NodeAdder, RegionPicker, GlobalContextMenuTrigger, Cutter],
   );
 }

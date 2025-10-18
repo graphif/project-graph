@@ -147,4 +147,5 @@ export const settingsIcons = {
   textResolution: Type,
   maxFps: Gauge,
   minFps: Gauge,
+  mouseTrail: LineSquiggle,
 };

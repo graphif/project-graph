@@ -150,6 +150,7 @@ export const settingsSchema = z.object({
   textResolution: z.number().min(0).max(20).int().default(5),
   maxFps: z.number().min(1).max(360).int().default(60),
   minFps: z.number().min(1).max(360).int().default(30),
+  mouseTrail: z.boolean().default(false),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

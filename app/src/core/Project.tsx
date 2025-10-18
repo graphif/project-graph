@@ -96,8 +96,8 @@ export class Project extends EventEmitter<{
 
   async init(
     fileSystemProviders: Record<string, { new (...args: any[]): FileSystemProvider }> = {},
-    services: { id?: string; new (...args: any[]): any }[] = [],
-    sprites: { new (...args: any[]): Container }[] = [],
+    services: ({ id?: string; new (...args: any[]): any } | false)[] = [],
+    sprites: ({ new (...args: any[]): Container } | false)[] = [],
   ) {
     await this.pixi.init({
       backgroundAlpha: Settings.windowBackgroundAlpha,
@@ -153,7 +153,6 @@ export class Project extends EventEmitter<{
     }
     this.state = ProjectState.Saved;
 
-    // 添加固定的元素
     const fpsText = this.pixi.stage.addChild(
       new MyText("0", {
         style: { fontSize: 12 },
@@ -164,6 +163,7 @@ export class Project extends EventEmitter<{
     this.pixi.ticker.add(() => {
       fpsText.text = Math.round(this.pixi.ticker.FPS).toString();
     });
+
     this.viewport = new Viewport({
       screenWidth: window.innerWidth,
       screenHeight: window.innerHeight,
@@ -180,11 +180,12 @@ export class Project extends EventEmitter<{
     this.viewport.cullable = true;
     this.viewport.cullableChildren = true;
     this.pixi.stage.addChild(this.viewport);
-    // 在[0,0]渲染一个红色的圆点，表示原点位置
+
     const origin = new Graphics();
     origin.circle(0, 0, 5);
     origin.fill(0xff0000);
     this.viewport.addChild(origin);
+
     const positionText = this.pixi.stage.addChild(
       new MyText("0,0", {
         style: { fontSize: 12 },
@@ -192,18 +193,19 @@ export class Project extends EventEmitter<{
         y: 30,
       }),
     );
+
     this.viewport.on("pointermove", (e) => {
       const worldPos = this.viewport.toWorld(e.client);
       positionText.text = `${worldPos.x.toFixed(0)},${worldPos.y.toFixed(0)}`;
       positionText.position = e.client.add(new Point(30, 30));
     });
 
-    // 添加传入的sprites
     for (const sprite of sprites) {
+      if (!sprite) continue;
       this.viewport.addChild(new sprite(this));
     }
-    // 注册服务
     for (const service of services) {
+      if (!service) continue;
       this.loadService(service);
     }
   }
@@ -331,7 +333,7 @@ declare module "./Project" {
 
 export enum ProjectState {
   /**
-   * “已保存”
+   * "已保存"
    * 已写入到原始文件中
    * 已上传到云端
    */
@@ -343,7 +345,7 @@ export enum ProjectState {
    */
   Stashed,
   /**
-   * “未保存”
+   * "未保存"
    * 未写入到原始文件中，也未暂存到数据目录（真·未保存）
    * 未上传到云端，也未暂存到本地
    */
