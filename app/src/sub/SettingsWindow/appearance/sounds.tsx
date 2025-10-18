@@ -117,6 +117,15 @@ export default function SoundEffectsPage() {
   const { t } = useTranslation("sounds");
   const [soundEnabled] = Settings.use("soundEnabled");
 
+  // 在组件顶层预先调用所有需要的Settings.use，避免在循环中调用Hooks
+  const soundFilePaths = SOUND_CONFIGS.reduce(
+    (acc, config) => {
+      acc[config.settingKey] = Settings.use(config.settingKey as any)[0];
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
+
   // 测试音效
   const handleTestSound = (testFunction: () => void) => {
     if (soundEnabled) {
@@ -168,7 +177,7 @@ export default function SoundEffectsPage() {
             <span>一键下载并设置所有官方音效</span>
           </button>
           {SOUND_CONFIGS.map(({ settingKey, name, testFunction }) => {
-            const [filePath] = Settings.use(settingKey as any);
+            const filePath = soundFilePaths[settingKey];
             return (
               <div key={settingKey} className="bg-muted flex items-center justify-between rounded-lg p-4">
                 <div className="flex w-full flex-col">

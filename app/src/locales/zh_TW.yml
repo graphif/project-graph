@@ -1211,3 +1211,6 @@ globalMenu:
     mayHaveBugs: 可能包含 Bug 和未完善的功能
     reportBug: "报告 Bug: 在 Issue #487 中评论"
     test: 测试功能
+
+sounds:
+  soundEnabled: 音效開關

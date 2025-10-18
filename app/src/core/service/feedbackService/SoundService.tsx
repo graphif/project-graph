@@ -59,6 +59,9 @@ export namespace SoundService {
   }
 
   async function loadAndPlaySound(filePath: string) {
+    if (!Settings.soundEnabled) {
+      return;
+    }
     if (filePath.trim() === "") {
       return;
     }

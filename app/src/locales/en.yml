@@ -1339,3 +1339,5 @@ visualSettingsGroup:
   background:
     title: Background Settings
 
+sounds:
+  soundEnabled: Sound Effect Switch
