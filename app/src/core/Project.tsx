@@ -155,13 +155,19 @@ export class Project extends EventEmitter<{
 
     const fpsText = this.pixi.stage.addChild(
       new MyText("0", {
-        style: { fontSize: 12 },
+        style: { fontSize: 24 },
         x: 10,
         y: 50,
       }),
     );
+    // 最多存储60帧的FPS数据，用于计算平均FPS
+    const recentFps: number[] = [];
     this.pixi.ticker.add(() => {
-      fpsText.text = Math.round(this.pixi.ticker.FPS).toString();
+      recentFps.push(this.pixi.ticker.FPS);
+      fpsText.text = `${Math.round(this.pixi.ticker.FPS)} (AVG ${Math.round(recentFps.reduce((a, b) => a + b, 0) / recentFps.length)})`;
+      if (recentFps.length > 60) {
+        recentFps.shift();
+      }
     });
 
     this.viewport = new Viewport({
