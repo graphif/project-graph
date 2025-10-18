@@ -128,6 +128,24 @@ export class TextNode extends Entity {
             );
             this.destroy();
           }
+          if (this.text.startsWith("x")) {
+            // 原点100范围内随机位置创建x后面数字个节点、
+            const count = parseInt(this.text.slice(1).trim()) || 1;
+            for (let i = 0; i < count; i++) {
+              const offsetX = Math.random() * 200 - 100;
+              const offsetY = Math.random() * 200 - 100;
+              this.project.stage.push(
+                new TextNode(this.project, {
+                  text: "New Node",
+                  position: {
+                    x: this.position.x + offsetX,
+                    y: this.position.y + offsetY,
+                  },
+                }),
+              );
+            }
+            this.destroy();
+          }
         }),
     );
   }
