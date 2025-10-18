@@ -131,6 +131,10 @@ export default function App() {
             getCurrentWindow().setAlwaysOnTop(true);
             toast.warning("您开启了穿透点击，已自动为您打开窗口透明与始终至于顶层");
           } else {
+            // 关闭了穿透点击
+            Settings.windowBackgroundAlpha = 1;
+            setIsWindowAlwaysOnTop(false);
+            getCurrentWindow().setAlwaysOnTop(false);
             toast.info("您关闭了穿透点击");
           }
           getCurrentWindow().setIgnoreCursorEvents(!prev);
