@@ -48,7 +48,7 @@ export class KeyboardOnlyTreeEngine {
    * 树形深度生长节点
    * @returns
    */
-  onDeepGenerateNode() {
+  onDeepGenerateNode(defaultText = "新节点", selectAll = true) {
     if (!this.project.keyboardOnlyEngine.isOpenning()) {
       return;
     }
@@ -117,7 +117,7 @@ export class KeyboardOnlyTreeEngine {
 
     // 创建位置寻找完毕
     const newNode = new TextNode(this.project, {
-      text: "新节点",
+      text: defaultText,
       collisionBox: new CollisionBox([
         new Rectangle(
           createLocation,
@@ -183,7 +183,7 @@ export class KeyboardOnlyTreeEngine {
     setTimeout(
       () => {
         // 防止把反引号给输入进去
-        this.project.controllerUtils.editTextNode(newNode);
+        this.project.controllerUtils.editTextNode(newNode, selectAll);
       },
       (1000 / 60) * 6,
     );
@@ -221,7 +221,7 @@ export class KeyboardOnlyTreeEngine {
           new Vector(parent instanceof TextNode ? parent.collisionBox.getRectangle().width : 100, 100),
         ),
       ]),
-      sizeAdjust: parent instanceof TextNode ? parent.sizeAdjust : "auto",
+      sizeAdjust: parent instanceof TextNode ? (parent.sizeAdjust as "auto" | "manual") : "auto",
     });
     this.project.stageManager.add(newNode);
     // 如果是在框里，则把新生长的节点也纳入到框里

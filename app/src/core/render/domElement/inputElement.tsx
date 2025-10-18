@@ -199,13 +199,29 @@ export class InputElement {
         if (event.key === "Tab") {
           // 防止tab切换到其他按钮
           event.preventDefault();
-          // 改成插入一个制表符
-          const start = textareaElement.selectionStart;
+          // const start = textareaElement.selectionStart;
           const end = textareaElement.selectionEnd;
-          textareaElement.value =
-            textareaElement.value.substring(0, start) + "\t" + textareaElement.value.substring(end);
-          textareaElement.selectionStart = start + 1;
-          textareaElement.selectionEnd = start + 1;
+          // textareaElement.value =
+          //   textareaElement.value.substring(0, start) + "\t" + textareaElement.value.substring(end);
+          // textareaElement.selectionStart = start + 1;
+          // textareaElement.selectionEnd = start + 1;
+
+          // 获取光标后面的内容：
+          const afterText = textareaElement.value.substring(end);
+
+          // tab生长后是否选中后面的内容
+          let selectAllTextWhenCreated = true;
+          if (afterText.trim() !== "") {
+            // 如果后面有内容，则在当前节点删除后面的内容
+            textareaElement.value = textareaElement.value.substring(0, end);
+            selectAllTextWhenCreated = false;
+          }
+
+          resolve(textareaElement.value);
+          onChange(textareaElement.value, textareaElement);
+          removeElement();
+          // xmind用户
+          this.project.keyboardOnlyTreeEngine.onDeepGenerateNode(afterText, selectAllTextWhenCreated);
         } else if (event.key === "Escape") {
           // Escape 是通用的取消编辑的快捷键
           resolve(textareaElement.value);
