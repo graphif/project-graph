@@ -29,6 +29,7 @@ import {
   ListCheck,
   ListCollapse,
   ListEnd,
+  ListMusic,
   ListRestart,
   ListTree,
   MemoryStick,
@@ -152,4 +153,5 @@ export const settingsIcons = {
   isStealthModeEnabled: Crosshair,
   stealthModeScopeRadius: ScanEye,
   clearHistoryWhenManualSave: Undo,
+  soundPitchVariationRange: ListMusic,
 };

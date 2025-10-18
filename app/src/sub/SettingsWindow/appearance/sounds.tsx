@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { tempDir, join } from "@tauri-apps/api/path";
 import { writeFile } from "@tauri-apps/plugin-fs";
+import { SettingField } from "@/components/ui/field";
 
 // 音效配置列表
 const SOUND_CONFIGS = [
@@ -148,6 +149,7 @@ export default function SoundEffectsPage() {
           }}
         />
       </div>
+      <SettingField settingKey={"soundPitchVariationRange"} />
 
       {soundEnabled && (
         <div className="space-y-2">

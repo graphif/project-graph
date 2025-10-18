@@ -627,6 +627,9 @@ settings:
       the software\nThe data sent is only for statistics and will not include your
       personal privacy information\nYour data will be stored on cloud servers in Hong
       Kong, China, and will not be sent abroad\n"
+  soundPitchVariationRange:
+    title: Sound Pitch Variation
+    description: Controls how much the pitch of sound effects varies randomly. Range for 0-1200 cents (1200 cents = 1 octave, 100 cents = 1 semitone). Higher values create more noticeable variations.
 plugins:
   welcome:
     title: Welcome to the Plugin System
@@ -1341,3 +1344,4 @@ visualSettingsGroup:
 
 sounds:
   soundEnabled: Sound Effect Switch
+

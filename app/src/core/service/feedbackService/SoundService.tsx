@@ -11,7 +11,9 @@ export namespace SoundService {
    * 100音分 = 1个半音
    * 可根据需要调整此值以获得更明显或更微妙的音调变化
    */
-  export const pitchVariationRange = 150; // 默认±150音分（1.5个半音）
+  export function getPitchVariationRange() {
+    return Settings.soundPitchVariationRange ?? 150; // 默认±150音分（1.5个半音）
+  }
   export namespace play {
     // 开始切断
     export function cuttingLineStart() {
@@ -78,8 +80,8 @@ export namespace SoundService {
     source.buffer = audioBuffer;
 
     // 添加音调随机化 - 根据配置的范围随机调整音调
-    // 使用pitchVariationRange变量控制变化范围，可在外部进行调节
-    const randomDetune = (Math.random() - 0.5) * pitchVariationRange * 2; // 范围内随机
+    // 使用getPitchVariationRange()函数获取配置的变化范围
+    const randomDetune = (Math.random() - 0.5) * getPitchVariationRange() * 2; // 范围内随机
     source.detune.value = randomDetune;
 
     source.connect(audioContext.destination); // 小概率消耗0.01秒

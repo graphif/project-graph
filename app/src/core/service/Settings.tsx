@@ -157,6 +157,7 @@ export const settingsSchema = z.object({
   isStealthModeEnabled: z.boolean().default(false),
   stealthModeScopeRadius: z.number().min(10).max(500).int().default(150),
   clearHistoryWhenManualSave: z.boolean().default(true),
+  soundPitchVariationRange: z.number().min(0).max(1200).int().default(150),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;
