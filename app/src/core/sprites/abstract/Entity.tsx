@@ -70,18 +70,20 @@ export abstract class Entity extends StageObject {
       }
       linking = false;
       tempLineEdge.removeFromParent();
-      // 检测是否碰到了Section
-      const pos = this.project.viewport.toWorld(e.client);
-      this.project.stage
-        .filter((so) => so !== this && so instanceof Entity && so.allowGraphChildren)
-        .forEach((so) => {
-          const rect = so.getWorldBounds().rectangle;
-          if (rect.contains(pos.x, pos.y)) {
-            console.log("碰到了", so);
-            this.removeFromParent();
-            so.addChild(this);
-          }
-        });
+      if (e.altKey) {
+        // 检测是否碰到了Section
+        const pos = this.project.viewport.toWorld(e.client);
+        this.project.stage
+          .filter((so) => so !== this && so instanceof Entity && so.allowGraphChildren)
+          .forEach((so) => {
+            const rect = so.getWorldBounds().rectangle;
+            if (rect.contains(pos.x, pos.y)) {
+              console.log("碰到了", so);
+              this.removeFromParent();
+              so.addChild(this);
+            }
+          });
+      }
     };
     this.on("pointerdown", (e) => {
       e.stopPropagation();
