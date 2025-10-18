@@ -52,7 +52,6 @@ export const settingsSchema = z.object({
   autoBackup: z.boolean().default(true),
   autoBackupInterval: z.number().min(60).max(6000).int().default(600),
   autoBackupLimitCount: z.number().min(1).max(500).int().default(10),
-  autoBackupDraftPath: z.string().default(""),
   aiApiBaseUrl: z.string().default("https://generativelanguage.googleapis.com/v1beta/openai/"),
   aiApiKey: z.string().default(""),
   aiModel: z.string().default("gemini-2.5-flash"),

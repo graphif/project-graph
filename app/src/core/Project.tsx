@@ -81,6 +81,7 @@ import { toast } from "sonner";
 import { getOriginalNameOf } from "virtual:original-class-name";
 import { URI } from "vscode-uri";
 import { Telemetry } from "./service/Telemetry";
+import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -453,6 +454,7 @@ declare module "./Project" {
     sectionMethods: SectionMethods;
     graphMethods: GraphMethods;
     stageStyleManager: StageStyleManager;
+    autoSaveBackup: AutoSaveBackupService;
   }
 }
 

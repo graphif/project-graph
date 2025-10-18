@@ -210,7 +210,7 @@ const categories = {
   automation: {
     autoNamer: ["autoNamerTemplate", "autoNamerSectionTemplate"],
     autoSave: ["autoSaveWhenClose", "autoSave", "autoSaveInterval"],
-    autoBackup: ["autoBackup", "autoBackupInterval", "autoBackupLimitCount", "autoBackupDraftPath"],
+    autoBackup: ["autoBackup", "autoBackupInterval", "autoBackupLimitCount"],
   },
   control: {
     mouse: [

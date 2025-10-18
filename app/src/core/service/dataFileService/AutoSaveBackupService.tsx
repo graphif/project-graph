@@ -61,40 +61,14 @@ export class AutoSaveBackupService {
    * 执行自动备份操作
    */
   private async autoBackup() {
-    if (!this.project.uri || this.project.isDraft) {
-      // 临时草稿先不备份
-      return;
-    }
-
     try {
       const currentHash = this.project.stageHash;
       // 检查是否与上次备份有差异
       if (currentHash === this.lastBackupHash) {
         return;
       }
-
-      // 获取缓存目录
-      const cacheDir = await appCacheDir();
-      // 创建备份目录
-      const backupDir = await join(cacheDir, "auto-backup-v2");
-
-      // 确保备份目录存在
-      if (!(await exists(backupDir))) {
-        try {
-          // 创建备份目录
-          await mkdir(backupDir);
-        } catch (err) {
-          toast.error(`创建备份目录失败: ${err}`);
-          return;
-        }
-      }
-
-      // 生成备份文件名
-      const fileName = this.generateBackupFileName();
-      const backupFilePath = await join(backupDir, fileName);
-
-      // 创建备份文件
-      await this.createBackupFile(backupFilePath);
+      const backupDir = await join(await appCacheDir(), "auto-backup-v2");
+      this.backupCurrentProject(backupDir);
 
       // 更新上次备份的哈希值
       this.lastBackupHash = currentHash;
@@ -104,6 +78,35 @@ export class AutoSaveBackupService {
     } catch (err) {
       toast.error("自动备份过程中发生错误:" + err);
     }
+  }
+
+  public async manualBackup() {
+    try {
+      const backupDir = await join(await appCacheDir(), "manual-backup-v2");
+      await this.backupCurrentProject(backupDir);
+    } catch (err) {
+      toast.error("备份过程中发生错误:" + err);
+    }
+  }
+
+  private async backupCurrentProject(backupDir: string) {
+    // 确保备份目录存在
+    if (!(await exists(backupDir))) {
+      try {
+        // 创建备份目录
+        await mkdir(backupDir);
+      } catch (err) {
+        toast.error(`创建备份目录失败: ${err}`);
+        return;
+      }
+    }
+
+    // 生成备份文件名
+    const fileName = this.generateBackupFileName();
+    const backupFilePath = await join(backupDir, fileName);
+
+    // 创建备份文件
+    await this.createBackupFile(backupFilePath);
   }
 
   /**
@@ -123,6 +126,9 @@ export class AutoSaveBackupService {
    * 获取原始文件名（不包含扩展名）
    */
   private getOriginalFileName(): string {
+    if (!this.project.uri || this.project.isDraft) {
+      return "Draft";
+    }
     try {
       const uriStr = decodeURI(this.project.uri.toString());
       const nameWithoutExt = PathString.getFileNameFromPath(uriStr);
@@ -142,7 +148,7 @@ export class AutoSaveBackupService {
 
       // 写入备份文件
       await writeFile(backupFilePath, fileContent);
-      toast.success("自动备份成功");
+      toast.success(`备份成功：${backupFilePath}`);
     } catch (err) {
       toast.error("创建备份文件失败:" + err);
       throw err;

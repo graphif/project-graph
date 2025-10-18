@@ -368,22 +368,13 @@ settings:
   autoBackup:
     title: 开启自动备份
     description: |
-      自动备份当前文件
-      自动备份会在工程文件旁边生成一个副本
+      自动备份当前文件到备份文件夹
       如果是草稿，则会存储在指定的路径
   autoBackupInterval:
     title: 自动备份间隔（秒）
     description: |
       自动备份过于频繁可能会产生大量的备份文件
       进而占用磁盘空间
-  autoBackupDraftPath:
-    title: 草稿的自动备份文件夹路径
-    description: |
-      请填写绝对路径，草稿将统一备份到此文件夹下
-      留空或路径错误时不进行备份
-      windows系统注意使用反斜杠
-      例如：C:\Users\username\Documents\DraftBackup
-      结尾不要带路径分隔符
   autoBackupLimitCount:
     title: 自动备份最大数量
     description: |

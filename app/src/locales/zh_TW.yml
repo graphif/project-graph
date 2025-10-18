@@ -243,21 +243,12 @@ settings:
     title: 開啟自動備份
     description: |
       自動備份目前檔案
-      自動備份會在工程檔案旁邊生成一個副本
       如果是草稿，則會儲存到指定的路徑
   autoBackupInterval:
     title: 自動備份間隔（秒）
     description: |
       自動備份過於頻繁可能會產生大量的備份檔案
       進而佔用磁碟空間
-  autoBackupDraftPath:
-    title: 草稿的自動備份資料夾路徑
-    description: |
-      請填寫絕對路徑，草稿將統一備份到此資料夾下
-      留空或路徑錯誤時不進行備份
-      windows系統注意使用反斜杠「\」
-      例如：C:\Users\username\Documents\DraftBackup
-      結尾不要帶路徑分隔符
   scaleExponent:
     title: 視角縮放速度
     description: |

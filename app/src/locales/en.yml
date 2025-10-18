@@ -301,14 +301,6 @@ settings:
     description: |
       Too frequent auto-backups may generate a large number of backup files, 
       which can occupy disk space.
-  autoBackupDraftPath:
-    title: Auto-Backup Path for Drafts
-    description: |
-      Please enter an absolute path. Drafts will be backed up to this folder.
-      If the path is empty or incorrect, no backup will be performed.
-      For Windows systems, use backslashes.
-      For example: C:\Users\username\Documents\DraftBackup
-      Do not end with a path separator.
   scaleExponent:
     title: Zoom Speed
     description: |

@@ -42,6 +42,7 @@ import { useAtom } from "jotai";
 import {
   Airplay,
   AppWindow,
+  Archive,
   Axe,
   BookOpen,
   BookOpenText,
@@ -64,7 +65,6 @@ import {
   FileInput,
   FileOutput,
   FilePlus,
-  Folder,
   FolderClock,
   FolderCog,
   FolderOpen,
@@ -261,6 +261,16 @@ export function GlobalMenu() {
             <FolderOpen />
             {t("file.open")} （.prg / .json）
           </Item>
+          <Item
+            disabled={!activeProject || activeProject.isDraft}
+            onClick={async () => {
+              const path = await join(activeProject!.uri.fsPath, "..");
+              await shellOpen(path);
+            }}
+          >
+            <FolderOpen />
+            打开当前工程文件所在文件夹
+          </Item>
           <Sub>
             <SubTrigger
               onMouseEnter={() => {
@@ -336,6 +346,23 @@ export function GlobalMenu() {
           >
             <FileDown />
             {t("file.saveAs")}
+          </Item>
+          <Item
+            onClick={async () => {
+              activeProject!.autoSaveBackup.manualBackup();
+            }}
+          >
+            <Archive />
+            手动创建备份（防坏档）
+          </Item>
+          <Item
+            onClick={async () => {
+              const path = await appCacheDir();
+              await shellOpen(path);
+            }}
+          >
+            <FolderClock />
+            打开备份文件夹
           </Item>
           <Separator />
           <Sub>
@@ -817,42 +844,15 @@ export function GlobalMenu() {
             <Radiation />
             重置全部快捷键
           </Item>
-          <Sub>
-            <SubTrigger>
-              <Folder />
-              打开配置目录
-            </SubTrigger>
-            <SubContent>
-              <Item
-                onClick={async () => {
-                  const path = await join(await dataDir(), "liren.project-graph");
-                  await shellOpen(path);
-                }}
-              >
-                <FolderCog />
-                配置文件夹
-              </Item>
-              <Item
-                onClick={async () => {
-                  const path = await appCacheDir();
-                  await shellOpen(path);
-                }}
-              >
-                <FolderClock />
-                缓存文件夹
-              </Item>
-              <Item
-                disabled={!activeProject || activeProject.isDraft}
-                onClick={async () => {
-                  const path = await join(activeProject!.uri.fsPath, "..");
-                  await shellOpen(path);
-                }}
-              >
-                <FolderOpen />
-                打开当前工程文件所在文件夹
-              </Item>
-            </SubContent>
-          </Sub>
+          <Item
+            onClick={async () => {
+              const path = await join(await dataDir(), "liren.project-graph");
+              await shellOpen(path);
+            }}
+          >
+            <FolderCog />
+            打开软件配置信息文件夹
+          </Item>
         </Content>
       </Menu>
 
