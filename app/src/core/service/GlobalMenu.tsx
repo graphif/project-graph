@@ -16,6 +16,7 @@ import { Project } from "@/core/Project";
 import { activeProjectAtom, isClassroomModeAtom, projectsAtom, store } from "@/state";
 import AIWindow from "@/sub/AIWindow";
 import AttachmentsWindow from "@/sub/AttachmentsWindow";
+import LogicNodePanel from "@/sub/AutoComputeWindow";
 import ExportPngWindow from "@/sub/ExportPngWindow";
 import FindWindow from "@/sub/FindWindow";
 import GenerateNodeTree, { GenerateNodeGraph, GenerateNodeMermaid } from "@/sub/GenerateNodeWindow";
@@ -29,7 +30,7 @@ import TestWindow from "@/sub/TestWindow";
 import UserWindow from "@/sub/UserWindow";
 import { getDeviceId } from "@/utils/otherApi";
 import { PathString } from "@/utils/pathString";
-import { Color } from "@graphif/data-structures";
+import { Color, Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Decoder } from "@msgpack/msgpack";
 import { getVersion } from "@tauri-apps/api/app";
@@ -118,7 +119,6 @@ import { DragFileIntoStageEngine } from "./dataManageService/dragFileIntoStageEn
 import { FeatureFlags } from "./FeatureFlags";
 import { Settings } from "./Settings";
 import { Telemetry } from "./Telemetry";
-import LogicNodePanel from "@/sub/AutoComputeWindow";
 
 const Content = MenubarContent;
 const Item = MenubarItem;
@@ -1284,6 +1284,20 @@ export function GlobalMenu() {
                 <Item onClick={() => LoginWindow.open()}>login</Item>
                 <Item onClick={() => UserWindow.open()}>user</Item>
                 <Item onClick={() => OnboardingWindow.open()}>onboarding</Item>
+                <Item
+                  onClick={() => {
+                    // 在原点100范围内随机创建100个节点
+                    for (let i = 0; i < 100; i++) {
+                      const x = Math.random() * 200 - 100;
+                      const y = Math.random() * 200 - 100;
+                      const node = new TextNode(activeProject!, { text: `节点${i + 1}` });
+                      node.moveTo(new Vector(x, y));
+                      activeProject!.stage.push(node);
+                    }
+                  }}
+                >
+                  创建100个节点
+                </Item>
               </SubContent>
             </Sub>
           </Content>
