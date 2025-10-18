@@ -109,3 +109,54 @@ GenerateNodeGraph.open = () => {
     rect: new Rectangle(new Vector(100, 100), new Vector(600, 600)),
   });
 };
+
+/**
+ * 根据mermaid文本生成框嵌套网状结构
+ * @returns
+ */
+export function GenerateNodeMermaid() {
+  const [text, setText] = useState("");
+  const { t } = useTranslation("globalMenu");
+
+  const [activeProject] = useAtom(activeProjectAtom);
+
+  return (
+    <div>
+      <div>
+        <h3 className="mb-2 text-xl font-semibold">{t("actions.generate.generateNodeMermaidByText")}</h3>
+        <p className="text-muted-foreground mb-4">{t("actions.generate.generateNodeMermaidByTextDescription")}</p>
+        <p className="text-xs opacity-50">示例格式：</p>
+        <pre className="bg-muted mb-4 rounded p-2 text-xs opacity-50">
+          graph TD; A[Section A] --{">"} B[Section B]; A --{">"} C[普通节点]; B --{">"} D[另一个节点]; E[Section E] --
+          {">"} F[F];
+        </pre>
+        <p className="text-xs opacity-50">
+          注意：节点名称中包含 Section 、 章节 、组 或 容器 关键词的将被创建为框（Section）。
+        </p>
+      </div>
+      <Textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder={t("actions.generate.generateNodeMermaidByTextPlaceholder")}
+        className="min-h-[200px]"
+      />
+      <div className="flex justify-end gap-2">
+        <Button
+          onClick={() => {
+            activeProject?.stageManager.generateNodeMermaidByText(text);
+          }}
+        >
+          {t("actions.confirm")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+GenerateNodeMermaid.open = () => {
+  SubWindow.create({
+    title: "生成框嵌套网状结构",
+    children: <GenerateNodeMermaid />,
+    rect: new Rectangle(new Vector(100, 100), new Vector(600, 600)),
+  });
+};

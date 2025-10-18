@@ -396,4 +396,216 @@ export class NodeAdder {
 
     dfsMarkdownNode(markdownJson[0], 0);
   }
+
+  /**
+   * 根据mermaid文本生成框嵌套网状结构
+   * 支持graph TD格式的mermaid文本
+   * 例如:
+   * graph TD;
+   *   A[Section A] --> B[Section B];
+   *   A --> C[C];
+   *   B --> D[D];
+   */
+  public addNodeMermaidByText(text: string, diffLocation: Vector = Vector.getZero()) {
+    // 验证文本格式
+    text = text.trim();
+    if (!text.startsWith("graph TD;") || !text.endsWith(";")) {
+      throw new Error("mermaid文本必须以 'graph TD;' 开头并以 ';' 结尾");
+    }
+
+    // 提取中间部分
+    const content = text.slice("graph TD;".length, -1).trim();
+    const lines = content.split(";");
+
+    // 存储节点和section的映射
+    const entityMap = new Map<string, ConnectableEntity | Section>();
+    // 存储连接关系
+    const connections: { source: string; target: string; text?: string }[] = [];
+
+    // 解析每一行
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      if (trimmedLine === "") continue;
+
+      // 处理连接关系
+      if (trimmedLine.includes("-->")) {
+        const parts = trimmedLine.split("-->");
+        if (parts.length !== 2) {
+          throw new Error(`解析时出现错误: "${line}"，连接格式不正确`);
+        }
+        const source = parts[0].trim();
+        const target = parts[1].trim();
+        connections.push({ source, target });
+      } else if (trimmedLine.includes("-")) {
+        // 处理带文字的连接
+        const parts = trimmedLine.split("->");
+        if (parts.length !== 2) {
+          throw new Error(`解析时出现错误: "${line}"，连接格式不正确`);
+        }
+        const leftContent = parts[0].trim();
+        const target = parts[1].trim();
+
+        const leftParts = leftContent.split("-");
+        if (leftParts.length !== 2) {
+          throw new Error(`解析时出现错误: "${line}"，带文字的连接格式不正确`);
+        }
+        const source = leftParts[0].trim();
+        const edgeText = leftParts[1].trim();
+        connections.push({ source, target, text: edgeText });
+      } else {
+        // 单独的节点定义
+        this.createEntityFromMermaidNode(trimmedLine, entityMap, diffLocation);
+      }
+    }
+
+    // 为所有在连接中提到但尚未创建的节点创建实体
+    for (const connection of connections) {
+      if (!entityMap.has(connection.source)) {
+        this.createEntityFromMermaidNode(connection.source, entityMap, diffLocation);
+      }
+      if (!entityMap.has(connection.target)) {
+        this.createEntityFromMermaidNode(connection.target, entityMap, diffLocation);
+      }
+    }
+
+    // 建立连接关系
+    for (const connection of connections) {
+      const sourceEntity = entityMap.get(connection.source);
+      const targetEntity = entityMap.get(connection.target);
+
+      if (
+        sourceEntity &&
+        targetEntity &&
+        sourceEntity instanceof ConnectableEntity &&
+        targetEntity instanceof ConnectableEntity
+      ) {
+        this.project.stageManager.connectEntity(sourceEntity, targetEntity);
+
+        // 如果有连线文字
+        if (connection.text) {
+          const edge = this.project.graphMethods.getEdgeFromTwoEntity(sourceEntity, targetEntity);
+          if (edge) {
+            edge.rename(connection.text);
+          }
+        }
+      }
+    }
+
+    // 设置嵌套关系
+    this.setupSectionNesting(entityMap);
+
+    // 调整位置和大小
+    this.adjustEntityLayout(entityMap, diffLocation);
+  }
+
+  /**
+   * 从mermaid节点格式创建实体
+   * 例如: A[Section A] -> 创建名为A的Section
+   *       B[B] -> 创建名为B的TextNode
+   */
+  private createEntityFromMermaidNode(
+    nodeStr: string,
+    entityMap: Map<string, ConnectableEntity | Section>,
+    diffLocation: Vector,
+  ) {
+    // 匹配 [Name] 格式
+    const match = nodeStr.match(/^([^\\[]+)\[(.*)\]$/);
+    if (match) {
+      const id = match[1].trim();
+      const text = match[2].trim();
+
+      // 判断是否为Section (名称中包含Section或章节等关键词)
+      let entity: ConnectableEntity | Section;
+      if (text.includes("Section") || text.includes("章节") || text.includes("组") || text.includes("容器")) {
+        // 创建Section
+        entity = new Section(this.project, {
+          text,
+          collisionBox: new CollisionBox([
+            new Rectangle(diffLocation.add(new Vector(Math.random() * 200, Math.random() * 200)), new Vector(200, 150)),
+          ]),
+        });
+      } else {
+        // 创建普通TextNode
+        entity = new TextNode(this.project, {
+          text,
+          collisionBox: new CollisionBox([
+            new Rectangle(diffLocation.add(new Vector(Math.random() * 200, Math.random() * 200)), Vector.same(100)),
+          ]),
+        });
+      }
+
+      this.project.stageManager.add(entity);
+      entityMap.set(id, entity);
+    } else {
+      // 如果没有[Name]格式，直接使用节点名
+      const id = nodeStr.trim();
+      if (!entityMap.has(id)) {
+        const node = new TextNode(this.project, {
+          text: id,
+          collisionBox: new CollisionBox([
+            new Rectangle(diffLocation.add(new Vector(Math.random() * 200, Math.random() * 200)), Vector.same(100)),
+          ]),
+        });
+        this.project.stageManager.add(node);
+        entityMap.set(id, node);
+      }
+    }
+  }
+
+  /**
+   * 设置Section的嵌套关系
+   * 基于连接关系推断嵌套
+   */
+  private setupSectionNesting(entityMap: Map<string, ConnectableEntity | Section>) {
+    // 找出所有Section
+    // const sections = Array.from(entityMap.values()).filter((e) => e instanceof Section) as Section[];
+    const nodes = Array.from(entityMap.values()).filter(
+      (e) => e instanceof ConnectableEntity && !(e instanceof Section),
+    ) as ConnectableEntity[];
+
+    // 对于每个节点，检查它是否应该被包含在某个Section中
+    for (const node of nodes) {
+      // 找出连接到这个节点的所有实体
+      const connectedEntities = this.project.graphMethods
+        .nodeParentArray(node)
+        .concat(this.project.graphMethods.nodeChildrenArray(node));
+
+      // 检查这些实体中是否有Section
+      for (const connectedEntity of connectedEntities) {
+        if (connectedEntity instanceof Section) {
+          // 将节点添加到Section中
+          connectedEntity.children.push(node);
+          connectedEntity.adjustLocationAndSize();
+          break; // 只添加到第一个匹配的Section中
+        }
+      }
+    }
+  }
+
+  /**
+   * 调整实体的布局
+   */
+  private adjustEntityLayout(entityMap: Map<string, ConnectableEntity | Section>, diffLocation: Vector) {
+    const entities = Array.from(entityMap.values());
+
+    // 简单的网格布局
+    const rows = Math.ceil(Math.sqrt(entities.length));
+    const cols = Math.ceil(entities.length / rows);
+    const spacing = 250;
+
+    let index = 0;
+    for (const entity of entities) {
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      const newLocation = diffLocation.add(new Vector(col * spacing, row * spacing));
+      entity.moveTo(newLocation);
+
+      // 如果是Section，调整其大小以包含所有子元素
+      if (entity instanceof Section) {
+        entity.adjustLocationAndSize();
+      }
+
+      index++;
+    }
+  }
 }

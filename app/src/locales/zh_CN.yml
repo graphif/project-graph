@@ -64,6 +64,14 @@ globalMenu:
         A --> B
         B --> C
         C --> D
+      generateNodeMermaidByText: 根据mermaid文本生成框嵌套网状结构
+      generateNodeMermaidByTextDescription: 支持graph TD格式的mermaid文本，可自动识别Section并创建嵌套结构
+      generateNodeMermaidByTextPlaceholder: |
+        graph TD;
+          A[Section A] --> B[Section B];
+          A --> C[普通节点];
+          B --> D[另一个节点];
+        ;
   settings:
     title: 设置
     appearance: 个性化

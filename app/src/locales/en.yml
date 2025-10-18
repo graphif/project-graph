@@ -695,6 +695,14 @@ globalMenu:
       generateNodeTreeByTextDescription: Enter tree structure text, each line represents a node, indentation represents hierarchical relationships
       generateNodeTreeByTextPlaceholder: Enter tree structure text...
       indention: Indentation Characters
+      generateNodeMermaidByText: Generate Section Nested Graph from Mermaid
+      generateNodeMermaidByTextDescription: Support graph TD format mermaid text, can automatically identify sections and create nested structures
+      generateNodeMermaidByTextPlaceholder: |
+        graph TD;
+          A[Section A] --> B[Section B];
+          A --> C[Regular Node];
+          B --> D[Another Node];
+        ;
   settings:
     title: Settings
     appearance: Personalization

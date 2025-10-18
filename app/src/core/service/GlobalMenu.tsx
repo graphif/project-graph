@@ -18,7 +18,7 @@ import AIWindow from "@/sub/AIWindow";
 import AttachmentsWindow from "@/sub/AttachmentsWindow";
 import ExportPngWindow from "@/sub/ExportPngWindow";
 import FindWindow from "@/sub/FindWindow";
-import GenerateNodeTree, { GenerateNodeGraph } from "@/sub/GenerateNodeWindow";
+import GenerateNodeTree, { GenerateNodeGraph, GenerateNodeMermaid } from "@/sub/GenerateNodeWindow";
 import LoginWindow from "@/sub/LoginWindow";
 import NodeDetailsWindow from "@/sub/NodeDetailsWindow";
 import OnboardingWindow from "@/sub/OnboardingWindow";
@@ -655,6 +655,16 @@ export function GlobalMenu() {
               >
                 <GitCompareArrows />
                 {t("actions.generate.generateNodeGraphByText")}
+              </Item>
+              <Item
+                onClick={async () => {
+                  if (toast.warning("目前还在开发中，此功能还不完善") == 1111) {
+                    GenerateNodeMermaid.open();
+                  }
+                }}
+              >
+                <GitCompareArrows />
+                {t("actions.generate.generateNodeMermaidByText")}
               </Item>
               <Item
                 onClick={() => {

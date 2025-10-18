@@ -582,6 +582,15 @@ export class StageManager {
     }
   }
 
+  generateNodeMermaidByText(text: string, location = this.project.camera.location) {
+    try {
+      this.project.nodeAdder.addNodeMermaidByText(text, location);
+      this.project.historyManager.recordStep();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  }
+
   generateNodeByMarkdown(text: string, location = this.project.camera.location) {
     this.project.nodeAdder.addNodeByMarkdown(text, location);
     this.project.historyManager.recordStep();
