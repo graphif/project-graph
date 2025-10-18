@@ -3,30 +3,115 @@ import { Popover } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Settings } from "@/core/service/Settings";
 import { SoundService } from "@/core/service/feedbackService/SoundService";
+import { AssetsRepository } from "@/core/service/AssetsRepository";
 import { open } from "@tauri-apps/plugin-shell";
-import { ExternalLink, Volume2, VolumeX } from "lucide-react";
+import { ExternalLink, Volume2, VolumeX, Download } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { tempDir, join } from "@tauri-apps/api/path";
+import { writeFile } from "@tauri-apps/plugin-fs";
 
 // 音效配置列表
 const SOUND_CONFIGS = [
-  { settingKey: "cuttingLineStartSoundFile", name: "开始切割", testFunction: SoundService.play.cuttingLineStart },
-  { settingKey: "cuttingLineReleaseSoundFile", name: "释放切割", testFunction: SoundService.play.cuttingLineRelease },
-  { settingKey: "connectLineStartSoundFile", name: "开始连接", testFunction: SoundService.play.connectLineStart },
-  { settingKey: "connectFindTargetSoundFile", name: "找到连接目标", testFunction: SoundService.play.connectFindTarget },
-  { settingKey: "alignAndAttachSoundFile", name: "对齐吸附", testFunction: SoundService.play.alignAndAttach },
-  { settingKey: "uiButtonEnterSoundFile", name: "按钮悬停", testFunction: SoundService.play.mouseEnterButton },
-  { settingKey: "uiButtonClickSoundFile", name: "按钮点击", testFunction: SoundService.play.mouseClickButton },
+  {
+    settingKey: "cuttingLineStartSoundFile",
+    name: "开始切割",
+    testFunction: SoundService.play.cuttingLineStart,
+    fileName: "cuttingLineStart.mp3",
+  },
+  {
+    settingKey: "cuttingLineReleaseSoundFile",
+    name: "释放切割",
+    testFunction: SoundService.play.cuttingLineRelease,
+    fileName: "cuttingLineRelease.mp3",
+  },
+  {
+    settingKey: "connectLineStartSoundFile",
+    name: "开始连接",
+    testFunction: SoundService.play.connectLineStart,
+    fileName: "connectLineStart.mp3",
+  },
+  {
+    settingKey: "connectFindTargetSoundFile",
+    name: "找到连接目标",
+    testFunction: SoundService.play.connectFindTarget,
+    fileName: "connectFindTarget.mp3",
+  },
+  {
+    settingKey: "alignAndAttachSoundFile",
+    name: "对齐吸附",
+    testFunction: SoundService.play.alignAndAttach,
+    fileName: "alignAndAttach.mp3",
+  },
+  {
+    settingKey: "uiButtonEnterSoundFile",
+    name: "按钮悬停",
+    testFunction: SoundService.play.mouseEnterButton,
+    fileName: "uiButtonEnter.mp3",
+  },
+  {
+    settingKey: "uiButtonClickSoundFile",
+    name: "按钮点击",
+    testFunction: SoundService.play.mouseClickButton,
+    fileName: "uiButtonClick.mp3",
+  },
   {
     settingKey: "uiSwitchButtonOnSoundFile",
     name: "开关开启",
     testFunction: SoundService.play.mouseClickSwitchButtonOn,
+    fileName: "uiSwitchButtonOn.mp3",
   },
   {
     settingKey: "uiSwitchButtonOffSoundFile",
     name: "开关关闭",
     testFunction: SoundService.play.mouseClickSwitchButtonOff,
+    fileName: "uiSwitchButtonOff.mp3",
   },
 ];
+
+// 一键下载并设置所有音效
+const downloadAndSetAllSounds = async () => {
+  try {
+    toast.promise(
+      async () => {
+        // 创建临时目录用于存储音效文件
+        const dir = await tempDir();
+
+        // 逐个下载音效文件并设置
+        for (const config of SOUND_CONFIGS) {
+          try {
+            // 从GitHub仓库下载音效文件
+            const u8a = await AssetsRepository.fetchFile(`sfx/${config.fileName}`);
+            const path = await join(dir, config.fileName);
+            await writeFile(path, u8a);
+
+            // 设置音效文件路径
+            // @ts-expect-error settingKey is keyof Settings
+            Settings[config.settingKey] = path;
+          } catch (error) {
+            console.error(`下载音效文件 ${config.fileName} 失败:`, error);
+            throw new Error(`下载音效文件 ${config.fileName} 失败`);
+          }
+        }
+
+        // 播放一个音效来验证设置成功
+        if (Settings.soundEnabled && SOUND_CONFIGS.length > 0) {
+          SOUND_CONFIGS[0].testFunction();
+        }
+
+        return true;
+      },
+      {
+        loading: "正在下载并设置音效文件...",
+        success: "所有音效文件已成功下载并设置！",
+        error: (err) => `设置音效失败: ${err.message}`,
+      },
+    );
+  } catch (error) {
+    console.error("一键设置音效失败:", error);
+    toast.error("一键设置音效失败，请稍后重试");
+  }
+};
 
 export default function SoundEffectsPage() {
   const { t } = useTranslation("sounds");
@@ -74,6 +159,14 @@ export default function SoundEffectsPage() {
 
       {soundEnabled && (
         <div className="space-y-2">
+          {/* 一键设置所有音效按钮 */}
+          <button
+            className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-primary/50 flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium shadow transition-colors focus-visible:outline-none focus-visible:ring-2"
+            onClick={downloadAndSetAllSounds}
+          >
+            <Download className="h-4 w-4" />
+            <span>一键下载并设置所有官方音效</span>
+          </button>
           {SOUND_CONFIGS.map(({ settingKey, name, testFunction }) => {
             const [filePath] = Settings.use(settingKey as any);
             return (
