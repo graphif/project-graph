@@ -8,7 +8,7 @@ import { open } from "@tauri-apps/plugin-shell";
 import { ExternalLink, Volume2, VolumeX, Download } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { tempDir, join } from "@tauri-apps/api/path";
+import { join, appLocalDataDir } from "@tauri-apps/api/path";
 import { writeFile } from "@tauri-apps/plugin-fs";
 import { SettingField } from "@/components/ui/field";
 
@@ -76,7 +76,7 @@ const downloadAndSetAllSounds = async () => {
     toast.promise(
       async () => {
         // 创建临时目录用于存储音效文件
-        const dir = await tempDir();
+        const dir = await appLocalDataDir();
 
         // 逐个下载音效文件并设置
         for (const config of SOUND_CONFIGS) {
