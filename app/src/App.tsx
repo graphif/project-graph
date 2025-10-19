@@ -12,7 +12,9 @@ import { Themes } from "@/core/service/Themes";
 import {
   activeProjectAtom,
   isClassroomModeAtom,
+  isClickThroughEnabledAtom,
   isWindowAlwaysOnTopAtom,
+  isWindowMaxsizedAtom,
   projectsAtom,
   windowIsAlwaysTopBeforeClickThroughAtom,
   windowOpacityBeforeClickThroughAtom,
@@ -22,17 +24,18 @@ import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
 import { arch, platform, version } from "@tauri-apps/plugin-os";
 import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
 import { useAtom } from "jotai";
-import { CloudUpload, Copy, Dot, Minus, Pin, PinOff, Square, X } from "lucide-react";
+import { ChevronsLeftRight, CloudUpload, Copy, Dot, Minus, Pin, PinOff, Square, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { cn } from "./utils/cn";
-import { isWindows } from "./utils/platform";
+import { isMac, isWindows } from "./utils/platform";
 import { register } from "@tauri-apps/plugin-global-shortcut";
 
 export default function App() {
-  const [maximized, _setMaximized] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_, _setMaximized] = useAtom(isWindowMaxsizedAtom);
 
   const [projects, setProjects] = useAtom(projectsAtom);
   const [activeProject, setActiveProject] = useAtom(activeProjectAtom);
@@ -43,7 +46,8 @@ export default function App() {
   const [dropState, setDropState] = useState<"none" | "open" | "append">("none");
   const [ignoreMouseEvents, setIgnoreMouseEvents] = useState(false);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
-  const [isClickThroughEnabled, setIsClickThroughEnabled] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [__, setIsClickThroughEnabled] = useAtom(isClickThroughEnabledAtom);
   const [windowOpacityBeforeClickThrough, setWindowOpacityBeforeClickThrough] = useAtom(
     windowOpacityBeforeClickThroughAtom,
   );
@@ -431,49 +435,12 @@ export default function App() {
           ignoreMouseEvents && "pointer-events-none",
         )}
       >
+        {isMac && <WindowButtons />}
         {/* <div className=" flex h-8 shrink-0 items-center overflow-hidden rounded-xl border"></div> */}
         <GlobalMenu />
         {isWide && <ProjectTabs />}
         <div className="h-full flex-1 cursor-grab active:cursor-grabbing" data-tauri-drag-region></div>
-        <div className="bg-background shadow-xs flex h-full items-center rounded-md border">
-          {isClickThroughEnabled && <span className="text-destructive!">Alt + 2关闭窗口穿透点击</span>}
-          {/* 钉住 */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={async (e) => {
-              e.stopPropagation();
-              const tauriWindow = getCurrentWindow();
-              if (isWindowAlwaysOnTop) {
-                setIsWindowAlwaysOnTop(false);
-                await tauriWindow.setAlwaysOnTop(false);
-              } else {
-                setIsWindowAlwaysOnTop(true);
-                await tauriWindow.setAlwaysOnTop(true);
-              }
-            }}
-          >
-            {isWindowAlwaysOnTop ? <Pin strokeWidth={3} /> : <PinOff strokeWidth={3} className="opacity-50" />}
-          </Button>
-          {/* 最小化 */}
-          <Button variant="ghost" size="icon" onClick={() => getCurrentWindow().minimize()}>
-            <Minus strokeWidth={3} />
-          </Button>
-          {/* 最大化/还原 */}
-          {maximized ? (
-            <Button variant="ghost" size="icon" className="text-xs" onClick={() => getCurrentWindow().unmaximize()}>
-              <Copy className="size-3" strokeWidth={3} />
-            </Button>
-          ) : (
-            <Button variant="ghost" size="icon" onClick={() => getCurrentWindow().maximize()}>
-              <Square className="size-3" strokeWidth={4} />
-            </Button>
-          )}
-          {/* 关闭 */}
-          <Button variant="ghost" size="icon" onClick={() => getCurrentWindow().close()}>
-            <X strokeWidth={3} />
-          </Button>
-        </div>
+        {!isMac && <WindowButtons />}
       </div>
 
       {!isWide && <ProjectTabs />}
@@ -512,6 +479,98 @@ export default function App() {
           className="absolute right-0 top-0 z-50 h-1 w-1 cursor-pointer rounded-bl-xl bg-red-600 transition-all hover:h-10 hover:w-10 hover:bg-yellow-500"
           onClick={() => getCurrentWindow().close()}
         ></div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * 窗口右上角的最小化，最大化，关闭等按钮
+ */
+function WindowButtons() {
+  const [maximized] = useAtom(isWindowMaxsizedAtom);
+  const [isClickThroughEnabled] = useAtom(isClickThroughEnabledAtom);
+  const [isWindowAlwaysOnTop, setIsWindowAlwaysOnTop] = useAtom(isWindowAlwaysOnTopAtom);
+  const checkoutWindowsAlwaysTop = async () => {
+    const tauriWindow = getCurrentWindow();
+    if (isWindowAlwaysOnTop) {
+      setIsWindowAlwaysOnTop(false);
+      await tauriWindow.setAlwaysOnTop(false);
+    } else {
+      setIsWindowAlwaysOnTop(true);
+      await tauriWindow.setAlwaysOnTop(true);
+    }
+  };
+
+  return (
+    <div className="bg-background shadow-xs flex h-full items-center rounded-md border">
+      {isClickThroughEnabled && <span className="text-destructive!">Alt + 2关闭窗口穿透点击</span>}
+      {isMac ? (
+        <span className="flex px-2">
+          <div
+            className="m-1 flex size-3 cursor-pointer items-center justify-center rounded-full bg-red-400 text-transparent hover:scale-110 hover:text-red-800"
+            onClick={() => getCurrentWindow().close()}
+          >
+            <X strokeWidth={3} size={10} />
+          </div>
+          <div
+            className="m-1 flex size-3 cursor-pointer items-center justify-center rounded-full bg-yellow-400 text-transparent hover:scale-110 hover:text-yellow-800"
+            onClick={() => getCurrentWindow().minimize()}
+          >
+            <Minus strokeWidth={3} size={10} />
+          </div>
+          <div
+            className="m-1 flex size-3 cursor-pointer items-center justify-center rounded-full bg-green-400 text-transparent hover:scale-110 hover:text-green-800"
+            onClick={() => {
+              getCurrentWindow()
+                .isFullscreen()
+                .then((res) => getCurrentWindow().setFullscreen(!res));
+            }}
+          >
+            <ChevronsLeftRight strokeWidth={3} size={10} className="rotate-45" />
+          </div>
+          <div
+            className="m-1 flex size-3 cursor-pointer items-center justify-center rounded-full bg-blue-400 text-blue-800 hover:scale-110"
+            onClick={async (e) => {
+              e.stopPropagation();
+              checkoutWindowsAlwaysTop();
+            }}
+          >
+            {isWindowAlwaysOnTop ? <Pin size={10} /> : <PinOff size={10} />}
+          </div>
+        </span>
+      ) : (
+        <>
+          {/* 钉住 */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={async (e) => {
+              e.stopPropagation();
+              checkoutWindowsAlwaysTop();
+            }}
+          >
+            {isWindowAlwaysOnTop ? <Pin strokeWidth={3} /> : <PinOff strokeWidth={3} className="opacity-50" />}
+          </Button>
+          {/* 最小化 */}
+          <Button variant="ghost" size="icon" onClick={() => getCurrentWindow().minimize()}>
+            <Minus strokeWidth={3} />
+          </Button>
+          {/* 最大化/还原 */}
+          {maximized ? (
+            <Button variant="ghost" size="icon" className="text-xs" onClick={() => getCurrentWindow().unmaximize()}>
+              <Copy className="size-3" strokeWidth={3} />
+            </Button>
+          ) : (
+            <Button variant="ghost" size="icon" onClick={() => getCurrentWindow().maximize()}>
+              <Square className="size-3" strokeWidth={4} />
+            </Button>
+          )}
+          {/* 关闭 */}
+          <Button variant="ghost" size="icon" onClick={() => getCurrentWindow().close()}>
+            <X strokeWidth={3} />
+          </Button>
+        </>
       )}
     </div>
   );
