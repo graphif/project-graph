@@ -16,8 +16,6 @@ import {
   isWindowAlwaysOnTopAtom,
   isWindowMaxsizedAtom,
   projectsAtom,
-  windowIsAlwaysTopBeforeClickThroughAtom,
-  windowOpacityBeforeClickThroughAtom,
 } from "@/state";
 import { getVersion } from "@tauri-apps/api/app";
 import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
@@ -39,7 +37,8 @@ export default function App() {
 
   const [projects, setProjects] = useAtom(projectsAtom);
   const [activeProject, setActiveProject] = useAtom(activeProjectAtom);
-  const [isWindowAlwaysOnTop, setIsWindowAlwaysOnTop] = useAtom(isWindowAlwaysOnTopAtom);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [___, setIsWindowAlwaysOnTop] = useAtom(isWindowAlwaysOnTopAtom);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const [isWide, setIsWide] = useState(false);
   const [telemetryEventSent, setTelemetryEventSent] = useState(false);
@@ -48,12 +47,6 @@ export default function App() {
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [__, setIsClickThroughEnabled] = useAtom(isClickThroughEnabledAtom);
-  const [windowOpacityBeforeClickThrough, setWindowOpacityBeforeClickThrough] = useAtom(
-    windowOpacityBeforeClickThroughAtom,
-  );
-  const [windowIsAlwaysTopBeforeClickThrough, setWindowIsAlwaysTopBeforeClickThrough] = useAtom(
-    windowIsAlwaysTopBeforeClickThroughAtom,
-  );
 
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef(0); // 用于保存滚动位置的 ref，防止切换标签页时滚动位置丢失
@@ -143,22 +136,33 @@ export default function App() {
           }
           if (!prev) {
             // 开启了穿透点击
-            // 先保存状态
-            setWindowIsAlwaysTopBeforeClickThrough(isWindowAlwaysOnTop);
-            setWindowOpacityBeforeClickThrough(Settings.windowBackgroundAlpha);
-
-            Settings.windowBackgroundAlpha = 0.2;
+            Settings.windowBackgroundAlpha = 0.1;
             setIsWindowAlwaysOnTop(true);
             getCurrentWindow().setAlwaysOnTop(true);
           } else {
             // 关闭了穿透点击
-            Settings.windowBackgroundAlpha = windowOpacityBeforeClickThrough;
-            setIsWindowAlwaysOnTop(windowIsAlwaysTopBeforeClickThrough);
-            getCurrentWindow().setAlwaysOnTop(windowIsAlwaysTopBeforeClickThrough);
+            Settings.windowBackgroundAlpha = 0.6;
+            setIsWindowAlwaysOnTop(false);
+            getCurrentWindow().setAlwaysOnTop(false);
           }
           getCurrentWindow().setIgnoreCursorEvents(!prev);
           return !prev;
         });
+      }
+    });
+
+    register("Alt+1", async (event) => {
+      if (event.state === "Pressed") {
+        if (!Settings.allowGlobalHotKeys) {
+          toast.warning("已禁用全局快捷键");
+          return;
+        }
+        console.log("开始呼出窗口");
+        // 呼出软件窗口
+        const window = getCurrentWindow();
+        await window.show();
+        await window.setSkipTaskbar(false);
+        await window.setFocus();
       }
     });
 
