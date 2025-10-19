@@ -13,3 +13,10 @@ export const isClassroomModeAtom = atom(false);
 export const nextProjectIdAtom = atom(1);
 export const contextMenuTooltipWordsAtom = atom<string>("");
 export const isWindowAlwaysOnTopAtom = atom<boolean>(false);
+
+// 窗口穿透点击相关
+
+// 开启窗口穿透点击之前的窗口不透明度
+export const windowOpacityBeforeClickThroughAtom = atom<number>(1);
+// 开启窗口穿透点击之前，窗口是否置于顶层
+export const windowIsAlwaysTopBeforeClickThroughAtom = atom<boolean>(false);

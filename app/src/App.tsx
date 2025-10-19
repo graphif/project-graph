@@ -9,7 +9,14 @@ import { GlobalMenu, onOpenFile } from "@/core/service/GlobalMenu";
 import { Settings } from "@/core/service/Settings";
 import { Telemetry } from "@/core/service/Telemetry";
 import { Themes } from "@/core/service/Themes";
-import { activeProjectAtom, isClassroomModeAtom, isWindowAlwaysOnTopAtom, projectsAtom } from "@/state";
+import {
+  activeProjectAtom,
+  isClassroomModeAtom,
+  isWindowAlwaysOnTopAtom,
+  projectsAtom,
+  windowIsAlwaysTopBeforeClickThroughAtom,
+  windowOpacityBeforeClickThroughAtom,
+} from "@/state";
 import { getVersion } from "@tauri-apps/api/app";
 import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
 import { arch, platform, version } from "@tauri-apps/plugin-os";
@@ -37,6 +44,12 @@ export default function App() {
   const [ignoreMouseEvents, setIgnoreMouseEvents] = useState(false);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
   const [isClickThroughEnabled, setIsClickThroughEnabled] = useState(false);
+  const [windowOpacityBeforeClickThrough, setWindowOpacityBeforeClickThrough] = useAtom(
+    windowOpacityBeforeClickThroughAtom,
+  );
+  const [windowIsAlwaysTopBeforeClickThrough, setWindowIsAlwaysTopBeforeClickThrough] = useAtom(
+    windowIsAlwaysTopBeforeClickThroughAtom,
+  );
 
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef(0); // 用于保存滚动位置的 ref，防止切换标签页时滚动位置丢失
@@ -126,16 +139,18 @@ export default function App() {
           }
           if (!prev) {
             // 开启了穿透点击
+            // 先保存状态
+            setWindowIsAlwaysTopBeforeClickThrough(isWindowAlwaysOnTop);
+            setWindowOpacityBeforeClickThrough(Settings.windowBackgroundAlpha);
+
             Settings.windowBackgroundAlpha = 0.2;
             setIsWindowAlwaysOnTop(true);
             getCurrentWindow().setAlwaysOnTop(true);
-            toast.warning("您开启了穿透点击，已自动为您打开窗口透明与始终至于顶层");
           } else {
             // 关闭了穿透点击
-            Settings.windowBackgroundAlpha = 1;
-            setIsWindowAlwaysOnTop(false);
-            getCurrentWindow().setAlwaysOnTop(false);
-            toast.info("您关闭了穿透点击");
+            Settings.windowBackgroundAlpha = windowOpacityBeforeClickThrough;
+            setIsWindowAlwaysOnTop(windowIsAlwaysTopBeforeClickThrough);
+            getCurrentWindow().setAlwaysOnTop(windowIsAlwaysTopBeforeClickThrough);
           }
           getCurrentWindow().setIgnoreCursorEvents(!prev);
           return !prev;
