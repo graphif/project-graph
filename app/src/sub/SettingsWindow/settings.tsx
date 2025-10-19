@@ -16,7 +16,6 @@ import {
 import { settingsSchema } from "@/core/service/Settings";
 import Fuse from "fuse.js";
 import {
-  AppWindowMac,
   ArrowUpRight,
   Bot,
   Box,
@@ -25,7 +24,6 @@ import {
   Camera,
   ChevronRight,
   Clock,
-  Cpu,
   Eye,
   Folder,
   Gamepad,
@@ -36,7 +34,6 @@ import {
   PictureInPicture,
   ReceiptText,
   Save,
-  Search,
   Sparkle,
   SquareDashedMousePointer,
   Text,
@@ -45,14 +42,13 @@ import {
   Workflow,
   Wrench,
   Zap,
-  ZoomIn,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export default function SettingsTab() {
   const { t } = useTranslation("settings");
-  const [currentCategory, setCurrentCategory] = useState("search");
+  const [currentCategory, setCurrentCategory] = useState("quick");
   const [currentGroup, setCurrentGroup] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchResult, setSearchResult] = useState<string[]>([]);
@@ -76,6 +72,9 @@ export default function SettingsTab() {
     setSearchResult(result);
   }, [searchKeyword, fuse]);
 
+  const isFlatArray = Array.isArray(categories[currentCategory as keyof typeof categories]);
+  const isInSearch = searchKeyword.length > 0;
+
   return (
     <div className="flex h-full">
       <Sidebar className="h-full overflow-auto">
@@ -83,21 +82,31 @@ export default function SettingsTab() {
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={currentCategory === "search"}
-                    onClick={() => setCurrentCategory("search")}
-                  >
-                    <div>
-                      <Search />
-                      <span>搜索</span>
-                    </div>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
                 {Object.entries(categories).map(([category, value]) => {
                   // @ts-expect-error fuck ts
                   const CategoryIcon = categoryIcons[category].icon;
+                  const isFlat = Array.isArray(value);
+
+                  if (isFlat) {
+                    return (
+                      <SidebarMenuItem key={category}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={category === currentCategory && !isInSearch}
+                          onClick={() => {
+                            setCurrentCategory(category);
+                            setCurrentGroup("");
+                          }}
+                        >
+                          <a href="#">
+                            <CategoryIcon />
+                            <span>{t(`categories.${category}.title`)}</span>
+                          </a>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  }
+
                   return (
                     <Collapsible key={category} defaultOpen className="group/collapsible">
                       <SidebarMenuItem>
@@ -143,38 +152,28 @@ export default function SettingsTab() {
         </SidebarContent>
       </Sidebar>
       <div className="mx-auto flex w-2/3 flex-col overflow-auto">
-        {currentCategory === "search" ? (
-          <>
+        {currentCategory === "quick" && (
+          <div className="bg-card sticky top-0 z-10 border-b p-4">
             <Input
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="搜索..."
+              placeholder="搜索所有设置..."
               autoFocus
             />
-            {searchResult.length === 0 && (
-              <>
-                <span className="h-4"></span>
-                <span>直接输入: 模糊匹配</span>
-                <span>空格分割: “与”</span>
-                <span>竖线分割: “或”</span>
-                <span>=: 精确匹配</span>
-                <span>&apos;: 包含</span>
-                <span>!: 反向匹配</span>
-                <span>^: 匹配开头</span>
-                <span>!^: 反向匹配开头</span>
-                <span>$: 匹配结尾</span>
-                <span>!$: 反向匹配结尾</span>
-              </>
-            )}
-            {searchResult.map((it) => (
-              <SettingField key={it} settingKey={it as any} />
-            ))}
-          </>
+          </div>
+        )}
+        {isInSearch ? (
+          searchResult.map((it) => <SettingField key={it} settingKey={it as any} />)
         ) : (
-          currentCategory &&
-          currentGroup &&
-          // @ts-expect-error fuck ts
-          categories[currentCategory][currentGroup]?.map((key) => <SettingField key={key} settingKey={key} />)
+          <>
+            {isFlatArray
+              ? // @ts-expect-error fuck ts
+                (categories[currentCategory] as string[]).map((key) => <SettingField key={key} settingKey={key} />)
+              : currentCategory &&
+                currentGroup &&
+                // @ts-expect-error fuck ts
+                categories[currentCategory][currentGroup]?.map((key) => <SettingField key={key} settingKey={key} />)}
+          </>
         )}
       </div>
     </div>
@@ -182,10 +181,22 @@ export default function SettingsTab() {
 }
 
 const categories = {
+  // ⭐ 常用快速设置 - 平铺，真正「快速」
+  quick: [
+    "language",
+    "isClassroomMode",
+    "windowBackgroundAlpha",
+    "autoBackup",
+    "autoBackupInterval",
+    "maxFps",
+    "textResolution",
+    "powerPreference",
+    "mouseTrail",
+  ],
+
+  // 🎨 视觉与显示 - 图表外观相关
   visual: {
-    basic: ["language", "isClassroomMode", "windowBackgroundAlpha", "mouseTrail"],
     background: [
-      "isRenderCenterPointer",
       "showBackgroundHorizontalLines",
       "showBackgroundVerticalLines",
       "showBackgroundDots",
@@ -203,16 +214,12 @@ const categories = {
       "entityDetailsLinesLimit",
       "entityDetailsWidthLimit",
     ],
-    debug: ["showDebug", "protectingPrivacy"],
     miniWindow: ["windowCollapsingWidth", "windowCollapsingHeight"],
-    experimental: ["limitCameraInCycleSpace", "cameraCycleSpaceSizeX", "cameraCycleSpaceSizeY"],
+    debug: ["showDebug", "protectingPrivacy"],
   },
-  automation: {
-    autoNamer: ["autoNamerTemplate", "autoNamerSectionTemplate"],
-    autoSave: ["autoSaveWhenClose", "autoSave", "autoSaveInterval"],
-    autoBackup: ["autoBackup", "autoBackupInterval", "autoBackupLimitCount", "autoBackupDraftPath"],
-  },
-  control: {
+
+  // 🖱️ 交互与操作 - 用户最常调的
+  interaction: {
     mouse: [
       "mouseRightDragBackground",
       "mouseLeftMode",
@@ -226,85 +233,69 @@ const categories = {
       "macMouseWheelIsSmoothed",
     ],
     touchpad: ["enableWindowsTouchPad", "macTrackpadAndMouseWheelDifference", "macTrackpadScaleSensitivity"],
-    cameraMove: [
+    camera: [
       "allowMoveCameraByWSAD",
       "cameraFollowsSelectedNodeOnArrowKeys",
       "cameraKeyboardMoveReverse",
       "moveAmplitude",
       "moveFriction",
-    ],
-    cameraZoom: [
       "scaleExponent",
       "cameraResetViewPaddingRate",
       "scaleCameraByMouseLocation",
       "cameraKeyboardScaleRate",
+      "limitCameraInCycleSpace",
+      "cameraCycleSpaceSizeX",
+      "cameraCycleSpaceSizeY",
     ],
-    rectangleSelect: ["rectangleSelectWhenRight", "rectangleSelectWhenLeft"],
-    textNode: [
+    selection: ["rectangleSelectWhenRight", "rectangleSelectWhenLeft"],
+    textEditing: [
       "textNodeStartEditMode",
       "textNodeContentLineBreak",
       "textNodeExitEditMode",
       "textNodeSelectAllWhenStartEditByMouseClick",
       "textNodeSelectAllWhenStartEditByKeyboard",
     ],
-    edge: ["allowAddCycleEdge", "autoAdjustLineEndpointsByMouseTrack", "enableRightClickConnect"],
-    generateNode: ["autoLayoutWhenTreeGenerate"],
+    connector: ["allowAddCycleEdge", "autoAdjustLineEndpointsByMouseTrack", "enableRightClickConnect"],
+    nodeGeneration: ["autoLayoutWhenTreeGenerate"],
     gamepad: ["gamepadDeadzone"],
   },
+
+  // ⚡ 性能与优化
   performance: {
-    memory: ["historySize", "clearHistoryWhenManualSave"],
-    cpu: ["autoRefreshStageByMouseAction"],
-    render: [
+    rendering: [
       "isPauseRenderWhenManipulateOvertime",
       "renderOverTimeWhenNoManipulateTime",
-      "scaleExponent",
       "ignoreTextNodeTextRenderLessThanCameraScale",
       "textIntegerLocationAndSizeRender",
       "powerPreference",
       "textResolution",
       "maxFps",
       "minFps",
+      "isEnableEntityCollision",
+      "autoRefreshStageByMouseAction",
     ],
-    experimental: ["isEnableEntityCollision"],
+    memory: ["historySize", "clearHistoryWhenManualSave"],
   },
-  ai: {
-    api: ["aiApiBaseUrl", "aiApiKey", "aiModel", "aiShowTokenCount"],
+
+  // 💾 数据与备份
+  data: {
+    autoSave: ["autoSaveWhenClose"],
+    autoBackup: ["autoBackup", "autoBackupInterval", "autoBackupLimitCount"],
+  },
+
+  // 🤖 自动化与AI
+  automation: {
+    autoNamer: ["autoNamerTemplate", "autoNamerSectionTemplate"],
+    ai: ["aiApiBaseUrl", "aiApiKey", "aiModel", "aiShowTokenCount"],
   },
 };
 
 const categoryIcons = {
-  ai: {
-    icon: Brain,
-    api: Network,
-  },
-  automation: {
-    icon: Bot,
-    autoNamer: Text,
-    autoSave: Save,
-    autoBackup: Folder,
-  },
-  control: {
-    icon: Wrench,
-    mouse: Mouse,
-    touchpad: Touchpad,
-    cameraMove: Camera,
-    cameraZoom: ZoomIn,
-    rectangleSelect: SquareDashedMousePointer,
-    textNode: TextSelect,
-    edge: ArrowUpRight,
-    generateNode: Network,
-    gamepad: Gamepad,
-  },
-  performance: {
-    icon: Zap,
-    memory: MemoryStick,
-    cpu: Cpu,
-    render: Clock,
-    experimental: Sparkle,
+  quick: {
+    icon: Sparkle,
   },
   visual: {
     icon: Eye,
-    basic: AppWindowMac,
     background: Layers,
     node: Workflow,
     edge: ArrowUpRight,
@@ -312,6 +303,31 @@ const categoryIcons = {
     entityDetails: ReceiptText,
     debug: Bug,
     miniWindow: PictureInPicture,
-    experimental: Sparkle,
+  },
+  interaction: {
+    icon: Wrench,
+    mouse: Mouse,
+    touchpad: Touchpad,
+    camera: Camera,
+    selection: SquareDashedMousePointer,
+    textEditing: TextSelect,
+    connector: ArrowUpRight,
+    nodeGeneration: Network,
+    gamepad: Gamepad,
+  },
+  performance: {
+    icon: Zap,
+    rendering: Clock,
+    memory: MemoryStick,
+  },
+  data: {
+    icon: Folder,
+    autoSave: Save,
+    autoBackup: Folder,
+  },
+  automation: {
+    icon: Bot,
+    autoNamer: Text,
+    ai: Brain,
   },
 };

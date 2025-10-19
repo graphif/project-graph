@@ -134,42 +134,39 @@ contextMenu:
 settings:
   title: 设置
   categories:
-    ai:
-      title: AI
-      api: API
-    automation:
-      title: 自动化
-      autoNamer: 自动命名
-      autoSave: 自动保存
-      autoBackup: 自动备份
-    control:
-      title: 控制
-      mouse: 鼠标
-      touchpad: 触摸板
-      cameraMove: 视野移动
-      cameraZoom: 视野缩放
-      rectangleSelect: 框选
-      textNode: 文本节点
-      edge: 连线
-      generateNode: 通过键盘生长节点
-      gamepad: 游戏手柄
+    quick:
+      title: 快速设置
     visual:
       title: 视觉
-      basic: 基础
       background: 背景
       node: 节点样式
       edge: 连线样式
-      section: “框”的样式
+      section: 「框」的样式
       entityDetails: 实体详情
-      debug: 调试
       miniWindow: 迷你窗口
-      experimental: 实验性功能
+      debug: 调试
+    interaction:
+      title: 交互
+      mouse: 鼠标
+      touchpad: 触摸板
+      camera: 视野控制
+      selection: 框选
+      textEditing: 文本编辑
+      connector: 连线
+      nodeGeneration: 节点生成
+      gamepad: 游戏手柄
     performance:
       title: 性能
+      rendering: 渲染
       memory: 内存
-      cpu: CPU
-      render: 渲染
-      experimental: 开发中的功能
+    data:
+      title: 数据与备份
+      autoSave: 自动保存
+      autoBackup: 自动备份
+    automation:
+      title: 自动化与AI
+      autoNamer: 自动命名
+      ai: AI
   language:
     title: 语言
     options:
@@ -725,9 +722,9 @@ settings:
     description: |
       需要重新打开文件才能生效
     options:
-      unspecified: 未指定
-      lowPower: 低功耗
-      highPerformance: 高性能
+      unspecified: 未指定 (由系统决定)
+      lowPower: 低功耗 (尽量用核显)
+      highPerformance: 高性能 (尽量用独显)
   textResolution:
     title: 文本质量
     description: |
