@@ -7,6 +7,8 @@ export const settingsSchema = z.object({
   language: z.union([z.literal("en"), z.literal("zh_CN"), z.literal("zh_TW")]).default("zh_CN"),
   isClassroomMode: z.boolean().default(false),
   windowBackgroundAlpha: z.number().min(0).max(1).default(0.9),
+  windowBackgroundOpacityAfterOpenClickThrough: z.number().min(0).max(1).default(0),
+  windowBackgroundOpacityAfterCloseClickThrough: z.number().min(0).max(1).default(0.5),
   isRenderCenterPointer: z.boolean().default(false),
   showBackgroundHorizontalLines: z.boolean().default(true),
   showBackgroundVerticalLines: z.boolean().default(true),

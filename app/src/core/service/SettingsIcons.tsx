@@ -125,6 +125,8 @@ export const settingsIcons = {
   useNativeTitleBar: AppWindowMac,
   isClassroomMode: Presentation,
   windowBackgroundAlpha: Blend,
+  windowBackgroundOpacityAfterOpenClickThrough: Blend,
+  windowBackgroundOpacityAfterCloseClickThrough: Blend,
   isRenderCenterPointer: Crosshair,
   showBackgroundHorizontalLines: Rows4,
   showBackgroundVerticalLines: Columns4,

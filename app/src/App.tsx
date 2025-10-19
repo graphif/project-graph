@@ -136,12 +136,12 @@ export default function App() {
           }
           if (!prev) {
             // 开启了穿透点击
-            Settings.windowBackgroundAlpha = 0.1;
+            Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterOpenClickThrough;
             setIsWindowAlwaysOnTop(true);
             getCurrentWindow().setAlwaysOnTop(true);
           } else {
             // 关闭了穿透点击
-            Settings.windowBackgroundAlpha = 0.6;
+            Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterCloseClickThrough;
             setIsWindowAlwaysOnTop(false);
             getCurrentWindow().setAlwaysOnTop(false);
           }

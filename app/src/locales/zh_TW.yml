@@ -125,6 +125,14 @@ settings:
       也能很直觀的知道當前的視野縮放倍數
   windowBackgroundAlpha:
     title: 視窗背景透明度
+  windowBackgroundOpacityAfterOpenClickThrough:
+    title: 開啟點擊穿透後的視窗背景透明度
+    description: |
+      設置在開啟點擊穿透功能後視窗背景的透明度
+  windowBackgroundOpacityAfterCloseClickThrough:
+    title: 關閉點擊穿透後的視窗背景透明度
+    description: |
+      設置在關閉點擊穿透功能後視窗背景的透明度
   showDebug:
     title: 顯示除錯資訊
     description: |

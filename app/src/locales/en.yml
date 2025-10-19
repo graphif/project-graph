@@ -160,6 +160,14 @@ settings:
       and intuitively understand the current zoom level.
   windowBackgroundAlpha:
     title: Window Background Transparency
+  windowBackgroundOpacityAfterOpenClickThrough:
+    title: Window Background Opacity After Enabling Click-Through
+    description: |
+      Set the window background opacity when click-through is enabled
+  windowBackgroundOpacityAfterCloseClickThrough:
+    title: Window Background Opacity After Disabling Click-Through
+    description: |
+      Set the window background opacity when click-through is disabled
   showDebug:
     title: Show Debug Information
     description: |

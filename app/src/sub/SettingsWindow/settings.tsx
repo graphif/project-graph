@@ -197,7 +197,13 @@ export default function SettingsTab() {
 
 const categories = {
   visual: {
-    basic: ["language", "isClassroomMode", "windowBackgroundAlpha"],
+    basic: [
+      "language",
+      "isClassroomMode",
+      "windowBackgroundAlpha",
+      "windowBackgroundOpacityAfterOpenClickThrough",
+      "windowBackgroundOpacityAfterCloseClickThrough",
+    ],
     background: [
       "isRenderCenterPointer",
       "showBackgroundHorizontalLines",

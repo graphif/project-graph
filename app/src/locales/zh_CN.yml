@@ -208,6 +208,14 @@ settings:
     title: 窗口背景透明度
     description: |
       *从1改到小于1的值需要重新打开文件才能生效
+  windowBackgroundOpacityAfterOpenClickThrough:
+    title: 开启点击穿透后的窗口背景透明度
+    description: |
+      设置在开启点击穿透功能后窗口背景的透明度
+  windowBackgroundOpacityAfterCloseClickThrough:
+    title: 关闭点击穿透后的窗口背景透明度
+    description: |
+      设置在关闭点击穿透功能后窗口背景的透明度
   showDebug:
     title: 显示调试信息
     description: |
