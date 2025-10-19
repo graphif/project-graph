@@ -153,7 +153,7 @@ export default function SettingsTab() {
       </Sidebar>
       <div className="mx-auto flex w-2/3 flex-col overflow-auto">
         {currentCategory === "quick" && (
-          <div className="bg-card sticky top-0 z-10 border-b p-4">
+          <div className="border-b p-4">
             <Input
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
