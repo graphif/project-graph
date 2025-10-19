@@ -320,7 +320,10 @@ export class ControllerCameraClass extends ControllerClass {
       } else if (Settings.mouseWheelWithShiftMode === "none") {
         return;
       }
-    } else if (this.project.controller.pressingKeySet.has("control")) {
+    } else if (
+      this.project.controller.pressingKeySet.has("control") ||
+      this.project.controller.pressingKeySet.has("meta")
+    ) {
       // 不要在节点上滚动
       const entity = this.project.stageManager.findEntityByLocation(worldLocation);
       if (entity !== null) {
