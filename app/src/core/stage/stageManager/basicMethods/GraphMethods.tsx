@@ -237,4 +237,60 @@ export class GraphMethods {
     // 将Set转换为数组并返回
     return Array.from(connectedNodes);
   }
+
+  private nodeChildrenArrayWithinSet(node: ConnectableEntity, nodeSet: Set<string>): ConnectableEntity[] {
+    return this.nodeChildrenArray(node).filter((child) => nodeSet.has(child.uuid));
+  }
+
+  private nodeParentArrayWithinSet(node: ConnectableEntity, nodeSet: Set<string>): ConnectableEntity[] {
+    return this.nodeParentArray(node).filter((parent) => nodeSet.has(parent.uuid));
+  }
+
+  /**
+   * 根据一组节点判断其在子图中的连接关系是否构成一棵树，并返回唯一根节点。
+   * 规则：
+   * - 子图中每个节点的入度至多为1
+   * - 恰好存在一个入度为0的根节点
+   * - 从根出发可达所有节点（连通），且无环
+   */
+  public getTreeRootByNodes(nodes: ConnectableEntity[]): ConnectableEntity | null {
+    if (nodes.length === 0) return null;
+    const nodeSet = new Set<string>(nodes.map((n) => n.uuid));
+    const roots = nodes.filter((n) => this.nodeParentArrayWithinSet(n, nodeSet).length === 0);
+    if (roots.length !== 1) return null;
+    return roots[0];
+  }
+
+  /** 判断一组节点在其诱导子图中是否构成一棵树 */
+  public isTreeByNodes(nodes: ConnectableEntity[]): boolean {
+    if (nodes.length === 0) return false;
+    const nodeSet = new Set<string>(nodes.map((n) => n.uuid));
+
+    // 每个节点入度最多为1
+    for (const n of nodes) {
+      if (this.nodeParentArrayWithinSet(n, nodeSet).length > 1) {
+        return false;
+      }
+    }
+
+    // 唯一根节点
+    const root = this.getTreeRootByNodes(nodes);
+    if (!root) return false;
+
+    // DFS 检测无环且连通（覆盖所有节点）
+    const visited = new Set<string>();
+    const dfs = (current: ConnectableEntity): boolean => {
+      if (visited.has(current.uuid)) {
+        return false; // 发现环
+      }
+      visited.add(current.uuid);
+      for (const child of this.nodeChildrenArrayWithinSet(current, nodeSet)) {
+        if (!dfs(child)) return false;
+      }
+      return true;
+    };
+
+    if (!dfs(root)) return false;
+    return visited.size === nodeSet.size;
+  }
 }

@@ -25,10 +25,16 @@ export class AutoLayout {
   constructor(private readonly project: Project) {}
 
   tick() {
-    // debug 只有在按下l键才会触发
-    if (!this.project.controller.pressingKeySet.has("g")) {
-      return;
+    // 引力式布局
+    if (this.project.controller.pressingKeySet.size === 1 && this.project.controller.pressingKeySet.has("g")) {
+      this.gravityLayoutTick();
     }
+  }
+
+  /**
+   * 引力式布局
+   */
+  gravityLayoutTick() {
     // 获取所有选中的节点
     const selectedConnectableEntities = this.project.stageManager
       .getSelectedEntities()

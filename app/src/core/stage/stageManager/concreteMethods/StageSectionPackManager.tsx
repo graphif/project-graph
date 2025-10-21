@@ -272,10 +272,28 @@ export class SectionPackManager {
       this.project.stageManager.goOutSection(addEntities, fatherSection);
     }
     const section = Section.fromEntities(this.project, addEntities);
-    section.text = this.project.stageUtils.replaceAutoNameTemplate(Settings.autoNamerSectionTemplate, section);
+    const smartTitle = this.getSmartSectionTitle(addEntities);
+    section.text =
+      smartTitle.length > 0
+        ? smartTitle
+        : this.project.stageUtils.replaceAutoNameTemplate(Settings.autoNamerSectionTemplate, section);
     this.project.stageManager.add(section);
     for (const fatherSection of firstParents) {
       this.project.stageManager.goInSection([section], fatherSection);
     }
+  }
+
+  getSmartSectionTitle(addEntities: Entity[]): string {
+    const textNodes = addEntities.filter((e) => e instanceof TextNode) as TextNode[];
+    if (textNodes.length === 0) return "";
+    // 所有实体必须是文本节点
+    if (textNodes.length !== addEntities.length) return "";
+
+    // 必须构成树形结构（在诱导子图中）
+    if (!this.project.graphMethods.isTreeByNodes(textNodes)) return "";
+
+    const root = this.project.graphMethods.getTreeRootByNodes(textNodes);
+    if (!root || !(root instanceof TextNode)) return "";
+    return root.text;
   }
 }
