@@ -274,4 +274,11 @@ export class KeyboardOnlyTreeEngine {
     const rootNodeParents = this.project.graphMethods.getRoots(entity);
     this.project.autoAlign.autoLayoutSelectedFastTreeModeRight(rootNodeParents[0]);
   }
+
+  /**
+   * 删除当前的节点
+   */
+  onDeleteCurrentNode() {
+    // TODO
+  }
 }

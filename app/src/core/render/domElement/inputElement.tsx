@@ -196,6 +196,30 @@ export class InputElement {
 
       textareaElement.addEventListener("keydown", (event) => {
         event.stopPropagation();
+        console.log(event);
+        if (event.code === "Backslash") {
+          // 广度生长节点
+          event.preventDefault();
+          let currentValue = textareaElement.value;
+          if (currentValue.endsWith("、")) {
+            // 删除结尾 防止把顿号写进去
+            currentValue = currentValue.slice(0, -1);
+          }
+          resolve(currentValue);
+          onChange(currentValue, textareaElement);
+          removeElement();
+          this.project.keyboardOnlyTreeEngine.onBroadGenerateNode();
+        }
+        if (event.code === "Backspace") {
+          // event.preventDefault();  // 不能这样否则就删除不了了。
+          if (textareaElement.value === "") {
+            // 已经要删空了。
+            resolve("");
+            onChange("", textareaElement);
+            removeElement();
+            this.project.stageManager.deleteSelectedStageObjects();
+          }
+        }
         if (event.key === "Tab") {
           // 防止tab切换到其他按钮
           event.preventDefault();
