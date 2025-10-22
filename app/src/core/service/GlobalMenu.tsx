@@ -19,7 +19,11 @@ import AttachmentsWindow from "@/sub/AttachmentsWindow";
 import LogicNodePanel from "@/sub/AutoComputeWindow";
 import ExportPngWindow from "@/sub/ExportPngWindow";
 import FindWindow from "@/sub/FindWindow";
-import GenerateNodeTree, { GenerateNodeGraph, GenerateNodeMermaid } from "@/sub/GenerateNodeWindow";
+import GenerateNodeTree, {
+  GenerateNodeGraph,
+  GenerateNodeMermaid,
+  GenerateNodeTreeByMarkdown,
+} from "@/sub/GenerateNodeWindow";
 import LoginWindow from "@/sub/LoginWindow";
 import NodeDetailsWindow from "@/sub/NodeDetailsWindow";
 import OnboardingWindow from "@/sub/OnboardingWindow";
@@ -674,6 +678,14 @@ export function GlobalMenu() {
               >
                 <Network className="-rotate-90" />
                 {t("actions.generate.generateNodeTreeByText")}
+              </Item>
+              <Item
+                onClick={async () => {
+                  GenerateNodeTreeByMarkdown.open();
+                }}
+              >
+                <Network className="-rotate-90" />
+                {t("actions.generate.generateNodeTreeByMarkdown")}
               </Item>
               <Item
                 onClick={async () => {

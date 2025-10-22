@@ -54,6 +54,9 @@ globalMenu:
       generateNodeTreeByText: 根据纯文本生成树状结构
       generateNodeTreeByTextDescription: 请输入树状结构文本，每行代表一个节点，缩进表示层级关系
       generateNodeTreeByTextPlaceholder: 输入树状结构文本...
+      generateNodeTreeByMarkdown: 根据Markdown文本生成树状结构
+      generateNodeTreeByMarkdownDescription: 请输入markdown格式的字符串，要有不同层级的标题
+      generateNodeTreeByMarkdownPlaceholder: 输入markdown格式文本...
       indention: 缩进字符数
       generateNodeGraphByText: 根据纯文本生成网状结构
       generateNodeGraphByTextDescription: 请输入网状结构文本，每行代表一个关系，每一行的格式为 `XXX --> XXX`
