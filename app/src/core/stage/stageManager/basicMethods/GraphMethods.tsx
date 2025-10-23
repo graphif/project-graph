@@ -49,6 +49,14 @@ export class GraphMethods {
     return res;
   }
 
+  edgeChildrenArray(node: ConnectableEntity): Edge[] {
+    return this.project.stageManager.getLineEdges().filter((edge) => edge.source.uuid === node.uuid);
+  }
+
+  edgeParentArray(node: ConnectableEntity): Edge[] {
+    return this.project.stageManager.getLineEdges().filter((edge) => edge.target.uuid === node.uuid);
+  }
+
   /**
    * 获取反向边集
    * @param edges

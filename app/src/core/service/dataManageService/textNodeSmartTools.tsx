@@ -1,5 +1,6 @@
 import { Dialog } from "@/components/ui/dialog";
 import { Project } from "@/core/Project";
+import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
@@ -81,37 +82,73 @@ export namespace TextNodeSmartTools {
         userInput = userInput.replaceAll("n", "\n");
         userInput = userInput.replaceAll("t", "\t");
         for (const node of selectedTextNodes) {
-          const text = node.text;
-          const seps = [userInput];
-          const escapedSeps = seps.map((sep) => sep.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-          const regex = new RegExp(escapedSeps.join("|"), "g");
-          const splitedTextList = text.split(regex).filter((item) => item !== "");
-          const putLocation = node.collisionBox.getRectangle().location.clone();
-          const newNodes = [];
-          for (const splitedText of splitedTextList) {
-            const newTextNode = new TextNode(project, {
-              uuid: v4(),
-              text: splitedText,
-              collisionBox: new CollisionBox([
-                new Rectangle(new Vector(putLocation.x, putLocation.y), new Vector(1, 1)),
-              ]),
-              color: node.color.clone(),
-            });
-            newNodes.push(newTextNode);
-            project.stageManager.add(newTextNode);
-            putLocation.y += 100;
-          }
-          newNodes.forEach((newNode) => {
-            newNode.isSelected = true;
-          });
-          project.layoutManager.alignTopToBottomNoSpace();
-          newNodes.forEach((newNode) => {
-            newNode.isSelected = false;
-          });
+          keiOneTextNode(project, node, userInput);
         }
         // 删除所有选中的文本节点
         project.stageManager.deleteEntities(selectedTextNodes);
       });
+    });
+  }
+
+  function keiOneTextNode(project: Project, node: TextNode, userInput: string) {
+    const text = node.text;
+    const seps = [userInput];
+    const escapedSeps = seps.map((sep) => sep.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    const regex = new RegExp(escapedSeps.join("|"), "g");
+    const splitedTextList = text.split(regex).filter((item) => item !== "");
+    const putLocation = node.collisionBox.getRectangle().location.clone();
+
+    const newNodes: TextNode[] = [];
+
+    const fromLines: Edge[] = project.graphMethods.edgeParentArray(node);
+    const toLines: Edge[] = project.graphMethods.edgeChildrenArray(node);
+
+    splitedTextList.forEach((splitedText) => {
+      const newTextNode = new TextNode(project, {
+        uuid: v4(),
+        text: splitedText,
+        collisionBox: new CollisionBox([new Rectangle(new Vector(putLocation.x, putLocation.y), new Vector(1, 1))]),
+        color: node.color.clone(),
+      });
+      newNodes.push(newTextNode);
+      project.stageManager.add(newTextNode);
+      putLocation.y += 100;
+    });
+
+    fromLines.forEach((edge) => {
+      newNodes.forEach((newNode) => {
+        project.stageManager.add(
+          new LineEdge(project, {
+            associationList: [edge.source, newNode],
+            text: edge.text,
+            targetRectangleRate: edge.targetRectangleRate.clone(),
+            sourceRectangleRate: edge.sourceRectangleRate.clone(),
+            color: edge.color.clone(),
+          }),
+        );
+      });
+    });
+    toLines.forEach((edge) => {
+      newNodes.forEach((newNode) => {
+        project.stageManager.add(
+          new LineEdge(project, {
+            associationList: [newNode, edge.target],
+            text: edge.text,
+            targetRectangleRate: edge.targetRectangleRate.clone(),
+            sourceRectangleRate: edge.sourceRectangleRate.clone(),
+            color: edge.color.clone(),
+          }),
+        );
+      });
+    });
+
+    // 再整体向下排列一下
+    newNodes.forEach((newNode) => {
+      newNode.isSelected = true;
+    });
+    project.layoutManager.alignTopToBottomNoSpace();
+    newNodes.forEach((newNode) => {
+      newNode.isSelected = false;
     });
   }
 
