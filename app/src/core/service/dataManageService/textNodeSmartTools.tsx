@@ -43,31 +43,175 @@ export namespace TextNodeSmartTools {
         selectedTextNodes = selectedTextNodes.sort(
           (a, b) => a.collisionBox.getRectangle().location.y - b.collisionBox.getRectangle().location.y,
         );
-        let mergeText = "";
-        const detailsList = [];
-        for (const textNode of selectedTextNodes) {
-          mergeText += textNode.text + userInput;
-          detailsList.push(textNode.details);
-        }
-        mergeText = mergeText.trim();
-        const leftTop = Rectangle.getBoundingRectangle(
-          selectedTextNodes.map((node) => node.collisionBox.getRectangle()),
-        ).leftTop;
-        const avgColor = averageColors(selectedTextNodes.map((node) => node.color));
-        const newTextNode = new TextNode(project, {
-          uuid: v4(),
-          text: mergeText,
-          collisionBox: new CollisionBox([new Rectangle(new Vector(leftTop.x, leftTop.y), new Vector(400, 1))]),
-          color: avgColor.clone(),
-          sizeAdjust: userInput.includes("\n") ? "manual" : "auto",
-          details: DetailsManager.mergeDetails(detailsList),
-        });
+
+        // 收集所有连线信息
+        const upstreamEdges = collectUpstreamEdges(project, selectedTextNodes);
+        const downstreamEdges = collectDownstreamEdges(project, selectedTextNodes);
+
+        // 创建合并后的节点
+        const newTextNode = createMergedNode(project, selectedTextNodes, userInput);
         project.stageManager.add(newTextNode);
+
+        // 处理上游连线
+        processUpstreamEdges(project, upstreamEdges, newTextNode);
+
+        // 处理下游连线
+        processDownstreamEdges(project, downstreamEdges, newTextNode);
+
         // 选中新的节点
         newTextNode.isSelected = true;
         project.stageManager.deleteEntities(selectedTextNodes);
       });
     });
+  }
+
+  /**
+   * 收集所有上游连线，按源节点分组
+   */
+  function collectUpstreamEdges(project: Project, nodes: TextNode[]): Map<string, Edge[]> {
+    const upstreamEdges = new Map<string, Edge[]>();
+
+    nodes.forEach((node) => {
+      const edges = project.graphMethods.edgeParentArray(node);
+      edges.forEach((edge) => {
+        if (!nodes.includes(edge.source as TextNode)) {
+          // 只收集来自外部节点的连线
+          const sourceId = edge.source.uuid;
+          if (!upstreamEdges.has(sourceId)) {
+            upstreamEdges.set(sourceId, []);
+          }
+          upstreamEdges.get(sourceId)!.push(edge);
+        }
+      });
+    });
+
+    return upstreamEdges;
+  }
+
+  /**
+   * 收集所有下游连线，按目标节点分组
+   */
+  function collectDownstreamEdges(project: Project, nodes: TextNode[]): Map<string, Edge[]> {
+    const downstreamEdges = new Map<string, Edge[]>();
+
+    nodes.forEach((node) => {
+      const edges = project.graphMethods.edgeChildrenArray(node);
+      edges.forEach((edge) => {
+        if (!nodes.includes(edge.target as TextNode)) {
+          // 只收集指向外部节点的连线
+          const targetId = edge.target.uuid;
+          if (!downstreamEdges.has(targetId)) {
+            downstreamEdges.set(targetId, []);
+          }
+          downstreamEdges.get(targetId)!.push(edge);
+        }
+      });
+    });
+
+    return downstreamEdges;
+  }
+
+  /**
+   * 创建合并后的节点
+   */
+  function createMergedNode(project: Project, nodes: TextNode[], userInput: string): TextNode {
+    let mergeText = "";
+    const detailsList = [];
+    for (const textNode of nodes) {
+      mergeText += textNode.text + userInput;
+      detailsList.push(textNode.details);
+    }
+    mergeText = mergeText.trim();
+    const leftTop = Rectangle.getBoundingRectangle(nodes.map((node) => node.collisionBox.getRectangle())).leftTop;
+    const avgColor = averageColors(nodes.map((node) => node.color));
+
+    return new TextNode(project, {
+      uuid: v4(),
+      text: mergeText,
+      collisionBox: new CollisionBox([new Rectangle(new Vector(leftTop.x, leftTop.y), new Vector(400, 1))]),
+      color: avgColor.clone(),
+      sizeAdjust: userInput.includes("\n") ? "manual" : "auto",
+      details: DetailsManager.mergeDetails(detailsList),
+    });
+  }
+
+  /**
+   * 处理上游连线
+   */
+  function processUpstreamEdges(project: Project, upstreamEdges: Map<string, Edge[]>, newNode: TextNode) {
+    upstreamEdges.forEach((edges) => {
+      const source = edges[0].source;
+
+      // 合并连线属性
+      const mergedEdgeProps = mergeEdgeProperties(edges);
+
+      // 创建新连线
+      project.stageManager.add(
+        new LineEdge(project, {
+          associationList: [source, newNode],
+          text: mergedEdgeProps.text,
+          targetRectangleRate: mergedEdgeProps.targetRectangleRate,
+          sourceRectangleRate: mergedEdgeProps.sourceRectangleRate,
+          color: mergedEdgeProps.color,
+        }),
+      );
+    });
+  }
+
+  /**
+   * 处理下游连线
+   */
+  function processDownstreamEdges(project: Project, downstreamEdges: Map<string, Edge[]>, newNode: TextNode) {
+    downstreamEdges.forEach((edges) => {
+      const target = edges[0].target;
+
+      // 合并连线属性
+      const mergedEdgeProps = mergeEdgeProperties(edges);
+
+      // 创建新连线
+      project.stageManager.add(
+        new LineEdge(project, {
+          associationList: [newNode, target],
+          text: mergedEdgeProps.text,
+          targetRectangleRate: mergedEdgeProps.targetRectangleRate,
+          sourceRectangleRate: mergedEdgeProps.sourceRectangleRate,
+          color: mergedEdgeProps.color,
+        }),
+      );
+    });
+  }
+
+  /**
+   * 合并连线属性
+   */
+  function mergeEdgeProperties(edges: Edge[]): {
+    text: string;
+    targetRectangleRate: Vector;
+    sourceRectangleRate: Vector;
+    color: Color;
+  } {
+    // 合并文本：按遍历顺序拼接不重复的文本
+    const texts = new Set<string>();
+    edges.forEach((edge) => {
+      if (edge.text && edge.text.trim()) {
+        texts.add(edge.text.trim());
+      }
+    });
+    const mergedText = Array.from(texts).join(" ");
+
+    // 使用最后一个连线的位置属性
+    const lastEdge = edges[edges.length - 1];
+
+    // 合并颜色
+    const colors = edges.map((edge) => edge.color);
+    const mergedColor = averageColors(colors);
+
+    return {
+      text: mergedText,
+      targetRectangleRate: lastEdge.targetRectangleRate.clone(),
+      sourceRectangleRate: lastEdge.sourceRectangleRate.clone(),
+      color: mergedColor.clone(),
+    };
   }
 
   export function kei(project: Project) {
