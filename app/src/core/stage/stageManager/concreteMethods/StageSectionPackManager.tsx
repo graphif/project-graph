@@ -272,7 +272,10 @@ export class SectionPackManager {
       this.project.stageManager.goOutSection(addEntities, fatherSection);
     }
     const section = Section.fromEntities(this.project, addEntities);
-    const smartTitle = this.getSmartSectionTitle(addEntities);
+    let smartTitle = this.getSmartSectionTitle(addEntities);
+    if (smartTitle.length > 10) {
+      smartTitle = smartTitle.slice(0, 10) + "...";
+    }
     section.text =
       smartTitle.length > 0
         ? smartTitle
