@@ -24,6 +24,8 @@ export class TextNode extends Entity {
   @serializable
   sizeAdjust: "auto" | "manual" = "auto";
 
+  textInput: TextInput;
+
   constructor(
     protected readonly project: Project,
     {
@@ -55,98 +57,97 @@ export class TextNode extends Entity {
       borderWidth: 2,
       borderColor: 0xffffff,
     };
-    this.addChild(
-      new TextInput(
-        this.project.viewport,
-        {
-          text: this.text,
-          style: {
-            fill: "white",
-            fontFamily: "system-ui",
-          },
-          interactive: true,
-          resolution: Settings.textResolution,
-          layout: true,
+    this.textInput = new TextInput(
+      this.project.viewport,
+      {
+        text: this.text,
+        style: {
+          fill: "white",
+          fontFamily: "system-ui",
         },
-        // padding8+border2
-        10,
-      )
-        .on("textchange", (value) => {
-          this.text = value;
-        })
-        .on("finishedit", () => {
-          if (this.text.startsWith("$$") && this.text.endsWith("$$")) {
-            // 转换为LatexNode
+        interactive: true,
+        resolution: Settings.textResolution,
+        layout: true,
+      },
+      // padding8+border2
+      10,
+    )
+      .on("textchange", (value) => {
+        this.text = value;
+      })
+      .on("finishedit", () => {
+        if (this.text.startsWith("$$") && this.text.endsWith("$$")) {
+          // 转换为LatexNode
+          this.project.stage.push(
+            new LatexNode(this.project, {
+              latex: this.text.slice(2, -2).trim(),
+              position: this.position,
+              color: this.color,
+            }),
+          );
+          this.destroy();
+        }
+        if (isSvgString(this.text)) {
+          // 转换为SvgNode
+          this.project.stage.push(
+            new SvgNode(this.project, {
+              svg: this.text,
+              position: this.position,
+              color: this.color,
+            }),
+          );
+          this.destroy();
+        }
+        if (this.text === "`") {
+          // 转换为Fulcrum
+          this.project.stage.push(
+            new Fulcrum(this.project, {
+              position: this.position,
+            }),
+          );
+          this.destroy();
+        }
+        // TODO: 可以换成正则匹配
+        if (this.text.startsWith("https://")) {
+          // 转换为UrlNode
+          this.project.stage.push(
+            new UrlNode(this.project, {
+              url: this.text,
+              position: this.position,
+            }),
+          );
+          this.destroy();
+        }
+        if (this.text.startsWith("%")) {
+          // 转换为ImageNode，%后面是attachmentId
+          const attachmentId = this.text.slice(1).trim();
+          this.project.stage.push(
+            new ImageNode(this.project, {
+              attachmentId,
+              position: this.position,
+            }),
+          );
+          this.destroy();
+        }
+        if (this.text.startsWith("x")) {
+          // 原点100范围内随机位置创建x后面数字个节点、
+          const count = parseInt(this.text.slice(1).trim()) || 1;
+          for (let i = 0; i < count; i++) {
+            const offsetX = Math.random() * 200 - 100;
+            const offsetY = Math.random() * 200 - 100;
             this.project.stage.push(
-              new LatexNode(this.project, {
-                latex: this.text.slice(2, -2).trim(),
-                position: this.position,
-                color: this.color,
+              new TextNode(this.project, {
+                text: "New Node",
+                position: {
+                  x: this.position.x + offsetX,
+                  y: this.position.y + offsetY,
+                },
               }),
             );
-            this.destroy();
           }
-          if (isSvgString(this.text)) {
-            // 转换为SvgNode
-            this.project.stage.push(
-              new SvgNode(this.project, {
-                svg: this.text,
-                position: this.position,
-                color: this.color,
-              }),
-            );
-            this.destroy();
-          }
-          if (this.text === "`") {
-            // 转换为Fulcrum
-            this.project.stage.push(
-              new Fulcrum(this.project, {
-                position: this.position,
-              }),
-            );
-            this.destroy();
-          }
-          // TODO: 可以换成正则匹配
-          if (this.text.startsWith("https://")) {
-            // 转换为UrlNode
-            this.project.stage.push(
-              new UrlNode(this.project, {
-                url: this.text,
-                position: this.position,
-              }),
-            );
-            this.destroy();
-          }
-          if (this.text.startsWith("%")) {
-            // 转换为ImageNode，%后面是attachmentId
-            const attachmentId = this.text.slice(1).trim();
-            this.project.stage.push(
-              new ImageNode(this.project, {
-                attachmentId,
-                position: this.position,
-              }),
-            );
-            this.destroy();
-          }
-          if (this.text.startsWith("x")) {
-            // 原点100范围内随机位置创建x后面数字个节点、
-            const count = parseInt(this.text.slice(1).trim()) || 1;
-            for (let i = 0; i < count; i++) {
-              const offsetX = Math.random() * 200 - 100;
-              const offsetY = Math.random() * 200 - 100;
-              this.project.stage.push(
-                new TextNode(this.project, {
-                  text: "New Node",
-                  position: {
-                    x: this.position.x + offsetX,
-                    y: this.position.y + offsetY,
-                  },
-                }),
-              );
-            }
-            this.destroy();
-          }
-        }),
-    );
+          this.destroy();
+        }
+      });
+    this.addChild(this.textInput);
   }
 }

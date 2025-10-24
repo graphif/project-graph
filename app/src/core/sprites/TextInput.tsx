@@ -13,7 +13,7 @@ export class TextInput extends Text {
     super(opts);
 
     let lastClickTime = 0;
-    this.on("activate", this.activate, this).on("click", (e) => {
+    this.on("click", (e) => {
       const now = Date.now();
       if (now - lastClickTime < 300) {
         // 双击
