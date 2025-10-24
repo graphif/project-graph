@@ -28,7 +28,1067 @@ import { TextNodeSmartTools } from "../../dataManageService/textNodeSmartTools";
 import { RecentFileManager } from "../../dataFileService/RecentFileManager";
 import { ConnectNodeSmartTools } from "../../dataManageService/connectNodeSmartTools";
 import { ColorSmartTools } from "../../dataManageService/colorSmartTools";
+import TagWindow from "@/sub/TagWindow";
 
+interface KeyBindItem {
+  id: string;
+  defaultKey: string;
+  onPress: (project?: Project) => void;
+}
+
+export const allKeyBinds: KeyBindItem[] = [
+  {
+    id: "test",
+    defaultKey: "C-A-S-t",
+    onPress: () =>
+      Dialog.buttons("测试快捷键", "您按下了自定义的测试快捷键，这一功能是测试开发所用，可在设置中更改触发方式", [
+        { id: "close", label: "关闭" },
+      ]),
+  },
+
+  /*------- 基础编辑 -------*/
+  {
+    id: "undo",
+    defaultKey: "C-z",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.historyManager.undo();
+    },
+  },
+  {
+    id: "redo",
+    defaultKey: "C-y",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.historyManager.redo();
+    },
+  },
+  {
+    id: "reload",
+    defaultKey: "C-f5",
+    onPress: async () => {
+      if (
+        await Dialog.confirm(
+          "危险操作：重新加载应用",
+          "此快捷键用于在废档了或软件卡住了的情况下重启，您按下了重新加载应用快捷键，是否要重新加载应用？这会导致您丢失所有未保存的工作。",
+          { destructive: true },
+        )
+      ) {
+        window.location.reload();
+      }
+    },
+  },
+
+  /*------- 课堂/专注模式 -------*/
+  {
+    id: "checkoutClassroomMode",
+    defaultKey: "F5",
+    onPress: async () => {
+      if (Settings.isClassroomMode) {
+        toast.info("已经退出专注模式，点击一下更新状态");
+      } else {
+        toast.info("进入专注模式，点击一下更新状态");
+      }
+      Settings.isClassroomMode = !Settings.isClassroomMode;
+    },
+  },
+
+  /*------- 相机/视图 -------*/
+  {
+    id: "resetView",
+    defaultKey: "F",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.camera.resetBySelected();
+    },
+  },
+  {
+    id: "resetCameraScale",
+    defaultKey: "C-A-r",
+    onPress: (project) => project!.camera.resetScale(),
+  },
+  {
+    id: "CameraScaleZoomIn",
+    defaultKey: "[",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.camera.zoomInByKeyboard();
+    },
+  },
+  {
+    id: "CameraScaleZoomOut",
+    defaultKey: "]",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.camera.zoomOutByKeyboard();
+    },
+  },
+
+  /*------- 相机分页移动（Win） -------*/
+  // 注意：实际运行时会根据 isMac 注册其一，这里两份都列出方便查阅
+  {
+    id: "CameraPageMoveUp",
+    defaultKey: isMac ? "S-i" : "pageup",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.camera.pageMove(Direction.Up);
+    },
+  },
+  {
+    id: "CameraPageMoveDown",
+    defaultKey: isMac ? "S-k" : "pagedown",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.camera.pageMove(Direction.Down);
+    },
+  },
+  {
+    id: "CameraPageMoveLeft",
+    defaultKey: isMac ? "S-j" : "home",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.camera.pageMove(Direction.Left);
+    },
+  },
+  {
+    id: "CameraPageMoveRight",
+    defaultKey: isMac ? "S-l" : "end",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.camera.pageMove(Direction.Right);
+    },
+  },
+
+  /*------- 章节/折叠/打包 -------*/
+  {
+    id: "folderSection",
+    defaultKey: "C-t",
+    onPress: (project) => project!.stageManager.sectionSwitchCollapse(),
+  },
+  {
+    id: "packEntityToSection",
+    defaultKey: "C-g",
+    onPress: (project) => project!.stageManager.packEntityToSectionBySelected(),
+  },
+
+  /*------- 边反向 -------*/
+  {
+    id: "reverseEdges",
+    defaultKey: "C-t",
+    onPress: (project) => project!.stageManager.reverseSelectedEdges(),
+  },
+  {
+    id: "reverseSelectedNodeEdge",
+    defaultKey: "C-t",
+    onPress: (project) => project!.stageManager.reverseSelectedNodeEdge(),
+  },
+
+  /*------- 创建无向边 -------*/
+  {
+    id: "createUndirectedEdgeFromEntities",
+    defaultKey: "S-g",
+    onPress: (project) => {
+      const selectedNodes = project!.stageManager
+        .getSelectedEntities()
+        .filter((node) => node instanceof ConnectableEntity);
+      if (selectedNodes.length <= 1) {
+        toast.error("至少选择两个可连接节点");
+        return;
+      }
+      const multiTargetUndirectedEdge = MultiTargetUndirectedEdge.createFromSomeEntity(project!, selectedNodes);
+      project!.stageManager.add(multiTargetUndirectedEdge);
+    },
+  },
+
+  /*------- 删除 -------*/
+  {
+    id: "deleteSelectedStageObjects",
+    defaultKey: isMac ? "backspace" : "delete",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.stageManager.deleteSelectedStageObjects();
+    },
+  },
+
+  /*------- 新建文本节点（多种方式） -------*/
+  {
+    id: "createTextNodeFromCameraLocation",
+    defaultKey: "insert",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.camera.clearMoveCommander();
+      project!.camera.speed = Vector.getZero();
+      project!.controllerUtils.addTextNodeByLocation(project!.camera.location, true);
+    },
+  },
+  {
+    id: "createTextNodeFromMouseLocation",
+    defaultKey: "S-insert",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.camera.clearMoveCommander();
+      project!.camera.speed = Vector.getZero();
+      project!.controllerUtils.addTextNodeByLocation(
+        project!.renderer.transformView2World(MouseLocation.vector()),
+        true,
+      );
+    },
+  },
+  {
+    id: "createTextNodeFromSelectedTop",
+    defaultKey: "A-arrowup",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Up, true);
+    },
+  },
+  {
+    id: "createTextNodeFromSelectedRight",
+    defaultKey: "A-arrowright",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Right, true);
+    },
+  },
+  {
+    id: "createTextNodeFromSelectedLeft",
+    defaultKey: "A-arrowleft",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Left, true);
+    },
+  },
+  {
+    id: "createTextNodeFromSelectedDown",
+    defaultKey: "A-arrowdown",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Down, true);
+    },
+  },
+
+  /*------- 选择（单选/多选） -------*/
+  {
+    id: "selectUp",
+    defaultKey: "arrowup",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.selectChangeEngine.selectUp();
+    },
+  },
+  {
+    id: "selectDown",
+    defaultKey: "arrowdown",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.selectChangeEngine.selectDown();
+    },
+  },
+  {
+    id: "selectLeft",
+    defaultKey: "arrowleft",
+    onPress: (project) => project!.selectChangeEngine.selectLeft(),
+  },
+  {
+    id: "selectRight",
+    defaultKey: "arrowright",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.selectChangeEngine.selectRight();
+    },
+  },
+  {
+    id: "selectAdditionalUp",
+    defaultKey: "S-arrowup",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.selectChangeEngine.selectUp(true);
+    },
+  },
+  {
+    id: "selectAdditionalDown",
+    defaultKey: "S-arrowdown",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.selectChangeEngine.selectDown(true);
+    },
+  },
+  {
+    id: "selectAdditionalLeft",
+    defaultKey: "S-arrowleft",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.selectChangeEngine.selectLeft(true);
+    },
+  },
+  {
+    id: "selectAdditionalRight",
+    defaultKey: "S-arrowright",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.selectChangeEngine.selectRight(true);
+    },
+  },
+
+  /*------- 移动选中实体 -------*/
+  {
+    id: "moveUpSelectedEntities",
+    defaultKey: "C-arrowup",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      const entities = project!.stageManager.getEntities().filter((e) => e.isSelected);
+      if (entities.length > 0) {
+        const rect = entities[0].collisionBox.getRectangle();
+        const newRect = rect.clone();
+        newRect.location.y -= 100;
+        project!.effects.addEffect(
+          RectangleSlideEffect.verticalSlide(
+            rect,
+            newRect,
+            project!.stageStyleManager.currentStyle.effects.successShadow,
+          ),
+        );
+      }
+      project!.entityMoveManager.moveSelectedEntities(new Vector(0, -100));
+    },
+  },
+  {
+    id: "moveDownSelectedEntities",
+    defaultKey: "C-arrowdown",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      const entities = project!.stageManager.getEntities().filter((e) => e.isSelected);
+      if (entities.length > 0) {
+        const rect = entities[0].collisionBox.getRectangle();
+        const newRect = rect.clone();
+        newRect.location.y += 100;
+        project!.effects.addEffect(
+          RectangleSlideEffect.verticalSlide(
+            rect,
+            newRect,
+            project!.stageStyleManager.currentStyle.effects.successShadow,
+          ),
+        );
+      }
+      project!.entityMoveManager.moveSelectedEntities(new Vector(0, 100));
+    },
+  },
+  {
+    id: "moveLeftSelectedEntities",
+    defaultKey: "C-arrowleft",
+    onPress: (project) => {
+      const entities = project!.stageManager.getEntities().filter((e) => e.isSelected);
+      if (entities.length > 0) {
+        const rect = entities[0].collisionBox.getRectangle();
+        const newRect = rect.clone();
+        newRect.location.x -= 100;
+        project!.effects.addEffect(
+          RectangleSlideEffect.horizontalSlide(
+            rect,
+            newRect,
+            project!.stageStyleManager.currentStyle.effects.successShadow,
+          ),
+        );
+      }
+      project!.entityMoveManager.moveSelectedEntities(new Vector(-100, 0));
+    },
+  },
+  {
+    id: "moveRightSelectedEntities",
+    defaultKey: "C-arrowright",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      const entities = project!.stageManager.getEntities().filter((e) => e.isSelected);
+      if (entities.length > 0) {
+        const rect = entities[0].collisionBox.getRectangle();
+        const newRect = rect.clone();
+        newRect.location.x += 100;
+        project!.effects.addEffect(
+          RectangleSlideEffect.horizontalSlide(
+            rect,
+            newRect,
+            project!.stageStyleManager.currentStyle.effects.successShadow,
+          ),
+        );
+      }
+      project!.entityMoveManager.moveSelectedEntities(new Vector(100, 0));
+    },
+  },
+
+  /*------- 跳跃移动 -------*/
+  {
+    id: "jumpMoveUpSelectedEntities",
+    defaultKey: "C-A-arrowup",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(0, -100));
+    },
+  },
+  {
+    id: "jumpMoveDownSelectedEntities",
+    defaultKey: "C-A-arrowdown",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(0, 100));
+    },
+  },
+  {
+    id: "jumpMoveLeftSelectedEntities",
+    defaultKey: "C-A-arrowleft",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(-100, 0));
+    },
+  },
+  {
+    id: "jumpMoveRightSelectedEntities",
+    defaultKey: "C-A-arrowright",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(100, 0));
+    },
+  },
+
+  /*------- 编辑/详情 -------*/
+  {
+    id: "editEntityDetails",
+    defaultKey: "C-enter",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.controllerUtils.editNodeDetailsByKeyboard();
+    },
+  },
+
+  /*------- 面板/窗口 -------*/
+  {
+    id: "openColorPanel",
+    defaultKey: "F6",
+    onPress: () => ColorWindow.open(),
+  },
+  {
+    id: "switchDebugShow",
+    defaultKey: "F3",
+    onPress: async () => {
+      Settings.showDebug = !Settings.showDebug;
+    },
+  },
+  {
+    id: "selectAll",
+    defaultKey: "C-a",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.stageManager.selectAll();
+      toast.success(
+        <div>
+          <h2>已全选所有元素</h2>
+          <p>
+            {project!.stageManager.getSelectedEntities().length}个实体+
+            {project!.stageManager.getSelectedAssociations().length}个关系=
+            {project!.stageManager.getSelectedStageObjects().length}个舞台对象
+          </p>
+        </div>,
+      );
+      project!.effects.addEffect(ViewOutlineFlashEffect.normal(Color.Green.toNewAlpha(0.2)));
+    },
+  },
+
+  /*------- 章节打包/解包 -------*/
+  {
+    id: "textNodeToSection",
+    defaultKey: "C-S-g",
+    onPress: (project) => project!.sectionPackManager.textNodeToSection(),
+  },
+  {
+    id: "unpackEntityFromSection",
+    defaultKey: "C-S-g",
+    onPress: (project) => project!.sectionPackManager.unpackSelectedSections(),
+  },
+
+  /*------- 隐私模式 -------*/
+  {
+    id: "checkoutProtectPrivacy",
+    defaultKey: "C-2",
+    onPress: async () => {
+      if (Settings.protectingPrivacy) {
+        toast.info("您已退出隐私模式，再次按下此快捷键、或在设置中开启，可进入隐私模式");
+      } else {
+        toast.info("您已通过快捷键进入隐私模式，再次按下此快捷键、或在设置中关闭，可退出隐私模式");
+      }
+      Settings.protectingPrivacy = !Settings.protectingPrivacy;
+    },
+  },
+
+  /*------- 搜索/外部打开 -------*/
+  {
+    id: "searchText",
+    defaultKey: "C-f",
+    onPress: () => FindWindow.open(),
+  },
+  {
+    id: "openTextNodeByContentExternal",
+    defaultKey: "C-e",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      openBrowserOrFile(project!);
+    },
+  },
+
+  /*------- 顶部菜单窗口 -------*/
+  {
+    id: "clickAppMenuSettingsButton",
+    defaultKey: "S-!",
+    onPress: () => SettingsWindow.open("settings"),
+  },
+  {
+    id: "clickAppMenuRecentFileButton",
+    defaultKey: "S-#",
+    onPress: () => RecentFilesWindow.open(),
+  },
+  {
+    id: "clickTagPanelButton",
+    defaultKey: "S-@",
+    onPress: () => TagWindow.open(),
+  },
+
+  /*------- 文件操作 -------*/
+  {
+    id: "saveFile",
+    defaultKey: "C-s",
+    onPress: () => {
+      const activeProject = store.get(activeProjectAtom);
+      activeProject?.camera.clearMoveCommander();
+      if (activeProject) {
+        activeProject.save();
+        if (Settings.clearHistoryWhenManualSave) {
+          activeProject.historyManager.clearHistory();
+        }
+        RecentFileManager.addRecentFileByUri(activeProject.uri);
+      }
+    },
+  },
+  {
+    id: "newDraft",
+    defaultKey: "C-n",
+    onPress: () => onNewDraft(),
+  },
+  {
+    id: "openFile",
+    defaultKey: "C-o",
+    onPress: () => onOpenFile(),
+  },
+
+  /*------- 窗口透明度 -------*/
+  {
+    id: "checkoutWindowOpacityMode",
+    defaultKey: "C-0",
+    onPress: async () => {
+      Settings.windowBackgroundAlpha = Settings.windowBackgroundAlpha === 0 ? 1 : 0;
+    },
+  },
+  {
+    id: "windowOpacityAlphaIncrease",
+    defaultKey: "C-A-S-+",
+    onPress: async (project) => {
+      const currentValue = Settings.windowBackgroundAlpha;
+      if (currentValue === 1) {
+        // 已经不能再大了
+        project!.effects.addEffect(ViewOutlineFlashEffect.short(project!.stageStyleManager.currentStyle.effects.flash));
+      } else {
+        Settings.windowBackgroundAlpha = Math.min(1, currentValue + 0.2);
+      }
+    },
+  },
+  {
+    id: "windowOpacityAlphaDecrease",
+    defaultKey: "C-A-S--",
+    onPress: async (project) => {
+      const currentValue = Settings.windowBackgroundAlpha;
+      if (currentValue === 0) {
+        // 已经不能再小了
+        project!.effects.addEffect(ViewOutlineFlashEffect.short(project!.stageStyleManager.currentStyle.effects.flash));
+      } else {
+        Settings.windowBackgroundAlpha = Math.max(0, currentValue - 0.2);
+      }
+    },
+  },
+
+  /*------- 复制粘贴 -------*/
+  {
+    id: "copy",
+    defaultKey: "C-c",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.copyEngine.copy();
+    },
+  },
+  {
+    id: "paste",
+    defaultKey: "C-v",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.copyEngine.paste();
+    },
+  },
+  {
+    id: "pasteWithOriginLocation",
+    defaultKey: "C-S-v",
+    onPress: () => toast("todo"),
+  },
+
+  /*------- 鼠标模式切换 -------*/
+  {
+    id: "checkoutLeftMouseToSelectAndMove",
+    defaultKey: "v v v",
+    onPress: async (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      Settings.mouseLeftMode = "selectAndMove";
+      toast("当前鼠标左键已经切换为框选/移动模式");
+    },
+  },
+  {
+    id: "checkoutLeftMouseToDrawing",
+    defaultKey: "b b b",
+    onPress: async (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      Settings.mouseLeftMode = "draw";
+      toast("当前鼠标左键已经切换为画笔模式");
+    },
+  },
+  {
+    id: "checkoutLeftMouseToConnectAndCutting",
+    defaultKey: "c c c",
+    onPress: async (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      Settings.mouseLeftMode = "connectAndCut";
+      toast("当前鼠标左键已经切换为连接/切割模式");
+    },
+  },
+
+  /*------- 笔选/扩展选择 -------*/
+  {
+    id: "selectEntityByPenStroke",
+    defaultKey: "C-w",
+    onPress: (project) => {
+      // 现在不生效了，不过也没啥用
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      PenStrokeMethods.selectEntityByPenStroke();
+    },
+  },
+  {
+    id: "expandSelectEntity",
+    defaultKey: "C-w",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.selectChangeEngine.expandSelect(false, false);
+    },
+  },
+  {
+    id: "expandSelectEntityReversed",
+    defaultKey: "C-S-w",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.selectChangeEngine.expandSelect(false, true);
+    },
+  },
+  {
+    id: "expandSelectEntityKeepLastSelected",
+    defaultKey: "C-A-w",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.selectChangeEngine.expandSelect(true, false);
+    },
+  },
+  {
+    id: "expandSelectEntityReversedKeepLastSelected",
+    defaultKey: "C-A-S-w",
+    onPress: async (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.selectChangeEngine.expandSelect(true, true);
+    },
+  },
+
+  /*------- 树/图 生成 -------*/
+  {
+    id: "generateNodeTreeWithDeepMode",
+    defaultKey: "tab",
+    onPress: async (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.keyboardOnlyTreeEngine.onDeepGenerateNode();
+    },
+  },
+  {
+    id: "generateNodeTreeWithBroadMode",
+    defaultKey: "\\",
+    onPress: async (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.keyboardOnlyTreeEngine.onBroadGenerateNode();
+    },
+  },
+  {
+    id: "generateNodeGraph",
+    defaultKey: "`",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      if (project!.keyboardOnlyGraphEngine.isCreating()) {
+        project!.keyboardOnlyGraphEngine.createFinished();
+      } else {
+        if (project!.keyboardOnlyGraphEngine.isEnableVirtualCreate()) {
+          project!.keyboardOnlyGraphEngine.createStart();
+        }
+      }
+    },
+  },
+
+  /*------- 手刹/刹车 -------*/
+  // TODO: 这俩有点问题
+  {
+    id: "masterBrakeControl",
+    defaultKey: "pause",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.camera.clearMoveCommander();
+      project!.camera.speed = Vector.getZero();
+    },
+  },
+  {
+    id: "masterBrakeCheckout",
+    defaultKey: "space",
+    onPress: async (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.camera.clearMoveCommander();
+      project!.camera.speed = Vector.getZero();
+      Settings.allowMoveCameraByWSAD = !Settings.allowMoveCameraByWSAD;
+    },
+  },
+
+  /*------- 树形调整 -------*/
+  {
+    id: "treeGraphAdjust",
+    defaultKey: "A-S-f",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      const entities = project!.stageManager
+        .getSelectedEntities()
+        .filter((entity) => entity instanceof ConnectableEntity);
+      for (const entity of entities) {
+        project!.keyboardOnlyTreeEngine.adjustTreeNode(entity);
+      }
+    },
+  },
+
+  /*------- 彩蛋/秘籍键 -------*/
+  {
+    // TODO 不触发了
+    id: "screenFlashEffect",
+    defaultKey: "arrowup arrowup arrowdown arrowdown arrowleft arrowright arrowleft arrowright b a",
+    onPress: (project) => project!.effects.addEffect(ViewFlashEffect.SaveFile()),
+  },
+  {
+    id: "alignNodesToInteger",
+    defaultKey: "i n t j",
+    onPress: (project) => {
+      const entities = project!.stageManager.getConnectableEntity();
+      for (const entity of entities) {
+        const leftTopLocation = entity.collisionBox.getRectangle().location;
+        const IntLocation = new Vector(Math.round(leftTopLocation.x), Math.round(leftTopLocation.y));
+        entity.moveTo(IntLocation);
+      }
+    },
+  },
+  {
+    id: "toggleCheckmarkOnTextNodes",
+    defaultKey: "o k k",
+    onPress: (project) => TextNodeSmartTools.okk(project!),
+  },
+  {
+    id: "reverseImageColors",
+    defaultKey: "r r r",
+    onPress: (project) => {
+      const selectedImageNodes: ImageNode[] = project!.stageManager
+        .getSelectedEntities()
+        .filter((node) => node instanceof ImageNode);
+      for (const node of selectedImageNodes) {
+        node.reverseColors();
+      }
+      if (selectedImageNodes.length > 0) {
+        toast(`已反转 ${selectedImageNodes.length} 张图片的颜色`);
+      }
+    },
+  },
+
+  /*------- 主题切换 -------*/
+  {
+    id: "switchToDarkTheme",
+    defaultKey: "b l a c k k",
+    onPress: () => {
+      toast.info("切换到暗黑主题");
+      Themes.applyThemeById("dark");
+    },
+  },
+  {
+    id: "switchToLightTheme",
+    defaultKey: "w h i t e e",
+    onPress: () => {
+      toast.info("切换到明亮主题");
+      Themes.applyThemeById("light");
+    },
+  },
+  {
+    id: "switchToParkTheme",
+    defaultKey: "p a r k k",
+    onPress: () => {
+      toast.info("切换到公园主题");
+      Themes.applyThemeById("park");
+    },
+  },
+  {
+    id: "switchToMacaronTheme",
+    defaultKey: "m k l m k l",
+    onPress: () => {
+      toast.info("切换到马卡龙主题");
+      Themes.applyThemeById("macaron");
+    },
+  },
+  {
+    id: "switchToMorandiTheme",
+    defaultKey: "m l d m l d",
+    onPress: () => {
+      toast.info("切换到莫兰迪主题");
+      Themes.applyThemeById("morandi");
+    },
+  },
+
+  /*------- 画笔透明度 -------*/
+  {
+    id: "increasePenAlpha",
+    defaultKey: "p s a + +",
+    onPress: async (project) => project!.controller.penStrokeDrawing.changeCurrentStrokeColorAlpha(0.1),
+  },
+  {
+    id: "decreasePenAlpha",
+    defaultKey: "p s a - -",
+    onPress: async (project) => project!.controller.penStrokeDrawing.changeCurrentStrokeColorAlpha(-0.1),
+  },
+
+  /*------- 对齐 -------*/
+  {
+    id: "alignTop",
+    defaultKey: "8 8",
+    onPress: (project) => {
+      project!.layoutManager.alignTop();
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Up, true);
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Down);
+    },
+  },
+  {
+    id: "alignBottom",
+    defaultKey: "2 2",
+    onPress: (project) => {
+      project!.layoutManager.alignBottom();
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Down, true);
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Up);
+    },
+  },
+  {
+    id: "alignLeft",
+    defaultKey: "4 4",
+    onPress: (project) => {
+      project!.layoutManager.alignLeft();
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Left, true);
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Right);
+    },
+  },
+  {
+    id: "alignRight",
+    defaultKey: "6 6",
+    onPress: (project) => {
+      project!.layoutManager.alignRight();
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Right, true);
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Left);
+    },
+  },
+  {
+    id: "alignHorizontalSpaceBetween",
+    defaultKey: "4 6 4 6",
+    onPress: (project) => project!.layoutManager.alignHorizontalSpaceBetween(),
+  },
+  {
+    id: "alignVerticalSpaceBetween",
+    defaultKey: "8 2 8 2",
+    onPress: (project) => project!.layoutManager.alignVerticalSpaceBetween(),
+  },
+  {
+    id: "alignCenterHorizontal",
+    defaultKey: "5 4 6",
+    onPress: (project) => project!.layoutManager.alignCenterHorizontal(),
+  },
+  {
+    id: "alignCenterVertical",
+    defaultKey: "5 8 2",
+    onPress: (project) => project!.layoutManager.alignCenterVertical(),
+  },
+  {
+    id: "alignLeftToRightNoSpace",
+    defaultKey: "4 5 6",
+    onPress: (project) => project!.layoutManager.alignLeftToRightNoSpace(),
+  },
+  {
+    id: "alignTopToBottomNoSpace",
+    defaultKey: "8 5 2",
+    onPress: (project) => project!.layoutManager.alignTopToBottomNoSpace(),
+  },
+
+  /*------- 连接 -------*/
+  {
+    id: "createConnectPointWhenDragConnecting",
+    defaultKey: "1",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.controller.nodeConnection.createConnectPointWhenConnect();
+    },
+  },
+  {
+    id: "connectAllSelectedEntities",
+    defaultKey: "- - a l l",
+    onPress: (project) => ConnectNodeSmartTools.connectAll(project!),
+  },
+  {
+    id: "connectLeftToRight",
+    defaultKey: "- - r i g h t",
+    onPress: (project) => ConnectNodeSmartTools.connectRight(project!),
+  },
+  {
+    id: "connectTopToBottom",
+    defaultKey: "- - d o w n",
+    onPress: (project) => ConnectNodeSmartTools.connectDown(project!),
+  },
+
+  /*------- 选择所有可见边 -------*/
+  {
+    id: "selectAllEdges",
+    defaultKey: "+ e d g e",
+    onPress: (project) => {
+      const selectedEdges = project!.stageManager.getAssociations();
+      const viewRect = project!.renderer.getCoverWorldRectangle();
+      for (const edge of selectedEdges) {
+        if (project!.renderer.isOverView(viewRect, edge)) continue;
+        edge.isSelected = true;
+      }
+    },
+  },
+
+  /*------- 快速着色 -------*/
+  {
+    id: "colorSelectedRed",
+    defaultKey: "; r e d",
+    onPress: (project) => {
+      const selectedStageObject = project!.stageManager.getStageObjects().filter((obj) => obj.isSelected);
+      for (const obj of selectedStageObject) {
+        if (obj instanceof TextNode) {
+          obj.color = new Color(239, 68, 68);
+        }
+      }
+    },
+  },
+  {
+    id: "increaseBrightness",
+    defaultKey: "b .",
+    onPress: (project) => ColorSmartTools.increaseBrightness(project!),
+  },
+  {
+    id: "decreaseBrightness",
+    defaultKey: "b ,",
+    onPress: (project) => ColorSmartTools.decreaseBrightness(project!),
+  },
+  {
+    id: "gradientColor",
+    defaultKey: "; ,",
+    onPress: (project) => ColorSmartTools.gradientColor(project!),
+  },
+  {
+    id: "changeColorHueUp",
+    defaultKey: "A-S-arrowup",
+    onPress: (project) => ColorSmartTools.changeColorHueUp(project!),
+  },
+  {
+    id: "changeColorHueDown",
+    defaultKey: "A-S-arrowdown",
+    onPress: (project) => ColorSmartTools.changeColorHueDown(project!),
+  },
+  {
+    id: "changeColorHueMajorUp",
+    defaultKey: "A-S-home",
+    onPress: (project) => ColorSmartTools.changeColorHueMajorUp(project!),
+  },
+  {
+    id: "changeColorHueMajorDown",
+    defaultKey: "A-S-end",
+    onPress: (project) => ColorSmartTools.changeColorHueMajorDown(project!),
+  },
+
+  /*------- 文本节点工具 -------*/
+  {
+    id: "toggleTextNodeSizeMode",
+    defaultKey: "t t t",
+    onPress: (project) => TextNodeSmartTools.ttt(project!),
+  },
+  {
+    id: "splitTextNodes",
+    defaultKey: "k e i",
+    onPress: (project) => TextNodeSmartTools.kei(project!),
+  },
+  {
+    id: "mergeTextNodes",
+    defaultKey: "r u a",
+    onPress: (project) => TextNodeSmartTools.rua(project!),
+  },
+  {
+    id: "swapTextAndDetails",
+    defaultKey: "e e e e e",
+    onPress: (project) => TextNodeSmartTools.exchangeTextAndDetails(project!),
+  },
+
+  /*------- 潜行模式 -------*/
+  {
+    id: "switchStealthMode",
+    defaultKey: "j a c k a l",
+    onPress: () => {
+      Settings.isStealthModeEnabled = !Settings.isStealthModeEnabled;
+      toast(Settings.isStealthModeEnabled ? "已开启潜行模式" : "已关闭潜行模式");
+    },
+  },
+
+  /*------- 拆分字符 -------*/
+  {
+    id: "removeFirstCharFromSelectedTextNodes",
+    defaultKey: "C-backspace",
+    onPress: (project) => TextNodeSmartTools.removeFirstCharFromSelectedTextNodes(project!),
+  },
+  {
+    id: "removeLastCharFromSelectedTextNodes",
+    defaultKey: "C-delete",
+    onPress: (project) => TextNodeSmartTools.removeLastCharFromSelectedTextNodes(project!),
+  },
+
+  /*------- 交换两实体位置 -------*/
+  {
+    id: "swapTwoSelectedEntitiesPositions",
+    defaultKey: "S-r",
+    onPress: (project) => {
+      // 这个东西废了，直接触发了软件刷新
+      // 这个东西没啥用，感觉得下掉
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      const selectedEntities = project!.stageManager.getSelectedEntities();
+      if (selectedEntities.length !== 2) return;
+      project!.historyManager.recordStep();
+      const [e1, e2] = selectedEntities;
+      const p1 = e1.collisionBox.getRectangle().location.clone();
+      const p2 = e2.collisionBox.getRectangle().location.clone();
+      e1.moveTo(p2);
+      e2.moveTo(p1);
+    },
+  },
+];
 /**
  * 快捷键注册函数
  */
@@ -40,789 +1100,10 @@ export class KeyBindsRegistrar {
    * 注册所有快捷键
    */
   async registerKeyBinds() {
-    // 开始注册快捷键
-    await this.project.keyBinds.create("test", "C-A-S-t", () =>
-      Dialog.buttons("测试快捷键", "您按下了自定义的测试快捷键，这一功能是测试开发所用，可在设置中更改触发方式", [
-        { id: "close", label: "关闭" },
-      ]),
-    );
-
-    await this.project.keyBinds.create("undo", "C-z", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.historyManager.undo();
-    });
-
-    await this.project.keyBinds.create("redo", "C-y", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.historyManager.redo();
-    });
-
-    // 危险操作，配置一个不容易触发的快捷键
-    await this.project.keyBinds.create("reload", "C-f5", async () => {
-      if (
-        await Dialog.confirm(
-          "危险操作：重新加载应用",
-          "此快捷键用于在废档了或软件卡住了的情况下重启，您按下了重新加载应用快捷键，是否要重新加载应用？这会导致您丢失所有未保存的工作。",
-          { destructive: true },
-        )
-      ) {
-        window.location.reload();
-      }
-    });
-
-    await this.project.keyBinds.create("checkoutClassroomMode", "F5", async () => {
-      // F5 是PPT的播放快捷键
-      if (Settings.isClassroomMode) {
-        toast.info("已经退出专注模式，点击一下更新状态");
-      } else {
-        toast.info("进入专注模式，点击一下更新状态");
-      }
-      Settings.isClassroomMode = !Settings.isClassroomMode;
-    });
-
-    await this.project.keyBinds.create("resetView", "F", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.camera.resetBySelected();
-    });
-
-    await this.project.keyBinds.create("resetCameraScale", "C-A-r", () => {
-      this.project.camera.resetScale();
-    });
-
-    await this.project.keyBinds.create("CameraScaleZoomIn", "[", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.camera.zoomInByKeyboard();
-    });
-
-    await this.project.keyBinds.create("CameraScaleZoomOut", "]", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.camera.zoomOutByKeyboard();
-    });
-
-    if (isMac) {
-      await this.project.keyBinds.create("CameraPageMoveUp", "S-i", () => {
-        this.project.camera.pageMove(Direction.Up);
-      });
-      await this.project.keyBinds.create("CameraPageMoveDown", "S-k", () => {
-        this.project.camera.pageMove(Direction.Down);
-      });
-      await this.project.keyBinds.create("CameraPageMoveLeft", "S-j", () => {
-        this.project.camera.pageMove(Direction.Left);
-      });
-      await this.project.keyBinds.create("CameraPageMoveRight", "S-l", () => {
-        this.project.camera.pageMove(Direction.Right);
-      });
-    } else {
-      await this.project.keyBinds.create("CameraPageMoveUp", "pageup", () => {
-        if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-        this.project.camera.pageMove(Direction.Up);
-      });
-      await this.project.keyBinds.create("CameraPageMoveDown", "pagedown", () => {
-        if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-        this.project.camera.pageMove(Direction.Down);
-      });
-      await this.project.keyBinds.create("CameraPageMoveLeft", "home", () => {
-        if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-        this.project.camera.pageMove(Direction.Left);
-      });
-      await this.project.keyBinds.create("CameraPageMoveRight", "end", () => {
-        if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-        this.project.camera.pageMove(Direction.Right);
+    for (const keyBind of allKeyBinds) {
+      await this.project.keyBinds.create(keyBind.id, keyBind.defaultKey, () => {
+        keyBind.onPress(this.project);
       });
     }
-
-    await this.project.keyBinds.create("folderSection", "C-t", () => {
-      this.project.stageManager.sectionSwitchCollapse();
-    });
-
-    await this.project.keyBinds.create("reverseEdges", "C-t", () => {
-      this.project.stageManager.reverseSelectedEdges();
-    });
-    await this.project.keyBinds.create("reverseSelectedNodeEdge", "C-t", () => {
-      this.project.stageManager.reverseSelectedNodeEdge();
-    });
-
-    await this.project.keyBinds.create("packEntityToSection", "C-g", () => {
-      this.project.stageManager.packEntityToSectionBySelected();
-    });
-    await this.project.keyBinds.create("createUndirectedEdgeFromEntities", "S-g", () => {
-      // 构建无向边
-      const selectedNodes = this.project.stageManager
-        .getSelectedEntities()
-        .filter((node) => node instanceof ConnectableEntity);
-      if (selectedNodes.length <= 1) {
-        toast.error("至少选择两个可连接节点");
-        return;
-      }
-      const multiTargetUndirectedEdge = MultiTargetUndirectedEdge.createFromSomeEntity(this.project, selectedNodes);
-      this.project.stageManager.add(multiTargetUndirectedEdge);
-    });
-
-    await this.project.keyBinds.create("deleteSelectedStageObjects", isMac ? "backspace" : "delete", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.stageManager.deleteSelectedStageObjects();
-    });
-
-    await this.project.keyBinds.create("createTextNodeFromCameraLocation", "insert", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.camera.clearMoveCommander();
-      this.project.camera.speed = Vector.getZero();
-      this.project.controllerUtils.addTextNodeByLocation(this.project.camera.location, true);
-    });
-    await this.project.keyBinds.create("createTextNodeFromMouseLocation", "S-insert", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.camera.clearMoveCommander();
-      this.project.camera.speed = Vector.getZero();
-      this.project.controllerUtils.addTextNodeByLocation(
-        this.project.renderer.transformView2World(MouseLocation.vector()),
-        true,
-      );
-    });
-
-    await this.project.keyBinds.create("createTextNodeFromSelectedTop", "A-arrowup", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Up, true);
-    });
-
-    await this.project.keyBinds.create("createTextNodeFromSelectedRight", "A-arrowright", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Right, true);
-    });
-
-    await this.project.keyBinds.create("createTextNodeFromSelectedLeft", "A-arrowleft", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Left, true);
-    });
-
-    await this.project.keyBinds.create("createTextNodeFromSelectedDown", "A-arrowdown", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Down, true);
-    });
-
-    await this.project.keyBinds.create("selectUp", "arrowup", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.selectUp();
-    });
-    await this.project.keyBinds.create("selectDown", "arrowdown", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.selectDown();
-    });
-    await this.project.keyBinds.create("selectLeft", "arrowleft", () => {
-      this.project.selectChangeEngine.selectLeft();
-    });
-    await this.project.keyBinds.create("selectRight", "arrowright", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.selectRight();
-    });
-    await this.project.keyBinds.create("selectAdditionalUp", "S-arrowup", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.selectUp(true);
-    });
-    await this.project.keyBinds.create("selectAdditionalDown", "S-arrowdown", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.selectDown(true);
-    });
-    await this.project.keyBinds.create("selectAdditionalLeft", "S-arrowleft", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.selectLeft(true);
-    });
-    await this.project.keyBinds.create("selectAdditionalRight", "S-arrowright", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.selectRight(true);
-    });
-
-    await this.project.keyBinds.create("moveUpSelectedEntities", "C-arowup", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      const entities = this.project.stageManager.getEntities().filter((e) => e.isSelected);
-      if (entities.length > 0) {
-        const rect = entities[0].collisionBox.getRectangle();
-        const newRect = rect.clone();
-        newRect.location.y -= 100;
-        this.project.effects.addEffect(
-          RectangleSlideEffect.verticalSlide(
-            rect,
-            newRect,
-            this.project.stageStyleManager.currentStyle.effects.successShadow,
-          ),
-        );
-      }
-      this.project.entityMoveManager.moveSelectedEntities(new Vector(0, -100));
-    });
-
-    await this.project.keyBinds.create("moveDownSelectedEntities", "C-arrowdown", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      const entities = this.project.stageManager.getEntities().filter((e) => e.isSelected);
-      if (entities.length > 0) {
-        const rect = entities[0].collisionBox.getRectangle();
-        const newRect = rect.clone();
-        newRect.location.y += 100;
-        this.project.effects.addEffect(
-          RectangleSlideEffect.verticalSlide(
-            rect,
-            newRect,
-            this.project.stageStyleManager.currentStyle.effects.successShadow,
-          ),
-        );
-      }
-      this.project.entityMoveManager.moveSelectedEntities(new Vector(0, 100));
-    });
-
-    await this.project.keyBinds.create("moveLeftSelectedEntities", "C-arrowleft", () => {
-      const entities = this.project.stageManager.getEntities().filter((e) => e.isSelected);
-      if (entities.length > 0) {
-        const rect = entities[0].collisionBox.getRectangle();
-        const newRect = rect.clone();
-        newRect.location.x -= 100;
-        this.project.effects.addEffect(
-          RectangleSlideEffect.horizontalSlide(
-            rect,
-            newRect,
-            this.project.stageStyleManager.currentStyle.effects.successShadow,
-          ),
-        );
-      }
-      this.project.entityMoveManager.moveSelectedEntities(new Vector(-100, 0));
-    });
-
-    await this.project.keyBinds.create("moveRightSelectedEntities", "C-arrowright", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      const entities = this.project.stageManager.getEntities().filter((e) => e.isSelected);
-      if (entities.length > 0) {
-        const rect = entities[0].collisionBox.getRectangle();
-        const newRect = rect.clone();
-        newRect.location.x += 100;
-        this.project.effects.addEffect(
-          RectangleSlideEffect.horizontalSlide(
-            rect,
-            newRect,
-            this.project.stageStyleManager.currentStyle.effects.successShadow,
-          ),
-        );
-      }
-      this.project.entityMoveManager.moveSelectedEntities(new Vector(100, 0));
-    });
-    await this.project.keyBinds.create("jumpMoveUpSelectedEntities", "C-A-arrowup", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(0, -100));
-    });
-
-    await this.project.keyBinds.create("jumpMoveDownSelectedEntities", "C-A-arrowdown", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(0, 100));
-    });
-
-    await this.project.keyBinds.create("jumpMoveLeftSelectedEntities", "C-A-arrowleft", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(-100, 0));
-    });
-
-    await this.project.keyBinds.create("jumpMoveRightSelectedEntities", "C-A-arrowright", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(100, 0));
-    });
-
-    await this.project.keyBinds.create("editEntityDetails", "C-enter", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.controllerUtils.editNodeDetailsByKeyboard();
-    });
-
-    await this.project.keyBinds.create("openColorPanel", "F6", () => {
-      // toast.warning("2.0版本的颜色面板已被整合入右键菜单，请在右键菜单中打开");
-      ColorWindow.open();
-    });
-    await this.project.keyBinds.create("switchDebugShow", "F3", async () => {
-      const currentValue = Settings.showDebug;
-      Settings.showDebug = !currentValue;
-    });
-
-    await this.project.keyBinds.create("selectAll", "C-a", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.stageManager.selectAll();
-      toast.success(
-        <div>
-          <h2>已全选所有元素</h2>
-          <p>
-            {this.project.stageManager.getSelectedEntities().length}个实体+
-            {this.project.stageManager.getSelectedAssociations().length}个关系=
-            {this.project.stageManager.getSelectedStageObjects().length}个舞台对象
-          </p>
-        </div>,
-      );
-      this.project.effects.addEffect(ViewOutlineFlashEffect.normal(Color.Green.toNewAlpha(0.2)));
-    });
-    await this.project.keyBinds.create("textNodeToSection", "C-S-g", () => {
-      this.project.sectionPackManager.textNodeToSection();
-    });
-    await this.project.keyBinds.create("unpackEntityFromSection", "C-S-g", () => {
-      this.project.sectionPackManager.unpackSelectedSections();
-    });
-    await this.project.keyBinds.create("checkoutProtectPrivacy", "C-2", async () => {
-      if (Settings.protectingPrivacy) {
-        toast.info("您已退出隐私模式，再次按下此快捷键、或在设置中开启，可进入隐私模式");
-      } else {
-        toast.info("您已通过快捷键进入隐私模式，再次按下此快捷键、或在设置中关闭，可退出隐私模式");
-      }
-      Settings.protectingPrivacy = !Settings.protectingPrivacy;
-    });
-    await this.project.keyBinds.create("searchText", "C-f", () => {
-      FindWindow.open();
-    });
-    await this.project.keyBinds.create("openTextNodeByContentExternal", "C-e", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      openBrowserOrFile(this.project);
-    });
-
-    await this.project.keyBinds.create("clickAppMenuSettingsButton", "S-!", () => {
-      SettingsWindow.open("settings");
-    });
-    // await this.project.keyBinds.create("clickTagPanelButton", "S-@", () => {
-    //   TagWindow.open();
-    // });
-    await this.project.keyBinds.create("clickAppMenuRecentFileButton", "S-#", () => {
-      // KeyboardRecentFilesWindow.open();
-      RecentFilesWindow.open();
-    });
-    // await this.project.keyBinds.create("clickStartFilePanelButton", "S-$", () => {
-    //   const button = document.getElementById("app-start-file-btn");
-    //   const event = new MouseEvent("click", {
-    //     bubbles: true,
-    //     cancelable: true,
-    //     view: window,
-    //   });
-    //   button?.dispatchEvent(event);
-    //   setTimeout(() => {
-    //     this.project.controller.pressingKeySet.clear();
-    //   }, 200);
-    // });
-    await this.project.keyBinds.create("saveFile", "C-s", () => {
-      const activeProject = store.get(activeProjectAtom);
-      // 提前清理动力，防止保存的时候无限向下滚动
-      activeProject?.camera.clearMoveCommander();
-      if (activeProject) {
-        activeProject.save();
-        if (Settings.clearHistoryWhenManualSave) {
-          activeProject.historyManager.clearHistory();
-        }
-        RecentFileManager.addRecentFileByUri(activeProject.uri);
-      }
-    });
-    await this.project.keyBinds.create("newDraft", "C-n", () => {
-      onNewDraft();
-    });
-    await this.project.keyBinds.create("openFile", "C-o", () => {
-      onOpenFile();
-    });
-
-    await this.project.keyBinds.create("checkoutWindowOpacityMode", "C-0", async () => {
-      // 切换窗口透明度模式
-      const currentValue = Settings.windowBackgroundAlpha;
-      if (currentValue === 0) {
-        Settings.windowBackgroundAlpha = 1;
-      } else {
-        Settings.windowBackgroundAlpha = 0;
-      }
-    });
-    await this.project.keyBinds.create("windowOpacityAlphaIncrease", "C-A-S-+", async () => {
-      const currentValue = Settings.windowBackgroundAlpha;
-      if (currentValue === 1) {
-        // 已经不能再大了
-        this.project.effects.addEffect(
-          ViewOutlineFlashEffect.short(this.project.stageStyleManager.currentStyle.effects.flash),
-        );
-      } else {
-        Settings.windowBackgroundAlpha = Math.min(1, currentValue + 0.2);
-      }
-    });
-    await this.project.keyBinds.create("windowOpacityAlphaDecrease", "C-A-S--", async () => {
-      const currentValue = Settings.windowBackgroundAlpha;
-      if (currentValue === 0) {
-        // 已经不能再小了
-        this.project.effects.addEffect(
-          ViewOutlineFlashEffect.short(this.project.stageStyleManager.currentStyle.effects.flash),
-        );
-      } else {
-        Settings.windowBackgroundAlpha = Math.max(0, currentValue - 0.2);
-      }
-    });
-
-    // await this.project.keyBinds.create("penStrokeWidthIncrease", "=", async () => {
-    //   if (Settings.mouseLeftMode === "draw") {
-    //     const newWidth = this.project.controller.penStrokeDrawing.currentStrokeWidth + 4;
-    //     this.project.controller.penStrokeDrawing.currentStrokeWidth = Math.max(1, Math.min(newWidth, 1000));
-    //     toast(`画笔粗细: ${this.project.controller.penStrokeDrawing.currentStrokeWidth}px`);
-    //   }
-    // });
-    // await this.project.keyBinds.create("penStrokeWidthDecrease", "-", async () => {
-    //   if (Settings.mouseLeftMode === "draw") {
-    //     const newWidth = this.project.controller.penStrokeDrawing.currentStrokeWidth - 4;
-    //     this.project.controller.penStrokeDrawing.currentStrokeWidth = Math.max(1, Math.min(newWidth, 1000));
-    //     toast(`画笔粗细: ${this.project.controller.penStrokeDrawing.currentStrokeWidth}px`);
-    //   }
-    // });
-
-    await this.project.keyBinds.create("copy", "C-c", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.copyEngine.copy();
-    });
-    await this.project.keyBinds.create("paste", "C-v", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.copyEngine.paste();
-    });
-
-    await this.project.keyBinds.create("pasteWithOriginLocation", "C-S-v", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      // this.project.copyEngine.pasteWithOriginLocation();
-      toast("todo");
-    });
-
-    await this.project.keyBinds.create("checkoutLeftMouseToSelectAndMove", "v v v", async () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      Settings.mouseLeftMode = "selectAndMove";
-      toast("当前鼠标左键已经切换为框选/移动模式");
-    });
-    await this.project.keyBinds.create("checkoutLeftMouseToDrawing", "b b b", async () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      Settings.mouseLeftMode = "draw";
-      toast("当前鼠标左键已经切换为画笔模式");
-    });
-
-    // 鼠标左键切换为连接模式
-    // let lastMouseMode = "selectAndMove";
-    await this.project.keyBinds.create("checkoutLeftMouseToConnectAndCutting", "c c c", async () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      Settings.mouseLeftMode = "connectAndCut";
-      toast("当前鼠标左键已经切换为连接/切割模式");
-    });
-
-    // await this.project.keyBinds.create("checkoutLeftMouseToConnectAndCuttingOnlyPressed", "z", async () => {
-    //   // lastMouseMode = Settings.mouseLeftMode;
-    //   if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-    //   Stage.MouseModeManager.checkoutConnectAndCuttingHook();
-    // })
-    // // .up(async () => {
-    // //   if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-    // //   Stage.MouseModeManager.checkoutSelectAndMoveHook();
-    // // });
-
-    await this.project.keyBinds.create("selectEntityByPenStroke", "C-w", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      PenStrokeMethods.selectEntityByPenStroke();
-    });
-    await this.project.keyBinds.create("expandSelectEntity", "C-w", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.expandSelect(false, false);
-    });
-    await this.project.keyBinds.create("expandSelectEntityReversed", "C-S-w", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.expandSelect(false, true);
-    });
-    await this.project.keyBinds.create("expandSelectEntityKeepLastSelected", "C-A-w", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.expandSelect(true, false);
-    });
-    await this.project.keyBinds.create("expandSelectEntityReversedKeepLastSelected", "C-A-S-w", async () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.expandSelect(true, true);
-    });
-
-    await this.project.keyBinds.create("generateNodeTreeWithDeepMode", "tab", async () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.keyboardOnlyTreeEngine.onDeepGenerateNode();
-    });
-
-    await this.project.keyBinds.create("masterBrakeControl", "pause", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      // 按下一次就清空动力
-      this.project.camera.clearMoveCommander();
-      this.project.camera.speed = Vector.getZero();
-    });
-
-    await this.project.keyBinds.create("masterBrakeCheckout", "space", async () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      // 看成汽车的手刹，按下一次就切换是否允许移动
-      this.project.camera.clearMoveCommander();
-      this.project.camera.speed = Vector.getZero();
-      Settings.allowMoveCameraByWSAD = !Settings.allowMoveCameraByWSAD;
-    });
-
-    await this.project.keyBinds.create("generateNodeTreeWithBroadMode", "\\", async () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.keyboardOnlyTreeEngine.onBroadGenerateNode();
-    });
-
-    // (await this.project.keyBinds.create("generateNodeGraph", "`"))
-    //   .down(() => {
-    //     if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-    //     if (this.project.keyboardOnlyGraphEngine.isEnableVirtualCreate()) {
-    //       this.project.keyboardOnlyGraphEngine.createStart();
-    //     }
-    //   })
-    //   .up(() => {
-    //     if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-    //     if (this.project.keyboardOnlyGraphEngine.isCreating()) {
-    //       this.project.keyboardOnlyGraphEngine.createFinished();
-    //     }
-    //   });
-    await this.project.keyBinds.create("generateNodeGraph", "`", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      if (this.project.keyboardOnlyGraphEngine.isCreating()) {
-        this.project.keyboardOnlyGraphEngine.createFinished();
-      } else {
-        if (this.project.keyboardOnlyGraphEngine.isEnableVirtualCreate()) {
-          this.project.keyboardOnlyGraphEngine.createStart();
-        }
-      }
-    });
-
-    await this.project.keyBinds.create("createConnectPointWhenDragConnecting", "1", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.controller.nodeConnection.createConnectPointWhenConnect();
-    });
-
-    await this.project.keyBinds.create("treeGraphAdjust", "A-S-f", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      // 获取所有的选中节点
-      const entities = this.project.stageManager
-        .getSelectedEntities()
-        .filter((entity) => entity instanceof ConnectableEntity);
-      // 调整所有节点的树形结构
-      for (const entity of entities) {
-        this.project.keyboardOnlyTreeEngine.adjustTreeNode(entity);
-      }
-    });
-
-    // 以下是老秘籍键
-
-    await this.project.keyBinds.create(
-      "screenFlashEffect",
-      "arrowup arrowup arrowdown arrowdown arrowleft arrowright arrowleft arrowright b a",
-      () => {
-        this.project.effects.addEffect(ViewFlashEffect.SaveFile());
-      },
-    );
-
-    // 减小体积
-    await this.project.keyBinds.create("alignNodesToInteger", "i n t j", () => {
-      const entities = this.project.stageManager.getConnectableEntity();
-      for (const entity of entities) {
-        const leftTopLocation = entity.collisionBox.getRectangle().location;
-        const IntLocation = new Vector(Math.round(leftTopLocation.x), Math.round(leftTopLocation.y));
-        entity.moveTo(IntLocation);
-      }
-    });
-
-    // 做计划的功能
-    await this.project.keyBinds.create("toggleCheckmarkOnTextNodes", "o k k", () => {
-      TextNodeSmartTools.okk(this.project);
-    });
-
-    // 反转选中图片的颜色
-    await this.project.keyBinds.create("reverseImageColors", "r r r", () => {
-      const selectedImageNodes: ImageNode[] = this.project.stageManager
-        .getSelectedEntities()
-        .filter((node) => node instanceof ImageNode);
-      for (const node of selectedImageNodes) {
-        node.reverseColors();
-      }
-      if (selectedImageNodes.length > 0) {
-        toast(`已反转 ${selectedImageNodes.length} 张图片的颜色`);
-      }
-    });
-
-    await this.project.keyBinds.create("switchToDarkTheme", "b l a c k k", () => {
-      toast.info("切换到暗黑主题");
-      Themes.applyThemeById("dark");
-    });
-
-    await this.project.keyBinds.create("switchToLightTheme", "w h i t e e", () => {
-      toast.info("切换到明亮主题");
-      Themes.applyThemeById("light");
-    });
-
-    await this.project.keyBinds.create("switchToParkTheme", "p a r k k", () => {
-      toast.info("切换到公园主题");
-      Themes.applyThemeById("park");
-    });
-
-    await this.project.keyBinds.create("switchToMacaronTheme", "m k l m k l", () => {
-      toast.info("切换到马卡龙主题");
-      Themes.applyThemeById("macaron");
-    });
-
-    await this.project.keyBinds.create("switchToMorandiTheme", "m l d m l d", () => {
-      toast.info("切换到莫兰迪主题");
-      Themes.applyThemeById("morandi");
-    });
-
-    // 画笔相关快捷键
-    await this.project.keyBinds.create("increasePenAlpha", "p s a + +", async () => {
-      this.project.controller.penStrokeDrawing.changeCurrentStrokeColorAlpha(0.1);
-    });
-
-    await this.project.keyBinds.create("decreasePenAlpha", "p s a - -", async () => {
-      this.project.controller.penStrokeDrawing.changeCurrentStrokeColorAlpha(-0.1);
-    });
-
-    // 对齐相关快捷键
-    await this.project.keyBinds.create("alignTop", "8 8", () => {
-      this.project.layoutManager.alignTop();
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Up, true);
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Down);
-    });
-
-    await this.project.keyBinds.create("alignBottom", "2 2", () => {
-      this.project.layoutManager.alignBottom();
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Down, true);
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Up);
-    });
-
-    await this.project.keyBinds.create("alignLeft", "4 4", () => {
-      this.project.layoutManager.alignLeft();
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Left, true);
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Right);
-    });
-
-    await this.project.keyBinds.create("alignRight", "6 6", () => {
-      this.project.layoutManager.alignRight();
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Right, true);
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Left);
-    });
-
-    await this.project.keyBinds.create("alignHorizontalSpaceBetween", "4 6 4 6", () => {
-      this.project.layoutManager.alignHorizontalSpaceBetween();
-    });
-
-    await this.project.keyBinds.create("alignVerticalSpaceBetween", "8 2 8 2", () => {
-      this.project.layoutManager.alignVerticalSpaceBetween();
-    });
-
-    await this.project.keyBinds.create("alignCenterHorizontal", "5 4 6", () => {
-      this.project.layoutManager.alignCenterHorizontal();
-    });
-
-    await this.project.keyBinds.create("alignCenterVertical", "5 8 2", () => {
-      this.project.layoutManager.alignCenterVertical();
-    });
-
-    await this.project.keyBinds.create("alignLeftToRightNoSpace", "4 5 6", () => {
-      this.project.layoutManager.alignLeftToRightNoSpace();
-    });
-
-    await this.project.keyBinds.create("alignTopToBottomNoSpace", "8 5 2", () => {
-      this.project.layoutManager.alignTopToBottomNoSpace();
-    });
-
-    // 全连接
-    await this.project.keyBinds.create("connectAllSelectedEntities", "- - a l l", () => {
-      ConnectNodeSmartTools.connectAll(this.project);
-    });
-
-    // 向右连接
-    await this.project.keyBinds.create("connectLeftToRight", "- - r i g h t", () => {
-      ConnectNodeSmartTools.connectRight(this.project);
-    });
-
-    await this.project.keyBinds.create("connectTopToBottom", "- - d o w n", () => {
-      ConnectNodeSmartTools.connectDown(this.project);
-    });
-
-    await this.project.keyBinds.create("selectAllEdges", "+ e d g e", () => {
-      const selectedEdges = this.project.stageManager.getAssociations();
-      const viewRect = this.project.renderer.getCoverWorldRectangle();
-      for (const edge of selectedEdges) {
-        if (this.project.renderer.isOverView(viewRect, edge)) continue;
-        edge.isSelected = true;
-      }
-    });
-
-    await this.project.keyBinds.create("colorSelectedRed", "; r e d", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
-      for (const obj of selectedStageObject) {
-        if (obj instanceof TextNode) {
-          obj.color = new Color(239, 68, 68);
-        }
-      }
-    });
-
-    await this.project.keyBinds.create("increaseBrightness", "b .", () => {
-      ColorSmartTools.increaseBrightness(this.project);
-    });
-
-    await this.project.keyBinds.create("decreaseBrightness", "b ,", () => {
-      ColorSmartTools.decreaseBrightness(this.project);
-    });
-
-    await this.project.keyBinds.create("gradientColor", "; ,", () => {
-      ColorSmartTools.gradientColor(this.project);
-    });
-
-    await this.project.keyBinds.create("changeColorHueUp", "A-S-arrowup", () => {
-      ColorSmartTools.changeColorHueUp(this.project);
-    });
-    await this.project.keyBinds.create("changeColorHueDown", "A-S-arrowdown", () => {
-      ColorSmartTools.changeColorHueDown(this.project);
-    });
-    await this.project.keyBinds.create("changeColorHueMajorUp", "A-S-home", () => {
-      ColorSmartTools.changeColorHueMajorUp(this.project);
-    });
-    await this.project.keyBinds.create("changeColorHueMajorDown", "A-S-end", () => {
-      ColorSmartTools.changeColorHueMajorDown(this.project);
-    });
-
-    await this.project.keyBinds.create("toggleTextNodeSizeMode", "t t t", () => {
-      TextNodeSmartTools.ttt(this.project);
-    });
-
-    await this.project.keyBinds.create("splitTextNodes", "k e i", () => {
-      TextNodeSmartTools.kei(this.project);
-    });
-
-    await this.project.keyBinds.create("mergeTextNodes", "r u a", () => {
-      TextNodeSmartTools.rua(this.project);
-    });
-
-    await this.project.keyBinds.create("swapTextAndDetails", "e e e e e", () => {
-      TextNodeSmartTools.exchangeTextAndDetails(this.project);
-    });
-
-    await this.project.keyBinds.create("switchStealthMode", "j a c k a l", () => {
-      Settings.isStealthModeEnabled = !Settings.isStealthModeEnabled;
-      toast(Settings.isStealthModeEnabled ? "已开启潜行模式" : "已关闭潜行模式");
-    });
-
-    // 去除选中文本节点开头的一个字符，并将移除的字符创建为新的文本节点放在左侧
-    await this.project.keyBinds.create("removeFirstCharFromSelectedTextNodes", "C-backspace", () => {
-      TextNodeSmartTools.removeFirstCharFromSelectedTextNodes(this.project);
-    });
-
-    // 去除选中文本节点结尾的一个字符，并将移除的字符创建为新的文本节点放在右侧
-    await this.project.keyBinds.create("removeLastCharFromSelectedTextNodes", "C-delete", () => {
-      TextNodeSmartTools.removeLastCharFromSelectedTextNodes(this.project);
-    });
-
-    // 交换两个选中实体的位置
-    await this.project.keyBinds.create("swapTwoSelectedEntitiesPositions", "S-r", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-
-      const selectedEntities = this.project.stageManager.getSelectedEntities();
-      // 只有当恰好选中两个实体时才执行交换
-      if (selectedEntities.length !== 2) {
-        return;
-      }
-
-      // 记录操作历史
-      this.project.historyManager.recordStep();
-
-      // 获取两个实体的碰撞箱外接矩形左上角位置
-      const entity1 = selectedEntities[0];
-      const entity2 = selectedEntities[1];
-
-      const position1 = entity1.collisionBox.getRectangle().location.clone();
-      const position2 = entity2.collisionBox.getRectangle().location.clone();
-
-      // 交换两个实体的位置
-      entity1.moveTo(position2);
-      entity2.moveTo(position1);
-    });
   }
 }

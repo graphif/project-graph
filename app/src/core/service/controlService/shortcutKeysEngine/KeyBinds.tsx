@@ -74,7 +74,7 @@ export class KeyBinds {
 
   /**
    * 获取所有快捷键绑定
-   * @returns
+   * @returns [[key, value], [key, value], ...], 具体来说是 [["copy", "C-c"], ["paste", "C-v"], ...]
    */
   async entries() {
     if (!this.store) {

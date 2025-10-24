@@ -1,3 +1,4 @@
+import { Dialog } from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import KeyBind from "@/components/ui/key-bind";
@@ -10,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { allKeyBinds } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import { activeProjectAtom } from "@/state";
 import Fuse from "fuse.js";
 import { useAtom } from "jotai";
@@ -118,7 +120,15 @@ export default function KeyBindsPage() {
         <RotateCw
           className="text-panel-details-text h-4 w-4 cursor-pointer opacity-0 transition-all hover:rotate-180 group-hover/field:opacity-100"
           onClick={() => {
-            // TODO
+            const defaultValue = allKeyBinds.find((kb) => kb.id === id)?.defaultKey;
+            if (defaultValue) {
+              setData((data) => data.map((item) => (item[0] === id ? [id, defaultValue] : item)));
+              activeProject?.keyBinds.set(id, defaultValue);
+              Dialog.confirm(
+                `已重置为 '${defaultValue}'，但需要刷新页面后生效`,
+                "切换左侧选项卡即可更新页面显示，看到效果。",
+              );
+            }
           }}
         />
         <KeyBind
