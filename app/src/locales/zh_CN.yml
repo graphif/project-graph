@@ -921,6 +921,7 @@ keyBindsGroup:
 
 keyBinds:
   title: 快捷键绑定
+  none: 未绑定快捷键
   test:
     title: 测试
     description: |

@@ -899,6 +899,7 @@ keys:
 
 keyBinds:
   title: Key Bindings
+  none: No Key Binding. Click to Bind
   test:
     title: Test
     description: |

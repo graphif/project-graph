@@ -178,7 +178,7 @@ export function Field({
         <span>{icon}</span>
         <div className="flex flex-col">
           <span>{title}</span>
-          <span className="text-panel-details-text text-xs">
+          <span className="text-panel-details-text text-xs font-light opacity-60">
             {description.split("\n").map((dd, ii) => (
               <p key={ii} className="text-xs">
                 {dd}

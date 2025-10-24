@@ -695,6 +695,7 @@ startFilePanel:
     showFileTime: 顯示檔案時間
 
 keyBinds:
+  none: 未绑定快捷键
   test:
     title: 測試
     description: |

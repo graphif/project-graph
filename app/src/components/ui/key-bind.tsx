@@ -18,7 +18,7 @@ export default function KeyBind({
 }) {
   const [choosing, setChoosing] = useState(false);
   const [value, setValue] = useState(defaultValue);
-  const { t } = useTranslation("keys");
+  const { t } = useTranslation("keyBinds");
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     event.preventDefault();
@@ -152,7 +152,11 @@ export function Modifiers({
       mods.push("meta");
     }
   }
-  return mods.map((modifier, index) => <span key={index}>{modifier}</span>);
+  return mods.map((modifier, index) => (
+    <span className="bg-card rounded-sm px-1" key={index}>
+      {modifier}
+    </span>
+  ));
 }
 
 export function MouseButton({ key_ }: { key_: string }) {

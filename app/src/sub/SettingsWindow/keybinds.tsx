@@ -24,6 +24,7 @@ import {
   Move,
   Network,
   PanelsTopLeft,
+  RotateCw,
   Scan,
   Search as SearchIcon,
   SendToBack,
@@ -114,6 +115,12 @@ export default function KeyBindsPage() {
         description={t(`${id}.description`, { defaultValue: "" })}
         className="border-accent border-b"
       >
+        <RotateCw
+          className="text-panel-details-text h-4 w-4 cursor-pointer opacity-0 transition-all hover:rotate-180 group-hover/field:opacity-100"
+          onClick={() => {
+            // TODO
+          }}
+        />
         <KeyBind
           defaultValue={data.find((item) => item[0] === id)?.[1]}
           onChange={(value) => {
