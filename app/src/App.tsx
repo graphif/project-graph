@@ -22,8 +22,8 @@ import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
 import { arch, platform, version } from "@tauri-apps/plugin-os";
 import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
 import { useAtom } from "jotai";
-import { ChevronsLeftRight, CloudUpload, Copy, Dot, Minus, Pin, PinOff, Square, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ChevronsLeftRight, Copy, Minus, Pin, PinOff, Square, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
@@ -32,6 +32,7 @@ import { isMac, isWindows } from "./utils/platform";
 import { register } from "@tauri-apps/plugin-global-shortcut";
 import { registerAllUIKeyBinds } from "./core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
+import { ProjectTabs } from "./ProjectTabs";
 
 export default function App() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -42,7 +43,7 @@ export default function App() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [___, setIsWindowAlwaysOnTop] = useAtom(isWindowAlwaysOnTopAtom);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
-  const [isWide, setIsWide] = useState(false);
+  // const [isWide, setIsWide] = useState(false);
   const [telemetryEventSent, setTelemetryEventSent] = useState(false);
   const [dropState, setDropState] = useState<"none" | "open" | "append">("none");
   const [ignoreMouseEvents, setIgnoreMouseEvents] = useState(false);
@@ -50,8 +51,6 @@ export default function App() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [__, setIsClickThroughEnabled] = useAtom(isClickThroughEnabledAtom);
 
-  const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const scrollPositionRef = useRef(0); // 用于保存滚动位置的 ref，防止切换标签页时滚动位置丢失
   const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
 
   // const { t } = useTranslation("app");
@@ -101,13 +100,13 @@ export default function App() {
     // 恢复窗口位置大小
     restoreStateCurrent(StateFlags.SIZE | StateFlags.POSITION | StateFlags.MAXIMIZED);
 
-    setIsWide(window.innerWidth / window.innerHeight > 1.8);
+    // setIsWide(window.innerWidth / window.innerHeight > 1.8);
 
     const unlisten1 = getCurrentWindow().onResized(() => {
       if (!isOnResizedDisabled.current) {
         isMaximizedWorkaround();
       }
-      setIsWide(window.innerWidth / window.innerHeight > 1.8);
+      // setIsWide(window.innerWidth / window.innerHeight > 1.8);
     });
 
     if (!telemetryEventSent) {
@@ -242,43 +241,6 @@ export default function App() {
     };
   }, [activeProject]);
 
-  useEffect(() => {
-    const el = tabsContainerRef.current; // tabs
-
-    const onWheel = (e: WheelEvent) => {
-      if (!el) return; // 再次检查 el 是否为 null
-      if (e.deltaY === 0) return;
-      e.preventDefault();
-      el.scrollTo({
-        left: el.scrollLeft + e.deltaY,
-        behavior: "smooth",
-      });
-      // 在滚轮事件中更新保存的滚动位置
-      scrollPositionRef.current = el.scrollLeft;
-    };
-
-    // 检查元素是否满足水平滚动条件
-    const isHorizontallyScrollable = el && el.scrollWidth > el.clientWidth;
-
-    if (el) {
-      // 先移除旧监听器
-      el.removeEventListener("wheel", onWheel);
-    }
-
-    if (el && isHorizontallyScrollable) {
-      el.addEventListener("wheel", onWheel, { passive: false });
-      // App重载后恢复滚动位置
-      el.scrollLeft = scrollPositionRef.current;
-    } else {
-      console.log("Element for wheel listener is null or not scrollable."); // 调试：如果 el 为 null 或 不满足水平滚动条件 时不可滚动
-    }
-
-    return () => {
-      if (el) {
-        el.removeEventListener("wheel", onWheel);
-      }
-    };
-  }, [projects.length, isWide, activeProject?.uri]);
   // 根据标签页数量、是否宽屏、当前活动项目uri 设置滚动tabs
   /**
    * 首次启动时显示欢迎页面
@@ -380,57 +342,15 @@ export default function App() {
     });
   };
 
-  /**
-   * 多标签页
-   */
-  const ProjectTabs = () => (
-    <div
-      ref={tabsContainerRef}
-      className={cn(
-        "scrollbar-hide z-10 flex h-9 gap-2 overflow-x-auto whitespace-nowrap hover:opacity-100",
-        isClassroomMode && "opacity-0",
-        ignoreMouseEvents && "pointer-events-none",
-      )}
-    >
-      {projects.map((project) => (
-        <Button
-          key={project.uri.toString()}
-          variant={activeProject?.uri.toString() === project.uri.toString() ? "secondary" : "outline"}
-          className={activeProject?.uri.toString() === project.uri.toString() ? "border-primary border-t-2" : ""}
-          onClick={() => {
-            setActiveProject(project);
-          }}
-          onMouseDown={async (e) => {
-            if (e.button === 1) {
-              e.preventDefault();
-              await closeProject(project);
-            }
-          }}
-        >
-          <span className="text-sm">
-            {project.uri.scheme === "draft"
-              ? `临时草稿 (${project.uri.path})`
-              : project.uri.scheme === "file"
-                ? project.uri.path.split("/").pop()
-                : project.uri.toString()}
-          </span>
-          <div
-            className="cursor-pointer overflow-hidden hover:opacity-75"
-            onClick={async (e) => {
-              e.stopPropagation();
-              await closeProject(project);
-            }}
-          >
-            {project.state === ProjectState.Saved && <X />}
-            {project.state === ProjectState.Stashed && <CloudUpload />}
-            {project.state === ProjectState.Unsaved && <Dot className="scale-300" />}
-          </div>
-        </Button>
-      ))}
-      {dropState !== "none" && (
-        <Button variant={dropState === "open" ? "default" : "outline"}>拖拽到此处打开文件</Button>
-      )}
-    </div>
+  const handleTabClick = useCallback((project: Project) => {
+    setActiveProject(project);
+  }, []);
+
+  const handleTabClose = useCallback(
+    async (project: Project) => {
+      await closeProject(project);
+    },
+    [closeProject],
   );
 
   return (
@@ -449,12 +369,19 @@ export default function App() {
         {isMac && <WindowButtons />}
         {/* <div className=" flex h-8 shrink-0 items-center overflow-hidden rounded-xl border"></div> */}
         <GlobalMenu />
-        {isWide && <ProjectTabs />}
         <div className="h-full flex-1 cursor-grab active:cursor-grabbing" data-tauri-drag-region></div>
         {!isMac && <WindowButtons />}
       </div>
 
-      {!isWide && <ProjectTabs />}
+      <ProjectTabs
+        projects={projects}
+        activeProject={activeProject}
+        onTabClick={handleTabClick}
+        onTabClose={handleTabClose}
+        isClassroomMode={isClassroomMode}
+        ignoreMouseEvents={ignoreMouseEvents}
+        dropState={dropState}
+      />
 
       {/* canvas */}
       <div className="absolute inset-0 overflow-hidden" ref={canvasWrapperRef}></div>
