@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { allKeyBinds, getKeyBindTypeById } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
-import { activeProjectAtom } from "@/state";
+import { activeProjectAtom, projectsAtom } from "@/state";
 import Fuse from "fuse.js";
 import { useAtom } from "jotai";
 import {
@@ -42,6 +42,7 @@ import { useTranslation } from "react-i18next";
 
 export default function KeyBindsPage() {
   const [activeProject] = useAtom(activeProjectAtom);
+  const [projects] = useAtom(projectsAtom);
   const [data, setData] = useState<[string, string][]>([]);
   const [currentGroup, setCurrentGroup] = useState<string>("search");
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -51,6 +52,7 @@ export default function KeyBindsPage() {
   const { t } = useTranslation("keyBinds");
   const { t: t2 } = useTranslation("keyBindsGroup");
 
+  // 这个代码不能去掉，否则打开设置界面会发现快捷键设置全被清空了
   useEffect(() => {
     if (activeProject) {
       activeProject.keyBinds.entries().then((entries) => {
@@ -124,7 +126,9 @@ export default function KeyBindsPage() {
             const defaultValue = allKeyBinds.find((kb) => kb.id === id)?.defaultKey;
             if (defaultValue) {
               setData((data) => data.map((item) => (item[0] === id ? [id, defaultValue] : item)));
-              activeProject?.keyBinds.set(id, defaultValue);
+              projects.forEach((project) => {
+                project.keyBinds.set(id, defaultValue);
+              });
               Dialog.confirm(
                 `已重置为 '${defaultValue}'，但需要刷新页面后生效`,
                 "切换左侧选项卡即可更新页面显示，看到效果。",
@@ -149,7 +153,9 @@ export default function KeyBindsPage() {
             } else if (keyBindType === "ui") {
               KeyBindsUI.changeOneUIKeyBind(id, value);
             } else {
-              activeProject?.keyBinds.set(id, value);
+              projects.forEach((project) => {
+                project.keyBinds.set(id, value);
+              });
             }
           }}
         />
