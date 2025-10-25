@@ -4,6 +4,8 @@ import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { open } from "@tauri-apps/plugin-shell";
 import { toast } from "sonner";
 import { PathString } from "./pathString";
+import { URI } from "vscode-uri";
+import { onOpenFile } from "@/core/service/GlobalMenu";
 
 export async function openBrowserOrFile(project: Project) {
   for (const node of project.stageManager.getSelectedEntities()) {
@@ -83,11 +85,18 @@ export function openSelectedImageNode() {
  * @param url
  */
 export function myOpen(url: string) {
-  if (PathString.isValidURL(url)) {
+  const isValidURL = PathString.isValidURL(url);
+  if (isValidURL) {
     // 是网址
     toast.info(`正在打开网址：【${url}】`);
   } else {
     toast.info(`正在打开本地文件路径：【${url}】`);
+  }
+  if (!isValidURL && url.endsWith(".prg")) {
+    // 打开绝对路径 prg文件
+    const uri = URI.file(url);
+    onOpenFile(uri, "externalOpen-myOpen-prg文件");
+    return;
   }
   open(url)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

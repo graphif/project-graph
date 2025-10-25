@@ -541,6 +541,7 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "C-e",
     onPress: (project) => {
       if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project?.controller.pressingKeySet.clear(); // 防止打开prg文件时，ctrl+E持续按下
       openBrowserOrFile(project!);
     },
   },
