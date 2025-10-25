@@ -1,7 +1,7 @@
 import { Project } from "@/core/Project";
 import { id, serializable } from "@graphif/serializer";
 import { LayoutContainer } from "@pixi/layout/components";
-import { Bounds, DestroyOptions, Graphics } from "pixi.js";
+import { DestroyOptions, Graphics } from "pixi.js";
 
 /**
  * 一切舞台上的东西
@@ -104,7 +104,20 @@ export abstract class StageObject extends LayoutContainer {
     return super.height;
   }
   getWorldBounds() {
-    return new Bounds(this.x, this.y, this.x + this.width, this.y + this.height);
+    const bounds = super.getBounds();
+    // 处理坐标系
+    const vp = this.project.viewport;
+    bounds.x = (bounds.x - vp.position.x) / vp.scale.x;
+    bounds.y = (bounds.y - vp.position.y) / vp.scale.y;
+    bounds.width = bounds.width / vp.scale.x;
+    bounds.height = bounds.height / vp.scale.y;
+    if (this.selected) {
+      bounds.x += StageObject.SELECTION_OUTLINE_PADDING;
+      bounds.y += StageObject.SELECTION_OUTLINE_PADDING;
+      bounds.width -= StageObject.SELECTION_OUTLINE_PADDING * 2;
+      bounds.height -= StageObject.SELECTION_OUTLINE_PADDING * 2;
+    }
+    return bounds;
   }
   /** 注意是view坐标系 */
   getBounds() {

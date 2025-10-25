@@ -15,8 +15,6 @@ import { UrlNode } from "./UrlNode";
 @passExtraAtArg1
 @passObject
 export class TextNode extends Entity {
-  allowGraphChildren = true;
-
   @serializable
   text: string;
   @serializable

@@ -1,5 +1,8 @@
 import { Graphics, Point, Rectangle } from "pixi.js";
 import { Project } from "../Project";
+import { Section } from "./Section";
+import { AssociationMember } from "./abstract/Association";
+import { Entity } from "./abstract/Entity";
 
 export class RegionPicker extends Graphics {
   constructor(project: Project) {
@@ -16,9 +19,17 @@ export class RegionPicker extends Graphics {
           it.selected = false;
         });
       })
-      .on("pointerup", () => {
+      .on("pointerup", (e) => {
         pressed = false;
         this.clear();
+        if (e.altKey) {
+          // 给选中的节点创建Section
+          const selectedEntities = project.stage.filter((it) => it.selected);
+          const section = new Section(project, {
+            members: selectedEntities.filter((it) => it instanceof Entity).map((it) => new AssociationMember(it)),
+          });
+          project.stage.push(section);
+        }
       })
       .on("pointerupoutside", () => {
         pressed = false;
