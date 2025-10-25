@@ -1406,6 +1406,10 @@ keyBinds:
     title: 将文本节点树转换为框嵌套结构
     description: 将选中的文本节点树结构转换为框嵌套结构
 
+  switchActiveProject:
+    title: 切换当前项目
+    description: 按下后，切换到下一个项目
+
 sounds:
   soundEnabled: 音效开关
 

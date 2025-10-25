@@ -302,6 +302,7 @@ const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "clickTagPanelButton",
       "clickAppMenuRecentFileButton",
       "clickStartFilePanelButton",
+      "switchActiveProject",
     ],
   },
   {

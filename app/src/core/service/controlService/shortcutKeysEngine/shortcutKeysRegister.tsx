@@ -11,7 +11,7 @@ import { ConnectableEntity } from "@/core/stage/stageObject/abstract/Connectable
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { activeProjectAtom, store } from "@/state";
+import { activeProjectAtom, projectsAtom, store } from "@/state";
 // import ColorWindow from "@/sub/ColorWindow";
 import FindWindow from "@/sub/FindWindow";
 // import KeyboardRecentFilesWindow from "@/sub/KeyboardRecentFilesWindow";
@@ -545,7 +545,7 @@ export const allKeyBinds: KeyBindItem[] = [
     },
   },
 
-  /*------- 顶部菜单窗口 -------*/
+  /*------- 顶部菜单窗口, UI操作 -------*/
   {
     id: "clickAppMenuSettingsButton",
     defaultKey: "S-!",
@@ -562,6 +562,34 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "clickTagPanelButton",
     defaultKey: "S-@",
     onPress: () => TagWindow.open(),
+    isUI: true,
+  },
+  {
+    id: "switchActiveProject",
+    defaultKey: "C-tab",
+    onPress: () => {
+      //
+
+      const projects = store.get(projectsAtom);
+      if (projects.length <= 1) {
+        toast.error("至少打开两个项目才能切换项目");
+        return;
+      }
+      const activeProject = store.get(activeProjectAtom);
+      if (!activeProject) {
+        toast.error("当前没有活动项目，无法切换项目");
+        return;
+      }
+      let activeProjectIndex = -1;
+      for (const p of projects) {
+        activeProjectIndex++;
+        if (p === activeProject) {
+          break;
+        }
+      }
+      const nextActiveProjectIndex = (activeProjectIndex + 1) % projects.length;
+      store.set(activeProjectAtom, projects[nextActiveProjectIndex]);
+    },
     isUI: true,
   },
 

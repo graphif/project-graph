@@ -1,5 +1,6 @@
 import { matchEmacsKey, transEmacsKeyWinToMac } from "@/utils/emacs";
 import { isMac } from "@/utils/platform";
+import { createStore } from "@/utils/store";
 import { Queue } from "@graphif/data-structures";
 
 /**
@@ -24,7 +25,7 @@ export namespace KeyBindsUI {
    * 只会在软件启动的时候注册一次
    * 其他情况下，只会在修改快捷键的时候进行重新修改值
    */
-  export function registerOneUIKeyBind(id: string, key: string, onPress = () => {}) {
+  export async function registerOneUIKeyBind(id: string, key: string, onPress = () => {}) {
     if (isMac) {
       key = transEmacsKeyWinToMac(key);
     }
@@ -35,6 +36,13 @@ export namespace KeyBindsUI {
     }
     registerSet.add(id);
     allUIKeyBinds.push({ id, key, onPress });
+
+    const store = await createStore("keybinds2.json");
+    const savedKey = await store.get<string>(id);
+    if (!savedKey) {
+      await store.set(id, key);
+      await store.save();
+    }
   }
 
   /**
@@ -42,13 +50,17 @@ export namespace KeyBindsUI {
    * @param id
    * @param key
    */
-  export function changeOneUIKeyBind(id: string, key: string) {
+  export async function changeOneUIKeyBind(id: string, key: string) {
     allUIKeyBinds = allUIKeyBinds.map((it) => {
       if (it.id === id) {
         return { ...it, key };
       }
       return it;
     });
+
+    const store = await createStore("keybinds2.json");
+    await store.set(id, key);
+    await store.save();
   }
 
   export function uiStartListen() {
