@@ -1,14 +1,11 @@
-// import { readTextFile } from "@tauri-apps/plugin-fs";
 import { Input } from "@/components/ui/input";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { SubWindow } from "@/core/service/SubWindow";
-// import { activeProjectAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { PathString } from "@/utils/pathString";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-// import { useAtom } from "jotai";
-import { Import, LoaderPinwheel, Trash2 } from "lucide-react";
+import { Import, LoaderPinwheel, Trash2, X } from "lucide-react";
 import React, { ChangeEventHandler, useEffect } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -16,13 +13,13 @@ import { onOpenFile } from "@/core/service/GlobalMenu";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { URI } from "vscode-uri";
+import { SoundService } from "@/core/service/feedbackService/SoundService";
 
 /**
  * 最近文件面板按钮
  * @returns
  */
 export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
-  // const containerRef = useRef<HTMLDivElement>(null);
   /**
    * 数据中有多少就是多少
    */
@@ -33,15 +30,14 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
   const [recentFilesFiltered, setRecentFilesFiltered] = React.useState<RecentFileManager.RecentFile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
-  // const [currentFile, setFile] = useAtom(fileAtom);
-  // const [activeProject] = useAtom(activeProjectAtom);
-
   // 当前预选中的文件下标
   const [currentPreselect, setCurrentPreselect] = React.useState<number>(0);
   const [searchString, setSearchString] = React.useState("");
 
   const [currentShowPath, setCurrentShowPath] = React.useState<string>("");
   const [currentShowTime, setCurrentShowTime] = React.useState<string>("");
+
+  const [isShowDeleteEveryItem, setIsShowDeleteEveryItem] = React.useState<boolean>(false);
 
   // 选择文件夹并导入PRG文件
   const importPrgFilesFromFolder = async () => {
@@ -156,7 +152,7 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
 
   return (
     <div className={cn("flex h-full flex-col items-center gap-2")}>
-      <div className="flex w-full items-center gap-2 p-4">
+      <div className="flex w-full flex-wrap items-center gap-2 p-4">
         <Input
           placeholder="请输入要筛选的文件"
           onChange={onInputChange}
@@ -167,18 +163,39 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
 
         <button
           onClick={importPrgFilesFromFolder}
-          className="bg-primary/10 hover:bg-primary/20 rounded-md p-2 transition-colors"
+          className="bg-primary/10 hover:bg-primary/20 flex gap-2 rounded-md p-2 transition-colors"
           title="递归导入文件夹中的所有.prg文件"
         >
           <Import />
+          <span>递归导入文件夹中的所有.prg文件</span>
         </button>
 
         <button
           onClick={clearAllRecentHistory}
-          className="bg-destructive/10 hover:bg-destructive/20 rounded-md p-2 transition-colors"
+          className="bg-destructive/10 hover:bg-destructive/20 flex gap-2 rounded-md p-2 transition-colors"
           title="清空所有历史记录"
         >
           <Trash2 />
+          <span>清空所有历史记录</span>
+        </button>
+        <button
+          onClick={() => {
+            setIsShowDeleteEveryItem((prev) => !prev);
+          }}
+          className="bg-destructive/10 hover:bg-destructive/20 flex gap-2 rounded-md p-2 transition-colors"
+          title="开始删除指定记录"
+        >
+          {isShowDeleteEveryItem ? (
+            <>
+              <Trash2 />
+              <span>停止删除指定记录</span>
+            </>
+          ) : (
+            <>
+              <Trash2 />
+              <span>开始删除指定记录</span>
+            </>
+          )}
         </button>
       </div>
       <div className="flex w-full flex-col items-baseline justify-center px-4 text-xs">
@@ -204,15 +221,42 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
           <div
             key={index}
             className={cn(
-              "bg-muted/50 flex max-w-64 origin-left flex-col items-center gap-2 truncate rounded-lg border p-4 px-2 py-1 opacity-75",
+              "bg-muted/50 relative flex max-w-64 origin-left cursor-pointer flex-col items-center gap-2 rounded-lg border p-4 px-2 py-1 opacity-75",
               {
                 "opacity-100": index === currentPreselect,
               },
             )}
-            onMouseEnter={() => setCurrentPreselect(index)}
-            onClick={() => checkoutFile(file)}
+            onMouseEnter={() => {
+              setCurrentPreselect(index);
+              SoundService.play.mouseEnterButton();
+            }}
+            onClick={() => {
+              if (isShowDeleteEveryItem) {
+                toast.warning("当前正在删除阶段，请退出删除阶段才能打开文件，或点击删除按钮删除该文件");
+                return;
+              }
+              checkoutFile(file);
+              SoundService.play.mouseClickButton();
+            }}
           >
-            {PathString.absolute2file(decodeURI(file.uri.toString()))}
+            {PathString.getShortedFileName(PathString.absolute2file(decodeURI(file.uri.toString())), 15)}
+            {isShowDeleteEveryItem && (
+              <button
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  //
+                  const result = await RecentFileManager.removeRecentFileByUri(file.uri);
+                  if (result) {
+                    updateRecentFiles();
+                  } else {
+                    toast.warning("删除失败");
+                  }
+                }}
+                className="bg-destructive absolute -right-2 -top-2 cursor-pointer rounded-full transition-colors hover:scale-110"
+              >
+                <X size={20} />
+              </button>
+            )}
           </div>
         ))}
       </div>
