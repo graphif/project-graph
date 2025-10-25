@@ -159,6 +159,24 @@ export function matchSingleEmacsKey(key: string, event: KeyboardEvent | MouseEve
   return matchModifiers && matchKey;
 }
 
+/**
+ * 把windows/linux格式的快捷键转换为Mac格式
+ * @param key
+ * @returns
+ */
+export function transEmacsKeyWinToMac(key: string): string {
+  key = key.replace("C-", "Control-");
+  key = key.replace("M-", "C-");
+  key = key.replace("Control-", "M-");
+  return key;
+}
+
+/**
+ * 匹配序列快捷键
+ * @param key "C-k C-t"
+ * @param events [KeyboardEvent, KeyboardEvent], 最大长度20，刚才触发的一系列事件
+ * @returns 是否匹配上了
+ */
 export function matchEmacsKey(key: string, events: (KeyboardEvent | MouseEvent | WheelEvent)[]): boolean {
   const seq = key.trim().split(/\s+/);
   if (seq.length === 0 || events.length < seq.length) return false;
@@ -176,6 +194,8 @@ export function matchEmacsKey(key: string, events: (KeyboardEvent | MouseEvent |
 
 /**
  * 将事件转换为emacs格式的快捷键
+ * @param event KeyboardEvent | MouseEvent | WheelEvent
+ * @returns "C-s", "C-<MWU>" 等格式
  */
 export function formatEmacsKey(event: KeyboardEvent | MouseEvent | WheelEvent): string {
   let key = "";

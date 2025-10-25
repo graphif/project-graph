@@ -116,19 +116,19 @@
 
 /* 赫然出现一些白色滚动条很不好看，先写一个基础样式覆盖一下 */
 ::-webkit-scrollbar {
-	width: 8px;
-	height: 8px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-	background: rgba(87, 95, 107, 0.1);
+  background: rgba(87, 95, 107, 0.1);
 }
 
 ::-webkit-scrollbar-thumb {
-	background: rgba(87, 95, 107, 0.4);
-	border-radius: 4px;
+  background: rgba(87, 95, 107, 0.4);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background: rgba(87, 95, 107, 0.6);
+  background: rgba(87, 95, 107, 0.6);
 }

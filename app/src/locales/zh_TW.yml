@@ -948,7 +948,7 @@ keyBinds:
     description: 按下後，貼上剪貼簿內容
   openFile:
     title: 打開檔案
-    description: "選擇一個曾經保存的json檔案並打開\n"
+    description: "選擇一個曾經保存的json/prg檔案並打開\n"
   createUndirectedEdgeFromEntities:
     description: "按下後，選中的兩個或以上實體之間會創建一條無方向連線\n"
     title: 選中的實體之間創建無限連線

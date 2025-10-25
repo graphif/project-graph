@@ -1,5 +1,5 @@
 import { Project, service } from "@/core/Project";
-import { matchEmacsKey } from "@/utils/emacs";
+import { matchEmacsKey, transEmacsKeyWinToMac } from "@/utils/emacs";
 import { isMac } from "@/utils/platform";
 import { createStore } from "@/utils/store";
 import { Queue } from "@graphif/data-structures";
@@ -15,7 +15,7 @@ export class KeyBinds {
   constructor(private readonly project: Project) {
     (async () => {
       this.store = await createStore("keybinds2.json");
-      await this.project.keyBindsRegistrar.registerKeyBinds();
+      await this.project.keyBindsRegistrar.registerAllKeyBinds();
       if ((await this.store.values()).find((it) => typeof it !== "string")) {
         // 重置store
         await this.store.clear();
@@ -99,9 +99,7 @@ export class KeyBinds {
       throw new Error(`Keybind ${id} 已经注册过了`);
     }
     if (isMac) {
-      defaultKey = defaultKey.replace("C-", "Control-");
-      defaultKey = defaultKey.replace("M-", "C-");
-      defaultKey = defaultKey.replace("Control-", "M-");
+      defaultKey = transEmacsKeyWinToMac(defaultKey);
     }
     this.registeredIdSet.add(id);
     let userSetKey = await this.get(id);
@@ -139,7 +137,7 @@ export class KeyBinds {
     // 清空存储
     await this.store.clear();
     // 重新注册所有快捷键
-    await this.project.keyBindsRegistrar.registerKeyBinds();
+    await this.project.keyBindsRegistrar.registerAllKeyBinds();
   }
 }
 

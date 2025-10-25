@@ -11,7 +11,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { allKeyBinds } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
+import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
+import { allKeyBinds, getKeyBindTypeById } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import { activeProjectAtom } from "@/state";
 import Fuse from "fuse.js";
 import { useAtom } from "jotai";
@@ -142,7 +143,14 @@ export default function KeyBindsPage() {
                 return item;
               }),
             );
-            activeProject?.keyBinds.set(id, value);
+            const keyBindType = getKeyBindTypeById(id);
+            if (keyBindType === "global") {
+              Dialog.confirm(`已重置为 '${value}'，但需要重启软件才能生效`, "");
+            } else if (keyBindType === "ui") {
+              KeyBindsUI.changeOneUIKeyBind(id, value);
+            } else {
+              activeProject?.keyBinds.set(id, value);
+            }
           }}
         />
       </Field>

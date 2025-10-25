@@ -944,7 +944,7 @@ keyBinds:
   openFile:
     title: 打开文件
     description: |
-      选择一个曾经保存的json文件并打开
+      选择一个曾经保存的json/prg文件并打开
   undo:
     title: 撤销
     description: 撤销上一次操作

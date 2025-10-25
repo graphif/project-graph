@@ -30,6 +30,8 @@ import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFi
 import { cn } from "./utils/cn";
 import { isMac, isWindows } from "./utils/platform";
 import { register } from "@tauri-apps/plugin-global-shortcut";
+import { registerAllUIKeyBinds } from "./core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
+import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 
 export default function App() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -70,6 +72,10 @@ export default function App() {
           });
       }
     });
+
+    // 注册UI级别快捷键
+    registerAllUIKeyBinds();
+    KeyBindsUI.uiStartListen();
 
     // 修复鼠标拖出窗口后触发上下文菜单的问题
     window.addEventListener("contextmenu", (event) => {
@@ -168,6 +174,7 @@ export default function App() {
 
     return () => {
       unlisten1?.then((f) => f());
+      KeyBindsUI.uiStopListen();
     };
   }, []);
 

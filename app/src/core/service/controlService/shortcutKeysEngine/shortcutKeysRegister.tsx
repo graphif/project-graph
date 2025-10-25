@@ -18,22 +18,28 @@ import FindWindow from "@/sub/FindWindow";
 import ColorWindow from "@/sub/ColorWindow";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
 import SettingsWindow from "@/sub/SettingsWindow";
+import TagWindow from "@/sub/TagWindow";
 import { Direction } from "@/types/directions";
 import { openBrowserOrFile } from "@/utils/externalOpen";
 import { isMac } from "@/utils/platform";
 import { Color, Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
-import { onNewDraft, onOpenFile } from "../../GlobalMenu";
-import { TextNodeSmartTools } from "../../dataManageService/textNodeSmartTools";
 import { RecentFileManager } from "../../dataFileService/RecentFileManager";
-import { ConnectNodeSmartTools } from "../../dataManageService/connectNodeSmartTools";
 import { ColorSmartTools } from "../../dataManageService/colorSmartTools";
-import TagWindow from "@/sub/TagWindow";
+import { ConnectNodeSmartTools } from "../../dataManageService/connectNodeSmartTools";
+import { TextNodeSmartTools } from "../../dataManageService/textNodeSmartTools";
+import { onNewDraft, onOpenFile } from "../../GlobalMenu";
+import { KeyBindsUI } from "./KeyBindsUI";
 
 interface KeyBindItem {
   id: string;
   defaultKey: string;
   onPress: (project?: Project) => void;
+
+  // 全局快捷键
+  isGlobal?: boolean;
+  // UI级别快捷键
+  isUI?: boolean;
 }
 
 export const allKeyBinds: KeyBindItem[] = [
@@ -44,6 +50,7 @@ export const allKeyBinds: KeyBindItem[] = [
       Dialog.buttons("测试快捷键", "您按下了自定义的测试快捷键，这一功能是测试开发所用，可在设置中更改触发方式", [
         { id: "close", label: "关闭" },
       ]),
+    isUI: true,
   },
 
   /*------- 基础编辑 -------*/
@@ -77,6 +84,7 @@ export const allKeyBinds: KeyBindItem[] = [
         window.location.reload();
       }
     },
+    isUI: true,
   },
 
   /*------- 课堂/专注模式 -------*/
@@ -91,6 +99,7 @@ export const allKeyBinds: KeyBindItem[] = [
       }
       Settings.isClassroomMode = !Settings.isClassroomMode;
     },
+    isUI: true,
   },
 
   /*------- 相机/视图 -------*/
@@ -464,6 +473,7 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "openColorPanel",
     defaultKey: "F6",
     onPress: () => ColorWindow.open(),
+    isUI: true,
   },
   {
     id: "switchDebugShow",
@@ -471,6 +481,7 @@ export const allKeyBinds: KeyBindItem[] = [
     onPress: async () => {
       Settings.showDebug = !Settings.showDebug;
     },
+    isUI: true,
   },
   {
     id: "selectAll",
@@ -516,6 +527,7 @@ export const allKeyBinds: KeyBindItem[] = [
       }
       Settings.protectingPrivacy = !Settings.protectingPrivacy;
     },
+    isUI: true,
   },
 
   /*------- 搜索/外部打开 -------*/
@@ -538,16 +550,19 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "clickAppMenuSettingsButton",
     defaultKey: "S-!",
     onPress: () => SettingsWindow.open("settings"),
+    isUI: true,
   },
   {
     id: "clickAppMenuRecentFileButton",
     defaultKey: "S-#",
     onPress: () => RecentFilesWindow.open(),
+    isUI: true,
   },
   {
     id: "clickTagPanelButton",
     defaultKey: "S-@",
     onPress: () => TagWindow.open(),
+    isUI: true,
   },
 
   /*------- 文件操作 -------*/
@@ -556,8 +571,8 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "C-s",
     onPress: () => {
       const activeProject = store.get(activeProjectAtom);
-      activeProject?.camera.clearMoveCommander();
       if (activeProject) {
+        activeProject.camera.clearMoveCommander();
         activeProject.save();
         if (Settings.clearHistoryWhenManualSave) {
           activeProject.historyManager.clearHistory();
@@ -565,16 +580,19 @@ export const allKeyBinds: KeyBindItem[] = [
         RecentFileManager.addRecentFileByUri(activeProject.uri);
       }
     },
+    isUI: true,
   },
   {
     id: "newDraft",
     defaultKey: "C-n",
     onPress: () => onNewDraft(),
+    isUI: true,
   },
   {
     id: "openFile",
     defaultKey: "C-o",
     onPress: () => onOpenFile(),
+    isUI: true,
   },
 
   /*------- 窗口透明度 -------*/
@@ -584,6 +602,7 @@ export const allKeyBinds: KeyBindItem[] = [
     onPress: async () => {
       Settings.windowBackgroundAlpha = Settings.windowBackgroundAlpha === 0 ? 1 : 0;
     },
+    isUI: true,
   },
   {
     id: "windowOpacityAlphaIncrease",
@@ -824,6 +843,7 @@ export const allKeyBinds: KeyBindItem[] = [
       toast.info("切换到暗黑主题");
       Themes.applyThemeById("dark");
     },
+    isUI: true,
   },
   {
     id: "switchToLightTheme",
@@ -832,6 +852,7 @@ export const allKeyBinds: KeyBindItem[] = [
       toast.info("切换到明亮主题");
       Themes.applyThemeById("light");
     },
+    isUI: true,
   },
   {
     id: "switchToParkTheme",
@@ -840,6 +861,7 @@ export const allKeyBinds: KeyBindItem[] = [
       toast.info("切换到公园主题");
       Themes.applyThemeById("park");
     },
+    isUI: true,
   },
   {
     id: "switchToMacaronTheme",
@@ -848,6 +870,7 @@ export const allKeyBinds: KeyBindItem[] = [
       toast.info("切换到马卡龙主题");
       Themes.applyThemeById("macaron");
     },
+    isUI: true,
   },
   {
     id: "switchToMorandiTheme",
@@ -856,6 +879,7 @@ export const allKeyBinds: KeyBindItem[] = [
       toast.info("切换到莫兰迪主题");
       Themes.applyThemeById("morandi");
     },
+    isUI: true,
   },
 
   /*------- 画笔透明度 -------*/
@@ -1056,6 +1080,7 @@ export const allKeyBinds: KeyBindItem[] = [
       Settings.isStealthModeEnabled = !Settings.isStealthModeEnabled;
       toast(Settings.isStealthModeEnabled ? "已开启潜行模式" : "已关闭潜行模式");
     },
+    isUI: true,
   },
 
   /*------- 拆分字符 -------*/
@@ -1099,10 +1124,36 @@ export class KeyBindsRegistrar {
   /**
    * 注册所有快捷键
    */
-  async registerKeyBinds() {
+  async registerAllKeyBinds() {
     for (const keyBind of allKeyBinds) {
+      // 这里只注册项目级别的快捷键
+      if (keyBind.isGlobal || keyBind.isUI) {
+        continue;
+      }
       await this.project.keyBinds.create(keyBind.id, keyBind.defaultKey, () => {
         keyBind.onPress(this.project);
+      });
+    }
+  }
+}
+
+export function getKeyBindTypeById(id: string): "global" | "ui" | "project" {
+  for (const keyBind of allKeyBinds) {
+    if (keyBind.id === id) {
+      return keyBind.isGlobal ? "global" : keyBind.isUI ? "ui" : "project";
+    }
+  }
+  return "project";
+}
+
+/**
+ * 注册所有UI级别的快捷键
+ */
+export function registerAllUIKeyBinds() {
+  for (const keyBind of allKeyBinds) {
+    if (keyBind.isUI) {
+      KeyBindsUI.registerOneUIKeyBind(keyBind.id, keyBind.defaultKey, () => {
+        keyBind.onPress();
       });
     }
   }

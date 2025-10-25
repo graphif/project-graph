@@ -1166,7 +1166,7 @@ keyBinds:
       the upper digit 0 key instead\n"
   openFile:
     title: Open File
-    description: "Select a previously saved JSON file and open it.\n"
+    description: "Select a previously saved json/prg file and open it.\n"
   newDraft:
     title: Create New Draft
     description: "Create a new draft file and switch to this file.\nIf the current
