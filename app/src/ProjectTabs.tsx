@@ -4,6 +4,7 @@ import { cn } from "@udecode/cn";
 import { Button } from "./components/ui/button";
 import { CircleAlert, CloudUpload, X } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./components/ui/tooltip";
+import { SoundService } from "./core/service/feedbackService/SoundService";
 
 // 将 ProjectTabs 移出 App 组件，作为独立组件
 export const ProjectTabs = memo(function ProjectTabs({
@@ -84,14 +85,20 @@ export const ProjectTabs = memo(function ProjectTabs({
             "hover:bg-primary/20 outline-inset h-full cursor-pointer px-2 hover:opacity-100",
             activeProject?.uri.toString() === project.uri.toString() ? "bg-primary/70" : "bg-accent opacity-70",
           )}
-          onClick={() => handleTabClick(project)}
           onMouseDown={(e) => {
-            if (e.button === 1) {
+            if (e.button === 0) {
+              SoundService.play.mouseClickButton();
+              handleTabClick(project);
+            } else if (e.button === 1) {
               e.preventDefault();
               saveScrollPosition();
               onTabClose(project);
               Promise.resolve().then(restoreScrollPosition);
+              SoundService.play.cuttingLineRelease();
             }
+          }}
+          onMouseEnter={() => {
+            SoundService.play.mouseEnterButton();
           }}
         >
           <span className="text-xs">
@@ -103,7 +110,10 @@ export const ProjectTabs = memo(function ProjectTabs({
           </span>
           <div
             className="hover:rotate-15 cursor-pointer overflow-hidden transition-transform hover:scale-110 hover:opacity-100"
-            onClick={(e) => handleTabClose(project, e)}
+            onClick={(e) => {
+              handleTabClose(project, e);
+              SoundService.play.cuttingLineRelease();
+            }}
           >
             {project.state === ProjectState.Saved && <X className="scale-75 opacity-75" />}
             {project.state === ProjectState.Stashed && <CloudUpload />}
