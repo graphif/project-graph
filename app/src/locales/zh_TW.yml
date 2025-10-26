@@ -935,6 +935,11 @@ keyBinds:
   newDraft:
     title: 新建草稿
     description: "新建一個草稿檔案，並切換到該檔案\n若當前檔案未保存則無法切換\n"
+  newFileAtCurrentProjectDir:
+    title: 在当前项目目录下新建文件
+    description: |
+      在当前项目目录下新建一个工程文件，并切换到该文件（用于快速创建文件）
+      若当前文件为草稿状态存则无法创建
   windowOpacityAlphaDecrease:
     title: 視窗不透明度減小
     description: "按下後，視窗不透明度（alpha）值减小0.2，往透明的方向改變，最小值為0\n如果您的鍵盤沒有小鍵盤的純減號鍵，可以改成横排數字0右側的減號與下划線公用鍵\n"

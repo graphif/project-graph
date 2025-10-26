@@ -28,7 +28,7 @@ import { RecentFileManager } from "../../dataFileService/RecentFileManager";
 import { ColorSmartTools } from "../../dataManageService/colorSmartTools";
 import { ConnectNodeSmartTools } from "../../dataManageService/connectNodeSmartTools";
 import { TextNodeSmartTools } from "../../dataManageService/textNodeSmartTools";
-import { onNewDraft, onOpenFile } from "../../GlobalMenu";
+import { createFileAtCurrentProjectDir, onNewDraft, onOpenFile } from "../../GlobalMenu";
 import { KeyBindsUI } from "./KeyBindsUI";
 
 interface KeyBindItem {
@@ -644,6 +644,24 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "newDraft",
     defaultKey: "C-n",
     onPress: () => onNewDraft(),
+    isUI: true,
+  },
+  {
+    id: "newFileAtCurrentProjectDir",
+    defaultKey: "C-S-n",
+    onPress: () => {
+      //
+      const activeProject = store.get(activeProjectAtom);
+      if (!activeProject) {
+        toast.error("当前没有激活的项目，无法在当前工程文件目录下创建新文件");
+        return;
+      }
+      if (activeProject.isDraft) {
+        toast.error("当前为草稿状态，无法在当前工程文件目录下创建新文件");
+        return;
+      }
+      createFileAtCurrentProjectDir(activeProject, async () => {});
+    },
     isUI: true,
   },
   {

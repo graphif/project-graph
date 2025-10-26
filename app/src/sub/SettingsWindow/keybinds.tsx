@@ -258,6 +258,7 @@ const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "saveFile",
       "openFile",
       "newDraft",
+      "newFileAtCurrentProjectDir",
       "undo",
       "redo",
       "selectAll",

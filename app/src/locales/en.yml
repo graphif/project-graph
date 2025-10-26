@@ -1173,6 +1173,10 @@ keyBinds:
     title: Create New Draft
     description: "Create a new draft file and switch to this file.\nIf the current
       file is not saved, you cannot switch.\n"
+  newFileAtCurrentProjectDir:
+    title: Create New File at Current Project Directory
+    description: "Create a new project file in the current project directory and
+      switch to this file.\nIf the current file is draft, you cannot create.\n"
   saveFile:
     description: "Save the current project file, if the current file is a draft, then
       save it as a new file.\n"

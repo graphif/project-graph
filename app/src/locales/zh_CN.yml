@@ -943,6 +943,11 @@ keyBinds:
     description: |
       新建一个草稿文件，并切换到该文件
       若当前文件未保存则无法切换
+  newFileAtCurrentProjectDir:
+    title: 在当前项目目录下新建文件
+    description: |
+      在当前项目目录下新建一个工程文件，并切换到该文件（用于快速创建文件）
+      若当前文件为草稿状态存则无法创建
   openFile:
     title: 打开文件
     description: |
