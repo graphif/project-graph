@@ -7,6 +7,8 @@ welcome:
   qq: QQ Group
   title: Welcome to《Project Graph》
   subtitle: Infinite canvas mind mapping software based on graph theory
+  openRecentFiles: Open Recent Files
+  newUserGuide: Open New User Guide
 
 about:
   updater:

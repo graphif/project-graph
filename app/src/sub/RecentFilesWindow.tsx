@@ -334,5 +334,6 @@ RecentFilesWindow.open = () => {
     title: "最近打开的文件",
     children: <RecentFilesWindow />,
     rect: new Rectangle(new Vector(50, 50), new Vector(window.innerWidth - 100, window.innerHeight - 100)),
+    closeWhenClickOutside: true,
   });
 };

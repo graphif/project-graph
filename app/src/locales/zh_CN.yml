@@ -1,7 +1,9 @@
 welcome:
   slogan: 基于图论的嵌套网状思维导图软件
-  newDraft: 新建文件
+  newDraft: 新建草稿
   openFile: 打开文件
+  openRecentFiles: 打开最近
+  newUserGuide: 新手引导
   settings: 设置
   about: 关于
   website: 官网
