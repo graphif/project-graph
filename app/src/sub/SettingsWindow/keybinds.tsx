@@ -303,6 +303,7 @@ const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "clickAppMenuRecentFileButton",
       "clickStartFilePanelButton",
       "switchActiveProject",
+      "switchActiveProjectReversed",
     ],
   },
   {

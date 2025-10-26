@@ -1409,6 +1409,9 @@ keyBinds:
   switchActiveProject:
     title: 切换当前项目
     description: 按下后，切换到下一个项目
+  switchActiveProjectReversed:
+    title: 切换当前项目（反序）
+    description: 按下后，切换到上一个项目
 
 sounds:
   soundEnabled: 音效开关

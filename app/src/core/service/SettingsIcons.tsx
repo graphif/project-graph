@@ -154,5 +154,4 @@ export const settingsIcons = {
   stealthModeScopeRadius: ScanEye,
   clearHistoryWhenManualSave: Undo,
   soundPitchVariationRange: ListMusic,
-  switchActiveProject: ListMusic,
 };

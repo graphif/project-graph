@@ -593,6 +593,35 @@ export const allKeyBinds: KeyBindItem[] = [
     },
     isUI: true,
   },
+  {
+    id: "switchActiveProjectReversed",
+    defaultKey: "C-S-tab",
+    onPress: () => {
+      const projects = store.get(projectsAtom);
+      if (projects.length <= 1) {
+        toast.error("至少打开两个项目才能切换项目");
+        return;
+      }
+      const activeProject = store.get(activeProjectAtom);
+      if (!activeProject) {
+        toast.error("当前没有活动项目，无法切换项目");
+        return;
+      }
+      let activeProjectIndex = -1;
+      for (const p of projects) {
+        activeProjectIndex++;
+        if (p === activeProject) {
+          break;
+        }
+      }
+      const mod = (n: number, m: number) => {
+        return ((n % m) + m) % m;
+      };
+      const nextActiveProjectIndex = mod(activeProjectIndex - 1, projects.length);
+      store.set(activeProjectAtom, projects[nextActiveProjectIndex]);
+    },
+    isUI: true,
+  },
 
   /*------- 文件操作 -------*/
   {
