@@ -9,25 +9,25 @@ import { onOpenFile } from "@/core/service/GlobalMenu";
 
 export async function openBrowserOrFile(project: Project) {
   for (const node of project.stageManager.getSelectedEntities()) {
-    openBrowserOrFileByEntity(node);
+    openBrowserOrFileByEntity(node, project);
   }
 }
 
-export function openBrowserOrFileByEntity(entity: Entity) {
+export function openBrowserOrFileByEntity(entity: Entity, project: Project) {
   if (entity instanceof TextNode) {
-    openOneTextNode(entity);
+    openOneTextNode(entity, project);
   } else {
-    openOneEntity(entity);
+    openOneEntity(entity, project);
   }
 }
 
-function openOneEntity(node: Entity) {
+function openOneEntity(node: Entity, project: Project) {
   let targetUrl = "";
   if (node.details.length > 0) {
     targetUrl = getEntityDetailsFirstLine(node);
   }
   targetUrl = splitDoubleQuote(targetUrl);
-  myOpen(targetUrl);
+  myOpen(targetUrl, project);
 }
 
 /**
@@ -36,13 +36,13 @@ function openOneEntity(node: Entity) {
  * 如果不符合，就根据内容打开
  * @param node
  */
-function openOneTextNode(node: TextNode) {
+function openOneTextNode(node: TextNode, project: Project) {
   let targetUrl = node.text;
   targetUrl = splitDoubleQuote(targetUrl);
   if (node.details.length > 0) {
     targetUrl = getEntityDetailsFirstLine(node);
   }
-  myOpen(targetUrl);
+  myOpen(targetUrl, project);
   // 2025年1月4日——有自动备份功能了，好像不需要再加验证了
 }
 
@@ -50,8 +50,6 @@ function getEntityDetailsFirstLine(node: Entity): string {
   let res = "";
   if (node.details.length > 0) {
     // 说明详细信息里面有内容，看看第一个内容是不是p标签
-    console.log("deails");
-    console.log(node.details);
     const firstLine = node.details[0];
     if (firstLine.type === "p") {
       for (const child of firstLine.children) {
@@ -76,19 +74,11 @@ function splitDoubleQuote(str: string) {
   return str;
 }
 
-// TODO: 打开图片节点文件路径
-export function openSelectedImageNode() {
-  // for (const entity of StageManager.getSelectedEntities()) {
-  //   if (entity instanceof ImageNode && entity.isSelected) {
-  //     myOpen(PathString.dirPath(Stage.path.getFilePath()) + PathString.getSep() + entity.path);
-  //   }
-  // }
-}
 /**
  * 调用tauri框架的open方法
  * @param url
  */
-export function myOpen(url: string) {
+function myOpen(url: string, project: Project) {
   const isValidURL = PathString.isValidURL(url);
   if (isValidURL) {
     // 是网址
@@ -96,11 +86,21 @@ export function myOpen(url: string) {
   } else {
     toast.info(`正在打开本地文件路径：【${url}】`);
   }
-  if (!isValidURL && url.endsWith(".prg")) {
-    // 打开绝对路径 prg文件
-    const uri = URI.file(url);
-    onOpenFile(uri, "externalOpen-myOpen-prg文件");
-    return;
+  if (!isValidURL) {
+    // 是文件路径
+    if (url.startsWith("./") || url.startsWith("../")) {
+      // 是相对路径！转成绝对路径
+      let currentProjectPath = PathString.uppercaseAbsolutePathDiskChar(project.uri.fsPath);
+      currentProjectPath = currentProjectPath.replaceAll("\\", "/");
+      url = PathString.relativePathToAbsolutePath(currentProjectPath, url);
+      console.log("转换后的url", url);
+    }
+    if (url.endsWith(".prg")) {
+      // 打开绝对路径 prg文件
+      const uri = URI.file(url);
+      onOpenFile(uri, "externalOpen-myOpen-prg文件");
+      return;
+    }
   }
   open(url)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

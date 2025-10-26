@@ -10,6 +10,7 @@ import { readFile } from "@tauri-apps/plugin-fs";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import { onOpenFile } from "../../GlobalMenu";
+import { PathString } from "@/utils/pathString";
 
 /**
  * 处理文件拖拽到舞台的引擎
@@ -65,9 +66,17 @@ export namespace DragFileIntoStageEngine {
    * @param filePath 相对路径
    */
   export async function handleDropFileRelativePath(project: Project, pathList: string[]) {
+    if (project.isDraft) {
+      toast.error("草稿是未保存文件，没有路径，不能用相对路径导入");
+      return;
+    }
+    // windows 的fsPath大概率是  d:/ 小写的盘符
+    const currentProjectPath = PathString.uppercaseAbsolutePathDiskChar(project.uri.fsPath);
+
     for (const filePath of pathList) {
+      const relativePath = PathString.getRelativePath(currentProjectPath, filePath);
       const textNode = new TextNode(project, {
-        text: filePath + "相对路径",
+        text: relativePath,
         collisionBox: new CollisionBox([new Rectangle(project.camera.location.clone(), new Vector(300, 150))]),
       });
 

@@ -385,7 +385,7 @@ export class ControllerCameraClass extends ControllerClass {
       const clickedEntity = this.project.stageManager.findEntityByLocation(pressLocation);
       if (clickedEntity !== null) {
         // 双击实体可以直接跳转
-        openBrowserOrFileByEntity(clickedEntity);
+        openBrowserOrFileByEntity(clickedEntity, this.project);
       } else {
         this.project.camera.resetBySelected();
       }

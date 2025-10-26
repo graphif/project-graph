@@ -117,6 +117,28 @@ export namespace PathString {
   }
 
   /**
+   * 将盘符转大写（先检测是否有盘符开头，如果有则转，没有则返回原来的字符串）
+   * @param absolutePath
+   * 例如：
+   * 输入："d:/desktop/a.txt"
+   * 输出："D:/desktop/a.txt"
+   */
+  export function uppercaseAbsolutePathDiskChar(absolutePath: string) {
+    if (!absolutePath) return absolutePath;
+
+    // 匹配 Windows 盘符格式，如 "c:", "D:\", "e:/"
+    const windowsDiskPattern = /^[a-zA-Z]:[\\/]/;
+
+    if (windowsDiskPattern.test(absolutePath)) {
+      // 将盘符转为大写
+      return absolutePath[0].toUpperCase() + absolutePath.slice(1);
+    }
+
+    // 非 Windows 路径或没有盘符，直接返回
+    return absolutePath;
+  }
+
+  /**
    * 获取一个相对路径，从一个绝对路径到另一个绝对路径的跳转
    * 如果无法获取，或者路径不合法，则返回空字符串
    * @param from
@@ -208,7 +230,11 @@ export namespace PathString {
     const { drive, parts: currentParts } = splitCurrentPath(currentPath);
     const relativeParts = splitRelativePath(relativePath);
 
-    const mergedParts = [...currentParts];
+    // 如果当前路径是文件（有扩展名），则去掉文件名部分，只保留目录
+    const isFile = hasFileExtension(currentParts[currentParts.length - 1]);
+    const directoryParts = isFile ? currentParts.slice(0, -1) : [...currentParts];
+
+    const mergedParts = [...directoryParts];
     for (const part of relativeParts) {
       if (part === "..") {
         if (mergedParts.length > 0) {
@@ -253,6 +279,13 @@ export namespace PathString {
   function splitRelativePath(relativePath: string) {
     relativePath = relativePath.replace(/\\/g, "/");
     return relativePath.split("/").filter((p) => p !== "");
+  }
+
+  // 辅助函数：判断字符串是否有文件扩展名
+  function hasFileExtension(filename: string): boolean {
+    if (!filename) return false;
+    // 简单的扩展名检测：包含点号且点号不在开头
+    return filename.includes(".") && filename.indexOf(".") > 0;
   }
 
   /**
