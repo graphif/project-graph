@@ -222,12 +222,15 @@ export default function App() {
         setDropMouseLocation("notInWindowZone");
       } else if (event.payload.type === "drop") {
         setDropMouseLocation("notInWindowZone");
+        // 之所以最下面才是绝对路径，是因为mac里位置计算有问题，最下面的hover选不到。
+        // 相对路径比绝对路径可能更实用，所以先把相对路径放在上面以临时解决使用需求。
+        // 以后再研究为什么拿到的位置有错误
         if (event.payload.position.y <= size.height / 3) {
           DragFileIntoStageEngine.handleDrop(activeProject, event.payload.paths);
         } else if (event.payload.position.y <= (size.height / 3) * 2) {
-          DragFileIntoStageEngine.handleDropFileAbsolutePath(activeProject, event.payload.paths);
-        } else {
           DragFileIntoStageEngine.handleDropFileRelativePath(activeProject, event.payload.paths);
+        } else {
+          DragFileIntoStageEngine.handleDropFileAbsolutePath(activeProject, event.payload.paths);
         }
       }
     });

@@ -24,6 +24,17 @@ export const DropWindowCover = ({
       <div
         className={cn(
           "bg-card/80 flex flex-1 flex-col items-center justify-center text-xl",
+          dropMouseLocation === "bottom" && "text-destructive bg-transparent",
+        )}
+      >
+        <p>
+          拖拽到这里：以 <span className="text-3xl">相对路径</span> 生成文本节点到舞台
+        </p>
+        <span className="text-sm">相对路径待完善，还没做好</span>
+      </div>
+      <div
+        className={cn(
+          "bg-card/80 flex flex-1 flex-col items-center justify-center text-xl",
           dropMouseLocation === "middle" && "text-destructive bg-transparent",
         )}
       >
@@ -34,17 +45,6 @@ export const DropWindowCover = ({
         <span className="text-sm">
           这样就可以构建外部文件链接，选中路径为内容的文本节点，直接调用系统默认方式打开此文件了
         </span>
-      </div>
-      <div
-        className={cn(
-          "bg-card/80 flex flex-1 flex-col items-center justify-center text-xl",
-          dropMouseLocation === "bottom" && "text-destructive bg-transparent",
-        )}
-      >
-        <p>
-          拖拽到这里：以 <span className="text-3xl">相对路径</span> 生成文本节点到舞台
-        </p>
-        <span className="text-sm">相对路径待完善，还没做好</span>
       </div>
     </div>
   );
