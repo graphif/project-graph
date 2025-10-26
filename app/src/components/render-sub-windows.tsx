@@ -25,6 +25,7 @@ export default function RenderSubWindows() {
             className={cn(
               "pointer-events-auto absolute flex flex-col overflow-hidden outline-0 transition",
               "data-closed:scale-90 data-closed:opacity-0",
+              "origin-top has-[[data-pg-drag-region]:active]:scale-95",
             )}
             onClick={() => {
               if (win.closeWhenClickInside) {
