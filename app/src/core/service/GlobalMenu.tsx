@@ -151,7 +151,6 @@ export function GlobalMenu() {
     await RecentFileManager.sortTimeRecentFiles();
     setRecentFiles(await RecentFileManager.getRecentFiles());
     const ver = await getVersion();
-    console.log("version", ver);
     setVersion(ver);
     setIsUnstableVersion(
       ver.includes("alpha") ||
@@ -179,78 +178,7 @@ export function GlobalMenu() {
           <Item
             disabled={!activeProject || activeProject.isDraft}
             onClick={() => {
-              if (!activeProject || activeProject.isDraft) return;
-
-              setTimeout(() => {
-                Dialog.input("请输入文件名（不需要输入后缀名）").then(async (userInput) => {
-                  if (userInput === undefined || userInput.trim() === "") return;
-
-                  // 检查文件名是否合法
-                  const invalidChars = /[\\/:*?"<>|]/;
-                  if (invalidChars.test(userInput)) {
-                    toast.error('文件名不能包含以下字符：\\ / : * ? " < > |');
-                    return;
-                  }
-
-                  // 移除可能存在的.prg后缀
-                  let fileName = userInput.trim();
-                  if (fileName.endsWith(".prg")) {
-                    fileName = fileName.slice(0, -4);
-                  }
-
-                  // 创建新文件路径
-                  const currentDir = activeProject.uri.fsPath.substring(
-                    0,
-                    activeProject.uri.fsPath.lastIndexOf("/") + 1,
-                  );
-                  const newFilePath = currentDir + fileName + ".prg";
-
-                  // 检查文件是否已存在
-                  const fileExists = await exists(newFilePath);
-                  if (fileExists) {
-                    toast.error(`文件 "${fileName}.prg" 已存在，请使用其他文件名`);
-                    return;
-                  }
-
-                  const newUri = URI.file(newFilePath);
-
-                  // 创建新项目
-                  const newProject = Project.newDraft();
-                  newProject.uri = newUri;
-
-                  // 初始化项目
-                  loadAllServicesBeforeInit(newProject);
-                  newProject
-                    .init()
-                    .then(() => {
-                      loadAllServicesAfterInit(newProject);
-                      // 在舞台上创建文本节点
-                      const newTextNode = new TextNode(newProject, {
-                        text: fileName,
-                      });
-                      newProject.stageManager.add(newTextNode);
-                      newTextNode.isSelected = true;
-
-                      // 保存文件
-                      newProject
-                        .save()
-                        .then(() => {
-                          // 更新项目列表和活动项目
-                          store.set(projectsAtom, [...store.get(projectsAtom), newProject]);
-                          store.set(activeProjectAtom, newProject);
-                          RecentFileManager.addRecentFileByUri(newUri);
-                          refresh();
-                          toast.success(`成功创建新文件：${fileName}.prg`);
-                        })
-                        .catch((error) => {
-                          toast.error(`保存文件失败：${String(error)}`);
-                        });
-                    })
-                    .catch((error) => {
-                      toast.error(`初始化项目失败：${String(error)}`);
-                    });
-                });
-              }, 50); // 轻微延迟
+              createFileAtCurrentProjectDir(activeProject!, refresh);
             }}
           >
             <FilePlus />
@@ -1327,6 +1255,7 @@ export async function onNewDraft() {
   store.set(projectsAtom, [...store.get(projectsAtom), project]);
   store.set(activeProjectAtom, project);
 }
+
 export async function onOpenFile(uri?: URI, source: string = "unknown") {
   if (!uri) {
     const path = await open({
@@ -1441,6 +1370,81 @@ export async function onOpenFile(uri?: URI, source: string = "unknown") {
       },
     },
   );
+}
+
+/**
+ * 在当前激活的工程文件的同一目录下创建prg文件
+ */
+export async function createFileAtCurrentProjectDir(activeProject: Project | undefined, refresh: () => Promise<void>) {
+  if (!activeProject || activeProject.isDraft) return;
+
+  setTimeout(() => {
+    Dialog.input("请输入文件名（不需要输入后缀名）").then(async (userInput) => {
+      if (userInput === undefined || userInput.trim() === "") return;
+
+      // 检查文件名是否合法
+      const invalidChars = /[\\/:*?"<>|]/;
+      if (invalidChars.test(userInput)) {
+        toast.error('文件名不能包含以下字符：\\ / : * ? " < > |');
+        return;
+      }
+
+      // 移除可能存在的.prg后缀
+      let fileName = userInput.trim();
+      if (fileName.endsWith(".prg")) {
+        fileName = fileName.slice(0, -4);
+      }
+
+      // 创建新文件路径
+      const currentDir = PathString.dirPath(activeProject.uri.fsPath);
+      const newFilePath = currentDir + "/" + fileName + ".prg";
+
+      // 检查文件是否已存在
+      const fileExists = await exists(newFilePath);
+      if (fileExists) {
+        toast.error(`文件 "${fileName}.prg" 已存在，请使用其他文件名`);
+        return;
+      }
+
+      const newUri = URI.file(newFilePath);
+
+      // 创建新项目
+      const newProject = Project.newDraft();
+      newProject.uri = newUri;
+
+      // 初始化项目
+      loadAllServicesBeforeInit(newProject);
+      newProject
+        .init()
+        .then(() => {
+          loadAllServicesAfterInit(newProject);
+          // 在舞台上创建文本节点
+          const newTextNode = new TextNode(newProject, {
+            text: fileName,
+          });
+          newProject.stageManager.add(newTextNode);
+          newTextNode.isSelected = true;
+
+          // 保存文件
+          newProject
+            .save()
+            .then(async () => {
+              // 更新项目列表和活动项目
+              store.set(projectsAtom, [...store.get(projectsAtom), newProject]);
+              store.set(activeProjectAtom, newProject);
+              await RecentFileManager.addRecentFileByUri(newUri);
+              await refresh();
+              toast.success(`成功创建新文件：${fileName}.prg`);
+            })
+            .catch((error) => {
+              toast.error(`保存文件失败：${String(error)}`);
+            });
+        })
+        .catch((error) => {
+          toast.error(`初始化项目失败：${String(error)}`);
+        });
+    });
+  }, 50); // 轻微延迟
 }
 
 /**
