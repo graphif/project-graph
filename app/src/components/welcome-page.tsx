@@ -22,6 +22,7 @@ import { AssetsRepository } from "@/core/service/AssetsRepository";
 import { join, tempDir } from "@tauri-apps/api/path";
 import { URI } from "vscode-uri";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
+import { isMac } from "@/utils/platform";
 
 export default function WelcomePage() {
   const [recentFiles, setRecentFiles] = useState<RecentFileManager.RecentFile[]>([]);
@@ -75,7 +76,7 @@ export default function WelcomePage() {
               <div onClick={onNewDraft}>
                 <FilePlus />
                 <span>{t("newDraft")}</span>
-                <span className="text-xs opacity-50">Ctrl + N</span>
+                <span className="text-xs opacity-50">{isMac ? "⌘ + N" : "Ctrl + N"}</span>
               </div>
               <div onClick={() => RecentFilesWindow.open()}>
                 <TableProperties />
@@ -85,7 +86,7 @@ export default function WelcomePage() {
               <div onClick={() => onOpenFile(undefined, "欢迎页面")}>
                 <FolderOpen />
                 <span>{t("openFile")}</span>
-                <span className="text-xs opacity-50">Ctrl + O</span>
+                <span className="text-xs opacity-50">{isMac ? "⌘ + O" : "Ctrl + O"}</span>
               </div>
             </div>
             <div

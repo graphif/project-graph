@@ -179,7 +179,7 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
           onChange={onInputChange}
           value={searchString}
           autoFocus
-          className="max-w-96 flex-1"
+          className="min-w-32 max-w-96 flex-1"
         />
 
         <button
@@ -334,6 +334,7 @@ RecentFilesWindow.open = () => {
     title: "最近打开的文件",
     children: <RecentFilesWindow />,
     rect: new Rectangle(new Vector(50, 50), new Vector(window.innerWidth - 100, window.innerHeight - 100)),
-    closeWhenClickOutside: true,
+    // 不要点击外面就关闭当前面板，不太好用
+    // closeWhenClickOutside: true,
   });
 };
