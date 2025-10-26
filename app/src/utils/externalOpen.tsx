@@ -9,11 +9,15 @@ import { onOpenFile } from "@/core/service/GlobalMenu";
 
 export async function openBrowserOrFile(project: Project) {
   for (const node of project.stageManager.getSelectedEntities()) {
-    if (node instanceof TextNode) {
-      openOneTextNode(node);
-    } else {
-      openOneEntity(node);
-    }
+    openBrowserOrFileByEntity(node);
+  }
+}
+
+export function openBrowserOrFileByEntity(entity: Entity) {
+  if (entity instanceof TextNode) {
+    openOneTextNode(entity);
+  } else {
+    openOneEntity(entity);
   }
 }
 

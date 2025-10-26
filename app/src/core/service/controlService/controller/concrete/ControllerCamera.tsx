@@ -9,6 +9,7 @@ import { ControllerCameraMac } from "@/core/service/controlService/controller/co
 import { EntityCreateFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityCreateFlashEffect";
 import { MouseTipFeedbackEffect } from "@/core/service/feedbackService/effectEngine/concrete/MouseTipFeedbackEffect";
 import { CursorNameEnum } from "@/types/cursors";
+import { openBrowserOrFileByEntity } from "@/utils/externalOpen";
 import { isIpad, isMac } from "@/utils/platform";
 import { LimitLengthQueue, Vector } from "@graphif/data-structures";
 
@@ -378,8 +379,16 @@ export class ControllerCameraClass extends ControllerClass {
       if (event.ctrlKey) {
         return;
       }
+
       // 中键双击
-      this.project.camera.resetBySelected();
+      const pressLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
+      const clickedEntity = this.project.stageManager.findEntityByLocation(pressLocation);
+      if (clickedEntity !== null) {
+        // 双击实体可以直接跳转
+        openBrowserOrFileByEntity(clickedEntity);
+      } else {
+        this.project.camera.resetBySelected();
+      }
     }
   };
 
