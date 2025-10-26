@@ -170,6 +170,23 @@ export class Project extends EventEmitter<{
       }
     });
 
+    const pressedKeysText = this.pixi.stage.addChild(
+      new MyText("", {
+        style: { fontSize: 24 },
+        x: 10,
+        y: 80,
+      }),
+    );
+    const pressedKeys = new Set<string>();
+    window.addEventListener("keydown", (e) => {
+      pressedKeys.add(e.key);
+      pressedKeysText.text = Array.from(pressedKeys).join(", ");
+    });
+    window.addEventListener("keyup", (e) => {
+      pressedKeys.delete(e.key);
+      pressedKeysText.text = Array.from(pressedKeys).join(", ");
+    });
+
     this.viewport = new Viewport({
       screenWidth: window.innerWidth,
       screenHeight: window.innerHeight,

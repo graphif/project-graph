@@ -4,6 +4,7 @@ import { serializable } from "@graphif/serializer";
 import { FederatedPointerEvent, ObservablePoint, Point } from "pixi.js";
 import type { Value } from "platejs";
 import { LineEdge } from "../LineEdge";
+import { Section } from "../Section";
 import { TempLineEdge } from "../TempLineEdge";
 import { AssociationMember } from "./Association";
 
@@ -92,6 +93,19 @@ export abstract class Entity extends StageObject {
       }
       linking = false;
       tempLineEdge.removeFromParent();
+      if (e.altKey) {
+        e.stopPropagation();
+        // 检测碰到了哪个Section
+        const target = this.project.stage
+          .filter((it) => it instanceof Section)
+          .find((section) => {
+            const bounds = section.getBounds().rectangle;
+            return bounds.contains(world.x, world.y);
+          });
+        if (target) {
+          target.members.push(new AssociationMember(this));
+        }
+      }
     };
     this.on("pointerdown", (e) => {
       e.stopPropagation();

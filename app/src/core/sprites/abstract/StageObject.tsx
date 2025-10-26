@@ -9,6 +9,7 @@ import { DestroyOptions, Graphics } from "pixi.js";
 export abstract class StageObject extends LayoutContainer {
   static SELECTION_OUTLINE_LABEL = "selection-outline";
   static SELECTION_OUTLINE_PADDING = 8;
+  allowClickToSelect: boolean = true;
 
   interactive = true;
 
@@ -68,11 +69,13 @@ export abstract class StageObject extends LayoutContainer {
         this.project.emit("pointer-leave-stage-object", this, e);
       })
       .on("pointerdown", () => {
+        if (!this.allowClickToSelect) return;
         this.project.stage.forEach((it) => (it.selected = false));
         this.selected = true;
       })
       .on("update", () => {
         if (this.selected) {
+          // 更新一下选中框的大小
           this.selected = false;
           this.selected = true;
         }

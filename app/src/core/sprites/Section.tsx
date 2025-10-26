@@ -7,6 +7,7 @@ import { MyText } from "./MyText";
 export class Section extends Association {
   static PADDING = 16;
   static TITLE_SIZE = 24;
+  allowClickToSelect = false;
 
   private _text: string = "";
   private _cachedTitleText: MyText | null = null;
@@ -36,9 +37,6 @@ export class Section extends Association {
     } = {},
   ) {
     super(project);
-    if (members.length !== 2) {
-      throw new Error("LineEdge must have exactly two members");
-    }
     this.uuid = uuid;
     this.color = new Color(color);
     this.members = members;
@@ -68,6 +66,9 @@ export class Section extends Association {
         style: {
           fontSize: Section.TITLE_SIZE,
         },
+        interactive: true,
+      }).on("pointerdown", () => {
+        this.selected = true;
       });
     }
     this._cachedTitleText.position.set(x, y);
@@ -75,7 +76,6 @@ export class Section extends Association {
   }
 
   refresh() {
-    if (this.members.length !== 2) return;
     const g = new Graphics();
 
     const bounds = this.members.map((m) => m.entity.getWorldBounds());
