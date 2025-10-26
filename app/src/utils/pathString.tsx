@@ -153,59 +153,47 @@ export namespace PathString {
    * 则返回 "../test2.txt"
    */
   export function getRelativePath(from: string, to: string): string {
-    // 统一替换反斜杠为正斜杠，并分割路径为数组，过滤掉空的部分
-    const fromParts = from
-      .replace(/\\/g, "/")
-      .split("/")
-      .filter((p) => p !== "");
-    const toParts = to
-      .replace(/\\/g, "/")
-      .split("/")
-      .filter((p) => p !== "");
+    // 统一替换反斜杠为正斜杠
+    const fromNormalized = from.replace(/\\/g, "/");
+    const toNormalized = to.replace(/\\/g, "/");
 
-    // 检查根目录是否相同
-    if (fromParts.length === 0 || toParts.length === 0 || fromParts[0] !== toParts[0]) {
+    console.log(fromNormalized, toNormalized);
+
+    // 分割路径为数组
+    const fromParts = fromNormalized.split("/").filter((part) => part && part !== ".");
+    const toParts = toNormalized.split("/").filter((part) => part && part !== ".");
+
+    // 检查是否在同一根目录下
+    if (fromParts[0] !== toParts[0]) {
       return "";
     }
 
-    // 提取父目录数组和文件名
-    const fromParent = fromParts.slice(0, fromParts.length - 1);
-    const toParent = toParts.slice(0, toParts.length - 1);
-    const toFileName = toParts[toParts.length - 1];
-
-    // 找到共同层级i
-    let i = 0;
-    while (i < fromParent.length && i < toParent.length && fromParent[i] === toParent[i]) {
-      i++;
+    // 找到共同路径的深度
+    let commonDepth = 0;
+    const maxCommonDepth = Math.min(fromParts.length, toParts.length);
+    while (commonDepth < maxCommonDepth && fromParts[commonDepth] === toParts[commonDepth]) {
+      commonDepth++;
     }
 
-    // 计算需要向上退的层数
-    const fromUpLevel = fromParent.length - i;
+    // 计算需要向上退出的层数
+    const upLevel = fromParts.length - commonDepth - 1; // -1 因为最后一部分是文件名
 
-    // 生成向上的部分（如'../..'）
-    const up = fromUpLevel > 0 ? Array(fromUpLevel).fill("..").join("/") : "";
+    // 构建向上部分
+    const upPart = upLevel > 0 ? Array(upLevel).fill("..").join("/") : "";
 
-    // 生成向下的部分（如'dir/subdir'）
-    const down = toParent.slice(i).join("/");
+    // 构建向下部分
+    const downPart = toParts.slice(commonDepth).join("/");
 
-    // 组合路径
+    // 组合相对路径
     let relativePath = "";
-    if (up) {
-      relativePath += up;
-      if (down) {
-        relativePath += "/";
-      }
-    }
-    if (down) {
-      relativePath += down;
-    }
-
-    // 处理文件名部分
-    if (relativePath) {
-      relativePath += "/" + toFileName;
+    if (upPart && downPart) {
+      relativePath = upPart + "/" + downPart;
+    } else if (upPart) {
+      relativePath = upPart;
+    } else if (downPart) {
+      relativePath = "./" + downPart;
     } else {
-      // 如果路径为空，说明父目录相同，直接返回当前目录下的文件名
-      relativePath = "./" + toFileName;
+      relativePath = "./" + toParts[toParts.length - 1];
     }
 
     return relativePath;
