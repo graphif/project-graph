@@ -60,7 +60,13 @@ export class LineEdge extends Association {
 
     // 画箭头
     const arrowSize = 8;
-    const angle = Math.atan2(ep.y - sp.y, ep.x - sp.x);
+    const angle = {
+      top: Math.PI / 2,
+      bottom: -Math.PI / 2,
+      left: 0,
+      right: Math.PI,
+      center: Math.atan2(ep.y - sp.y, ep.x - sp.x),
+    }[this.target.anchor];
     g.moveTo(ep.x, ep.y);
     g.lineTo(ep.x - arrowSize * Math.cos(angle - Math.PI / 6), ep.y - arrowSize * Math.sin(angle - Math.PI / 6));
     g.lineTo(ep.x - arrowSize * Math.cos(angle + Math.PI / 6), ep.y - arrowSize * Math.sin(angle + Math.PI / 6));
