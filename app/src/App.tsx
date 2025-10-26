@@ -5,7 +5,7 @@ import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Dialog } from "@/components/ui/dialog";
 import Welcome from "@/components/welcome-page";
 import { Project, ProjectState } from "@/core/Project";
-import { GlobalMenu, onOpenFile } from "@/core/service/GlobalMenu";
+import { GlobalMenu } from "@/core/service/GlobalMenu";
 import { Settings } from "@/core/service/Settings";
 import { Telemetry } from "@/core/service/Telemetry";
 import { Themes } from "@/core/service/Themes";
@@ -25,7 +25,6 @@ import { useAtom } from "jotai";
 import { ChevronsLeftRight, Copy, Minus, Pin, PinOff, Square, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { URI } from "vscode-uri";
 import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { cn } from "./utils/cn";
 import { isMac, isWindows } from "./utils/platform";
@@ -33,6 +32,7 @@ import { register } from "@tauri-apps/plugin-global-shortcut";
 import { registerAllUIKeyBinds } from "./core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { ProjectTabs } from "./ProjectTabs";
+import { DropWindowCover } from "./DropWindowCover";
 
 export default function App() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -45,7 +45,9 @@ export default function App() {
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   // const [isWide, setIsWide] = useState(false);
   const [telemetryEventSent, setTelemetryEventSent] = useState(false);
-  const [dropState, setDropState] = useState<"none" | "open" | "append">("none");
+  const [dropMouseLocation, setDropMouseLocation] = useState<"top" | "middle" | "bottom" | "notInWindowZone">(
+    "notInWindowZone",
+  );
   const [ignoreMouseEvents, setIgnoreMouseEvents] = useState(false);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -206,33 +208,26 @@ export default function App() {
     activeProject.canvas.element.addEventListener("pointerup", () => {
       setIgnoreMouseEvents(false);
     });
-    const unlisten2 = getCurrentWindow().onDragDropEvent((event) => {
+    const unlisten2 = getCurrentWindow().onDragDropEvent(async (event) => {
+      const size = await getCurrentWindow().outerSize();
       if (event.payload.type === "over") {
-        if (event.payload.position.y <= 96) {
-          // 拖拽到标签页栏区域
-          setDropState("open");
+        if (event.payload.position.y <= size.height / 3) {
+          setDropMouseLocation("top");
+        } else if (event.payload.position.y <= (size.height / 3) * 2) {
+          setDropMouseLocation("middle");
         } else {
-          // 拖拽到画布区域
-          setDropState("append");
+          setDropMouseLocation("bottom");
         }
       } else if (event.payload.type === "leave") {
-        setDropState("none");
+        setDropMouseLocation("notInWindowZone");
       } else if (event.payload.type === "drop") {
-        setDropState("none");
-        if (event.payload.position.y <= 96) {
-          // 拖拽到标签页栏区域
-          for (const path of event.payload.paths) {
-            if (path.endsWith(".prg") || path.endsWith(".json")) {
-              onOpenFile(URI.file(path), "拖入窗口");
-            } else {
-              toast.error("不支持打开此文件");
-            }
-          }
-        } else {
-          // 拖拽到画布区域
-          toast("追加到画布……待完善");
-          // console.log(activeProject, event.payload.paths);
+        setDropMouseLocation("notInWindowZone");
+        if (event.payload.position.y <= size.height / 3) {
           DragFileIntoStageEngine.handleDrop(activeProject, event.payload.paths);
+        } else if (event.payload.position.y <= (size.height / 3) * 2) {
+          DragFileIntoStageEngine.handleDropFileAbsolutePath(activeProject, event.payload.paths);
+        } else {
+          DragFileIntoStageEngine.handleDropFileRelativePath(activeProject, event.payload.paths);
         }
       }
     });
@@ -241,7 +236,6 @@ export default function App() {
     };
   }, [activeProject]);
 
-  // 根据标签页数量、是否宽屏、当前活动项目uri 设置滚动tabs
   /**
    * 首次启动时显示欢迎页面
    */
@@ -380,7 +374,6 @@ export default function App() {
         onTabClose={handleTabClose}
         isClassroomMode={isClassroomMode}
         ignoreMouseEvents={ignoreMouseEvents}
-        dropState={dropState}
       />
 
       {/* canvas */}
@@ -418,6 +411,7 @@ export default function App() {
           onClick={() => getCurrentWindow().close()}
         ></div>
       )}
+      {dropMouseLocation !== "notInWindowZone" && <DropWindowCover dropMouseLocation={dropMouseLocation} />}
     </div>
   );
 }

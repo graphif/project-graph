@@ -14,7 +14,6 @@ export const ProjectTabs = memo(function ProjectTabs({
   onTabClose,
   isClassroomMode,
   ignoreMouseEvents,
-  dropState,
 }: {
   projects: Project[];
   activeProject: Project | undefined;
@@ -22,7 +21,6 @@ export const ProjectTabs = memo(function ProjectTabs({
   onTabClose: (project: Project) => void;
   isClassroomMode: boolean;
   ignoreMouseEvents: boolean;
-  dropState: "none" | "open" | "append";
 }) {
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef(0);
@@ -129,9 +127,6 @@ export const ProjectTabs = memo(function ProjectTabs({
           </div>
         </Button>
       ))}
-      {dropState !== "none" && (
-        <Button variant={dropState === "open" ? "default" : "outline"}>拖拽到此处打开文件</Button>
-      )}
     </div>
   );
 });
