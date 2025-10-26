@@ -24,7 +24,7 @@ export const DropWindowCover = ({
       <div
         className={cn(
           "bg-card/80 flex flex-1 flex-col items-center justify-center text-xl",
-          dropMouseLocation === "bottom" && "text-destructive bg-transparent",
+          dropMouseLocation === "middle" && "text-destructive bg-transparent",
         )}
       >
         <p>
@@ -35,7 +35,7 @@ export const DropWindowCover = ({
       <div
         className={cn(
           "bg-card/80 flex flex-1 flex-col items-center justify-center text-xl",
-          dropMouseLocation === "middle" && "text-destructive bg-transparent",
+          dropMouseLocation === "bottom" && "text-destructive bg-transparent",
         )}
       >
         <p>

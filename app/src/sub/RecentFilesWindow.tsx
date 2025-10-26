@@ -5,7 +5,7 @@ import { cn } from "@/utils/cn";
 import { PathString } from "@/utils/pathString";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { Import, LoaderPinwheel, Trash2, X } from "lucide-react";
+import { DoorClosed, DoorOpen, Import, LoaderPinwheel, Trash2, X, Link, HardDriveDownload } from "lucide-react";
 import React, { ChangeEventHandler, useEffect } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -14,12 +14,16 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { URI } from "vscode-uri";
 import { SoundService } from "@/core/service/feedbackService/SoundService";
+import { useAtom } from "jotai";
+import { activeProjectAtom } from "@/state";
+import { DragFileIntoStageEngine } from "@/core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 
 /**
  * 最近文件面板按钮
  * @returns
  */
 export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
+  const [activeProject] = useAtom(activeProjectAtom);
   /**
    * 数据中有多少就是多少
    */
@@ -38,6 +42,7 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
   const [currentShowTime, setCurrentShowTime] = React.useState<string>("");
 
   const [isShowDeleteEveryItem, setIsShowDeleteEveryItem] = React.useState<boolean>(false);
+  const [isShowDoorEveryItem, setIsShowDoorEveryItem] = React.useState<boolean>(false);
 
   // 选择文件夹并导入PRG文件
   const importPrgFilesFromFolder = async () => {
@@ -150,6 +155,22 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
     }
   };
 
+  const addCurrentFileToCurrentProject = (fileAbsolutePath: string, isAbsolute: boolean) => {
+    if (!activeProject) {
+      toast.error("当前没有激活的项目，无法添加传送门");
+      return;
+    }
+    if (isAbsolute) {
+      DragFileIntoStageEngine.handleDropFileAbsolutePath(activeProject, [fileAbsolutePath]);
+    } else {
+      if (activeProject.isDraft) {
+        toast.error("草稿是未保存文件，没有路径，不能用相对路径导入");
+        return;
+      }
+      DragFileIntoStageEngine.handleDropFileRelativePath(activeProject, [fileAbsolutePath]);
+    }
+  };
+
   return (
     <div className={cn("flex h-full flex-col items-center gap-2")}>
       <div className="flex w-full flex-wrap items-center gap-2 p-4">
@@ -183,7 +204,6 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
             setIsShowDeleteEveryItem((prev) => !prev);
           }}
           className="bg-destructive/10 hover:bg-destructive/20 flex gap-2 rounded-md p-2 transition-colors"
-          title="开始删除指定记录"
         >
           {isShowDeleteEveryItem ? (
             <>
@@ -194,6 +214,24 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
             <>
               <Trash2 />
               <span>开始删除指定记录</span>
+            </>
+          )}
+        </button>
+        <button
+          onClick={() => {
+            setIsShowDoorEveryItem((prev) => !prev);
+          }}
+          className="bg-primary/10 flex gap-2 rounded-md p-2 transition-colors"
+        >
+          {isShowDoorEveryItem ? (
+            <>
+              <DoorOpen />
+              <span>停止添加传送门</span>
+            </>
+          ) : (
+            <>
+              <DoorClosed />
+              <span>开始添加传送门</span>
             </>
           )}
         </button>
@@ -235,6 +273,10 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
                 toast.warning("当前正在删除阶段，请退出删除阶段才能打开文件，或点击删除按钮删除该文件");
                 return;
               }
+              if (isShowDoorEveryItem) {
+                toast.warning("当前正在添加传送门阶段，请退出添加传送门阶段才能打开文件，或点击按钮添加传送门");
+                return;
+              }
               checkoutFile(file);
               SoundService.play.mouseClickButton();
             }}
@@ -244,7 +286,6 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
               <button
                 onClick={async (e) => {
                   e.stopPropagation();
-                  //
                   const result = await RecentFileManager.removeRecentFileByUri(file.uri);
                   if (result) {
                     updateRecentFiles();
@@ -255,6 +296,30 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
                 className="bg-destructive absolute -right-2 -top-2 cursor-pointer rounded-full transition-colors hover:scale-110"
               >
                 <X size={20} />
+              </button>
+            )}
+            {isShowDoorEveryItem && (
+              <button
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const filePath = PathString.uppercaseAbsolutePathDiskChar(file.uri.fsPath).replaceAll("\\", "/");
+                  addCurrentFileToCurrentProject(filePath, false);
+                }}
+                className="bg-primary absolute -top-2 right-4 cursor-pointer rounded-full transition-colors hover:scale-110"
+              >
+                <Link size={20} />
+              </button>
+            )}
+            {isShowDoorEveryItem && (
+              <button
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const filePath = PathString.uppercaseAbsolutePathDiskChar(file.uri.fsPath).replaceAll("\\", "/");
+                  addCurrentFileToCurrentProject(filePath, true);
+                }}
+                className="bg-primary absolute -right-2 -top-2 cursor-pointer rounded-full transition-colors hover:scale-110"
+              >
+                <HardDriveDownload size={20} />
               </button>
             )}
           </div>
