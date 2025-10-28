@@ -343,8 +343,7 @@ export class Project extends EventEmitter<{
   }
 
   getStageObjectAt(point: PointData): StageObject | null {
-    const worldPos = this.viewport.toWorld(point);
-    return this.stage.find((so) => so.myContainsPoint(worldPos)) || null;
+    return this.stage.find((so) => so.myContainsPoint(point)) || null;
   }
 }
 
