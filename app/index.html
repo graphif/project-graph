@@ -14,6 +14,10 @@
       import { getOriginalNameOf } from "virtual:original-class-name";
       configureSerializer(getOriginalNameOf);
     </script>
+    <script type="module">
+      import { enableMock } from "./src/mocks";
+      enableMock();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
