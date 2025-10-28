@@ -29,7 +29,6 @@ import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFi
 import { cn } from "./utils/cn";
 import { isMac, isWindows } from "./utils/platform";
 import { register } from "@tauri-apps/plugin-global-shortcut";
-import { registerAllUIKeyBinds } from "./core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { ProjectTabs } from "./ProjectTabs";
 import { DropWindowCover } from "./DropWindowCover";
@@ -75,7 +74,7 @@ export default function App() {
     });
 
     // 注册UI级别快捷键
-    registerAllUIKeyBinds();
+    KeyBindsUI.registerAllUIKeyBinds();
     KeyBindsUI.uiStartListen();
 
     // 修复鼠标拖出窗口后触发上下文菜单的问题

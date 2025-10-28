@@ -29,7 +29,6 @@ import { ColorSmartTools } from "../../dataManageService/colorSmartTools";
 import { ConnectNodeSmartTools } from "../../dataManageService/connectNodeSmartTools";
 import { TextNodeSmartTools } from "../../dataManageService/textNodeSmartTools";
 import { createFileAtCurrentProjectDir, onNewDraft, onOpenFile } from "../../GlobalMenu";
-import { KeyBindsUI } from "./KeyBindsUI";
 
 interface KeyBindItem {
   id: string;
@@ -1220,17 +1219,4 @@ export function getKeyBindTypeById(id: string): "global" | "ui" | "project" {
     }
   }
   return "project";
-}
-
-/**
- * 注册所有UI级别的快捷键
- */
-export function registerAllUIKeyBinds() {
-  for (const keyBind of allKeyBinds) {
-    if (keyBind.isUI) {
-      KeyBindsUI.registerOneUIKeyBind(keyBind.id, keyBind.defaultKey, () => {
-        keyBind.onPress();
-      });
-    }
-  }
 }
