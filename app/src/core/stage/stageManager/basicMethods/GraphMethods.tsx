@@ -70,6 +70,23 @@ export class GraphMethods {
   }
 
   /**
+   * 当前节点是否是存在于树形结构中，且非树形结构的跟节点
+   * @param node
+   * @returns
+   */
+  isCurrentNodeInTreeStructAndNotRoot(node: ConnectableEntity): boolean {
+    const roots = this.getRoots(node);
+    if (roots.length !== 1) {
+      return false;
+    }
+    const rootNode = roots[0];
+    if (rootNode.uuid === node.uuid) {
+      return false;
+    }
+    return this.isTree(rootNode);
+  }
+
+  /**
    * 获取自己的祖宗节点
    * @param node 节点
    */
