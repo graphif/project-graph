@@ -1,4 +1,5 @@
-import { Color, ColorSource, Graphics } from "pixi.js";
+import { BezierUtils } from "@/utils/bezier";
+import { Color, ColorSource, Graphics, PointData } from "pixi.js";
 import { Project } from "../Project";
 import { Association, AssociationMember } from "./abstract/Association";
 
@@ -44,15 +45,16 @@ export class LineEdge extends Association {
     const g = new Graphics();
     const sp = this.source.position.subtract(this.position);
     const ep = this.target.position.subtract(this.position);
-    const distance = Math.hypot(ep.x - sp.x, ep.y - sp.y);
 
-    // 获取两个控制点
-    // const offset = 6.25 * Math.sqrt(distance);
-    const offset = 0.5 * distance;
-    const cp1 = this.source.offset(offset).subtract(this.position);
-    const cp2 = this.target.offset(offset).subtract(this.position);
     g.moveTo(sp.x, sp.y);
-    g.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, ep.x, ep.y);
+    g.bezierCurveTo(
+      this.bezierCp1.x - this.position.x,
+      this.bezierCp1.y - this.position.y,
+      this.bezierCp2.x - this.position.x,
+      this.bezierCp2.y - this.position.y,
+      ep.x,
+      ep.y,
+    );
     g.stroke({ width: 2, color: this.color });
     // debug:画出控制点
     // g.circle(cp1.x, cp1.y, 2).fill({ color: 0xff0000 });
@@ -75,5 +77,28 @@ export class LineEdge extends Association {
 
     this.removeChildren();
     this.addChild(g);
+  }
+
+  get bezierFrom() {
+    return this.source.position;
+  }
+  get bezierCp1() {
+    const offset =
+      0.5 *
+      Math.hypot(this.target.position.x - this.source.position.x, this.target.position.y - this.source.position.y);
+    return this.source.withOffset(offset);
+  }
+  get bezierCp2() {
+    const offset =
+      0.5 *
+      Math.hypot(this.target.position.x - this.source.position.x, this.target.position.y - this.source.position.y);
+    return this.target.withOffset(offset);
+  }
+  get bezierTo() {
+    return this.target.position;
+  }
+
+  myContainsPoint(point: PointData) {
+    return BezierUtils.isPointInBezierCurve(this.bezierFrom, this.bezierCp1, this.bezierCp2, this.bezierTo, point, 2);
   }
 }

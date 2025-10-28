@@ -56,7 +56,7 @@ export class TempLineEdge extends Association {
 
     // 画曲线
     const offset = 6.25 * Math.sqrt(distance);
-    const cp1 = this.source.offset(offset).subtract(this.position);
+    const cp1 = this.source.withOffset(offset).subtract(this.position);
     const cp2 = this.endPoint.subtract(this.source.position);
     g.moveTo(sp.x, sp.y);
     g.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, ep.x, ep.y);

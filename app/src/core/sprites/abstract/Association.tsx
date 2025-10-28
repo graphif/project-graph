@@ -122,7 +122,7 @@ export class AssociationMember {
   }
 
   /** 往旁边偏移 */
-  offset(distance: number): Point {
+  withOffset(distance: number): Point {
     const pos = this.position.clone();
     switch (this.anchor) {
       case "center":

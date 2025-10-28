@@ -12,8 +12,9 @@ export class Cutter extends Graphics {
     project.viewport
       .on("pointerdown", (e) => {
         if (e.button !== 2) return;
-        pressed = true;
         startPoint = project.viewport.toWorld(e.client);
+        if (project.getStageObjectAt(startPoint)) return;
+        pressed = true;
         // 取消所有节点的选中状态
         project.stage.forEach((it) => {
           it.selected = false;

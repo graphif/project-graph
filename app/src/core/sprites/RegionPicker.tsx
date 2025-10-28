@@ -12,8 +12,14 @@ export class RegionPicker extends Graphics {
     project.viewport
       .on("pointerdown", (e) => {
         if (e.button !== 0) return;
-        pressed = true;
         startPoint = project.viewport.toWorld(e.client);
+        // 点击选中节点
+        const clickedEntity = project.getStageObjectAt(startPoint);
+        if (clickedEntity) {
+          clickedEntity.selected = true;
+          return;
+        }
+        pressed = true;
         // 取消所有节点的选中状态
         project.stage.forEach((it) => {
           it.selected = false;

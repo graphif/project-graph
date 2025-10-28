@@ -1,7 +1,7 @@
 import { Project } from "@/core/Project";
 import { id, serializable } from "@graphif/serializer";
 import { LayoutContainer } from "@pixi/layout/components";
-import { DestroyOptions, Graphics } from "pixi.js";
+import { DestroyOptions, Graphics, PointData } from "pixi.js";
 
 /**
  * 一切舞台上的东西
@@ -70,8 +70,6 @@ export abstract class StageObject extends LayoutContainer {
       })
       .on("pointerdown", () => {
         if (!this.allowClickToSelect) return;
-        this.project.stage.forEach((it) => (it.selected = false));
-        this.selected = true;
       })
       .on("update", () => {
         if (this.selected) {
@@ -132,5 +130,10 @@ export abstract class StageObject extends LayoutContainer {
       bounds.height -= StageObject.SELECTION_OUTLINE_PADDING * 2;
     }
     return bounds;
+  }
+
+  myContainsPoint(point: PointData) {
+    const rect = this.getWorldBounds().rectangle;
+    return rect.contains(point.x, point.y);
   }
 }

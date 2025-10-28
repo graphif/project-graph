@@ -9,7 +9,7 @@ import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, 
 import { EventEmitter } from "events";
 import mime from "mime";
 import { Viewport } from "pixi-viewport";
-import { Application, Container, FederatedPointerEvent, Graphics, Point } from "pixi.js";
+import { Application, Container, FederatedPointerEvent, Graphics, Point, PointData } from "pixi.js";
 import "pixi.js/math-extras";
 import { URI } from "vscode-uri";
 import { Settings } from "./service/Settings";
@@ -340,6 +340,11 @@ export class Project extends EventEmitter<{
   set stage(value: StageObject[]) {
     this.viewport?.removeChild(...this._stage);
     this._stage = new ObservableArray(this.onStageAdd.bind(this), this.onStageRemove.bind(this), value);
+  }
+
+  getStageObjectAt(point: PointData): StageObject | null {
+    const worldPos = this.viewport.toWorld(point);
+    return this.stage.find((so) => so.myContainsPoint(worldPos)) || null;
   }
 }
 
