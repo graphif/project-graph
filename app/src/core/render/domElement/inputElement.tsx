@@ -251,6 +251,7 @@ export class InputElement {
           // xmind用户
           this.project.keyboardOnlyTreeEngine.onDeepGenerateNode(afterText, selectAllTextWhenCreated);
         } else if (event.key === "Escape") {
+          event.preventDefault(); // 这里可以阻止mac退出全屏
           // Escape 是通用的取消编辑的快捷键
           resolve(textareaElement.value);
           onChange(textareaElement.value, textareaElement);
