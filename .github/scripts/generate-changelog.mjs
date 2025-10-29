@@ -108,6 +108,9 @@ response
   .then((data) => {
     const changelog = data.candidates[0].content.parts[0].text;
     const finalChangelog = `${changelog}
+---
+###### 更新日志由 AI 根据 Git 提交记录自动生成
+###### 上一个版本: \`${baseRef}\`
 `;
     console.log(finalChangelog);
   })
