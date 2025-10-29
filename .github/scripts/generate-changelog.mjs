@@ -1,15 +1,18 @@
 /* eslint-disable */
 import { execSync } from "child_process";
 
-// 获取最近一次发布的标签
-const lastRelease = execSync(
-  "git for-each-ref --sort=-creatordate --format='%(refname:short)' \"refs/tags/v*\" | head -n 1",
-)
-  .toString()
-  .trim();
+// 获取基础ref，如果环境变量中提供了则使用，否则使用最近一次发布的标签
+let baseRef = process.env.CHANGELOG_BASE_REF?.trim();
+
+if (!baseRef) {
+  // 获取最近一次发布的标签
+  baseRef = execSync("git for-each-ref --sort=-creatordate --format='%(refname:short)' \"refs/tags/v*\" | head -n 1")
+    .toString()
+    .trim();
+}
 
 // 获取 Git 提交记录
-const commits = execSync(`git log ${lastRelease}.. --pretty=format:"%s" --reverse`).toString().trim();
+const commits = execSync(`git log ${baseRef}.. --pretty=format:"%s" --reverse`).toString().trim();
 
 // 定义提示信息
 const prompt = `
@@ -17,15 +20,15 @@ const prompt = `
 你的任务是生成一篇清晰、简洁的Changelog，面向最终用户（非技术人员），避免使用技术术语，专注于用户能直接感知的变更。请遵循以下规则：
 
 1. **理解commit类型**：
-  - \`feat\` / \`feature\`：新功能，归类为“新功能”。
-  - \`fix\` / \`hotfix\`：问题修复，归类为“问题修复”。
-  - \`docs\`：文档或内容更新，归类为“文档和内容更新”。
-  - \`chore\`：界面优化、配置调整或内部改进，归类为“改进和优化”（重点描述用户可见的变化）。
+  - \`feat\` / \`feature\`：新功能，归类为"新功能"。
+  - \`fix\` / \`hotfix\`：问题修复，归类为"问题修复"。
+  - \`docs\`：文档或内容更新，归类为"文档和内容更新"。
+  - \`chore\`：界面优化、配置调整或内部改进，归类为"改进和优化"（重点描述用户可见的变化）。
   - 其他类型根据描述推断，确保归类合理。
 
 2. **组织Changelog结构**：
-  - 按类别分组commit（如“问题修复”、“文档和内容更新”、“改进和优化”等），每个类别使用子标题。
-  - 每个类别下用项目符号列表描述变更，语言口语化、正面积极（例如：用“修复了...问题”而非“修复bug”）。
+  - 按类别分组commit（如"问题修复"、"文档和内容更新"、"改进和优化"等），每个类别使用子标题。
+  - 每个类别下用项目符号列表描述变更，语言口语化、正面积极（例如：用"修复了...问题"而非"修复bug"）。
   - 如果多个commit相似，可合并描述以提高可读性。
 
 3. **输出格式**：

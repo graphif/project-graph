@@ -50,6 +50,11 @@ on:
         type: string
         description: The version of the AUR package.
         required: true
+      changelog_base_ref:
+        type: string
+        description: The base ref (tag or commit) to use for generating changelog. If empty, uses the latest release tag.
+        required: false
+        default: ""
       task_build:
         type: string
         description: The task to run for building the app.

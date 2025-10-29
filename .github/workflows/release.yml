@@ -17,6 +17,11 @@ on:
         description: "删除以前的release"
         required: false
         default: false
+      changelog_base_ref:
+        type: string
+        description: "用于生成changelog的基础ref (tag或commit)，如不填则使用最近一次发布的标签"
+        required: false
+        default: ""
 
 jobs:
   build:
@@ -31,6 +36,7 @@ jobs:
       aur_version: ${{ inputs.version }}
       aur_key_algorithm: "ed25519"
       aur_package_name: "project-graph-bin"
+      changelog_base_ref: ${{ inputs.changelog_base_ref }}
       delete_release: ${{ inputs.delete_release }}
       prerelease: ${{ inputs.prerelease }}
       release_name: "v${{ inputs.version }}"
