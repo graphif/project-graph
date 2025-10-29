@@ -49,10 +49,35 @@ export abstract class StageObject extends LayoutContainer {
     this._selected = value;
   }
 
+  private onPointerEnter: ((e: any) => void) | null = null;
+  private onPointerLeave: ((e: any) => void) | null = null;
+  private onPointerDown: (() => void) | null = null;
+  private onUpdate: (() => void) | null = null;
+
   destroy(options?: DestroyOptions): void {
+    // 移除所有事件监听器
+    if (this.onPointerEnter) {
+      this.off("pointerenter", this.onPointerEnter);
+    }
+    if (this.onPointerLeave) {
+      this.off("pointerleave", this.onPointerLeave);
+    }
+    if (this.onPointerDown) {
+      this.off("pointerdown", this.onPointerDown);
+    }
+    if (this.onUpdate) {
+      this.off("update", this.onUpdate);
+    }
+
+    this.onPointerEnter = null;
+    this.onPointerLeave = null;
+    this.onPointerDown = null;
+    this.onUpdate = null;
+
     super.destroy(options);
     this.project.stage = this.project.stage.filter((s) => s !== this);
   }
+
   removeFromParent(): void {
     super.removeFromParent();
     this.project.stage = this.project.stage.filter((s) => s !== this);
@@ -62,22 +87,31 @@ export abstract class StageObject extends LayoutContainer {
 
   constructor(protected readonly project: Project) {
     super();
-    this.on("pointerenter", (e) => {
+
+    this.onPointerEnter = (e) => {
       this.project.emit("pointer-enter-stage-object", this, e);
-    })
-      .on("pointerleave", (e) => {
-        this.project.emit("pointer-leave-stage-object", this, e);
-      })
-      .on("pointerdown", () => {
-        if (!this.allowClickToSelect) return;
-      })
-      .on("update", () => {
-        if (this.selected) {
-          // 更新一下选中框的大小
-          this.selected = false;
-          this.selected = true;
-        }
-      });
+    };
+
+    this.onPointerLeave = (e) => {
+      this.project.emit("pointer-leave-stage-object", this, e);
+    };
+
+    this.onPointerDown = () => {
+      if (!this.allowClickToSelect) return;
+    };
+
+    this.onUpdate = () => {
+      if (this.selected) {
+        // 更新一下选中框的大小
+        this.selected = false;
+        this.selected = true;
+      }
+    };
+
+    this.on("pointerenter", this.onPointerEnter)
+      .on("pointerleave", this.onPointerLeave)
+      .on("pointerdown", this.onPointerDown)
+      .on("update", this.onUpdate);
   }
 
   get x() {

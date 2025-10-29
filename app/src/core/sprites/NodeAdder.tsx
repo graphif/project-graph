@@ -1,13 +1,16 @@
-import { Container, Point } from "pixi.js";
+import { Container, DestroyOptions, Point } from "pixi.js";
 import { Project } from "../Project";
 import { TextNode } from "./TextNode";
 
 export class NodeAdder extends Container {
-  constructor(project: Project) {
+  private onClickHandler: ((e: any) => void) | null = null;
+
+  constructor(private project: Project) {
     super();
     let lastClickTime = 0;
     let lastClickPoint = new Point(0, 0);
-    project.viewport.on("click", (e) => {
+
+    this.onClickHandler = (e) => {
       const now = Date.now();
       if (now - lastClickTime < 300 && lastClickPoint.equals(project.viewport.toWorld(e.client))) {
         const textNode = new TextNode(project, { text: "...", position: project.viewport.toWorld(e.client) });
@@ -20,6 +23,17 @@ export class NodeAdder extends Container {
       }
       lastClickTime = now;
       lastClickPoint = project.viewport.toWorld(e.client);
-    });
+    };
+
+    project.viewport.on("click", this.onClickHandler);
+  }
+
+  override destroy(options?: DestroyOptions): void {
+    // 移除事件监听器
+    if (this.onClickHandler) {
+      this.project.viewport.off("click", this.onClickHandler);
+      this.onClickHandler = null;
+    }
+    super.destroy(options);
   }
 }

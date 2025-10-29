@@ -1,5 +1,5 @@
 import { serializable } from "@graphif/serializer";
-import { Color, ColorSource, Graphics } from "pixi.js";
+import { Color, ColorSource, DestroyOptions, Graphics } from "pixi.js";
 import { Project } from "../Project";
 import { Association, AssociationMember } from "./abstract/Association";
 import { MyText } from "./MyText";
@@ -11,6 +11,7 @@ export class Section extends Association {
 
   private _text: string = "";
   private _cachedTitleText: MyText | null = null;
+  private onTitlePointerDown: (() => void) | null = null;
 
   @serializable
   get text() {
@@ -62,14 +63,15 @@ export class Section extends Association {
 
   private getOrCreateTitleText(x: number, y: number): MyText {
     if (!this._cachedTitleText) {
+      this.onTitlePointerDown = () => {
+        this.selected = true;
+      };
       this._cachedTitleText = new MyText(this._text, {
         style: {
           fontSize: Section.TITLE_SIZE,
         },
         interactive: true,
-      }).on("pointerdown", () => {
-        this.selected = true;
-      });
+      }).on("pointerdown", this.onTitlePointerDown);
     }
     this._cachedTitleText.position.set(x, y);
     return this._cachedTitleText;
@@ -93,5 +95,18 @@ export class Section extends Association {
     if (this.text) {
       this.addChild(this.getOrCreateTitleText(minX + Section.PADDING, minY + Section.PADDING));
     }
+  }
+
+  override destroy(options?: DestroyOptions): void {
+    // 移除缓存的标题文本的事件监听器
+    if (this._cachedTitleText && this.onTitlePointerDown) {
+      this._cachedTitleText.off("pointerdown", this.onTitlePointerDown);
+    }
+    if (this._cachedTitleText) {
+      this._cachedTitleText.destroy();
+      this._cachedTitleText = null;
+    }
+    this.onTitlePointerDown = null;
+    super.destroy(options);
   }
 }

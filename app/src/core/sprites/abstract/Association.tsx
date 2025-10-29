@@ -2,7 +2,7 @@ import { Entity } from "@/core/sprites/abstract/Entity";
 import { StageObject } from "@/core/sprites/abstract/StageObject";
 import { ObservableArray } from "@graphif/data-structures";
 import { serializable } from "@graphif/serializer";
-import { Color, ObservablePoint, Point } from "pixi.js";
+import { Color, DestroyOptions, ObservablePoint, Point } from "pixi.js";
 
 /**
  * 一切连接关系的抽象
@@ -77,6 +77,12 @@ export abstract class Association extends StageObject {
   onMembersChange() {
     this.position = this.position.clone();
     this.refresh();
+  }
+
+  override destroy(options?: DestroyOptions): void {
+    // 清理所有成员的事件监听器
+    this._members.forEach((it) => it.entity.off("update", this.handleMemberMoved));
+    super.destroy(options);
   }
 }
 

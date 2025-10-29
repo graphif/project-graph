@@ -1,9 +1,12 @@
 import { Text } from "@pixi/layout/components";
 import { Viewport } from "pixi-viewport";
-import { Color, ColorSource, TextOptions } from "pixi.js";
+import { Color, ColorSource, DestroyOptions, TextOptions } from "pixi.js";
 
 export class TextInput extends Text {
   interactive = true;
+  private activeTextarea: HTMLTextAreaElement | null = null;
+  private handleInput: ((e: Event) => void) | null = null;
+  private handleBlur: ((e: Event) => void) | null = null;
 
   constructor(
     private viewport: Viewport,
@@ -47,23 +50,63 @@ export class TextInput extends Text {
     el.style.lineHeight = (this.style.lineHeight || this.height / lines) * this.viewport.scale.x + "px";
     el.rows = lines;
     document.body.appendChild(el);
+
+    // 清理旧的输入元素和监听器
+    if (this.activeTextarea) {
+      if (this.handleInput) {
+        this.activeTextarea.removeEventListener("input", this.handleInput);
+      }
+      if (this.handleBlur) {
+        this.activeTextarea.removeEventListener("blur", this.handleBlur);
+      }
+      this.activeTextarea.remove();
+    }
+
+    this.activeTextarea = el;
+    const oldStyleFill = this.style.fill;
+
     setTimeout(() => {
       el.focus();
     }, 10);
-    el.addEventListener("input", () => {
+
+    this.handleInput = () => {
       this.text = el.value;
       this.emit("textchange", this.text);
       el.rows = Math.max(1, el.value.split("\n").length);
-    });
-    el.addEventListener("blur", () => {
+    };
+
+    this.handleBlur = () => {
       this.text = el.value;
       this.emit("textchange", this.text);
       this.emit("finishedit", this.text);
+      el.removeEventListener("input", this.handleInput!);
+      el.removeEventListener("blur", this.handleBlur!);
       el.remove();
+      this.activeTextarea = null;
       this.style.fill = oldStyleFill;
-    });
+    };
+
+    el.addEventListener("input", this.handleInput);
+    el.addEventListener("blur", this.handleBlur);
     // 把自己设置成透明
-    const oldStyleFill = this.style.fill;
     this.style.fill = new Color("transparent");
+  }
+
+  override destroy(options?: DestroyOptions): void {
+    // 清理 DOM 元素和事件监听器
+    if (this.activeTextarea) {
+      if (this.handleInput) {
+        this.activeTextarea.removeEventListener("input", this.handleInput);
+      }
+      if (this.handleBlur) {
+        this.activeTextarea.removeEventListener("blur", this.handleBlur);
+      }
+      this.activeTextarea.remove();
+      this.activeTextarea = null;
+    }
+    this.handleInput = null;
+    this.handleBlur = null;
+
+    super.destroy(options);
   }
 }
