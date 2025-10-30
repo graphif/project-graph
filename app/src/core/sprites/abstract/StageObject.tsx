@@ -25,12 +25,12 @@ export abstract class StageObject extends LayoutContainer {
     if (value === this._selected) return;
     if (value) {
       const g = new Graphics({
-        label: StageObject.SELECTION_OUTLINE_LABEL,
+        label: StageObject.SELECTION_OUTLINE_LABEL + this.uuid,
       });
       // 在自己的bounds外面一圈画框
       g.roundRect(
-        -StageObject.SELECTION_OUTLINE_PADDING,
-        -StageObject.SELECTION_OUTLINE_PADDING,
+        this.x - StageObject.SELECTION_OUTLINE_PADDING,
+        this.y - StageObject.SELECTION_OUTLINE_PADDING,
         this.width / this.scale.x + StageObject.SELECTION_OUTLINE_PADDING * 2,
         this.height / this.scale.y + StageObject.SELECTION_OUTLINE_PADDING * 2,
         StageObject.SELECTION_OUTLINE_PADDING + (this.layout?._styles?.custom.borderRadius ?? 8),
@@ -39,11 +39,11 @@ export abstract class StageObject extends LayoutContainer {
         width: 2,
         color: 0x00ffff,
       });
-      this.addChild(g);
+      this.project.viewport.addChild(g);
     } else {
-      const e = this.getChildByLabel(StageObject.SELECTION_OUTLINE_LABEL);
+      const e = this.project.viewport.getChildByLabel(StageObject.SELECTION_OUTLINE_LABEL + this.uuid);
       if (e) {
-        this.removeChild(e);
+        this.project.viewport.removeChild(e);
       }
     }
     this._selected = value;
@@ -114,30 +114,6 @@ export abstract class StageObject extends LayoutContainer {
       .on("update", this.onUpdate);
   }
 
-  get x() {
-    if (this.selected) {
-      return super.x + StageObject.SELECTION_OUTLINE_PADDING;
-    }
-    return super.x;
-  }
-  get y() {
-    if (this.selected) {
-      return super.y + StageObject.SELECTION_OUTLINE_PADDING;
-    }
-    return super.y;
-  }
-  get width() {
-    if (this.selected) {
-      return super.width - StageObject.SELECTION_OUTLINE_PADDING * 2;
-    }
-    return super.width;
-  }
-  get height() {
-    if (this.selected) {
-      return super.height - StageObject.SELECTION_OUTLINE_PADDING * 2;
-    }
-    return super.height;
-  }
   getWorldBounds() {
     const bounds = super.getBounds();
     // 处理坐标系
@@ -146,23 +122,6 @@ export abstract class StageObject extends LayoutContainer {
     bounds.y = (bounds.y - vp.position.y) / vp.scale.y;
     bounds.width = bounds.width / vp.scale.x;
     bounds.height = bounds.height / vp.scale.y;
-    if (this.selected) {
-      bounds.x += StageObject.SELECTION_OUTLINE_PADDING;
-      bounds.y += StageObject.SELECTION_OUTLINE_PADDING;
-      bounds.width -= StageObject.SELECTION_OUTLINE_PADDING * 2;
-      bounds.height -= StageObject.SELECTION_OUTLINE_PADDING * 2;
-    }
-    return bounds;
-  }
-  /** 注意是view坐标系 */
-  getBounds() {
-    const bounds = super.getBounds();
-    if (this.selected) {
-      bounds.x += StageObject.SELECTION_OUTLINE_PADDING;
-      bounds.y += StageObject.SELECTION_OUTLINE_PADDING;
-      bounds.width -= StageObject.SELECTION_OUTLINE_PADDING * 2;
-      bounds.height -= StageObject.SELECTION_OUTLINE_PADDING * 2;
-    }
     return bounds;
   }
 

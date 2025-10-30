@@ -108,7 +108,6 @@ import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import { TextNode } from "../sprites/TextNode";
 import { ProjectUpgrader } from "../stage/ProjectUpgrader";
-import { LineEdge } from "../stage/stageObject/association/LineEdge";
 import { AssetsRepository } from "./AssetsRepository";
 import { RecentFileManager } from "./dataFileService/RecentFileManager";
 import { DragFileIntoStageEngine } from "./dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
@@ -1054,10 +1053,7 @@ export function GlobalMenu() {
                 </Item>
                 <Item
                   onClick={() => {
-                    const tn1 = new TextNode(activeProject!, { text: "tn1" });
-                    const tn2 = new TextNode(activeProject!, { text: "tn2" });
-                    const le = LineEdge.fromTwoEntity(activeProject!, tn1, tn2);
-                    console.log(serialize([tn1, tn2, le]));
+                    console.log(serialize(activeProject!.stage));
                   }}
                 >
                   serialize
