@@ -11,7 +11,7 @@ import { Rectangle } from "@graphif/shapes";
 import { useAtom } from "jotai";
 import { Bot, BrainCircuit, ChevronRight, FolderOpen, Loader2, Send, SettingsIcon, User, Wrench } from "lucide-react";
 import OpenAI from "openai";
-import { useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 
 export default function AIWindow() {
   const [project] = useAtom(activeProjectAtom);
@@ -197,7 +197,7 @@ export default function AIWindow() {
                 ))}
             </div>
           ) : (
-            <></>
+            <Fragment key={i} />
           ),
         )}
       </div>
