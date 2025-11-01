@@ -56,7 +56,7 @@ export class AutoLayoutFastTree {
     return Rectangle.getBoundingRectangle(childRectangle.concat([node.collisionBox.getRectangle()]));
   }
   /**
-   * 将一个子树 看成一个外接矩形，移动这个外接矩形到某一个位置
+   * 将一个子树 看成一个外接矩形，移动这个外接矩形左上角到某一个位置
    * @param treeRoot
    * @param targetLocation
    */
@@ -93,11 +93,11 @@ export class AutoLayoutFastTree {
    * 排列多个子树，支持从上到下或从左到右排列
    * 从上到下排列多个子树，除了第一个子树，其他子树都相对于第一个子树的外接矩形进行位置调整
    * @param trees 要排列的子树数组
-   * @param direction 排列方向，col表示从上到下，row表示从左到右
+   * @param direction 要排列的是哪一侧的子树群
    * @param gap 子树之间的间距
    * @returns
    */
-  private alignTrees(trees: ConnectableEntity[], direction: "col" | "row" = "col", gap = 10) {
+  private alignTrees(trees: ConnectableEntity[], direction: "top" | "bottom" | "left" | "right", gap = 10) {
     if (trees.length === 0 || trees.length === 1) {
       return;
     }
@@ -106,27 +106,40 @@ export class AutoLayoutFastTree {
 
     // 根据方向设置初始位置
     let currentPosition: Vector;
-    if (direction === "col") {
-      // 从上到下排列：初始位置在第一棵树的左下方
+    if (direction === "right") {
+      // ok
       currentPosition = firstTreeRect.leftBottom.add(new Vector(0, gap));
-      // 保持从上到下的相对位置
       trees.sort((a, b) => a.collisionBox.getRectangle().top - b.collisionBox.getRectangle().top);
-    } else {
-      // 从左到右排列：初始位置在第一棵树的右下方
+    } else if (direction === "left") {
+      currentPosition = firstTreeRect.rightBottom.add(new Vector(0, gap));
+      trees.sort((a, b) => a.collisionBox.getRectangle().top - b.collisionBox.getRectangle().top);
+    } else if (direction === "bottom") {
+      // ok
       currentPosition = firstTreeRect.rightTop.add(new Vector(gap, 0));
-      // 保持从左到右的相对位置
+      trees.sort((a, b) => a.collisionBox.getRectangle().left - b.collisionBox.getRectangle().left);
+    } else {
+      // top
+      currentPosition = firstTreeRect.rightBottom.add(new Vector(gap, 0));
       trees.sort((a, b) => a.collisionBox.getRectangle().left - b.collisionBox.getRectangle().left);
     }
 
     for (let i = 1; i < trees.length; i++) {
       const tree = trees[i];
-      this.moveTreeRectTo(tree, currentPosition);
 
       // 根据方向更新下一个位置
-      if (direction === "col") {
-        currentPosition.y += this.getTreeBoundingRectangle(tree).height + gap;
-      } else {
-        currentPosition.x += this.getTreeBoundingRectangle(tree).width + gap;
+      const treeRect = this.getTreeBoundingRectangle(tree);
+      if (direction === "right") {
+        this.moveTreeRectTo(tree, currentPosition);
+        currentPosition.y += treeRect.height + gap;
+      } else if (direction === "bottom") {
+        this.moveTreeRectTo(tree, currentPosition);
+        currentPosition.x += treeRect.width + gap;
+      } else if (direction === "left") {
+        this.moveTreeRectTo(tree, currentPosition.subtract(new Vector(treeRect.width, 0)));
+        currentPosition.y += treeRect.height + gap;
+      } else if (direction === "top") {
+        this.moveTreeRectTo(tree, currentPosition.subtract(new Vector(0, treeRect.height)));
+        currentPosition.x += treeRect.width + gap;
       }
     }
   }
@@ -228,8 +241,13 @@ export class AutoLayoutFastTree {
       const rect1 = Rectangle.getBoundingRectangle(group1.map((child) => this.getTreeBoundingRectangle(child)));
       const rect2 = Rectangle.getBoundingRectangle(group2.map((child) => this.getTreeBoundingRectangle(child)));
 
+      let pushCount = 0;
       // 检查是否重叠或连线相交
       while (this.hasOverlapOrLineIntersection(rootNode, group1, group2, dir1, dir2)) {
+        pushCount++;
+        if (pushCount > 1000) {
+          break; // 防止无限循环
+        }
         // 确定强势方向
         const group1Size = group1.length;
         const group2Size = group2.length;
@@ -319,6 +337,15 @@ export class AutoLayoutFastTree {
       const rightRect = dir1 === "right" ? rect1 : rect2;
       const bottomRect = dir1 === "bottom" ? rect1 : rect2;
 
+      // 检查子树群是否异常
+      const isRightGroupAbnormal = rightRect.left < rootRect.right; // 右侧子树群整体在根节点右侧的左侧
+      const isBottomGroupAbnormal = bottomRect.top < rootRect.bottom; // 下侧子树群整体在根节点下侧的上侧
+
+      // 如果任意一个子树群异常，跳过连线检查
+      if (isRightGroupAbnormal || isBottomGroupAbnormal) {
+        return false;
+      }
+
       // 获取右侧节点群最下方节点（数组最后一个元素）
       if (rightGroup.length > 0 && bottomGroup.length > 0) {
         const lastRightNode = rightGroup[rightGroup.length - 1];
@@ -360,6 +387,15 @@ export class AutoLayoutFastTree {
       const bottomGroup = dir1 === "bottom" ? group1 : group2;
       const leftRect = dir1 === "left" ? rect1 : rect2;
       const bottomRect = dir1 === "bottom" ? rect1 : rect2;
+
+      // 检查子树群是否异常
+      const isLeftGroupAbnormal = leftRect.right > rootRect.left; // 左侧子树群整体在根节点左侧的右侧
+      const isBottomGroupAbnormal = bottomRect.top < rootRect.bottom; // 下侧子树群整体在根节点下侧的上侧
+
+      // 如果任意一个子树群异常，跳过连线检查
+      if (isLeftGroupAbnormal || isBottomGroupAbnormal) {
+        return false;
+      }
 
       if (leftGroup.length > 0 && bottomGroup.length > 0) {
         // 左侧最下方节点
@@ -403,6 +439,15 @@ export class AutoLayoutFastTree {
       const leftRect = dir1 === "left" ? rect1 : rect2;
       const topRect = dir1 === "top" ? rect1 : rect2;
 
+      // 检查子树群是否异常
+      const isLeftGroupAbnormal = leftRect.right > rootRect.left; // 左侧子树群整体在根节点左侧的右侧
+      const isTopGroupAbnormal = topRect.bottom > rootRect.top; // 上侧子树群整体在根节点上侧的下侧
+
+      // 如果任意一个子树群异常，跳过连线检查
+      if (isLeftGroupAbnormal || isTopGroupAbnormal) {
+        return false;
+      }
+
       if (leftGroup.length > 0 && topGroup.length > 0) {
         // 左侧最上方节点
         const firstLeftNode = leftGroup[0];
@@ -444,6 +489,15 @@ export class AutoLayoutFastTree {
       const topGroup = dir1 === "top" ? group1 : group2;
       const rightRect = dir1 === "right" ? rect1 : rect2;
       const topRect = dir1 === "top" ? rect1 : rect2;
+
+      // 检查子树群是否异常
+      const isRightGroupAbnormal = rightRect.left < rootRect.right; // 右侧子树群整体在根节点右侧的左侧
+      const isTopGroupAbnormal = topRect.bottom > rootRect.top; // 上侧子树群整体在根节点上侧的下侧
+
+      // 如果任意一个子树群异常，跳过连线检查
+      if (isRightGroupAbnormal || isTopGroupAbnormal) {
+        return false;
+      }
 
       if (rightGroup.length > 0 && topGroup.length > 0) {
         // 右侧最上方节点
@@ -526,16 +580,16 @@ export class AutoLayoutFastTree {
         dfs(child); // 递归口
       }
       // 排列这些子节点，然后调整子树位置到根节点旁边
-      this.alignTrees(rightChildList, "col", 20);
+      this.alignTrees(rightChildList, "right", 20);
       this.adjustChildrenTreesByRootNodeLocation(node, rightChildList, 150, "rightCenter");
 
-      this.alignTrees(topChildList, "row", 20);
+      this.alignTrees(topChildList, "top", 20);
       this.adjustChildrenTreesByRootNodeLocation(node, topChildList, 150, "topCenter");
 
-      this.alignTrees(bottomChildList, "row", 20);
+      this.alignTrees(bottomChildList, "bottom", 20);
       this.adjustChildrenTreesByRootNodeLocation(node, bottomChildList, 150, "bottomCenter");
 
-      this.alignTrees(leftChildList, "col", 20);
+      this.alignTrees(leftChildList, "left", 20);
       this.adjustChildrenTreesByRootNodeLocation(node, leftChildList, 150, "leftCenter");
 
       // 检测并解决不同方向子树群之间的重叠问题

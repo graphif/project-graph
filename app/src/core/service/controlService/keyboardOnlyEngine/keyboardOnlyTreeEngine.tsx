@@ -251,6 +251,8 @@ export class KeyboardOnlyTreeEngine {
     if (parents.length === 0) return;
     if (parents.length !== 1) return;
     const parent = parents[0];
+    // 获取预方向
+    const preDirection = this.getNodePreDirection(parent);
     // 当前选择的节点的正下方创建一个节点
     // 找到创建点
     const newLocation = currentSelectNode.collisionBox.getRectangle().leftBottom.add(new Vector(0, 1));
@@ -276,8 +278,21 @@ export class KeyboardOnlyTreeEngine {
     this.project.stageManager.connectEntity(parent, newNode);
 
     const newEdges = this.project.graphMethods.getEdgesBetween(parent, newNode);
-    this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Right, true);
-    this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Left);
+
+    if (preDirection === "right") {
+      // 右侧发出 左侧接收
+      this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Right, true);
+      this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Left);
+    } else if (preDirection === "left") {
+      this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Left, true);
+      this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Right);
+    } else if (preDirection === "down") {
+      this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Down, true);
+      this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Up);
+    } else if (preDirection === "up") {
+      this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Up, true);
+      this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Down);
+    }
 
     // 继承父节点颜色
     if (parent instanceof TextNode) {
