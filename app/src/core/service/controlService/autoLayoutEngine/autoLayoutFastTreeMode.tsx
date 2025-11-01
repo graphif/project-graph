@@ -91,6 +91,7 @@ export class AutoLayoutFastTree {
 
   /**
    * 排列多个子树，支持从上到下或从左到右排列
+   * 从上到下排列多个子树，除了第一个子树，其他子树都相对于第一个子树的外接矩形进行位置调整
    * @param trees 要排列的子树数组
    * @param direction 排列方向，col表示从上到下，row表示从左到右
    * @param gap 子树之间的间距
@@ -131,59 +132,66 @@ export class AutoLayoutFastTree {
   }
 
   /**
-   * 根据子节点，调整根节点的位置
-   * @param rootNode 要调整位置的根节点
+   * 根据根节点位置，调整子树的位置
+   * @param rootNode 固定位置的根节点
+   * @param childList 需要调整位置的子节点列表
    * @param gap 根节点与子节点之间的间距
-   * @param position 根节点相对于子节点外接矩形的位置：leftCenter(左侧中心)、rightCenter(右侧中心)、topCenter(上方中心)、bottomCenter(下方中心)
+   * @param position 子节点相对于根节点的位置：rightCenter(右侧中心)、leftCenter(左侧中心)、bottomCenter(下方中心)、topCenter(上方中心)
    */
-  private adjustRootNodeLocationByChildren(
+  private adjustChildrenTreesByRootNodeLocation(
     rootNode: ConnectableEntity,
     childList: ConnectableEntity[],
     gap = 100,
-    position: "leftCenter" | "rightCenter" | "topCenter" | "bottomCenter" = "leftCenter",
+    position: "rightCenter" | "leftCenter" | "bottomCenter" | "topCenter" = "rightCenter",
   ) {
-    // const childList = this.project.graphMethods.nodeChildrenArray(rootNode);
     if (childList.length === 0) {
       return;
     }
 
-    const childsRectangle = Rectangle.getBoundingRectangle(childList.map((child) => child.collisionBox.getRectangle()));
     const parentRectangle = rootNode.collisionBox.getRectangle();
+
+    // 计算子树的外接矩形
+    const childsRectangle = Rectangle.getBoundingRectangle(childList.map((child) => child.collisionBox.getRectangle()));
+
+    // 计算子树应该移动到的目标位置（使用边缘距离而不是中心位置）
     let targetLocation: Vector;
 
     // 根据位置参数计算目标位置
     switch (position) {
-      case "leftCenter":
-        // 左侧中心：父节点位于子节点外接矩形的左侧中心位置
-        targetLocation = childsRectangle.leftCenter.add(new Vector(-gap, 0));
-        rootNode.moveTo(targetLocation);
-        rootNode.move(new Vector(-parentRectangle.width, -parentRectangle.height / 2));
-        break;
-
       case "rightCenter":
-        // 右侧中心：父节点位于子节点外接矩形的右侧中心位置
-        targetLocation = childsRectangle.rightCenter.add(new Vector(gap, 0));
-        rootNode.moveTo(targetLocation);
-        rootNode.move(new Vector(0, -parentRectangle.height / 2));
+        // 右侧：子树位于根节点的右侧，使用右边缘计算
+        targetLocation = new Vector(parentRectangle.right + gap + childsRectangle.width / 2, parentRectangle.center.y);
         break;
 
-      case "topCenter":
-        // 上方中心：父节点位于子节点外接矩形的上方中心位置
-        targetLocation = childsRectangle.topCenter.add(new Vector(0, -gap));
-        rootNode.moveTo(targetLocation);
-        rootNode.move(new Vector(-parentRectangle.width / 2, -parentRectangle.height));
+      case "leftCenter":
+        // 左侧：子树位于根节点的左侧，使用左边缘计算
+        targetLocation = new Vector(parentRectangle.left - gap - childsRectangle.width / 2, parentRectangle.center.y);
         break;
 
       case "bottomCenter":
-        // 下方中心：父节点位于子节点外接矩形的下方中心位置
-        targetLocation = childsRectangle.bottomCenter.add(new Vector(0, gap));
-        rootNode.moveTo(targetLocation);
-        rootNode.move(new Vector(-parentRectangle.width / 2, 0));
+        // 下方：子树位于根节点的下方，使用底边缘计算
+        targetLocation = new Vector(
+          parentRectangle.center.x,
+          parentRectangle.bottom + gap + childsRectangle.height / 2,
+        );
         break;
+
+      case "topCenter":
+        // 上方：子树位于根节点的上方，使用顶边缘计算
+        targetLocation = new Vector(parentRectangle.center.x, parentRectangle.top - gap - childsRectangle.height / 2);
+        break;
+    }
+
+    // 计算需要移动的偏移量
+    const offset = targetLocation.subtract(childsRectangle.center);
+
+    // 移动所有子节点及其子树
+    for (const child of childList) {
+      this.project.entityMoveManager.moveWithChildren(child, offset);
     }
   }
   /**
-   * 向右树形节点的根节点
+   * 快速树形布局
    * @param rootNode
    */
   public autoLayoutFastTreeMode(rootNode: ConnectableEntity) {
@@ -199,7 +207,6 @@ export class AutoLayoutFastTree {
       const outUnknownEdges = outEdges.filter((edge) => edge.isUnknownDirection());
 
       // 获取排序后的子节点列表
-      // const childList = outEdges.map((edge) => edge.target);
       let rightChildList = outRightEdges.map((edge) => edge.target);
       let leftChildList = outLeftEdges.map((edge) => edge.target);
       let topChildList = outTopEdges.map((edge) => edge.target);
@@ -226,18 +233,18 @@ export class AutoLayoutFastTree {
       for (const child of unknownChildList) {
         dfs(child); // 递归口
       }
-      // 排列这些子节点，然后更改当前根节点在所有子节点中的相对位置
+      // 排列这些子节点，然后调整子树位置到根节点旁边
       this.alignTrees(rightChildList, "col", 20);
-      this.adjustRootNodeLocationByChildren(node, rightChildList, 150, "leftCenter");
+      this.adjustChildrenTreesByRootNodeLocation(node, rightChildList, 150, "rightCenter");
 
       this.alignTrees(topChildList, "row", 20);
-      this.adjustRootNodeLocationByChildren(node, topChildList, 150, "bottomCenter");
+      this.adjustChildrenTreesByRootNodeLocation(node, topChildList, 150, "topCenter");
 
       this.alignTrees(bottomChildList, "row", 20);
-      this.adjustRootNodeLocationByChildren(node, bottomChildList, 150, "topCenter");
+      this.adjustChildrenTreesByRootNodeLocation(node, bottomChildList, 150, "bottomCenter");
 
       this.alignTrees(leftChildList, "col", 20);
-      this.adjustRootNodeLocationByChildren(node, leftChildList, 150, "rightCenter");
+      this.adjustChildrenTreesByRootNodeLocation(node, leftChildList, 150, "leftCenter");
     };
 
     dfs(rootNode);

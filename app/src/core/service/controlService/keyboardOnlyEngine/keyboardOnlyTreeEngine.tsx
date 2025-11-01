@@ -212,7 +212,7 @@ export class KeyboardOnlyTreeEngine {
       const rootNodeParent = rootNodeParents[0];
       if (this.project.graphMethods.isTree(rootNodeParent)) {
         if (Settings.autoLayoutWhenTreeGenerate) {
-          this.project.autoAlign.autoLayoutSelectedFastTreeModeRight(rootNodeParent);
+          this.project.autoAlign.autoLayoutSelectedFastTreeMode(rootNodeParent);
         }
         // 更新选择状态
         rootNodeParent.isSelected = false;
@@ -289,7 +289,7 @@ export class KeyboardOnlyTreeEngine {
       const rootNodeParent = rootNodeParents[0];
       if (this.project.graphMethods.isTree(rootNodeParent)) {
         if (Settings.autoLayoutWhenTreeGenerate) {
-          this.project.autoAlign.autoLayoutSelectedFastTreeModeRight(rootNodeParent);
+          this.project.autoAlign.autoLayoutSelectedFastTreeMode(rootNodeParent);
         }
         // 更新选择状态
         rootNodeParent.isSelected = false;
@@ -315,7 +315,10 @@ export class KeyboardOnlyTreeEngine {
    */
   adjustTreeNode(entity: ConnectableEntity) {
     const rootNodeParents = this.project.graphMethods.getRoots(entity);
-    this.project.autoAlign.autoLayoutSelectedFastTreeModeRight(rootNodeParents[0]);
+    this.project.autoAlign.autoLayoutSelectedFastTreeMode(rootNodeParents[0]);
+    // 恢复选择状态
+    rootNodeParents[0].isSelected = false;
+    entity.isSelected = true;
   }
 
   /**

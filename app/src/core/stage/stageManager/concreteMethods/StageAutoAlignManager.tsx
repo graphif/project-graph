@@ -266,7 +266,7 @@ export class AutoAlign {
    * 自动布局树形结构
    * @param selectedRootEntity
    */
-  autoLayoutSelectedFastTreeModeRight(selectedRootEntity: ConnectableEntity) {
+  autoLayoutSelectedFastTreeMode(selectedRootEntity: ConnectableEntity) {
     // 检测树形结构
     if (!this.project.graphMethods.isTree(selectedRootEntity)) {
       // 不是树形结构，不做任何处理

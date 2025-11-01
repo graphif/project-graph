@@ -311,9 +311,7 @@ export default function MyContextMenuContent() {
               size="icon"
               className="size-6"
               onClick={() =>
-                p.autoAlign.autoLayoutSelectedFastTreeModeRight(
-                  p.stageManager.getSelectedEntities()[0] as ConnectableEntity,
-                )
+                p.autoAlign.autoLayoutSelectedFastTreeMode(p.stageManager.getSelectedEntities()[0] as ConnectableEntity)
               }
             >
               <Network className="-rotate-90" />
