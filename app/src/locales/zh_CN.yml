@@ -1026,6 +1026,7 @@ keyBinds:
     title: 生长子级节点
     description: |
       按下后，瞬间生长一个节点并放置在当前选中节点的右侧
+      如果对节点设置了生长方向，则会按照生长方向生长子节点（若无设置则默认向右生长）
       同时自动排版整个节点树的结构，确保其是一个向右的树型结构
       使用此功能前先确保已选中一个节点、且该节点所在结构为树形结构
   generateNodeTreeWithBroadMode:
@@ -1050,6 +1051,26 @@ keyBinds:
     description: |
       主要用于关闭了键盘生长节点时触发的树形排布调整时使用
       可以通过此快捷键手动触发布局调整
+  setNodeTreeDirectionLeft:
+    title: 设置当前节点的树形生长方向为向左
+    description: |
+      需要选中节点后按下此快捷键
+      设置后，在此节点上按Tab生长时，会向左生长子节点
+  setNodeTreeDirectionRight:
+    title: 设置当前节点的树形生长方向为向右
+    description: |
+      需要选中节点后按下此快捷键
+      设置后，在此节点上按Tab生长时，会向右生长子节点
+  setNodeTreeDirectionUp:
+    title: 设置当前节点的树形生长方向为向上
+    description: |
+      需要选中节点后按下此快捷键
+      设置后，在此节点上按Tab生长时，会向上生长子节点
+  setNodeTreeDirectionDown:
+    title: 设置当前节点的树形生长方向为向下
+    description: |
+      需要选中节点后按下此快捷键
+      设置后，在此节点上按Tab生长时，会向下生长子节点
 
   masterBrakeCheckout:
     title: 手刹：开启/关闭通过按键控制摄像机移动
@@ -1397,12 +1418,6 @@ keyBinds:
   reverseImageColors:
     title: 反转图片颜色
     description: 反转选中图片的颜色（将白色背景变为黑色，反之亦然）
-  autoLayoutSelectedFastTreeModeRight:
-    title: 快速向右树形排列
-    description: 选中树形结构的跟节点，向右排列树形结构
-  autoLayoutSelectedFastTreeModeDown:
-    title: 快速向下树形排列
-    description: 选中树形结构的跟节点，向下排列树形结构
   treeReverseY:
     title: 纵向反转树形结构
     description: 选中树形结构的根节点，将其纵向反转

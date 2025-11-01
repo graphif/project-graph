@@ -305,7 +305,7 @@ export default function MyContextMenuContent() {
       {/* 树形面板 */}
       {isSelectedTreeRoots() && (
         <Item className="bg-transparent! gap-0 p-0">
-          <ContextMenuTooltip keyId="autoLayoutSelectedFastTreeModeRight">
+          <ContextMenuTooltip keyId="treeGraphAdjust">
             <Button
               variant="ghost"
               size="icon"
@@ -327,20 +327,6 @@ export default function MyContextMenuContent() {
               }
             >
               <ArrowLeftRight />
-            </Button>
-          </ContextMenuTooltip>
-          <ContextMenuTooltip keyId="autoLayoutSelectedFastTreeModeDown">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-6"
-              onClick={() =>
-                p.autoAlign.autoLayoutSelectedFastTreeModeDown(
-                  p.stageManager.getSelectedEntities()[0] as ConnectableEntity,
-                )
-              }
-            >
-              <Network />
             </Button>
           </ContextMenuTooltip>
           <ContextMenuTooltip keyId="treeReverseY">

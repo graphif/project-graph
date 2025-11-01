@@ -13,39 +13,6 @@ export class AutoLayoutFastTree {
   constructor(private readonly project: Project) {}
 
   /**
-   * 向下树形布局
-   * @param rootNode 树形节点的根节点
-   */
-  autoLayoutFastTreeModeDown(rootNode: ConnectableEntity) {
-    const dfs = (node: ConnectableEntity) => {
-      const spaceX = 20;
-      const spaceY = 150;
-      // 子节点所占空间的宽度
-      let width = Math.max(0, this.project.graphMethods.nodeChildrenArray(node).length - 1) * spaceX;
-      const widths: number[] = [];
-      const paddings: number[] = [];
-      let sumWidths = -width; // widths元素之和
-      for (const child of this.project.graphMethods.nodeChildrenArray(node)) {
-        const childrenWidth = dfs(child);
-        const wd = child.collisionBox.getRectangle().size.x;
-        widths.push(Math.max(wd, childrenWidth));
-        paddings.push(widths[widths.length - 1] / 2 - wd / 2);
-        width += widths[widths.length - 1];
-      }
-      sumWidths += width;
-      let currentX =
-        node.geometryCenter.x - (sumWidths - paddings[0] - paddings[paddings.length - 1]) / 2 - paddings[0];
-      for (let i = 0; i < widths.length; i++) {
-        const child = this.project.graphMethods.nodeChildrenArray(node)[i];
-        child.moveTo(new Vector(currentX + paddings[i], node.collisionBox.getRectangle().top + spaceY));
-        currentX += widths[i] + spaceX;
-      }
-      return width;
-    };
-    dfs(rootNode);
-  }
-
-  /**
    * 获取当前树的外接矩形，注意不要有环，有环就废了
    * @param node
    * @returns

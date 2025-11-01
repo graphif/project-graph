@@ -275,14 +275,4 @@ export class AutoAlign {
     }
     this.project.autoLayoutFastTree.autoLayoutFastTreeMode(selectedRootEntity);
   }
-
-  autoLayoutSelectedFastTreeModeDown(selectedRootEntity: ConnectableEntity) {
-    // 检测树形结构
-    if (!this.project.graphMethods.isTree(selectedRootEntity)) {
-      // 不是树形结构，不做任何处理
-      toast.error("选择的节点必须是树形结构的根节点");
-      return;
-    }
-    this.project.autoLayoutFastTree.autoLayoutFastTreeModeDown(selectedRootEntity);
-  }
 }
