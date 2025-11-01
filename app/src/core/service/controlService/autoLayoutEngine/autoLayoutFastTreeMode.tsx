@@ -190,6 +190,102 @@ export class AutoLayoutFastTree {
       this.project.entityMoveManager.moveWithChildren(child, offset);
     }
   }
+
+  /**
+   * 检测并解决不同方向子树群之间的重叠问题
+   * @param rootNode 根节点
+   * @param directionGroups 不同方向的子树群
+   */
+  private resolveSubtreeOverlaps(
+    rootNode: ConnectableEntity,
+    directionGroups: {
+      right?: ConnectableEntity[];
+      left?: ConnectableEntity[];
+      bottom?: ConnectableEntity[];
+      top?: ConnectableEntity[];
+    },
+  ) {
+    // 创建方向对进行检查
+    const directionPairs = [
+      { dir1: "right" as const, dir2: "bottom" as const },
+      { dir1: "right" as const, dir2: "top" as const },
+      { dir1: "right" as const, dir2: "left" as const },
+      { dir1: "bottom" as const, dir2: "top" as const },
+      { dir1: "bottom" as const, dir2: "left" as const },
+      { dir1: "top" as const, dir2: "left" as const },
+    ];
+
+    // 检查每对方向是否有重叠
+    for (const { dir1, dir2 } of directionPairs) {
+      const group1 = directionGroups[dir1];
+      const group2 = directionGroups[dir2];
+
+      if (!group1 || !group2 || group1.length === 0 || group2.length === 0) {
+        continue;
+      }
+
+      // 获取子树群的外接矩形
+      const rect1 = Rectangle.getBoundingRectangle(group1.map((child) => this.getTreeBoundingRectangle(child)));
+      const rect2 = Rectangle.getBoundingRectangle(group2.map((child) => this.getTreeBoundingRectangle(child)));
+
+      // 检查是否重叠
+      while (rect1.isCollideWithRectangle(rect2)) {
+        // 确定强势方向
+        const group1Size = group1.length;
+        const group2Size = group2.length;
+        let weakerDir: "right" | "left" | "bottom" | "top";
+
+        if (group1Size > group2Size) {
+          weakerDir = dir2;
+        } else if (group2Size > group1Size) {
+          weakerDir = dir1;
+        } else {
+          // 数量相等时，按优先级排序：右侧>下侧>左侧>上侧
+          const priorityOrder = ["right", "bottom", "left", "top"] as const;
+          const index1 = priorityOrder.indexOf(dir1);
+          const index2 = priorityOrder.indexOf(dir2);
+          weakerDir = index1 < index2 ? dir2 : dir1;
+        }
+
+        // 移动弱势方向的子树群
+        const weakerGroup = weakerDir === dir1 ? group1 : group2;
+        const moveAmount = 10; // 每次移动10个距离
+
+        // 根据方向确定移动向量
+        let moveVector: Vector;
+        switch (weakerDir) {
+          case "right":
+            moveVector = new Vector(moveAmount, 0);
+            break;
+          case "left":
+            moveVector = new Vector(-moveAmount, 0);
+            break;
+          case "bottom":
+            moveVector = new Vector(0, moveAmount);
+            break;
+          case "top":
+            moveVector = new Vector(0, -moveAmount);
+            break;
+        }
+
+        // 移动弱势方向的所有子树
+        for (const child of weakerGroup) {
+          this.project.entityMoveManager.moveWithChildren(child, moveVector);
+        }
+
+        // 更新外接矩形以继续检查
+        if (weakerDir === dir1) {
+          const newRect1 = Rectangle.getBoundingRectangle(group1.map((child) => this.getTreeBoundingRectangle(child)));
+          rect1.location = newRect1.location.clone();
+          rect1.size = newRect1.size.clone();
+        } else {
+          const newRect2 = Rectangle.getBoundingRectangle(group2.map((child) => this.getTreeBoundingRectangle(child)));
+          rect2.location = newRect2.location.clone();
+          rect2.size = newRect2.size.clone();
+        }
+      }
+    }
+  }
   /**
    * 快速树形布局
    * @param rootNode
@@ -245,6 +341,14 @@ export class AutoLayoutFastTree {
 
       this.alignTrees(leftChildList, "col", 20);
       this.adjustChildrenTreesByRootNodeLocation(node, leftChildList, 150, "leftCenter");
+
+      // 检测并解决不同方向子树群之间的重叠问题
+      this.resolveSubtreeOverlaps(node, {
+        right: rightChildList.length > 0 ? rightChildList : undefined,
+        left: leftChildList.length > 0 ? leftChildList : undefined,
+        bottom: bottomChildList.length > 0 ? bottomChildList : undefined,
+        top: topChildList.length > 0 ? topChildList : undefined,
+      });
     };
 
     dfs(rootNode);
