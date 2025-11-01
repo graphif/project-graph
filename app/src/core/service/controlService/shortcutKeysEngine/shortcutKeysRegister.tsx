@@ -869,6 +869,50 @@ export const allKeyBinds: KeyBindItem[] = [
       }
     },
   },
+  {
+    id: "setNodeTreeDirectionUp",
+    defaultKey: "W W",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      const entities = project!.stageManager
+        .getSelectedEntities()
+        .filter((entity) => entity instanceof ConnectableEntity);
+      project?.keyboardOnlyTreeEngine.changePreDirection(entities, "up");
+    },
+  },
+  {
+    id: "setNodeTreeDirectionDown",
+    defaultKey: "S S",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      const entities = project!.stageManager
+        .getSelectedEntities()
+        .filter((entity) => entity instanceof ConnectableEntity);
+      project?.keyboardOnlyTreeEngine.changePreDirection(entities, "down");
+    },
+  },
+  {
+    id: "setNodeTreeDirectionLeft",
+    defaultKey: "A A",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      const entities = project!.stageManager
+        .getSelectedEntities()
+        .filter((entity) => entity instanceof ConnectableEntity);
+      project?.keyboardOnlyTreeEngine.changePreDirection(entities, "left");
+    },
+  },
+  {
+    id: "setNodeTreeDirectionRight",
+    defaultKey: "D D",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      const entities = project!.stageManager
+        .getSelectedEntities()
+        .filter((entity) => entity instanceof ConnectableEntity);
+      project?.keyboardOnlyTreeEngine.changePreDirection(entities, "right");
+    },
+  },
 
   /*------- 彩蛋/秘籍键 -------*/
   {

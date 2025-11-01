@@ -7,6 +7,7 @@ import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { v4 } from "uuid";
 import { Settings } from "../../Settings";
+import { LineEffect } from "../../feedbackService/effectEngine/concrete/LineEffect";
 
 /**
  * 专用于Xmind式的树形结构的键盘操作引擎
@@ -15,8 +16,17 @@ import { Settings } from "../../Settings";
 export class KeyboardOnlyTreeEngine {
   constructor(private readonly project: Project) {}
 
-  // 通过一个节点的所有入度线的端点，来判断在这个节点上按tab时，应该往哪里创建节点
-  private getNodeDirectionByIncomingEdges(node: ConnectableEntity): "right" | "left" | "down" | "up" {
+  /**
+   * 获取节点的“预方向”
+   * 如果有缓存，则拿缓存中的值，没有缓存，根据节点的入度线的方向，来判断“预方向”
+   * @param node
+   * @returns
+   */
+  private getNodePreDirection(node: ConnectableEntity): "right" | "left" | "down" | "up" {
+    if (this.preDirectionCacheMap.has(node.uuid)) {
+      const direction = this.preDirectionCacheMap.get(node.uuid)!;
+      return direction;
+    }
     const incomingEdges = this.project.graphMethods.getIncomingEdges(node);
     if (incomingEdges.length === 0) {
       return "right";
@@ -44,6 +54,39 @@ export class KeyboardOnlyTreeEngine {
     return direction;
   }
 
+  private preDirectionCacheMap: Map<string, "right" | "left" | "down" | "up"> = new Map();
+
+  /**
+   * 改变节点的“预方向”
+   * @param nodes
+   * @param direction
+   */
+  public changePreDirection(nodes: ConnectableEntity[], direction: "right" | "left" | "down" | "up"): void {
+    for (const node of nodes) {
+      this.preDirectionCacheMap.set(node.uuid, direction);
+      // 添加特效提示
+      this.addNodeEffectByPreDirection(node);
+    }
+  }
+
+  /**
+   * 根据节点的“预方向”，添加特效提示
+   * @param node
+   */
+  public addNodeEffectByPreDirection(node: ConnectableEntity): void {
+    const direction = this.getNodePreDirection(node);
+    const rect = node.collisionBox.getRectangle();
+    if (direction === "up") {
+      this.project.effects.addEffect(LineEffect.rectangleEdgeTip(rect.leftTop, rect.rightTop));
+    } else if (direction === "down") {
+      this.project.effects.addEffect(LineEffect.rectangleEdgeTip(rect.leftBottom, rect.rightBottom));
+    } else if (direction === "left") {
+      this.project.effects.addEffect(LineEffect.rectangleEdgeTip(rect.leftTop, rect.leftBottom));
+    } else if (direction === "right") {
+      this.project.effects.addEffect(LineEffect.rectangleEdgeTip(rect.rightTop, rect.rightBottom));
+    }
+  }
+
   /**
    * 树形深度生长节点
    * @returns
@@ -57,7 +100,7 @@ export class KeyboardOnlyTreeEngine {
     this.project.camera.clearMoveCommander();
     this.project.camera.speed = Vector.getZero();
     // 确定创建方向：默认向右
-    const direction = this.getNodeDirectionByIncomingEdges(rootNode);
+    const direction = this.getNodePreDirection(rootNode);
     // 先找到自己所有的第一层后继节点
     const childSet = this.project.graphMethods.getOneStepSuccessorSet(rootNode);
 

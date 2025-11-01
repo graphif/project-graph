@@ -183,6 +183,8 @@ export class SelectChangeEngine {
     }
 
     this.addEffect(selectedNodeRect.collisionBox.getRectangle(), newSelectNodeRect);
+    // 添加特效提示
+    this.project.keyboardOnlyTreeEngine.addNodeEffectByPreDirection(newSelectedConnectableEntity);
   }
 
   private getCurrentSelectedNode(): ConnectableEntity | null {
