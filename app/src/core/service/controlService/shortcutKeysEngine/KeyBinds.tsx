@@ -1,35 +1,37 @@
-import { Project, service } from "@/core/Project";
+import { Project } from "@/core/Project";
+import { activeProjectAtom, store } from "@/state";
 import { matchEmacsKey } from "@/utils/emacs";
 import { isMac } from "@/utils/platform";
 import { createStore } from "@/utils/store";
 import { Queue } from "@graphif/data-structures";
 import { Store } from "@tauri-apps/plugin-store";
+import { AdditionalOperation, apply, RulesLogic } from "json-logic-js";
+import { KeyBindsRegistrar } from "./shortcutKeysRegister";
 
 /**
  * 用于管理快捷键绑定
  */
-@service("keyBinds")
-export class KeyBinds {
-  private store: Store | null = null;
+export namespace KeyBinds {
+  let store: Store | null = null;
 
-  constructor(private readonly project: Project) {
-    (async () => {
-      this.store = await createStore("keybinds2.json");
-      await this.project.keyBindsRegistrar.registerKeyBinds();
-      if ((await this.store.values()).find((it) => typeof it !== "string")) {
-        // 重置store
-        await this.store.clear();
-      }
-    })();
+  export async function init() {
+    store = await createStore("keybinds2.json");
+    if ((await store.values()).find((it) => typeof it !== "string")) {
+      // 重置store
+      await store.clear();
+    }
+    setTimeout(async () => {
+      await KeyBindsRegistrar.registerKeyBinds();
+    }, 0);
   }
 
-  async set(id: string, key: string) {
-    if (!this.store) {
+  export async function set(id: string, key: string) {
+    if (!store) {
       throw new Error("Store not initialized.");
     }
-    await this.store.set(id, key);
-    if (this.callbacks[id]) {
-      this.callbacks[id].forEach((callback) => callback(key));
+    await store.set(id, key);
+    if (callbacks[id]) {
+      callbacks[id].forEach((callback) => callback(key));
     }
   }
 
@@ -38,11 +40,11 @@ export class KeyBinds {
    * @param id
    * @returns
    */
-  async get(id: string): Promise<string | null> {
-    if (!this.store) {
+  export async function get(id: string): Promise<string | null> {
+    if (!store) {
       throw new Error("Store not initialized.");
     }
-    const data = await this.store.get<string>(id);
+    const data = await store.get<string>(id);
     return data || null;
   }
 
@@ -52,23 +54,23 @@ export class KeyBinds {
    * @param callback
    * @returns
    */
-  watch(key: string, callback: (value: string) => void) {
-    if (!this.callbacks[key]) {
-      this.callbacks[key] = [];
+  export function watch(key: string, callback: (value: string) => void) {
+    if (!callbacks[key]) {
+      callbacks[key] = [];
     }
-    this.callbacks[key].push(callback);
-    if (this.store) {
-      this.get(key).then((value) => {
+    callbacks[key].push(callback);
+    if (store) {
+      get(key).then((value) => {
         if (!value) return;
         callback(value);
       });
     }
     return () => {
-      this.callbacks[key] = this.callbacks[key].filter((cb) => cb !== callback);
+      callbacks[key] = callbacks[key].filter((cb) => cb !== callback);
     };
   }
 
-  private callbacks: {
+  let callbacks: {
     [key: string]: Array<(value: any) => void>;
   } = {};
 
@@ -76,16 +78,16 @@ export class KeyBinds {
    * 获取所有快捷键绑定
    * @returns
    */
-  async entries() {
-    if (!this.store) {
+  export async function entries() {
+    if (!store) {
       throw new Error("Keybind Store not initialized.");
     }
-    return await this.store.entries<string>();
+    return await store.entries<string>();
   }
 
   // 仅用于初始化软件时注册快捷键
-  registeredIdSet: Set<string> = new Set();
-  binds: Set<_Bind> = new Set();
+  export const registeredIdSet: Set<string> = new Set();
+  export const binds: Set<_Bind> = new Set();
 
   /**
    * 注册快捷键，注意：Mac会自动将此进行替换
@@ -94,8 +96,13 @@ export class KeyBinds {
    * @param onPress 按下后的执行函数
    * @returns
    */
-  async create(id: string, defaultKey: string, onPress = () => {}): Promise<_Bind> {
-    if (this.registeredIdSet.has(id)) {
+  export async function create(
+    id: string,
+    defaultKey: string,
+    rule: RulesLogic<AdditionalOperation> = true,
+    onPress = (_project: Project) => {},
+  ): Promise<_Bind> {
+    if (registeredIdSet.has(id)) {
       throw new Error(`Keybind ${id} 已经注册过了`);
     }
     if (isMac) {
@@ -103,43 +110,43 @@ export class KeyBinds {
       defaultKey = defaultKey.replace("M-", "C-");
       defaultKey = defaultKey.replace("Control-", "M-");
     }
-    this.registeredIdSet.add(id);
-    let userSetKey = await this.get(id);
+    registeredIdSet.add(id);
+    let userSetKey = await get(id);
     if (!userSetKey) {
       // 注册新的快捷键
-      await this.set(id, defaultKey);
+      await set(id, defaultKey);
       userSetKey = defaultKey;
     }
-    const obj = new _Bind(this.project, id, userSetKey, onPress);
+    const obj = new _Bind(id, userSetKey, rule, onPress);
     // 将绑定对象添加到集合中，以便后续清理
-    this.binds.add(obj);
+    binds.add(obj);
     // 监听快捷键变化
-    this.watch(id, (value) => {
+    watch(id, (value) => {
       obj.key = value;
     });
     return obj;
   }
 
-  dispose() {
-    this.binds.forEach((bind) => bind.dispose());
-    this.binds.clear();
-    this.registeredIdSet.clear();
-    this.callbacks = {};
+  export function dispose() {
+    binds.forEach((bind) => bind.dispose());
+    binds.clear();
+    registeredIdSet.clear();
+    callbacks = {};
   }
 
   /**
    * 重置所有快捷键为默认值
    */
-  async resetAllKeyBinds() {
-    if (!this.store) {
+  export async function resetAllKeyBinds() {
+    if (!store) {
       throw new Error("Store not initialized.");
     }
     // 清除已注册ID集合和资源
-    this.dispose();
+    dispose();
     // 清空存储
-    await this.store.clear();
+    await store.clear();
     // 重新注册所有快捷键
-    await this.project.keyBindsRegistrar.registerKeyBinds();
+    await KeyBindsRegistrar.registerKeyBinds();
   }
 }
 
@@ -163,23 +170,24 @@ class _Bind {
    * 每发生一个事件，都会调用这个函数
    */
   private check() {
+    if (!apply(this.rule)) return;
     if (matchEmacsKey(this.key, this.events.arrayList)) {
-      this.onPress();
+      this.onPress(store.get(activeProjectAtom)!);
       // 执行了快捷键之后，清空队列
       this.events.clear();
     }
   }
 
   constructor(
-    private readonly project: Project,
     public id: string,
     public key: string,
-    private readonly onPress: () => void,
+    public rule: RulesLogic<AdditionalOperation>,
+    public readonly onPress: (_project: Project) => void,
   ) {
     // 有任意事件时，管它是什么，都放进队列
-    this.project.canvas.element.addEventListener("mousedown", this.onMouseDown);
-    this.project.canvas.element.addEventListener("keydown", this.onKeyDown);
-    this.project.canvas.element.addEventListener("wheel", this.onWheel, { passive: true });
+    window.addEventListener("mousedown", this.onMouseDown);
+    window.addEventListener("keydown", this.onKeyDown);
+    window.addEventListener("wheel", this.onWheel, { passive: true });
   }
 
   onMouseDown = (event: MouseEvent) => {
@@ -198,8 +206,8 @@ class _Bind {
   };
 
   dispose() {
-    this.project.canvas.element.removeEventListener("mousedown", this.onMouseDown);
-    this.project.canvas.element.removeEventListener("keydown", this.onKeyDown);
-    this.project.canvas.element.removeEventListener("wheel", this.onWheel);
+    window.removeEventListener("mousedown", this.onMouseDown);
+    window.removeEventListener("keydown", this.onKeyDown);
+    window.removeEventListener("wheel", this.onWheel);
   }
 }

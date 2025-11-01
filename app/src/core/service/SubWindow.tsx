@@ -71,6 +71,7 @@ export namespace SubWindow {
     }
     // 窗口创建完成，添加到store中
     store.set(subWindowsAtom, [...store.get(subWindowsAtom), win]);
+    focus(win.id);
     if (options.closeWhenClickOutside) {
       win._closeWhenClickOutsideListener = (e: PointerEvent) => {
         if (e.target instanceof HTMLElement && e.target.closest(`[data-pg-window-id="${win.id}"]`)) {
@@ -117,5 +118,8 @@ export namespace SubWindow {
   }
   export function get(id: string) {
     return store.get(subWindowsAtom).find((window) => window.id === id)!;
+  }
+  export function getFocused() {
+    return store.get(subWindowsAtom).find((window) => window.focused)!;
   }
 }

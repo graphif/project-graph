@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import MyContextMenuContent from "./components/context-menu-content";
 import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
+import { SubWindow } from "./core/service/SubWindow";
 import { cn } from "./utils/cn";
 import { isWindows } from "./utils/platform";
 
@@ -57,6 +58,11 @@ export default function App() {
           .then((isFullscreen) => {
             getCurrentWindow().setFullscreen(!isFullscreen);
           });
+      }
+      if (event.key === "Escape") {
+        // 关闭当前子窗口
+        console.log("esc");
+        SubWindow.close(SubWindow.getFocused().id);
       }
     });
 

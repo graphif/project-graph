@@ -339,6 +339,9 @@ importers:
       "@tauri-apps/plugin-window-state":
         specifier: ^2.3.0
         version: 2.3.0
+      "@types/json-logic-js":
+        specifier: ^2.0.8
+        version: 2.0.8
       "@types/lodash":
         specifier: ^4.17.20
         version: 4.17.20
@@ -417,6 +420,9 @@ importers:
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0
+      json-logic-js:
+        specifier: ^2.0.5
+        version: 2.0.5
       jsondiffpatch:
         specifier: ^0.7.3
         version: 0.7.3
@@ -4184,6 +4190,10 @@ packages:
     resolution:
       { integrity: sha512-gQkc1Felhyj+aB9jmz/ICLm1fDPQx7l/60JIBSSEC+j09JeaINlzd0Wj9LZlQkHnV5rJYkroOHE5wdbDgADJrw== }
 
+  "@types/json-logic-js@2.0.8":
+    resolution:
+      { integrity: sha512-WgNsDPuTPKYXl0Jh0IfoCoJoAGGYZt5qzpmjuLSEg7r0cKp/kWtWp0HAsVepyPSPyXiHo6uXp/B/kW/2J1fa2Q== }
+
   "@types/json-schema@7.0.15":
     resolution:
       { integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA== }
@@ -6884,6 +6894,10 @@ packages:
     resolution:
       { integrity: sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ== }
 
+  json-logic-js@2.0.5:
+    resolution:
+      { integrity: sha512-rTT2+lqcuUmj4DgWfmzupZqQDA64AdmYqizzMPWj3DxGdfFNsxPpcNVSaTj4l8W2tG/+hg7/mQhxjU3aPacO6g== }
+
   json-parse-even-better-errors@2.3.1:
     resolution:
       { integrity: sha512-xyFwyhro/JEof6Ghe2iz2NcXoj2sloNsWr/XsERDK/oiPCfaNhl5ONfp+jQdAZRQQ0IJWNzH9zIZF7li91kh2w== }
@@ -6938,6 +6952,7 @@ packages:
     resolution:
       { integrity: sha512-iYSchDJ+liQ8iwbSI2QqsQOvqv58eJCEanyJPJi+Khyu8smkcKSFUCbPwzFcL7YVtZ6eONjqRX/38caJ7QjRAQ== }
     engines: { node: ">= 0.6" }
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   keyv@4.5.4:
     resolution:
@@ -13436,6 +13451,8 @@ snapshots:
 
   "@types/js-md5@0.8.0": {}
 
+  "@types/json-logic-js@2.0.8": {}
+
   "@types/json-schema@7.0.15": {}
 
   "@types/katex@0.16.7": {}
@@ -15918,6 +15935,8 @@ snapshots:
   jsesc@3.1.0: {}
 
   json-buffer@3.0.1: {}
+
+  json-logic-js@2.0.5: {}
 
   json-parse-even-better-errors@2.3.1: {}
 

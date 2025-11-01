@@ -1,18 +1,19 @@
 import { Dialog } from "@/components/ui/dialog";
-import { Project, service } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { Settings } from "@/core/service/Settings";
 import { Themes } from "@/core/service/Themes";
-import { PenStrokeMethods } from "@/core/stage/stageManager/basicMethods/PenStrokeMethods";
 import { Entity } from "@/core/sprites/abstract/Entity";
+import { TextNode } from "@/core/sprites/TextNode";
+import { PenStrokeMethods } from "@/core/stage/stageManager/basicMethods/PenStrokeMethods";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { TextNode } from "@/core/sprites/TextNode";
 import { activeProjectAtom, store } from "@/state";
 // import ColorWindow from "@/sub/ColorWindow";
 import FindWindow from "@/sub/FindWindow";
 // import KeyboardRecentFilesWindow from "@/sub/KeyboardRecentFilesWindow";
+import { Project } from "@/core/Project";
 import ColorWindow from "@/sub/ColorWindow";
+import CommandPaletteWindow from "@/sub/CommandPaletteWindow";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
 import SettingsWindow from "@/sub/SettingsWindow";
 import { Direction } from "@/types/directions";
@@ -20,39 +21,40 @@ import { openBrowserOrFile } from "@/utils/externalOpen";
 import { isMac } from "@/utils/platform";
 import { Color, Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
-import { onNewDraft, onOpenFile } from "../../GlobalMenu";
 import { TextNodeSmartTools } from "../../dataManageService/textNodeSmartTools";
+import { onNewDraft, onOpenFile } from "../../GlobalMenu";
+import { KeyBinds } from "./KeyBinds";
 
 /**
  * 快捷键注册函数
  */
-@service("keyBindsRegistrar")
-export class KeyBindsRegistrar {
-  constructor(private readonly project: Project) {}
-
+export namespace KeyBindsRegistrar {
   /**
    * 注册所有快捷键
    */
-  async registerKeyBinds() {
+  export async function registerKeyBinds() {
     // 开始注册快捷键
-    await this.project.keyBinds.create("test", "C-A-S-t", () =>
+    await KeyBinds.create("test", "C-A-S-t", true, () =>
       Dialog.buttons("测试快捷键", "您按下了自定义的测试快捷键，这一功能是测试开发所用，可在设置中更改触发方式", [
         { id: "close", label: "关闭" },
       ]),
     );
-
-    await this.project.keyBinds.create("undo", "C-z", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.historyManager.undo();
+    await KeyBinds.create("openCommandPalette", "C-S-p", true, () => {
+      CommandPaletteWindow.open();
     });
 
-    await this.project.keyBinds.create("redo", "C-y", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.historyManager.redo();
+    await KeyBinds.create("undo", "C-z", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.historyManager.undo();
+    });
+
+    await KeyBinds.create("redo", "C-y", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.historyManager.redo();
     });
 
     // 危险操作，配置一个不容易触发的快捷键
-    await this.project.keyBinds.create("reload", "C-f5", async () => {
+    await KeyBinds.create("reload", "C-f5", true, async () => {
       if (
         await Dialog.confirm(
           "危险操作：重新加载应用",
@@ -64,7 +66,7 @@ export class KeyBindsRegistrar {
       }
     });
 
-    await this.project.keyBinds.create("checkoutClassroomMode", "F5", async () => {
+    await KeyBinds.create("checkoutClassroomMode", "F5", true, async () => {
       // F5 是PPT的播放快捷键
       if (Settings.isClassroomMode) {
         toast.info("已经退出专注模式，点击一下更新状态");
@@ -74,281 +76,278 @@ export class KeyBindsRegistrar {
       Settings.isClassroomMode = !Settings.isClassroomMode;
     });
 
-    await this.project.keyBinds.create("resetView", "F", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.camera.resetBySelected();
+    await KeyBinds.create("resetView", "F", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.camera.resetBySelected();
     });
 
-    await this.project.keyBinds.create("resetCameraScale", "C-A-r", () => {
-      this.project.camera.resetScale();
+    await KeyBinds.create("resetCameraScale", "C-A-r", true, (project: Project) => {
+      project.camera.resetScale();
     });
 
-    await this.project.keyBinds.create("CameraScaleZoomIn", "[", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.camera.zoomInByKeyboard();
+    await KeyBinds.create("CameraScaleZoomIn", "[", () => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.camera.zoomInByKeyboard();
     });
 
-    await this.project.keyBinds.create("CameraScaleZoomOut", "]", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.camera.zoomOutByKeyboard();
+    await KeyBinds.create("CameraScaleZoomOut", "]", () => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.camera.zoomOutByKeyboard();
     });
 
     if (isMac) {
-      await this.project.keyBinds.create("CameraPageMoveUp", "S-i", () => {
-        this.project.camera.pageMove(Direction.Up);
+      await KeyBinds.create("CameraPageMoveUp", "S-i", true, (project: Project) => {
+        project.camera.pageMove(Direction.Up);
       });
-      await this.project.keyBinds.create("CameraPageMoveDown", "S-k", () => {
-        this.project.camera.pageMove(Direction.Down);
+      await KeyBinds.create("CameraPageMoveDown", "S-k", true, (project: Project) => {
+        project.camera.pageMove(Direction.Down);
       });
-      await this.project.keyBinds.create("CameraPageMoveLeft", "S-j", () => {
-        this.project.camera.pageMove(Direction.Left);
+      await KeyBinds.create("CameraPageMoveLeft", "S-j", true, (project: Project) => {
+        project.camera.pageMove(Direction.Left);
       });
-      await this.project.keyBinds.create("CameraPageMoveRight", "S-l", () => {
-        this.project.camera.pageMove(Direction.Right);
+      await KeyBinds.create("CameraPageMoveRight", "S-l", true, (project: Project) => {
+        project.camera.pageMove(Direction.Right);
       });
     } else {
-      await this.project.keyBinds.create("CameraPageMoveUp", "pageup", () => {
-        if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-        this.project.camera.pageMove(Direction.Up);
+      await KeyBinds.create("CameraPageMoveUp", "pageup", true, (project: Project) => {
+        if (!project.keyboardOnlyEngine.isOpenning()) return;
+        project.camera.pageMove(Direction.Up);
       });
-      await this.project.keyBinds.create("CameraPageMoveDown", "pagedown", () => {
-        if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-        this.project.camera.pageMove(Direction.Down);
+      await KeyBinds.create("CameraPageMoveDown", "pagedown", true, (project: Project) => {
+        if (!project.keyboardOnlyEngine.isOpenning()) return;
+        project.camera.pageMove(Direction.Down);
       });
-      await this.project.keyBinds.create("CameraPageMoveLeft", "home", () => {
-        if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-        this.project.camera.pageMove(Direction.Left);
+      await KeyBinds.create("CameraPageMoveLeft", "home", true, (project: Project) => {
+        if (!project.keyboardOnlyEngine.isOpenning()) return;
+        project.camera.pageMove(Direction.Left);
       });
-      await this.project.keyBinds.create("CameraPageMoveRight", "end", () => {
-        if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-        this.project.camera.pageMove(Direction.Right);
+      await KeyBinds.create("CameraPageMoveRight", "end", true, (project: Project) => {
+        if (!project.keyboardOnlyEngine.isOpenning()) return;
+        project.camera.pageMove(Direction.Right);
       });
     }
 
-    await this.project.keyBinds.create("folderSection", "C-t", () => {
-      this.project.stageManager.sectionSwitchCollapse();
+    await KeyBinds.create("folderSection", "C-t", true, (project: Project) => {
+      project.stageManager.sectionSwitchCollapse();
     });
 
-    await this.project.keyBinds.create("reverseEdges", "C-t", () => {
-      this.project.stageManager.reverseSelectedEdges();
+    await KeyBinds.create("reverseEdges", "C-t", true, (project: Project) => {
+      project.stageManager.reverseSelectedEdges();
     });
-    await this.project.keyBinds.create("reverseSelectedNodeEdge", "C-t", () => {
-      this.project.stageManager.reverseSelectedNodeEdge();
+    await KeyBinds.create("reverseSelectedNodeEdge", "C-t", true, (project: Project) => {
+      project.stageManager.reverseSelectedNodeEdge();
     });
 
-    await this.project.keyBinds.create("packEntityToSection", "C-g", () => {
-      this.project.stageManager.packEntityToSectionBySelected();
+    await KeyBinds.create("packEntityToSection", "C-g", true, (project: Project) => {
+      project.stageManager.packEntityToSectionBySelected();
     });
-    await this.project.keyBinds.create("createUndirectedEdgeFromEntities", "S-g", () => {
+    await KeyBinds.create("createUndirectedEdgeFromEntities", "S-g", true, (project: Project) => {
       // 构建无向边
-      const selectedNodes = this.project.stageManager.getSelectedEntities().filter((node) => node instanceof Entity);
+      const selectedNodes = project.stageManager.getSelectedEntities().filter((node) => node instanceof Entity);
       if (selectedNodes.length <= 1) {
         toast.error("至少选择两个可连接节点");
         return;
       }
-      const multiTargetUndirectedEdge = MultiTargetUndirectedEdge.createFromSomeEntity(this.project, selectedNodes);
-      this.project.stageManager.add(multiTargetUndirectedEdge);
+      const multiTargetUndirectedEdge = MultiTargetUndirectedEdge.createFromSomeEntity(project, selectedNodes);
+      project.stageManager.add(multiTargetUndirectedEdge);
     });
 
-    await this.project.keyBinds.create("deleteSelectedStageObjects", isMac ? "backspace" : "delete", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.stageManager.deleteSelectedStageObjects();
+    await KeyBinds.create("deleteSelectedStageObjects", isMac ? "backspace" : "delete", () => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.stageManager.deleteSelectedStageObjects();
     });
 
-    await this.project.keyBinds.create("createTextNodeFromCameraLocation", "insert", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.camera.clearMoveCommander();
-      this.project.camera.speed = Vector.getZero();
-      this.project.controllerUtils.addTextNodeByLocation(this.project.camera.location, true);
+    await KeyBinds.create("createTextNodeFromCameraLocation", "insert", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.camera.clearMoveCommander();
+      project.camera.speed = Vector.getZero();
+      project.controllerUtils.addTextNodeByLocation(project.camera.location, true);
     });
-    await this.project.keyBinds.create("createTextNodeFromMouseLocation", "S-insert", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.camera.clearMoveCommander();
-      this.project.camera.speed = Vector.getZero();
-      this.project.controllerUtils.addTextNodeByLocation(
-        this.project.renderer.transformView2World(MouseLocation.vector()),
-        true,
-      );
+    await KeyBinds.create("createTextNodeFromMouseLocation", "S-insert", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.camera.clearMoveCommander();
+      project.camera.speed = Vector.getZero();
+      project.controllerUtils.addTextNodeByLocation(project.renderer.transformView2World(MouseLocation.vector()), true);
     });
 
-    await this.project.keyBinds.create("createTextNodeFromSelectedTop", "A-arrowup", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Up, true);
+    await KeyBinds.create("createTextNodeFromSelectedTop", "A-arrowup", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Up, true);
     });
 
-    await this.project.keyBinds.create("createTextNodeFromSelectedRight", "A-arrowright", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Right, true);
+    await KeyBinds.create("createTextNodeFromSelectedRight", "A-arrowright", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Right, true);
     });
 
-    await this.project.keyBinds.create("createTextNodeFromSelectedLeft", "A-arrowleft", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Left, true);
+    await KeyBinds.create("createTextNodeFromSelectedLeft", "A-arrowleft", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Left, true);
     });
 
-    await this.project.keyBinds.create("createTextNodeFromSelectedDown", "A-arrowdown", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Down, true);
+    await KeyBinds.create("createTextNodeFromSelectedDown", "A-arrowdown", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.controllerUtils.addTextNodeFromCurrentSelectedNode(Direction.Down, true);
     });
 
-    await this.project.keyBinds.create("selectUp", "arrowup", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.selectUp();
+    await KeyBinds.create("selectUp", "arrowup", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.selectChangeEngine.selectUp();
     });
-    await this.project.keyBinds.create("selectDown", "arrowdown", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.selectDown();
+    await KeyBinds.create("selectDown", "arrowdown", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.selectChangeEngine.selectDown();
     });
-    await this.project.keyBinds.create("selectLeft", "arrowleft", () => {
-      this.project.selectChangeEngine.selectLeft();
+    await KeyBinds.create("selectLeft", "arrowleft", true, (project: Project) => {
+      project.selectChangeEngine.selectLeft();
     });
-    await this.project.keyBinds.create("selectRight", "arrowright", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.selectRight();
+    await KeyBinds.create("selectRight", "arrowright", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.selectChangeEngine.selectRight();
     });
-    await this.project.keyBinds.create("selectAdditionalUp", "S-arrowup", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.selectUp(true);
+    await KeyBinds.create("selectAdditionalUp", "S-arrowup", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.selectChangeEngine.selectUp(true);
     });
-    await this.project.keyBinds.create("selectAdditionalDown", "S-arrowdown", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.selectDown(true);
+    await KeyBinds.create("selectAdditionalDown", "S-arrowdown", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.selectChangeEngine.selectDown(true);
     });
-    await this.project.keyBinds.create("selectAdditionalLeft", "S-arrowleft", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.selectLeft(true);
+    await KeyBinds.create("selectAdditionalLeft", "S-arrowleft", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.selectChangeEngine.selectLeft(true);
     });
-    await this.project.keyBinds.create("selectAdditionalRight", "S-arrowright", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.selectRight(true);
+    await KeyBinds.create("selectAdditionalRight", "S-arrowright", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.selectChangeEngine.selectRight(true);
     });
 
-    await this.project.keyBinds.create("moveUpSelectedEntities", "C-arowup", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      const entities = this.project.stageManager.getEntities().filter((e) => e.isSelected);
+    await KeyBinds.create("moveUpSelectedEntities", "C-arowup", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      const entities = project.stageManager.getEntities().filter((e) => e.isSelected);
       if (entities.length > 0) {
         const rect = entities[0].collisionBox.getRectangle();
         const newRect = rect.clone();
         newRect.location.y -= 100;
-        this.project.effects.addEffect(
+        project.effects.addEffect(
           RectangleSlideEffect.verticalSlide(
             rect,
             newRect,
-            this.project.stageStyleManager.currentStyle.effects.successShadow,
+            project.stageStyleManager.currentStyle.effects.successShadow,
           ),
         );
       }
-      this.project.entityMoveManager.moveSelectedEntities(new Vector(0, -100));
+      project.entityMoveManager.moveSelectedEntities(new Vector(0, -100));
     });
 
-    await this.project.keyBinds.create("moveDownSelectedEntities", "C-arrowdown", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      const entities = this.project.stageManager.getEntities().filter((e) => e.isSelected);
+    await KeyBinds.create("moveDownSelectedEntities", "C-arrowdown", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      const entities = project.stageManager.getEntities().filter((e) => e.isSelected);
       if (entities.length > 0) {
         const rect = entities[0].collisionBox.getRectangle();
         const newRect = rect.clone();
         newRect.location.y += 100;
-        this.project.effects.addEffect(
+        project.effects.addEffect(
           RectangleSlideEffect.verticalSlide(
             rect,
             newRect,
-            this.project.stageStyleManager.currentStyle.effects.successShadow,
+            project.stageStyleManager.currentStyle.effects.successShadow,
           ),
         );
       }
-      this.project.entityMoveManager.moveSelectedEntities(new Vector(0, 100));
+      project.entityMoveManager.moveSelectedEntities(new Vector(0, 100));
     });
 
-    await this.project.keyBinds.create("moveLeftSelectedEntities", "C-arrowleft", () => {
-      const entities = this.project.stageManager.getEntities().filter((e) => e.isSelected);
+    await KeyBinds.create("moveLeftSelectedEntities", "C-arrowleft", true, (project: Project) => {
+      const entities = project.stageManager.getEntities().filter((e) => e.isSelected);
       if (entities.length > 0) {
         const rect = entities[0].collisionBox.getRectangle();
         const newRect = rect.clone();
         newRect.location.x -= 100;
-        this.project.effects.addEffect(
+        project.effects.addEffect(
           RectangleSlideEffect.horizontalSlide(
             rect,
             newRect,
-            this.project.stageStyleManager.currentStyle.effects.successShadow,
+            project.stageStyleManager.currentStyle.effects.successShadow,
           ),
         );
       }
-      this.project.entityMoveManager.moveSelectedEntities(new Vector(-100, 0));
+      project.entityMoveManager.moveSelectedEntities(new Vector(-100, 0));
     });
 
-    await this.project.keyBinds.create("moveRightSelectedEntities", "C-arrowright", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      const entities = this.project.stageManager.getEntities().filter((e) => e.isSelected);
+    await KeyBinds.create("moveRightSelectedEntities", "C-arrowright", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      const entities = project.stageManager.getEntities().filter((e) => e.isSelected);
       if (entities.length > 0) {
         const rect = entities[0].collisionBox.getRectangle();
         const newRect = rect.clone();
         newRect.location.x += 100;
-        this.project.effects.addEffect(
+        project.effects.addEffect(
           RectangleSlideEffect.horizontalSlide(
             rect,
             newRect,
-            this.project.stageStyleManager.currentStyle.effects.successShadow,
+            project.stageStyleManager.currentStyle.effects.successShadow,
           ),
         );
       }
-      this.project.entityMoveManager.moveSelectedEntities(new Vector(100, 0));
+      project.entityMoveManager.moveSelectedEntities(new Vector(100, 0));
     });
-    await this.project.keyBinds.create("jumpMoveUpSelectedEntities", "C-A-arrowup", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(0, -100));
-    });
-
-    await this.project.keyBinds.create("jumpMoveDownSelectedEntities", "C-A-arrowdown", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(0, 100));
+    await KeyBinds.create("jumpMoveUpSelectedEntities", "C-A-arrowup", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(0, -100));
     });
 
-    await this.project.keyBinds.create("jumpMoveLeftSelectedEntities", "C-A-arrowleft", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(-100, 0));
+    await KeyBinds.create("jumpMoveDownSelectedEntities", "C-A-arrowdown", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(0, 100));
     });
 
-    await this.project.keyBinds.create("jumpMoveRightSelectedEntities", "C-A-arrowright", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(100, 0));
+    await KeyBinds.create("jumpMoveLeftSelectedEntities", "C-A-arrowleft", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(-100, 0));
     });
 
-    await this.project.keyBinds.create("editEntityDetails", "C-enter", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.controllerUtils.editNodeDetailsByKeyboard();
+    await KeyBinds.create("jumpMoveRightSelectedEntities", "C-A-arrowright", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.entityMoveManager.jumpMoveSelectedConnectableEntities(new Vector(100, 0));
     });
 
-    await this.project.keyBinds.create("openColorPanel", "F6", () => {
+    await KeyBinds.create("editEntityDetails", "C-enter", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.controllerUtils.editNodeDetailsByKeyboard();
+    });
+
+    await KeyBinds.create("openColorPanel", "F6", true, () => {
       // toast.warning("2.0版本的颜色面板已被整合入右键菜单，请在右键菜单中打开");
       ColorWindow.open();
     });
-    await this.project.keyBinds.create("switchDebugShow", "F3", async () => {
+    await KeyBinds.create("switchDebugShow", "F3", true, async () => {
       const currentValue = Settings.showDebug;
       Settings.showDebug = !currentValue;
     });
 
-    await this.project.keyBinds.create("selectAll", "C-a", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.stageManager.selectAll();
+    await KeyBinds.create("selectAll", "C-a", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.stageManager.selectAll();
       toast.success(
         <div>
           <h2>已全选所有元素</h2>
           <p>
-            {this.project.stageManager.getSelectedEntities().length}个实体+
-            {this.project.stageManager.getSelectedAssociations().length}个关系=
-            {this.project.stageManager.getSelectedStageObjects().length}个舞台对象
+            {project.stageManager.getSelectedEntities().length}个实体+
+            {project.stageManager.getSelectedAssociations().length}个关系=
+            {project.stageManager.getSelectedStageObjects().length}个舞台对象
           </p>
         </div>,
       );
-      this.project.effects.addEffect(ViewOutlineFlashEffect.normal(Color.Green.toNewAlpha(0.2)));
+      project.effects.addEffect(ViewOutlineFlashEffect.normal(Color.Green.toNewAlpha(0.2)));
     });
-    await this.project.keyBinds.create("textNodeToSection", "C-S-g", () => {
-      this.project.sectionPackManager.textNodeToSection();
+    await KeyBinds.create("textNodeToSection", "C-S-g", true, (project: Project) => {
+      project.sectionPackManager.textNodeToSection();
     });
-    await this.project.keyBinds.create("unpackEntityFromSection", "C-S-g", () => {
-      this.project.sectionPackManager.unpackSelectedSections();
+    await KeyBinds.create("unpackEntityFromSection", "C-S-g", true, (project: Project) => {
+      project.sectionPackManager.unpackSelectedSections();
     });
-    await this.project.keyBinds.create("checkoutProtectPrivacy", "C-2", async () => {
+    await KeyBinds.create("checkoutProtectPrivacy", "C-2", true, async () => {
       if (Settings.protectingPrivacy) {
         toast.info("您已退出隐私模式，再次按下此快捷键、或在设置中开启，可进入隐私模式");
       } else {
@@ -356,25 +355,25 @@ export class KeyBindsRegistrar {
       }
       Settings.protectingPrivacy = !Settings.protectingPrivacy;
     });
-    await this.project.keyBinds.create("searchText", "C-f", () => {
+    await KeyBinds.create("searchText", "C-f", true, () => {
       FindWindow.open();
     });
-    await this.project.keyBinds.create("openTextNodeByContentExternal", "C-e", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      openBrowserOrFile(this.project);
+    await KeyBinds.create("openTextNodeByContentExternal", "C-e", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      openBrowserOrFile(project);
     });
 
-    await this.project.keyBinds.create("clickAppMenuSettingsButton", "S-!", () => {
+    await KeyBinds.create("clickAppMenuSettingsButton", "S-!", () => {
       SettingsWindow.open("settings");
     });
-    // await this.project.keyBinds.create("clickTagPanelButton", "S-@", () => {
+    // await KeyBinds.create("clickTagPanelButton", "S-@", () => {
     //   TagWindow.open();
     // });
-    await this.project.keyBinds.create("clickAppMenuRecentFileButton", "S-#", () => {
+    await KeyBinds.create("clickAppMenuRecentFileButton", "S-#", () => {
       // KeyboardRecentFilesWindow.open();
       RecentFilesWindow.open();
     });
-    // await this.project.keyBinds.create("clickStartFilePanelButton", "S-$", () => {
+    // await KeyBinds.create("clickStartFilePanelButton", "S-$", (project: Project) => {
     //   const button = document.getElementById("app-start-file-btn");
     //   const event = new MouseEvent("click", {
     //     bubbles: true,
@@ -383,10 +382,10 @@ export class KeyBindsRegistrar {
     //   });
     //   button?.dispatchEvent(event);
     //   setTimeout(() => {
-    //     this.project.controller.pressingKeySet.clear();
+    //     project.controller.pressingKeySet.clear();
     //   }, 200);
     // });
-    await this.project.keyBinds.create("saveFile", "C-s", () => {
+    await KeyBinds.create("saveFile", "C-s", true, () => {
       const activeProject = store.get(activeProjectAtom);
       if (activeProject) {
         activeProject.save();
@@ -395,14 +394,14 @@ export class KeyBindsRegistrar {
         }
       }
     });
-    await this.project.keyBinds.create("newDraft", "C-n", () => {
+    await KeyBinds.create("newDraft", "C-n", true, () => {
       onNewDraft();
     });
-    await this.project.keyBinds.create("openFile", "C-o", () => {
+    await KeyBinds.create("openFile", "C-o", true, () => {
       onOpenFile();
     });
 
-    await this.project.keyBinds.create("checkoutWindowOpacityMode", "C-0", async () => {
+    await KeyBinds.create("checkoutWindowOpacityMode", "C-0", true, async () => {
       // 切换窗口透明度模式
       const currentValue = Settings.windowBackgroundAlpha;
       if (currentValue === 0) {
@@ -411,186 +410,182 @@ export class KeyBindsRegistrar {
         Settings.windowBackgroundAlpha = 0;
       }
     });
-    await this.project.keyBinds.create("windowOpacityAlphaIncrease", "C-A-S-+", async () => {
+    await KeyBinds.create("windowOpacityAlphaIncrease", "C-A-S-+", async (project: Project) => {
       const currentValue = Settings.windowBackgroundAlpha;
       if (currentValue === 1) {
         // 已经不能再大了
-        this.project.effects.addEffect(
-          ViewOutlineFlashEffect.short(this.project.stageStyleManager.currentStyle.effects.flash),
-        );
+        project.effects.addEffect(ViewOutlineFlashEffect.short(project.stageStyleManager.currentStyle.effects.flash));
       } else {
         Settings.windowBackgroundAlpha = Math.min(1, currentValue + 0.2);
       }
     });
-    await this.project.keyBinds.create("windowOpacityAlphaDecrease", "C-A-S--", async () => {
+    await KeyBinds.create("windowOpacityAlphaDecrease", "C-A-S--", true, async (project: Project) => {
       const currentValue = Settings.windowBackgroundAlpha;
       if (currentValue === 0) {
         // 已经不能再小了
-        this.project.effects.addEffect(
-          ViewOutlineFlashEffect.short(this.project.stageStyleManager.currentStyle.effects.flash),
-        );
+        project.effects.addEffect(ViewOutlineFlashEffect.short(project.stageStyleManager.currentStyle.effects.flash));
       } else {
         Settings.windowBackgroundAlpha = Math.max(0, currentValue - 0.2);
       }
     });
 
-    // await this.project.keyBinds.create("penStrokeWidthIncrease", "=", async () => {
+    // await KeyBinds.create("penStrokeWidthIncrease", "=", async () => {
     //   if (Settings.mouseLeftMode === "draw") {
-    //     const newWidth = this.project.controller.penStrokeDrawing.currentStrokeWidth + 4;
-    //     this.project.controller.penStrokeDrawing.currentStrokeWidth = Math.max(1, Math.min(newWidth, 1000));
-    //     toast(`画笔粗细: ${this.project.controller.penStrokeDrawing.currentStrokeWidth}px`);
+    //     const newWidth = project.controller.penStrokeDrawing.currentStrokeWidth + 4;
+    //     project.controller.penStrokeDrawing.currentStrokeWidth = Math.max(1, Math.min(newWidth, 1000));
+    //     toast(`画笔粗细: ${project.controller.penStrokeDrawing.currentStrokeWidth}px`);
     //   }
     // });
-    // await this.project.keyBinds.create("penStrokeWidthDecrease", "-", async () => {
+    // await KeyBinds.create("penStrokeWidthDecrease", "-", true, async (project: Project) => {
     //   if (Settings.mouseLeftMode === "draw") {
-    //     const newWidth = this.project.controller.penStrokeDrawing.currentStrokeWidth - 4;
-    //     this.project.controller.penStrokeDrawing.currentStrokeWidth = Math.max(1, Math.min(newWidth, 1000));
-    //     toast(`画笔粗细: ${this.project.controller.penStrokeDrawing.currentStrokeWidth}px`);
+    //     const newWidth = project.controller.penStrokeDrawing.currentStrokeWidth - 4;
+    //     project.controller.penStrokeDrawing.currentStrokeWidth = Math.max(1, Math.min(newWidth, 1000));
+    //     toast(`画笔粗细: ${project.controller.penStrokeDrawing.currentStrokeWidth}px`);
     //   }
     // });
 
-    await this.project.keyBinds.create("copy", "C-c", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.copyEngine.copy();
+    await KeyBinds.create("copy", "C-c", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.copyEngine.copy();
     });
-    await this.project.keyBinds.create("paste", "C-v", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.copyEngine.paste();
+    await KeyBinds.create("paste", "C-v", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.copyEngine.paste();
     });
 
-    await this.project.keyBinds.create("pasteWithOriginLocation", "C-S-v", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      // this.project.copyEngine.pasteWithOriginLocation();
+    await KeyBinds.create("pasteWithOriginLocation", "C-S-v", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      // project.copyEngine.pasteWithOriginLocation();
       toast("todo");
     });
 
-    await this.project.keyBinds.create("checkoutLeftMouseToSelectAndMove", "v v v", async () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
+    await KeyBinds.create("checkoutLeftMouseToSelectAndMove", "v v v", true, async (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
       Settings.mouseLeftMode = "selectAndMove";
       toast("当前鼠标左键已经切换为框选/移动模式");
     });
-    await this.project.keyBinds.create("checkoutLeftMouseToDrawing", "b b b", async () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
+    await KeyBinds.create("checkoutLeftMouseToDrawing", "b b b", true, async (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
       Settings.mouseLeftMode = "draw";
       toast("当前鼠标左键已经切换为画笔模式");
     });
 
     // 鼠标左键切换为连接模式
     // let lastMouseMode = "selectAndMove";
-    await this.project.keyBinds.create("checkoutLeftMouseToConnectAndCutting", "c c c", async () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
+    await KeyBinds.create("checkoutLeftMouseToConnectAndCutting", "c c c", true, async (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
       Settings.mouseLeftMode = "connectAndCut";
       toast("当前鼠标左键已经切换为连接/切割模式");
     });
 
-    // await this.project.keyBinds.create("checkoutLeftMouseToConnectAndCuttingOnlyPressed", "z", async () => {
+    // await KeyBinds.create("checkoutLeftMouseToConnectAndCuttingOnlyPressed", "z", true, async (project: Project) => {
     //   // lastMouseMode = Settings.mouseLeftMode;
-    //   if (!this.project.keyboardOnlyEngine.isOpenning()) return;
+    //   if (!project.keyboardOnlyEngine.isOpenning()) return;
     //   Stage.MouseModeManager.checkoutConnectAndCuttingHook();
     // })
     // // .up(async () => {
-    // //   if (!this.project.keyboardOnlyEngine.isOpenning()) return;
+    // //   if (!project.keyboardOnlyEngine.isOpenning()) return;
     // //   Stage.MouseModeManager.checkoutSelectAndMoveHook();
     // // });
 
-    await this.project.keyBinds.create("selectEntityByPenStroke", "C-w", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
+    await KeyBinds.create("selectEntityByPenStroke", "C-w", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
       PenStrokeMethods.selectEntityByPenStroke();
     });
-    await this.project.keyBinds.create("expandSelectEntity", "C-w", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.expandSelect(false, false);
+    await KeyBinds.create("expandSelectEntity", "C-w", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.selectChangeEngine.expandSelect(false, false);
     });
-    await this.project.keyBinds.create("expandSelectEntityReversed", "C-S-w", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.expandSelect(false, true);
+    await KeyBinds.create("expandSelectEntityReversed", "C-S-w", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.selectChangeEngine.expandSelect(false, true);
     });
-    await this.project.keyBinds.create("expandSelectEntityKeepLastSelected", "C-A-w", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.expandSelect(true, false);
+    await KeyBinds.create("expandSelectEntityKeepLastSelected", "C-A-w", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.selectChangeEngine.expandSelect(true, false);
     });
-    await this.project.keyBinds.create("expandSelectEntityReversedKeepLastSelected", "C-A-S-w", async () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.selectChangeEngine.expandSelect(true, true);
-    });
-
-    await this.project.keyBinds.create("generateNodeTreeWithDeepMode", "tab", async () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.keyboardOnlyTreeEngine.onDeepGenerateNode();
+    await KeyBinds.create("expandSelectEntityReversedKeepLastSelected", "C-A-S-w", true, async (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.selectChangeEngine.expandSelect(true, true);
     });
 
-    await this.project.keyBinds.create("masterBrakeControl", "pause", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
+    await KeyBinds.create("generateNodeTreeWithDeepMode", "tab", true, async (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.keyboardOnlyTreeEngine.onDeepGenerateNode();
+    });
+
+    await KeyBinds.create("masterBrakeControl", "pause", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
       // 按下一次就清空动力
-      this.project.camera.clearMoveCommander();
-      this.project.camera.speed = Vector.getZero();
+      project.camera.clearMoveCommander();
+      project.camera.speed = Vector.getZero();
     });
 
-    await this.project.keyBinds.create("masterBrakeCheckout", "space", async () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
+    await KeyBinds.create("masterBrakeCheckout", "space", true, async (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
       // 看成汽车的手刹，按下一次就切换是否允许移动
-      this.project.camera.clearMoveCommander();
-      this.project.camera.speed = Vector.getZero();
+      project.camera.clearMoveCommander();
+      project.camera.speed = Vector.getZero();
       Settings.allowMoveCameraByWSAD = !Settings.allowMoveCameraByWSAD;
     });
 
-    await this.project.keyBinds.create("generateNodeTreeWithBroadMode", "\\", async () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.keyboardOnlyTreeEngine.onBroadGenerateNode();
+    await KeyBinds.create("generateNodeTreeWithBroadMode", "\\", async () => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.keyboardOnlyTreeEngine.onBroadGenerateNode();
     });
 
-    // (await this.project.keyBinds.create("generateNodeGraph", "`"))
+    // (await KeyBinds.create("generateNodeGraph", "`"))
     //   .down(() => {
-    //     if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-    //     if (this.project.keyboardOnlyGraphEngine.isEnableVirtualCreate()) {
-    //       this.project.keyboardOnlyGraphEngine.createStart();
+    //     if (!project.keyboardOnlyEngine.isOpenning()) return;
+    //     if (project.keyboardOnlyGraphEngine.isEnableVirtualCreate()) {
+    //       project.keyboardOnlyGraphEngine.createStart();
     //     }
     //   })
     //   .up(() => {
-    //     if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-    //     if (this.project.keyboardOnlyGraphEngine.isCreating()) {
-    //       this.project.keyboardOnlyGraphEngine.createFinished();
+    //     if (!project.keyboardOnlyEngine.isOpenning()) return;
+    //     if (project.keyboardOnlyGraphEngine.isCreating()) {
+    //       project.keyboardOnlyGraphEngine.createFinished();
     //     }
     //   });
-    await this.project.keyBinds.create("generateNodeGraph", "`", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      if (this.project.keyboardOnlyGraphEngine.isCreating()) {
-        this.project.keyboardOnlyGraphEngine.createFinished();
+    await KeyBinds.create("generateNodeGraph", "`", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      if (project.keyboardOnlyGraphEngine.isCreating()) {
+        project.keyboardOnlyGraphEngine.createFinished();
       } else {
-        if (this.project.keyboardOnlyGraphEngine.isEnableVirtualCreate()) {
-          this.project.keyboardOnlyGraphEngine.createStart();
+        if (project.keyboardOnlyGraphEngine.isEnableVirtualCreate()) {
+          project.keyboardOnlyGraphEngine.createStart();
         }
       }
     });
 
-    await this.project.keyBinds.create("createConnectPointWhenDragConnecting", "1", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
-      this.project.controller.nodeConnection.createConnectPointWhenConnect();
+    await KeyBinds.create("createConnectPointWhenDragConnecting", "1", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
+      project.controller.nodeConnection.createConnectPointWhenConnect();
     });
 
-    await this.project.keyBinds.create("treeGraphAdjust", "A-S-f", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
+    await KeyBinds.create("treeGraphAdjust", "A-S-f", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
       // 获取所有的选中节点
-      const entities = this.project.stageManager.getSelectedEntities().filter((entity) => entity instanceof Entity);
+      const entities = project.stageManager.getSelectedEntities().filter((entity) => entity instanceof Entity);
       // 调整所有节点的树形结构
       for (const entity of entities) {
-        this.project.keyboardOnlyTreeEngine.adjustTreeNode(entity);
+        project.keyboardOnlyTreeEngine.adjustTreeNode(entity);
       }
     });
 
     // 以下是老秘籍键
 
-    await this.project.keyBinds.create(
+    await KeyBinds.create(
       "screenFlashEffect",
       "arrowup arrowup arrowdown arrowdown arrowleft arrowright arrowleft arrowright b a",
       () => {
-        this.project.effects.addEffect(ViewFlashEffect.SaveFile());
+        project.effects.addEffect(ViewFlashEffect.SaveFile());
       },
     );
 
     // 减小体积
-    await this.project.keyBinds.create("alignNodesToInteger", "i n t j", () => {
-      const entities = this.project.stageManager.getConnectableEntity();
+    await KeyBinds.create("alignNodesToInteger", "i n t j", true, (project: Project) => {
+      const entities = project.stageManager.getConnectableEntity();
       for (const entity of entities) {
         const leftTopLocation = entity.collisionBox.getRectangle().location;
         const IntLocation = new Vector(Math.round(leftTopLocation.x), Math.round(leftTopLocation.y));
@@ -599,13 +594,13 @@ export class KeyBindsRegistrar {
     });
 
     // 做计划的功能
-    await this.project.keyBinds.create("toggleCheckmarkOnTextNodes", "o k k", () => {
-      TextNodeSmartTools.okk(this.project);
+    await KeyBinds.create("toggleCheckmarkOnTextNodes", "o k k", true, (project: Project) => {
+      TextNodeSmartTools.okk(project);
     });
 
     // 反转选中图片的颜色
-    await this.project.keyBinds.create("reverseImageColors", "r r r", () => {
-      const selectedImageNodes: ImageNode[] = this.project.stageManager
+    await KeyBinds.create("reverseImageColors", "r r r", true, (project: Project) => {
+      const selectedImageNodes: ImageNode[] = project.stageManager
         .getSelectedEntities()
         .filter((node) => node instanceof ImageNode);
       for (const node of selectedImageNodes) {
@@ -616,144 +611,140 @@ export class KeyBindsRegistrar {
       }
     });
 
-    await this.project.keyBinds.create("switchToDarkTheme", "b l a c k k", () => {
+    await KeyBinds.create("switchToDarkTheme", "b l a c k k", true, () => {
       toast.info("切换到暗黑主题");
       Themes.applyThemeById("dark");
     });
 
-    await this.project.keyBinds.create("switchToLightTheme", "w h i t e e", () => {
+    await KeyBinds.create("switchToLightTheme", "w h i t e e", true, () => {
       toast.info("切换到明亮主题");
       Themes.applyThemeById("light");
     });
 
-    await this.project.keyBinds.create("switchToParkTheme", "p a r k k", () => {
+    await KeyBinds.create("switchToParkTheme", "p a r k k", true, () => {
       toast.info("切换到公园主题");
       Themes.applyThemeById("park");
     });
 
-    await this.project.keyBinds.create("switchToMacaronTheme", "m k l m k l", () => {
+    await KeyBinds.create("switchToMacaronTheme", "m k l m k l", true, () => {
       toast.info("切换到马卡龙主题");
       Themes.applyThemeById("macaron");
     });
 
-    await this.project.keyBinds.create("switchToMorandiTheme", "m l d m l d", () => {
+    await KeyBinds.create("switchToMorandiTheme", "m l d m l d", true, () => {
       toast.info("切换到莫兰迪主题");
       Themes.applyThemeById("morandi");
     });
 
     // 画笔相关快捷键
-    await this.project.keyBinds.create("increasePenAlpha", "p s a + +", async () => {
-      this.project.controller.penStrokeDrawing.changeCurrentStrokeColorAlpha(0.1);
+    await KeyBinds.create("increasePenAlpha", "p s a + +", async (project: Project) => {
+      project.controller.penStrokeDrawing.changeCurrentStrokeColorAlpha(0.1);
     });
 
-    await this.project.keyBinds.create("decreasePenAlpha", "p s a - -", async () => {
-      this.project.controller.penStrokeDrawing.changeCurrentStrokeColorAlpha(-0.1);
+    await KeyBinds.create("decreasePenAlpha", "p s a - -", true, async (project: Project) => {
+      project.controller.penStrokeDrawing.changeCurrentStrokeColorAlpha(-0.1);
     });
 
     // 对齐相关快捷键
-    await this.project.keyBinds.create("alignTop", "8 8", () => {
-      this.project.layoutManager.alignTop();
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Up, true);
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Down);
+    await KeyBinds.create("alignTop", "8 8", true, (project: Project) => {
+      project.layoutManager.alignTop();
+      project.stageManager.changeSelectedEdgeConnectLocation(Direction.Up, true);
+      project.stageManager.changeSelectedEdgeConnectLocation(Direction.Down);
     });
 
-    await this.project.keyBinds.create("alignBottom", "2 2", () => {
-      this.project.layoutManager.alignBottom();
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Down, true);
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Up);
+    await KeyBinds.create("alignBottom", "2 2", true, (project: Project) => {
+      project.layoutManager.alignBottom();
+      project.stageManager.changeSelectedEdgeConnectLocation(Direction.Down, true);
+      project.stageManager.changeSelectedEdgeConnectLocation(Direction.Up);
     });
 
-    await this.project.keyBinds.create("alignLeft", "4 4", () => {
-      this.project.layoutManager.alignLeft();
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Left, true);
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Right);
+    await KeyBinds.create("alignLeft", "4 4", true, (project: Project) => {
+      project.layoutManager.alignLeft();
+      project.stageManager.changeSelectedEdgeConnectLocation(Direction.Left, true);
+      project.stageManager.changeSelectedEdgeConnectLocation(Direction.Right);
     });
 
-    await this.project.keyBinds.create("alignRight", "6 6", () => {
-      this.project.layoutManager.alignRight();
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Right, true);
-      this.project.stageManager.changeSelectedEdgeConnectLocation(Direction.Left);
+    await KeyBinds.create("alignRight", "6 6", true, (project: Project) => {
+      project.layoutManager.alignRight();
+      project.stageManager.changeSelectedEdgeConnectLocation(Direction.Right, true);
+      project.stageManager.changeSelectedEdgeConnectLocation(Direction.Left);
     });
 
-    await this.project.keyBinds.create("alignHorizontalSpaceBetween", "4 6 4 6", () => {
-      this.project.layoutManager.alignHorizontalSpaceBetween();
+    await KeyBinds.create("alignHorizontalSpaceBetween", "4 6 4 6", true, (project: Project) => {
+      project.layoutManager.alignHorizontalSpaceBetween();
     });
 
-    await this.project.keyBinds.create("alignVerticalSpaceBetween", "8 2 8 2", () => {
-      this.project.layoutManager.alignVerticalSpaceBetween();
+    await KeyBinds.create("alignVerticalSpaceBetween", "8 2 8 2", true, (project: Project) => {
+      project.layoutManager.alignVerticalSpaceBetween();
     });
 
-    await this.project.keyBinds.create("alignCenterHorizontal", "5 4 6", () => {
-      this.project.layoutManager.alignCenterHorizontal();
+    await KeyBinds.create("alignCenterHorizontal", "5 4 6", true, (project: Project) => {
+      project.layoutManager.alignCenterHorizontal();
     });
 
-    await this.project.keyBinds.create("alignCenterVertical", "5 8 2", () => {
-      this.project.layoutManager.alignCenterVertical();
+    await KeyBinds.create("alignCenterVertical", "5 8 2", true, (project: Project) => {
+      project.layoutManager.alignCenterVertical();
     });
 
-    await this.project.keyBinds.create("alignLeftToRightNoSpace", "4 5 6", () => {
-      this.project.layoutManager.alignLeftToRightNoSpace();
+    await KeyBinds.create("alignLeftToRightNoSpace", "4 5 6", true, (project: Project) => {
+      project.layoutManager.alignLeftToRightNoSpace();
     });
 
-    await this.project.keyBinds.create("alignTopToBottomNoSpace", "8 5 2", () => {
-      this.project.layoutManager.alignTopToBottomNoSpace();
+    await KeyBinds.create("alignTopToBottomNoSpace", "8 5 2", true, (project: Project) => {
+      project.layoutManager.alignTopToBottomNoSpace();
     });
 
     // 全连接
-    await this.project.keyBinds.create("connectAllSelectedEntities", "- - a l l", () => {
-      const selectedNodes = this.project.stageManager.getSelectedEntities();
+    await KeyBinds.create("connectAllSelectedEntities", "- - a l l", true, (project: Project) => {
+      const selectedNodes = project.stageManager.getSelectedEntities();
       for (let i = 0; i < selectedNodes.length; i++) {
         for (let j = 0; j < selectedNodes.length; j++) {
           const fromNode = selectedNodes[i];
           const toNode = selectedNodes[j];
           if (fromNode === toNode) continue;
           if (fromNode instanceof Entity && toNode instanceof Entity) {
-            this.project.stageManager.connectEntity(fromNode, toNode, false);
+            project.stageManager.connectEntity(fromNode, toNode, false);
           }
         }
       }
     });
 
     // 向右连接
-    await this.project.keyBinds.create("connectLeftToRight", "- - r i g h t", () => {
-      const selectedNodes = this.project.stageManager
-        .getSelectedEntities()
-        .filter((entity) => entity instanceof Entity);
+    await KeyBinds.create("connectLeftToRight", "- - r i g h t", true, (project: Project) => {
+      const selectedNodes = project.stageManager.getSelectedEntities().filter((entity) => entity instanceof Entity);
       if (selectedNodes.length <= 1) return;
       selectedNodes.sort((a, b) => a.collisionBox.getRectangle().location.x - b.collisionBox.getRectangle().location.x);
       for (let i = 0; i < selectedNodes.length - 1; i++) {
         const fromNode = selectedNodes[i];
         const toNode = selectedNodes[i + 1];
         if (fromNode === toNode) continue;
-        this.project.stageManager.connectEntity(fromNode, toNode, false);
+        project.stageManager.connectEntity(fromNode, toNode, false);
       }
     });
 
-    await this.project.keyBinds.create("connectTopToBottom", "- - d o w n", () => {
-      const selectedNodes = this.project.stageManager
-        .getSelectedEntities()
-        .filter((entity) => entity instanceof Entity);
+    await KeyBinds.create("connectTopToBottom", "- - d o w n", true, (project: Project) => {
+      const selectedNodes = project.stageManager.getSelectedEntities().filter((entity) => entity instanceof Entity);
       if (selectedNodes.length <= 1) return;
       selectedNodes.sort((a, b) => a.collisionBox.getRectangle().location.y - b.collisionBox.getRectangle().location.y);
       for (let i = 0; i < selectedNodes.length - 1; i++) {
         const fromNode = selectedNodes[i];
         const toNode = selectedNodes[i + 1];
         if (fromNode === toNode) continue;
-        this.project.stageManager.connectEntity(fromNode, toNode, false);
+        project.stageManager.connectEntity(fromNode, toNode, false);
       }
     });
 
-    await this.project.keyBinds.create("selectAllEdges", "+ e d g e", () => {
-      const selectedEdges = this.project.stageManager.getAssociations();
-      const viewRect = this.project.renderer.getCoverWorldRectangle();
+    await KeyBinds.create("selectAllEdges", "+ e d g e", (project: Project) => {
+      const selectedEdges = project.stageManager.getAssociations();
+      const viewRect = project.renderer.getCoverWorldRectangle();
       for (const edge of selectedEdges) {
-        if (this.project.renderer.isOverView(viewRect, edge)) continue;
+        if (project.renderer.isOverView(viewRect, edge)) continue;
         edge.isSelected = true;
       }
     });
 
-    await this.project.keyBinds.create("colorSelectedRed", "; r e d", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
+    await KeyBinds.create("colorSelectedRed", "; r e d", (project: Project) => {
+      const selectedStageObject = project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
       for (const obj of selectedStageObject) {
         if (obj instanceof TextNode) {
           obj.color = new Color(239, 68, 68);
@@ -761,8 +752,8 @@ export class KeyBindsRegistrar {
       }
     });
 
-    await this.project.keyBinds.create("increaseBrightness", "b .", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
+    await KeyBinds.create("increaseBrightness", "b .", (project: Project) => {
+      const selectedStageObject = project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
       for (const obj of selectedStageObject) {
         if (obj instanceof TextNode) {
           if (obj.color.a === 0) continue;
@@ -776,8 +767,8 @@ export class KeyBindsRegistrar {
       }
     });
 
-    await this.project.keyBinds.create("decreaseBrightness", "b ,", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
+    await KeyBinds.create("decreaseBrightness", "b ,", (project: Project) => {
+      const selectedStageObject = project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
       for (const obj of selectedStageObject) {
         if (obj instanceof TextNode) {
           if (obj.color.a === 0) continue;
@@ -791,8 +782,8 @@ export class KeyBindsRegistrar {
       }
     });
 
-    await this.project.keyBinds.create("gradientColor", "; ,", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
+    await KeyBinds.create("gradientColor", "; ,", (project: Project) => {
+      const selectedStageObject = project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
       for (const obj of selectedStageObject) {
         if (obj instanceof TextNode) {
           if (obj.color.a === 0) continue;
@@ -802,8 +793,8 @@ export class KeyBindsRegistrar {
       }
     });
 
-    await this.project.keyBinds.create("changeColorHueUp", "A-S-arrowup", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
+    await KeyBinds.create("changeColorHueUp", "A-S-arrowup", true, (project: Project) => {
+      const selectedStageObject = project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
       for (const obj of selectedStageObject) {
         if (obj instanceof TextNode) {
           if (obj.color.a === 0) continue;
@@ -812,8 +803,8 @@ export class KeyBindsRegistrar {
         }
       }
     });
-    await this.project.keyBinds.create("changeColorHueDown", "A-S-arrowdown", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
+    await KeyBinds.create("changeColorHueDown", "A-S-arrowdown", true, (project: Project) => {
+      const selectedStageObject = project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
       for (const obj of selectedStageObject) {
         if (obj instanceof TextNode) {
           if (obj.color.a === 0) continue;
@@ -824,8 +815,8 @@ export class KeyBindsRegistrar {
         }
       }
     });
-    await this.project.keyBinds.create("changeColorHueMajorUp", "A-S-home", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
+    await KeyBinds.create("changeColorHueMajorUp", "A-S-home", true, (project: Project) => {
+      const selectedStageObject = project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
       for (const obj of selectedStageObject) {
         if (obj instanceof TextNode) {
           if (obj.color.a === 0) continue;
@@ -834,8 +825,8 @@ export class KeyBindsRegistrar {
         }
       }
     });
-    await this.project.keyBinds.create("changeColorHueMajorDown", "A-S-end", () => {
-      const selectedStageObject = this.project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
+    await KeyBinds.create("changeColorHueMajorDown", "A-S-end", true, (project: Project) => {
+      const selectedStageObject = project.stageManager.getStageObjects().filter((obj) => obj.isSelected);
       for (const obj of selectedStageObject) {
         if (obj instanceof TextNode) {
           if (obj.color.a === 0) continue;
@@ -847,49 +838,49 @@ export class KeyBindsRegistrar {
       }
     });
 
-    await this.project.keyBinds.create("toggleTextNodeSizeMode", "t t t", () => {
-      TextNodeSmartTools.ttt(this.project);
+    await KeyBinds.create("toggleTextNodeSizeMode", "t t t", true, (project: Project) => {
+      TextNodeSmartTools.ttt(project);
     });
 
-    await this.project.keyBinds.create("splitTextNodes", "k e i", () => {
-      TextNodeSmartTools.kei(this.project);
+    await KeyBinds.create("splitTextNodes", "k e i", true, (project: Project) => {
+      TextNodeSmartTools.kei(project);
     });
 
-    await this.project.keyBinds.create("mergeTextNodes", "r u a", () => {
-      TextNodeSmartTools.rua(this.project);
+    await KeyBinds.create("mergeTextNodes", "r u a", true, (project: Project) => {
+      TextNodeSmartTools.rua(project);
     });
 
-    await this.project.keyBinds.create("swapTextAndDetails", "e e e e e", () => {
-      TextNodeSmartTools.exchangeTextAndDetails(this.project);
+    await KeyBinds.create("swapTextAndDetails", "e e e e e", true, (project: Project) => {
+      TextNodeSmartTools.exchangeTextAndDetails(project);
     });
 
-    await this.project.keyBinds.create("switchStealthMode", "j a c k a l", () => {
+    await KeyBinds.create("switchStealthMode", "j a c k a l", true, () => {
       Settings.isStealthModeEnabled = !Settings.isStealthModeEnabled;
       toast(Settings.isStealthModeEnabled ? "已开启潜行模式" : "已关闭潜行模式");
     });
 
     // 去除选中文本节点开头的一个字符，并将移除的字符创建为新的文本节点放在左侧
-    await this.project.keyBinds.create("removeFirstCharFromSelectedTextNodes", "C-backspace", () => {
-      TextNodeSmartTools.removeFirstCharFromSelectedTextNodes(this.project);
+    await KeyBinds.create("removeFirstCharFromSelectedTextNodes", "C-backspace", true, (project: Project) => {
+      TextNodeSmartTools.removeFirstCharFromSelectedTextNodes(project);
     });
 
     // 去除选中文本节点结尾的一个字符，并将移除的字符创建为新的文本节点放在右侧
-    await this.project.keyBinds.create("removeLastCharFromSelectedTextNodes", "C-delete", () => {
-      TextNodeSmartTools.removeLastCharFromSelectedTextNodes(this.project);
+    await KeyBinds.create("removeLastCharFromSelectedTextNodes", "C-delete", true, (project: Project) => {
+      TextNodeSmartTools.removeLastCharFromSelectedTextNodes(project);
     });
 
     // 交换两个选中实体的位置
-    await this.project.keyBinds.create("swapTwoSelectedEntitiesPositions", "S-r", () => {
-      if (!this.project.keyboardOnlyEngine.isOpenning()) return;
+    await KeyBinds.create("swapTwoSelectedEntitiesPositions", "S-r", true, (project: Project) => {
+      if (!project.keyboardOnlyEngine.isOpenning()) return;
 
-      const selectedEntities = this.project.stageManager.getSelectedEntities();
+      const selectedEntities = project.stageManager.getSelectedEntities();
       // 只有当恰好选中两个实体时才执行交换
       if (selectedEntities.length !== 2) {
         return;
       }
 
       // 记录操作历史
-      this.project.historyManager.recordStep();
+      project.historyManager.recordStep();
 
       // 获取两个实体的碰撞箱外接矩形左上角位置
       const entity1 = selectedEntities[0];

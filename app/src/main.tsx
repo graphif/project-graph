@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import VConsole from "vconsole";
 import { URI } from "vscode-uri";
 import App from "./App";
+import { KeyBinds } from "./core/service/controlService/shortcutKeysEngine/KeyBinds";
 import { onOpenFile } from "./core/service/GlobalMenu";
 import "./css/index.css";
 
@@ -55,6 +56,7 @@ const el = document.getElementById("root")!;
     Tutorials.init(),
     UserScriptsManager.init(),
     UserState.init(),
+    KeyBinds.init(),
   ]);
   // 这些东西依赖上面的东西，所以单独一个Promise.all
   await Promise.all([loadLanguageFiles(), loadSyncModules()]);

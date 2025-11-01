@@ -1,3 +1,4 @@
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import KeyBind from "@/components/ui/key-bind";
@@ -10,9 +11,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { activeProjectAtom } from "@/state";
+import { KeyBinds } from "@/core/service/controlService/shortcutKeysEngine/KeyBinds";
 import Fuse from "fuse.js";
-import { useAtom } from "jotai";
 import {
   AppWindow,
   Brush,
@@ -37,7 +37,6 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export default function KeyBindsPage() {
-  const [activeProject] = useAtom(activeProjectAtom);
   const [data, setData] = useState<[string, string][]>([]);
   const [currentGroup, setCurrentGroup] = useState<string>("search");
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -48,17 +47,15 @@ export default function KeyBindsPage() {
   const { t: t2 } = useTranslation("keyBindsGroup");
 
   useEffect(() => {
-    if (activeProject) {
-      activeProject.keyBinds.entries().then((entries) => {
-        setData(entries);
-      });
-    }
-  }, [activeProject]);
+    KeyBinds.entries().then((entries) => {
+      setData(entries);
+    });
+  }, []);
 
   useEffect(() => {
     (async () => {
       fuse.current = new Fuse(
-        (await activeProject?.keyBinds.entries())!.map(
+        (await KeyBinds.entries())!.map(
           ([key, value]) =>
             ({
               key,
@@ -109,7 +106,7 @@ export default function KeyBindsPage() {
     keys.map((id) => (
       <Field
         key={id}
-        icon={<Keyboard />}
+        // icon={<Keyboard />}
         title={t(`${id}.title`, { defaultValue: id })}
         description={t(`${id}.description`, { defaultValue: "" })}
         className="border-accent border-b"
@@ -125,13 +122,13 @@ export default function KeyBindsPage() {
                 return item;
               }),
             );
-            activeProject?.keyBinds.set(id, value);
+            KeyBinds.set(id, value);
           }}
         />
       </Field>
     ));
 
-  return activeProject ? (
+  return (
     <div className="flex h-full">
       <Sidebar className="h-full overflow-auto">
         <SidebarContent>
@@ -199,7 +196,9 @@ export default function KeyBindsPage() {
           </>
         ) : currentGroup ? (
           <>
-            {t2(`${currentGroup}.description`, { defaultValue: "" })}
+            <Alert>
+              <AlertDescription>{t2(`${currentGroup}.description`, { defaultValue: "" })}</AlertDescription>
+            </Alert>
             {renderKeyFields(allGroups.find((g) => g.title === currentGroup)?.keys ?? [])}
           </>
         ) : (
@@ -209,8 +208,6 @@ export default function KeyBindsPage() {
         )}
       </div>
     </div>
-  ) : (
-    <Field color="warning" title="需要先打开一个工程文件才能编辑快捷键设置" />
   );
 }
 type ShortcutKeysGroup = {

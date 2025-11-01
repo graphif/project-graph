@@ -89,7 +89,7 @@ export default function KeyBind({
 
 export function RenderKey({ data }: { data: ReturnType<typeof parseEmacsKey>[number] }) {
   return (
-    <span className="not-first:before:content-[',_'] flex gap-1">
+    <span className="not-first:before:content-[',_'] inline-flex gap-1">
       <Modifiers modifiers={data} />
       {data.key.startsWith("<") ? <MouseButton key_={data.key} /> : data.key}
     </span>
