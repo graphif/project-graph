@@ -1,7 +1,7 @@
 import { Project, service } from "@/core/Project";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
+import { Rectangle, Line } from "@graphif/shapes";
 
 /**
  * 瞬间树形布局算法
@@ -228,8 +228,8 @@ export class AutoLayoutFastTree {
       const rect1 = Rectangle.getBoundingRectangle(group1.map((child) => this.getTreeBoundingRectangle(child)));
       const rect2 = Rectangle.getBoundingRectangle(group2.map((child) => this.getTreeBoundingRectangle(child)));
 
-      // 检查是否重叠
-      while (rect1.isCollideWithRectangle(rect2)) {
+      // 检查是否重叠或连线相交
+      while (this.hasOverlapOrLineIntersection(rootNode, group1, group2, dir1, dir2)) {
         // 确定强势方向
         const group1Size = group1.length;
         const group2Size = group2.length;
@@ -285,6 +285,202 @@ export class AutoLayoutFastTree {
         }
       }
     }
+  }
+
+  /**
+   * 检查两个方向子树群之间是否有矩形重叠或连线相交
+   * @param rootNode 根节点
+   * @param group1 第一个子树群
+   * @param group2 第二个子树群
+   */
+  private hasOverlapOrLineIntersection(
+    rootNode: ConnectableEntity,
+    group1: ConnectableEntity[],
+    group2: ConnectableEntity[],
+    dir1: "left" | "right" | "top" | "bottom",
+    dir2: "left" | "right" | "top" | "bottom",
+  ): boolean {
+    // 检查矩形重叠
+    const rect1 = Rectangle.getBoundingRectangle(group1.map((child) => this.getTreeBoundingRectangle(child)));
+    const rect2 = Rectangle.getBoundingRectangle(group2.map((child) => this.getTreeBoundingRectangle(child)));
+
+    if (rect1.isCollideWith(rect2)) {
+      return true;
+    }
+
+    // 根据方向参数进行特定的连线检测
+    const rootRect = rootNode.collisionBox.getRectangle();
+
+    // 1. 右侧和下侧节点群互相检测
+    if ((dir1 === "right" && dir2 === "bottom") || (dir1 === "bottom" && dir2 === "right")) {
+      // 确定哪组是右侧，哪组是下侧
+      const rightGroup = dir1 === "right" ? group1 : group2;
+      const bottomGroup = dir1 === "bottom" ? group1 : group2;
+      const rightRect = dir1 === "right" ? rect1 : rect2;
+      const bottomRect = dir1 === "bottom" ? rect1 : rect2;
+
+      // 获取右侧节点群最下方节点（数组最后一个元素）
+      if (rightGroup.length > 0 && bottomGroup.length > 0) {
+        const lastRightNode = rightGroup[rightGroup.length - 1];
+        const lastRightNodeRect = lastRightNode.collisionBox.getRectangle();
+
+        // 右侧节点群最下方节点的左边缘中心位置
+        const rightNodeLeftCenter = lastRightNodeRect.leftCenter.clone();
+
+        // 根节点的右侧中心位置
+        const rootRightCenter = rootRect.rightCenter.clone();
+
+        // 构造连线并检查是否与下侧节点群外接矩形重叠
+        const line1 = new Line(rootRightCenter, rightNodeLeftCenter);
+        if (line1.isCollideWithRectangle(bottomRect)) {
+          return true;
+        }
+
+        // 获取下方节点群最右侧节点
+        const lastBottomNode = bottomGroup[bottomGroup.length - 1];
+        const lastBottomNodeRect = lastBottomNode.collisionBox.getRectangle();
+
+        // 下方节点群最右侧节点的上中心位置
+        const bottomNodeTopCenter = lastBottomNodeRect.topCenter.clone();
+
+        // 根节点的下中心位置
+        const rootBottomCenter = rootRect.bottomCenter.clone();
+
+        // 构造连线并检查是否与右侧节点群外接矩形重叠
+        const line2 = new Line(rootBottomCenter, bottomNodeTopCenter);
+        if (line2.isCollideWithRectangle(rightRect)) {
+          return true;
+        }
+      }
+    }
+
+    // 2. 左侧和下侧节点群互相检测
+    else if ((dir1 === "left" && dir2 === "bottom") || (dir1 === "bottom" && dir2 === "left")) {
+      const leftGroup = dir1 === "left" ? group1 : group2;
+      const bottomGroup = dir1 === "bottom" ? group1 : group2;
+      const leftRect = dir1 === "left" ? rect1 : rect2;
+      const bottomRect = dir1 === "bottom" ? rect1 : rect2;
+
+      if (leftGroup.length > 0 && bottomGroup.length > 0) {
+        // 左侧最下方节点
+        const lastLeftNode = leftGroup[leftGroup.length - 1];
+        const lastLeftNodeRect = lastLeftNode.collisionBox.getRectangle();
+
+        // 左侧节点群最下方节点的右边缘中心位置
+        const leftNodeRightCenter = lastLeftNodeRect.rightCenter.clone();
+
+        // 根节点的左侧中心位置
+        const rootLeftCenter = rootRect.leftCenter.clone();
+
+        // 构造连线并检查是否与下侧节点群外接矩形重叠
+        const line1 = new Line(rootLeftCenter, leftNodeRightCenter);
+        if (line1.isCollideWithRectangle(bottomRect)) {
+          return true;
+        }
+
+        // 下方最左侧节点
+        const firstBottomNode = bottomGroup[0];
+        const firstBottomNodeRect = firstBottomNode.collisionBox.getRectangle();
+
+        // 下方节点群最左侧节点的上中心位置
+        const bottomNodeTopCenter = firstBottomNodeRect.topCenter.clone();
+
+        // 根节点的下中心位置
+        const rootBottomCenter = rootRect.bottomCenter.clone();
+
+        // 构造连线并检查是否与左侧节点群外接矩形重叠
+        const line2 = new Line(rootBottomCenter, bottomNodeTopCenter);
+        if (line2.isCollideWithRectangle(leftRect)) {
+          return true;
+        }
+      }
+    }
+
+    // 3. 左侧和上侧节点群互相检测
+    else if ((dir1 === "left" && dir2 === "top") || (dir1 === "top" && dir2 === "left")) {
+      const leftGroup = dir1 === "left" ? group1 : group2;
+      const topGroup = dir1 === "top" ? group1 : group2;
+      const leftRect = dir1 === "left" ? rect1 : rect2;
+      const topRect = dir1 === "top" ? rect1 : rect2;
+
+      if (leftGroup.length > 0 && topGroup.length > 0) {
+        // 左侧最上方节点
+        const firstLeftNode = leftGroup[0];
+        const firstLeftNodeRect = firstLeftNode.collisionBox.getRectangle();
+
+        // 左侧节点群最上方节点的右边缘中心位置
+        const leftNodeRightCenter = firstLeftNodeRect.rightCenter.clone();
+
+        // 根节点的左侧中心位置
+        const rootLeftCenter = rootRect.leftCenter.clone();
+
+        // 构造连线并检查是否与上侧节点群外接矩形重叠
+        const line1 = new Line(rootLeftCenter, leftNodeRightCenter);
+        if (line1.isCollideWithRectangle(topRect)) {
+          return true;
+        }
+
+        // 上方最左侧节点
+        const firstTopNode = topGroup[0];
+        const firstTopNodeRect = firstTopNode.collisionBox.getRectangle();
+
+        // 上方节点群最左侧节点的下中心位置
+        const topNodeBottomCenter = firstTopNodeRect.bottomCenter.clone();
+
+        // 根节点的上中心位置
+        const rootTopCenter = rootRect.topCenter.clone();
+
+        // 构造连线并检查是否与左侧节点群外接矩形重叠
+        const line2 = new Line(rootTopCenter, topNodeBottomCenter);
+        if (line2.isCollideWithRectangle(leftRect)) {
+          return true;
+        }
+      }
+    }
+
+    // 4. 右侧和上侧节点群互相检测
+    else if ((dir1 === "right" && dir2 === "top") || (dir1 === "top" && dir2 === "right")) {
+      const rightGroup = dir1 === "right" ? group1 : group2;
+      const topGroup = dir1 === "top" ? group1 : group2;
+      const rightRect = dir1 === "right" ? rect1 : rect2;
+      const topRect = dir1 === "top" ? rect1 : rect2;
+
+      if (rightGroup.length > 0 && topGroup.length > 0) {
+        // 右侧最上方节点
+        const firstRightNode = rightGroup[0];
+        const firstRightNodeRect = firstRightNode.collisionBox.getRectangle();
+
+        // 右侧节点群最上方节点的左边缘中心位置
+        const rightNodeLeftCenter = firstRightNodeRect.leftCenter.clone();
+
+        // 根节点的右侧中心位置
+        const rootRightCenter = rootRect.rightCenter.clone();
+
+        // 构造连线并检查是否与上侧节点群外接矩形重叠
+        const line1 = new Line(rootRightCenter, rightNodeLeftCenter);
+        if (line1.isCollideWithRectangle(topRect)) {
+          return true;
+        }
+
+        // 上方最右侧节点
+        const lastTopNode = topGroup[topGroup.length - 1];
+        const lastTopNodeRect = lastTopNode.collisionBox.getRectangle();
+
+        // 上方节点群最右侧节点的下中心位置
+        const topNodeBottomCenter = lastTopNodeRect.bottomCenter.clone();
+
+        // 根节点的上中心位置
+        const rootTopCenter = rootRect.topCenter.clone();
+
+        // 构造连线并检查是否与右侧节点群外接矩形重叠
+        const line2 = new Line(rootTopCenter, topNodeBottomCenter);
+        if (line2.isCollideWithRectangle(rightRect)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
   /**
    * 快速树形布局
