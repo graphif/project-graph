@@ -28,13 +28,20 @@ onboarding:
   next: 下一步
 
 welcome:
+  title: Project Graph
   slogan: 基于图论的嵌套网状思维导图软件
   newDraft: 新建文件
   openFile: 打开文件
   settings: 设置
   about: 关于
   website: 官网
-  title: Project Graph
+  empty:
+    title: 欢迎使用 Project Graph
+    description: 基于图论的嵌套网状思维导图软件
+    newDraft: 新建文件
+    openFile: 打开文件
+    tutorial: 新手引导
+
 
 globalMenu:
   file:

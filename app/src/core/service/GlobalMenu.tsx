@@ -913,22 +913,7 @@ export function GlobalMenu() {
             <MessageCircleWarning />
             {t("about.title")}
           </Item>
-          <Item
-            onClick={async () => {
-              toast.promise(
-                async () => {
-                  const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-2.0.prg");
-                  const dir = await tempDir();
-                  const path = await join(dir, `tutorial-${crypto.randomUUID()}.prg`);
-                  await writeFile(path, u8a);
-                  await onOpenFile(URI.file(path), "新手引导");
-                },
-                {
-                  loading: "正在下载新手引导文件",
-                },
-              );
-            }}
-          >
+          <Item onClick={onOpenTutorial}>
             <PersonStanding />
             {t("about.guide")}
           </Item>
@@ -1132,6 +1117,7 @@ export function GlobalMenu() {
                 <Item onClick={() => LoginWindow.open()}>login</Item>
                 <Item onClick={() => UserWindow.open()}>user</Item>
                 <Item onClick={() => OnboardingWindow.open()}>onboarding</Item>
+                <Item onClick={() => RecentFileManager.clearAllRecentFiles()}>清空recent files</Item>
               </SubContent>
             </Sub>
           </Content>
@@ -1285,4 +1271,19 @@ function getOneSelectedTextNodeWhenExportingPlainText(activeProject: Project | u
     toast.warning(`只能选择一个节点，你选中了${selectedEntities.length}个节点`);
     return null;
   }
+}
+
+export async function onOpenTutorial() {
+  toast.promise(
+    async () => {
+      const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-2.0.prg");
+      const dir = await tempDir();
+      const path = await join(dir, `tutorial-${crypto.randomUUID()}.prg`);
+      await writeFile(path, u8a);
+      await onOpenFile(URI.file(path), "新手引导");
+    },
+    {
+      loading: "正在下载新手引导文件",
+    },
+  );
 }
