@@ -1,8 +1,8 @@
-import { DestroyOptions, Graphics, Point, Rectangle } from "pixi.js";
+import { DestroyOptions, Graphics, Point, PointData, Rectangle } from "pixi.js";
 import { Project } from "../Project";
 import { Settings } from "../service/Settings";
 import { Section } from "./Section";
-import { AssociationMember } from "./abstract/Association";
+import { Association, AssociationMember } from "./abstract/Association";
 import { Entity } from "./abstract/Entity";
 
 export class RegionPicker extends Graphics {
@@ -18,7 +18,7 @@ export class RegionPicker extends Graphics {
 
     // 移动相关的状态
     let moving = false;
-    let movingEntity: Entity | null = null;
+    let movingEntity: Entity | (Association & { moveTo: (position: PointData) => void }) | null = null;
     const moveStartWorldPoint = new Point(0, 0);
     const moveStartEntityPoint = new Point(0, 0);
 
@@ -37,9 +37,9 @@ export class RegionPicker extends Graphics {
         clickedEntity.selected = true;
 
         // 开始移动
-        if (clickedEntity instanceof Entity) {
+        if (clickedEntity instanceof Entity || (clickedEntity instanceof Association && "moveTo" in clickedEntity)) {
           moving = true;
-          movingEntity = clickedEntity;
+          movingEntity = clickedEntity as any;
           moveStartWorldPoint.copyFrom(startPoint);
           moveStartEntityPoint.copyFrom(clickedEntity.position);
         }
@@ -81,7 +81,11 @@ export class RegionPicker extends Graphics {
       if (moving && movingEntity) {
         const world = project.viewport.toWorld(e.client);
         const pos = moveStartEntityPoint.add(world).subtract(moveStartWorldPoint);
-        movingEntity.position.copyFrom(pos);
+        if (movingEntity instanceof Association) {
+          movingEntity.moveTo(pos);
+        } else {
+          movingEntity.position.copyFrom(pos);
+        }
       }
 
       // 处理矩形选择逻辑

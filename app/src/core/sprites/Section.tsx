@@ -1,14 +1,5 @@
 import { serializable } from "@graphif/serializer";
-import {
-  Color,
-  ColorSource,
-  Container,
-  DestroyOptions,
-  FederatedPointerEvent,
-  Graphics,
-  Point,
-  PointData,
-} from "pixi.js";
+import { Color, ColorSource, Container, DestroyOptions, Graphics, PointData } from "pixi.js";
 import { Project } from "../Project";
 import { Association, AssociationMember } from "./abstract/Association";
 import { MyText } from "./MyText";
@@ -31,11 +22,6 @@ export class Section extends Association {
     this.refresh();
   }
 
-  private onPointerDownHandler: ((e: FederatedPointerEvent) => void) | null = null;
-  private onPointerUpHandler: ((e: FederatedPointerEvent) => void) | null = null;
-  private onPointerUpOutsideHandler: ((e: FederatedPointerEvent) => void) | null = null;
-  private onGlobalPointerMoveHandler: ((e: FederatedPointerEvent) => void) | null = null;
-
   constructor(
     protected readonly project: Project,
     {
@@ -56,40 +42,6 @@ export class Section extends Association {
     this.members = members;
     this.text = text;
     this.refresh();
-
-    let moving = false;
-    const lastPos = new Point();
-    this.onPointerDownHandler = (e) => {
-      console.log(1);
-      if (e.button !== 0) return;
-      moving = true;
-      const pos = this.project.viewport.toWorld(e.client);
-      lastPos.copyFrom(pos);
-    };
-    this.onPointerUpHandler = () => {
-      moving = false;
-    };
-    this.onPointerUpOutsideHandler = () => {
-      moving = false;
-    };
-    this.onGlobalPointerMoveHandler = (e) => {
-      if (moving) {
-        const pos = this.project.viewport.toWorld(e.client);
-        const movementX = pos.x - lastPos.x;
-        const movementY = pos.y - lastPos.y;
-        lastPos.copyFrom(pos);
-        // 移动所有members
-        for (const member of this.members) {
-          member.entity.position.x += movementX;
-          member.entity.position.y += movementY;
-        }
-        this.emit("update");
-      }
-    };
-    this.on("pointerdown", this.onPointerDownHandler)
-      .on("pointerup", this.onPointerUpHandler)
-      .on("pointerupoutside", this.onPointerUpOutsideHandler)
-      .on("globalpointermove", this.onGlobalPointerMoveHandler);
   }
 
   get source() {
@@ -160,15 +112,6 @@ export class Section extends Association {
       this._cachedTitleContainer = null;
     }
 
-    if (this.onPointerDownHandler) this.off("pointerdown", this.onPointerDownHandler);
-    if (this.onPointerUpHandler) this.off("pointerup", this.onPointerUpHandler);
-    if (this.onPointerUpOutsideHandler) this.off("pointerupoutside", this.onPointerUpOutsideHandler);
-    if (this.onGlobalPointerMoveHandler) this.off("globalpointermove", this.onGlobalPointerMoveHandler);
-    this.onPointerDownHandler = null;
-    this.onPointerUpHandler = null;
-    this.onPointerUpOutsideHandler = null;
-    this.onGlobalPointerMoveHandler = null;
-
     super.destroy(options);
   }
 
@@ -214,5 +157,15 @@ export class Section extends Association {
         point.y <= bounds.maxY
       )
     );
+  }
+
+  moveTo(position: PointData): void {
+    const offsetX = position.x - this.x;
+    const offsetY = position.y - this.y;
+    this.members.forEach((m) => {
+      m.entity.position.x += offsetX;
+      m.entity.position.y += offsetY;
+    });
+    this.emit("update");
   }
 }
