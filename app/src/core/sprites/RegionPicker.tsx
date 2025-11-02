@@ -16,19 +16,37 @@ export class RegionPicker extends Graphics {
     let pressed = false;
     let startPoint = new Point(0, 0);
 
+    // 移动相关的状态
+    let moving = false;
+    let movingEntity: Entity | null = null;
+    const moveStartWorldPoint = new Point(0, 0);
+    const moveStartEntityPoint = new Point(0, 0);
+
     this.onPointerDown = (e) => {
       if (e.button !== 0) return;
       startPoint = project.viewport.toWorld(e.client);
+
       // 点击选中节点
       const clickedEntity = project.getStageObjectAt(startPoint);
       if (clickedEntity) {
+        console.log("Clicked entity:", clickedEntity);
         // 先取消其他节点的选中状态
         project.stage.forEach((it) => {
           it.selected = false;
         });
         clickedEntity.selected = true;
+
+        // 开始移动
+        if (clickedEntity instanceof Entity) {
+          moving = true;
+          movingEntity = clickedEntity;
+          moveStartWorldPoint.copyFrom(startPoint);
+          moveStartEntityPoint.copyFrom(clickedEntity.position);
+        }
+
         return;
       }
+
       pressed = true;
       // 取消所有节点的选中状态
       project.stage.forEach((it) => {
@@ -38,6 +56,8 @@ export class RegionPicker extends Graphics {
 
     this.onPointerUp = (e) => {
       pressed = false;
+      moving = false;
+      movingEntity = null;
       this.clear();
       if (e.altKey) {
         // 给选中的节点创建Section
@@ -51,10 +71,20 @@ export class RegionPicker extends Graphics {
 
     this.onPointerUpOutside = () => {
       pressed = false;
+      moving = false;
+      movingEntity = null;
       this.clear();
     };
 
     this.onGlobalPointerMove = (e) => {
+      // 处理移动逻辑
+      if (moving && movingEntity) {
+        const world = project.viewport.toWorld(e.client);
+        const pos = moveStartEntityPoint.add(world).subtract(moveStartWorldPoint);
+        movingEntity.position.copyFrom(pos);
+      }
+
+      // 处理矩形选择逻辑
       if (pressed) {
         const currentPoint = project.viewport.toWorld(e.client);
         const rect = new Rectangle(

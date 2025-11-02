@@ -43,10 +43,7 @@ export abstract class Entity extends StageObject {
   constructor(project: Project) {
     super(project);
 
-    // HACK: 如果直接用event.movement处理移动可能会漂移，暂时没有找到原因
-    let moving = false;
     const startWorldPoint = new Point(0, 0);
-    const startPoint = new Point(0, 0);
     let linking = false;
     this.tempLineEdge = new TempLineEdge(this.project, {
       members: [new AssociationMember(this, "right")],
@@ -99,10 +96,7 @@ export abstract class Entity extends StageObject {
     this.onPointerDownHandler = (e) => {
       const world = this.project.viewport.toWorld(e.client);
       startWorldPoint.copyFrom(world);
-      startPoint.copyFrom(this.position);
-      if (e.button === 0) {
-        moving = true;
-      } else if (e.button === 2) {
+      if (e.button === 2) {
         linking = true;
         this.tempLineEdge!.endPoint.copyFrom(world);
         this.project.stage.push(this.tempLineEdge!);
@@ -110,7 +104,6 @@ export abstract class Entity extends StageObject {
     };
 
     this.onPointerUpHandler = (e: FederatedPointerEvent) => {
-      moving = false;
       const world = this.project.viewport.toWorld(e.client);
       if (e.button === 2 && world.equals(startWorldPoint) && !linking) {
         // 触发右键菜单
@@ -134,7 +127,6 @@ export abstract class Entity extends StageObject {
     };
 
     this.onPointerUpOutsideHandler = (e: FederatedPointerEvent) => {
-      moving = false;
       const world = this.project.viewport.toWorld(e.client);
       if (e.button === 2 && world.equals(startWorldPoint) && !linking) {
         // 触发右键菜单
@@ -158,11 +150,6 @@ export abstract class Entity extends StageObject {
     };
 
     this.onGlobalPointerMoveHandler = (e) => {
-      if (moving) {
-        const world = this.project.viewport.toWorld(e.client);
-        const pos = startPoint.add(world).subtract(startWorldPoint);
-        this.position.copyFrom(pos);
-      }
       if (linking) {
         const pos = this.project.viewport.toWorld(e.client);
         const bounds = this.getBounds();
