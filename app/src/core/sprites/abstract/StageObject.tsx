@@ -49,18 +49,18 @@ export abstract class StageObject extends LayoutContainer {
     this._selected = value;
   }
 
-  private onPointerEnter: ((e: any) => void) | null = null;
+  private onPointerMove: ((e: any) => void) | null = null;
   private onPointerLeave: ((e: any) => void) | null = null;
   private onPointerDown: (() => void) | null = null;
   private onUpdate: (() => void) | null = null;
 
   destroy(options?: DestroyOptions): void {
     // 移除所有事件监听器
-    if (this.onPointerEnter) {
-      this.off("pointerenter", this.onPointerEnter);
-    }
     if (this.onPointerLeave) {
       this.off("pointerleave", this.onPointerLeave);
+    }
+    if (this.onPointerMove) {
+      this.off("pointerenter", this.onPointerMove);
     }
     if (this.onPointerDown) {
       this.off("pointerdown", this.onPointerDown);
@@ -69,7 +69,7 @@ export abstract class StageObject extends LayoutContainer {
       this.off("update", this.onUpdate);
     }
 
-    this.onPointerEnter = null;
+    this.onPointerMove = null;
     this.onPointerLeave = null;
     this.onPointerDown = null;
     this.onUpdate = null;
@@ -88,12 +88,26 @@ export abstract class StageObject extends LayoutContainer {
   constructor(protected readonly project: Project) {
     super();
 
-    this.onPointerEnter = (e) => {
-      this.project.emit("pointer-enter-stage-object", this, e);
+    let hovered = false;
+    this.onPointerMove = (e) => {
+      const pos = this.project.viewport.toWorld(e.client);
+      if (!hovered && this.myContainsPoint(pos)) {
+        hovered = true;
+        this.emit("hover", e);
+        this.project.emit("pointer-enter-stage-object", this, e);
+      } else if (hovered && !this.myContainsPoint(pos)) {
+        hovered = false;
+        this.emit("unhover", e);
+        this.project.emit("pointer-leave-stage-object", this, e);
+      }
     };
-
     this.onPointerLeave = (e) => {
-      this.project.emit("pointer-leave-stage-object", this, e);
+      // 不用globalpointermove是因为可能有性能问题
+      if (hovered) {
+        hovered = false;
+        this.emit("unhover", e);
+        this.project.emit("pointer-leave-stage-object", this, e);
+      }
     };
 
     this.onPointerDown = () => {
@@ -108,7 +122,7 @@ export abstract class StageObject extends LayoutContainer {
       }
     };
 
-    this.on("pointerenter", this.onPointerEnter)
+    this.on("pointermove", this.onPointerMove)
       .on("pointerleave", this.onPointerLeave)
       .on("pointerdown", this.onPointerDown)
       .on("update", this.onUpdate);
