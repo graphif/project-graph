@@ -78,13 +78,13 @@ export class Camera {
     const targetLocation = this.location.clone();
     const rect = this.project.renderer.getCoverWorldRectangle();
     if (direction === Direction.Up) {
-      targetLocation.y -= rect.height * 1;
+      targetLocation.y -= rect.height * 0.5;
     } else if (direction === Direction.Down) {
-      targetLocation.y += rect.height * 1;
+      targetLocation.y += rect.height * 0.5;
     } else if (direction === Direction.Left) {
-      targetLocation.x -= rect.width * 1;
+      targetLocation.x -= rect.width * 0.5;
     } else if (direction === Direction.Right) {
-      targetLocation.x += rect.width * 1;
+      targetLocation.x += rect.width * 0.5;
     }
     // 生成接下来一些帧里的移动轨迹位置点。
     this.bombMove(targetLocation);

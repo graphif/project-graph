@@ -121,7 +121,6 @@ export const allKeyBinds: KeyBindItem[] = [
     onPress: (project) => {
       // if (!project!.keyboardOnlyEngine.isOpenning()) return;
       // project!.camera.zoomInByKeyboardPress();
-      console.log("[[[[");
       project!.camera.isStartZoomIn = true;
       project!.camera.addScaleFollowMouseLocationTime(1);
     },
