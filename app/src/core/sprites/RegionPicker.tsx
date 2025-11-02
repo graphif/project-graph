@@ -97,9 +97,9 @@ export class RegionPicker extends Graphics {
           Math.abs(currentPoint.x - startPoint.x),
           Math.abs(currentPoint.y - startPoint.y),
         );
-        const isWindowSelection = Settings.cadLikeSelection
-          ? startPoint.x < currentPoint.x
-          : startPoint.x > currentPoint.x;
+        const isWindowSelection =
+          (Settings.rectangleSelectWhenLeft && startPoint.x > currentPoint.x) ||
+          (!Settings.rectangleSelectWhenLeft && startPoint.x < currentPoint.x);
         this.clear();
         this.roundRect(rect.x, rect.y, rect.width, rect.height, 8 / project.viewport.scale.x);
         this.stroke({

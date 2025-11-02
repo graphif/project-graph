@@ -221,7 +221,6 @@ const categories = {
   // 🖱️ 交互与操作 - 用户最常调的
   interaction: {
     mouse: [
-      "cadLikeSelection",
       "mouseRightDragBackground",
       "mouseLeftMode",
       "enableDragAutoAlign",

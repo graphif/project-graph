@@ -148,5 +148,4 @@ export const settingsIcons = {
   maxFps: Gauge,
   minFps: Gauge,
   mouseTrail: LineSquiggle,
-  cadLikeSelection: Blend,
 };

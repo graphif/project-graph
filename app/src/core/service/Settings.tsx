@@ -151,7 +151,6 @@ export const settingsSchema = z.object({
   maxFps: z.number().min(1).max(360).int().default(60),
   minFps: z.number().min(1).max(360).int().default(30),
   mouseTrail: z.boolean().default(false),
-  cadLikeSelection: z.boolean().default(false),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

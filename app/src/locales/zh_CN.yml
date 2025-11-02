@@ -750,12 +750,6 @@ settings:
     title: 鼠标拖尾效果
     description: |
       在鼠标经过的位置留下拖尾，可能降低大脑负担
-  cadLikeSelection:
-    title: CAD 式框选
-    description: |
-      开启后，鼠标框选的行为将会反转：
-      向右框选为完全覆盖框选（窗口选择），向左框选为碰撞框选（交叉选择）
-      更符合 CAD 软件的操作习惯
 
 effects:
   CircleChangeRadiusEffect:
