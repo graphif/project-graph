@@ -70,6 +70,11 @@ on:
         description: Whether to include devtools in the build.
         required: false
         default: false
+      update_homebrew:
+        type: boolean
+        description: Whether to update Homebrew tap after release.
+        required: false
+        default: true
     secrets:
       TAURI_SIGNING_PRIVATE_KEY:
         description: Sign app binaries for updater support.
@@ -91,6 +96,9 @@ on:
         required: false
       GEMINI_API_KEY:
         description: Authenticate Google Gemini to generate changelog.
+        required: false
+      HOMEBREW_TAP_TOKEN:
+        description: "Token for triggering Homebrew tap updates."
         required: false
 
 jobs:
@@ -377,3 +385,60 @@ jobs:
           git add PKGBUILD .SRCINFO
           git commit -m "Bump version to ${{ inputs.app_version }}"
           git push origin master
+
+  update-homebrew-tap:
+    needs: publish-tauri
+    runs-on: ubuntu-latest
+    if: |
+      inputs.update_homebrew == true &&
+      (inputs.release_tag == 'nightly' || startsWith(inputs.release_tag, 'v'))
+    steps:
+      - name: Determine version and URL
+        id: homebrew_info
+        run: |
+          VERSION="${{ inputs.app_version }}"
+          TAG="${{ inputs.release_tag }}"
+          
+          # 使用 %20 编码空格
+          if [[ "$TAG" == "nightly" ]]; then
+            URL="https://github.com/${{ github.repository }}/releases/download/nightly/Project%20Graph_${VERSION}_universal.app.tar.gz"
+            EVENT_TYPE="nightly-published"
+          else
+            URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/Project%20Graph_${VERSION}_universal.app.tar.gz"
+            EVENT_TYPE="latest-published"
+            VERSION="${TAG}"
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "event_type=$EVENT_TYPE" >> $GITHUB_OUTPUT
+          
+          echo "Homebrew update info:"
+          echo "  Version: $VERSION"
+          echo "  URL: $URL"
+          echo "  Event Type: $EVENT_TYPE"
+
+      - name: Download and calculate SHA256
+        id: sha256
+        run: |
+          URL="${{ steps.homebrew_info.outputs.url }}"
+          echo "Downloading from: $URL"
+          
+          curl -L -o /tmp/app.tar.gz "$URL"
+          SHA256=$(shasum -a 256 /tmp/app.tar.gz | awk '{print $1}')
+          
+          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
+          echo "SHA256: $SHA256"
+
+      - name: Trigger Homebrew Tap Update
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          repository: uvuowh/homebrew-project-graph
+          event-type: ${{ steps.homebrew_info.outputs.event_type }}
+          client-payload: |
+            {
+              "version": "${{ steps.homebrew_info.outputs.version }}",
+              "url": "${{ steps.homebrew_info.outputs.url }}",
+              "sha256": "${{ steps.sha256.outputs.sha256 }}"
+            }
