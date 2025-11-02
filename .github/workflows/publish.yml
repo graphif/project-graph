@@ -250,13 +250,13 @@ jobs:
         if: matrix.platform == 'macos-latest'
         run: |
           cd app/src-tauri/target/*/release/bundle/macos
-          mv *.app.tar.gz "Project Graph_${{ inputs.app_version }}_universal.app.tar.gz"
-          mv *.app.tar.gz.sig "Project Graph_${{ inputs.app_version }}_universal.app.tar.gz.sig"
+          mv *.app.tar.gz "Project.Graph_${{ inputs.app_version }}_universal.app.tar.gz"
+          mv *.app.tar.gz.sig "Project.Graph_${{ inputs.app_version }}_universal.app.tar.gz.sig"
       - name: Linux - Rename rpm
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           cd app/src-tauri/target/release/bundle/rpm
-          mv *.rpm "Project Graph_${{ inputs.app_version }}_amd64.rpm"
+          mv *.rpm "Project.Graph_${{ inputs.app_version }}_amd64.rpm"
       - name: Linux / MacOS - Upload
         if: matrix.platform != 'windows-latest'
         run: |
@@ -399,12 +399,12 @@ jobs:
           VERSION="${{ inputs.app_version }}"
           TAG="${{ inputs.release_tag }}"
           
-          # 使用 %20 编码空格
+          # 使用实际的文件名格式（点号分隔）
           if [[ "$TAG" == "nightly" ]]; then
-            URL="https://github.com/${{ github.repository }}/releases/download/nightly/Project%20Graph_${VERSION}_universal.app.tar.gz"
+            URL="https://github.com/${{ github.repository }}/releases/download/nightly/Project.Graph_${VERSION}_universal.app.tar.gz"
             EVENT_TYPE="nightly-published"
           else
-            URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/Project%20Graph_${VERSION}_universal.app.tar.gz"
+            URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/Project.Graph_${VERSION}_universal.app.tar.gz"
             EVENT_TYPE="latest-published"
             VERSION="${TAG}"
           fi
@@ -424,7 +424,31 @@ jobs:
           URL="${{ steps.homebrew_info.outputs.url }}"
           echo "Downloading from: $URL"
           
-          curl -L -o /tmp/app.tar.gz "$URL"
+          # 添加重试机制和错误处理
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if curl -fL --retry 3 --retry-delay 5 -o /tmp/app.tar.gz "$URL"; then
+              echo "Download successful"
+              break
+            else
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              echo "Download failed, retry $RETRY_COUNT/$MAX_RETRIES"
+              if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+                echo "Error: Failed to download after $MAX_RETRIES attempts"
+                exit 1
+              fi
+              sleep 10
+            fi
+          done
+          
+          # 验证下载的文件
+          if [ ! -f /tmp/app.tar.gz ] || [ ! -s /tmp/app.tar.gz ]; then
+            echo "Error: Downloaded file is missing or empty"
+            exit 1
+          fi
+          
           SHA256=$(shasum -a 256 /tmp/app.tar.gz | awk '{print $1}')
           
           echo "sha256=$SHA256" >> $GITHUB_OUTPUT
