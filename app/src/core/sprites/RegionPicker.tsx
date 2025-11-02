@@ -21,6 +21,10 @@ export class RegionPicker extends Graphics {
       // 点击选中节点
       const clickedEntity = project.getStageObjectAt(startPoint);
       if (clickedEntity) {
+        // 先取消其他节点的选中状态
+        project.stage.forEach((it) => {
+          it.selected = false;
+        });
         clickedEntity.selected = true;
         return;
       }
