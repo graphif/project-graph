@@ -12,14 +12,14 @@ import { EdgeCollisionBoxGetter } from "@/core/stage/stageObject/association/Edg
 import { store } from "@/state";
 import { exit, writeStderr } from "@/utils/otherApi";
 import { isDesktop, isMobile, isWeb } from "@/utils/platform";
-import { serializable } from "@graphif/serializer";
+import { serializableFallback } from "@graphif/serializer";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { getMatches } from "@tauri-apps/plugin-cli";
 import { exists } from "@tauri-apps/plugin-fs";
 import "driver.js/dist/driver.css";
 import i18next from "i18next";
 import { Provider } from "jotai";
-import { Color, Container, ObservablePoint, Point } from "pixi.js";
+import { Color } from "pixi.js";
 import { createRoot } from "react-dom/client";
 import { initReactI18next } from "react-i18next";
 import { toast } from "sonner";
@@ -30,12 +30,7 @@ import { KeyBinds } from "./core/service/controlService/shortcutKeysEngine/KeyBi
 import { onOpenFile } from "./core/service/GlobalMenu";
 import "./css/index.css";
 
-serializable(Point, "x");
-serializable(Point, "y");
-serializable(ObservablePoint, "x");
-serializable(ObservablePoint, "y");
-serializable(Container, "position");
-serializable(Color, "value");
+serializableFallback(Color, "value");
 
 if (import.meta.env.DEV && isMobile) {
   new VConsole();

@@ -14,7 +14,14 @@ export function configureSerializer(
  */
 const serializableSymbol = Symbol("serializable");
 const lastSerializableIndexSymbol = Symbol("lastSerializableIndex");
-export const serializable = (target: any, key: string) => {
+
+/** 将属性和所在的类标记为可序列化 */
+export function serializable(target: any, key: string) {
+  const className =
+    getOriginalNameOf(target.constructor) === "Function"
+      ? target.name // 出问题了，直接用函数名
+      : getOriginalNameOf(target.constructor);
+
   if (!Reflect.hasMetadata(lastSerializableIndexSymbol, target)) {
     Reflect.defineMetadata(lastSerializableIndexSymbol, 0, target);
   }
@@ -24,8 +31,19 @@ export const serializable = (target: any, key: string) => {
     Reflect.getMetadata(lastSerializableIndexSymbol, target) + 1,
     target,
   );
-  classes.set(getOriginalNameOf(target.constructor), target.constructor);
-};
+  classes.set(className, target);
+  console.debug(`[Serializer] Registered class ${className}, property ${key}`);
+}
+
+const serializableFallbackProperties = new Set<string>();
+/** 给第三方库的类标记为可序列化 */
+export function serializableFallback(target: any, key: string) {
+  const className =
+    getOriginalNameOf(target.constructor) === "Function"
+      ? target.name // 出问题了，直接用函数名
+      : getOriginalNameOf(target.constructor);
+  serializableFallbackProperties.add(`${className}:${key}`);
+}
 
 const passExtraAtArg1Symbol = Symbol("passExtraAtArg1");
 export const passExtraAtArg1 = Reflect.metadata(passExtraAtArg1Symbol, true);
@@ -64,7 +82,8 @@ export function serialize(originalObj: any): any {
     } else if (obj === null) {
       return null;
     } else if (typeof obj === "object") {
-      const className = getOriginalNameOf(obj.constructor);
+      const className =
+        getOriginalNameOf(obj.constructor) === "Function" ? obj.constructor.name : getOriginalNameOf(obj.constructor);
       if (!className) {
         throw TypeError("[Serializer] Cannot find class name of", obj);
       }
@@ -74,13 +93,21 @@ export function serialize(originalObj: any): any {
       const result: any = {
         _: className,
       };
+
       let id: any;
-      for (const key in obj) {
-        if (!Reflect.hasMetadata(serializableSymbol, obj, key)) continue;
+      for (const key of getAllPropertyNames(obj)) {
+        console.debug(`[Serializer] Checking property ${key.toString()} of ${className}`);
+        if (
+          !Reflect.hasMetadata(serializableSymbol, obj, key) &&
+          !serializableFallbackProperties.has(`${className}:${key.toString()}`)
+        ) {
+          continue;
+        }
         if (Reflect.hasMetadata(idSymbol, obj, key)) {
           id = obj[key];
         }
-        result[key] = _serialize(obj[key], `${path}/${key}`);
+        console.debug(`[Serializer] Adding property ${key.toString()} of ${className}`);
+        result[key] = _serialize(obj[key], `${path}/${key.toString()}`);
       }
       if (id) {
         if (id2path.has(id)) {
@@ -189,4 +216,14 @@ function replaceRef(obj: any, refPathObj: any = obj): any {
     }
   }
   return obj;
+}
+
+function getAllPropertyNames(obj: any): (string | symbol)[] {
+  const props = new Set<string | symbol>();
+  let currentObj = obj;
+  while (currentObj && currentObj !== Object.prototype) {
+    Reflect.ownKeys(currentObj).forEach((key) => props.add(key));
+    currentObj = Object.getPrototypeOf(currentObj);
+  }
+  return Array.from(props);
 }
