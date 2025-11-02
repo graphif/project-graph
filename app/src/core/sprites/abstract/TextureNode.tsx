@@ -95,6 +95,10 @@ export abstract class TextureNode extends Entity {
     );
   }
 
+  /**
+   * 可选实现
+   * 双击时调用
+   */
   abstract edit(): void;
 
   set selected(value: boolean) {

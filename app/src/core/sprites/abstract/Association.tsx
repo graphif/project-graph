@@ -6,6 +6,7 @@ import { Color, DestroyOptions, ObservablePoint, Point } from "pixi.js";
 
 /**
  * 一切连接关系的抽象
+ * 可选实现: moveTo(position: PointData): void 如果实现了此方法，关系就可以被拖拽移动，但是移动的行为要自己定义
  */
 export abstract class Association extends StageObject {
   private handleMemberMoved = () => {

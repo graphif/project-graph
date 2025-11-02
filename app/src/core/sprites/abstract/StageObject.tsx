@@ -7,11 +7,11 @@ import { DestroyOptions, Graphics, PointData } from "pixi.js";
  * 一切舞台上的东西
  */
 export abstract class StageObject extends LayoutContainer {
+  /**
+   * 选中节点时会向viewport添加一个「SELECTION_OUTLINE_LABEL+uuid」作为标签的Graphics来渲染选中框
+   */
   static SELECTION_OUTLINE_LABEL = "selection-outline";
   static SELECTION_OUTLINE_PADDING = 8;
-  allowClickToSelect: boolean = true;
-
-  interactive = true;
 
   @id
   @serializable
@@ -21,6 +21,9 @@ export abstract class StageObject extends LayoutContainer {
   public get selected() {
     return this._selected;
   }
+  /**
+   * 如果选中状态变动，则在viewport上添加或移除选中框
+   */
   public set selected(value: boolean) {
     if (value === this._selected) return;
     if (value) {
@@ -52,9 +55,11 @@ export abstract class StageObject extends LayoutContainer {
 
   private onPointerMove: ((e: any) => void) | null = null;
   private onPointerLeave: ((e: any) => void) | null = null;
-  private onPointerDown: (() => void) | null = null;
   private onUpdate: (() => void) | null = null;
 
+  /**
+   * 移除所有事件监听器，并同时从渲染层和数据层中移除自己
+   */
   destroy(options?: DestroyOptions): void {
     // 移除所有事件监听器
     if (this.onPointerLeave) {
@@ -63,27 +68,30 @@ export abstract class StageObject extends LayoutContainer {
     if (this.onPointerMove) {
       this.off("pointerenter", this.onPointerMove);
     }
-    if (this.onPointerDown) {
-      this.off("pointerdown", this.onPointerDown);
-    }
     if (this.onUpdate) {
       this.off("update", this.onUpdate);
     }
 
     this.onPointerMove = null;
     this.onPointerLeave = null;
-    this.onPointerDown = null;
     this.onUpdate = null;
 
     super.destroy(options);
     this.project.stage = this.project.stage.filter((s) => s !== this);
   }
 
+  /**
+   * 仅从数据层中移除自己
+   */
   removeFromParent(): void {
     super.removeFromParent();
     this.project.stage = this.project.stage.filter((s) => s !== this);
   }
 
+  /**
+   * 可选实现
+   * 清空所有children,并重新添加children,应由属性的setter来执行
+   */
   refresh() {}
 
   constructor(protected readonly project: Project) {
@@ -104,15 +112,12 @@ export abstract class StageObject extends LayoutContainer {
     };
     this.onPointerLeave = (e) => {
       // 不用globalpointermove是因为可能有性能问题
+      // TODO: 需要测试一下性能
       if (hovered) {
         hovered = false;
         this.emit("unhover", e);
         this.project.emit("pointer-leave-stage-object", this, e);
       }
-    };
-
-    this.onPointerDown = () => {
-      if (!this.allowClickToSelect) return;
     };
 
     this.onUpdate = () => {
@@ -123,12 +128,12 @@ export abstract class StageObject extends LayoutContainer {
       }
     };
 
-    this.on("pointermove", this.onPointerMove)
-      .on("pointerleave", this.onPointerLeave)
-      .on("pointerdown", this.onPointerDown)
-      .on("update", this.onUpdate);
+    this.on("pointermove", this.onPointerMove).on("pointerleave", this.onPointerLeave).on("update", this.onUpdate);
   }
 
+  /**
+   * 获取在世界坐标系下的bounds
+   */
   getWorldBounds() {
     const bounds = super.getBounds();
     // 处理坐标系
@@ -140,6 +145,9 @@ export abstract class StageObject extends LayoutContainer {
     return bounds;
   }
 
+  /**
+   * 检测碰撞
+   */
   myContainsPoint(point: PointData) {
     const rect = this.getWorldBounds().rectangle;
     return rect.contains(point.x, point.y);

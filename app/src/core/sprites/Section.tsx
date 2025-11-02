@@ -4,6 +4,11 @@ import { Project } from "../Project";
 import { Association, AssociationMember } from "./abstract/Association";
 import { MyText } from "./MyText";
 
+/**
+ * 框
+ * 3.0版本从实体改为关系
+ * 目前是唯一的可以移动的关系
+ */
 export class Section extends Association {
   static PADDING = 16;
   static TITLE_SIZE = 24;
