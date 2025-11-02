@@ -47,3 +47,32 @@ jobs:
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+  update-homebrew:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Calculate SHA256
+        id: sha256
+        run: |
+          VERSION="${{ inputs.version }}"
+          URL="https://github.com/graphif/project-graph/releases/download/v${VERSION}/Project.Graph_${VERSION}_universal.app.tar.gz"
+          
+          curl -L -o /tmp/release.tar.gz "$URL"
+          SHA256=$(shasum -a 256 /tmp/release.tar.gz | awk '{print $1}')
+          
+          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
+          echo "url=$URL" >> $GITHUB_OUTPUT
+
+      - name: Trigger Homebrew Tap Update
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          repository: uvuowh/homebrew-project-graph
+          event-type: latest-published
+          client-payload: |
+            {
+              "version": "v${{ inputs.version }}",
+              "url": "${{ steps.sha256.outputs.url }}",
+              "sha256": "${{ steps.sha256.outputs.sha256 }}"
+            }
