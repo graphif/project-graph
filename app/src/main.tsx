@@ -19,7 +19,7 @@ import { exists } from "@tauri-apps/plugin-fs";
 import "driver.js/dist/driver.css";
 import i18next from "i18next";
 import { Provider } from "jotai";
-import { Color } from "pixi.js";
+import { Color, Container, ObservablePoint, Point } from "pixi.js";
 import { createRoot } from "react-dom/client";
 import { initReactI18next } from "react-i18next";
 import { toast } from "sonner";
@@ -31,6 +31,11 @@ import { onOpenFile } from "./core/service/GlobalMenu";
 import "./css/index.css";
 
 serializableFallback(Color, "value");
+serializableFallback(Container, "position");
+serializableFallback(Point, "x");
+serializableFallback(Point, "y");
+serializableFallback(ObservablePoint, "x");
+serializableFallback(ObservablePoint, "y");
 
 if (import.meta.env.DEV && isMobile) {
   new VConsole();

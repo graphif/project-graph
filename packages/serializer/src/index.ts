@@ -43,6 +43,7 @@ export function serializableFallback(target: any, key: string) {
       ? target.name // 出问题了，直接用函数名
       : getOriginalNameOf(target.constructor);
   serializableFallbackProperties.add(`${className}:${key}`);
+  classes.set(className, target);
 }
 
 const passExtraAtArg1Symbol = Symbol("passExtraAtArg1");
@@ -95,19 +96,23 @@ export function serialize(originalObj: any): any {
       };
 
       let id: any;
-      for (const key of getAllPropertyNames(obj)) {
-        console.debug(`[Serializer] Checking property ${key.toString()} of ${className}`);
+      for (const { name, source } of getAllProperties(obj)) {
+        const sourceName =
+          getOriginalNameOf(source.constructor) === "Function"
+            ? source.constructor.name
+            : getOriginalNameOf(source.constructor);
+        // console.debug(`[Serializer] Checking property ${name.toString()} of ${className} extended from ${sourceName}`);
         if (
-          !Reflect.hasMetadata(serializableSymbol, obj, key) &&
-          !serializableFallbackProperties.has(`${className}:${key.toString()}`)
+          !Reflect.hasMetadata(serializableSymbol, obj, name) &&
+          !serializableFallbackProperties.has(`${sourceName}:${name.toString()}`)
         ) {
           continue;
         }
-        if (Reflect.hasMetadata(idSymbol, obj, key)) {
-          id = obj[key];
+        if (Reflect.hasMetadata(idSymbol, obj, name)) {
+          id = obj[name];
         }
-        console.debug(`[Serializer] Adding property ${key.toString()} of ${className}`);
-        result[key] = _serialize(obj[key], `${path}/${key.toString()}`);
+        // console.debug(`[Serializer] Adding property ${name.toString()} of ${className} extended from ${sourceName}`);
+        result[name] = _serialize(obj[name], `${path}/${name.toString()}`);
       }
       if (id) {
         if (id2path.has(id)) {
@@ -218,11 +223,16 @@ function replaceRef(obj: any, refPathObj: any = obj): any {
   return obj;
 }
 
-function getAllPropertyNames(obj: any): (string | symbol)[] {
-  const props = new Set<string | symbol>();
+function getAllProperties(obj: any): { name: string | symbol; source: any }[] {
+  const props = new Set<{ name: string | symbol; source: any }>();
   let currentObj = obj;
   while (currentObj && currentObj !== Object.prototype) {
-    Reflect.ownKeys(currentObj).forEach((key) => props.add(key));
+    Reflect.ownKeys(currentObj).forEach((key) =>
+      props.add({
+        name: key,
+        source: currentObj,
+      }),
+    );
     currentObj = Object.getPrototypeOf(currentObj);
   }
   return Array.from(props);

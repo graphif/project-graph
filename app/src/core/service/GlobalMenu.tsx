@@ -1038,7 +1038,9 @@ export function GlobalMenu() {
                 </Item>
                 <Item
                   onClick={() => {
-                    console.log(serialize(activeProject!.stage));
+                    const s = serialize(activeProject!.stage);
+                    console.log(s);
+                    console.log(deserialize(s, activeProject!));
                   }}
                 >
                   serialize
