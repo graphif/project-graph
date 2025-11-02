@@ -1,5 +1,6 @@
 import { DestroyOptions, Graphics, Point, Rectangle } from "pixi.js";
 import { Project } from "../Project";
+import { Settings } from "../service/Settings";
 import { Section } from "./Section";
 import { AssociationMember } from "./abstract/Association";
 import { Entity } from "./abstract/Entity";
@@ -62,16 +63,18 @@ export class RegionPicker extends Graphics {
           Math.abs(currentPoint.x - startPoint.x),
           Math.abs(currentPoint.y - startPoint.y),
         );
-        const isCoverMode = startPoint.x > currentPoint.x && startPoint.y > currentPoint.y;
+        const isWindowSelection = Settings.cadLikeSelection
+          ? startPoint.x < currentPoint.x
+          : startPoint.x > currentPoint.x;
         this.clear();
         this.roundRect(rect.x, rect.y, rect.width, rect.height, 8 / project.viewport.scale.x);
         this.stroke({
           width: 1 / project.viewport.scale.x,
-          color: isCoverMode ? 0xffff00 : 0x00ff00,
+          color: isWindowSelection ? 0x90d5ff : 0x00ff00,
         });
         // 选中区域内的节点
         project.stage.forEach((it) => {
-          it.selected = rect[isCoverMode ? "containsRect" : "intersects"](it.getWorldBounds().rectangle);
+          it.selected = rect[isWindowSelection ? "containsRect" : "intersects"](it.getWorldBounds().rectangle);
         });
       }
     };
