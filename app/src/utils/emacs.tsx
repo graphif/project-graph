@@ -177,7 +177,7 @@ export function transEmacsKeyWinToMac(key: string): string {
  * @param events [KeyboardEvent, KeyboardEvent], 最大长度20，刚才触发的一系列事件
  * @returns 是否匹配上了
  */
-export function matchEmacsKey(key: string, events: (KeyboardEvent | MouseEvent | WheelEvent)[]): boolean {
+export function matchEmacsKeyPress(key: string, events: (KeyboardEvent | MouseEvent | WheelEvent)[]): boolean {
   const seq = key.trim().split(/\s+/);
   if (seq.length === 0 || events.length < seq.length) return false;
 

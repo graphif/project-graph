@@ -1,4 +1,4 @@
-import { matchEmacsKey, transEmacsKeyWinToMac } from "@/utils/emacs";
+import { matchEmacsKeyPress, transEmacsKeyWinToMac } from "@/utils/emacs";
 import { isMac } from "@/utils/platform";
 import { createStore } from "@/utils/store";
 import { Queue } from "@graphif/data-structures";
@@ -93,7 +93,7 @@ export namespace KeyBindsUI {
 
   function check() {
     for (const uiKeyBind of allUIKeyBinds) {
-      if (matchEmacsKey(uiKeyBind.key, userEventQueue.arrayList)) {
+      if (matchEmacsKeyPress(uiKeyBind.key, userEventQueue.arrayList)) {
         uiKeyBind.onPress();
         // 执行了快捷键之后，清空队列
         userEventQueue.clear();

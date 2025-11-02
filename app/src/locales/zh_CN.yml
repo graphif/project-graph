@@ -1051,6 +1051,11 @@ keyBinds:
     description: |
       主要用于关闭了键盘生长节点时触发的树形排布调整时使用
       可以通过此快捷键手动触发布局调整
+  gravityLayout:
+    title: 持续按下引力式布局
+    description: |
+      选中一堆连线的节点群后，持续按下该键可以进行引力式布局。
+      注意此键若想自定义，只能设置为单个非修饰键，否则可能有未知bug。zh
   setNodeTreeDirectionLeft:
     title: 设置当前节点的树形生长方向为向左
     description: |

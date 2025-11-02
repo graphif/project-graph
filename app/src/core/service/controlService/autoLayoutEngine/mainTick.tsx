@@ -24,11 +24,25 @@ function distanceToForce(distance: number): number {
 export class AutoLayout {
   constructor(private readonly project: Project) {}
 
+  private isGravityLayoutStart: boolean = false;
+
   tick() {
     // 引力式布局
-    if (this.project.controller.pressingKeySet.size === 1 && this.project.controller.pressingKeySet.has("g")) {
+    // if (this.project.controller.pressingKeySet.size === 1 && this.project.controller.pressingKeySet.has("g")) {
+    //   this.gravityLayoutTick();
+    // }
+
+    if (this.isGravityLayoutStart) {
       this.gravityLayoutTick();
     }
+  }
+
+  public setGravityLayoutStart() {
+    this.isGravityLayoutStart = true;
+  }
+
+  public setGravityLayoutEnd() {
+    this.isGravityLayoutStart = false;
   }
 
   /**

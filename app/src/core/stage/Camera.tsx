@@ -207,6 +207,12 @@ export class Camera {
     if (Settings.limitCameraInCycleSpace) {
       this.dealCycleSpace();
     }
+    if (this.isStartZoomIn) {
+      this.targetScale *= 1.05;
+    }
+    if (this.isStartZoomOut) {
+      this.targetScale *= 0.95;
+    }
     this.tickNumber++;
   }
   /**
@@ -221,15 +227,22 @@ export class Camera {
     this.allowScaleFollowMouseLocationTicks = ticks;
   }
 
-  zoomInByKeyboard() {
+  zoomInByKeyboardPress() {
     this.targetScale *= 1 + Settings.cameraKeyboardScaleRate;
-    this.allowScaleFollowMouseLocationTicks = this.tickNumber + 5 * 60;
+    this.addScaleFollowMouseLocationTime(5);
   }
 
-  zoomOutByKeyboard() {
+  zoomOutByKeyboardPress() {
     this.targetScale *= 1 - Settings.cameraKeyboardScaleRate;
-    this.allowScaleFollowMouseLocationTicks = this.tickNumber + 5 * 60;
+    this.addScaleFollowMouseLocationTime(5);
   }
+
+  public addScaleFollowMouseLocationTime(sec: number) {
+    this.allowScaleFollowMouseLocationTicks = this.tickNumber + sec * 60;
+  }
+
+  public isStartZoomIn: boolean = false;
+  public isStartZoomOut: boolean = false;
 
   /**
    * 处理循环空间

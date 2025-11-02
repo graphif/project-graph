@@ -34,7 +34,7 @@ interface KeyBindItem {
   id: string;
   defaultKey: string;
   onPress: (project?: Project) => void;
-
+  onRelease?: (project?: Project) => void;
   // 全局快捷键
   isGlobal?: boolean;
   // UI级别快捷键
@@ -119,16 +119,29 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "CameraScaleZoomIn",
     defaultKey: "[",
     onPress: (project) => {
-      if (!project!.keyboardOnlyEngine.isOpenning()) return;
-      project!.camera.zoomInByKeyboard();
+      // if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      // project!.camera.zoomInByKeyboardPress();
+      console.log("[[[[");
+      project!.camera.isStartZoomIn = true;
+      project!.camera.addScaleFollowMouseLocationTime(1);
+    },
+    onRelease: (project) => {
+      project!.camera.isStartZoomIn = false;
+      project!.camera.addScaleFollowMouseLocationTime(5);
     },
   },
   {
     id: "CameraScaleZoomOut",
     defaultKey: "]",
     onPress: (project) => {
-      if (!project!.keyboardOnlyEngine.isOpenning()) return;
-      project!.camera.zoomOutByKeyboard();
+      // if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      // project!.camera.zoomOutByKeyboardPress();
+      project!.camera.isStartZoomOut = true;
+      project!.camera.addScaleFollowMouseLocationTime(1);
+    },
+    onRelease: (project) => {
+      project!.camera.isStartZoomOut = false;
+      project!.camera.addScaleFollowMouseLocationTime(5);
     },
   },
 
@@ -870,6 +883,16 @@ export const allKeyBinds: KeyBindItem[] = [
     },
   },
   {
+    id: "gravityLayout",
+    defaultKey: "g",
+    onPress: (project) => {
+      project?.autoLayout.setGravityLayoutStart();
+    },
+    onRelease: (project) => {
+      project?.autoLayout.setGravityLayoutEnd();
+    },
+  },
+  {
     id: "setNodeTreeDirectionUp",
     defaultKey: "W W",
     onPress: (project) => {
@@ -1233,6 +1256,7 @@ export const allKeyBinds: KeyBindItem[] = [
     },
   },
 ];
+
 /**
  * 快捷键注册函数
  */
@@ -1249,9 +1273,18 @@ export class KeyBindsRegistrar {
       if (keyBind.isGlobal || keyBind.isUI) {
         continue;
       }
-      await this.project.keyBinds.create(keyBind.id, keyBind.defaultKey, () => {
-        keyBind.onPress(this.project);
-      });
+      await this.project.keyBinds.create(
+        keyBind.id,
+        keyBind.defaultKey,
+        () => {
+          keyBind.onPress(this.project);
+        },
+        keyBind.onRelease
+          ? () => {
+              keyBind.onRelease!(this.project);
+            }
+          : undefined,
+      );
     }
   }
 }
@@ -1263,4 +1296,15 @@ export function getKeyBindTypeById(id: string): "global" | "ui" | "project" {
     }
   }
   return "project";
+}
+
+export function isKeyBindHasRelease(id: string) {
+  for (const keyBind of allKeyBinds) {
+    if (keyBind.id === id) {
+      if (keyBind.onRelease) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
