@@ -378,6 +378,15 @@ settings:
     description: |
       当使用Ctrl+S快捷键手动保存文件时，自动清空操作历史记录。
       开启此选项可以减少内存占用并保持界面整洁。
+  historyManagerMode:
+    title: 历史记录管理器模式
+    description: |
+      选择历史记录的管理方式：
+      memoryEfficient - 内存高效模式，使用增量存储，省内存但可能在撤销/重做时稍慢
+      timeEfficient - 时间高效模式，使用完整快照存储，操作响应快但可能占用更多内存
+    options:
+      memoryEfficient: 内存高效模式
+      timeEfficient: 时间高效模式
   autoBackup:
     title: 开启自动备份
     description: |

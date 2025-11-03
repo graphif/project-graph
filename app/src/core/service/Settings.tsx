@@ -155,6 +155,7 @@ export const settingsSchema = z.object({
   githubUser: z.string().default(""),
   theme: z.string().default("dark-blue"),
   telemetry: z.boolean().default(true),
+  historyManagerMode: z.union([z.literal("memoryEfficient"), z.literal("timeEfficient")]).default("timeEfficient"),
   isStealthModeEnabled: z.boolean().default(false),
   stealthModeScopeRadius: z.number().min(10).max(500).int().default(150),
   clearHistoryWhenManualSave: z.boolean().default(true),

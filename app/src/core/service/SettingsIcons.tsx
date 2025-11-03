@@ -153,5 +153,6 @@ export const settingsIcons = {
   isStealthModeEnabled: Crosshair,
   stealthModeScopeRadius: ScanEye,
   clearHistoryWhenManualSave: Undo,
+  historyManagerMode: Undo,
   soundPitchVariationRange: ListMusic,
 };

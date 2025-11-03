@@ -273,7 +273,7 @@ const categories = {
     gamepad: ["gamepadDeadzone"],
   },
   performance: {
-    memory: ["historySize", "clearHistoryWhenManualSave"],
+    memory: ["historySize", "clearHistoryWhenManualSave", "historyManagerMode"],
     cpu: ["autoRefreshStageByMouseAction"],
     render: [
       "isPauseRenderWhenManipulateOvertime",
