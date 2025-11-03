@@ -973,6 +973,7 @@ export const allKeyBinds: KeyBindItem[] = [
       if (selectedImageNodes.length > 0) {
         toast(`已反转 ${selectedImageNodes.length} 张图片的颜色`);
       }
+      project?.historyManager.recordStep();
     },
   },
 

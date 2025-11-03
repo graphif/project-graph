@@ -124,6 +124,7 @@ export class ImageNode extends ConnectableEntity {
   /**
    * 反转图片颜色
    * 将图片的RGB值转换为互补色（255-R, 255-G, 255-B）
+   * 并将反色后的图片数据保存到project.attachments中，实现持久化存储
    */
   reverseColors() {
     if (!this.bitmap) return;
@@ -155,11 +156,19 @@ export class ImageNode extends ConnectableEntity {
     // 将修改后的图像数据绘制回canvas
     ctx.putImageData(imageData, 0, 0);
 
-    // 创建新的ImageBitmap
+    // 创建新的ImageBitmap并保存到attachments中
     createImageBitmap(imageData).then((newBitmap) => {
       this.bitmap = newBitmap;
-      // 记录操作历史
-      this.project.historyManager.recordStep();
+
+      // 将canvas转换为Blob并保存到project.attachments中
+      canvas.toBlob((blob) => {
+        if (blob) {
+          // 创建新的attachmentId并替换原有数据
+          const newAttachmentId = this.project.addAttachment(blob);
+          // 更新当前节点的attachmentId
+          this.attachmentId = newAttachmentId;
+        }
+      }, "image/png");
     });
   }
 }
