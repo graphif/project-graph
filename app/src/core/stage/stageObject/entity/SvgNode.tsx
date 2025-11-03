@@ -96,8 +96,9 @@ export class SvgNode extends ConnectableEntity {
   /**
    * 修改SVG内容中的颜色
    * @param newColor 新颜色
+   * 并将修改后的SVG内容保存到project.attachments中，实现持久化存储
    */
-  async changeColor(newColor: Color) {
+  async changeColor(newColor: Color, mode: "fill" | "stroke" = "fill") {
     // 先释放原来的objecturl
     URL.revokeObjectURL(this.image.src);
     this.color = newColor;
@@ -107,10 +108,23 @@ export class SvgNode extends ConnectableEntity {
     if (!svgCode) {
       return;
     }
-    // 替换所有currentColor
-    const newSvgCode = svgCode.replace(/currentColor/g, hexColor);
-    // 重新创建image对象
+    let newSvgCode = svgCode;
+    if (mode === "fill") {
+      // 替换所有fill="xxxx"格式为fill="新颜色"
+      newSvgCode = svgCode.replace(/fill="[^"]*"/g, `fill="${hexColor}"`);
+    } else if (mode === "stroke") {
+      // 替换所有stroke="xxxx"格式为stroke="新颜色"
+      newSvgCode = svgCode.replace(/stroke="[^"]*"/g, `stroke="${hexColor}"`);
+    }
+    // 创建新的Blob
     const newBlob = new Blob([newSvgCode], { type: "image/svg+xml" });
+
+    // 将修改后的SVG内容保存到project.attachments中，实现持久化存储
+    const newAttachmentId = this.project.addAttachment(newBlob);
+    // 更新当前节点的attachmentId
+    this.attachmentId = newAttachmentId;
+
+    // 重新创建image对象
     const newUrl = URL.createObjectURL(newBlob);
     this.image = new Image();
     this.image.src = newUrl;
