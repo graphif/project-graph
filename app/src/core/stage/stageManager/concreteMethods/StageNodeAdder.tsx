@@ -235,7 +235,7 @@ export class NodeAdder {
           if (!endNode) {
             endNode = createNodeByName(endName);
           }
-          this.project.stageManager.connectEntity(startNode, endNode);
+          this.project.nodeConnector.connectEntityFast(startNode, endNode);
         } else {
           // 连线上有文字
           // 解析
@@ -276,13 +276,7 @@ export class NodeAdder {
             // 临时创建一下
             startNode = createNodeByName(startName);
           }
-          this.project.stageManager.connectEntity(startNode, endNode);
-          // 在线上填写文字
-          const edge = this.project.graphMethods.getEdgeFromTwoEntity(startNode, endNode);
-          if (edge === null) {
-            throw new Error(`解析时出现错误: "${line}"，找不到对应的连线`);
-          }
-          edge.rename(edgeText);
+          this.project.nodeConnector.connectEntityFast(startNode, endNode, edgeText);
         }
       } else {
         // 这一行是一个节点行
@@ -332,7 +326,7 @@ export class NodeAdder {
       if (nodeStack.peek()) {
         nodeStack.push(node, indent);
         const fatherNode = nodeStack.unsafeGet(nodeStack.length - 2);
-        this.project.stageManager.connectEntity(fatherNode, node);
+        this.project.nodeConnector.connectEntityFast(fatherNode, node);
       }
     }
   }

@@ -64,6 +64,17 @@ export class NodeConnector {
     this.project.stageManager.updateReferences();
   }
 
+  connectEntityFast(fromNode: ConnectableEntity, toNode: ConnectableEntity, text: string = ""): void {
+    const newEdge = new LineEdge(this.project, {
+      associationList: [fromNode, toNode],
+      text,
+      targetRectangleRate: new Vector(0.5, 0.5),
+      sourceRectangleRate: new Vector(0.5, 0.5),
+    });
+
+    this.project.stageManager.add(newEdge);
+  }
+
   addCrEdge(fromNode: ConnectableEntity, toNode: ConnectableEntity): void {
     if (!this.isConnectable(fromNode, toNode)) {
       return;
