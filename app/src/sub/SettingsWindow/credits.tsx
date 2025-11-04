@@ -18,6 +18,8 @@ const donations: DonationData[] = [
   // { user: "MacBook", note: "littlefean", amount: -7599.2 },
   { user: "域名 project-graph.top", note: "zty012", amount: -13.66 },
   // 以下为捐赠用户
+  { user: "沐影", note: "感谢大佬的软件，很好用", amount: 20 },
+  { user: "", note: "", amount: 6 },
   { user: "Clay", note: "支持开源，希望PG走的更远", amount: 50 },
   { user: "闪光的波动", note: "既然有okk打对勾，怎么能没有一个err来打叉呢", amount: 6 },
   { user: "云深不知处", note: "很棒的软件，非常的帅希望能走更远", amount: 20 },
