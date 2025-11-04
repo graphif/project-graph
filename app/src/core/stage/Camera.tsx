@@ -183,13 +183,10 @@ export class Camera {
     }
 
     // 计算动力
-    const power = this.accelerateCommander
-      /** 摄像机 >1放大 <1缩小，为了让放大的时候移动速度慢，所以取倒数 */
-      .multiply(Settings.moveAmplitude * (1 / this.currentScale));
-
-    // if (isFastMovingMode) {
-    //   power = power.multiply(10);
-    // }
+    /** 摄像机 >1放大 <1缩小，为了让放大的时候移动速度慢，所以取倒数 */
+    // 为了加强宏观快速移动，微观慢速移动的特性，动力计算公式再取了一个平方
+    let power = this.accelerateCommander.multiply(Settings.moveAmplitude * (1 / this.currentScale) ** 2);
+    power = power.limitX(-300, 300).limitY(-300, 300);
 
     // 速度 = 速度 + 加速度（动力+摩擦力）
     this.speed = this.speed.add(power).add(friction);
