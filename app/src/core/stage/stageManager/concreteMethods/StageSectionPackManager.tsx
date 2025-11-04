@@ -6,8 +6,12 @@ import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
+import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { toast } from "sonner";
 import { v4 } from "uuid";
+import { Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 
 /**
  * 管理所有东西进出StageSection的逻辑
@@ -283,6 +287,78 @@ export class SectionPackManager {
     this.project.stageManager.add(section);
     for (const fatherSection of firstParents) {
       this.project.stageManager.goInSection([section], fatherSection);
+    }
+  }
+
+  /**
+   * 从框选区域创建Section，并在左上角和右下角添加质点
+   */
+  createSectionFromSelectionRectangle(): void {
+    const rectangleSelect = this.project.rectangleSelect;
+    const selectionRectangle = rectangleSelect.getRectangle();
+
+    if (!selectionRectangle) {
+      return;
+    }
+
+    // 创建空的Section
+    const collisionBox = new CollisionBox([selectionRectangle.clone()]);
+    const section = new Section(this.project, {
+      text: "section",
+      collisionBox: collisionBox,
+      children: [],
+      isCollapsed: false,
+      isHidden: false,
+    });
+
+    // 创建左上角和右下角的质点
+    const radius = ConnectPoint.CONNECT_POINT_SHRINK_RADIUS;
+
+    // 左上角质点
+    const topLeftLocation = selectionRectangle.location.clone();
+    const topLeftCollisionBox = new CollisionBox([new Rectangle(topLeftLocation, Vector.same(radius * 2))]);
+    const topLeftPoint = new ConnectPoint(this.project, {
+      collisionBox: topLeftCollisionBox,
+    });
+
+    // 右下角质点
+    const bottomRightLocation = selectionRectangle.location
+      .clone()
+      .add(new Vector(selectionRectangle.size.x - radius * 2, selectionRectangle.size.y - radius * 2));
+    const bottomRightCollisionBox = new CollisionBox([new Rectangle(bottomRightLocation, Vector.same(radius * 2))]);
+    const bottomRightPoint = new ConnectPoint(this.project, {
+      collisionBox: bottomRightCollisionBox,
+    });
+
+    // 将质点添加到舞台
+    this.project.stageManager.add(topLeftPoint);
+    this.project.stageManager.add(bottomRightPoint);
+
+    // 将Section添加到舞台
+    this.project.stageManager.add(section);
+    // 重命名 Section
+    // 此处未生效，以后再排查
+    // setTimeout(() => {
+    //   this.project.stageUtils.replaceAutoNameTemplate(Settings.autoNamerSectionTemplate, section);
+    // });
+
+    // 将质点放入Section
+    this.project.stageManager.goInSection([topLeftPoint, bottomRightPoint], section);
+
+    // 清空矩形框
+    rectangleSelect.shutDown();
+
+    // 记录历史步骤
+    this.project.historyManager.recordStep();
+  }
+
+  /**
+   * 将选中的实体打包成Section
+   */
+  packSelectedEntitiesToSection(): void {
+    const selectedEntities = this.project.stageManager.getEntities().filter((entity) => entity.isSelected);
+    if (selectedEntities.length > 0) {
+      this.packEntityToSection(selectedEntities);
     }
   }
 
