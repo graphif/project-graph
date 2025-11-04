@@ -961,6 +961,11 @@ export const allKeyBinds: KeyBindItem[] = [
     onPress: (project) => TextNodeSmartTools.okk(project!),
   },
   {
+    id: "toggleCheckErrorOnTextNodes",
+    defaultKey: "e r r",
+    onPress: (project) => TextNodeSmartTools.err(project!),
+  },
+  {
     id: "reverseImageColors",
     defaultKey: "r r r",
     onPress: (project) => {

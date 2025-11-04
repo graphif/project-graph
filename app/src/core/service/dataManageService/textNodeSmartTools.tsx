@@ -427,15 +427,39 @@ export namespace TextNodeSmartTools {
     }
   }
 
+  const specialColorList = [new Color(59, 114, 60), new Color(61, 10, 11)];
+  const specialCharPrefix = ["✅", "❌"];
+
   export function okk(project: Project) {
     const selectedTextNodes = project.stageManager.getSelectedEntities().filter((node) => node instanceof TextNode);
     for (const node of selectedTextNodes) {
-      if (node.color.equals(new Color(59, 114, 60))) {
-        node.rename(node.text.replace("✅ ", ""));
+      if (specialColorList.some((value) => value.equals(node.color))) {
         node.color = Color.Transparent;
       } else {
-        node.rename("✅ " + node.text);
         node.color = new Color(59, 114, 60);
+      }
+      if (specialCharPrefix.some((value) => node.text.startsWith(value + " "))) {
+        node.rename(node.text.slice(2));
+      } else {
+        node.rename("✅ " + node.text);
+      }
+      project.controllerUtils.finishChangeTextNode(node);
+    }
+    project.stageManager.updateReferences();
+  }
+
+  export function err(project: Project) {
+    const selectedTextNodes = project.stageManager.getSelectedEntities().filter((node) => node instanceof TextNode);
+    for (const node of selectedTextNodes) {
+      if (specialColorList.some((value) => value.equals(node.color))) {
+        node.color = Color.Transparent;
+      } else {
+        node.color = new Color(61, 10, 11);
+      }
+      if (specialCharPrefix.some((value) => node.text.startsWith(value + " "))) {
+        node.rename(node.text.slice(2));
+      } else {
+        node.rename("❌ " + node.text);
       }
       project.controllerUtils.finishChangeTextNode(node);
     }
