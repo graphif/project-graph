@@ -129,8 +129,11 @@ export class Camera {
     }
 
     // 回弹效果
-    if (this.currentScale < 0.0005) {
-      this.targetScale = 0.001;
+    // if (this.currentScale < 0.001) {
+    //   this.targetScale = 0.005;
+    // }
+    if (this.currentScale < 0.0000000001) {
+      this.targetScale = 0.0000000002;
     }
     // 彩蛋
     if (this.currentScale > 100) {
@@ -294,7 +297,9 @@ export class Camera {
       );
     }
     // 性能优化之，将缩放小数点保留四位
-    newCurrentScale = parseFloat(newCurrentScale.toFixed(4));
+    if (this.currentScale > 0.01) {
+      newCurrentScale = parseFloat(newCurrentScale.toFixed(4));
+    }
     const diff = newCurrentScale / this.currentScale;
     this.currentScale = newCurrentScale;
 
