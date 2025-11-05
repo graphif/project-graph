@@ -70,7 +70,7 @@ export const ProjectTabs = memo(function ProjectTabs({
     <div
       ref={tabsContainerRef}
       className={cn(
-        "scrollbar-hide z-10 flex h-6 gap-1 overflow-x-auto whitespace-nowrap hover:opacity-100",
+        "scrollbar-hide z-10 flex h-4 overflow-x-auto whitespace-nowrap hover:opacity-100 sm:h-6 sm:gap-1",
         isClassroomMode && "opacity-0",
         ignoreMouseEvents && "pointer-events-none",
       )}
@@ -80,7 +80,7 @@ export const ProjectTabs = memo(function ProjectTabs({
         <Button
           key={project.uri.toString()}
           className={cn(
-            "hover:bg-primary/20 outline-inset h-full cursor-pointer px-2 hover:opacity-100",
+            "hover:bg-primary/20 outline-inset h-full cursor-pointer rounded-none px-2 hover:opacity-100 sm:rounded-sm",
             activeProject?.uri.toString() === project.uri.toString() ? "bg-primary/70" : "bg-accent opacity-70",
           )}
           onMouseDown={(e) => {

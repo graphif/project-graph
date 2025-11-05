@@ -351,21 +351,27 @@ export default function App() {
 
   return (
     <div
-      className="bg-stage-background relative flex h-full w-full flex-col gap-2 p-2"
+      className="bg-stage-background relative flex h-full w-full flex-col overflow-clip sm:gap-2 sm:p-2"
       onContextMenu={(e) => e.preventDefault()}
     >
       {/* 菜单 | 标签页 | ...移动窗口区域... | 窗口控制按钮 */}
       <div
         className={cn(
-          "z-10 flex h-9 gap-2 transition-all hover:opacity-100",
+          "z-10 flex h-4 transition-all hover:opacity-100 sm:h-9 sm:gap-2",
           isClassroomMode && "opacity-0",
           ignoreMouseEvents && "pointer-events-none",
         )}
       >
+        <div
+          className="hover:bg-primary/25 h-full min-w-6 cursor-grab transition-colors active:cursor-grabbing sm:hidden"
+          data-tauri-drag-region
+        />
         {isMac && <WindowButtons />}
-        {/* <div className=" flex h-8 shrink-0 items-center overflow-hidden rounded-xl border"></div> */}
         <GlobalMenu />
-        <div className="h-full flex-1 cursor-grab active:cursor-grabbing" data-tauri-drag-region></div>
+        <div
+          className="hover:bg-primary/25 h-full flex-1 cursor-grab transition-colors hover:*:opacity-100 active:cursor-grabbing sm:rounded-sm sm:hover:border"
+          data-tauri-drag-region
+        />
         {!isMac && <WindowButtons />}
       </div>
 
@@ -437,24 +443,24 @@ function WindowButtons() {
   };
 
   return (
-    <div className="bg-background shadow-xs flex h-full items-center rounded-md border">
+    <div className="bg-background shadow-xs flex h-full items-center sm:rounded-md sm:border">
       {isClickThroughEnabled && <span className="text-destructive!">Alt + 2关闭窗口穿透点击</span>}
       {isMac ? (
-        <span className="flex px-2">
+        <span className="flex *:flex *:size-3 sm:px-2 sm:*:m-1">
           <div
-            className="m-1 flex size-3 cursor-pointer items-center justify-center rounded-full bg-red-400 text-transparent hover:scale-110 hover:text-red-800"
+            className="hidden cursor-pointer items-center justify-center rounded-full bg-red-400 text-transparent hover:scale-110 hover:text-red-800"
             onClick={() => getCurrentWindow().close()}
           >
             <X strokeWidth={3} size={10} />
           </div>
           <div
-            className="m-1 flex size-3 cursor-pointer items-center justify-center rounded-full bg-yellow-400 text-transparent hover:scale-110 hover:text-yellow-800"
+            className="hidden cursor-pointer items-center justify-center rounded-full bg-yellow-400 text-transparent hover:scale-110 hover:text-yellow-800 sm:block"
             onClick={() => getCurrentWindow().minimize()}
           >
             <Minus strokeWidth={3} size={10} />
           </div>
           <div
-            className="m-1 flex size-3 cursor-pointer items-center justify-center rounded-full bg-green-400 text-transparent hover:scale-110 hover:text-green-800"
+            className="hidden cursor-pointer items-center justify-center rounded-full bg-green-400 text-transparent hover:scale-110 hover:text-green-800 sm:block"
             onClick={() => {
               getCurrentWindow()
                 .isFullscreen()
@@ -464,7 +470,7 @@ function WindowButtons() {
             <ChevronsLeftRight strokeWidth={3} size={10} className="rotate-45" />
           </div>
           <div
-            className="m-1 flex size-3 cursor-pointer items-center justify-center rounded-full bg-blue-400 text-blue-800 hover:scale-110"
+            className="cursor-pointer items-center justify-center rounded-full bg-blue-400 text-blue-800 hover:scale-110"
             onClick={async (e) => {
               e.stopPropagation();
               checkoutWindowsAlwaysTop();

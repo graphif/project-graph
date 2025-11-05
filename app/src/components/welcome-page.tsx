@@ -43,17 +43,20 @@ export default function WelcomePage() {
 
   return (
     <div className="flex h-full w-full items-center justify-center bg-[var(--stage-background)]">
-      <div className="flex flex-col gap-8">
-        <div className="flex flex-col gap-2">
+      <div className="m-2 flex flex-col p-4 sm:gap-8">
+        {/* 顶部标题区域 */}
+        <div className="flex flex-col sm:gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-3xl">{t("title")}</span>
-            <span className="rounded-lg px-2 py-1 text-sm opacity-50 ring">{appVersion}</span>
+            <span className="sm:text-3xl">{t("title")}</span>
+            <span className="hidden opacity-50 sm:inline sm:rounded-lg sm:px-2 sm:py-1 md:text-sm">{appVersion}</span>
           </div>
-          <div className="text-lg opacity-50">{t("slogan")}</div>
+          <div className="hidden text-xs opacity-50 sm:block sm:text-lg">{t("slogan")}</div>
         </div>
-        <div className="flex gap-16">
-          <div className="flex flex-col gap-8">
-            <div className="grid grid-cols-2 grid-rows-2 gap-2 gap-x-4 *:flex *:w-max *:cursor-pointer *:items-center *:gap-2 *:hover:opacity-75 *:active:scale-90">
+        {/* 底部区域 */}
+        <div className="flex sm:gap-16">
+          <div className="flex flex-col sm:gap-8">
+            {/* 常用操作 宫格区 */}
+            <div className="grid grid-cols-2 grid-rows-2 *:flex *:w-max *:cursor-pointer *:items-center *:gap-2 *:hover:opacity-75 *:active:scale-90 sm:gap-2 sm:gap-x-4">
               <div
                 onClick={() => {
                   toast.promise(
@@ -71,27 +74,27 @@ export default function WelcomePage() {
                 }}
               >
                 <PersonStanding />
-                <span>{t("newUserGuide")}</span>
+                <span className="hidden sm:inline">{t("newUserGuide")}</span>
               </div>
               <div onClick={onNewDraft}>
                 <FilePlus />
-                <span>{t("newDraft")}</span>
-                <span className="text-xs opacity-50">{isMac ? "⌘ + N" : "Ctrl + N"}</span>
+                <span className="hidden sm:inline">{t("newDraft")}</span>
+                <span className="hidden text-xs opacity-50 sm:inline">{isMac ? "⌘ + N" : "Ctrl + N"}</span>
               </div>
               <div onClick={() => RecentFilesWindow.open()}>
                 <TableProperties />
-                <span>{t("openRecentFiles")}</span>
-                <span className="text-xs opacity-50">Shift + #</span>
+                <span className="hidden sm:inline">{t("openRecentFiles")}</span>
+                <span className="hidden text-xs opacity-50 sm:inline">Shift + #</span>
               </div>
               <div onClick={() => onOpenFile(undefined, "欢迎页面")}>
                 <FolderOpen />
-                <span>{t("openFile")}</span>
-                <span className="text-xs opacity-50">{isMac ? "⌘ + O" : "Ctrl + O"}</span>
+                <span className="hidden sm:inline">{t("openFile")}</span>
+                <span className="hidden text-xs opacity-50 sm:inline">{isMac ? "⌘ + O" : "Ctrl + O"}</span>
               </div>
             </div>
             <div
               className={cn(
-                "flex flex-col gap-2 *:flex *:flex-col *:transition-opacity *:*:last:opacity-50 *:hover:opacity-75",
+                "hidden flex-col gap-2 *:flex *:flex-col *:transition-opacity *:*:last:opacity-50 *:hover:opacity-75 sm:flex",
               )}
             >
               {recentFiles.slice(0, 6).map((file, index) => (
@@ -112,18 +115,19 @@ export default function WelcomePage() {
               ))}
             </div>
           </div>
-          <div className="flex flex-col gap-2 *:flex *:w-max *:cursor-pointer *:gap-2 *:hover:opacity-75 *:active:scale-90">
+          {/* 右侧区域 */}
+          <div className="flex flex-col *:flex *:w-max *:cursor-pointer *:gap-2 *:hover:opacity-75 *:active:scale-90 sm:gap-2">
             <div onClick={() => SettingsWindow.open("settings")}>
               <SettingsIcon />
-              <span>{t("settings")}</span>
+              <span className="hidden sm:inline">{t("settings")}</span>
             </div>
             <div onClick={() => SettingsWindow.open("about")}>
               <Info />
-              <span>{t("about")}</span>
+              <span className="hidden sm:inline">{t("about")}</span>
             </div>
             <div onClick={() => shellOpen("https://project-graph.top")}>
               <Earth />
-              <span>{t("website")}</span>
+              <span className="hidden sm:inline">{t("website")}</span>
             </div>
           </div>
         </div>

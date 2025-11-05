@@ -168,7 +168,7 @@ export function GlobalMenu() {
       <Menu>
         <Trigger>
           <File />
-          {t("file.title")}
+          <span className="hidden sm:inline">{t("file.title")}</span>
         </Trigger>
         <Content>
           <Item onClick={() => onNewDraft()}>
@@ -511,7 +511,7 @@ export function GlobalMenu() {
       <Menu>
         <Trigger disabled={!activeProject}>
           <View />
-          {t("view.title")}
+          <span className="hidden sm:inline">{t("view.title")}</span>
         </Trigger>
         <Content>
           <Item
@@ -553,7 +553,7 @@ export function GlobalMenu() {
       <Menu>
         <Trigger disabled={!activeProject}>
           <Axe />
-          {t("actions.title")}
+          <span className="hidden sm:inline">{t("actions.title")}</span>
         </Trigger>
         <Content>
           <Item
@@ -675,7 +675,7 @@ export function GlobalMenu() {
       <Menu>
         <Trigger>
           <SettingsIcon />
-          {t("settings.title")}
+          <span className="hidden sm:inline">{t("settings.title")}</span>
         </Trigger>
         <Content>
           <Item onClick={() => SettingsWindow.open("settings")}>
@@ -800,7 +800,7 @@ export function GlobalMenu() {
       <Menu>
         <Trigger disabled={!activeProject}>
           <Bot />
-          {t("ai.title")}
+          <span className="hidden sm:inline">{t("ai.title")}</span>
         </Trigger>
         <Content>
           <Item onClick={() => AIWindow.open()}>
@@ -814,7 +814,7 @@ export function GlobalMenu() {
       <Menu>
         <Trigger>
           <AppWindow />
-          {t("window.title")}
+          <span className="hidden sm:inline">{t("window.title")}</span>
         </Trigger>
         <Content>
           <Item
@@ -991,7 +991,7 @@ export function GlobalMenu() {
       <Menu>
         <Trigger>
           <CircleAlert />
-          {t("about.title")}
+          <span className="hidden sm:inline">{t("about.title")}</span>
         </Trigger>
         <Content>
           <Item onClick={() => SettingsWindow.open("about")}>
@@ -1114,7 +1114,7 @@ export function GlobalMenu() {
           <Trigger className={isDev ? "text-green-500" : "*:text-destructive! text-destructive!"}>
             {/* 增加辨识度，让开发者更容易分辨dev和nightly版本 */}
             {isDev ? <BugPlay /> : <MessageCircleWarning />}
-            {isDev ? "本地开发模式" : t("unstable.title")}
+            <span className="hidden sm:inline">{isDev ? "本地开发模式" : t("unstable.title")}</span>
           </Trigger>
           <Content>
             <Item variant="destructive">v{version}</Item>

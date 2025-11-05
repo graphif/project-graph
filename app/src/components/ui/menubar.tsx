@@ -9,7 +9,10 @@ function Menubar({ className, ...props }: React.ComponentProps<typeof MenubarPri
   return (
     <MenubarPrimitive.Root
       data-slot="menubar"
-      className={cn("bg-background shadow-xs flex h-9 items-center gap-1 rounded-md border p-1", className)}
+      className={cn(
+        "bg-background shadow-xs flex h-full items-center sm:gap-1 sm:rounded-md sm:border sm:p-1",
+        className,
+      )}
       {...props}
     />
   );
@@ -36,7 +39,7 @@ function MenubarTrigger({ className, ...props }: React.ComponentProps<typeof Men
     <MenubarPrimitive.Trigger
       data-slot="menubar-trigger"
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground outline-hidden flex select-none items-center rounded-sm px-2 py-1 text-sm font-medium data-[disabled]:opacity-50 [&_svg]:mr-1 [&_svg]:size-4",
+        "focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground outline-hidden flex select-none items-center rounded-sm py-1 text-sm font-medium data-[disabled]:opacity-50 sm:px-2 [&_svg]:size-4 sm:[&_svg]:mr-1",
         className,
       )}
       onMouseEnter={() => {
