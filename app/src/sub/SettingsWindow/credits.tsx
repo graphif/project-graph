@@ -18,6 +18,11 @@ const donations: DonationData[] = [
   // { user: "MacBook", note: "littlefean", amount: -7599.2 },
   { user: "域名 project-graph.top", note: "zty012", amount: -13.66 },
   // 以下为捐赠用户
+  { user: "X.", note: "牛逼666", amount: 6.66 },
+  { user: "LzM", note: "希望会有导出PDF格式的功能", amount: 20 },
+  { user: "LzM", note: "希望持续更新，太好使了", amount: 30 },
+  { user: "黄泳", note: "希望未来越做越好", amount: 50 },
+  { user: "Mr.Rove Rabbit", note: "大佬，感谢，加油很喜欢这个软件", amount: 10 },
   { user: "沐影", note: "感谢大佬的软件，很好用", amount: 20 },
   { user: "", note: "", amount: 6 },
   { user: "Clay", note: "支持开源，希望PG走的更远", amount: 50 },

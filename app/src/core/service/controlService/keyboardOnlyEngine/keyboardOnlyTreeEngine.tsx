@@ -253,11 +253,21 @@ export class KeyboardOnlyTreeEngine {
     const parent = parents[0];
     // 获取预方向
     const preDirection = this.getNodePreDirection(parent);
+    // 自动命名新节点（如果当前选中的同级节点有标号特征。）
+    let nextNodeName = "新节点";
+    let isAddNewNumberName = false;
+    if (currentSelectNode instanceof TextNode) {
+      const newName = extractNumberAndReturnNext(currentSelectNode.text);
+      if (newName) {
+        nextNodeName = newName;
+        isAddNewNumberName = true;
+      }
+    }
     // 当前选择的节点的正下方创建一个节点
     // 找到创建点
     const newLocation = currentSelectNode.collisionBox.getRectangle().leftBottom.add(new Vector(0, 1));
     const newNode = new TextNode(this.project, {
-      text: "新节点",
+      text: nextNodeName,
       details: [],
       uuid: v4(),
       collisionBox: new CollisionBox([
@@ -316,7 +326,7 @@ export class KeyboardOnlyTreeEngine {
     setTimeout(
       () => {
         // 防止把反引号给输入进去
-        this.project.controllerUtils.editTextNode(newNode);
+        this.project.controllerUtils.editTextNode(newNode, !isAddNewNumberName);
       },
       (1000 / 60) * 6,
     );
@@ -342,4 +352,108 @@ export class KeyboardOnlyTreeEngine {
   onDeleteCurrentNode() {
     // TODO
   }
+}
+
+/**
+ * 提取字符串中的标号格式并返回下一标号字符串
+ * 例如：
+ * 输入："1 xxxx"
+ * 返回："2 "
+ *
+ * 输入："1. xxxx"
+ * 返回："2. "
+ *
+ * 输入："[1] xxx"
+ * 返回："[2] "
+ *
+ * 输入："1) xxx"
+ * 返回："2) "
+ *
+ * 输入："(1) xxx"
+ * 返回："(2) "
+ *
+ * 类似的括号格式可能还有：
+ * 【1】
+ * 1:
+ * 1、
+ * 1,
+ * 1，
+ *
+ * 总之，返回的序号总比输入的序号大1
+ * 输入的序号后面可能会有标题内容，返回的内容中会不带标题内容，自动过滤
+ * @param str
+ */
+function extractNumberAndReturnNext(str: string): string {
+  const s = (str ?? "").trimStart();
+  if (!s) return "";
+
+  // 成对括号映射：ASCII + 常见全角/中文括号（用 Unicode 转义避免混淆）
+  const BRACKET_PAIRS: Record<string, string> = {
+    "(": ")",
+    "[": "]",
+    "{": "}",
+    "\uFF08": "\uFF09", // （ ）
+    "\u3010": "\u3011", // 【 】
+    "\u3014": "\u3015", // 〔 〕
+    "\u3016": "\u3017", // 〖 〗
+  };
+
+  // 常见分隔符集合：半角 + 全角（用 Unicode 转义避免混淆）
+  const DELIMS = new Set<string>([
+    ".",
+    ")",
+    ":",
+    ",",
+    "\uFF1A", // ：
+    "\u3001", // 、
+    "\uFF0C", // ，
+    "\uFF0E", // ．
+    "\u3002", // 。
+  ]);
+
+  // 1) 括号包裹的数字：例如 (1)、[1]、{1}、（1）、【1】、〔1〕、〖1〗
+  const open = s[0];
+  const close = BRACKET_PAIRS[open];
+  if (close) {
+    let i = 1;
+
+    // 跳过括号后的空白
+    while (i < s.length && /\s/.test(s[i])) i++;
+
+    // 读取连续数字
+    const numStart = i;
+    while (i < s.length && s.charCodeAt(i) >= 48 && s.charCodeAt(i) <= 57) i++;
+    if (i === numStart) return ""; // 括号里没数字
+
+    // 跳过数字后的空白
+    while (i < s.length && /\s/.test(s[i])) i++;
+
+    // 必须紧跟对应闭括号
+    if (s[i] === close) {
+      const n = parseInt(s.slice(numStart, i), 10) + 1;
+      return `${open}${n}${close} `;
+    }
+    return "";
+  }
+
+  // 2) 数字起始的情况：1. / 1) / 1: / 1、 / 1, / 1，/ 1． / 1。/ 或纯数字“1 ”
+  const m = s.match(/^(\d+)/);
+  if (m) {
+    const numStr = m[1];
+    let i = numStr.length;
+
+    // 跳过数字后的空白
+    while (i < s.length && /\s/.test(s[i])) i++;
+
+    const delim = s[i];
+    const next = String(parseInt(numStr, 10) + 1);
+
+    if (delim && DELIMS.has(delim)) {
+      return `${next}${delim} `;
+    }
+    return `${next} `;
+  }
+
+  // 未匹配到已知格式
+  return "";
 }
