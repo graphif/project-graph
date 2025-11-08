@@ -480,9 +480,10 @@ function WindowButtons() {
           </div>
         </span>
       ) : (
-        <>
+        <span className="flex h-full flex-row sm:gap-1">
           {/* 钉住 */}
           <Button
+            className="size-4 sm:size-9"
             variant="ghost"
             size="icon"
             onClick={async (e) => {
@@ -493,24 +494,44 @@ function WindowButtons() {
             {isWindowAlwaysOnTop ? <Pin strokeWidth={3} /> : <PinOff strokeWidth={3} className="opacity-50" />}
           </Button>
           {/* 最小化 */}
-          <Button variant="ghost" size="icon" onClick={() => getCurrentWindow().minimize()}>
+          <Button
+            className="size-4 sm:size-9"
+            variant="ghost"
+            size="icon"
+            onClick={() => getCurrentWindow().minimize()}
+          >
             <Minus strokeWidth={3} />
           </Button>
           {/* 最大化/还原 */}
           {maximized ? (
-            <Button variant="ghost" size="icon" className="text-xs" onClick={() => getCurrentWindow().unmaximize()}>
+            <Button
+              className="size-4 text-xs sm:size-9"
+              variant="ghost"
+              size="icon"
+              onClick={() => getCurrentWindow().unmaximize()}
+            >
               <Copy className="size-3" strokeWidth={3} />
             </Button>
           ) : (
-            <Button variant="ghost" size="icon" onClick={() => getCurrentWindow().maximize()}>
+            <Button
+              className="size-4 text-xs sm:size-9"
+              variant="ghost"
+              size="icon"
+              onClick={() => getCurrentWindow().maximize()}
+            >
               <Square className="size-3" strokeWidth={4} />
             </Button>
           )}
           {/* 关闭 */}
-          <Button variant="ghost" size="icon" onClick={() => getCurrentWindow().close()}>
+          <Button
+            className="size-4 text-xs sm:size-9"
+            variant="ghost"
+            size="icon"
+            onClick={() => getCurrentWindow().close()}
+          >
             <X strokeWidth={3} />
           </Button>
-        </>
+        </span>
       )}
     </div>
   );
