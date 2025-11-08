@@ -1,12 +1,10 @@
 import { Project, service } from "@/core/Project";
-import { SetFunctions } from "@/core/algorithm/setFunctions";
 import { ConnectableAssociation } from "@/core/stage/stageObject/abstract/Association";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Serialized } from "@/types/node";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
@@ -21,6 +19,7 @@ import { RectangleNoteReversedEffect } from "../../feedbackService/effectEngine/
 import { VirtualClipboard } from "./VirtualClipboard";
 import { CopyEngineImage } from "./copyEngineImage";
 import { CopyEngineText } from "./copyEngineText";
+import { CopyEngineUtils } from "./copyEngineUtils";
 
 /**
  * 专门用来管理节点复制的引擎
@@ -49,42 +48,7 @@ export class CopyEngine {
       toast.info("当前没有选中任何实体，已清空了虚拟剪贴板");
       return;
     }
-
-    // 更新虚拟剪贴板
-    const selectedUUIDs = new Set(selectedEntities.map((it) => it.uuid));
-    // ===== 开始构建 copyedStageObjects
-    const copiedStageObjects: StageObject[] = [...selectedEntities]; // 准备复制后的数据
-    // 处理Section框内部的实体
-    // 先检测一下选中的内容中是否有框
-    const isHaveSection = selectedEntities.some((it) => it instanceof Section);
-    if (isHaveSection) {
-      // 如果有框，则获取框内的实体
-      const innerEntities = this.project.sectionMethods.getAllEntitiesInSelectedSectionsOrEntities(selectedEntities);
-      // 根据 selectedUUIDs 过滤
-      const filteredInnerEntities = innerEntities.filter((it) => !selectedUUIDs.has(it.uuid));
-      copiedStageObjects.push(...filteredInnerEntities);
-      // 补充 selectedUUIDs
-      for (const entity of filteredInnerEntities) {
-        selectedUUIDs.add(entity.uuid);
-      }
-    }
-    // O(N), N 为当前舞台对象数量
-    for (const association of this.project.stageManager.getAssociations()) {
-      if (association instanceof ConnectableAssociation) {
-        if (association instanceof Edge) {
-          if (selectedUUIDs.has(association.source.uuid) && selectedUUIDs.has(association.target.uuid)) {
-            copiedStageObjects.push(association);
-          }
-        } else if (association instanceof MultiTargetUndirectedEdge) {
-          // 无向边
-          const associationUUIDs = new Set(association.associationList.map((it) => it.uuid));
-          if (SetFunctions.isSubset(associationUUIDs, selectedUUIDs)) {
-            copiedStageObjects.push(association);
-          }
-        }
-      }
-    }
-    // ===== copyedStageObjects 构建完毕
+    const copiedStageObjects = CopyEngineUtils.getAllStageObjectFromEntities(this.project, selectedEntities);
 
     // 深拷贝一下数据，只有在粘贴的时候才刷新uuid
     const serializedCopiedStageObjects = serialize(copiedStageObjects);

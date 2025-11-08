@@ -28,6 +28,7 @@ globalMenu:
       exportSelectedNodeGraph: 导出 选中的 网状关系
       exportSelectedNodeTree: 导出 选中的 树状关系（纯文本缩进）
       exportSelectedNodeTreeMarkdown: 导出 选中的 树状关系（Markdown格式）
+      exportSelectedNodeGraphMermaid: 根据 选中的 嵌套网状关系（Mermaid格式）
     exportSelected: 导出选中内容
     plainText: 纯文本
     exportSuccess: 导出成功

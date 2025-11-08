@@ -101,11 +101,13 @@ import {
   Search,
   SettingsIcon,
   SquareDashedMousePointer,
+  SquareSquare,
   Tag,
   TestTube2,
   TextQuote,
   Tv,
   Undo,
+  VectorSquare,
   VenetianMask,
   View,
   Workflow,
@@ -436,7 +438,7 @@ export function GlobalMenu() {
                       Dialog.copy(t("file.exportSuccess"), "", result);
                     }}
                   >
-                    <FileDigit />
+                    <VectorSquare />
                     {t("file.plainTextType.exportAllNodeGraph")}
                   </Item>
                   {/* 导出 选中 网状关系 */}
@@ -452,7 +454,7 @@ export function GlobalMenu() {
                       Dialog.copy(t("file.exportSuccess"), "", result);
                     }}
                   >
-                    <MousePointer2 />
+                    <VectorSquare />
                     {t("file.plainTextType.exportSelectedNodeGraph")}
                   </Item>
                   {/* 导出 选中 树状关系 （纯文本缩进） */}
@@ -465,7 +467,7 @@ export function GlobalMenu() {
                       }
                     }}
                   >
-                    <MousePointer2 />
+                    <Network />
                     {t("file.plainTextType.exportSelectedNodeTree")}
                   </Item>
                   {/* 导出 选中 树状关系 （Markdown格式） */}
@@ -478,8 +480,19 @@ export function GlobalMenu() {
                       }
                     }}
                   >
-                    <MousePointer2 />
+                    <Network />
                     {t("file.plainTextType.exportSelectedNodeTreeMarkdown")}
+                  </Item>
+                  {/* 导出 选中 网状嵌套关系 （mermaid格式） */}
+                  <Item
+                    onClick={() => {
+                      const selectedEntities = activeProject!.stageManager.getSelectedEntities();
+                      const result = activeProject!.stageExport.getMermaidTextByEntites(selectedEntities);
+                      Dialog.copy(t("file.exportSuccess"), "", result);
+                    }}
+                  >
+                    <SquareSquare />
+                    {t("file.plainTextType.exportSelectedNodeGraphMermaid")}
                   </Item>
                 </SubContent>
               </Sub>

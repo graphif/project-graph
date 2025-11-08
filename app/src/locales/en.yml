@@ -666,6 +666,7 @@ globalMenu:
       exportSelectedNodeGraph: Export Selected Node Graph as Plain Text
       exportSelectedNodeTree: Export Selected Node Tree as Plain Text
       exportSelectedNodeTreeMarkdown: Export Selected Node Tree as Markdown
+      exportSelectedNodeGraphMermaid: Export Selected Node Graph as Mermaid
     exportSelected: Export Selected Content
     plainText: Plain Text
     exportSuccess: Export Successful
