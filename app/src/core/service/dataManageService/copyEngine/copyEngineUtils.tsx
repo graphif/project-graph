@@ -5,7 +5,9 @@ import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
+import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
+import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 
 /**
  *
@@ -14,6 +16,7 @@ export namespace CopyEngineUtils {
   /**
    * 根据一部分物体，获取所有相关的实体
    * 可以用于选中复制的时候
+   * （导出mermaid也会用到这个工具函数）
    */
   export function getAllStageObjectFromEntities(project: Project, entities: Entity[]): StageObject[] {
     //
@@ -52,5 +55,39 @@ export namespace CopyEngineUtils {
       }
     }
     return result;
+  }
+
+  /**
+   * 收集所有需要复制的附件（ImageNode 和 SvgNode 的附件）
+   * @param project
+   * @param stageObjects
+   * @returns
+   */
+  export async function collectAttachmentFromStageObjects(
+    project: Project,
+    stageObjects: StageObject[],
+  ): Promise<Map<string, { data: ArrayBuffer; type: string }>> {
+    const attachmentMap = new Map<string, { data: ArrayBuffer; type: string }>();
+    const attachmentIds = new Set<string>();
+
+    // 从所有复制的舞台对象中收集 attachmentId
+    for (const stageObject of stageObjects) {
+      if (stageObject instanceof ImageNode || stageObject instanceof SvgNode) {
+        const attachmentId = stageObject.attachmentId;
+        if (attachmentId && !attachmentIds.has(attachmentId)) {
+          attachmentIds.add(attachmentId);
+          const blob = project.attachments.get(attachmentId);
+          if (blob) {
+            // 将 Blob 转换为 ArrayBuffer 以便序列化
+            const arrayBuffer = await blob.arrayBuffer();
+            attachmentMap.set(attachmentId, {
+              data: arrayBuffer,
+              type: blob.type,
+            });
+          }
+        }
+      }
+    }
+    return attachmentMap;
   }
 }

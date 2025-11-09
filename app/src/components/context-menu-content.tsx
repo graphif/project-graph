@@ -120,7 +120,13 @@ export default function MyContextMenuContent() {
       {/* 第一行 Ctrl+c/v/x del */}
       <Item className="bg-transparent! gap-0 p-0">
         <KeyTooltip keyId="copy">
-          <Button variant="ghost" size="icon" onClick={() => p.copyEngine.copy()}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              p.copyEngine.copy();
+            }}
+          >
             <Copy />
           </Button>
         </KeyTooltip>

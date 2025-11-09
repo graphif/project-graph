@@ -4,13 +4,15 @@ import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
+import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Serialized } from "@/types/node";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
-import { Image } from "@tauri-apps/api/image";
+import { Image as TauriImage } from "@tauri-apps/api/image";
 import { readText, writeImage, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { toast } from "sonner";
 import { v4 } from "uuid";
@@ -39,7 +41,7 @@ export class CopyEngine {
    * 将当前选中的节点复制到虚拟粘贴板
    * 也要将选中的部分复制到系统粘贴板
    */
-  copy() {
+  async copy() {
     // 获取所有选中的实体，不能包含关系
     const selectedEntities = this.project.stageManager.getSelectedEntities();
     if (selectedEntities.length === 0) {
@@ -50,10 +52,19 @@ export class CopyEngine {
     }
     const copiedStageObjects = CopyEngineUtils.getAllStageObjectFromEntities(this.project, selectedEntities);
 
+    // 收集所有需要复制的附件（ImageNode 和 SvgNode 的附件）
+    const attachmentMap = await CopyEngineUtils.collectAttachmentFromStageObjects(this.project, copiedStageObjects);
+
     // 深拷贝一下数据，只有在粘贴的时候才刷新uuid
     const serializedCopiedStageObjects = serialize(copiedStageObjects);
     console.log(serializedCopiedStageObjects);
-    VirtualClipboard.copy(serialize(serializedCopiedStageObjects));
+
+    // 将舞台对象和附件一起存储到虚拟粘贴板
+    VirtualClipboard.copy({
+      stageObjects: serialize(serializedCopiedStageObjects),
+      attachments: Object.fromEntries(attachmentMap),
+    });
+
     const rect = Rectangle.getBoundingRectangle(selectedEntities.map((it) => it.collisionBox.getRectangle()));
     this.project.effects.addEffect(new RectangleNoteReversedEffect(new ProgressNumber(0, 100), rect, Color.Green));
 
@@ -63,7 +74,7 @@ export class CopyEngine {
       const imageNode = selectedEntities[0] as ImageNode;
       const blob = this.project.attachments.get(imageNode.attachmentId);
       if (blob) {
-        blob.arrayBuffer().then(Image.fromBytes).then(writeImage);
+        blob.arrayBuffer().then(TauriImage.fromBytes).then(writeImage);
         toast.success("已将选中的图片复制到系统剪贴板");
       }
     } else {
@@ -93,8 +104,34 @@ export class CopyEngine {
 
   virtualClipboardPaste() {
     // 获取虚拟粘贴板上数据的外接矩形
-    const pastDataSerialized = VirtualClipboard.paste();
+    const clipboardData = VirtualClipboard.paste();
+
+    // 兼容旧格式：如果直接是序列化数据，则没有附件
+    let pastDataSerialized: any;
+    let attachmentsData: Record<string, { data: ArrayBuffer; type: string }> | undefined;
+
+    if (clipboardData && typeof clipboardData === "object" && "stageObjects" in clipboardData) {
+      // 新格式：包含附件数据
+      pastDataSerialized = clipboardData.stageObjects;
+      attachmentsData = clipboardData.attachments;
+    } else {
+      // 旧格式：只有序列化数据
+      pastDataSerialized = clipboardData;
+    }
+
     const pasteData: StageObject[] = deserialize(pastDataSerialized, this.project);
+
+    // 处理附件：将附件添加到新项目中，并建立 oldAttachmentId -> newAttachmentId 的映射
+    const attachmentIdMap = new Map<string, string>();
+    if (attachmentsData) {
+      for (const [oldAttachmentId, attachmentInfo] of Object.entries(attachmentsData)) {
+        // 将 ArrayBuffer 转换回 Blob
+        const blob = new Blob([attachmentInfo.data], { type: attachmentInfo.type });
+        // 添加到新项目并生成新的 UUID
+        const newAttachmentId = this.project.addAttachment(blob);
+        attachmentIdMap.set(oldAttachmentId, newAttachmentId);
+      }
+    }
 
     // 粘贴的时候刷新UUID
     for (const stageObject of pasteData) {
@@ -104,6 +141,48 @@ export class CopyEngine {
         const newUUID = v4();
         const oldUUID = stageObject.uuid;
         stageObject.uuid = newUUID;
+
+        // 更新附件ID（如果是 ImageNode 或 SvgNode）
+        if (stageObject instanceof ImageNode) {
+          const oldAttachmentId = stageObject.attachmentId;
+          if (oldAttachmentId && attachmentIdMap.has(oldAttachmentId)) {
+            const newAttachmentId = attachmentIdMap.get(oldAttachmentId)!;
+            stageObject.attachmentId = newAttachmentId;
+            // 重新加载图片附件
+            const blob = this.project.attachments.get(newAttachmentId);
+            if (blob) {
+              createImageBitmap(blob).then((bitmap) => {
+                stageObject.bitmap = bitmap;
+                stageObject.state = "success";
+                // 设置碰撞箱
+                stageObject.scaleUpdate(0);
+              });
+            }
+          }
+        } else if (stageObject instanceof SvgNode) {
+          const oldAttachmentId = stageObject.attachmentId;
+          if (oldAttachmentId && attachmentIdMap.has(oldAttachmentId)) {
+            const newAttachmentId = attachmentIdMap.get(oldAttachmentId)!;
+            stageObject.attachmentId = newAttachmentId;
+            // 重新加载 SVG 附件
+            const blob = this.project.attachments.get(newAttachmentId);
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              stageObject.image = new Image();
+              stageObject.image.src = url;
+              stageObject.image.onload = () => {
+                stageObject.originalSize = new Vector(stageObject.image.naturalWidth, stageObject.image.naturalHeight);
+                stageObject.collisionBox = new CollisionBox([
+                  new Rectangle(
+                    stageObject.collisionBox.getRectangle().location,
+                    stageObject.originalSize.multiply(stageObject.scale),
+                  ),
+                ]);
+              };
+            }
+          }
+        }
+
         // 开始遍历所有关联，更新uuid
         for (const stageObject2 of pasteData) {
           if (stageObject2 instanceof ConnectableAssociation) {
@@ -162,8 +241,8 @@ export class CopyEngine {
    * 剪切
    * 复制，然后删除选中的舞台对象
    */
-  cut() {
-    this.copy();
+  async cut() {
+    await this.copy();
     this.project.stageManager.deleteSelectedStageObjects();
   }
 
