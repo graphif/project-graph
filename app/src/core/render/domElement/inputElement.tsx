@@ -3,6 +3,7 @@ import { EntityDashTipEffect } from "@/core/service/feedbackService/effectEngine
 import { EntityShakeEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityShakeEffect";
 import { Settings } from "@/core/service/Settings";
 import { getEnterKey } from "@/utils/keyboardFunctions";
+import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
 
@@ -196,7 +197,18 @@ export class InputElement {
 
       textareaElement.addEventListener("keydown", (event) => {
         event.stopPropagation();
-        console.log(event);
+        if (isMac) {
+          // 补充mac平台快捷键，home/end移动到行首/行尾
+          // shift+home/end 选中当前光标位置到行首/行尾
+          if (event.key === "Home") {
+            moveToLineStart(textareaElement, event.shiftKey);
+            event.preventDefault();
+          } else if (event.key === "End") {
+            moveToLineEnd(textareaElement, event.shiftKey);
+            event.preventDefault();
+          }
+        }
+
         if (event.code === "Backslash") {
           const currentSelectNode = this.project.stageManager.getConnectableEntity().find((node) => node.isSelected);
           if (!currentSelectNode) return;
@@ -213,8 +225,7 @@ export class InputElement {
             removeElement();
             this.project.keyboardOnlyTreeEngine.onBroadGenerateNode();
           }
-        }
-        if (event.code === "Backspace") {
+        } else if (event.code === "Backspace") {
           // event.preventDefault();  // 不能这样否则就删除不了了。
           if (textareaElement.value === "") {
             // 已经要删空了。
@@ -223,8 +234,7 @@ export class InputElement {
             removeElement();
             this.project.stageManager.deleteSelectedStageObjects();
           }
-        }
-        if (event.key === "Tab") {
+        } else if (event.key === "Tab") {
           // 防止tab切换到其他按钮
           event.preventDefault();
           // const start = textareaElement.selectionStart;
@@ -314,4 +324,73 @@ export class InputElement {
   }
 
   constructor(private readonly project: Project) {}
+}
+
+// 移动到当前行的行首
+function moveToLineStart(textarea: HTMLTextAreaElement, isSelecting = false) {
+  const value = textarea.value;
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+
+  // 找到当前行的开始位置
+  let lineStart = 0;
+  for (let i = start - 1; i >= 0; i--) {
+    if (value[i] === "\n") {
+      lineStart = i + 1;
+      break;
+    }
+  }
+
+  if (isSelecting) {
+    // Shift+Home: 选中从当前光标到行首
+    // 保持selectionEnd不变（当前光标位置），移动selectionStart到行首
+    if (start === end) {
+      // 没有选中文本时
+      textarea.selectionStart = lineStart;
+      textarea.selectionEnd = end;
+    } else {
+      // 已经有选中文本时，扩展选中范围到行首
+      textarea.selectionStart = lineStart;
+      // selectionEnd保持不变
+    }
+  } else {
+    // Home: 只移动光标到行首
+    textarea.selectionStart = lineStart;
+    textarea.selectionEnd = lineStart;
+  }
+}
+
+// 移动到当前行的行尾
+function moveToLineEnd(textarea: HTMLTextAreaElement, isSelecting = false) {
+  const value = textarea.value;
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const length = value.length;
+
+  // 找到当前行的结束位置
+  let lineEnd = length;
+  for (let i = end; i < length; i++) {
+    if (value[i] === "\n") {
+      lineEnd = i;
+      break;
+    }
+  }
+
+  if (isSelecting) {
+    // Shift+End: 选中从当前光标到行尾
+    // 保持selectionStart不变（当前光标位置），移动selectionEnd到行尾
+    if (start === end) {
+      // 没有选中文本时
+      textarea.selectionStart = start;
+      textarea.selectionEnd = lineEnd;
+    } else {
+      // 已经有选中文本时，扩展选中范围到行尾
+      textarea.selectionEnd = lineEnd;
+      // selectionStart保持不变
+    }
+  } else {
+    // End: 只移动光标到行尾
+    textarea.selectionStart = lineEnd;
+    textarea.selectionEnd = lineEnd;
+  }
 }
