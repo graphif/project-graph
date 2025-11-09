@@ -222,10 +222,20 @@ export class EntityRenderer {
       );
     } else if (imageNode.state === "notFound") {
       this.project.textRenderer.renderTextFromCenter(
-        `not found ${imageNode.attachmentId}`,
+        `图片未找到：${imageNode.attachmentId}`,
         this.project.renderer.transformWorld2View(imageNode.rectangle.center),
         20 * this.project.camera.currentScale,
         this.project.stageStyleManager.currentStyle.StageObjectBorder,
+      );
+      // 画出它的碰撞箱
+      this.project.shapeRenderer.renderRect(
+        new Rectangle(
+          this.project.renderer.transformWorld2View(imageNode.rectangle.location),
+          imageNode.rectangle.size.multiply(this.project.camera.currentScale),
+        ),
+        Color.Red.toNewAlpha(0.5),
+        Color.Red.clone(),
+        2 * this.project.camera.currentScale,
       );
     }
   }
