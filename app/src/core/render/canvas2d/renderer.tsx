@@ -9,6 +9,7 @@ import { getTextSize } from "@/utils/font";
 import { isFrame, isMac } from "@/utils/platform";
 import { Color, mixColors, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Rectangle } from "@graphif/shapes";
+import { GlobalMaskRenderer } from "./utilsRenderer/globalMaskRenderer";
 
 /**
  * 渲染器
@@ -87,23 +88,7 @@ export class Renderer {
     this.renderMainStageElements(viewRectangle);
 
     // 潜行模式 - 只显示鼠标周围的一个圆形区域
-    if (Settings.isStealthModeEnabled) {
-      const ctx = this.project.canvas.ctx;
-      // 设置合成模式为目标输入模式
-      ctx.globalCompositeOperation = "destination-in";
-      // 获取鼠标位置
-      const mouseX = MouseLocation.x;
-      const mouseY = MouseLocation.y;
-      // 获取潜行模式半径
-      const scopeRadius = Settings.stealthModeScopeRadius;
-      // 绘制圆形区域
-      ctx.beginPath();
-      ctx.arc(mouseX, mouseY, scopeRadius, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(0, 0, 0, 1)"; // 设置填充颜色为完全不透明的黑色
-      ctx.fill();
-      // 恢复合成模式
-      ctx.globalCompositeOperation = "source-over";
-    }
+    GlobalMaskRenderer.renderCircleMask(this.project, MouseLocation, Settings.stealthModeReverseMask);
 
     this.renderViewElements(viewRectangle);
   }

@@ -212,6 +212,7 @@ const categories = {
       "showBackgroundCartesian",
       "isStealthModeEnabled",
       "stealthModeScopeRadius",
+      "stealthModeReverseMask",
     ],
     node: ["enableTagTextNodesBigDisplay", "showTextNodeBorder"],
     edge: ["lineStyle"],

@@ -977,6 +977,19 @@ export function GlobalMenu() {
               <Item
                 disabled={!activeProject}
                 onClick={() => {
+                  Settings.stealthModeReverseMask = !Settings.stealthModeReverseMask;
+                }}
+              >
+                <CircleDot />
+                {activeProject ? (
+                  <span>{Settings.stealthModeReverseMask ? "关闭" : "开启"}反向遮罩</span>
+                ) : (
+                  "请先打开工程文件才能使用此功能"
+                )}
+              </Item>
+              <Item
+                disabled={!activeProject}
+                onClick={() => {
                   const newRadius = Math.max(10, Math.min(500, Settings.stealthModeScopeRadius + 50));
                   Settings.stealthModeScopeRadius = newRadius;
                 }}

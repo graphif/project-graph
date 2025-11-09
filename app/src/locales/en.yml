@@ -498,6 +498,10 @@ settings:
     title: Stealth Mode Scope Radius
     description: |
       The radius of the stealth mode scope.
+  stealthModeReverseMask:
+    title: Reverse Mask
+    description: |
+      When enabled, the center area of the scope will be masked, only showing the surrounding area.
 
   # Sounds
   cuttingLineStartSoundFile:
