@@ -1,7 +1,7 @@
 import { Project } from "@/core/Project";
 import { id, serializable } from "@graphif/serializer";
 import { LayoutContainer } from "@pixi/layout/components";
-import { DestroyOptions, Graphics, PointData } from "pixi.js";
+import { DestroyOptions, Graphics, PointData, Rectangle } from "pixi.js";
 
 /**
  * 一切舞台上的东西
@@ -151,5 +151,9 @@ export abstract class StageObject extends LayoutContainer {
   myContainsPoint(point: PointData) {
     const rect = this.getWorldBounds().rectangle;
     return rect.contains(point.x, point.y);
+  }
+  myIntersects(rect: Rectangle) {
+    const myRect = this.getWorldBounds().rectangle;
+    return myRect.intersects(rect);
   }
 }

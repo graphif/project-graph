@@ -98,8 +98,8 @@ export class RegionPicker extends Graphics {
           Math.abs(currentPoint.y - startPoint.y),
         );
         const isWindowSelection =
-          (Settings.rectangleSelectWhenLeft && startPoint.x > currentPoint.x) ||
-          (!Settings.rectangleSelectWhenLeft && startPoint.x < currentPoint.x);
+          (Settings.rectangleSelectWhenLeft === "contain" && startPoint.x > currentPoint.x) ||
+          (!Settings.rectangleSelectWhenLeft === "contain" && startPoint.x < currentPoint.x);
         this.clear();
         this.roundRect(rect.x, rect.y, rect.width, rect.height, 8 / project.viewport.scale.x);
         this.stroke({
@@ -108,7 +108,11 @@ export class RegionPicker extends Graphics {
         });
         // 选中区域内的节点
         project.stage.forEach((it) => {
-          it.selected = rect[isWindowSelection ? "containsRect" : "intersects"](it.getWorldBounds().rectangle);
+          if (isWindowSelection) {
+            it.selected = rect.containsRect(it.getWorldBounds().rectangle);
+          } else {
+            it.selected = it.myIntersects(rect);
+          }
         });
       }
     };
