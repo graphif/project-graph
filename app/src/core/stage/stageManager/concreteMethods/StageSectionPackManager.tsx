@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { v4 } from "uuid";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
+import { ConnectableEntity } from "../../stageObject/abstract/ConnectableEntity";
 
 /**
  * 管理所有东西进出StageSection的逻辑
@@ -219,9 +220,8 @@ export class SectionPackManager {
         uuid: v4(),
         text: section.text,
         details: section.details,
-        location: [sectionLocation.x, sectionLocation.y],
-        size: [100, 100],
-        color: section.color.toArray(),
+        collisionBox: new CollisionBox([new Rectangle(sectionLocation.clone(), Vector.getZero())]),
+        color: section.color.clone(),
       });
       // 将textNode添加到舞台
       this.project.stageManager.add(textNode);
@@ -362,16 +362,20 @@ export class SectionPackManager {
     }
   }
 
-  getSmartSectionTitle(addEntities: Entity[]): string {
-    const textNodes = addEntities.filter((e) => e instanceof TextNode) as TextNode[];
-    if (textNodes.length === 0) return "";
-    // 所有实体必须是文本节点
-    if (textNodes.length !== addEntities.length) return "";
+  /**
+   * 获取一个智能的Section标题，如果Section内是树形结构
+   * @param addEntities
+   * @returns
+   */
+  private getSmartSectionTitle(addEntities: Entity[]): string {
+    // 只看所有的可连接节点，涂鸦之类的直接忽略
+    const connectableEntities = addEntities.filter((e) => e instanceof ConnectableEntity);
+    if (connectableEntities.length === 0) return "";
 
-    // 必须构成树形结构（在诱导子图中）
-    if (!this.project.graphMethods.isTreeByNodes(textNodes)) return "";
+    // 必须构成树形结构
+    if (!this.project.graphMethods.isTreeByNodes(connectableEntities)) return "";
 
-    const root = this.project.graphMethods.getTreeRootByNodes(textNodes);
+    const root = this.project.graphMethods.getTreeRootByNodes(connectableEntities);
     if (!root || !(root instanceof TextNode)) return "";
     return root.text;
   }
