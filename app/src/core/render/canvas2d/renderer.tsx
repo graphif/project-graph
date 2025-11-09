@@ -384,7 +384,7 @@ export class Renderer {
               );
             }
           }
-          let hintText = "松开 “生长自由节点键” 完成新节点创建,IKJL键移动生长位置";
+          let hintText = "再按一次 “生长自由节点键（默认是反引号键）” 完成并退出新节点创建,IKJL键移动生长位置";
           if (isHaveEntity) {
             hintText = "连接！";
           }
@@ -394,7 +394,7 @@ export class Renderer {
             this.transformWorld2View(
               this.project.keyboardOnlyGraphEngine.virtualTargetLocation().add(new Vector(0, 50)),
             ),
-            15 * this.project.camera.currentScale,
+            10 * this.project.camera.currentScale,
             Infinity,
             this.project.stageStyleManager.currentStyle.StageObjectBorder,
           );

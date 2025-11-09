@@ -1054,8 +1054,8 @@ keyBinds:
     title: 生长自由节点
     description: |
       按下后，出现一个虚拟生长位置
-      在按下该键不松开的同时按下“I J K L”键自由调整生长位置
-      松开后，生长完成
+      此时，按下“I J K L”键自由调整生长位置
+      再次按下该键，退出自由生长模式
       使用此功能前先确保已选中一个节点
   createConnectPointWhenDragConnecting:
     title: 拖拽连线时，按下此键，创建质点中转
