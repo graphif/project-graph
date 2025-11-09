@@ -124,6 +124,7 @@ export const settingsSchema = z.object({
   textNodeSelectAllWhenStartEditByKeyboard: z.boolean().default(false),
   allowAddCycleEdge: z.boolean().default(false),
   autoLayoutWhenTreeGenerate: z.boolean().default(true),
+  enableBackslashGenerateNodeInInput: z.boolean().default(false),
   gamepadDeadzone: z.number().min(0).max(1).default(0.1),
   showGrid: z.boolean().default(true),
   maxFps: z.number().default(60),

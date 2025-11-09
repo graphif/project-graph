@@ -105,6 +105,7 @@ export const settingsIcons = {
   textNodeSelectAllWhenStartEditByKeyboard: TextCursorInput,
   allowAddCycleEdge: RotateCw,
   autoLayoutWhenTreeGenerate: ListTree,
+  enableBackslashGenerateNodeInInput: Keyboard,
   gamepadDeadzone: Skull,
   historySize: Undo,
   compressPastedImages: ImageMinus,

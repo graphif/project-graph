@@ -458,6 +458,11 @@ settings:
     description: |
       开启后，生长节点时自动更新布局
       此处的生长节点指tab和\键生长节点
+  enableBackslashGenerateNodeInInput:
+    title: 在输入状态下也能通过反斜杠创建同级节点
+    description: |
+      开启后，在文本节点编辑状态下，按下反斜杠键（\）也可以创建同级节点
+      关闭后，只有在非编辑状态下才能通过反斜杠键创建同级节点
   moveAmplitude:
     title: 视角移动加速度
     description: |

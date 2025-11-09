@@ -539,6 +539,11 @@ settings:
   autoLayoutWhenTreeGenerate:
     description: "開啟後，生長節點時自動更新佈局\n此處的生長節點指 tab 和 \\ 鍵生長節點\n"
     title: 生長節點時自動更新佈局
+  enableBackslashGenerateNodeInInput:
+    title: 在輸入狀態下也能通過反斜杠創建同級節點
+    description: |
+      開啟後，在文本節點編輯狀態下，按下反斜杠鍵（\）也可以創建同級節點
+      關閉後，只有在非編輯狀態下才能通過反斜杠鍵創建同級節點
   isStealthModeEnabled:
     title: 潜行模式
     description: 摸鱼专用，配合窗口透明效果更佳

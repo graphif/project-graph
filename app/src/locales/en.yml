@@ -620,6 +620,11 @@ settings:
     description: "After it is turned on, the layout will be automatically updated
       when growing nodes\nThe growing nodes here refer to the tab and \\ key growing
       nodes\n"
+  enableBackslashGenerateNodeInInput:
+    title: Enable backslash to create sibling nodes while in input mode
+    description: |
+      When enabled, pressing the backslash key (\) while editing a text node will also create a sibling node
+      When disabled, the backslash key can only create sibling nodes when not in edit mode
   agreeTerms:
     title: agree to the Terms of Service
     description: "please read carefully and agree to the Terms of Service\n"

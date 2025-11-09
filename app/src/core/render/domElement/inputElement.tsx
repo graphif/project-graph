@@ -214,16 +214,18 @@ export class InputElement {
           if (!currentSelectNode) return;
           if (this.project.graphMethods.isCurrentNodeInTreeStructAndNotRoot(currentSelectNode)) {
             // 广度生长节点
-            event.preventDefault();
-            let currentValue = textareaElement.value;
-            if (currentValue.endsWith("、")) {
-              // 删除结尾 防止把顿号写进去
-              currentValue = currentValue.slice(0, -1);
+            if (Settings.enableBackslashGenerateNodeInInput) {
+              event.preventDefault();
+              let currentValue = textareaElement.value;
+              if (currentValue.endsWith("、")) {
+                // 删除结尾 防止把顿号写进去
+                currentValue = currentValue.slice(0, -1);
+              }
+              resolve(currentValue);
+              onChange(currentValue, textareaElement);
+              removeElement();
+              this.project.keyboardOnlyTreeEngine.onBroadGenerateNode();
             }
-            resolve(currentValue);
-            onChange(currentValue, textareaElement);
-            removeElement();
-            this.project.keyboardOnlyTreeEngine.onBroadGenerateNode();
           }
         } else if (event.code === "Backspace") {
           // event.preventDefault();  // 不能这样否则就删除不了了。
