@@ -3,11 +3,12 @@ import { ConnectableEntity } from "@/core/stage/stageObject/abstract/Connectable
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Direction } from "@/types/directions";
-import { Vector } from "@graphif/data-structures";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { v4 } from "uuid";
 import { Settings } from "../../Settings";
 import { LineEffect } from "../../feedbackService/effectEngine/concrete/LineEffect";
+import { RectangleRenderEffect } from "../../feedbackService/effectEngine/concrete/RectangleRenderEffect";
 
 /**
  * 专用于Xmind式的树形结构的键盘操作引擎
@@ -340,9 +341,32 @@ export class KeyboardOnlyTreeEngine {
    */
   adjustTreeNode(entity: ConnectableEntity) {
     const rootNodeParents = this.project.graphMethods.getRoots(entity);
-    this.project.autoAlign.autoLayoutSelectedFastTreeMode(rootNodeParents[0]);
+    const rootNode = rootNodeParents[0];
+    this.project.autoAlign.autoLayoutSelectedFastTreeMode(rootNode);
+
+    // 添加闪烁特效：树形结构的外接矩形和根节点
+    const allNodes = this.project.graphMethods.getSuccessorSet(rootNode, true);
+    const treeBoundingRect = Rectangle.getBoundingRectangle(
+      allNodes.map((node) => node.collisionBox.getRectangle()),
+      10, // 添加一些 padding
+    );
+    const rootNodeRect = rootNode.collisionBox.getRectangle();
+
+    // 使用成功阴影颜色作为闪烁特效颜色
+    const flashColor = this.project.stageStyleManager.currentStyle.effects.successShadow;
+
+    // 为树的外接矩形添加闪烁特效
+    this.project.effects.addEffect(
+      new RectangleRenderEffect(new ProgressNumber(0, 60), treeBoundingRect, flashColor.toTransparent(), flashColor, 3),
+    );
+
+    // 为根节点添加闪烁特效
+    this.project.effects.addEffect(
+      new RectangleRenderEffect(new ProgressNumber(0, 60), rootNodeRect, flashColor.toTransparent(), flashColor, 4),
+    );
+
     // 恢复选择状态
-    rootNodeParents[0].isSelected = false;
+    rootNode.isSelected = false;
     entity.isSelected = true;
   }
 
