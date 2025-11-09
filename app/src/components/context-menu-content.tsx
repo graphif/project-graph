@@ -44,13 +44,11 @@ import {
   LayoutDashboard,
   Maximize2,
   Minimize2,
-  MousePointer,
   MoveHorizontal,
   MoveUpRight,
   Network,
   Package,
   Palette,
-  Pencil,
   RefreshCcw,
   Slash,
   Spline,
@@ -60,7 +58,6 @@ import {
   TextSelect,
   Trash,
   Undo,
-  Waypoints,
   SquaresUnite,
   SquareSplitHorizontal,
   Repeat2,
@@ -843,44 +840,6 @@ export default function MyContextMenuContent() {
           </SubContent>
         </Sub>
       )}
-
-      {/* 鼠标模式 */}
-      <Item className="bg-transparent! gap-0 p-0">
-        <ContextMenuTooltip keyId="checkoutLeftMouseToSelectAndMove">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              Settings.mouseLeftMode = "selectAndMove";
-            }}
-          >
-            <MousePointer />
-          </Button>
-        </ContextMenuTooltip>
-
-        <ContextMenuTooltip keyId="checkoutLeftMouseToDrawing">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              Settings.mouseLeftMode = "draw";
-            }}
-          >
-            <Pencil />
-          </Button>
-        </ContextMenuTooltip>
-        <ContextMenuTooltip keyId="checkoutLeftMouseToConnectAndCutting">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              Settings.mouseLeftMode = "connectAndCut";
-            }}
-          >
-            <Waypoints />
-          </Button>
-        </ContextMenuTooltip>
-      </Item>
     </Content>
   );
 }
@@ -917,11 +876,14 @@ function ContextMenuTooltip({ keyId, children = <></> }: { keyId: string; childr
           let res = "";
           if (seq.control) {
             res += "Ctrl+";
-          } else if (seq.meta) {
+          }
+          if (seq.meta) {
             res += "Meta+";
-          } else if (seq.shift) {
+          }
+          if (seq.shift) {
             res += "Shift+";
-          } else if (seq.alt) {
+          }
+          if (seq.alt) {
             res += "Alt+";
           }
           return res + seq.key.toUpperCase();

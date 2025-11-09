@@ -32,6 +32,7 @@ import { register } from "@tauri-apps/plugin-global-shortcut";
 import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { ProjectTabs } from "./ProjectTabs";
 import { DropWindowCover } from "./DropWindowCover";
+import ToolbarContent from "./components/toolbar-content";
 
 export default function App() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -411,6 +412,9 @@ export default function App() {
       <RenderSubWindows /> */}
 
       <RenderSubWindows />
+
+      {/* 底部工具栏 */}
+      {activeProject && <ToolbarContent />}
 
       {/* 右上角关闭的触发角 */}
       {isWindows && (
