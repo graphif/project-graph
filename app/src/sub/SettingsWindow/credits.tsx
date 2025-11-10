@@ -18,6 +18,13 @@ const donations: DonationData[] = [
   // { user: "MacBook", note: "littlefean", amount: -7599.2 },
   { user: "域名 project-graph.top", note: "zty012", amount: -13.66 },
   // 以下为捐赠用户
+  { user: "大纯", note: "希望软件越来越好", amount: 6.6 },
+  { user: "爱和小狗打招呼", note: "厉害厉害", amount: 6.8 },
+  { user: "傅劲 Jin Fu", note: "加油，坚持下去。很要用的软件", amount: 20 },
+  { user: "", note: "", amount: 3 },
+  { user: "凯尔希握力计", note: "希望能在力所能及的前提下，能支持对draw.io的导入", amount: 20 },
+  { user: "凯尔希握力计", note: "", amount: 0.01 },
+  { user: "李康", note: "非常好用的一款软件，希望越做越好", amount: 20 },
   { user: "X.", note: "牛逼666", amount: 6.66 },
   { user: "LzM", note: "希望会有导出PDF格式的功能", amount: 20 },
   { user: "LzM", note: "希望持续更新，太好使了", amount: 30 },
