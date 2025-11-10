@@ -401,205 +401,324 @@ export class NodeAdder {
    *   B --> D[D];
    */
   public addNodeMermaidByText(text: string, diffLocation: Vector = Vector.getZero()) {
-    // 验证文本格式
-    text = text.trim();
-    if (!text.startsWith("graph TD;") || !text.endsWith(";")) {
-      throw new Error("mermaid文本必须以 'graph TD;' 开头并以 ';' 结尾");
+    const normalizeLine = (line: string) => line.trim().replace(/;$/, "");
+
+    type MermaidNodeToken = {
+      id: string;
+      label?: string;
+      shape: "rectangle" | "round" | "circle" | "rhombus" | "stadium" | "other";
+    };
+
+    const decodeMermaidText = (value: string): string => value.replace(/&quot;/g, '"').replace(/<br\s*\/?>/gi, "\n");
+
+    const sanitizeLabel = (raw: string | undefined): string | undefined => {
+      if (!raw) {
+        return undefined;
+      }
+      let result = raw.trim();
+      if ((result.startsWith('"') && result.endsWith('"')) || (result.startsWith("'") && result.endsWith("'"))) {
+        result = result.slice(1, -1);
+      }
+      result = decodeMermaidText(result);
+      result = result.trim();
+      return result.length > 0 ? result : undefined;
+    };
+
+    const parseNodeToken = (token: string): MermaidNodeToken => {
+      const content = normalizeLine(token);
+
+      const bracketMatch = content.match(/^([^[]+)\[(.*)\]$/);
+      if (bracketMatch) {
+        return {
+          id: decodeMermaidText(bracketMatch[1].trim()),
+          label: sanitizeLabel(bracketMatch[2]),
+          shape: "rectangle",
+        };
+      }
+
+      const quotedBracketMatch = content.match(/^([^[]+)\["(.*)"\]$/);
+      if (quotedBracketMatch) {
+        return {
+          id: decodeMermaidText(quotedBracketMatch[1].trim()),
+          label: sanitizeLabel(`"${quotedBracketMatch[2]}"`),
+          shape: "rectangle",
+        };
+      }
+
+      const doubleRoundMatch = content.match(/^([^(]+)\(\((.*)\)\)$/);
+      if (doubleRoundMatch) {
+        return {
+          id: decodeMermaidText(doubleRoundMatch[1].trim()),
+          label: sanitizeLabel(doubleRoundMatch[2]),
+          shape: "circle",
+        };
+      }
+
+      const roundMatch = content.match(/^([^(]+)\((.*)\)$/);
+      if (roundMatch) {
+        return {
+          id: decodeMermaidText(roundMatch[1].trim()),
+          label: sanitizeLabel(roundMatch[2]),
+          shape: "round",
+        };
+      }
+
+      const rhombusMatch = content.match(/^([^{}]+)\{(.*)\}$/);
+      if (rhombusMatch) {
+        return {
+          id: decodeMermaidText(rhombusMatch[1].trim()),
+          label: sanitizeLabel(rhombusMatch[2]),
+          shape: "rhombus",
+        };
+      }
+
+      const stadiumMatch = content.match(/^([^[]+)\[\((.*)\)\]$/);
+      if (stadiumMatch) {
+        return {
+          id: decodeMermaidText(stadiumMatch[1].trim()),
+          label: sanitizeLabel(stadiumMatch[2]),
+          shape: "stadium",
+        };
+      }
+
+      const cleanId = sanitizeLabel(content) ?? decodeMermaidText(content);
+      return {
+        id: cleanId,
+        shape: "other",
+      };
+    };
+
+    const lines = text
+      .replace(/\r/g, "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(
+        (line) =>
+          line.length > 0 &&
+          !line.startsWith("```") &&
+          !line.startsWith("%%") &&
+          !line.toLowerCase().startsWith("style ") &&
+          !line.toLowerCase().startsWith("linkstyle ") &&
+          !line.toLowerCase().startsWith("classdef "),
+      );
+
+    if (lines.length === 0) {
+      return;
     }
 
-    // 提取中间部分
-    const content = text.slice("graph TD;".length, -1).trim();
-    const lines = content.split(";");
+    const entityMap = new Map<string, ConnectableEntity>();
+    const entityParentMap = new Map<ConnectableEntity, Section>();
+    const sectionChildrenMap = new Map<Section, ConnectableEntity[]>();
+    const sectionStack: Section[] = [];
+    const createdEntities = new Set<ConnectableEntity>();
+    const pendingEdges: Array<{ source: ConnectableEntity; target: ConnectableEntity; label?: string }> = [];
 
-    // 存储节点和section的映射
-    const entityMap = new Map<string, ConnectableEntity | Section>();
-    // 存储连接关系
-    const connections: { source: string; target: string; text?: string }[] = [];
-
-    // 解析每一行
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      if (trimmedLine === "") continue;
-
-      // 处理连接关系
-      if (trimmedLine.includes("-->")) {
-        const parts = trimmedLine.split("-->");
-        if (parts.length !== 2) {
-          throw new Error(`解析时出现错误: "${line}"，连接格式不正确`);
-        }
-        const source = parts[0].trim();
-        const target = parts[1].trim();
-        connections.push({ source, target });
-      } else if (trimmedLine.includes("-")) {
-        // 处理带文字的连接
-        const parts = trimmedLine.split("->");
-        if (parts.length !== 2) {
-          throw new Error(`解析时出现错误: "${line}"，连接格式不正确`);
-        }
-        const leftContent = parts[0].trim();
-        const target = parts[1].trim();
-
-        const leftParts = leftContent.split("-");
-        if (leftParts.length !== 2) {
-          throw new Error(`解析时出现错误: "${line}"，带文字的连接格式不正确`);
-        }
-        const source = leftParts[0].trim();
-        const edgeText = leftParts[1].trim();
-        connections.push({ source, target, text: edgeText });
-      } else {
-        // 单独的节点定义
-        this.createEntityFromMermaidNode(trimmedLine, entityMap, diffLocation);
+    const ensureSectionChild = (section: Section, child: ConnectableEntity) => {
+      if (section === child) {
+        return;
       }
-    }
-
-    // 为所有在连接中提到但尚未创建的节点创建实体
-    for (const connection of connections) {
-      if (!entityMap.has(connection.source)) {
-        this.createEntityFromMermaidNode(connection.source, entityMap, diffLocation);
+      if (!sectionChildrenMap.has(section)) {
+        sectionChildrenMap.set(section, []);
       }
-      if (!entityMap.has(connection.target)) {
-        this.createEntityFromMermaidNode(connection.target, entityMap, diffLocation);
+      const childList = sectionChildrenMap.get(section)!;
+      if (!childList.includes(child)) {
+        childList.push(child);
       }
-    }
+      if (!section.children.includes(child)) {
+        section.children.push(child);
+      }
+      entityParentMap.set(child, section);
+    };
 
-    // 建立连接关系
-    for (const connection of connections) {
-      const sourceEntity = entityMap.get(connection.source);
-      const targetEntity = entityMap.get(connection.target);
+    const shouldTreatAsSection = (label: string | undefined, forceSection: boolean): boolean => {
+      if (forceSection) {
+        return true;
+      }
+      if (!label) {
+        return false;
+      }
+      return /(section|章节|组|容器)/i.test(label);
+    };
 
-      if (
-        sourceEntity &&
-        targetEntity &&
-        sourceEntity instanceof ConnectableEntity &&
-        targetEntity instanceof ConnectableEntity
-      ) {
-        this.project.stageManager.connectEntity(sourceEntity, targetEntity);
+    const createDefaultRectangle = (size: Vector) =>
+      new Rectangle(diffLocation.add(new Vector(Math.random() * 40, Math.random() * 40)), size);
 
-        // 如果有连线文字
-        if (connection.text) {
-          const edge = this.project.graphMethods.getEdgeFromTwoEntity(sourceEntity, targetEntity);
-          if (edge) {
-            edge.rename(connection.text);
+    const ensureEntity = (
+      token: string,
+      options: { forceSection?: boolean; displayText?: string } = {},
+    ): ConnectableEntity => {
+      const parsed = parseNodeToken(token);
+      const baseId = parsed.id;
+      if (!baseId) {
+        throw new Error(`无法解析节点标识: "${token}"`);
+      }
+
+      const existing = entityMap.get(baseId);
+      const finalLabel = options.displayText ?? parsed.label;
+      const forceSection = options.forceSection ?? false;
+      const treatAsSection = shouldTreatAsSection(finalLabel, forceSection);
+
+      if (existing) {
+        if (finalLabel) {
+          if (existing instanceof Section) {
+            if (existing.text !== finalLabel) {
+              existing.rename(finalLabel);
+            }
+          } else if (existing instanceof TextNode) {
+            if (existing.text !== finalLabel) {
+              existing.rename(finalLabel);
+            }
           }
         }
+        if (sectionStack.length > 0) {
+          const currentSection = sectionStack[sectionStack.length - 1];
+          ensureSectionChild(currentSection, existing);
+        }
+        return existing;
       }
-    }
 
-    // 设置嵌套关系
-    this.setupSectionNesting(entityMap);
-
-    // 调整位置和大小
-    this.adjustEntityLayout(entityMap, diffLocation);
-  }
-
-  /**
-   * 从mermaid节点格式创建实体
-   * 例如: A[Section A] -> 创建名为A的Section
-   *       B[B] -> 创建名为B的TextNode
-   */
-  private createEntityFromMermaidNode(
-    nodeStr: string,
-    entityMap: Map<string, ConnectableEntity | Section>,
-    diffLocation: Vector,
-  ) {
-    // 匹配 [Name] 格式
-    const match = nodeStr.match(/^([^\\[]+)\[(.*)\]$/);
-    if (match) {
-      const id = match[1].trim();
-      const text = match[2].trim();
-
-      // 判断是否为Section (名称中包含Section或章节等关键词)
-      let entity: ConnectableEntity | Section;
-      if (text.includes("Section") || text.includes("章节") || text.includes("组") || text.includes("容器")) {
-        // 创建Section
-        entity = new Section(this.project, {
-          text,
-          collisionBox: new CollisionBox([
-            new Rectangle(diffLocation.add(new Vector(Math.random() * 200, Math.random() * 200)), new Vector(200, 150)),
-          ]),
+      let entity: ConnectableEntity;
+      if (treatAsSection) {
+        const section = new Section(this.project, {
+          text: finalLabel ?? baseId,
+          collisionBox: new CollisionBox([createDefaultRectangle(new Vector(240, 180))]),
+          children: [],
         });
+        entity = section;
+        sectionChildrenMap.set(section, sectionChildrenMap.get(section) ?? []);
       } else {
-        // 创建普通TextNode
         entity = new TextNode(this.project, {
-          text,
-          collisionBox: new CollisionBox([
-            new Rectangle(diffLocation.add(new Vector(Math.random() * 200, Math.random() * 200)), Vector.same(100)),
-          ]),
+          text: finalLabel ?? baseId,
+          collisionBox: new CollisionBox([createDefaultRectangle(Vector.same(120))]),
         });
       }
 
       this.project.stageManager.add(entity);
-      entityMap.set(id, entity);
-    } else {
-      // 如果没有[Name]格式，直接使用节点名
-      const id = nodeStr.trim();
-      if (!entityMap.has(id)) {
-        const node = new TextNode(this.project, {
-          text: id,
-          collisionBox: new CollisionBox([
-            new Rectangle(diffLocation.add(new Vector(Math.random() * 200, Math.random() * 200)), Vector.same(100)),
-          ]),
-        });
-        this.project.stageManager.add(node);
-        entityMap.set(id, node);
+      entityMap.set(baseId, entity);
+      createdEntities.add(entity);
+
+      if (sectionStack.length > 0) {
+        const currentSection = sectionStack[sectionStack.length - 1];
+        ensureSectionChild(currentSection, entity);
       }
+
+      return entity;
+    };
+
+    for (const rawLine of lines) {
+      const line = normalizeLine(rawLine);
+      if (line.length === 0) {
+        continue;
+      }
+
+      const lowerLine = line.toLowerCase();
+      if (lowerLine.startsWith("graph ")) {
+        continue;
+      }
+
+      if (lowerLine.startsWith("subgraph ")) {
+        const token = line.slice("subgraph ".length).trim();
+        const sectionEntity = ensureEntity(token, { forceSection: true });
+        if (sectionEntity instanceof Section) {
+          sectionStack.push(sectionEntity);
+        }
+        continue;
+      }
+
+      if (lowerLine === "end" || lowerLine.startsWith("end ")) {
+        sectionStack.pop();
+        continue;
+      }
+
+      const arrowIndex = line.indexOf("-->");
+      if (arrowIndex !== -1) {
+        const leftPart = line.slice(0, arrowIndex).trim();
+        const rightPart = line.slice(arrowIndex + 3).trim();
+
+        if (!rightPart) {
+          continue;
+        }
+
+        let sourceToken = leftPart;
+        let edgeLabel: string | undefined;
+
+        const labelIndex = leftPart.indexOf("--");
+        if (labelIndex !== -1) {
+          sourceToken = leftPart.slice(0, labelIndex).trim();
+          const rawLabel = leftPart.slice(labelIndex + 2).trim();
+          edgeLabel = sanitizeLabel(rawLabel);
+        }
+
+        const sourceEntity = ensureEntity(sourceToken);
+        const targetEntity = ensureEntity(rightPart);
+
+        pendingEdges.push({ source: sourceEntity, target: targetEntity, label: edgeLabel });
+        continue;
+      }
+
+      ensureEntity(line);
     }
-  }
 
-  /**
-   * 设置Section的嵌套关系
-   * 基于连接关系推断嵌套
-   */
-  private setupSectionNesting(entityMap: Map<string, ConnectableEntity | Section>) {
-    // 找出所有Section
-    // const sections = Array.from(entityMap.values()).filter((e) => e instanceof Section) as Section[];
-    const nodes = Array.from(entityMap.values()).filter(
-      (e) => e instanceof ConnectableEntity && !(e instanceof Section),
-    ) as ConnectableEntity[];
+    const layoutGroup = (entities: ConnectableEntity[], origin: Vector, spacing: Vector) => {
+      if (entities.length === 0) {
+        return;
+      }
+      const columns = Math.max(1, Math.ceil(Math.sqrt(entities.length)));
+      for (let index = 0; index < entities.length; index++) {
+        const entity = entities[index];
+        const row = Math.floor(index / columns);
+        const col = index % columns;
+        const target = origin.add(new Vector(col * spacing.x, row * spacing.y));
 
-    // 对于每个节点，检查它是否应该被包含在某个Section中
-    for (const node of nodes) {
-      // 找出连接到这个节点的所有实体
-      const connectedEntities = this.project.graphMethods
-        .nodeParentArray(node)
-        .concat(this.project.graphMethods.nodeChildrenArray(node));
-
-      // 检查这些实体中是否有Section
-      for (const connectedEntity of connectedEntities) {
-        if (connectedEntity instanceof Section) {
-          // 将节点添加到Section中
-          connectedEntity.children.push(node);
-          connectedEntity.adjustLocationAndSize();
-          break; // 只添加到第一个匹配的Section中
+        if (entity instanceof Section) {
+          layoutSection(entity, target);
+        } else {
+          entity.moveTo(target);
+          if (entity instanceof TextNode) {
+            entity.forceAdjustSizeByText();
+          }
         }
       }
-    }
-  }
+    };
 
-  /**
-   * 调整实体的布局
-   */
-  private adjustEntityLayout(entityMap: Map<string, ConnectableEntity | Section>, diffLocation: Vector) {
-    const entities = Array.from(entityMap.values());
-
-    // 简单的网格布局
-    const rows = Math.ceil(Math.sqrt(entities.length));
-    const cols = Math.ceil(entities.length / rows);
-    const spacing = 250;
-
-    let index = 0;
-    for (const entity of entities) {
-      const row = Math.floor(index / cols);
-      const col = index % cols;
-      const newLocation = diffLocation.add(new Vector(col * spacing, row * spacing));
-      entity.moveTo(newLocation);
-
-      // 如果是Section，调整其大小以包含所有子元素
-      if (entity instanceof Section) {
-        entity.adjustLocationAndSize();
+    const layoutSection = (section: Section, origin: Vector) => {
+      const children = sectionChildrenMap.get(section) ?? [];
+      if (children.length === 0) {
+        section.moveTo(origin);
+        section.adjustLocationAndSize();
+        section.moveTo(origin);
+        return;
       }
 
-      index++;
+      section.moveTo(origin);
+      layoutGroup(children, origin.add(new Vector(40, 120)), new Vector(200, 160));
+      section.adjustLocationAndSize();
+      section.moveTo(origin);
+    };
+
+    const rootEntities: ConnectableEntity[] = [];
+    for (const entity of entityMap.values()) {
+      if (!entityParentMap.has(entity)) {
+        rootEntities.push(entity);
+      }
+    }
+
+    layoutGroup(rootEntities, diffLocation, new Vector(260, 200));
+
+    for (const { source, target, label } of pendingEdges) {
+      if (label) {
+        this.project.nodeConnector.connectEntityFast(source, target, label);
+      } else {
+        this.project.nodeConnector.connectEntityFast(source, target);
+      }
+    }
+
+    for (const section of sectionChildrenMap.keys()) {
+      section.adjustLocationAndSize();
+    }
+
+    if (createdEntities.size > 0 || pendingEdges.length > 0) {
+      this.project.historyManager.recordStep();
     }
   }
 }

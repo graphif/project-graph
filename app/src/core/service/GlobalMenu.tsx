@@ -638,9 +638,7 @@ export function GlobalMenu() {
               </Item>
               <Item
                 onClick={async () => {
-                  if (toast.warning("目前还在开发中，此功能还不完善") == 1111) {
-                    GenerateNodeMermaid.open();
-                  }
+                  GenerateNodeMermaid.open();
                 }}
               >
                 <GitCompareArrows />

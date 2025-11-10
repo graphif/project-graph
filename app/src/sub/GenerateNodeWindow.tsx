@@ -203,7 +203,7 @@ export function GenerateNodeMermaid() {
 
 GenerateNodeMermaid.open = () => {
   SubWindow.create({
-    title: "生成框嵌套网状结构",
+    title: "生成框嵌套网状结构(Mermaid格式)",
     children: <GenerateNodeMermaid />,
     rect: new Rectangle(new Vector(100, 100), new Vector(600, 600)),
   });
