@@ -12,7 +12,8 @@ import { toast } from "sonner";
 @service("keyboardOnlyEngine")
 export class KeyboardOnlyEngine {
   constructor(private readonly project: Project) {
-    this.bindKeyEvents();
+    this.project.canvas.element.addEventListener("keydown", this.onKeyDown);
+    this.project.canvas.element.addEventListener("keyup", this.onKeyUp);
   }
 
   /**
@@ -26,59 +27,64 @@ export class KeyboardOnlyEngine {
     return this.openning;
   }
 
-  /**
-   * 开始绑定按键事件
-   * 仅在最开始调用一次
-   */
-  private bindKeyEvents() {
-    const startEditNode = (event: KeyboardEvent, selectedNode: TextNode) => {
-      event.preventDefault(); // 这个prevent必须开启，否则会立刻在刚创建的输入框里输入一个换行符。
-      this.addSuccessEffect();
-      // 编辑节点
-      setTimeout(() => {
-        this.project.controllerUtils.editTextNode(selectedNode, Settings.textNodeSelectAllWhenStartEditByKeyboard);
-      }, 1); // 上面的prevent似乎不生效了，但这里加个1毫秒就能解决了
-    };
+  public dispose() {
+    // 销毁服务
+    this.project.canvas.element.removeEventListener("keydown", this.onKeyDown);
+    this.project.canvas.element.removeEventListener("keyup", this.onKeyUp);
+  }
 
-    this.project.canvas.element.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        const enterKeyDetail = getEnterKey(event);
-        if (Settings.textNodeStartEditMode === enterKeyDetail) {
-          // 这个还必须在down的位置上，因为在up上会导致无限触发
-          const selectedNode = this.project.stageManager.getTextNodes().find((node) => node.isSelected);
-          if (!selectedNode) return;
-          startEditNode(event, selectedNode);
-        } else {
-          // 用户可能记错了快捷键
-          this.addFailEffect();
-        }
-      } else if (event.key === " ") {
-        if (Settings.textNodeStartEditMode === "space") {
-          // 用户设置了空格键进入节点编辑状态（3群用户：神奈川）
-          const selectedNode = this.project.stageManager.getTextNodes().find((node) => node.isSelected);
-          if (!selectedNode) return;
-          if (this.project.controller.isMouseDown[0]) {
-            // 不要在可能拖动节点的情况下按空格
-            toast.warning("请不要在拖动节点的过程中按空格");
-            return;
-          }
-          startEditNode(event, selectedNode);
-        }
-      } else if (event.key === "Escape") {
-        // 取消全部选择
-        for (const stageObject of this.project.stageManager.getStageObjects()) {
-          stageObject.isSelected = false;
-        }
-      } else if (event.key === "F2") {
+  private startEditNode = (event: KeyboardEvent, selectedNode: TextNode) => {
+    event.preventDefault(); // 这个prevent必须开启，否则会立刻在刚创建的输入框里输入一个换行符。
+    this.addSuccessEffect();
+    // 编辑节点
+    setTimeout(() => {
+      this.project.controllerUtils.editTextNode(selectedNode, Settings.textNodeSelectAllWhenStartEditByKeyboard);
+    }, 1); // 上面的prevent似乎不生效了，但这里加个1毫秒就能解决了
+  };
+
+  private onKeyUp = (event: KeyboardEvent) => {
+    // 把空格键进入节点编辑状态的时机绑定到keyup上，这样就巧妙的解决了退出编辑状态后左键框选和点击失灵的问题。
+    if (event.key === " ") {
+      if (Settings.textNodeStartEditMode === "space") {
+        // 用户设置了空格键进入节点编辑状态（3群用户：神奈川）
         const selectedNode = this.project.stageManager.getTextNodes().find((node) => node.isSelected);
         if (!selectedNode) return;
-        // 编辑节点
-        this.project.controllerUtils.editTextNode(selectedNode);
-      } else {
-        // SelectChangeEngine.listenKeyDown(event);
+        if (this.project.controller.isMouseDown[0]) {
+          // 不要在可能拖动节点的情况下按空格
+          toast.warning("请不要在拖动节点的过程中按空格");
+          return;
+        }
+        this.startEditNode(event, selectedNode);
       }
-    });
-  }
+    }
+  };
+
+  private onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Enter") {
+      const enterKeyDetail = getEnterKey(event);
+      if (Settings.textNodeStartEditMode === enterKeyDetail) {
+        // 这个还必须在down的位置上，因为在up上会导致无限触发
+        const selectedNode = this.project.stageManager.getTextNodes().find((node) => node.isSelected);
+        if (!selectedNode) return;
+        this.startEditNode(event, selectedNode);
+      } else {
+        // 用户可能记错了快捷键
+        this.addFailEffect();
+      }
+    } else if (event.key === "Escape") {
+      // 取消全部选择
+      for (const stageObject of this.project.stageManager.getStageObjects()) {
+        stageObject.isSelected = false;
+      }
+    } else if (event.key === "F2") {
+      const selectedNode = this.project.stageManager.getTextNodes().find((node) => node.isSelected);
+      if (!selectedNode) return;
+      // 编辑节点
+      this.project.controllerUtils.editTextNode(selectedNode);
+    } else {
+      // SelectChangeEngine.listenKeyDown(event);
+    }
+  };
 
   private addSuccessEffect() {
     const textNodes = this.project.stageManager.getTextNodes().filter((textNode) => textNode.isSelected);
