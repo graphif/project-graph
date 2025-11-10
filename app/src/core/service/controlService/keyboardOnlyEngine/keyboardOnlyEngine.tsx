@@ -4,6 +4,7 @@ import { EntityShakeEffect } from "@/core/service/feedbackService/effectEngine/c
 import { Settings } from "@/core/service/Settings";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { getEnterKey } from "@/utils/keyboardFunctions";
+import { toast } from "sonner";
 
 /**
  * 纯键盘控制的相关引擎
@@ -53,8 +54,14 @@ export class KeyboardOnlyEngine {
         }
       } else if (event.key === " ") {
         if (Settings.textNodeStartEditMode === "space") {
+          // 用户设置了空格键进入节点编辑状态（3群用户：神奈川）
           const selectedNode = this.project.stageManager.getTextNodes().find((node) => node.isSelected);
           if (!selectedNode) return;
+          if (this.project.controller.isMouseDown[0]) {
+            // 不要在可能拖动节点的情况下按空格
+            toast.warning("请不要在拖动节点的过程中按空格");
+            return;
+          }
           startEditNode(event, selectedNode);
         }
       } else if (event.key === "Escape") {

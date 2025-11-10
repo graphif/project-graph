@@ -19,7 +19,7 @@ export class RectangleSlideEffect extends Effect {
   ) {
     super(timeProgress);
     this.subEffects = [];
-    const trailCount = 50; // 每条边显示5条尾翼线
+    const spacing = 20; // 尾翼线之间保持固定间距
     const minLength = 100;
     const maxLength = 200;
 
@@ -28,9 +28,9 @@ export class RectangleSlideEffect extends Effect {
       const isMovingRight = endRect.left > startRect.left;
       const edgeX = isMovingRight ? endRect.left : endRect.right;
 
-      // 在垂直边缘均匀分布尾翼线
-      for (let i = 0; i < trailCount; i++) {
-        const y = endRect.top + (endRect.height * i) / (trailCount - 1);
+      // 在垂直边缘按固定间距分布尾翼线
+      for (let offset = 0; offset <= endRect.height; offset += spacing) {
+        const y = endRect.top + offset;
         const startPoint = new Vector(edgeX, y);
         const endPoint = isMovingRight
           ? startPoint.subtract(new Vector(Random.randomFloat(minLength, maxLength), 0))
@@ -45,9 +45,9 @@ export class RectangleSlideEffect extends Effect {
       const isMovingDown = endRect.top > startRect.top;
       const edgeY = isMovingDown ? endRect.top : endRect.bottom;
 
-      // 在水平边缘均匀分布尾翼线
-      for (let i = 0; i < trailCount; i++) {
-        const x = endRect.left + (endRect.width * i) / (trailCount - 1);
+      // 在水平边缘按固定间距分布尾翼线
+      for (let offset = 0; offset <= endRect.width; offset += spacing) {
+        const x = endRect.left + offset;
         const startPoint = new Vector(x, edgeY);
         const endPoint = isMovingDown
           ? startPoint.subtract(new Vector(0, Random.randomFloat(minLength, maxLength)))

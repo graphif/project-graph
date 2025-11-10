@@ -686,7 +686,10 @@ export class Renderer {
     let x = margin;
     const fontSize = 30;
 
-    for (const key of this.project.controller.pressingKeySet) {
+    for (let key of this.project.controller.pressingKeySet) {
+      if (key === " ") {
+        key = "␣";
+      }
       const textLocation = new Vector(x, this.h - 100);
       this.project.textRenderer.renderText(
         key,
