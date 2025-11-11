@@ -93,10 +93,10 @@ export class Renderer {
     this.renderViewElements(viewRectangle);
   }
 
-  private renderViewElements(viewRectangle: Rectangle) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private renderViewElements(_viewRectangle: Rectangle) {
     this.renderSpecialKeys();
     this.renderCenterPointer();
-    this.renderPrivacyBoard(viewRectangle);
     this.renderDebugDetails();
   }
 
@@ -164,17 +164,6 @@ export class Renderer {
     }
   }
 
-  private renderPrivacyBoard(viewRectangle: Rectangle) {
-    // 画隐私保护边
-    if (Settings.protectingPrivacy) {
-      this.project.shapeRenderer.renderRect(
-        this.transformWorld2View(viewRectangle),
-        Color.Transparent,
-        new Color(33, 54, 167, 0.5),
-        50,
-      );
-    }
-  }
   /** 鼠标hover的边 */
   private renderHoverCollisionBox() {
     for (const edge of this.project.mouseInteraction.hoverEdges) {
