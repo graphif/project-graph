@@ -94,16 +94,21 @@ export class InputElement {
         isComposing = true;
       });
       inputElement.addEventListener("compositionend", () => {
-        isComposing = false;
+        // 防止此事件早于enter键按下触发（Mac的bug）
+        setTimeout(() => {
+          isComposing = false;
+        }, 100);
       });
-
       inputElement.addEventListener("keydown", (event) => {
         event.stopPropagation();
-        if (event.key === "Enter" && !isComposing) {
-          resolve(inputElement.value);
-          onChange(inputElement.value);
-          document.body.removeEventListener("mousedown", onOutsideClick);
-          removeElement();
+
+        if (event.key === "Enter") {
+          if (!(event.isComposing || isComposing)) {
+            resolve(inputElement.value);
+            onChange(inputElement.value);
+            document.body.removeEventListener("mousedown", onOutsideClick);
+            removeElement();
+          }
         }
         if (event.key === "Tab") {
           // 防止tab切换到其他按钮
