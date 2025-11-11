@@ -88,10 +88,20 @@ export default function KeyBind({
 }
 
 export function RenderKey({ data }: { data: ReturnType<typeof parseEmacsKey>[number] }) {
+  let keyShow = data.key;
+  if (data.key === "arrowup") {
+    keyShow = "↑";
+  } else if (data.key === "arrowdown") {
+    keyShow = "↓";
+  } else if (data.key === "arrowleft") {
+    keyShow = "←";
+  } else if (data.key === "arrowright") {
+    keyShow = "→";
+  }
   return (
-    <span className="not-first:before:content-[',_'] flex gap-1">
+    <span className="not-first:before:content-[',_'] flex gap-1 font-bold">
       <Modifiers modifiers={data} />
-      {data.key.startsWith("<") ? <MouseButton key_={data.key} /> : data.key}
+      {data.key.startsWith("<") ? <MouseButton key_={data.key} /> : keyShow}
     </span>
   );
 }
@@ -153,7 +163,7 @@ export function Modifiers({
     }
   }
   return mods.map((modifier, index) => (
-    <span className="bg-card rounded-sm px-1" key={index}>
+    <span className="bg-card text-foreground rounded-sm px-1 font-semibold" key={index}>
       {modifier}
     </span>
   ));
