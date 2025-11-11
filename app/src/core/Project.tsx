@@ -6,7 +6,7 @@ import { deserialize, serialize } from "@graphif/serializer";
 import { Decoder, Encoder } from "@msgpack/msgpack";
 import "@pixi/layout";
 import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, ZipWriter } from "@zip.js/zip.js";
-import { EventEmitter } from "events";
+import { EventEmitter } from "eventemitter3";
 import mime from "mime";
 import { Viewport } from "pixi-viewport";
 import { Application, Container, FederatedPointerEvent, Graphics, Point, PointData } from "pixi.js";

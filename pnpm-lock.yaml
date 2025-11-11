@@ -15,9 +15,6 @@ catalogs:
     react-dom:
       specifier: ^19.1.0
       version: 19.1.0
-    tsdown:
-      specifier: ^0.12.9
-      version: 0.12.9
     typescript:
       specifier: 5.9.2
       version: 5.9.2
@@ -402,9 +399,6 @@ importers:
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.1
-      events:
-        specifier: ^3.3.0
-        version: 3.3.0
       fuse.js:
         specifier: ^7.1.0
         version: 7.1.0
@@ -15025,7 +15019,8 @@ snapshots:
 
   eventemitter3@5.0.1: {}
 
-  events@3.3.0: {}
+  events@3.3.0:
+    optional: true
 
   execa@5.1.1:
     dependencies:

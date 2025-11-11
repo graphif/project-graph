@@ -1,7 +1,7 @@
 import { Project, service } from "@/core/Project";
 import { sleep } from "@/utils/sleep";
 import { Vector } from "@graphif/data-structures";
-import EventEmitter from "events";
+import EventEmitter from "eventemitter3";
 
 interface EventMap {
   progress: [progress: number];
