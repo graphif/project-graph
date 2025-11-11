@@ -197,9 +197,16 @@ settings:
   protectingPrivacy:
     title: Privacy Protection
     description: |
-      When enabled for screenshot feedback, all Chinese characters will be replaced with 《㊙》 to protect privacy.
+      When enabled for screenshot feedback, text will be replaced according to the selected mode to protect privacy.
       This is only a display-level replacement and does not affect the actual data.
       You can disable it after feedback to restore the original view.
+  protectingPrivacyMode:
+    title: Privacy Protection Mode
+    description: |
+      Select the text replacement method for privacy protection
+    options:
+      secretWord: Uniform Replacement (Chinese→㊙, Letters→a/A, Numbers→6)
+      caesar: Caesar Shift (all characters shifted one position back)
   entityDetailsFontSize:
     title: Entity Details Font Size
     description: |

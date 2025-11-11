@@ -1,5 +1,6 @@
 import { isMac } from "@/utils/platform";
 import { MaxSizeCache, Vector } from "@graphif/data-structures";
+import { Settings } from "@/core/service/Settings";
 
 const _canvas = document.createElement("canvas");
 const _context = _canvas.getContext("2d");
@@ -65,12 +66,47 @@ export function getMultiLineTextSize(text: string, fontSize: number, lineHeight:
 }
 
 /**
- * 所有的汉字替换成“㊙”
- * 所有小写字母替换成 a，大写字母替换成 A
- * 所有数字全部替换成 6
+ * 隐私保护文本替换
+ * 根据设置的保护模式进行不同的替换
  * @param text
  */
 export function replaceTextWhenProtect(text: string) {
+  // 检查是否设置了保护模式，如果没有，默认为secretWord
+  const mode = Settings.protectingPrivacyMode || "secretWord";
+
+  if (mode === "caesar") {
+    // 凯撒移位加密：所有字符往后移动一位
+    return text
+      .split("")
+      .map((char) => {
+        const code = char.charCodeAt(0);
+
+        // 对于可打印ASCII字符进行移位
+        if (code >= 32 && code <= 126) {
+          // 特殊处理：'z' 移到 'a'，'Z' 移到 'A'，'9' 移到 '0'
+          if (char === "z") return "a";
+          if (char === "Z") return "A";
+          if (char === "9") return "0";
+          // 其他字符直接 +1
+          return String.fromCharCode(code + 1);
+        }
+
+        // 对于中文字符，进行移位加密
+        if (code >= 0x4e00 && code <= 0x9fa5) {
+          // 中文字符在Unicode范围内循环移位
+          // 0x4e00是汉字起始，0x9fa5是汉字结束，总共约20902个汉字
+          const shiftedCode = code + 1;
+          // 如果超过汉字范围，则回到起始位置
+          return String.fromCharCode(shiftedCode <= 0x9fa5 ? shiftedCode : 0x4e00);
+        }
+
+        // 其他字符保持不变
+        return char;
+      })
+      .join("");
+  }
+
+  // 默认的secretWord模式
   return text
     .replace(/[\u4e00-\u9fa5]/g, "㊙")
     .replace(/[a-z]/g, "a")

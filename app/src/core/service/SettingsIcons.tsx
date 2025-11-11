@@ -145,6 +145,7 @@ export const settingsIcons = {
   entityDetailsWidthLimit: Space,
   showDebug: Bug,
   protectingPrivacy: VenetianMask,
+  protectingPrivacyMode: VenetianMask,
   windowCollapsingWidth: MoveHorizontal,
   windowCollapsingHeight: MoveVertical,
   limitCameraInCycleSpace: Ratio,

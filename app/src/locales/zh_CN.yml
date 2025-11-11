@@ -259,9 +259,16 @@ settings:
   protectingPrivacy:
     title: 隐私保护
     description: |
-      用于反馈问题截图时，开启此项之后将汉字全部替换成《㊙》，以保护隐私。
+      用于反馈问题截图时，开启此项之后将根据所选模式替换文字，以保护隐私。
       仅作显示层面的替换，不会影响真实数据
       反馈完毕后可再关闭，复原
+  protectingPrivacyMode:
+    title: 隐私保护模式
+    description: |
+      选择隐私保护时的文字替换方式
+    options:
+      secretWord: 统一替换（汉字→㊙，字母→a/A，数字→6）
+      caesar: 凯撒移位（所有字符往后移动一位）
   entityDetailsFontSize:
     title: 实体详细信息字体大小
     description: |

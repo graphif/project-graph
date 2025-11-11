@@ -25,6 +25,7 @@ export const settingsSchema = z.object({
   entityDetailsWidthLimit: z.number().min(200).max(2000).int().default(200),
   showDebug: z.boolean().default(false),
   protectingPrivacy: z.boolean().default(false),
+  protectingPrivacyMode: z.union([z.literal("secretWord"), z.literal("caesar")]).default("secretWord"),
   windowCollapsingWidth: z.number().min(50).max(2000).int().default(300),
   windowCollapsingHeight: z.number().min(25).max(2000).int().default(300),
   limitCameraInCycleSpace: z.boolean().default(false),

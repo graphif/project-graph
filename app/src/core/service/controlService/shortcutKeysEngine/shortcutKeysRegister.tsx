@@ -544,11 +544,6 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "checkoutProtectPrivacy",
     defaultKey: "C-2",
     onPress: async () => {
-      if (Settings.protectingPrivacy) {
-        toast.info("您已退出隐私模式，再次按下此快捷键、或在设置中开启，可进入隐私模式");
-      } else {
-        toast.info("您已通过快捷键进入隐私模式，再次按下此快捷键、或在设置中关闭，可退出隐私模式");
-      }
       Settings.protectingPrivacy = !Settings.protectingPrivacy;
     },
     isUI: true,

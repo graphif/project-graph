@@ -224,7 +224,7 @@ const categories = {
       "entityDetailsLinesLimit",
       "entityDetailsWidthLimit",
     ],
-    debug: ["showDebug", "protectingPrivacy"],
+    debug: ["showDebug", "protectingPrivacy", "protectingPrivacyMode"],
     miniWindow: ["windowCollapsingWidth", "windowCollapsingHeight"],
     experimental: ["limitCameraInCycleSpace", "cameraCycleSpaceSizeX", "cameraCycleSpaceSizeY"],
   },
