@@ -559,6 +559,90 @@ export function GlobalMenu() {
             <MapPin />
             {t("view.moveViewToOrigin")}
           </Item>
+          <Item
+            onClick={async () => {
+              if (!activeProject) return;
+              let isValid = false;
+              let scale = 1;
+
+              while (!isValid) {
+                const scaleStr = await Dialog.input("设置自定义视野大小", "请输入缩放比例（推荐范围：0.1-10）", {
+                  defaultValue: scale.toString(),
+                });
+
+                if (!scaleStr) return; // 用户取消
+
+                const parsedScale = parseFloat(scaleStr);
+                if (isNaN(parsedScale)) {
+                  toast.error("请输入有效的数字");
+                } else if (parsedScale <= 0) {
+                  toast.error("缩放比例必须大于0");
+                } else if (parsedScale > 100) {
+                  toast.error("缩放比例不能超过100");
+                } else {
+                  scale = parsedScale;
+                  isValid = true;
+                }
+              }
+
+              // 直接修改camera内部属性
+              activeProject.camera.targetScale = scale;
+              activeProject.camera.currentScale = scale;
+            }}
+          >
+            <Scaling />
+            自定义视野大小
+          </Item>
+          <Item
+            onClick={async () => {
+              if (!activeProject) return;
+
+              // 获取并验证X坐标
+              let x = 0;
+              let xValid = false;
+              while (!xValid) {
+                const xStr = await Dialog.input("设置自定义视野位置", "请输入X坐标", {
+                  defaultValue: x.toString(),
+                });
+
+                if (!xStr) return; // 用户取消
+
+                const parsedX = parseFloat(xStr);
+                if (isNaN(parsedX)) {
+                  toast.error("请输入有效的数字");
+                } else {
+                  x = parsedX;
+                  xValid = true;
+                }
+              }
+
+              // 获取并验证Y坐标
+              let y = 0;
+              let yValid = false;
+              while (!yValid) {
+                const yStr = await Dialog.input("设置自定义视野位置", "请输入Y坐标", {
+                  defaultValue: y.toString(),
+                });
+
+                if (!yStr) return; // 用户取消
+
+                const parsedY = parseFloat(yStr);
+                if (isNaN(parsedY)) {
+                  toast.error("请输入有效的数字");
+                } else {
+                  y = parsedY;
+                  yValid = true;
+                }
+              }
+
+              // 直接修改camera内部位置属性
+              activeProject.camera.location.x = x;
+              activeProject.camera.location.y = y;
+            }}
+          >
+            <MapPin />
+            自定义视野位置
+          </Item>
         </Content>
       </Menu>
 
