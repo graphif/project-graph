@@ -94,7 +94,7 @@ export class SectionInOutManager {
     const textNode = new TextNode(this.project, {
       uuid: section.uuid, // 保持UUID不变
       text: section.text,
-      // details: section.details,
+      details: section.details,
       collisionBox: new CollisionBox([section.collisionBox.getRectangle()]),
       color: section.color.clone(),
     });
