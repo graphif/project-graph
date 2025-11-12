@@ -574,6 +574,10 @@ settings:
   macTrackpadScaleSensitivity:
     title: MacBook trackpad two-finger zoom sensitivity
     description: The larger the value, the faster the scaling speed
+  macEnableControlToCut:
+    title: mac下是否启用 control键按下来开始刀斩
+    description:
+      按下control键，在舞台上移动鼠标，再松开control键，完成一次刀斩
   mouseSideWheelMode:
     title: Mouse Side Scroll Wheel Mode
     description: "The side scroll wheel is the roller on the thumb\n"

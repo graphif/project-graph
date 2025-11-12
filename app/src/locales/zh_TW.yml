@@ -493,6 +493,10 @@ settings:
   macTrackpadScaleSensitivity:
     title: macbook 的觸控板雙指縮放靈敏度
     description: "值越大，縮放的速度越快\n"
+  macEnableControlToCut:
+    title: mac下是否启用 control键按下来开始刀斩
+    description:
+      按下control键，在舞台上移动鼠标，再松开control键，完成一次刀斩
   uiButtonClickSoundFile:
     title: 按鈕點擊時的聲音文件
     description: "按鈕點擊時播放的聲音文件路徑\n"

@@ -93,6 +93,7 @@ export const settingsSchema = z.object({
     .union([z.literal("trackpadIntAndWheelFloat"), z.literal("tarckpadFloatAndWheelInt")])
     .default("trackpadIntAndWheelFloat"),
   macTrackpadScaleSensitivity: z.number().min(0).max(1).multipleOf(0.001).default(0.5),
+  macEnableControlToCut: z.boolean().default(true),
   allowMoveCameraByWSAD: z.boolean().default(false),
   allowGlobalHotKeys: z.boolean().default(true),
   cameraFollowsSelectedNodeOnArrowKeys: z.boolean().default(false),

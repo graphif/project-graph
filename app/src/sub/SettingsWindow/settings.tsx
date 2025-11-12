@@ -246,6 +246,7 @@ const categories = {
       "doubleClickMiddleMouseButton",
       "mouseSideWheelMode",
       "macMouseWheelIsSmoothed",
+      "macEnableControlToCut",
     ],
     touchpad: ["enableWindowsTouchPad", "macTrackpadAndMouseWheelDifference", "macTrackpadScaleSensitivity"],
     cameraMove: [

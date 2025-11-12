@@ -577,6 +577,10 @@ settings:
     title: macbook 的触摸板双指缩放灵敏度
     description:
       值越大，缩放的速度越快
+  macEnableControlToCut:
+    title: mac下是否启用 control键按下来开始刀斩
+    description:
+      按下control键，在舞台上移动鼠标，再松开control键，完成一次刀斩
   macMouseWheelIsSmoothed:
     title: macbook 的鼠标滚轮是否平滑
     description:

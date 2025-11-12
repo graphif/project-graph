@@ -25,7 +25,7 @@ export class ControllerCuttingClass extends ControllerClass {
   private _isControlKeyDown = false;
   // mac 特性功能
   private onControlKeyDown = (event: KeyboardEvent) => {
-    if (isMac && event.key === "Control" && !this._isControlKeyDown) {
+    if (isMac && event.key === "Control" && Settings.macEnableControlToCut && !this._isControlKeyDown) {
       this._isControlKeyDown = true;
       this.project.controller.isMouseDown[2] = true;
       // 模拟鼠标按下事件
@@ -40,7 +40,7 @@ export class ControllerCuttingClass extends ControllerClass {
 
   // mac 特性功能
   private onControlKeyUp = (event: KeyboardEvent) => {
-    if (isMac && event.key === "Control" && this._isControlKeyDown) {
+    if (isMac && event.key === "Control" && Settings.macEnableControlToCut && this._isControlKeyDown) {
       this._isControlKeyDown = false;
       this.project.controller.isMouseDown[2] = false;
       // 模拟鼠标松开事件
