@@ -18,6 +18,7 @@ const donations: DonationData[] = [
   // { user: "MacBook", note: "littlefean", amount: -7599.2 },
   { user: "域名 project-graph.top", note: "zty012", amount: -13.66 },
   // 以下为捐赠用户
+  { user: "马达", note: "", amount: 20 },
   { user: "大纯", note: "希望软件越来越好", amount: 6.6 },
   { user: "爱和小狗打招呼", note: "厉害厉害", amount: 6.8 },
   { user: "傅劲 Jin Fu", note: "加油，坚持下去。很要用的软件", amount: 20 },
@@ -280,7 +281,7 @@ function Donation({
         </div>
       </div>
 
-      {note && <div className="text-muted-foreground bg-background/50 rounded p-2 text-sm">{note}</div>}
+      {note && <div className="text-muted-foreground bg-background/50 rounded p-2 text-xs md:text-sm">{note}</div>}
     </div>
   );
 }

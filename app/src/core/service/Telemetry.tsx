@@ -7,6 +7,7 @@ export namespace Telemetry {
   let deviceId = "";
 
   export async function event(event: string, data: any = {}) {
+    if (import.meta.env.DEV) return; // 本地开发模式就不发了
     if (!FeatureFlags.TELEMETRY) return;
     if (!Settings.telemetry) return;
     if (!deviceId) {
