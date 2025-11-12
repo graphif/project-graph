@@ -31,6 +31,7 @@ export default function ExportPngWindow() {
   const [imageResolution, setImageResolution] = useState(new Vector(0, 0));
   const [overSized, setOverSized] = useState(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [sleepTime, setSleepTime] = useState(2); // 默认2毫秒
 
   useEffect(() => {
     project.camera.targetScale = scale;
@@ -69,7 +70,7 @@ export default function ExportPngWindow() {
     const ac = new AbortController();
     setAbortController(ac);
     project?.stageExportPng
-      .exportStage(ac.signal)
+      .exportStage(ac.signal, sleepTime)
       .on("progress", setProgress)
       .on("error", (err) => {
         toast.error("渲染失败: " + err.message);
@@ -126,6 +127,18 @@ export default function ExportPngWindow() {
         <Checkbox checked={showGrid} onCheckedChange={(it) => setShowGrid(!!it)} />
         <span>显示网格</span>
       </div>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <span>渲染间隔: {sleepTime}ms</span>
+          <Slider value={[sleepTime]} onValueChange={([v]) => setSleepTime(v)} min={1} max={1000} step={1} />
+        </div>
+        <Alert>
+          <Info />
+          <AlertDescription>
+            间隔时间越小，渲染速度越快，但可能导致渲染不完整；间隔时间越大，渲染越稳定，但速度越慢
+          </AlertDescription>
+        </Alert>
+      </div>
       {progress === -1 ? (
         <div className="flex gap-2">
           <Button onClick={startExport} disabled={overSized}>
@@ -154,6 +167,6 @@ ExportPngWindow.open = () => {
   SubWindow.create({
     title: "导出 PNG",
     children: <ExportPngWindow />,
-    rect: new Rectangle(new Vector(100, 100), new Vector(300, 600)),
+    rect: new Rectangle(new Vector(100, 100), new Vector(600, 700)),
   });
 };

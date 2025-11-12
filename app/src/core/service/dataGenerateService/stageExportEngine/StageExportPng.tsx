@@ -16,7 +16,7 @@ export class StageExportPng {
   /**
    * 将整个舞台导出为png图片
    */
-  private async exportStage_(emitter: EventEmitter<EventMap>, signal: AbortSignal) {
+  private async exportStage_(emitter: EventEmitter<EventMap>, signal: AbortSignal, sleepTime: number) {
     // 创建一个新的画布
     const resultCanvas = this.generateCanvasNode();
     const resultCtx = resultCanvas.getContext("2d")!;
@@ -37,9 +37,9 @@ export class StageExportPng {
     while (i < leftTopLocList.length) {
       const { x, y } = leftTopLocList[i];
       // 先移动再暂停等待
-      await sleep(2);
+      await sleep(sleepTime);
       this.project.camera.location = new Vector(x + viewRect.size.x / 2, y + viewRect.size.y / 2);
-      await sleep(2);
+      await sleep(sleepTime);
       if (this.project.renderer.frameIndex - lastFrame < 2) {
         continue;
       }
@@ -75,9 +75,9 @@ export class StageExportPng {
     resultCanvas.remove();
   }
 
-  exportStage(signal: AbortSignal) {
+  exportStage(signal: AbortSignal, sleepTime: number = 2) {
     const emitter = new EventEmitter<EventMap>();
-    this.exportStage_(emitter, signal).catch((err) => emitter.emit("error", err));
+    this.exportStage_(emitter, signal, sleepTime).catch((err) => emitter.emit("error", err));
     return emitter;
   }
 
