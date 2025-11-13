@@ -81,7 +81,7 @@ export class MouseTrail extends Container {
      ──────────────────────────────────────────── */
   private updateTrail = () => {
     /* 当缩放比例小于 0.5 时禁用拖尾 */
-    if (this.project.viewport.scale.x < 0.5) {
+    if (this.project.viewport.scaled < 0.5) {
       this.clear();
       return;
     }

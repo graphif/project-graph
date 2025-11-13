@@ -26,15 +26,15 @@ export class BackgroundGrid extends TilingSprite {
 
   private update() {
     this.tilePosition.set(-this.project.viewport.left, -this.project.viewport.top);
-    this.width = this.project.pixi.renderer.width / this.project.viewport.scale.x;
+    this.width = this.project.pixi.renderer.width / this.project.viewport.scaled;
     this.height = this.project.pixi.renderer.height / this.project.viewport.scale.y;
     this.position.set(this.project.viewport.left, this.project.viewport.top);
   }
   private redraw() {
     let gridSize = 50;
     let lineWidth = 1;
-    if (this.project.viewport.scale.x < 1) {
-      while (gridSize * this.project.viewport.scale.x < 50) {
+    if (this.project.viewport.scaled < 1) {
+      while (gridSize * this.project.viewport.scaled < 50) {
         gridSize *= 2;
         lineWidth *= 2;
       }

@@ -35,19 +35,19 @@ export class TextInput extends Text {
     el.id = `TextInput${this.uid}`;
     el.value = this.text;
     el.style.position = "fixed";
-    el.style.left = this.getGlobalPosition().x + this.offset * this.viewport.scale.x + "px";
-    el.style.top = this.getGlobalPosition().y + this.offset * this.viewport.scale.x + "px";
+    el.style.left = this.getGlobalPosition().x + this.offset * this.viewport.scaled + "px";
+    el.style.top = this.getGlobalPosition().y + this.offset * this.viewport.scaled + "px";
     el.style.zIndex = "1000";
     el.style.background = "transparent";
     el.style.color = new Color(this.style.fill as ColorSource).toHex();
-    el.style.fontSize = this.style.fontSize * this.viewport.scale.x + "px";
+    el.style.fontSize = this.style.fontSize * this.viewport.scaled + "px";
     el.style.padding = "0px";
     el.style.outline = "none";
     el.style.border = "none";
     el.style.resize = "none";
     el.style.overflow = "hidden";
     const lines = el.value.split("\n").length;
-    el.style.lineHeight = (this.style.lineHeight || this.height / lines) * this.viewport.scale.x + "px";
+    el.style.lineHeight = (this.style.lineHeight || this.height / lines) * this.viewport.scaled + "px";
     el.rows = lines;
     document.body.appendChild(el);
 

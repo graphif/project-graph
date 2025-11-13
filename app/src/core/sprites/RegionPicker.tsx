@@ -101,9 +101,9 @@ export class RegionPicker extends Graphics {
           (Settings.rectangleSelectWhenLeft === "contain" && startPoint.x > currentPoint.x) ||
           (!Settings.rectangleSelectWhenLeft === "contain" && startPoint.x < currentPoint.x);
         this.clear();
-        this.roundRect(rect.x, rect.y, rect.width, rect.height, 8 / project.viewport.scale.x);
+        this.roundRect(rect.x, rect.y, rect.width, rect.height, 8 / project.viewport.scaled);
         this.stroke({
-          width: 1 / project.viewport.scale.x,
+          width: 1 / project.viewport.scaled,
           color: isWindowSelection ? 0x90d5ff : 0x00ff00,
         });
         // 选中区域内的节点

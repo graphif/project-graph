@@ -48,7 +48,7 @@ export class Cutter extends Graphics {
         this.moveTo(startPoint.x, startPoint.y);
         this.lineTo(currentPoint.x, currentPoint.y);
         this.stroke({
-          width: 1 / project.viewport.scale.x,
+          width: 1 / project.viewport.scaled,
           color: 0xff0000,
         });
         // 标记与线相交的舞台对象

@@ -12,12 +12,9 @@ import { Viewport } from "pixi-viewport";
 import { Application, Container, FederatedPointerEvent, Graphics, Point, PointData } from "pixi.js";
 import "pixi.js/math-extras";
 import { URI } from "vscode-uri";
+import { MyWheelPlugin } from "./MyWheelPlugin";
 import { Settings } from "./service/Settings";
 import { MyText } from "./sprites/MyText";
-
-if (import.meta.hot) {
-  import.meta.hot.accept();
-}
 
 export class Project extends EventEmitter<{
   "state-change": [state: ProjectState];
@@ -153,39 +150,39 @@ export class Project extends EventEmitter<{
     }
     this.state = ProjectState.Saved;
 
-    const fpsText = this.pixi.stage.addChild(
-      new MyText("0", {
-        style: { fontSize: 24 },
-        x: 10,
-        y: 50,
-      }),
-    );
-    // 最多存储60帧的FPS数据，用于计算平均FPS
-    const recentFps: number[] = [];
-    this.pixi.ticker.add(() => {
-      recentFps.push(this.pixi.ticker.FPS);
-      fpsText.text = `${Math.round(this.pixi.ticker.FPS)} (AVG ${Math.round(recentFps.reduce((a, b) => a + b, 0) / recentFps.length)})`;
-      if (recentFps.length > 60) {
-        recentFps.shift();
-      }
-    });
+    // const fpsText = this.pixi.stage.addChild(
+    //   new MyText("0", {
+    //     style: { fontSize: 24 },
+    //     x: 10,
+    //     y: 50,
+    //   }),
+    // );
+    // // 最多存储60帧的FPS数据，用于计算平均FPS
+    // const recentFps: number[] = [];
+    // this.pixi.ticker.add(() => {
+    //   recentFps.push(this.pixi.ticker.FPS);
+    //   fpsText.text = `${Math.round(this.pixi.ticker.FPS)} (AVG ${Math.round(recentFps.reduce((a, b) => a + b, 0) / recentFps.length)})`;
+    //   if (recentFps.length > 60) {
+    //     recentFps.shift();
+    //   }
+    // });
 
-    const pressedKeysText = this.pixi.stage.addChild(
-      new MyText("", {
-        style: { fontSize: 24 },
-        x: 10,
-        y: 80,
-      }),
-    );
-    const pressedKeys = new Set<string>();
-    window.addEventListener("keydown", (e) => {
-      pressedKeys.add(e.key);
-      pressedKeysText.text = Array.from(pressedKeys).join(", ");
-    });
-    window.addEventListener("keyup", (e) => {
-      pressedKeys.delete(e.key);
-      pressedKeysText.text = Array.from(pressedKeys).join(", ");
-    });
+    // const pressedKeysText = this.pixi.stage.addChild(
+    //   new MyText("", {
+    //     style: { fontSize: 24 },
+    //     x: 10,
+    //     y: 80,
+    //   }),
+    // );
+    // const pressedKeys = new Set<string>();
+    // window.addEventListener("keydown", (e) => {
+    //   pressedKeys.add(e.key);
+    //   pressedKeysText.text = Array.from(pressedKeys).join(", ");
+    // });
+    // window.addEventListener("keyup", (e) => {
+    //   pressedKeys.delete(e.key);
+    //   pressedKeysText.text = Array.from(pressedKeys).join(", ");
+    // });
 
     this.viewport = new Viewport({
       screenWidth: window.innerWidth,
@@ -193,13 +190,18 @@ export class Project extends EventEmitter<{
       worldWidth: Infinity,
       worldHeight: Infinity,
       events: this.pixi.renderer.events,
-    })
-      .drag({
-        mouseButtons: "middle",
-      })
-      .wheel({
-        smooth: 5,
-      });
+    }).drag({
+      mouseButtons: "middle",
+    });
+    this.viewport.plugins.add(
+      "wheel",
+      new MyWheelPlugin(this.viewport, {
+        interrupt: false,
+      }),
+    );
+    // .wheel({
+    //   lineHeight: 0,
+    // });
     this.viewport.cullable = true;
     this.viewport.cullableChildren = true;
     this.pixi.stage.addChild(this.viewport);
