@@ -42,11 +42,13 @@ export class ReferenceBlockRenderer {
     }
 
     if (referenceBlockNode.state === "notFound" || !referenceBlockNode.bitmap) {
+      const rect = referenceBlockNode.collisionBox.getRectangle();
       // 渲染错误状态
-      this.project.textRenderer.renderText(
-        "Not Found",
-        this.project.renderer.transformWorld2View(referenceBlockNode.collisionBox.getRectangle().location),
+      this.project.textRenderer.renderMultiLineTextFromCenter(
+        `Not Found: \nfile:"${referenceBlockNode.fileName}"\nsection:"${referenceBlockNode.sectionName}"`,
+        this.project.renderer.transformWorld2View(rect.center),
         12 * this.project.camera.currentScale,
+        rect.width * 2 * this.project.camera.currentScale,
         this.project.stageStyleManager.currentStyle.effects.warningShadow,
       );
       return;

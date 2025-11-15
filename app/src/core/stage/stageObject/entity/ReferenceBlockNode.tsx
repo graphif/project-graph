@@ -41,7 +41,7 @@ export class ReferenceBlockNode extends ConnectableEntity {
     protected readonly project: Project,
     {
       uuid = crypto.randomUUID() as string,
-      collisionBox = new CollisionBox([new Rectangle(Vector.getZero(), new Vector(100, 100))]),
+      collisionBox = new CollisionBox([new Rectangle(Vector.getZero(), new Vector(400, 200))]),
       fileName = "",
       sectionName = "",
       scale = 1,

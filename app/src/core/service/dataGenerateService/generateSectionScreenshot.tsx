@@ -45,8 +45,8 @@ export namespace GenerateSectionScreenshot {
       // 7. 创建临时Canvas
       const tempCanvas = document.createElement("canvas");
       const scale = window.devicePixelRatio;
-      const canvasWidth = sectionRect.width * 1.1;
-      const canvasHeight = sectionRect.height * 1.1;
+      const canvasWidth = sectionRect.width + 2;
+      const canvasHeight = sectionRect.height + 2;
       tempCanvas.width = canvasWidth * scale;
       tempCanvas.height = canvasHeight * scale;
       tempCanvas.style.width = `${canvasWidth}px`;

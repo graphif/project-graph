@@ -76,6 +76,7 @@ import {
   SunDim,
   Ellipsis,
   SquareDashedBottomCode,
+  RefreshCcwDot,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -91,6 +92,7 @@ import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSma
 import { parseEmacsKey } from "@/utils/emacs";
 import { ConnectNodeSmartTools } from "@/core/service/dataManageService/connectNodeSmartTools";
 import { ColorSmartTools } from "@/core/service/dataManageService/colorSmartTools";
+import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 
 const Content = ContextMenuContent;
 const Item = ContextMenuItem;
@@ -633,6 +635,25 @@ export default function MyContextMenuContent() {
           <Item onClick={() => p.stageManager.sectionSwitchCollapse()}>
             <Package />
             {t("toggleSectionCollapse")}
+          </Item>
+        </>
+      )}
+      {/* 存在选中 引用块 */}
+      {p.stageManager.getSelectedEntities().filter((it) => it instanceof ReferenceBlockNode).length > 0 && (
+        <>
+          <Item
+            onClick={() => {
+              p.stageManager
+                .getSelectedEntities()
+                .filter((it) => it instanceof ReferenceBlockNode)
+                .filter((it) => it.isSelected)
+                .forEach((it) => {
+                  it.refresh();
+                });
+            }}
+          >
+            <RefreshCcwDot />
+            刷新引用块
           </Item>
         </>
       )}
