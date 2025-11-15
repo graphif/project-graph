@@ -1,5 +1,6 @@
 import logoUrl from "@/assets/icon.png";
 import { Dialog } from "@/components/ui/dialog";
+import { getDeviceId } from "@/utils/otherApi";
 import { getVersion } from "@tauri-apps/api/app";
 import { open } from "@tauri-apps/plugin-shell";
 import { useEffect, useState } from "react";
@@ -18,14 +19,7 @@ export default function AboutTab() {
   useEffect(() => {
     (async () => {
       if (logoClickCount >= 10) {
-        const url = await Dialog.input(
-          "navigate",
-          "此操作将放弃所有未保存的文件，使用此功能打开其他人给你的网址可能会导致感染计算机病毒！",
-          { destructive: true },
-        );
-        if (url && url.length > 5) {
-          window.location.href = url;
-        }
+        await Dialog.copy("用户 ID", "", await getDeviceId());
         setLogoClickCount(0);
       }
     })();
