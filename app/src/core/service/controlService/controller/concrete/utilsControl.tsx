@@ -51,20 +51,10 @@ export class ControllerUtils {
           if (lastAutoCompleteWindowId) {
             SubWindow.close(lastAutoCompleteWindowId);
           }
-          // 自动补全逻辑节点
-          if (text.startsWith("#")) {
-            lastAutoCompleteWindowId = AutoCompleteWindow.open(
-              this.project.renderer.transformWorld2View(clickedNode.rectangle).leftBottom,
-              Object.fromEntries(
-                Object.entries(LogicNodeNameToRenderNameMap).filter(([k]) =>
-                  k.toLowerCase().startsWith(text.toLowerCase()),
-                ),
-              ),
-              (value) => {
-                ele.value = value;
-              },
-            ).id;
-          }
+          // 自动补全逻辑
+          this.handleAutoComplete(text, clickedNode, ele, (value) => {
+            lastAutoCompleteWindowId = value;
+          });
           // onChange
           clickedNode?.rename(text);
           const rectWorld = clickedNode.collisionBox.getRectangle();
@@ -380,7 +370,55 @@ export class ControllerUtils {
     }
   }
 
-  // 实验性的双链
+  /**
+   * 处理自动补全逻辑
+   * @param text 当前输入的文本
+   * @param node 当前编辑的文本节点
+   * @param ele 输入框元素
+   * @param setWindowId 设置自动补全窗口ID的回调函数
+   */
+  private handleAutoComplete(
+    text: string,
+    node: TextNode,
+    ele: HTMLTextAreaElement,
+    setWindowId: (id: string) => void,
+  ) {
+    // 处理#开头的逻辑节点补全
+    if (text.startsWith("#")) {
+      // 提取搜索文本，去掉所有#
+      const searchText = text.replaceAll("#", "").toLowerCase();
+      const matchingNodes = Object.entries(LogicNodeNameToRenderNameMap).filter(([key]) => {
+        const nodeName = key.replaceAll("#", "").toLowerCase();
+        return nodeName.startsWith(searchText);
+      });
+      // 打开自动补全窗口
+      if (matchingNodes.length > 0) {
+        const windowId = AutoCompleteWindow.open(
+          this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
+          Object.fromEntries(matchingNodes),
+          (value) => {
+            ele.value = value;
+          },
+        ).id;
+        setWindowId(windowId);
+      } else {
+        const windowId = AutoCompleteWindow.open(
+          this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
+          { tip: `暂无匹配的逻辑节点名称【${searchText}】` },
+          (value) => {
+            ele.value = value;
+          },
+        ).id;
+        setWindowId(windowId);
+      }
+    }
+    // 后续可以在这里添加其他类型的补全逻辑，比如[[????]]格式
+    // else if (text.startsWith("[[")) {
+    //   // 处理[[格式的补全
+    // }
+  }
+
+  // 实验性的孪生关系
   public finishChangeTextNode(textNode: TextNode) {
     // 查找所有无向边，如果无向边的颜色 = (11, 45, 14, 0)，那么就找到了一个关联
     const edges: MultiTargetUndirectedEdge[] = [];
