@@ -45,6 +45,7 @@ export default function KeyBindsPage() {
 
   const { t } = useTranslation("keyBinds");
   const { t: t2 } = useTranslation("keyBindsGroup");
+  const { t: t3 } = useTranslation("settings");
 
   useEffect(() => {
     KeyBinds.entries().then((entries) => {
@@ -172,7 +173,7 @@ export default function KeyBindsPage() {
             <Input
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="搜索..."
+              placeholder={t3("search")}
               autoFocus
             />
             {searchKeyword === "" && (

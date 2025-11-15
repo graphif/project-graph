@@ -140,6 +140,14 @@ contextMenu:
 
 settings:
   title: 设置
+  search: 搜索…
+  tabs:
+    settings: 设置
+    keybinds: 快捷键
+    appearance: 个性化
+    themes: 主题
+    about: 关于
+    credits: 鸣谢
   categories:
     quick:
       title: 快速设置
@@ -176,10 +184,6 @@ settings:
       ai: AI
   language:
     title: 语言
-    options:
-      en: English
-      zh_CN: 简体中文
-      zh_TW: 繁體中文
   showTipsOnUI:
     title: 在 UI 中显示提示信息
     description: |

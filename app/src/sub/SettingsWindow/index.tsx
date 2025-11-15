@@ -3,7 +3,9 @@ import { SubWindow } from "@/core/service/SubWindow";
 import { activeProjectAtom, store } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
+import { Brush, Info, Keyboard, Palette, SettingsIcon, User } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import AboutTab from "./about";
 import AppearanceTab from "./appearance";
 import CreditsTab from "./credits";
@@ -11,21 +13,30 @@ import KeyBindsPage from "./keybinds";
 import SettingsTab from "./settings";
 import ThemesTab from "./themes";
 
-type TabName = "settings" | "keybinds" | "appearance" | "themes" | "about" | "credits";
+const tabs = [
+  { value: "settings", icon: SettingsIcon },
+  { value: "keybinds", icon: Keyboard },
+  { value: "appearance", icon: Brush },
+  { value: "themes", icon: Palette },
+  { value: "about", icon: Info },
+  { value: "credits", icon: User },
+] as const;
+type TabName = (typeof tabs)[number]["value"];
 
 export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab?: TabName }) {
   const [currentTab, setCurrentTab] = useState<TabName>(defaultTab);
+  const { t } = useTranslation("settings");
 
   return (
     <Tabs value={currentTab} onValueChange={setCurrentTab as any} className="h-full gap-0 overflow-hidden">
       <div className="flex">
         <TabsList>
-          <TabsTrigger value="settings">设置</TabsTrigger>
-          <TabsTrigger value="keybinds">快捷键</TabsTrigger>
-          <TabsTrigger value="appearance">个性化</TabsTrigger>
-          <TabsTrigger value="themes">主题</TabsTrigger>
-          <TabsTrigger value="about">关于</TabsTrigger>
-          <TabsTrigger value="credits">鸣谢</TabsTrigger>
+          {tabs.map((tab) => (
+            <TabsTrigger key={tab.value} value={tab.value}>
+              <tab.icon />
+              {t(`tabs.${tab.value}`)}
+            </TabsTrigger>
+          ))}
         </TabsList>
         <div data-pg-drag-region className="h-full flex-1" />
       </div>

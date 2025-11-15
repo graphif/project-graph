@@ -9,13 +9,65 @@ import { Telemetry } from "@/core/service/Telemetry";
 import { cn } from "@/utils/cn";
 import _ from "lodash";
 import { ChevronRight, RotateCw } from "lucide-react";
-import React, { CSSProperties, Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { CSSProperties, Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof Settings; extra?: React.ReactNode }) {
   const [value, setValue] = React.useState<any>(Settings[settingKey]);
   const { t, i18n } = useTranslation("settings");
   const schema = settingsSchema.shape[settingKey];
+  const languages = useMemo(() => {
+    if (settingKey !== "language") return [];
+    if (!i18n.options.supportedLngs) return [];
+    // 获取完成度
+    // 先获取zh_CN的所有key，然后对比其他语言的key，算出完成度
+    const zhCNKeys = new Set<string>();
+    const zhCN = i18n.options.resources!.zh_CN;
+    // 遍历zh_CN的所有key
+    Object.keys(zhCN).forEach((ns) => {
+      const traverse = (obj: any, prefix = "") => {
+        Object.keys(obj).forEach((key) => {
+          const value = obj[key];
+          if (typeof value === "string") {
+            zhCNKeys.add(prefix + key);
+          } else if (typeof value === "object") {
+            traverse(value, prefix + key + ".");
+          }
+        });
+      };
+      traverse(zhCN[ns]);
+    });
+    return i18n.options.supportedLngs
+      .filter((it) => it != "cimode")
+      .map((lng) => {
+        // 计算完成度
+        const computeCompleteness = (): number => {
+          if (lng === "zh_CN") return 1;
+          const lngKeys = new Set<string>();
+          const lngResource = i18n.options.resources![lng];
+          if (!lngResource) return 0;
+          Object.keys(lngResource).forEach((ns) => {
+            const traverse = (obj: any, prefix = "") => {
+              Object.keys(obj).forEach((key) => {
+                const value = obj[key];
+                if (typeof value === "string") {
+                  lngKeys.add(prefix + key);
+                } else if (typeof value === "object") {
+                  traverse(value, prefix + key + ".");
+                }
+              });
+            };
+            traverse(lngResource[ns]);
+          });
+          return Array.from(lngKeys).filter((key) => zhCNKeys.has(key)).length / zhCNKeys.size;
+        };
+        return {
+          code: lng,
+          name: t("metadata:name", { lng }),
+          completeness: computeCompleteness(),
+        };
+      });
+  }, [settingKey, i18n]);
 
   React.useEffect(() => {
     if (value !== Settings[settingKey]) {
@@ -94,11 +146,17 @@ export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof 
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {schema._def.innerType._def.options.map(({ _def: { value: it } }) => (
-              <SelectItem key={it} value={it}>
-                {t(`${settingKey}.options.${it}`)}
-              </SelectItem>
-            ))}
+            {settingKey === "language"
+              ? languages.map((lng) => (
+                  <SelectItem key={lng.code} value={lng.code}>
+                    {lng.name} ({(lng.completeness * 100).toFixed(2)}%)
+                  </SelectItem>
+                ))
+              : schema._def.innerType._def.options.map(({ _def: { value: it } }) => (
+                  <SelectItem key={it} value={it}>
+                    {t(`${settingKey}.options.${it}`)}
+                  </SelectItem>
+                ))}
           </SelectContent>
         </Select>
       ) : (

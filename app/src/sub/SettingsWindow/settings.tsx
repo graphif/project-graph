@@ -157,7 +157,7 @@ export default function SettingsTab() {
             <Input
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="搜索所有设置..."
+              placeholder={t("search")}
               autoFocus
             />
           </div>
