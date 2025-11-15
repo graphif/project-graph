@@ -15,7 +15,7 @@ export default function AutoCompleteWindow({
     <div className="flex max-h-96 flex-col gap-1 p-2">
       {Object.entries(items).map(([k, v]) => (
         <div key={k} className="flex justify-between" onClick={() => onSelect(k)}>
-          <span>{k}</span>
+          <span className="mr-2">{k}</span>
           <span className="opacity-75">{v}</span>
         </div>
       ))}

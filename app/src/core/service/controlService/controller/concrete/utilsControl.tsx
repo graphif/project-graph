@@ -1,6 +1,7 @@
 import { Project, service } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { LogicNodeNameToRenderNameMap } from "@/core/service/dataGenerateService/autoComputeEngine/logicNodeNameEnum";
+import Fuse from "fuse.js";
 import { EntityCreateFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityCreateFlashEffect";
 import { SubWindow } from "@/core/service/SubWindow";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
@@ -387,10 +388,21 @@ export class ControllerUtils {
     if (text.startsWith("#")) {
       // 提取搜索文本，去掉所有#
       const searchText = text.replaceAll("#", "").toLowerCase();
-      const matchingNodes = Object.entries(LogicNodeNameToRenderNameMap).filter(([key]) => {
-        const nodeName = key.replaceAll("#", "").toLowerCase();
-        return nodeName.startsWith(searchText);
+
+      const logicNodeEntries = Object.entries(LogicNodeNameToRenderNameMap).map(([key, renderName]) => ({
+        key,
+        name: key.replaceAll("#", "").toLowerCase(),
+        renderName,
+      }));
+
+      const fuse = new Fuse(logicNodeEntries, {
+        keys: ["name"],
+        threshold: 0.3, // (0 = exact, 1 = very fuzzy)
       });
+
+      const searchResults = fuse.search(searchText);
+      const matchingNodes = searchResults.map((result) => [result.item.key, result.item.renderName]);
+
       // 打开自动补全窗口
       if (matchingNodes.length > 0) {
         const windowId = AutoCompleteWindow.open(
@@ -404,7 +416,12 @@ export class ControllerUtils {
       } else {
         const windowId = AutoCompleteWindow.open(
           this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
-          { tip: `暂无匹配的逻辑节点名称【${searchText}】` },
+          {
+            tip:
+              searchText === ""
+                ? "暂无匹配的逻辑节点名称，请输入全大写字母"
+                : `暂无匹配的逻辑节点名称【${searchText}】`,
+          },
           (value) => {
             ele.value = value;
           },
