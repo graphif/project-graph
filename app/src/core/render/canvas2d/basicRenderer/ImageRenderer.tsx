@@ -28,4 +28,27 @@ export class ImageRenderer {
       source.height * scale * this.project.camera.currentScale,
     );
   }
+
+  /**
+   * 根据ImageBitmap来渲染图片到canvas指定位置
+   * @param bitmap ImageBitmap对象
+   * @param location 图片左上角位置
+   * @param scale 1 表示正常，0.5 表示缩小一半，2 表示放大两倍
+   */
+  renderImageBitmap(
+    bitmap: ImageBitmap | undefined,
+    location: Vector,
+    scale: number = 1 / (window.devicePixelRatio || 1),
+  ) {
+    if (!bitmap) {
+      return;
+    }
+    this.project.canvas.ctx.drawImage(
+      bitmap,
+      location.x,
+      location.y,
+      bitmap.width * scale * this.project.camera.currentScale,
+      bitmap.height * scale * this.project.camera.currentScale,
+    );
+  }
 }

@@ -19,6 +19,7 @@ import { SectionRenderer } from "@/core/render/canvas2d/entityRenderer/section/S
 import { SvgNodeRenderer } from "@/core/render/canvas2d/entityRenderer/svgNode/SvgNodeRenderer";
 import { TextNodeRenderer } from "@/core/render/canvas2d/entityRenderer/textNode/TextNodeRenderer";
 import { UrlNodeRenderer } from "@/core/render/canvas2d/entityRenderer/urlNode/urlNodeRenderer";
+import { ReferenceBlockRenderer } from "@/core/render/canvas2d/entityRenderer/ReferenceBlockRenderer";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { BackgroundRenderer } from "@/core/render/canvas2d/utilsRenderer/backgroundRenderer";
 import { RenderUtils } from "@/core/render/canvas2d/utilsRenderer/RenderUtils";
@@ -139,6 +140,7 @@ export function loadAllServicesBeforeInit(project: Project): void {
   project.loadService(SvgNodeRenderer);
   project.loadService(TextNodeRenderer);
   project.loadService(UrlNodeRenderer);
+  project.loadService(ReferenceBlockRenderer);
   project.loadService(BackgroundRenderer);
   project.loadService(SearchContentHighlightRenderer);
   project.loadService(StageExport);

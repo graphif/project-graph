@@ -2,6 +2,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { FileSystemProvider, Service } from "@/core/interfaces/Service";
 import type { CurveRenderer } from "@/core/render/canvas2d/basicRenderer/curveRenderer";
 import type { ImageRenderer } from "@/core/render/canvas2d/basicRenderer/ImageRenderer";
+import type { ReferenceBlockRenderer } from "@/core/render/canvas2d/entityRenderer/ReferenceBlockRenderer";
 import type { ShapeRenderer } from "@/core/render/canvas2d/basicRenderer/shapeRenderer";
 import type { SvgRenderer } from "@/core/render/canvas2d/basicRenderer/svgRenderer";
 import type { TextRenderer } from "@/core/render/canvas2d/basicRenderer/textRenderer";
@@ -426,6 +427,7 @@ declare module "./Project" {
     selectChangeEngine: SelectChangeEngine;
     textRenderer: TextRenderer;
     imageRenderer: ImageRenderer;
+    referenceBlockRenderer: ReferenceBlockRenderer;
     shapeRenderer: ShapeRenderer;
     entityRenderer: EntityRenderer;
     edgeRenderer: EdgeRenderer;

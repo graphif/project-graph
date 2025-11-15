@@ -12,6 +12,8 @@ import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { Color, ProgressNumber } from "@graphif/data-structures";
+import { ReferenceBlockNode } from "../../stageObject/entity/ReferenceBlockNode";
+import { ConnectableEntity } from "../../stageObject/abstract/ConnectableEntity";
 
 type DeleteHandler<T extends Entity> = (entity: T) => void;
 type Constructor<T> = { new (...args: any[]): T };
@@ -35,6 +37,7 @@ export class DeleteManager {
     this.registerHandler(UrlNode, this.deleteUrlNode.bind(this));
     this.registerHandler(PenStroke, this.deletePenStroke.bind(this));
     this.registerHandler(SvgNode, this.deleteSvgNode.bind(this));
+    this.registerHandler(ReferenceBlockNode, this.deleteReferenceBlockNode.bind(this));
   }
 
   deleteEntities(deleteNodes: Entity[]) {
@@ -52,6 +55,14 @@ export class DeleteManager {
   }
 
   private deleteSvgNode(entity: SvgNode) {
+    if (this.project.stageManager.getEntities().includes(entity)) {
+      this.project.stageManager.delete(entity);
+      // 删除所有相关的边
+      this.deleteEntityAfterClearAssociation(entity);
+    }
+  }
+
+  private deleteReferenceBlockNode(entity: ReferenceBlockNode) {
     if (this.project.stageManager.getEntities().includes(entity)) {
       this.project.stageManager.delete(entity);
       // 删除所有相关的边
@@ -142,7 +153,7 @@ export class DeleteManager {
    * 删除所有相关的边
    * @param entity
    */
-  private deleteEntityAfterClearAssociation(entity: Entity) {
+  private deleteEntityAfterClearAssociation(entity: ConnectableEntity) {
     const prepareDeleteAssociation: Association[] = [];
     const visitedAssociations: Set<string> = new Set();
 

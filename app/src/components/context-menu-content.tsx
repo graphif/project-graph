@@ -74,6 +74,8 @@ import {
   ChevronDown,
   Sun,
   SunDim,
+  Ellipsis,
+  SquareDashedBottomCode,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -601,6 +603,18 @@ export default function MyContextMenuContent() {
                     <MoveDown />
                     大幅度降低色相值
                     <span className="text-xs opacity-50">[Alt+Shift+End]</span>
+                  </Item>
+                </SubContent>
+              </Sub>
+              <Sub>
+                <SubTrigger>
+                  <Ellipsis />
+                  其他
+                </SubTrigger>
+                <SubContent>
+                  <Item onClick={() => TextNodeSmartTools.changeTextNodeToReferenceBlock(p)}>
+                    <SquareDashedBottomCode />
+                    将选中的文本节点转换为引用块
                   </Item>
                 </SubContent>
               </Sub>

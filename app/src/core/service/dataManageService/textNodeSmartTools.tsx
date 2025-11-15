@@ -3,6 +3,7 @@ import { Project } from "@/core/Project";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
 import { averageColors, Color, Vector } from "@graphif/data-structures";
@@ -500,5 +501,39 @@ export namespace TextNodeSmartTools {
     } else {
       toast.error("树形接入时，这个选中的节点没有与任何连线相碰，或者所有相碰的连线源头不唯一");
     }
+  }
+
+  /**
+   * 将选中的特殊格式的文本节点，转换成引用块
+   * @param project
+   * @returns
+   */
+  export function changeTextNodeToReferenceBlock(project: Project) {
+    const selectedTextNodes = project.stageManager.getSelectedEntities().filter((node) => node instanceof TextNode);
+    if (selectedTextNodes.length !== 1) {
+      toast.error("只能选中一个节点作为引用块");
+    }
+    const selectedNode = selectedTextNodes[0];
+    const text = selectedNode.text;
+    let referenceName = "";
+    if (text.trim().startsWith("[[") && text.trim().endsWith("]]")) {
+      referenceName = text.trim().slice(2, -2);
+    } else {
+      toast.error("引用块必须以[[和]]包裹");
+      return;
+    }
+    const fileName = referenceName.split("#")[0];
+    const sectionName = referenceName.split("#")[1];
+
+    const referenceBlock = new ReferenceBlockNode(project, {
+      collisionBox: new CollisionBox([
+        new Rectangle(selectedNode.collisionBox.getRectangle().leftTop, new Vector(100, 100)),
+      ]),
+      fileName,
+      sectionName,
+    });
+
+    project.stageManager.add(referenceBlock);
+    project.stageManager.delete(selectedNode);
   }
 }

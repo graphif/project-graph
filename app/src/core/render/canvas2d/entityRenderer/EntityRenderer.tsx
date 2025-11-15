@@ -4,6 +4,7 @@ import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
+import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
@@ -138,6 +139,8 @@ export class EntityRenderer {
       this.renderPenStroke(entity);
     } else if (entity instanceof SvgNode) {
       this.project.svgNodeRenderer.render(entity);
+    } else if (entity instanceof ReferenceBlockNode) {
+      this.project.referenceBlockRenderer.render(entity);
     }
     // details右上角小按钮
     if (this.project.camera.currentScale > Settings.ignoreTextNodeTextRenderLessThanCameraScale) {
