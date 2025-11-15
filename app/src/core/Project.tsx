@@ -106,7 +106,7 @@ export class Project extends EventEmitter<{
         } as const
       )[Settings.powerPreference],
       resizeTo: window,
-      antialias: true,
+      antialias: Settings.antialias,
     });
     this.pixi.ticker.maxFPS = Settings.maxFps;
     this.pixi.ticker.minFPS = Settings.minFps;

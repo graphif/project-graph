@@ -750,6 +750,10 @@ settings:
     title: 鼠标拖尾效果
     description: |
       在鼠标经过的位置留下拖尾，可能降低大脑负担
+  antialias:
+    title: 抗锯齿
+    description: |
+      开启后，图像边缘会更加平滑，但可能会降低性能
 
 effects:
   CircleChangeRadiusEffect:

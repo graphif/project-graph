@@ -1,6 +1,5 @@
 import { LazyStore } from "@tauri-apps/plugin-store";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import z from "zod";
 
 export const settingsSchema = z.object({
@@ -151,6 +150,7 @@ export const settingsSchema = z.object({
   maxFps: z.number().min(1).max(360).int().default(60),
   minFps: z.number().min(1).max(360).int().default(30),
   mouseTrail: z.boolean().default(false),
+  antialias: z.boolean().default(true),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;
@@ -178,7 +178,14 @@ try {
 } catch (e) {
   if (e instanceof z.ZodError) {
     console.error(e);
-    toast.error(`设置文件格式错误\n${JSON.stringify(e.issues)}`);
+    // 重置有问题的设置项
+    for (const issue of e.issues) {
+      const key = issue.path[0] as string;
+      const defaultValue = settingsSchema.shape[key as keyof Settings]._def.defaultValue();
+      console.warn(`设置项 "${key}" 的值有误，已重置为默认值`);
+      store.set(key, defaultValue);
+      (savedSettings as any)[key] = defaultValue;
+    }
   }
 }
 

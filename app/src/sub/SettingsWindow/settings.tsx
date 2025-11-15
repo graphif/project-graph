@@ -184,13 +184,11 @@ const categories = {
   // ⭐ 常用快速设置 - 平铺，真正「快速」
   quick: [
     "language",
-    "isClassroomMode",
     "windowBackgroundAlpha",
-    "autoBackup",
-    "autoBackupInterval",
     "maxFps",
     "textResolution",
     "powerPreference",
+    "antialias",
     "mouseTrail",
   ],
 
@@ -273,6 +271,7 @@ const categories = {
       "minFps",
       "isEnableEntityCollision",
       "autoRefreshStageByMouseAction",
+      "antialias",
     ],
     memory: ["historySize", "clearHistoryWhenManualSave"],
   },
