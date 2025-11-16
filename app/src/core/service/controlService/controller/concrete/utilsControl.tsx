@@ -22,6 +22,7 @@ import { Color, colorInvert, Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
 import { PathString } from "@/utils/pathString";
 import { DateChecker } from "@/utils/dateChecker";
+import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
 
 /**
  * 这里是专门存放代码相同的地方
@@ -114,6 +115,7 @@ export class ControllerUtils {
 
         // 实验
         this.finishChangeTextNode(clickedNode);
+        this.autoChangeTextNodeToReferenceBlock(this.project, clickedNode);
       });
   }
 
@@ -534,10 +536,19 @@ export class ControllerUtils {
     }
   }
 
-  // 实验性的孪生关系
+  // 完成编辑节点的操作
   public finishChangeTextNode(textNode: TextNode) {
+    this.syncChangeTextNode(textNode);
+  }
+
+  private autoChangeTextNodeToReferenceBlock(project: Project, textNode: TextNode) {
+    textNode.isSelected = true;
+    TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
+  }
+
+  // 同步更改孪生节点
+  private syncChangeTextNode(textNode: TextNode) {
     // 查找所有无向边，如果无向边的颜色 = (11, 45, 14, 0)，那么就找到了一个关联
-    const edges: MultiTargetUndirectedEdge[] = [];
 
     const otherUUID: Set<string> = new Set();
 
@@ -563,7 +574,5 @@ export class ControllerUtils {
         node.color = textNode.color;
       }
     });
-
-    return edges;
   }
 }
