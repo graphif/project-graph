@@ -30,6 +30,7 @@ import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSma
  */
 @service("controllerUtils")
 export class ControllerUtils {
+  private currentAutoCompleteWindowId: string | undefined;
   constructor(private readonly project: Project) {}
 
   /**
@@ -410,6 +411,9 @@ export class ControllerUtils {
       const matchingNodes = searchResults.map((result) => [result.item.key, result.item.renderName]);
 
       // 打开自动补全窗口
+      if (this.currentAutoCompleteWindowId) {
+        SubWindow.close(this.currentAutoCompleteWindowId);
+      }
       if (matchingNodes.length > 0) {
         const windowId = AutoCompleteWindow.open(
           this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
@@ -418,6 +422,7 @@ export class ControllerUtils {
             ele.value = value;
           },
         ).id;
+        this.currentAutoCompleteWindowId = windowId;
         setWindowId(windowId);
       } else {
         const windowId = AutoCompleteWindow.open(
@@ -432,6 +437,7 @@ export class ControllerUtils {
             ele.value = value;
           },
         ).id;
+        this.currentAutoCompleteWindowId = windowId;
         setWindowId(windowId);
       }
       // 处理[[格式的补全
@@ -464,6 +470,9 @@ export class ControllerUtils {
         ]); // 转换为相对时间格式
 
         // 打开自动补全窗口
+        if (this.currentAutoCompleteWindowId) {
+          SubWindow.close(this.currentAutoCompleteWindowId);
+        }
         if (matchingFiles.length > 0) {
           const windowId = AutoCompleteWindow.open(
             this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
@@ -473,6 +482,7 @@ export class ControllerUtils {
               ele.value = `[[${value}`;
             },
           ).id;
+          this.currentAutoCompleteWindowId = windowId;
           setWindowId(windowId);
         } else {
           const windowId = AutoCompleteWindow.open(
@@ -484,6 +494,7 @@ export class ControllerUtils {
               ele.value = `[[${value}`;
             },
           ).id;
+          this.currentAutoCompleteWindowId = windowId;
           setWindowId(windowId);
         }
       } else {
@@ -510,6 +521,9 @@ export class ControllerUtils {
         const matchingSections = searchResults.map((result) => [result.item.name, ""]);
 
         // 打开自动补全窗口
+        if (this.currentAutoCompleteWindowId) {
+          SubWindow.close(this.currentAutoCompleteWindowId);
+        }
         if (matchingSections.length > 0) {
           const windowId = AutoCompleteWindow.open(
             this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
@@ -519,6 +533,7 @@ export class ControllerUtils {
               ele.value = `[[${fileName}#${value}`;
             },
           ).id;
+          this.currentAutoCompleteWindowId = windowId;
           setWindowId(windowId);
         } else {
           const windowId = AutoCompleteWindow.open(
@@ -530,6 +545,7 @@ export class ControllerUtils {
               ele.value = `[[${fileName}#${value}`;
             },
           ).id;
+          this.currentAutoCompleteWindowId = windowId;
           setWindowId(windowId);
         }
       }
