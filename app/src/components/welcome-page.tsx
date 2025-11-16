@@ -48,9 +48,14 @@ export default function WelcomePage() {
         <div className="flex flex-col sm:gap-2">
           <div className="flex items-center gap-2">
             <span className="sm:text-3xl">{t("title")}</span>
-            <span className="hidden opacity-50 sm:inline sm:rounded-lg sm:px-2 sm:py-1 md:text-sm">{appVersion}</span>
+            <span className="border-card-foreground/30 hidden border-2 opacity-50 sm:inline sm:rounded-lg sm:px-2 sm:py-1 md:text-lg">
+              {appVersion}
+            </span>
           </div>
           <div className="hidden text-xs opacity-50 sm:block sm:text-lg">{t("slogan")}</div>
+
+          {/* 临时加一个 */}
+          <div className="hidden text-xs opacity-25 sm:block sm:text-xs">区块化双向引用即将上线……</div>
         </div>
         {/* 底部区域 */}
         <div className="flex sm:gap-16">
