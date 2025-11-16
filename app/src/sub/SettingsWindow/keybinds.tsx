@@ -167,7 +167,7 @@ export default function KeyBindsPage() {
           </SidebarGroup>
         </SidebarContent>
       </Sidebar>
-      <div className="mx-auto flex w-2/3 flex-col overflow-auto">
+      <div className="mx-auto my-2 flex w-2/3 flex-col overflow-auto">
         {currentGroup === "search" ? (
           <>
             <Input

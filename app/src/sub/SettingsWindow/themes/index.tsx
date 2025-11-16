@@ -92,7 +92,7 @@ export default function ThemesTab() {
           </SidebarGroup>
         </SidebarContent>
       </Sidebar>
-      <div className="mx-auto flex w-2/3 flex-col gap-2 overflow-auto">
+      <div className="mx-auto my-2 flex w-2/3 flex-col gap-2 overflow-auto">
         <div className="flex gap-2">
           <Button
             onClick={() => {

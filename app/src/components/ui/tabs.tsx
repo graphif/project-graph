@@ -110,7 +110,7 @@ const TabsContent = React.forwardRef<
   <TabsPrimitive.Content
     ref={ref}
     data-slot="tabs-content"
-    className={cn("mt-2 flex-1 outline-none", className)}
+    className={cn("flex-1 outline-none", className)}
     {...props}
   />
 ));

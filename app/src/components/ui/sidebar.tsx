@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/utils/cn";
 
 function Sidebar({
-  variant = "sidebar",
+  variant = "floating",
   className,
   children,
   ...props
@@ -18,7 +18,7 @@ function Sidebar({
 }) {
   return (
     <div
-      className="text-sidebar-foreground group peer hidden md:block"
+      className="text-sidebar-foreground group peer"
       data-state="open"
       data-variant={variant}
       data-side="left"
@@ -39,7 +39,7 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         className={cn(
-          "w-(16rem) inset-y-0 hidden transition-[left,right,width] duration-200 ease-linear md:flex",
+          "w-(16rem) inset-y-0 flex transition-[left,right,width] duration-200 ease-linear",
           "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(16rem)*-1)]",
           // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
@@ -67,7 +67,7 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
       data-slot="sidebar-inset"
       className={cn(
         "bg-background relative flex w-full flex-1 flex-col",
-        "md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm",
+        "peer-data-[variant=inset]:m-2 peer-data-[variant=inset]:ml-0 peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2 peer-data-[variant=inset]:rounded-xl peer-data-[variant=inset]:shadow-sm",
         className,
       )}
       {...props}

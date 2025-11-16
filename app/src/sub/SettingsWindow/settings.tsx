@@ -151,7 +151,7 @@ export default function SettingsTab() {
           </SidebarGroup>
         </SidebarContent>
       </Sidebar>
-      <div className="mx-auto flex w-2/3 flex-col overflow-auto">
+      <div className="mx-auto my-2 flex w-2/3 flex-col overflow-auto">
         {currentCategory === "quick" && (
           <div className="border-b p-4">
             <Input
