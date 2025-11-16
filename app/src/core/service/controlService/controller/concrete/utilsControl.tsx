@@ -558,8 +558,10 @@ export class ControllerUtils {
   }
 
   private autoChangeTextNodeToReferenceBlock(project: Project, textNode: TextNode) {
-    textNode.isSelected = true;
-    TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
+    if (textNode.text.startsWith("[[") && textNode.text.endsWith("]]")) {
+      textNode.isSelected = true;
+      TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
+    }
   }
 
   // 同步更改孪生节点
