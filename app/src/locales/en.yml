@@ -445,6 +445,10 @@ settings:
     title: Select All Text When Starting Edit by Keyboard
     description: |
       When enabled, all text content will be selected when you press the key to enter text node editing mode.
+  textNodeBackspaceDeleteWhenEmpty:
+    title: Delete Text Node When Backspace Pressed on Empty Content
+    description: |
+      When enabled, pressing the Backspace key on an empty text node in edit mode will delete the entire node.
   enableDragAutoAlign:
     title: Enable Automatic Alignment When Dragging Nodes
     description: |

@@ -77,6 +77,7 @@ import {
   Ellipsis,
   SquareDashedBottomCode,
   RefreshCcwDot,
+  CornerUpRight,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -654,6 +655,20 @@ export default function MyContextMenuContent() {
           >
             <RefreshCcwDot />
             刷新引用块
+          </Item>
+          <Item
+            onClick={() => {
+              p.stageManager
+                .getSelectedEntities()
+                .filter((it) => it instanceof ReferenceBlockNode)
+                .filter((it) => it.isSelected)
+                .forEach((it) => {
+                  it.goToSource();
+                });
+            }}
+          >
+            <CornerUpRight />
+            进入该引用块所在的文件
           </Item>
         </>
       )}

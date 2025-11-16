@@ -550,6 +550,10 @@ settings:
     title: 文本节点通过键盘开始编辑时自动全选内容
     description: |
       开启后，在您按下文本节点编辑模式的按键时，会全选文本内容
+  textNodeBackspaceDeleteWhenEmpty:
+    title: 当在编辑模式下文本节点无内容时按Backspace键自动删除整个节点
+    description: |
+      开启后，在编辑文本节点且内容为空时，按下Backspace键会自动删除整个节点
   enableDragAutoAlign:
     title: 鼠标拖动自动吸附对齐节点
     description: |

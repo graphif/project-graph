@@ -1,7 +1,10 @@
 import { Project } from "@/core/Project";
+import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { GenerateSectionScreenshot } from "@/core/service/dataGenerateService/generateSectionScreenshot";
+import { onOpenFile } from "@/core/service/GlobalMenu";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { PathString } from "@/utils/pathString";
 import { Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
@@ -155,5 +158,24 @@ export class ReferenceBlockNode extends ConnectableEntity {
    */
   async refresh() {
     await this.generateScreenshot();
+  }
+
+  /**
+   * 用户点击这个引用块，跳转到对应的跨文件的 地方
+   */
+  async goToSource() {
+    if (this.state !== "success") {
+      return;
+    }
+    const recentFiles = await RecentFileManager.getRecentFiles();
+    const file = recentFiles.find(
+      (file) =>
+        PathString.getFileNameFromPath(file.uri.path) === this.fileName ||
+        PathString.getFileNameFromPath(file.uri.fsPath) === this.fileName,
+    );
+    if (!file) {
+      return;
+    }
+    onOpenFile(file.uri, "ReferenceBlockNode跳转打开-prg文件");
   }
 }

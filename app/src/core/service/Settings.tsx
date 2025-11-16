@@ -93,7 +93,7 @@ export const settingsSchema = z.object({
     .union([z.literal("trackpadIntAndWheelFloat"), z.literal("tarckpadFloatAndWheelInt")])
     .default("trackpadIntAndWheelFloat"),
   macTrackpadScaleSensitivity: z.number().min(0).max(1).multipleOf(0.001).default(0.5),
-  macEnableControlToCut: z.boolean().default(true),
+  macEnableControlToCut: z.boolean().default(false),
   allowMoveCameraByWSAD: z.boolean().default(false),
   allowGlobalHotKeys: z.boolean().default(true),
   cameraFollowsSelectedNodeOnArrowKeys: z.boolean().default(false),
@@ -124,6 +124,7 @@ export const settingsSchema = z.object({
     .default("enter"),
   textNodeSelectAllWhenStartEditByMouseClick: z.boolean().default(true),
   textNodeSelectAllWhenStartEditByKeyboard: z.boolean().default(false),
+  textNodeBackspaceDeleteWhenEmpty: z.boolean().default(false),
   allowAddCycleEdge: z.boolean().default(false),
   autoLayoutWhenTreeGenerate: z.boolean().default(true),
   enableBackslashGenerateNodeInInput: z.boolean().default(false),

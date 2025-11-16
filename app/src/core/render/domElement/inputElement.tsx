@@ -235,11 +235,16 @@ export class InputElement {
         } else if (event.code === "Backspace") {
           // event.preventDefault();  // 不能这样否则就删除不了了。
           if (textareaElement.value === "") {
-            // 已经要删空了。
-            resolve("");
-            onChange("", textareaElement);
-            removeElement();
-            this.project.stageManager.deleteSelectedStageObjects();
+            if (Settings.textNodeBackspaceDeleteWhenEmpty) {
+              // 已经要删空了。
+              resolve("");
+              onChange("", textareaElement);
+              removeElement();
+              this.project.stageManager.deleteSelectedStageObjects();
+            } else {
+              // 整一个特效
+              this.addFailEffect(false);
+            }
           }
         } else if (event.key === "Tab") {
           // 防止tab切换到其他按钮
@@ -322,12 +327,14 @@ export class InputElement {
     }
   }
 
-  private addFailEffect() {
+  private addFailEffect(withToast = true) {
     const textNodes = this.project.stageManager.getTextNodes().filter((textNode) => textNode.isEditing);
     for (const textNode of textNodes) {
       this.project.effects.addEffect(EntityShakeEffect.fromEntity(textNode));
     }
-    toast("您可能记错了退出或换行的控制设置");
+    if (withToast) {
+      toast("您可能记错了退出或换行的控制设置");
+    }
   }
 
   constructor(private readonly project: Project) {}
