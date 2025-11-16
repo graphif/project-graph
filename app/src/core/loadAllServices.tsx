@@ -84,17 +84,25 @@ export function loadAllServicesBeforeInit(project: Project): void {
   project.loadService(StageStyleManager);
   project.loadService(KeyBinds);
   project.loadService(ControllerUtils);
+
+  // 基础算法
   project.loadService(SectionMethods);
   project.loadService(GraphMethods);
+
   project.loadService(Controller);
   project.loadService(AutoComputeUtils);
   project.loadService(RenderUtils);
   project.loadService(WorldRenderUtils);
   project.loadService(StageManager);
-  project.loadService(AutoCompute); // 自动计算引擎应该早于Camera，因为它会操作摄像机
+
+  // 自动计算引擎应该早于Camera，因为它会操作摄像机
+  project.loadService(AutoCompute);
   project.loadService(Camera);
+
+  // 基础渲染器
   project.loadService(Renderer);
-  project.loadService(Effects); // Effects必须在Renderer之后
+  // Effects必须在Renderer之后
+  project.loadService(Effects);
 
   project.loadService(RectangleSelect);
   project.loadService(StageNodeRotate);
@@ -122,6 +130,8 @@ export function loadAllServicesBeforeInit(project: Project): void {
   project.loadService(KeyboardOnlyGraphEngine);
   project.loadService(KeyboardOnlyTreeEngine);
   project.loadService(SelectChangeEngine);
+
+  // 渲染服务
   project.loadService(TextRenderer);
   project.loadService(ImageRenderer);
   project.loadService(ShapeRenderer);
@@ -143,12 +153,17 @@ export function loadAllServicesBeforeInit(project: Project): void {
   project.loadService(ReferenceBlockRenderer);
   project.loadService(BackgroundRenderer);
   project.loadService(SearchContentHighlightRenderer);
+
+  // 导出服务
   project.loadService(StageExport);
   project.loadService(StageExportPng);
   project.loadService(StageExportSvg);
   project.loadService(GenerateFromFolder);
+
+  // 快捷键交互
   project.loadService(KeyBindsRegistrar);
 
+  // 自动保存与备份
   project.loadService(AutoSaveBackupService);
 }
 

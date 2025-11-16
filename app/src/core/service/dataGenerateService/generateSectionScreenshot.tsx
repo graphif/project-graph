@@ -1,4 +1,4 @@
-import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
+import { loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project } from "@/core/Project";
 import { PathString } from "@/utils/pathString";
 import { RecentFileManager } from "../dataFileService/RecentFileManager";
@@ -27,7 +27,6 @@ export namespace GenerateSectionScreenshot {
       const project = new Project(fileUri);
       loadAllServicesBeforeInit(project);
       await project.init();
-      loadAllServicesAfterInit(project);
       // 5. 查找指定名称的Section
       const targetSection = project.stage.find((obj) => obj instanceof Section && obj.text === sectionName);
 

@@ -1,4 +1,4 @@
-import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
+import { loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project } from "@/core/Project";
 import { PathString } from "@/utils/pathString";
 import { RecentFileManager } from "../dataFileService/RecentFileManager";
@@ -44,7 +44,6 @@ export namespace CrossFileContentQuery {
       const project = new Project(fileUri);
       loadAllServicesBeforeInit(project);
       await project.init();
-      loadAllServicesAfterInit(project);
 
       // 2. 查找所有Section
       const sections = project.stage
