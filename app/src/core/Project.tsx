@@ -249,10 +249,7 @@ export class Project extends EventEmitter<{
     }
     await Promise.allSettled(promises);
     // 销毁pixi
-    this.pixi.destroy(true, {
-      children: true,
-      context: true,
-    });
+    this.pixi.destroy();
   }
 
   /**

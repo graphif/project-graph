@@ -15,7 +15,7 @@ import { register } from "@tauri-apps/plugin-global-shortcut";
 import { arch, platform, version } from "@tauri-apps/plugin-os";
 import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
 import { useAtom } from "jotai";
-import { CloudUpload, Copy, Dot, Layers2, Minus, Pin, PinOff, Square, X } from "lucide-react";
+import { CloudUpload, Copy, Dot, Home, Layers2, Minus, Pin, PinOff, Square, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
@@ -165,7 +165,10 @@ export default function App() {
 
   useEffect(() => {
     if (!canvasWrapperRef.current) return;
-    if (!activeProject) return;
+    if (!activeProject) {
+      canvasWrapperRef.current.innerHTML = "";
+      return;
+    }
     activeProject.mount(canvasWrapperRef.current);
     const unlisten2 = getCurrentWindow().onDragDropEvent((event) => {
       if (event.payload.type === "over") {
@@ -343,6 +346,15 @@ export default function App() {
         isClassroomMode && "opacity-0",
       )}
     >
+      <Button
+        variant={activeProject ? "outline" : "secondary"}
+        className={cn("backdrop-blur-sm", !activeProject && "border-primary border-t-2")}
+        onClick={() => {
+          setActiveProject(undefined);
+        }}
+      >
+        <Home />
+      </Button>
       {projects.map((project) => (
         <Button
           key={project.uri.toString()}
@@ -470,7 +482,7 @@ export default function App() {
       {/* canvas */}
       <div className="absolute inset-0 overflow-hidden" ref={canvasWrapperRef}></div>
       {/* 没有项目处于打开状态时，显示欢迎页面 */}
-      {projects.length === 0 && (
+      {!activeProject && (
         <div className="absolute inset-0 overflow-hidden *:h-full *:w-full">
           <Welcome />
         </div>
