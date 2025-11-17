@@ -6,6 +6,8 @@ import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { readImage } from "@tauri-apps/plugin-clipboard-manager";
 import { MouseLocation } from "../../controlService/MouseLocation";
+import { toast } from "sonner";
+import { Telemetry } from "../../Telemetry";
 
 /**
  * 图片复制粘贴引擎
@@ -19,10 +21,16 @@ export class CopyEngineImage {
     } catch (error) {
       console.error("标准图片处理失败，尝试Windows兼容模式:", error);
       if (isWindows) {
-        console.log("检测到Windows系统，尝试备用处理方案");
-        await this.processImageWindowsCompat();
+        try {
+          await this.processImageWindowsCompat();
+        } catch (error) {
+          console.error("Windows兼容模式粘贴图片处理失败:", error);
+          toast.error("Windows兼容模式粘贴图片处理失败，请关闭文件再打开重试、或重启软件");
+          Telemetry.event("粘贴图片处理失败（Windows兼容模式）", String(error));
+        }
       } else {
-        throw error;
+        toast.error("粘贴图片失败，请关闭文件再打开重试、或重启软件");
+        Telemetry.event("粘贴图片处理失败（非Windows）", String(error));
       }
     }
   }
