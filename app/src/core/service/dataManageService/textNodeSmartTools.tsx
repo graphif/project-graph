@@ -1,11 +1,14 @@
 import { Dialog } from "@/components/ui/dialog";
+import { loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project } from "@/core/Project";
+import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
+import { PathString } from "@/utils/pathString";
 import { averageColors, Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";
@@ -508,10 +511,11 @@ export namespace TextNodeSmartTools {
    * @param project
    * @returns
    */
-  export function changeTextNodeToReferenceBlock(project: Project) {
+  export async function changeTextNodeToReferenceBlock(project: Project) {
     const selectedTextNodes = project.stageManager.getSelectedEntities().filter((node) => node instanceof TextNode);
     if (selectedTextNodes.length !== 1) {
       toast.error("只能选中一个节点作为引用块");
+      return;
     }
     const selectedNode = selectedTextNodes[0];
     const text = selectedNode.text;
@@ -535,5 +539,51 @@ export namespace TextNodeSmartTools {
 
     project.stageManager.add(referenceBlock);
     project.stageManager.delete(selectedNode);
+
+    // 仅当项目不是草稿时才更新引用
+    if (project.isDraft) {
+      return;
+    }
+
+    // 更新被引用文件的reference.msgpack
+    const currentFileName = PathString.getFileNameFromPath(project.uri.path);
+    if (!currentFileName) return;
+
+    try {
+      // 根据文件名查找被引用文件
+      const recentFiles = await RecentFileManager.getRecentFiles();
+      const referencedFile = recentFiles.find(
+        (file) =>
+          PathString.getFileNameFromPath(file.uri.path) === fileName ||
+          PathString.getFileNameFromPath(file.uri.fsPath) === fileName,
+      );
+      if (!referencedFile) return;
+
+      // 创建被引用文件的Project实例
+      const referencedProject = new Project(referencedFile.uri);
+
+      // 初始化项目
+      loadAllServicesBeforeInit(referencedProject);
+      await referencedProject.init();
+
+      // 更新引用
+      if (!referencedProject.references.sections[sectionName]) {
+        referencedProject.references.sections[sectionName] = [];
+      }
+
+      // 确保数组中没有重复的文件名
+      const index = referencedProject.references.sections[sectionName].indexOf(currentFileName);
+      if (index === -1) {
+        referencedProject.references.sections[sectionName].push(currentFileName);
+        // 保存更新
+        await referencedProject.save();
+      }
+      // 关闭项目
+      await referencedProject.dispose();
+      // TODO: 存在隐患，欠考虑如果引用已经被当前软件打开的情况。
+      toast.info(`更新引用`);
+    } catch (error) {
+      toast.error("Failed to update reference:" + String(error));
+    }
   }
 }

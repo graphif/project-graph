@@ -108,7 +108,7 @@ export class ControllerUtils {
         selectAll,
         // rectWorld.width * this.project.camera.currentScale, // limit width
       )
-      .then(() => {
+      .then(async () => {
         SubWindow.close(lastAutoCompleteWindowId);
         clickedNode!.isEditing = false;
         this.project.controller.isCameraLocked = false;
@@ -116,7 +116,7 @@ export class ControllerUtils {
 
         // 实验
         this.finishChangeTextNode(clickedNode);
-        this.autoChangeTextNodeToReferenceBlock(this.project, clickedNode);
+        await this.autoChangeTextNodeToReferenceBlock(this.project, clickedNode);
       });
   }
 
@@ -557,10 +557,10 @@ export class ControllerUtils {
     this.syncChangeTextNode(textNode);
   }
 
-  private autoChangeTextNodeToReferenceBlock(project: Project, textNode: TextNode) {
+  private async autoChangeTextNodeToReferenceBlock(project: Project, textNode: TextNode) {
     if (textNode.text.startsWith("[[") && textNode.text.endsWith("]]")) {
       textNode.isSelected = true;
-      TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
+      await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
     }
   }
 

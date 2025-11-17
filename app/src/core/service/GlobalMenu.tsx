@@ -30,6 +30,7 @@ import OnboardingWindow from "@/sub/OnboardingWindow";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
 import SettingsWindow from "@/sub/SettingsWindow";
 import TagWindow from "@/sub/TagWindow";
+import ReferencesWindow from "@/sub/ReferencesWindow";
 import TestWindow from "@/sub/TestWindow";
 import UserWindow from "@/sub/UserWindow";
 import { getDeviceId } from "@/utils/otherApi";
@@ -111,6 +112,7 @@ import {
   VenetianMask,
   View,
   Workflow,
+  Bookmark,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -516,6 +518,17 @@ export function GlobalMenu() {
           >
             <Tag />
             {t("file.tags")}
+          </Item>
+
+          {/* 引用管理器 */}
+          <Item
+            disabled={!activeProject}
+            onClick={() => {
+              ReferencesWindow.open();
+            }}
+          >
+            <Bookmark />
+            引用管理器
           </Item>
         </Content>
       </Menu>

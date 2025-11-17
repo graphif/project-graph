@@ -1,4 +1,5 @@
 import { Project, service } from "@/core/Project";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { Color } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -59,6 +60,25 @@ export class ReferenceBlockRenderer {
       referenceBlockNode.bitmap,
       this.project.renderer.transformWorld2View(referenceBlockNode.collisionBox.getRectangle().location),
       referenceBlockNode.scale,
+    );
+  }
+
+  /**
+   * 渲染这个实体被引用的次数和提示边框
+   */
+  public renderOneEntityLinkTipAndCount(entity: Entity) {
+    // 渲染边框
+    const rect = entity.collisionBox.getRectangle();
+    const expandRect = rect.expandFromCenter(20);
+    this.project.shapeRenderer.renderRect(
+      new Rectangle(
+        this.project.renderer.transformWorld2View(expandRect.location),
+        expandRect.size.multiply(this.project.camera.currentScale),
+      ),
+      Color.Transparent,
+      this.project.stageStyleManager.currentStyle.effects.successShadow,
+      1 * this.project.camera.currentScale,
+      10 * this.project.camera.currentScale,
     );
   }
 }
