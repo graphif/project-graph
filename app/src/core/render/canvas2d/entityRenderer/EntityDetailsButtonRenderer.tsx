@@ -1,8 +1,9 @@
-import { NumberFunctions } from "@/core/algorithm/numberFunctions";
 import { Project, service } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { Vector } from "@graphif/data-structures";
+import { Color, Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
+
 /**
  * 仅仅渲染一个节点右上角的按钮
  */
@@ -35,15 +36,17 @@ export class EntityDetailsButtonRenderer {
         this.project.stageStyleManager.currentStyle.DetailsDebugText,
       );
     }
-    this.project.textRenderer.renderText(
-      "📃",
-      this.project.renderer.transformWorld2View(entity.detailsButtonRectangle().leftTop),
-      (isMouseHovering ? getFontSizeByTime() : 20) * this.project.camera.currentScale,
+    const rect = entity.detailsButtonRectangle();
+    const color = isMouseHovering ? this.project.stageStyleManager.currentStyle.CollideBoxSelected : Color.Transparent;
+    this.project.shapeRenderer.renderRect(
+      new Rectangle(
+        this.project.renderer.transformWorld2View(rect.leftTop),
+        rect.size.multiply(this.project.camera.currentScale),
+      ),
+      color,
+      this.project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(0.5),
+      2 * this.project.camera.currentScale,
+      5 * this.project.camera.currentScale,
     );
   }
-}
-
-function getFontSizeByTime() {
-  const r = NumberFunctions.sinNumberByTime(19, 21, 0.25);
-  return r;
 }

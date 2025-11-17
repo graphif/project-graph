@@ -42,7 +42,7 @@ export abstract class Entity extends StageObject {
 
   public detailsButtonRectangle(): Rectangle {
     const thisRectangle = this.collisionBox.getRectangle();
-    return new Rectangle(thisRectangle.rightTop.subtract(new Vector(20, 20)), new Vector(20, 20));
+    return new Rectangle(thisRectangle.rightTop.subtract(new Vector(10, 10)), new Vector(25, 25));
   }
   public isMouseInDetailsButton(mouseWorldLocation: Vector): boolean {
     return this.detailsButtonRectangle().isPointIn(mouseWorldLocation);
