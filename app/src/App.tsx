@@ -405,7 +405,7 @@ export default function App() {
       onContextMenu={(e) => e.preventDefault()}
     >
       {/* 菜单 | 标签页 | ...移动窗口区域... | 窗口控制按钮 */}
-      <div className={cn("z-10 flex h-9 gap-2 transition-all hover:opacity-100", isClassroomMode && "opacity-0")}>
+      <div className={cn("z-20 flex h-9 gap-2 transition-all hover:opacity-100", isClassroomMode && "opacity-0")}>
         {/* <div className=" flex h-8 shrink-0 items-center overflow-hidden rounded-xl border"></div> */}
         <GlobalMenu />
         {isWide && <ProjectTabs />}

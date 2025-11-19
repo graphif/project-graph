@@ -1145,7 +1145,11 @@ export async function onOpenFile(uri?: URI, source: string = "unknown") {
     if (!path) return;
     uri = URI.file(path);
   }
-  let upgraded: ReturnType<typeof ProjectUpgrader.convertVAnyToN1> extends Promise<infer T> ? T : never;
+
+  let upgraded: ReturnType<typeof ProjectUpgrader.convertVAnyToN1> extends Promise<infer T> ? T : never = {
+    data: [],
+    attachments: new Map(),
+  };
 
   // 读取文件内容并判断格式
   const fileData = await readFile(uri.fsPath);
@@ -1180,19 +1184,9 @@ export async function onOpenFile(uri?: URI, source: string = "unknown") {
     if (typeof decodedData !== "object" || decodedData === null) {
       throw new Error("msgpack 解码结果不是有效的对象");
     }
-    const t = performance.now();
     upgraded = await toast
       .promise(ProjectUpgrader.convertVAnyToN1(decodedData as Record<string, any>, uri), {
         loading: "正在转换旧版项目文件...",
-        success: () => {
-          const time = performance.now() - t;
-          Telemetry.event("转换vany->n1", { time, length: fileData.length });
-          return `转换成功，耗时 ${time}ms`;
-        },
-        error: (e) => {
-          Telemetry.event("转换vany->n1报错", { error: String(e) });
-          return `转换失败，已发送错误报告，可在群内联系开发者\n${String(e)}`;
-        },
       })
       .unwrap();
     toast.info("您正在尝试导入旧版的文件！稍后如果点击了保存文件，文件会保存为相同文件夹内的 .prg 后缀的文件");
@@ -1208,38 +1202,22 @@ export async function onOpenFile(uri?: URI, source: string = "unknown") {
   const t = performance.now();
   const loadServiceTime = performance.now() - t;
   await RecentFileManager.addRecentFileByUri(uri);
-  toast.promise(
-    async () => {
-      await initProjectWithAllServices(project);
-    },
-    {
-      loading: "正在打开文件...",
-      success: () => {
-        if (upgraded) {
-          project.stage = deserialize(upgraded.data, project);
-          project.attachments = upgraded.attachments;
-        }
-        const readFileTime = performance.now() - t;
-        store.set(projectsAtom, [...store.get(projectsAtom), project]);
-        store.set(activeProjectAtom, project);
-        setTimeout(() => {
-          project.camera.reset();
-        }, 100);
-        Telemetry.event("打开文件", {
-          loadServiceTime,
-          readFileTime,
-          source,
-        });
-        return `耗时 ${readFileTime}ms，共 ${project.stage.length} 个舞台对象，${project.attachments.size} 个附件`;
-      },
-      error: (e) => {
-        Telemetry.event("打开文件失败", {
-          error: String(e),
-        });
-        return `读取时发生错误，已发送错误报告，可在群内联系开发者\n${String(e)}`;
-      },
-    },
-  );
+  await initProjectWithAllServices(project);
+  if (upgraded) {
+    project.stage = deserialize(upgraded.data, project);
+    project.attachments = upgraded.attachments;
+  }
+  const readFileTime = performance.now() - t;
+  store.set(projectsAtom, [...store.get(projectsAtom), project]);
+  store.set(activeProjectAtom, project);
+  setTimeout(() => {
+    project.camera.reset();
+  }, 100);
+  Telemetry.event("打开文件", {
+    loadServiceTime,
+    readFileTime,
+    source,
+  });
 }
 
 /**
