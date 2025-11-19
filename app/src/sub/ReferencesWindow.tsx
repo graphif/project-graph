@@ -51,9 +51,9 @@ export default function ReferencesWindow() {
       {/* 引用信息展示 */}
       <div className="flex-1 overflow-y-auto">
         <div className="mb-4">
-          <h3 className="mb-2 text-lg font-semibold">被引用的文件</h3>
+          <h3 className="mb-2 text-lg font-semibold">直接引用此文件的文件</h3>
           {references.files.length === 0 ? (
-            <p className="text-sm text-gray-500">当前项目中没有被引用的文件</p>
+            <p className="text-muted-foreground text-sm">当前项目中没有引用此文件的文件</p>
           ) : (
             <div className="space-y-1">
               {references.files.map((filePath) => {
@@ -61,11 +61,11 @@ export default function ReferencesWindow() {
                 return (
                   <div
                     key={filePath}
-                    className="flex cursor-pointer items-center gap-2 rounded p-1 text-sm hover:bg-gray-100"
+                    className="text-select-option-text hover:text-select-option-hover-text hover:bg-icon-button-bg flex cursor-pointer items-center gap-2 rounded p-1 text-sm"
                     onClick={() => handleOpenReferencedFile(fileName)}
                   >
                     <span className="font-medium">{fileName}</span>
-                    <span className="text-xs text-gray-500">{filePath}</span>
+                    <span className="text-muted-foreground text-xs">{filePath}</span>
                   </div>
                 );
               })}
@@ -76,13 +76,13 @@ export default function ReferencesWindow() {
         <div>
           <h3 className="mb-2 text-lg font-semibold">被引用的章节</h3>
           {Object.keys(references.sections).length === 0 ? (
-            <p className="text-sm text-gray-500">当前项目中没有被引用的章节</p>
+            <p className="text-muted-foreground text-sm">当前项目中没有被引用的章节</p>
           ) : (
             <div className="space-y-3">
               {Object.entries(references.sections).map(([fileName, sections]) => (
                 <div key={fileName}>
                   <div
-                    className="cursor-pointer rounded p-1 font-medium hover:bg-gray-100"
+                    className="text-select-option-text hover:text-select-option-hover-text hover:bg-icon-button-bg cursor-pointer rounded p-1 font-medium"
                     onClick={() => handleOpenReferencedFile(fileName)}
                   >
                     {fileName}
@@ -91,7 +91,7 @@ export default function ReferencesWindow() {
                     {sections.map((sectionName) => (
                       <div
                         key={sectionName}
-                        className="cursor-pointer rounded border-l-2 border-gray-200 p-1 pl-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="border-muted text-select-option-text hover:text-select-option-hover-text hover:bg-icon-button-bg cursor-pointer rounded border-l-2 p-1 pl-2 text-sm"
                       >
                         {sectionName}
                       </div>
