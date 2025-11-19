@@ -668,7 +668,7 @@ export default function MyContextMenuContent() {
             }}
           >
             <CornerUpRight />
-            进入该引用块所在的文件
+            进入该引用块所在的源头位置
           </Item>
         </>
       )}

@@ -30,6 +30,14 @@ export class RectangleLittleNoteEffect extends Effect {
     );
   }
 
+  static fromUtilsSlowNote(stageObject: StageObject): RectangleLittleNoteEffect {
+    return new RectangleLittleNoteEffect(
+      new ProgressNumber(0, 100),
+      stageObject.collisionBox.getRectangle(),
+      Color.Green,
+    );
+  }
+
   static fromSearchNode(stageObject: StageObject): RectangleLittleNoteEffect {
     return new RectangleLittleNoteEffect(
       new ProgressNumber(0, 30),

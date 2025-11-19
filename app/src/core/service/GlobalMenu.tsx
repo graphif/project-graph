@@ -112,7 +112,7 @@ import {
   VenetianMask,
   View,
   Workflow,
-  Bookmark,
+  Link,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -522,12 +522,12 @@ export function GlobalMenu() {
 
           {/* 引用管理器 */}
           <Item
-            disabled={!activeProject}
+            disabled={!activeProject || activeProject.isDraft}
             onClick={() => {
-              ReferencesWindow.open();
+              ReferencesWindow.open(activeProject!.uri);
             }}
           >
-            <Bookmark />
+            <Link />
             引用管理器
           </Item>
         </Content>
@@ -1377,7 +1377,7 @@ export async function onNewDraft() {
   store.set(activeProjectAtom, project);
 }
 
-export async function onOpenFile(uri?: URI, source: string = "unknown") {
+export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise<Project | undefined> {
   if (!uri) {
     const path = await open({
       directory: false,
@@ -1443,54 +1443,59 @@ export async function onOpenFile(uri?: URI, source: string = "unknown") {
 
   if (store.get(projectsAtom).some((p) => p.uri.toString() === uri.toString())) {
     store.set(activeProjectAtom, store.get(projectsAtom).find((p) => p.uri.toString() === uri.toString())!);
-    store.get(activeProjectAtom)?.loop();
+    const activeProject = store.get(activeProjectAtom);
+    if (!activeProject) return;
+    activeProject.loop();
     // 把其他项目pause
     store
       .get(projectsAtom)
       .filter((p) => p.uri.toString() !== uri.toString())
       .forEach((p) => p.pause());
     toast.success("切换到已打开的标签页");
-    return;
+    return activeProject;
   }
   const project = new Project(uri);
   const t = performance.now();
   loadAllServicesBeforeInit(project);
   const loadServiceTime = performance.now() - t;
 
-  toast.promise(
-    async () => {
-      await project.init();
-      loadAllServicesAfterInit(project);
-    },
-    {
-      loading: "正在打开文件...",
-      success: () => {
-        if (upgraded) {
-          project.stage = deserialize(upgraded.data, project);
-          project.attachments = upgraded.attachments;
-        }
-        const readFileTime = performance.now() - t;
-        store.set(projectsAtom, [...store.get(projectsAtom), project]);
-        store.set(activeProjectAtom, project);
-        setTimeout(() => {
-          project.camera.reset();
-        }, 100);
-        RecentFileManager.addRecentFileByUri(uri);
-        Telemetry.event("打开文件", {
-          loadServiceTime,
-          readFileTime,
-          source,
-        });
-        return `耗时 ${readFileTime}ms，共 ${project.stage.length} 个舞台对象，${project.attachments.size} 个附件`;
+  await toast
+    .promise(
+      async () => {
+        await project.init();
+        loadAllServicesAfterInit(project);
       },
-      error: (e) => {
-        Telemetry.event("打开文件失败", {
-          error: String(e),
-        });
-        return `读取时发生错误，已发送错误报告，可在群内联系开发者\n${String(e)}`;
+      {
+        loading: "正在打开文件...",
+        success: () => {
+          if (upgraded) {
+            project.stage = deserialize(upgraded.data, project);
+            project.attachments = upgraded.attachments;
+          }
+          const readFileTime = performance.now() - t;
+          store.set(projectsAtom, [...store.get(projectsAtom), project]);
+          store.set(activeProjectAtom, project);
+          setTimeout(() => {
+            project.camera.reset();
+          }, 100);
+          RecentFileManager.addRecentFileByUri(uri);
+          Telemetry.event("打开文件", {
+            loadServiceTime,
+            readFileTime,
+            source,
+          });
+          return `耗时 ${readFileTime}ms，共 ${project.stage.length} 个舞台对象，${project.attachments.size} 个附件`;
+        },
+        error: (e) => {
+          Telemetry.event("打开文件失败", {
+            error: String(e),
+          });
+          return `读取时发生错误，已发送错误报告，可在群内联系开发者\n${String(e)}`;
+        },
       },
-    },
-  );
+    )
+    .unwrap();
+  return project;
 }
 
 /**

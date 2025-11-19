@@ -8,6 +8,8 @@ import { PathString } from "@/utils/pathString";
 import { Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
+import { Section } from "./Section";
+import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 
 /**
  * 引用块节点
@@ -176,6 +178,19 @@ export class ReferenceBlockNode extends ConnectableEntity {
     if (!file) {
       return;
     }
-    onOpenFile(file.uri, "ReferenceBlockNode跳转打开-prg文件");
+    // 跳转到源头：对应的源头Section
+    const project = await onOpenFile(file.uri, "ReferenceBlockNode跳转打开-prg文件");
+    if (!project) {
+      return;
+    }
+    const targetSection = project.stage
+      .filter((obj) => obj instanceof Section)
+      .find((section) => section.text === this.sectionName);
+    if (!targetSection) {
+      return;
+    }
+    const center = targetSection.collisionBox.getRectangle().center;
+    project.camera.location = center;
+    project.effects.addEffect(RectangleLittleNoteEffect.fromUtilsSlowNote(targetSection));
   }
 }
