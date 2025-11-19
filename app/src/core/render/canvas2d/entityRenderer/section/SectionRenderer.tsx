@@ -205,6 +205,13 @@ export class SectionRenderer {
       this.renderNoCollapse(section);
     }
 
+    if (!section.isSelected && this.project.references.sections[section.text]) {
+      this.project.referenceBlockRenderer.renderSourceSectionBorder(
+        section,
+        this.project.references.sections[section.text].length,
+      );
+    }
+
     if (section.isSelected) {
       // 在外面增加一个框
       this.project.collisionBoxRenderer.render(
