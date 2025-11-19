@@ -13,18 +13,19 @@ export class ReferenceBlockRenderer {
 
   render(referenceBlockNode: ReferenceBlockNode) {
     // 需要有一个边框
-    const renderRectangle = new Rectangle(
+    const renderViewRectangle = new Rectangle(
       this.project.renderer.transformWorld2View(referenceBlockNode.rectangle.location),
       referenceBlockNode.rectangle.size.multiply(this.project.camera.currentScale),
     );
     this.project.shapeRenderer.renderRect(
-      renderRectangle,
+      renderViewRectangle,
       Color.Transparent,
       this.project.stageStyleManager.currentStyle.StageObjectBorder,
       1 * this.project.camera.currentScale,
     );
+
+    // 选中状态
     if (referenceBlockNode.isSelected) {
-      // 在外面增加一个框
       this.project.collisionBoxRenderer.render(
         referenceBlockNode.collisionBox,
         this.project.stageStyleManager.currentStyle.CollideBoxSelected,
@@ -33,12 +34,43 @@ export class ReferenceBlockRenderer {
 
     if (referenceBlockNode.state === "loading") {
       // 渲染加载状态
-      this.project.textRenderer.renderText(
+      this.project.textRenderer.renderTextFromCenter(
         "Loading...",
-        this.project.renderer.transformWorld2View(referenceBlockNode.collisionBox.getRectangle().location),
+        renderViewRectangle.center,
         12 * this.project.camera.currentScale,
         this.project.stageStyleManager.currentStyle.StageObjectBorder,
       );
+      const i = this.project.renderer.frameIndex % 4;
+      // 渲染四个边
+      if (i === 0) {
+        this.project.curveRenderer.renderSolidLine(
+          renderViewRectangle.leftTop,
+          renderViewRectangle.rightTop,
+          this.project.stageStyleManager.currentStyle.effects.dash,
+          4 * this.project.camera.currentScale,
+        );
+      } else if (i === 1) {
+        this.project.curveRenderer.renderSolidLine(
+          renderViewRectangle.rightTop,
+          renderViewRectangle.rightBottom,
+          this.project.stageStyleManager.currentStyle.effects.dash,
+          4 * this.project.camera.currentScale,
+        );
+      } else if (i === 2) {
+        this.project.curveRenderer.renderSolidLine(
+          renderViewRectangle.rightBottom,
+          renderViewRectangle.leftBottom,
+          this.project.stageStyleManager.currentStyle.effects.dash,
+          4 * this.project.camera.currentScale,
+        );
+      } else if (i === 3) {
+        this.project.curveRenderer.renderSolidLine(
+          renderViewRectangle.leftBottom,
+          renderViewRectangle.leftTop,
+          this.project.stageStyleManager.currentStyle.effects.dash,
+          4 * this.project.camera.currentScale,
+        );
+      }
       return;
     }
 
