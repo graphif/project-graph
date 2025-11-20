@@ -26,6 +26,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
@@ -44,13 +45,14 @@ export default function WelcomePage() {
   useEffect(() => {
     if (!selectedFile) return;
     setError(null);
-    onOpenFile(selectedFile.uri, "欢迎页面-最近打开的文件")
-      .then(() => {
+    setTimeout(async () => {
+      try {
+        await onOpenFile(selectedFile.uri, "欢迎页面-最近打开的文件");
         setSelectedFile(null);
-      })
-      .catch((err) => {
+      } catch (err) {
         setError(String(err));
-      });
+      }
+    }, 500);
   }, [selectedFile]);
 
   return (
@@ -75,6 +77,9 @@ export default function WelcomePage() {
           </SidebarGroup>
           <SidebarGroup>
             <SidebarGroupLabel>常用文件夹</SidebarGroupLabel>
+            <SidebarGroupAction>
+              <Plus />
+            </SidebarGroupAction>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
@@ -201,7 +206,7 @@ function RecentFiles({ onSelect }: { onSelect: (file: RecentFileManager.RecentFi
     setPromise(RecentFileManager.getRecentFiles());
   }, []);
 
-  return files?.map((file, i) => (
+  return files?.toReversed().map((file, i) => (
     <motion.div
       layoutId={`card-${file.uri.path}`}
       className="bg-card group relative cursor-pointer overflow-hidden rounded-xl border"
