@@ -33,4 +33,8 @@ export class Circle extends Shape {
     const top = this.location.y - this.radius;
     return new Rectangle(new Vector(left, top), Vector.same(this.radius * 2));
   }
+
+  toString(): string {
+    return `Circle(${this.location.toString()}, ${this.radius})`;
+  }
 }

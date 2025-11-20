@@ -6,12 +6,7 @@ import { Rectangle } from "@graphif/shapes";
 import { RefreshCcw } from "lucide-react";
 import { useAtom } from "jotai";
 import { useState, useEffect } from "react";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { PathString } from "@/utils/pathString";
-import { toast } from "sonner";
-import { onOpenFile } from "@/core/service/GlobalMenu";
-import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
-import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 import { URI } from "vscode-uri";
 
 export default function ReferencesWindow(props: { currentProjectFileName: string }) {
@@ -28,36 +23,6 @@ export default function ReferencesWindow(props: { currentProjectFileName: string
   useEffect(() => {
     refresh();
   }, []);
-
-  const handleOpenReferencedFile = async (fileName: string, referenceBlockNodeSectionName: string) => {
-    const recentFiles = await RecentFileManager.getRecentFiles();
-    const file = recentFiles.find(
-      (file) =>
-        PathString.getFileNameFromPath(file.uri.path) === fileName ||
-        PathString.getFileNameFromPath(file.uri.fsPath) === fileName,
-    );
-    if (!file) {
-      toast.error(`文件 ${fileName} 未找到`);
-      return;
-    }
-    const project = await onOpenFile(file.uri, "ReferencesWindow跳转打开-prg文件");
-    // 从被引用的源头，跳转到引用的地方
-    if (project && referenceBlockNodeSectionName) {
-      setTimeout(() => {
-        const referenceBlockNode = project.stage
-          .filter((o) => o instanceof ReferenceBlockNode)
-          .find((o) => o.sectionName === referenceBlockNodeSectionName);
-        if (referenceBlockNode) {
-          const center = referenceBlockNode.collisionBox.getRectangle().center;
-          project.camera.location = center;
-          // 加一个特效
-          project.effects.addEffect(RectangleLittleNoteEffect.fromUtilsSlowNote(referenceBlockNode));
-        } else {
-          toast.error(`没有找到引用标题为 “${referenceBlockNodeSectionName}” 的引用块节点`);
-        }
-      }, 100);
-    }
-  };
 
   return (
     <div className="flex flex-col gap-2 p-2">
@@ -107,7 +72,9 @@ export default function ReferencesWindow(props: { currentProjectFileName: string
                   <div className="ml-4 mt-1 space-y-1">
                     {sections.map((fileName) => (
                       <div
-                        onClick={() => handleOpenReferencedFile(fileName, referencedSectionName)}
+                        onClick={() =>
+                          project.referenceManager.jumpToReferenceLocation(fileName, referencedSectionName)
+                        }
                         key={fileName}
                         className="border-muted text-select-option-text hover:text-select-option-hover-text hover:bg-icon-button-bg cursor-pointer rounded border-l-2 p-1 pl-2 text-sm"
                       >
@@ -124,6 +91,46 @@ export default function ReferencesWindow(props: { currentProjectFileName: string
     </div>
   );
 }
+
+export function SectionReferencePanel(props: { currentProjectFileName: string; sectionName: string }) {
+  // const currentProjectFileName = props.currentProjectFileName;
+  const sectionName = props.sectionName;
+  const [project] = useAtom(activeProjectAtom);
+  if (!project) return <></>;
+  const [references, setReferences] = useState(project.references);
+  function refresh() {
+    setReferences({ ...project!.references });
+  }
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-2 p-2">
+      {references.sections[sectionName].map((fileName) => (
+        <div
+          onClick={() => project.referenceManager.jumpToReferenceLocation(fileName, sectionName)}
+          key={fileName}
+          className="border-muted text-select-option-text w-full cursor-pointer rounded p-1 text-sm hover:ring"
+        >
+          {fileName}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+SectionReferencePanel.open = (currentURI: URI, sectionName: string, sectionViewLocation: Vector) => {
+  const fileName = PathString.getFileNameFromPath(currentURI.path);
+  SubWindow.create({
+    title: `引用它的地方`,
+    children: <SectionReferencePanel currentProjectFileName={fileName} sectionName={sectionName} />,
+    rect: new Rectangle(sectionViewLocation, new Vector(150, 150)),
+    closeWhenClickOutside: true,
+    closeWhenClickInside: true,
+  });
+};
 
 ReferencesWindow.open = (currentURI: URI) => {
   const fileName = PathString.getFileNameFromPath(currentURI.path);

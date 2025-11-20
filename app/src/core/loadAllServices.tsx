@@ -71,6 +71,7 @@ import { TagManager } from "@/core/stage/stageManager/concreteMethods/StageTagMa
 import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import { StageManager } from "@/core/stage/stageManager/StageManager";
 import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
+import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageReferenceManager";
 
 /**
  * 以下方法在项目初始化之前加载所有服务
@@ -126,6 +127,7 @@ export function loadAllServicesBeforeInit(project: Project): void {
   project.loadService(SectionInOutManager);
   project.loadService(SectionPackManager);
   project.loadService(TagManager);
+  project.loadService(ReferenceManager);
   project.loadService(KeyboardOnlyEngine);
   project.loadService(KeyboardOnlyGraphEngine);
   project.loadService(KeyboardOnlyTreeEngine);

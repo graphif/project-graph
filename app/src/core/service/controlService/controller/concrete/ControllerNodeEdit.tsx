@@ -3,9 +3,11 @@ import { Settings } from "@/core/service/Settings";
 import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
+import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 import { open } from "@tauri-apps/plugin-shell";
+import { MouseLocation } from "../../MouseLocation";
 /**
  * 包含编辑节点文字，编辑详细信息等功能的控制器
  *
@@ -46,6 +48,9 @@ export class ControllerNodeEditClass extends ControllerClass {
         // 跳转链接
         open(clickedEntity.url);
       }
+    } else if (clickedEntity instanceof ReferenceBlockNode) {
+      // 双击引用块跳转到源头
+      clickedEntity.goToSource();
     }
   };
 
@@ -65,6 +70,10 @@ export class ControllerNodeEditClass extends ControllerClass {
         return;
       }
     }
+    // 处理引用按钮点击事件
+    this.project.referenceManager.onClickReferenceNumber(
+      this.project.renderer.transformView2World(MouseLocation.vector()),
+    );
   };
 
   mousemove = (event: MouseEvent) => {

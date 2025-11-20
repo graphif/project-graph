@@ -1,9 +1,9 @@
 import { Project, service } from "@/core/Project";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { Color, Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
+import { Rectangle, Circle } from "@graphif/shapes";
+import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 
 /**
  * 引用块节点渲染器
@@ -30,6 +30,19 @@ export class ReferenceBlockRenderer {
       this.project.collisionBoxRenderer.render(
         referenceBlockNode.collisionBox,
         this.project.stageStyleManager.currentStyle.CollideBoxSelected,
+      );
+
+      // 在引用块底部添加提示文本
+      const bottomCenter = this.project.renderer.transformWorld2View(
+        referenceBlockNode.rectangle.location.add(
+          new Vector(referenceBlockNode.rectangle.size.x / 2, referenceBlockNode.rectangle.size.y + 15),
+        ),
+      );
+      this.project.textRenderer.renderTextFromCenter(
+        "双击跳转到源头位置",
+        bottomCenter,
+        10 * this.project.camera.currentScale,
+        this.project.stageStyleManager.currentStyle.StageObjectBorder,
       );
     }
 
@@ -97,12 +110,20 @@ export class ReferenceBlockRenderer {
       referenceBlockNode.scale,
     );
 
-    if (referenceBlockNode.state === "success" && !referenceBlockNode.isSelected) {
+    if (referenceBlockNode.state === "success") {
+      let expand = 4;
+      let lightColor = this.project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(0.5);
+      let darkColor = this.project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(0.8);
+      if (referenceBlockNode.isSelected) {
+        expand = 16;
+        lightColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected;
+        darkColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected.toNewAlpha(1);
+      }
       const baseRect = referenceBlockNode.collisionBox.getRectangle();
       // 渲染外层括号
-      this.renderBrackets(baseRect.expandFromCenter(8), new Color(118, 78, 209));
+      this.renderBrackets(baseRect.expandFromCenter(expand + 4), darkColor);
       // 渲染内层括号
-      this.renderBrackets(baseRect.expandFromCenter(4), new Color(169, 136, 238));
+      this.renderBrackets(baseRect.expandFromCenter(expand), lightColor);
     }
   }
 
@@ -191,35 +212,47 @@ export class ReferenceBlockRenderer {
     this.project.curveRenderer.renderSolidLine(renderViewRect.rightBottom, rightMid, color, lineWidth);
 
     // 在左上角渲染计数
-    const textWorldLocation = worldRect.leftTop.add(new Vector(0, -10));
-    const textViewLocation = this.project.renderer.transformWorld2View(textWorldLocation);
-    const textViewPosition = textViewLocation.add(new Vector(-20, -20).multiply(this.project.camera.currentScale));
-    const fontSize = 32 * this.project.camera.currentScale;
-    const circleRadius = fontSize * 0.8;
+    const mouseWorldPos = this.project.renderer.transformView2World(MouseLocation.vector());
+    // 创建计数圆形的世界坐标
+    const circleWorld = section.referenceButtonCircle();
+    const countCircleCenter = circleWorld.location;
+    const countCircleRadius = circleWorld.radius;
+    // 转换为视图坐标
+    const countCircleCenterView = this.project.renderer.transformWorld2View(countCircleCenter);
+    const countCircleRadiusView = countCircleRadius * this.project.camera.currentScale;
+    const fontSize = countCircleRadius * 1.5 * this.project.camera.currentScale;
 
-    // 绘制紫色圆形背景
-    this.project.shapeRenderer.renderCircle(textViewPosition, circleRadius, color, Color.Transparent, 0);
+    // 检查鼠标是否悬浮在圆形上
+    const isMouseHovering = new Circle(countCircleCenter, countCircleRadius).isPointIn(mouseWorldPos);
+
+    // 根据鼠标是否悬浮选择圆形颜色
+    const circleColor = isMouseHovering ? new Color(150, 120, 230) : color;
+
+    // 绘制圆形背景
+    this.project.shapeRenderer.renderCircle(
+      countCircleCenterView,
+      countCircleRadiusView,
+      circleColor,
+      Color.Transparent,
+      0,
+    );
 
     // 绘制白色文字，中心对准圆心
-    this.project.textRenderer.renderTextFromCenter(countNumber.toString(), textViewPosition, fontSize, Color.White);
-  }
-
-  /**
-   * 渲染这个实体被引用的次数和提示边框
-   */
-  public renderOneEntityLinkTipAndCount(entity: Entity) {
-    // 渲染边框
-    const rect = entity.collisionBox.getRectangle();
-    const expandRect = rect.expandFromCenter(20);
-    this.project.shapeRenderer.renderRect(
-      new Rectangle(
-        this.project.renderer.transformWorld2View(expandRect.location),
-        expandRect.size.multiply(this.project.camera.currentScale),
-      ),
-      Color.Transparent,
-      this.project.stageStyleManager.currentStyle.effects.successShadow,
-      1 * this.project.camera.currentScale,
-      10 * this.project.camera.currentScale,
+    this.project.textRenderer.renderTextFromCenter(
+      countNumber.toString(),
+      countCircleCenterView,
+      fontSize,
+      Color.White,
     );
+
+    // 如果鼠标悬浮，显示提示文字
+    if (isMouseHovering) {
+      this.project.textRenderer.renderText(
+        "点击查看引用",
+        countCircleCenterView.add(new Vector(countCircleRadiusView + 5, -countCircleRadiusView / 2)),
+        12 * this.project.camera.currentScale,
+        Color.White,
+      );
+    }
   }
 }

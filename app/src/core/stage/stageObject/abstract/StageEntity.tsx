@@ -2,7 +2,7 @@ import { Settings } from "@/core/service/Settings";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { Vector } from "@graphif/data-structures";
 import { serializable } from "@graphif/serializer";
-import { Rectangle } from "@graphif/shapes";
+import { Circle, Rectangle } from "@graphif/shapes";
 import type { Value } from "platejs";
 import { DetailsManager } from "../tools/entityDetailsManager";
 /**
@@ -46,6 +46,14 @@ export abstract class Entity extends StageObject {
   }
   public isMouseInDetailsButton(mouseWorldLocation: Vector): boolean {
     return this.detailsButtonRectangle().isPointIn(mouseWorldLocation);
+  }
+
+  public referenceButtonCircle(): Circle {
+    const thisRectangle = this.collisionBox.getRectangle();
+    return new Circle(thisRectangle.leftTop.subtract(new Vector(25, 25)), 25);
+  }
+  public isMouseInReferenceButton(mouseWorldLocation: Vector): boolean {
+    return this.referenceButtonCircle().isPointIn(mouseWorldLocation);
   }
 
   /**

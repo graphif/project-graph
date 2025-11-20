@@ -83,6 +83,7 @@ import { getOriginalNameOf } from "virtual:original-class-name";
 import { URI } from "vscode-uri";
 import { Telemetry } from "./service/Telemetry";
 import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
+import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageReferenceManager";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -468,6 +469,7 @@ declare module "./Project" {
     graphMethods: GraphMethods;
     stageStyleManager: StageStyleManager;
     autoSaveBackup: AutoSaveBackupService;
+    referenceManager: ReferenceManager;
   }
 }
 
