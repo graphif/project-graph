@@ -193,12 +193,15 @@ export class ReferenceBlockRenderer {
     // 在左上角渲染计数
     const textWorldLocation = worldRect.leftTop.add(new Vector(0, -10));
     const textViewLocation = this.project.renderer.transformWorld2View(textWorldLocation);
-    this.project.textRenderer.renderText(
-      countNumber.toString(),
-      textViewLocation.add(new Vector(-20, -20).multiply(this.project.camera.currentScale)),
-      32 * this.project.camera.currentScale,
-      color,
-    );
+    const textViewPosition = textViewLocation.add(new Vector(-20, -20).multiply(this.project.camera.currentScale));
+    const fontSize = 32 * this.project.camera.currentScale;
+    const circleRadius = fontSize * 0.8;
+
+    // 绘制紫色圆形背景
+    this.project.shapeRenderer.renderCircle(textViewPosition, circleRadius, color, Color.Transparent, 0);
+
+    // 绘制白色文字，中心对准圆心
+    this.project.textRenderer.renderTextFromCenter(countNumber.toString(), textViewPosition, fontSize, Color.White);
   }
 
   /**
