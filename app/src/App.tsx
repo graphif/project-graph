@@ -25,6 +25,7 @@ import { useAtom } from "jotai";
 import { ChevronsLeftRight, Copy, Minus, Pin, PinOff, Square, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { cpuInfo } from "tauri-plugin-system-info-api";
 import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { cn } from "./utils/cn";
 import { isMac, isWindows } from "./utils/platform";
@@ -114,11 +115,14 @@ export default function App() {
     if (!telemetryEventSent) {
       setTelemetryEventSent(true);
       (async () => {
+        const cpu = await cpuInfo();
         await Telemetry.event("启动应用", {
           version: await getVersion(),
           os: platform(),
           arch: arch(),
           osVersion: version(),
+          cpu: cpu.cpus[0].brand,
+          cpuCount: cpu.cpu_count,
         });
       })();
     }

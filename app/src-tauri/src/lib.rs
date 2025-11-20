@@ -40,6 +40,7 @@ pub fn run() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_system_info::init())
         .setup(|app| {
             #[cfg(debug_assertions)] // only include this code on debug builds
             {
