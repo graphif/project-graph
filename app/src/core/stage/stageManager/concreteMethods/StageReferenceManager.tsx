@@ -9,9 +9,80 @@ import { ReferenceBlockNode } from "../../stageObject/entity/ReferenceBlockNode"
 import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 import { SectionReferencePanel } from "@/sub/ReferencesWindow";
 
+interface parserResult {
+  /**
+   * 是否是一个合法的引用块内容
+   */
+  isValid: boolean;
+  /**
+   * 不合法的原因
+   */
+  invalidReason: string;
+  /**
+   * 引用的文件名
+   */
+  fileName: string;
+  /**
+   * 引用的章节名，为空表示引用整个文件
+   */
+  sectionName: string;
+}
+
 @service("referenceManager")
 export class ReferenceManager {
   constructor(private readonly project: Project) {}
+
+  public static referenceBlockTextParser(text: string): parserResult {
+    if (!text.startsWith("[[") || !text.endsWith("]]")) {
+      return {
+        isValid: false,
+        invalidReason: "引用块内容格式错误, 必须用双中括号包裹起来，且双中括号外侧不能有空格",
+        fileName: "",
+        sectionName: "",
+      };
+    }
+    const content = text.slice(2, -2);
+    if (content.includes("#")) {
+      const [fileName, sectionName] = content.split("#");
+      if (!fileName) {
+        return {
+          isValid: false,
+          invalidReason: "引用块格式错误，文件名不能为空",
+          fileName: "",
+          sectionName: "",
+        };
+      }
+      if (!sectionName) {
+        return {
+          isValid: false,
+          invalidReason: "引用块格式错误，章节名不能为空",
+          fileName: fileName,
+          sectionName: "",
+        };
+      }
+      return {
+        isValid: true,
+        invalidReason: "",
+        fileName: fileName,
+        sectionName: sectionName,
+      };
+    } else {
+      if (!content) {
+        return {
+          isValid: false,
+          invalidReason: "引用块内容格式错误, 文件名不能为空",
+          fileName: "",
+          sectionName: "",
+        };
+      }
+      return {
+        isValid: true,
+        invalidReason: "",
+        fileName: content,
+        sectionName: "",
+      };
+    }
+  }
 
   /**
    * 处理引用按钮点击事件

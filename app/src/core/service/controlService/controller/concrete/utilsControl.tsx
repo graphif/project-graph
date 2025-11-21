@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { PathString } from "@/utils/pathString";
 import { DateChecker } from "@/utils/dateChecker";
 import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
+import { ReferenceManager } from "@/core/stage/stageManager/concreteMethods/StageReferenceManager";
 
 /**
  * 这里是专门存放代码相同的地方
@@ -560,6 +561,24 @@ export class ControllerUtils {
   private async autoChangeTextNodeToReferenceBlock(project: Project, textNode: TextNode) {
     if (textNode.text.startsWith("[[") && textNode.text.endsWith("]]")) {
       textNode.isSelected = true;
+      // 要加一个前置判断，防止用户输入本来就没有的东西
+
+      const recentFiles = await RecentFileManager.getRecentFiles();
+      const parserResult = ReferenceManager.referenceBlockTextParser(textNode.text);
+      if (!parserResult.isValid) {
+        toast.error(parserResult.invalidReason);
+        return;
+      }
+      if (!recentFiles.map((item) => PathString.getFileNameFromPath(item.uri.fsPath)).includes(parserResult.fileName)) {
+        toast.error(`文件【${parserResult.fileName}】不在“最近打开的文件”中，不能创建引用`);
+        return;
+      }
+      // 获取该文件中的所有section
+      const sections = await CrossFileContentQuery.getSectionsByFileName(parserResult.fileName);
+      if (!sections.includes(parserResult.sectionName)) {
+        toast.error(`文件【${parserResult.fileName}】中没有section【${parserResult.sectionName}】，不能创建引用`);
+        return;
+      }
       await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
     }
   }

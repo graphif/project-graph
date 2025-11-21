@@ -15,7 +15,7 @@ export namespace CrossFileContentQuery {
   const CACHE_TIME = 10000;
 
   /**
-   * 获取指定.prg 文件中的所有的 Section框名称
+   * 获取指定.prg 文件中的所有的 Section框名称 (有缓存机制)
    * @param fileName 文件名
    * @returns Section框名称数组
    */

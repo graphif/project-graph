@@ -512,6 +512,12 @@ export namespace TextNodeSmartTools {
    * @returns
    */
   export async function changeTextNodeToReferenceBlock(project: Project) {
+    // 仅当项目不是草稿时才更新引用
+    if (project.isDraft) {
+      toast.error("草稿项目不能更新为引用块");
+      return;
+    }
+
     const selectedTextNodes = project.stageManager.getSelectedEntities().filter((node) => node instanceof TextNode);
     if (selectedTextNodes.length !== 1) {
       toast.error("只能选中一个节点作为引用块");
@@ -538,12 +544,7 @@ export namespace TextNodeSmartTools {
     });
 
     project.stageManager.add(referenceBlock);
-    project.stageManager.delete(selectedNode);
-
-    // 仅当项目不是草稿时才更新引用
-    if (project.isDraft) {
-      return;
-    }
+    project.stageManager.delete(selectedNode); // TODO: 直接删除原有节点有隐患
 
     // 更新被引用文件的reference.msgpack
     const currentFileName = PathString.getFileNameFromPath(project.uri.path);
@@ -581,7 +582,6 @@ export namespace TextNodeSmartTools {
       // 关闭项目
       await referencedProject.dispose();
       // TODO: 存在隐患，欠考虑如果引用已经被当前软件打开的情况。
-      toast.info(`更新引用`);
     } catch (error) {
       toast.error("Failed to update reference:" + String(error));
     }
