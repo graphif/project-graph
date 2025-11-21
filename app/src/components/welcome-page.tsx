@@ -1,5 +1,6 @@
 import logoUrl from "@/assets/icon.png";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
+import { easeOutExpo } from "@/core/service/feedbackService/effectEngine/mathTools/easings";
 import { onNewDraft, onOpenFile } from "@/core/service/GlobalMenu";
 import SettingsWindow from "@/sub/SettingsWindow";
 import { useHitokoto } from "@/utils/hitokoto";
@@ -56,105 +57,114 @@ export default function WelcomePage() {
   }, [selectedFile]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[var(--stage-background)] pt-11">
-      <Sidebar className="h-full">
-        <SidebarHeader className="flex-row items-center gap-1.5 pb-0">
-          <img src={logoUrl} className="size-8" />
-          Project Graph
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton>
-                    <FileClock />
-                    最近打开
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel>常用文件夹</SidebarGroupLabel>
-            <SidebarGroupAction>
-              <Plus />
-            </SidebarGroupAction>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton>
-                    <Folder />
-                    file:///home/zty/des
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => SettingsWindow.open()}>
-                <SettingsIcon />
-                设置
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => SettingsWindow.open("about")}>
-                <Info />
-                关于
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
-      <div className="mx-auto flex max-w-[1200px] grow flex-col gap-4 overflow-y-auto overflow-x-hidden p-2 pl-0">
-        <Card>
-          <CardHeader>
-            <CardTitle>描述你的想法，让它们编织成现实。</CardTitle>
-            <CardDescription>使用 AI 将想法转化为图。使用本功能视为您同意我们的用户协议。</CardDescription>
-            <CardAction className="flex gap-1">
-              <Button variant="ghost" onClick={() => open("https://graphif.dev/docs/app/misc/terms")}>
-                <ExternalLink />
-                用户协议
-              </Button>
-              <Button>
-                开始生成
-                <ChevronRight />
-              </Button>
-            </CardAction>
-          </CardHeader>
-          <CardContent>
-            <Input placeholder="输入你的想法…" />
-          </CardContent>
-        </Card>
-        <div className="scrollbar-hide grid grid-cols-4 gap-4 pb-10">
-          <div
-            className="relative cursor-pointer overflow-hidden rounded-xl border border-dashed transition active:scale-90"
-            onClick={onNewDraft}
-          >
-            <div className="flex aspect-video items-center justify-center opacity-75">
-              <Plus size={64} />
+    <div className="h-screen w-screen bg-[var(--stage-background)]">
+      <motion.div
+        className="flex h-full overflow-hidden pt-11 blur-xl"
+        animate={
+          selectedFile
+            ? { filter: "blur(24px)", transform: "scale(0.9)" }
+            : { filter: "blur(0px)", transform: "scale(1)" }
+        }
+        transition={{ duration: 0.5, type: "tween", ease: easeOutExpo }}
+      >
+        <Sidebar className="h-full">
+          <SidebarHeader className="flex-row items-center gap-1.5 pb-0">
+            <img src={logoUrl} className="size-8" />
+            Project Graph
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton>
+                      <FileClock />
+                      最近打开
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupLabel>常用文件夹</SidebarGroupLabel>
+              <SidebarGroupAction>
+                <Plus />
+              </SidebarGroupAction>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton>
+                      <Folder />
+                      file:///home/zty/des
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => SettingsWindow.open()}>
+                  <SettingsIcon />
+                  设置
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => SettingsWindow.open("about")}>
+                  <Info />
+                  关于
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarFooter>
+        </Sidebar>
+        <div className="mx-auto flex max-w-[1200px] grow flex-col gap-4 overflow-y-auto overflow-x-hidden p-2 pl-0">
+          <Card>
+            <CardHeader>
+              <CardTitle>描述你的想法，让它们编织成现实。</CardTitle>
+              <CardDescription>使用 AI 将想法转化为图。使用本功能视为您同意我们的用户协议。</CardDescription>
+              <CardAction className="flex gap-1">
+                <Button variant="ghost" onClick={() => open("https://graphif.dev/docs/app/misc/terms")}>
+                  <ExternalLink />
+                  用户协议
+                </Button>
+                <Button>
+                  开始生成
+                  <ChevronRight />
+                </Button>
+              </CardAction>
+            </CardHeader>
+            <CardContent>
+              <Input placeholder="输入你的想法…" />
+            </CardContent>
+          </Card>
+          <div className="scrollbar-hide grid grid-cols-4 gap-4 pb-10">
+            <div
+              className="relative cursor-pointer overflow-hidden rounded-xl border border-dashed transition active:scale-90"
+              onClick={onNewDraft}
+            >
+              <div className="flex aspect-video items-center justify-center opacity-75">
+                <Plus size={64} />
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 flex flex-col gap-2 bg-gradient-to-t from-black/75 to-transparent p-4 pt-8 text-white">
+                <CardTitle>新建文件</CardTitle>
+                <CardDescription>「{hitokoto.hitokoto}」</CardDescription>
+              </div>
             </div>
-            <div className="absolute bottom-0 left-0 right-0 flex flex-col gap-2 bg-gradient-to-t from-black/75 to-transparent p-4 pt-8 text-white">
-              <CardTitle>新建文件</CardTitle>
-              <CardDescription>「{hitokoto.hitokoto}」</CardDescription>
-            </div>
+            <Suspense
+              fallback={Array(15).fill(
+                <div className="flex aspect-video flex-col justify-end gap-2 rounded-xl border p-4">
+                  <Skeleton className="mb-2 h-6 w-3/4 rounded-md" />
+                  <Skeleton className="h-4 w-1/2 rounded-md" />
+                </div>,
+              )}
+            >
+              <RecentFiles onSelect={setSelectedFile} />
+            </Suspense>
           </div>
-          <Suspense
-            fallback={Array(15).fill(
-              <div className="flex aspect-video flex-col justify-end gap-2 rounded-xl border p-4">
-                <Skeleton className="mb-2 h-6 w-3/4 rounded-md" />
-                <Skeleton className="h-4 w-1/2 rounded-md" />
-              </div>,
-            )}
-          >
-            <RecentFiles onSelect={setSelectedFile} />
-          </Suspense>
         </div>
-      </div>
-
+      </motion.div>
       <AnimatePresence>
         {selectedFile && (
           <motion.div
@@ -163,7 +173,7 @@ export default function WelcomePage() {
             initial={{ borderRadius: 12 }}
             animate={{ borderRadius: 0 }}
             exit={{ borderRadius: 12 }}
-            transition={{ duration: 0.5, type: "spring", bounce: 0.15 }}
+            transition={{ duration: 0.5, type: "tween", ease: easeOutExpo }}
           >
             <motion.div
               initial={{ opacity: 0 }}
