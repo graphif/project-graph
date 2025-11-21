@@ -533,7 +533,7 @@ export namespace TextNodeSmartTools {
       return;
     }
     const fileName = referenceName.split("#")[0];
-    const sectionName = referenceName.split("#")[1];
+    const sectionName = referenceName.split("#")[1] || "";
 
     const referenceBlock = new ReferenceBlockNode(project, {
       collisionBox: new CollisionBox([
@@ -568,17 +568,34 @@ export namespace TextNodeSmartTools {
       await referencedProject.init();
 
       // 更新引用
-      if (!referencedProject.references.sections[sectionName]) {
-        referencedProject.references.sections[sectionName] = [];
+      if (sectionName) {
+        // 引用特定Section的情况
+        if (!referencedProject.references.sections[sectionName]) {
+          referencedProject.references.sections[sectionName] = [];
+        }
+
+        // 确保数组中没有重复的文件名
+        const index = referencedProject.references.sections[sectionName].indexOf(currentFileName);
+        if (index === -1) {
+          referencedProject.references.sections[sectionName].push(currentFileName);
+          // 保存更新
+          await referencedProject.save();
+        }
+      } else {
+        // 引用整个文件的情况
+        if (!referencedProject.references.files) {
+          referencedProject.references.files = [];
+        }
+
+        // 确保数组中没有重复的文件名
+        const index = referencedProject.references.files.indexOf(currentFileName);
+        if (index === -1) {
+          referencedProject.references.files.push(currentFileName);
+          // 保存更新
+          await referencedProject.save();
+        }
       }
 
-      // 确保数组中没有重复的文件名
-      const index = referencedProject.references.sections[sectionName].indexOf(currentFileName);
-      if (index === -1) {
-        referencedProject.references.sections[sectionName].push(currentFileName);
-        // 保存更新
-        await referencedProject.save();
-      }
       // 关闭项目
       await referencedProject.dispose();
       // TODO: 存在隐患，欠考虑如果引用已经被当前软件打开的情况。

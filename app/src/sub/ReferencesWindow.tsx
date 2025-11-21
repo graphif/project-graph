@@ -18,6 +18,7 @@ export default function ReferencesWindow(props: { currentProjectFileName: string
 
   function refresh() {
     setReferences({ ...project!.references });
+    // 现在这个刷新作用很小，不能检测已经失效的引用
   }
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function ReferencesWindow(props: { currentProjectFileName: string
 
       {/* 引用信息展示 */}
       <div className="flex-1 overflow-y-auto">
-        {/* <div className="mb-4">
+        <div className="mb-4">
           <h3 className="mb-2 text-lg font-semibold">直接引用{currentProjectFileName}的文件</h3>
           {references.files.length === 0 ? (
             <p className="text-muted-foreground text-sm">当前项目中没有引用{currentProjectFileName}的文件</p>
@@ -46,8 +47,8 @@ export default function ReferencesWindow(props: { currentProjectFileName: string
                 return (
                   <div
                     key={filePath}
-                    className="text-select-option-text hover:text-select-option-hover-text hover:bg-icon-button-bg flex cursor-pointer items-center gap-2 rounded p-1 text-sm"
-                    onClick={() => handleOpenReferencedFile(fileName, "")}
+                    className="text-select-option-text flex cursor-pointer items-center gap-2 rounded p-1 text-sm *:cursor-pointer hover:ring"
+                    onClick={() => project.referenceManager.jumpToReferenceLocation(fileName, "")}
                   >
                     <span className="font-medium">{fileName}</span>
                     <span className="text-muted-foreground text-xs">{filePath}</span>
@@ -56,27 +57,25 @@ export default function ReferencesWindow(props: { currentProjectFileName: string
               })}
             </div>
           )}
-        </div> */}
+        </div>
 
         <div>
-          <h3 className="mb-2 text-lg font-semibold">被引用的章节</h3>
+          <h3 className="mb-2 text-lg font-semibold">引用此文件中一些Section框的文件</h3>
           {Object.keys(references.sections).length === 0 ? (
-            <p className="text-muted-foreground text-sm">{currentProjectFileName}中没有被引用的章节</p>
+            <p className="text-muted-foreground text-sm">{currentProjectFileName}中没有被引用的Section</p>
           ) : (
             <div className="space-y-3">
               {Object.entries(references.sections).map(([referencedSectionName, sections]) => (
                 <div key={referencedSectionName}>
-                  <div className="text-select-option-text hover:text-select-option-hover-text hover:bg-icon-button-bg cursor-pointer rounded p-1 font-medium">
-                    {referencedSectionName}
-                  </div>
-                  <div className="ml-4 mt-1 space-y-1">
+                  <div className="text-select-option-text rounded p-1 font-medium">{referencedSectionName}</div>
+                  <div className="my-1 ml-4 space-y-1">
                     {sections.map((fileName) => (
                       <div
                         onClick={() =>
                           project.referenceManager.jumpToReferenceLocation(fileName, referencedSectionName)
                         }
                         key={fileName}
-                        className="border-muted text-select-option-text hover:text-select-option-hover-text hover:bg-icon-button-bg cursor-pointer rounded border-l-2 p-1 pl-2 text-sm"
+                        className="border-muted text-select-option-text cursor-pointer rounded border-l-2 p-1 pl-2 text-sm hover:ring"
                       >
                         {fileName}
                       </div>

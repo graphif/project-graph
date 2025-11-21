@@ -573,11 +573,13 @@ export class ControllerUtils {
         toast.error(`文件【${parserResult.fileName}】不在“最近打开的文件”中，不能创建引用`);
         return;
       }
-      // 获取该文件中的所有section
-      const sections = await CrossFileContentQuery.getSectionsByFileName(parserResult.fileName);
-      if (!sections.includes(parserResult.sectionName)) {
-        toast.error(`文件【${parserResult.fileName}】中没有section【${parserResult.sectionName}】，不能创建引用`);
-        return;
+      if (parserResult.sectionName) {
+        // 用户输入了#，需要检查section是否存在
+        const sections = await CrossFileContentQuery.getSectionsByFileName(parserResult.fileName);
+        if (!sections.includes(parserResult.sectionName)) {
+          toast.error(`文件【${parserResult.fileName}】中没有section【${parserResult.sectionName}】，不能创建引用`);
+          return;
+        }
       }
       await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
     }

@@ -105,9 +105,17 @@ export class ReferenceBlockNode extends ConnectableEntity {
   private async generateScreenshot() {
     try {
       this.state = "loading";
-      // 调用API获取截图
-      // const screenshotBlob = await this.project.generateSectionScreenshot(this.fileName, this.sectionName);
-      const screenshotBlob = await GenerateScreenshot.generateSection(this.fileName, this.sectionName);
+      let screenshotBlob;
+
+      // 根据sectionName是否为空来决定调用哪个方法
+      if (this.sectionName) {
+        // 引用特定的Section
+        screenshotBlob = await GenerateScreenshot.generateSection(this.fileName, this.sectionName);
+      } else {
+        // 引用整个文件
+        screenshotBlob = await GenerateScreenshot.generateFullView(this.fileName);
+      }
+
       if (screenshotBlob) {
         // 保存到附件
         const newAttachmentId = this.project.addAttachment(screenshotBlob);
