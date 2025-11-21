@@ -33,7 +33,7 @@ export default function App() {
   const [activeProject, setActiveProject] = useAtom(activeProjectAtom);
   const [isWindowAlwaysOnTop, setIsWindowAlwaysOnTop] = useAtom(isWindowAlwaysOnTopAtom);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
-  const [isWide, setIsWide] = useState(false);
+
   const [telemetryEventSent, setTelemetryEventSent] = useState(false);
   const [dropState, setDropState] = useState<"none" | "open" | "append">("none");
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
@@ -92,13 +92,10 @@ export default function App() {
     // 恢复窗口位置大小
     restoreStateCurrent(StateFlags.SIZE | StateFlags.POSITION | StateFlags.MAXIMIZED);
 
-    setIsWide(window.innerWidth / window.innerHeight > 1.8);
-
     const unlisten1 = getCurrentWindow().onResized(() => {
       if (!isOnResizedDisabled.current) {
         isMaximizedWorkaround();
       }
-      setIsWide(window.innerWidth / window.innerHeight > 1.8);
     });
 
     if (!telemetryEventSent) {
@@ -245,8 +242,8 @@ export default function App() {
         el.removeEventListener("wheel", onWheel);
       }
     };
-  }, [projects.length, isWide, activeProject?.uri]);
-  // 根据标签页数量、是否宽屏、当前活动项目uri 设置滚动tabs
+  }, [projects.length, activeProject?.uri]);
+  // 根据标签页数量、当前活动项目uri 设置滚动tabs
   /**
    * 首次启动时显示欢迎页面
    */
@@ -412,7 +409,7 @@ export default function App() {
       <div className={cn("z-20 flex h-9 gap-2 transition-all hover:opacity-100", isClassroomMode && "opacity-0")}>
         {/* <div className=" flex h-8 shrink-0 items-center overflow-hidden rounded-xl border"></div> */}
         <GlobalMenu />
-        {isWide && <ProjectTabs />}
+        <ProjectTabs />
         <div className="h-full flex-1 cursor-grab active:cursor-grabbing" data-tauri-drag-region></div>
         <div className="bg-background/50 shadow-xs flex h-full items-center rounded-md border backdrop-blur-sm">
           {/* 开启穿透点击 */}
@@ -482,7 +479,6 @@ export default function App() {
         </div>
       </div>
 
-      {!isWide && <ProjectTabs />}
       {/* canvas */}
       <div className="absolute inset-0 overflow-hidden" ref={canvasWrapperRef}></div>
       {/* 没有项目处于打开状态时，显示欢迎页面 */}
