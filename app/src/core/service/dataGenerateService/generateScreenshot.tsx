@@ -38,20 +38,29 @@ export namespace GenerateScreenshot {
       // 6. 调整相机位置到Section
       const sectionRect = targetSection.collisionBox.getRectangle();
       project.camera.location = sectionRect.center;
-      project.camera.currentScale = 1;
-      project.camera.targetScale = 1;
 
-      // 7. 创建临时Canvas
+      // 7. 计算缩放比例，确保最终截图宽高不超过1920
+      const maxDimension = 1920;
+      let scaleFactor = 1;
+      if (sectionRect.width > maxDimension || sectionRect.height > maxDimension) {
+        const widthRatio = maxDimension / sectionRect.width;
+        const heightRatio = maxDimension / sectionRect.height;
+        scaleFactor = Math.min(widthRatio, heightRatio);
+      }
+      project.camera.currentScale = scaleFactor;
+      project.camera.targetScale = scaleFactor;
+
+      // 8. 创建临时Canvas
       const tempCanvas = document.createElement("canvas");
-      const scale = window.devicePixelRatio;
-      const canvasWidth = sectionRect.width + 2;
-      const canvasHeight = sectionRect.height + 2;
-      tempCanvas.width = canvasWidth * scale;
-      tempCanvas.height = canvasHeight * scale;
+      const deviceScale = window.devicePixelRatio;
+      const canvasWidth = Math.min(sectionRect.width * scaleFactor + 2, maxDimension + 2);
+      const canvasHeight = Math.min(sectionRect.height * scaleFactor + 2, maxDimension + 2);
+      tempCanvas.width = canvasWidth * deviceScale;
+      tempCanvas.height = canvasHeight * deviceScale;
       tempCanvas.style.width = `${canvasWidth}px`;
       tempCanvas.style.height = `${canvasHeight}px`;
       const tempCtx = tempCanvas.getContext("2d")!;
-      tempCtx.scale(scale, scale);
+      tempCtx.scale(deviceScale, deviceScale);
 
       // 8. 渲染Project到临时Canvas
       // 保存原Canvas和渲染器尺寸
