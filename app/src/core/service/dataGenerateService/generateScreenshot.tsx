@@ -6,16 +6,16 @@ import { Section } from "@/core/stage/stageObject/entity/Section";
 import { sleep } from "@/utils/sleep";
 
 /**
- * 从一个文件中生成指定Section的截图
+ * 从一个文件中生成截图
  */
-export namespace GenerateSectionScreenshot {
+export namespace GenerateScreenshot {
   /**
    * 根据文件名和Section框名生成截图
    * @param fileName 文件名
    * @param sectionName Section框名
    * @returns 截图的Blob对象
    */
-  export async function generate(fileName: string, sectionName: string): Promise<Blob | undefined> {
+  export async function generateSection(fileName: string, sectionName: string): Promise<Blob | undefined> {
     try {
       // 1. 根据文件名查找并加载prg文件
       const recentFiles = await RecentFileManager.getRecentFiles();

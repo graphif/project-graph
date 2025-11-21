@@ -1,6 +1,6 @@
 import { Project } from "@/core/Project";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
-import { GenerateSectionScreenshot } from "@/core/service/dataGenerateService/generateSectionScreenshot";
+import { GenerateScreenshot } from "@/core/service/dataGenerateService/generateScreenshot";
 import { onOpenFile } from "@/core/service/GlobalMenu";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
@@ -25,8 +25,16 @@ export class ReferenceBlockNode extends ConnectableEntity {
   public uuid: string;
   @serializable
   public collisionBox: CollisionBox;
+
+  /**
+   * 引用的文件名，不包括文件扩展名
+   */
   @serializable
   public fileName: string;
+
+  /**
+   * 引用的Section框名，为空表示引用整个文件
+   */
   @serializable
   public sectionName: string;
   @serializable
@@ -99,7 +107,7 @@ export class ReferenceBlockNode extends ConnectableEntity {
       this.state = "loading";
       // 调用API获取截图
       // const screenshotBlob = await this.project.generateSectionScreenshot(this.fileName, this.sectionName);
-      const screenshotBlob = await GenerateSectionScreenshot.generate(this.fileName, this.sectionName);
+      const screenshotBlob = await GenerateScreenshot.generateSection(this.fileName, this.sectionName);
       if (screenshotBlob) {
         // 保存到附件
         const newAttachmentId = this.project.addAttachment(screenshotBlob);
