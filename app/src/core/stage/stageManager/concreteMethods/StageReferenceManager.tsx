@@ -9,6 +9,7 @@ import { ReferenceBlockNode } from "../../stageObject/entity/ReferenceBlockNode"
 import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 import { SectionReferencePanel } from "@/sub/ReferencesWindow";
 import { loadAllServicesBeforeInit } from "@/core/loadAllServices";
+import { projectsAtom, store } from "@/state";
 
 interface parserResult {
   /**
@@ -196,12 +197,22 @@ export class ReferenceManager {
       );
       if (!referencedFile) return;
 
-      // 创建被引用文件的Project实例
-      const referencedProject = new Project(referencedFile.uri);
+      // 先检查当前是否已经打开了该文件的Project实例
+      const allProjects = store.get(projectsAtom);
+      let referencedProject = allProjects.find((project) => {
+        const projectFileName = PathString.getFileNameFromPath(project.uri.path);
+        const projectFileNameFs = PathString.getFileNameFromPath(project.uri.fsPath);
+        return projectFileName === fileName || projectFileNameFs === fileName;
+      });
 
-      // 初始化项目
-      loadAllServicesBeforeInit(referencedProject);
-      await referencedProject.init();
+      // 如果没有打开，则创建新的Project实例
+      let shouldDisposeProject = false;
+      if (!referencedProject) {
+        referencedProject = new Project(referencedFile.uri);
+        loadAllServicesBeforeInit(referencedProject);
+        await referencedProject.init();
+        shouldDisposeProject = true;
+      }
 
       // 更新引用
       if (sectionName) {
@@ -232,9 +243,10 @@ export class ReferenceManager {
         }
       }
 
-      // 关闭项目
-      await referencedProject.dispose();
-      // TODO: 存在隐患，欠考虑如果引用已经被当前软件打开的情况。
+      // 只有在我们创建的情况下才需要dispose
+      if (shouldDisposeProject) {
+        await referencedProject.dispose();
+      }
     } catch (error) {
       toast.error("更新reference.msgpack失败：" + String(error));
     }
