@@ -1,14 +1,11 @@
 import { Dialog } from "@/components/ui/dialog";
-import { loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project } from "@/core/Project";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
-import { PathString } from "@/utils/pathString";
 import { averageColors, Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";
@@ -545,62 +542,6 @@ export namespace TextNodeSmartTools {
 
     project.stageManager.add(referenceBlock);
     project.stageManager.delete(selectedNode); // TODO: 直接删除原有节点有隐患
-
-    // 更新被引用文件的reference.msgpack
-    const currentFileName = PathString.getFileNameFromPath(project.uri.path);
-    if (!currentFileName) return;
-
-    try {
-      // 根据文件名查找被引用文件
-      const recentFiles = await RecentFileManager.getRecentFiles();
-      const referencedFile = recentFiles.find(
-        (file) =>
-          PathString.getFileNameFromPath(file.uri.path) === fileName ||
-          PathString.getFileNameFromPath(file.uri.fsPath) === fileName,
-      );
-      if (!referencedFile) return;
-
-      // 创建被引用文件的Project实例
-      const referencedProject = new Project(referencedFile.uri);
-
-      // 初始化项目
-      loadAllServicesBeforeInit(referencedProject);
-      await referencedProject.init();
-
-      // 更新引用
-      if (sectionName) {
-        // 引用特定Section的情况
-        if (!referencedProject.references.sections[sectionName]) {
-          referencedProject.references.sections[sectionName] = [];
-        }
-
-        // 确保数组中没有重复的文件名
-        const index = referencedProject.references.sections[sectionName].indexOf(currentFileName);
-        if (index === -1) {
-          referencedProject.references.sections[sectionName].push(currentFileName);
-          // 保存更新
-          await referencedProject.save();
-        }
-      } else {
-        // 引用整个文件的情况
-        if (!referencedProject.references.files) {
-          referencedProject.references.files = [];
-        }
-
-        // 确保数组中没有重复的文件名
-        const index = referencedProject.references.files.indexOf(currentFileName);
-        if (index === -1) {
-          referencedProject.references.files.push(currentFileName);
-          // 保存更新
-          await referencedProject.save();
-        }
-      }
-
-      // 关闭项目
-      await referencedProject.dispose();
-      // TODO: 存在隐患，欠考虑如果引用已经被当前软件打开的情况。
-    } catch (error) {
-      toast.error("Failed to update reference:" + String(error));
-    }
+    await project.referenceManager.insertRefDataToSourcePrgFile(fileName, sectionName);
   }
 }

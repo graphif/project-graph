@@ -8,6 +8,7 @@ import { onOpenFile } from "@/core/service/GlobalMenu";
 import { ReferenceBlockNode } from "../../stageObject/entity/ReferenceBlockNode";
 import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 import { SectionReferencePanel } from "@/sub/ReferencesWindow";
+import { loadAllServicesBeforeInit } from "@/core/loadAllServices";
 
 interface parserResult {
   /**
@@ -32,6 +33,12 @@ interface parserResult {
 export class ReferenceManager {
   constructor(private readonly project: Project) {}
 
+  /**
+   * 保险检查函数
+   * 解析用户在文本节点中输入的引用格式文本，防止直接退出编辑模式后触发转换，导致引用块内容被错误解析
+   * @param text 引用块文本
+   * @returns
+   */
   public static referenceBlockTextParser(text: string): parserResult {
     if (!text.startsWith("[[") || !text.endsWith("]]")) {
       return {
@@ -100,6 +107,136 @@ export class ReferenceManager {
           return;
         }
       }
+    }
+  }
+
+  /**
+   * 更新当前项目的引用信息
+   * （清理无效的引用）
+   */
+  public async updateCurrentProjectReference() {
+    const recentFiles = await RecentFileManager.getRecentFiles();
+
+    // 遍历当前项目的每一个被引用的Section框
+    for (const sectionName in this.project.references.sections) {
+      const fileNameList = this.project.references.sections[sectionName];
+      const fileNameListNew = [];
+      for (const fileName of fileNameList) {
+        const file = recentFiles.find(
+          (file) =>
+            PathString.getFileNameFromPath(file.uri.path) === fileName ||
+            PathString.getFileNameFromPath(file.uri.fsPath) === fileName,
+        );
+        if (file) {
+          // 即使文件存在，也要打开看一看引用块是否在那个文件中。
+          const thatProject = new Project(file.uri);
+          loadAllServicesBeforeInit(thatProject);
+          await thatProject.init();
+          if (this.checkReferenceBlockInProject(thatProject, fileName, sectionName)) {
+            fileNameListNew.push(fileName);
+          }
+          thatProject.dispose();
+        }
+      }
+      if (fileNameListNew.length === 0) {
+        // 直接把这个章节从引用列表中删除
+        delete this.project.references.sections[sectionName];
+      } else {
+        this.project.references.sections[sectionName] = fileNameListNew;
+      }
+    }
+
+    // 遍历每一个直接引用自己整个文件的文件
+    const fileNameListNew = [];
+    for (const fileName of this.project.references.files) {
+      const file = recentFiles.find(
+        (file) =>
+          PathString.getFileNameFromPath(file.uri.path) === fileName ||
+          PathString.getFileNameFromPath(file.uri.fsPath) === fileName,
+      );
+      if (file) {
+        // 即使文件存在，也要打开看一看引用块是否在那个文件中。
+        const thatProject = new Project(file.uri);
+        loadAllServicesBeforeInit(thatProject);
+        await thatProject.init();
+        if (this.checkReferenceBlockInProject(thatProject, fileName, "")) {
+          fileNameListNew.push(fileName);
+        }
+        thatProject.dispose();
+      }
+    }
+    this.project.references.files = fileNameListNew;
+  }
+
+  public checkReferenceBlockInProject(project: Project, fileName: string, sectionName: string) {
+    const referenceBlocks = project.stage
+      .filter((object) => object instanceof ReferenceBlockNode)
+      .filter(
+        (referenceBlockNode) =>
+          referenceBlockNode.fileName === fileName && referenceBlockNode.sectionName === sectionName,
+      );
+    if (referenceBlocks.length > 0) {
+      return true;
+    }
+    return false;
+  }
+
+  public async insertRefDataToSourcePrgFile(fileName: string, sectionName: string) {
+    // 更新被引用文件的reference.msgpack
+    const currentFileName = PathString.getFileNameFromPath(this.project.uri.path);
+    if (!currentFileName) return;
+
+    try {
+      // 根据文件名查找被引用文件
+      const recentFiles = await RecentFileManager.getRecentFiles();
+      const referencedFile = recentFiles.find(
+        (file) =>
+          PathString.getFileNameFromPath(file.uri.path) === fileName ||
+          PathString.getFileNameFromPath(file.uri.fsPath) === fileName,
+      );
+      if (!referencedFile) return;
+
+      // 创建被引用文件的Project实例
+      const referencedProject = new Project(referencedFile.uri);
+
+      // 初始化项目
+      loadAllServicesBeforeInit(referencedProject);
+      await referencedProject.init();
+
+      // 更新引用
+      if (sectionName) {
+        // 引用特定Section的情况
+        if (!referencedProject.references.sections[sectionName]) {
+          referencedProject.references.sections[sectionName] = [];
+        }
+
+        // 确保数组中没有重复的文件名
+        const index = referencedProject.references.sections[sectionName].indexOf(currentFileName);
+        if (index === -1) {
+          referencedProject.references.sections[sectionName].push(currentFileName);
+          // 保存更新
+          await referencedProject.save();
+        }
+      } else {
+        // 引用整个文件的情况
+        if (!referencedProject.references.files) {
+          referencedProject.references.files = [];
+        }
+
+        // 确保数组中没有重复的文件名
+        const index = referencedProject.references.files.indexOf(currentFileName);
+        if (index === -1) {
+          referencedProject.references.files.push(currentFileName);
+          // 保存更新
+          await referencedProject.save();
+        }
+      }
+
+      // 关闭项目
+      await referencedProject.dispose();
+      // TODO: 存在隐患，欠考虑如果引用已经被当前软件打开的情况。
+    } catch (error) {
+      toast.error("更新reference.msgpack失败：" + String(error));
     }
   }
 
