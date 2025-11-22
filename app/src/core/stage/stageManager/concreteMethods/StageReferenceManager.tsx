@@ -94,13 +94,14 @@ export class ReferenceManager {
 
   /**
    * 处理引用按钮点击事件
-   * 这个函数需要性能优化，鼠标每次点击都会调用这个函数
+   * O(N) 需要查找每一个引用的Section
    * @param clickLocation 点击位置
    */
   public onClickReferenceNumber(clickLocation: Vector) {
-    //
+    if (Object.keys(this.project.references.sections).length === 0) return;
+    const sectionNameMap = this.buildSectionName2SectionMap(Object.keys(this.project.references.sections));
     for (const sectionName in this.project.references.sections) {
-      const section = this.findSectionBySectionName(sectionName);
+      const section = sectionNameMap[sectionName];
       if (section) {
         if (section.isMouseInReferenceButton(clickLocation)) {
           // 打开这个详细信息的引用弹窗
@@ -109,6 +110,17 @@ export class ReferenceManager {
         }
       }
     }
+  }
+
+  private buildSectionName2SectionMap(sectionNames: string[]): Record<string, Section> {
+    const res: Record<string, Section> = {};
+    const sectionNameSet = new Set(sectionNames);
+    for (const section of this.project.stage.filter((obj) => obj instanceof Section)) {
+      if (sectionNameSet.has(section.text)) {
+        res[section.text] = section;
+      }
+    }
+    return res;
   }
 
   /**
