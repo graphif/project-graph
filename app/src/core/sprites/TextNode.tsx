@@ -156,7 +156,7 @@ export class TextNode extends Entity {
     this.addChild(this.textInput);
   }
 
-  override destroy(options?: DestroyOptions): void {
+  destroy(options?: DestroyOptions): void {
     // 移除 TextInput 事件监听器
     if (this.onTextChange) {
       this.textInput.off("textchange", this.onTextChange);

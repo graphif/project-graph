@@ -124,7 +124,7 @@ export class RegionPicker extends Graphics {
       .on("globalpointermove", this.onGlobalPointerMove);
   }
 
-  override destroy(options?: DestroyOptions): void {
+  destroy(options?: DestroyOptions): void {
     // 移除所有事件监听器
     if (this.onPointerDown) {
       this.project.viewport.off("pointerdown", this.onPointerDown);

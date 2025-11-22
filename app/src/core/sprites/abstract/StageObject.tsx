@@ -1,11 +1,13 @@
 import { Project } from "@/core/Project";
+import { BindEvents, on } from "@/utils/on";
 import { id, serializable } from "@graphif/serializer";
 import { LayoutContainer } from "@pixi/layout/components";
-import { DestroyOptions, Graphics, PointData, Rectangle } from "pixi.js";
+import { DestroyOptions, FederatedPointerEvent, Graphics, PointData, Rectangle } from "pixi.js";
 
 /**
  * 一切舞台上的东西
  */
+@BindEvents
 export abstract class StageObject extends LayoutContainer {
   /**
    * 选中节点时会向viewport添加一个「SELECTION_OUTLINE_LABEL+uuid」作为标签的Graphics来渲染选中框
@@ -53,29 +55,10 @@ export abstract class StageObject extends LayoutContainer {
     this._selected = value;
   }
 
-  private onPointerMove: ((e: any) => void) | null = null;
-  private onPointerLeave: ((e: any) => void) | null = null;
-  private onUpdate: (() => void) | null = null;
-
   /**
    * 移除所有事件监听器，并同时从渲染层和数据层中移除自己
    */
   destroy(options?: DestroyOptions): void {
-    // 移除所有事件监听器
-    if (this.onPointerLeave) {
-      this.off("pointerleave", this.onPointerLeave);
-    }
-    if (this.onPointerMove) {
-      this.off("pointerenter", this.onPointerMove);
-    }
-    if (this.onUpdate) {
-      this.off("update", this.onUpdate);
-    }
-
-    this.onPointerMove = null;
-    this.onPointerLeave = null;
-    this.onUpdate = null;
-
     super.destroy(options);
     this.project.stage = this.project.stage.filter((s) => s !== this);
   }
@@ -96,39 +79,6 @@ export abstract class StageObject extends LayoutContainer {
 
   constructor(protected readonly project: Project) {
     super();
-
-    let hovered = false;
-    this.onPointerMove = (e) => {
-      const pos = this.project.viewport.toWorld(e.client);
-      if (!hovered && this.myContainsPoint(pos)) {
-        hovered = true;
-        this.emit("hover", e);
-        this.project.emit("pointer-enter-stage-object", this, e);
-      } else if (hovered && !this.myContainsPoint(pos)) {
-        hovered = false;
-        this.emit("unhover", e);
-        this.project.emit("pointer-leave-stage-object", this, e);
-      }
-    };
-    this.onPointerLeave = (e) => {
-      // 不用globalpointermove是因为可能有性能问题
-      // TODO: 需要测试一下性能
-      if (hovered) {
-        hovered = false;
-        this.emit("unhover", e);
-        this.project.emit("pointer-leave-stage-object", this, e);
-      }
-    };
-
-    this.onUpdate = () => {
-      if (this.selected) {
-        // 更新一下选中框的大小
-        this.selected = false;
-        this.selected = true;
-      }
-    };
-
-    this.on("pointermove", this.onPointerMove).on("pointerleave", this.onPointerLeave).on("update", this.onUpdate);
   }
 
   /**
@@ -155,5 +105,38 @@ export abstract class StageObject extends LayoutContainer {
   myIntersects(rect: Rectangle) {
     const myRect = this.getWorldBounds().rectangle;
     return myRect.intersects(rect);
+  }
+
+  private hovered = false;
+  @on("pointermove")
+  _StageObject_pointermove(e: FederatedPointerEvent) {
+    const pos = this.project.viewport.toWorld(e.client);
+    if (!this.hovered && this.myContainsPoint(pos)) {
+      this.hovered = true;
+      this.emit("hover", e);
+      this.project.emit("pointer-enter-stage-object", this, e);
+    } else if (this.hovered && !this.myContainsPoint(pos)) {
+      this.hovered = false;
+      this.emit("unhover", e);
+      this.project.emit("pointer-leave-stage-object", this, e);
+    }
+  }
+  @on("pointerleave")
+  _StageObject_pointerleave(e: FederatedPointerEvent) {
+    // 不用globalpointermove是因为可能有性能问题
+    // TODO: 需要测试一下性能
+    if (this.hovered) {
+      this.hovered = false;
+      this.emit("unhover", e);
+      this.project.emit("pointer-leave-stage-object", this, e);
+    }
+  }
+  @on("update")
+  _StageObject_update() {
+    if (this.selected) {
+      // 更新一下选中框的大小
+      this.selected = false;
+      this.selected = true;
+    }
   }
 }

@@ -54,7 +54,7 @@ export class ImageNode extends TextureNode {
     this.position.copyFrom(position);
   }
 
-  override edit() {
+  edit() {
     Dialog.input("绑定附件", "", { defaultValue: this.attachmentId }).then((result) => {
       if (result) {
         this.attachmentId = result;

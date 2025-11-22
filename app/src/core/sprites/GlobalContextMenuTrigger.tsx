@@ -24,7 +24,7 @@ export class GlobalContextMenuTrigger extends Container {
     project.viewport.on("pointerdown", this.onPointerDown).on("pointerup", this.onPointerUp);
   }
 
-  override destroy(options?: DestroyOptions): void {
+  destroy(options?: DestroyOptions): void {
     // 移除事件监听器
     if (this.onPointerDown) {
       this.project.viewport.off("pointerdown", this.onPointerDown);

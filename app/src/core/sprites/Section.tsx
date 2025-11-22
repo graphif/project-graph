@@ -110,7 +110,7 @@ export class Section extends Association {
     }
   }
 
-  override destroy(options?: DestroyOptions): void {
+  destroy(options?: DestroyOptions): void {
     // 移除缓存的标题文本的事件监听器
     if (this._cachedTitleContainer) {
       this._cachedTitleContainer.destroy();
@@ -120,7 +120,7 @@ export class Section extends Association {
     super.destroy(options);
   }
 
-  override myContainsPoint(point: PointData): boolean {
+  myContainsPoint(point: PointData): boolean {
     const bounds = this.getWorldBounds();
     const titleHeight = this.text ? Section.TITLE_SIZE + Section.PADDING : 0;
     const strokeWidth = 2;

@@ -37,7 +37,7 @@ export class LatexNode extends SvgNode {
     this.latex = latex;
   }
 
-  override edit() {
+  edit() {
     Dialog.input("编辑 LaTeX 公式", "", { defaultValue: this.latex, multiline: true }).then((result) => {
       if (result) {
         this.latex = result;

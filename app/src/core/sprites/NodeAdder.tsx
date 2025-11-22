@@ -27,7 +27,7 @@ export class NodeAdder extends Container {
     project.viewport.on("click", this.onClickHandler);
   }
 
-  override destroy(options?: DestroyOptions): void {
+  destroy(options?: DestroyOptions): void {
     // 移除事件监听器
     if (this.onClickHandler) {
       this.project.viewport.off("click", this.onClickHandler);

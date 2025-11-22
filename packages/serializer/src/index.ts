@@ -31,7 +31,15 @@ export function serializable(target: any, key: string) {
     Reflect.getMetadata(lastSerializableIndexSymbol, target) + 1,
     target,
   );
-  classes.set(className, target);
+  let constructor = target;
+  try {
+    if (!constructor.toString().includes("class ")) {
+      constructor = target.constructor;
+    }
+  } catch {
+    // ignore
+  }
+  classes.set(className, constructor);
   console.debug(`[Serializer] Registered class ${className}, property ${key}`);
 }
 

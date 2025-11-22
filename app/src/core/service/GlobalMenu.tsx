@@ -33,6 +33,7 @@ import { Color } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Decoder } from "@msgpack/msgpack";
 import { getVersion } from "@tauri-apps/api/app";
+import { isTauri } from "@tauri-apps/api/core";
 import { appCacheDir, dataDir, join, tempDir } from "@tauri-apps/api/path";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open, save } from "@tauri-apps/plugin-dialog";
@@ -140,6 +141,10 @@ export function GlobalMenu() {
 
   async function refresh() {
     setRecentFiles(await RecentFileManager.getRecentFiles());
+    if (!isTauri()) {
+      setIsUnstableVersion(true);
+      return;
+    }
     const ver = await getVersion();
     console.log("version", ver);
     setVersion(ver);
@@ -1038,9 +1043,9 @@ export function GlobalMenu() {
                 </Item>
                 <Item
                   onClick={() => {
-                    const s = serialize(activeProject!.stage);
+                    const s = JSON.stringify(serialize(activeProject!.stage));
                     console.log(s);
-                    console.log(deserialize(s, activeProject!));
+                    console.log(deserialize(JSON.parse(s), activeProject!));
                   }}
                 >
                   serialize

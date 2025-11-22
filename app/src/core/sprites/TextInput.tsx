@@ -92,7 +92,7 @@ export class TextInput extends Text {
     this.style.fill = new Color("transparent");
   }
 
-  override destroy(options?: DestroyOptions): void {
+  destroy(options?: DestroyOptions): void {
     // 清理 DOM 元素和事件监听器
     if (this.activeTextarea) {
       if (this.handleInput) {

@@ -70,7 +70,7 @@ export class SvgNode extends TextureNode {
     this.color = color;
   }
 
-  override edit() {
+  edit() {
     Dialog.input("编辑 SVG 节点", "", { defaultValue: this.svg, multiline: true }).then((result) => {
       if (result) {
         this.svg = result;

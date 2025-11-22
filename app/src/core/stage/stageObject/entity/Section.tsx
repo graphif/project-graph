@@ -227,7 +227,7 @@ export class Section extends Entity {
     // 移动其他实体，递归碰撞
     this.updateOtherEntityLocationByMove();
   }
-  protected override collideWithOtherEntity(other: Entity): void {
+  protected collideWithOtherEntity(other: Entity): void {
     if (!Settings.isEnableEntityCollision) {
       return;
     }

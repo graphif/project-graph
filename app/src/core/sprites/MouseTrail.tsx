@@ -174,7 +174,7 @@ export class MouseTrail extends Container {
     this.trailGraphics.clear();
   }
 
-  override destroy() {
+  destroy() {
     this.project.pixi.ticker?.remove(this.updateTrail, this);
     this.project.viewport.off("pointermove");
     this.clear();

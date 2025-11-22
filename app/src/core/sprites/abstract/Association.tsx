@@ -80,7 +80,7 @@ export abstract class Association extends StageObject {
     this.refresh();
   }
 
-  override destroy(options?: DestroyOptions): void {
+  destroy(options?: DestroyOptions): void {
     // 清理所有成员的事件监听器
     this._members.forEach((it) => it.entity.off("update", this.handleMemberMoved));
     super.destroy(options);

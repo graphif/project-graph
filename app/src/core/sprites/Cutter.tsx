@@ -127,7 +127,7 @@ export class Cutter extends Graphics {
     return t >= 0 && t <= 1 && u >= 0 && u <= 1;
   }
 
-  override destroy(options?: DestroyOptions): void {
+  destroy(options?: DestroyOptions): void {
     // 清理所有事件监听器
     if (this.onPointerDown) {
       this.project.viewport.off("pointerdown", this.onPointerDown);
