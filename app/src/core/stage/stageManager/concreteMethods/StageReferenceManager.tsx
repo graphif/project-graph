@@ -124,6 +124,47 @@ export class ReferenceManager {
   }
 
   /**
+   * 更新当前项目中的一个Section的引用信息
+   * @param recentFiles
+   * @param sectionName
+   */
+  public async updateOneSectionReferenceInfo(recentFiles: RecentFileManager.RecentFile[], sectionName: string) {
+    const fileNameList = this.project.references.sections[sectionName];
+    const fileNameListNew = [];
+    for (const fileName of fileNameList) {
+      const file = recentFiles.find(
+        (file) =>
+          PathString.getFileNameFromPath(file.uri.path) === fileName ||
+          PathString.getFileNameFromPath(file.uri.fsPath) === fileName,
+      );
+      if (file) {
+        // 即使文件存在，也要打开看一看引用块是否在那个文件中。
+        const thatProject = new Project(file.uri);
+        loadAllServicesBeforeInit(thatProject);
+        await thatProject.init();
+        if (
+          this.checkReferenceBlockInProject(
+            thatProject,
+            PathString.getFileNameFromPath(this.project.uri.path),
+            sectionName,
+          )
+        ) {
+          fileNameListNew.push(fileName);
+        } else {
+          toast.warning(`文件 ${fileName} 中不再引用 ${sectionName}，已从引用列表中移除`);
+        }
+        thatProject.dispose();
+      }
+    }
+    if (fileNameListNew.length === 0) {
+      // 直接把这个章节从引用列表中删除
+      delete this.project.references.sections[sectionName];
+    } else {
+      this.project.references.sections[sectionName] = fileNameListNew;
+    }
+  }
+
+  /**
    * 更新当前项目的引用信息
    * （清理无效的引用）
    */
@@ -132,31 +173,7 @@ export class ReferenceManager {
 
     // 遍历当前项目的每一个被引用的Section框
     for (const sectionName in this.project.references.sections) {
-      const fileNameList = this.project.references.sections[sectionName];
-      const fileNameListNew = [];
-      for (const fileName of fileNameList) {
-        const file = recentFiles.find(
-          (file) =>
-            PathString.getFileNameFromPath(file.uri.path) === fileName ||
-            PathString.getFileNameFromPath(file.uri.fsPath) === fileName,
-        );
-        if (file) {
-          // 即使文件存在，也要打开看一看引用块是否在那个文件中。
-          const thatProject = new Project(file.uri);
-          loadAllServicesBeforeInit(thatProject);
-          await thatProject.init();
-          if (this.checkReferenceBlockInProject(thatProject, fileName, sectionName)) {
-            fileNameListNew.push(fileName);
-          }
-          thatProject.dispose();
-        }
-      }
-      if (fileNameListNew.length === 0) {
-        // 直接把这个章节从引用列表中删除
-        delete this.project.references.sections[sectionName];
-      } else {
-        this.project.references.sections[sectionName] = fileNameListNew;
-      }
+      await this.updateOneSectionReferenceInfo(recentFiles, sectionName);
     }
 
     // 遍历每一个直接引用自己整个文件的文件
@@ -305,15 +322,5 @@ export class ReferenceManager {
       section.text,
       this.project.renderer.transformWorld2View(section.rectangle.leftTop),
     );
-  }
-
-  private findSectionBySectionName(sectionName: string) {
-    const section = this.project.stage
-      .filter((object) => object instanceof Section)
-      .find((section) => section.text === sectionName);
-    if (section) {
-      return section;
-    }
-    return null;
   }
 }

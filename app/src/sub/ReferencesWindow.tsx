@@ -8,6 +8,7 @@ import { useAtom } from "jotai";
 import { useState, useEffect } from "react";
 import { PathString } from "@/utils/pathString";
 import { URI } from "vscode-uri";
+import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 
 export default function ReferencesWindow(props: { currentProjectFileName: string }) {
   const currentProjectFileName = props.currentProjectFileName;
@@ -105,25 +106,44 @@ export function SectionReferencePanel(props: { currentProjectFileName: string; s
   const [project] = useAtom(activeProjectAtom);
   if (!project) return <></>;
   const [references, setReferences] = useState(project.references);
-  function refresh() {
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  async function refresh() {
+    setIsUpdating(true);
+    await project?.referenceManager.updateOneSectionReferenceInfo(
+      await RecentFileManager.getRecentFiles(),
+      sectionName,
+    );
     setReferences({ ...project!.references });
+    setIsUpdating(false);
   }
 
   useEffect(() => {
-    refresh();
+    setReferences({ ...project!.references });
   }, []);
 
   return (
     <div className="flex flex-col gap-2 p-2">
-      {references.sections[sectionName].map((fileName) => (
-        <div
-          onClick={() => project.referenceManager.jumpToReferenceLocation(fileName, sectionName)}
-          key={fileName}
-          className="border-muted text-select-option-text w-full cursor-pointer rounded p-1 text-sm hover:ring"
-        >
-          {fileName}
-        </div>
-      ))}
+      {isUpdating ? (
+        <span>正在刷新中...</span>
+      ) : (
+        <>
+          {references.sections[sectionName] &&
+            references.sections[sectionName].map((fileName) => (
+              <div
+                onClick={() => project.referenceManager.jumpToReferenceLocation(fileName, sectionName)}
+                key={fileName}
+                className="border-muted text-select-option-text w-full cursor-pointer rounded p-1 text-sm hover:ring"
+              >
+                {fileName}
+              </div>
+            ))}
+          <Button onClick={refresh} variant="outline">
+            <RefreshCcw />
+            刷新
+          </Button>
+        </>
+      )}
     </div>
   );
 }
