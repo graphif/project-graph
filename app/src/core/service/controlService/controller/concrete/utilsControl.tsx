@@ -24,6 +24,7 @@ import { PathString } from "@/utils/pathString";
 import { DateChecker } from "@/utils/dateChecker";
 import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
 import { ReferenceManager } from "@/core/stage/stageManager/concreteMethods/StageReferenceManager";
+import _ from "lodash";
 
 /**
  * 这里是专门存放代码相同的地方
@@ -394,33 +395,117 @@ export class ControllerUtils {
   ) {
     // 处理#开头的逻辑节点补全
     if (text.startsWith("#")) {
-      // 提取搜索文本，去掉所有#
-      const searchText = text.replaceAll("#", "").toLowerCase();
+      this.handleAutoCompleteLogic(text, node, ele, setWindowId);
+      // 处理[[格式的补全
+    } else if (text.startsWith("[[")) {
+      this.handleAutoCompleteReferenceDebounced(text, node, ele, setWindowId);
+    }
+  }
+  private handleAutoCompleteReferenceDebounced = _.debounce(
+    (text: string, node: TextNode, ele: HTMLTextAreaElement, setWindowId: (id: string) => void) => {
+      this.handleAutoCompleteReference(text, node, ele, setWindowId);
+      console.log("ref匹配执行了");
+    },
+    500,
+  );
 
-      const logicNodeEntries = Object.entries(LogicNodeNameToRenderNameMap).map(([key, renderName]) => ({
-        key,
-        name: key.replaceAll("#", "").toLowerCase(),
-        renderName,
-      }));
+  private handleAutoCompleteLogic(
+    text: string,
+    node: TextNode,
+    ele: HTMLTextAreaElement,
+    setWindowId: (id: string) => void,
+  ) {
+    // 提取搜索文本，去掉所有#
+    const searchText = text.replaceAll("#", "").toLowerCase();
 
-      const fuse = new Fuse(logicNodeEntries, {
-        keys: ["name"],
-        threshold: 0.3, // (0 = exact, 1 = very fuzzy)
+    const logicNodeEntries = Object.entries(LogicNodeNameToRenderNameMap).map(([key, renderName]) => ({
+      key,
+      name: key.replaceAll("#", "").toLowerCase(),
+      renderName,
+    }));
+
+    const fuse = new Fuse(logicNodeEntries, {
+      keys: ["name"],
+      threshold: 0.3, // (0 = exact, 1 = very fuzzy)
+    });
+
+    const searchResults = fuse.search(searchText);
+    const matchingNodes = searchResults.map((result) => [result.item.key, result.item.renderName]);
+
+    // 打开自动补全窗口
+    if (this.currentAutoCompleteWindowId) {
+      SubWindow.close(this.currentAutoCompleteWindowId);
+    }
+    if (matchingNodes.length > 0) {
+      const windowId = AutoCompleteWindow.open(
+        this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
+        Object.fromEntries(matchingNodes),
+        (value) => {
+          ele.value = value;
+        },
+      ).id;
+      this.currentAutoCompleteWindowId = windowId;
+      setWindowId(windowId);
+    } else {
+      const windowId = AutoCompleteWindow.open(
+        this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
+        {
+          tip:
+            searchText === "" ? "暂无匹配的逻辑节点名称，请输入全大写字母" : `暂无匹配的逻辑节点名称【${searchText}】`,
+        },
+        (value) => {
+          ele.value = value;
+        },
+      ).id;
+      this.currentAutoCompleteWindowId = windowId;
+      setWindowId(windowId);
+    }
+  }
+
+  private async handleAutoCompleteReference(
+    text: string,
+    node: TextNode,
+    ele: HTMLTextAreaElement,
+    setWindowId: (id: string) => void,
+  ) {
+    // 提取搜索文本，去掉开头的[[
+    const searchText = text.slice(2).toLowerCase().replace("]]", "");
+    // 检查是否包含#
+    const hasHash = searchText.includes("#");
+
+    if (!hasHash) {
+      // 获取最近文件列表
+      const recentFiles = await RecentFileManager.getRecentFiles();
+
+      // 处理最近文件列表，提取文件名
+      const fileEntries = recentFiles.map((file) => {
+        // 提取文件名（不含扩展名）
+        const fileName = PathString.getFileNameFromPath(file.uri.path);
+        return { name: fileName, time: file.time }; // 使用对象格式以便Fuse.js搜索
+      });
+
+      const fuse = new Fuse(fileEntries, {
+        keys: ["name"], // 搜索name属性
+        threshold: 0.3,
       });
 
       const searchResults = fuse.search(searchText);
-      const matchingNodes = searchResults.map((result) => [result.item.key, result.item.renderName]);
+      const matchingFiles = searchResults.map((result) => [
+        result.item.name,
+        DateChecker.formatRelativeTime(result.item.time),
+      ]); // 转换为相对时间格式
 
       // 打开自动补全窗口
       if (this.currentAutoCompleteWindowId) {
         SubWindow.close(this.currentAutoCompleteWindowId);
       }
-      if (matchingNodes.length > 0) {
+      if (matchingFiles.length > 0) {
         const windowId = AutoCompleteWindow.open(
           this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
-          Object.fromEntries(matchingNodes),
+          Object.fromEntries(matchingFiles),
           (value) => {
-            ele.value = value;
+            // 用户选择后，需要保留[[前缀并添加选择的文件名
+            ele.value = `[[${value}`;
           },
         ).id;
         this.currentAutoCompleteWindowId = windowId;
@@ -429,126 +514,65 @@ export class ControllerUtils {
         const windowId = AutoCompleteWindow.open(
           this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
           {
-            tip:
-              searchText === ""
-                ? "暂无匹配的逻辑节点名称，请输入全大写字母"
-                : `暂无匹配的逻辑节点名称【${searchText}】`,
+            tip: searchText === "" ? "暂无最近文件" : `暂无匹配的最近文件【${searchText}】`,
           },
           (value) => {
-            ele.value = value;
+            ele.value = `[[${value}`;
           },
         ).id;
         this.currentAutoCompleteWindowId = windowId;
         setWindowId(windowId);
       }
-      // 处理[[格式的补全
-    } else if (text.startsWith("[[")) {
-      // 提取搜索文本，去掉开头的[[
-      const searchText = text.slice(2).toLowerCase().replace("]]", "");
-      // 检查是否包含#
-      const hasHash = searchText.includes("#");
+    } else {
+      // 包含#，拆分文件名和section名称
+      const [fileName, sectionName] = searchText.split("#", 2);
 
-      if (!hasHash) {
-        // 获取最近文件列表
-        const recentFiles = await RecentFileManager.getRecentFiles();
+      // 获取该文件中的所有section
+      const sections = await CrossFileContentQuery.getSectionsByFileName(fileName);
 
-        // 处理最近文件列表，提取文件名
-        const fileEntries = recentFiles.map((file) => {
-          // 提取文件名（不含扩展名）
-          const fileName = PathString.getFileNameFromPath(file.uri.path);
-          return { name: fileName, time: file.time }; // 使用对象格式以便Fuse.js搜索
-        });
+      // 将section名称转换为对象数组，以便Fuse.js搜索
+      const sectionObjects = sections.map((section) => ({ name: section }));
+      let searchResults;
 
-        const fuse = new Fuse(fileEntries, {
-          keys: ["name"], // 搜索name属性
-          threshold: 0.3,
-        });
-
-        const searchResults = fuse.search(searchText);
-        const matchingFiles = searchResults.map((result) => [
-          result.item.name,
-          DateChecker.formatRelativeTime(result.item.time),
-        ]); // 转换为相对时间格式
-
-        // 打开自动补全窗口
-        if (this.currentAutoCompleteWindowId) {
-          SubWindow.close(this.currentAutoCompleteWindowId);
-        }
-        if (matchingFiles.length > 0) {
-          const windowId = AutoCompleteWindow.open(
-            this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
-            Object.fromEntries(matchingFiles),
-            (value) => {
-              // 用户选择后，需要保留[[前缀并添加选择的文件名
-              ele.value = `[[${value}`;
-            },
-          ).id;
-          this.currentAutoCompleteWindowId = windowId;
-          setWindowId(windowId);
-        } else {
-          const windowId = AutoCompleteWindow.open(
-            this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
-            {
-              tip: searchText === "" ? "暂无最近文件" : `暂无匹配的最近文件【${searchText}】`,
-            },
-            (value) => {
-              ele.value = `[[${value}`;
-            },
-          ).id;
-          this.currentAutoCompleteWindowId = windowId;
-          setWindowId(windowId);
-        }
+      // 当section名称为空时，显示所有section（最多20个）
+      if (!sectionName?.trim()) {
+        // 取前20个section
+        searchResults = sectionObjects.slice(0, 20).map((item) => ({ item }));
       } else {
-        // 包含#，拆分文件名和section名称
-        const [fileName, sectionName] = searchText.split("#", 2);
+        // 创建Fuse搜索器，对section名称进行模糊匹配
+        const fuse = new Fuse(sectionObjects, { keys: ["name"], threshold: 0.3 });
+        searchResults = fuse.search(sectionName);
+      }
 
-        // 获取该文件中的所有section
-        const sections = await CrossFileContentQuery.getSectionsByFileName(fileName);
+      const matchingSections = searchResults.map((result) => [result.item.name, ""]);
 
-        // 将section名称转换为对象数组，以便Fuse.js搜索
-        const sectionObjects = sections.map((section) => ({ name: section }));
-        let searchResults;
-
-        // 当section名称为空时，显示所有section（最多20个）
-        if (!sectionName?.trim()) {
-          // 取前20个section
-          searchResults = sectionObjects.slice(0, 20).map((item) => ({ item }));
-        } else {
-          // 创建Fuse搜索器，对section名称进行模糊匹配
-          const fuse = new Fuse(sectionObjects, { keys: ["name"], threshold: 0.3 });
-          searchResults = fuse.search(sectionName);
-        }
-
-        const matchingSections = searchResults.map((result) => [result.item.name, ""]);
-
-        // 打开自动补全窗口
-        if (this.currentAutoCompleteWindowId) {
-          SubWindow.close(this.currentAutoCompleteWindowId);
-        }
-        if (matchingSections.length > 0) {
-          const windowId = AutoCompleteWindow.open(
-            this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
-            Object.fromEntries(matchingSections),
-            (value) => {
-              // 用户选择后，需要保留[[前缀、文件名和#，并添加选择的section名称
-              ele.value = `[[${fileName}#${value}`;
-            },
-          ).id;
-          this.currentAutoCompleteWindowId = windowId;
-          setWindowId(windowId);
-        } else {
-          const windowId = AutoCompleteWindow.open(
-            this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
-            {
-              tip: sectionName === "" ? `这个文件中没有section，无法创建引用` : `暂无匹配的section【${sectionName}】`,
-            },
-            (value) => {
-              ele.value = `[[${fileName}#${value}`;
-            },
-          ).id;
-          this.currentAutoCompleteWindowId = windowId;
-          setWindowId(windowId);
-        }
+      // 打开自动补全窗口
+      if (this.currentAutoCompleteWindowId) {
+        SubWindow.close(this.currentAutoCompleteWindowId);
+      }
+      if (matchingSections.length > 0) {
+        const windowId = AutoCompleteWindow.open(
+          this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
+          Object.fromEntries(matchingSections),
+          (value) => {
+            // 用户选择后，需要保留[[前缀、文件名和#，并添加选择的section名称
+            ele.value = `[[${fileName}#${value}`;
+          },
+        ).id;
+        this.currentAutoCompleteWindowId = windowId;
+        setWindowId(windowId);
+      } else {
+        const windowId = AutoCompleteWindow.open(
+          this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
+          {
+            tip: sectionName === "" ? `这个文件中没有section，无法创建引用` : `暂无匹配的section【${sectionName}】`,
+          },
+          (value) => {
+            ele.value = `[[${fileName}#${value}`;
+          },
+        ).id;
+        this.currentAutoCompleteWindowId = windowId;
+        setWindowId(windowId);
       }
     }
   }

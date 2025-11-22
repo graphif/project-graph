@@ -53,9 +53,6 @@ export default function WelcomePage() {
             </span>
           </div>
           <div className="hidden text-xs opacity-50 sm:block sm:text-lg">{t("slogan")}</div>
-
-          {/* 临时加一个 */}
-          <div className="hidden text-xs opacity-25 sm:block sm:text-xs">区块化双向引用即将上线……</div>
         </div>
         {/* 底部区域 */}
         <div className="flex sm:gap-16">
