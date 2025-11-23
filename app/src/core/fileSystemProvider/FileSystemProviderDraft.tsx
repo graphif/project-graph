@@ -1,5 +1,4 @@
-import { FileSystemProvider } from "@/core/interfaces/Service";
-import { Project } from "@/core/Project";
+import { FileSystemProvider } from "@/core/fileSystemProvider";
 import { encode } from "@msgpack/msgpack";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
@@ -7,8 +6,6 @@ import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
 import { URI } from "vscode-uri";
 
 export class FileSystemProviderDraft implements FileSystemProvider {
-  constructor(private readonly project: Project) {}
-
   async read() {
     // 创建空白文件
     const encodedStage = encode([]);
@@ -34,7 +31,7 @@ export class FileSystemProviderDraft implements FileSystemProvider {
     }
     const newUri = URI.file(path);
     await writeFile(newUri.fsPath, content);
-    this.project.uri = newUri;
+    return newUri;
   }
   async remove() {}
   async exists() {
@@ -42,4 +39,27 @@ export class FileSystemProviderDraft implements FileSystemProvider {
   }
   async mkdir() {}
   async rename() {}
+  async stat() {
+    return {
+      isFile: true,
+      isDirectory: false,
+      isSymlink: false,
+      size: 1024,
+      mtime: new Date(),
+      atime: new Date(),
+      birthtime: new Date(),
+      readonly: false,
+      fileId: 12345,
+      dev: 2049,
+      ino: 12345678,
+      mode: 33188,
+      nlink: 1,
+      uid: 501,
+      gid: 20,
+      rdev: 0,
+      blksize: 4096,
+      blocks: 8,
+      fileAttributes: 0,
+    };
+  }
 }

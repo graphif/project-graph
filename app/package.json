@@ -83,6 +83,8 @@
     "@react-scan/vite-plugin-react-scan": "^0.1.8",
     "@swc-jotai/react-refresh": "^0.3.0",
     "@tailwindcss/vite": "^4.1.11",
+    "@tanstack/react-virtual": "^3.13.12",
+    "@tanstack/virtual-core": "^3.13.12",
     "@tauri-apps/api": "^2.6.0",
     "@tauri-apps/cli": "^2.6.2",
     "@tauri-apps/plugin-cli": "~2.4.0",

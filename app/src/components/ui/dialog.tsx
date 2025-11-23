@@ -1,16 +1,49 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { XIcon } from "lucide-react";
+import {
+  ArrowUp,
+  Check,
+  Dock,
+  Download,
+  File,
+  FileText,
+  Folder,
+  HardDrive,
+  Home,
+  Link,
+  Usb,
+  X,
+  XIcon,
+} from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { fileSystemProviders } from "@/core/fileSystemProvider";
 import { SubWindow } from "@/core/service/SubWindow";
 import { cn } from "@/utils/cn";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { desktopDir, documentDir, downloadDir, homeDir } from "@tauri-apps/api/path";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { DirEntry } from "@tauri-apps/plugin-fs";
+import { Suspense } from "react";
 import { toast } from "sonner";
+import { allSysInfo } from "tauri-plugin-system-info-api";
+import { URI } from "vscode-uri";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "./sidebar";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
 
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
@@ -56,7 +89,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed left-[50%] top-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
+          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed left-[50%] top-[50%] z-50 flex w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] flex-col gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
           className,
         )}
         {...props}
@@ -116,137 +149,212 @@ function DialogDescription({ className, ...props }: React.ComponentProps<typeof 
   );
 }
 
+function ConfirmDialog({
+  winId,
+  title,
+  description,
+  destructive,
+  resolve,
+}: {
+  winId?: string;
+  title: string;
+  description: string;
+  destructive: boolean;
+  resolve: (value: boolean) => void;
+}) {
+  const [open, setOpen] = React.useState(true);
+
+  return (
+    <Dialog open={open}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                resolve(false);
+                setOpen(false);
+                setTimeout(() => {
+                  SubWindow.close(winId!);
+                }, 500);
+              }}
+            >
+              取消
+            </Button>
+            <Button
+              variant={destructive ? "destructive" : "default"}
+              onClick={() => {
+                resolve(true);
+                setOpen(false);
+                setTimeout(() => {
+                  SubWindow.close(winId!);
+                }, 500);
+              }}
+            >
+              确定
+            </Button>
+          </DialogFooter>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
+  );
+}
 Dialog.confirm = (title = "你确定？", description = "", { destructive = false } = {}): Promise<boolean> => {
   return new Promise((resolve) => {
-    function Component({ winId }: { winId?: string }) {
-      const [open, setOpen] = React.useState(true);
-
-      return (
-        <Dialog open={open}>
-          <DialogContent showCloseButton={false}>
-            <DialogHeader>
-              <DialogTitle>{title}</DialogTitle>
-              <DialogDescription>{description}</DialogDescription>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    resolve(false);
-                    setOpen(false);
-                    setTimeout(() => {
-                      SubWindow.close(winId!);
-                    }, 500);
-                  }}
-                >
-                  取消
-                </Button>
-                <Button
-                  variant={destructive ? "destructive" : "default"}
-                  onClick={() => {
-                    resolve(true);
-                    setOpen(false);
-                    setTimeout(() => {
-                      SubWindow.close(winId!);
-                    }, 500);
-                  }}
-                >
-                  确定
-                </Button>
-              </DialogFooter>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
-      );
-    }
-
     SubWindow.create({
       titleBarOverlay: true,
       closable: false,
       rect: new Rectangle(Vector.same(100), Vector.same(-1)),
-      children: <Component />,
+      children: <ConfirmDialog {...{ title, description, destructive, resolve }} />,
     });
   });
 };
 
+function InputDialog({
+  winId,
+  title,
+  description,
+  defaultValue,
+  placeholder,
+  destructive,
+  multiline,
+  resolve,
+}: {
+  winId?: string;
+  title: string;
+  description: string;
+  defaultValue: string;
+  placeholder: string;
+  destructive: boolean;
+  multiline: boolean;
+  resolve: (value?: string) => void;
+}) {
+  const [open, setOpen] = React.useState(true);
+  const [value, setValue] = React.useState(defaultValue);
+  const InputComponent = multiline ? Textarea : Input;
+
+  return (
+    <Dialog open={open}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+          <InputComponent
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder={placeholder}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                e.stopPropagation();
+                resolve(value);
+                setOpen(false);
+                setTimeout(() => {
+                  SubWindow.close(winId!);
+                }, 500);
+              }
+            }}
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                resolve(undefined);
+                setOpen(false);
+                setTimeout(() => {
+                  SubWindow.close(winId!);
+                }, 500);
+              }}
+            >
+              取消
+            </Button>
+            <Button
+              variant={destructive ? "destructive" : "default"}
+              onClick={() => {
+                resolve(value);
+                setOpen(false);
+                setTimeout(() => {
+                  SubWindow.close(winId!);
+                }, 500);
+              }}
+            >
+              确定
+            </Button>
+          </DialogFooter>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
+  );
+}
 Dialog.input = (
   title = "请输入文本",
   description = "",
   { defaultValue = "", placeholder = "...", destructive = false, multiline = false } = {},
 ): Promise<string | undefined> => {
   return new Promise((resolve) => {
-    function Component({ winId }: { winId?: string }) {
-      const [open, setOpen] = React.useState(true);
-      const [value, setValue] = React.useState(defaultValue);
-      const InputComponent = multiline ? Textarea : Input;
-
-      return (
-        <Dialog open={open}>
-          <DialogContent showCloseButton={false}>
-            <DialogHeader>
-              <DialogTitle>{title}</DialogTitle>
-              <DialogDescription>{description}</DialogDescription>
-              <InputComponent
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                placeholder={placeholder}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    resolve(value);
-                    setOpen(false);
-                    setTimeout(() => {
-                      SubWindow.close(winId!);
-                    }, 500);
-                  }
-                }}
-              />
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    resolve(undefined);
-                    setOpen(false);
-                    setTimeout(() => {
-                      SubWindow.close(winId!);
-                    }, 500);
-                  }}
-                >
-                  取消
-                </Button>
-                <Button
-                  variant={destructive ? "destructive" : "default"}
-                  onClick={() => {
-                    resolve(value);
-                    setOpen(false);
-                    setTimeout(() => {
-                      SubWindow.close(winId!);
-                    }, 500);
-                  }}
-                >
-                  确定
-                </Button>
-              </DialogFooter>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
-      );
-    }
-
     SubWindow.create({
       titleBarOverlay: true,
       closable: false,
       rect: new Rectangle(Vector.same(100), Vector.same(-1)),
-      children: <Component />,
+      children: <InputDialog {...{ title, description, defaultValue, placeholder, destructive, multiline, resolve }} />,
     });
   });
 };
 
+function ButtonsDialog({
+  winId,
+  title,
+  description,
+  buttons,
+  resolve,
+}: {
+  winId?: string;
+  title: string;
+  description: string;
+  buttons: readonly {
+    id: string;
+    label: string;
+    variant?: Parameters<typeof Button>[0]["variant"];
+  }[];
+  resolve: (value: string) => void;
+}) {
+  const [open, setOpen] = React.useState(true);
+
+  return (
+    <Dialog open={open}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+          <DialogFooter>
+            {buttons.map(({ id, label, variant = "default" }) => (
+              <Button
+                key={id}
+                variant={variant}
+                onClick={() => {
+                  resolve(id);
+                  setOpen(false);
+                  setTimeout(() => {
+                    SubWindow.close(winId!);
+                  }, 500);
+                }}
+              >
+                {label}
+              </Button>
+            ))}
+          </DialogFooter>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
+  );
+}
 Dialog.buttons = <
   const Buttons extends readonly {
     id: string;
     label: string;
-    variant?: Parameters<typeof Button>[number]["variant"];
+    variant?: Parameters<typeof Button>[0]["variant"];
   }[],
 >(
   title: string,
@@ -254,93 +362,347 @@ Dialog.buttons = <
   buttons: Buttons,
 ): Promise<Buttons[number]["id"]> => {
   return new Promise((resolve) => {
-    function Component({ winId }: { winId?: string }) {
-      const [open, setOpen] = React.useState(true);
-
-      return (
-        <Dialog open={open}>
-          <DialogContent showCloseButton={false}>
-            <DialogHeader>
-              <DialogTitle>{title}</DialogTitle>
-              <DialogDescription>{description}</DialogDescription>
-              <DialogFooter>
-                {buttons.map(({ id, label, variant = "default" }) => (
-                  <Button
-                    key={id}
-                    variant={variant}
-                    onClick={() => {
-                      resolve(id);
-                      setOpen(false);
-                      setTimeout(() => {
-                        SubWindow.close(winId!);
-                      }, 500);
-                    }}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </DialogFooter>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
-      );
-    }
-
     SubWindow.create({
       titleBarOverlay: true,
       closable: false,
       rect: new Rectangle(Vector.same(100), Vector.same(-1)),
-      children: <Component />,
+      children: <ButtonsDialog {...{ title, description, buttons, resolve }} />,
     });
   });
 };
 
+function CopyDialog({
+  winId,
+  title,
+  description,
+  value,
+  resolve,
+}: {
+  winId?: string;
+  title: string;
+  description: string;
+  value: string;
+  resolve: () => void;
+}) {
+  const [open, setOpen] = React.useState(true);
+
+  return (
+    <Dialog open={open}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+          {/* <Textarea value={value} style={{ height: "300px", minHeigt: "600px" }} /> */}
+          <pre className="max-h-64 select-text overflow-y-auto rounded-md border p-2">{value}</pre>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                await writeText(value);
+                toast.success("已复制到剪贴板");
+              }}
+            >
+              复制
+            </Button>
+            <Button
+              onClick={() => {
+                resolve();
+                setOpen(false);
+                setTimeout(() => {
+                  SubWindow.close(winId!);
+                }, 500);
+              }}
+            >
+              确定
+            </Button>
+          </DialogFooter>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
+  );
+}
 Dialog.copy = (title = "导出成功", description = "", value = ""): Promise<void> => {
   return new Promise((resolve) => {
-    function Component({ winId }: { winId?: string }) {
-      const [open, setOpen] = React.useState(true);
-
-      return (
-        <Dialog open={open}>
-          <DialogContent showCloseButton={false}>
-            <DialogHeader>
-              <DialogTitle>{title}</DialogTitle>
-              <DialogDescription>{description}</DialogDescription>
-              {/* <Textarea value={value} style={{ height: "300px", minHeigt: "600px" }} /> */}
-              <pre className="max-h-64 select-text overflow-y-auto rounded-md border p-2">{value}</pre>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={async () => {
-                    await writeText(value);
-                    toast.success("已复制到剪贴板");
-                  }}
-                >
-                  复制
-                </Button>
-                <Button
-                  onClick={() => {
-                    resolve();
-                    setOpen(false);
-                    setTimeout(() => {
-                      SubWindow.close(winId!);
-                    }, 500);
-                  }}
-                >
-                  确定
-                </Button>
-              </DialogFooter>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
-      );
-    }
-
     SubWindow.create({
       titleBarOverlay: true,
       closable: false,
       rect: new Rectangle(Vector.same(100), Vector.same(-1)),
-      children: <Component />,
+      children: <CopyDialog {...{ title, description, value, resolve }} />,
+    });
+  });
+};
+
+// type MyDirEntry = DirEntry &
+//   (
+//     | {
+//         isSymlink: false;
+//       }
+//     | {
+//         isSymlink: true;
+//         target: URI;
+//       }
+//   );
+const sysInfoPromise = allSysInfo();
+const homeDirPromise = homeDir();
+const desktopDirPromise = desktopDir();
+const downloadDirPromise = downloadDir();
+const documentDirPromise = documentDir();
+function FileDialog({
+  winId,
+  title,
+  kind,
+  resolve,
+}: {
+  winId?: string;
+  title: string;
+  kind: "file" | "directory";
+  resolve: (value?: URI) => void;
+}) {
+  const [open, setOpen] = React.useState(true);
+
+  const sysInfo = React.use(sysInfoPromise);
+  const homeDir = React.use(homeDirPromise);
+  const desktopDir = React.use(desktopDirPromise);
+  const downloadDir = React.use(downloadDirPromise);
+  const documentDir = React.use(documentDirPromise);
+
+  const [currentUri, setCurrentUri] = React.useState<URI>(URI.file("/"));
+  const fs = React.useMemo(() => new fileSystemProviders[currentUri.scheme](), [currentUri.scheme]);
+  const [data, setData] = React.useState<DirEntry[]>([]);
+  const scrollParentRef = React.useRef<HTMLTableElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: data.length,
+    getScrollElement: () => scrollParentRef.current,
+    estimateSize: () => 38,
+    overscan: 5,
+  });
+
+  React.useEffect(() => {
+    (async () => {
+      const entries = await fs.readDir(currentUri);
+      // 排序：文件夹->文件->符号链接->隐藏的文件夹->隐藏的文件
+      // 分别按照字母排序
+      entries.sort((a, b) => {
+        const getOrder = (entry: DirEntry) => {
+          if (entry.isDirectory && !entry.name.startsWith(".")) return 0;
+          if (entry.isFile && !entry.name.startsWith(".")) return 1;
+          if (entry.isSymlink) return 2;
+          if (entry.isDirectory && entry.name.startsWith(".")) return 3;
+          if (entry.isFile && entry.name.startsWith(".")) return 4;
+          return 5;
+        };
+        const orderA = getOrder(a);
+        const orderB = getOrder(b);
+        if (orderA !== orderB) return orderA - orderB;
+        return a.name.localeCompare(b.name);
+      });
+      setData(entries);
+    })();
+  }, [currentUri]);
+
+  return (
+    <Dialog open={open}>
+      <DialogContent showCloseButton={false} className="max-w-full! h-2/3 w-1/2">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {kind === "file" ? <File /> : <Folder />}
+            {title}
+            <div className="grow" />
+            <Button
+              variant="outline"
+              onClick={() => {
+                resolve(undefined);
+                setOpen(false);
+                setTimeout(() => {
+                  SubWindow.close(winId!);
+                }, 500);
+              }}
+            >
+              <X />
+              取消
+            </Button>
+            {kind === "directory" && (
+              <Button
+                onClick={() => {
+                  resolve(currentUri);
+                  setOpen(false);
+                  setTimeout(() => {
+                    SubWindow.close(winId!);
+                  }, 500);
+                }}
+              >
+                <Check />
+                选择当前目录
+              </Button>
+            )}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex size-full gap-2 overflow-hidden">
+          <Sidebar className="h-full overflow-auto p-0">
+            <SidebarContent>
+              <SidebarGroup>
+                <SidebarGroupLabel>用户目录</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {[
+                      { icon: Home, name: "家目录", path: homeDir },
+                      { icon: Dock, name: "桌面", path: desktopDir },
+                      { icon: Download, name: "下载", path: downloadDir },
+                      { icon: FileText, name: "文档", path: documentDir },
+                    ].map((it) => (
+                      <SidebarMenuItem key={it.path}>
+                        <SidebarMenuButton
+                          onClick={() => setCurrentUri(URI.file(it.path))}
+                          isActive={currentUri.scheme === "file" && currentUri.fsPath.startsWith(it.path)}
+                        >
+                          <it.icon />
+                          {it.name}
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+              <SidebarGroup>
+                <SidebarGroupLabel>挂载点</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {sysInfo.disks.map((it) => (
+                      <SidebarMenuItem key={it.mount_point}>
+                        <SidebarMenuButton
+                          onClick={() => setCurrentUri(URI.file(it.mount_point))}
+                          isActive={currentUri.scheme === "file" && currentUri.fsPath.startsWith(it.mount_point)}
+                        >
+                          {it.is_removable ? <Usb /> : <HardDrive />}
+                          {it.name} ({it.mount_point})
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
+          </Sidebar>
+          <div className="flex grow flex-col gap-2 *:data-[slot=table-container]:h-full">
+            <div className="flex gap-2">
+              <Button
+                disabled={currentUri.path === "/"}
+                onClick={() => {
+                  const segments = currentUri.path.replace(/\/$/g, "").split("/");
+                  segments.pop();
+                  const parentPath = segments.join("/") || "/";
+                  setCurrentUri(currentUri.with({ path: parentPath }));
+                }}
+                size="icon"
+                variant="outline"
+              >
+                <ArrowUp />
+              </Button>
+              <Select value={currentUri.scheme} onValueChange={(scheme) => setCurrentUri(URI.from({ scheme }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.keys(fileSystemProviders).map((scheme) => (
+                    <SelectItem key={scheme} value={scheme}>
+                      {scheme}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                className="grow"
+                value={currentUri.path}
+                onChange={(e) => setCurrentUri(currentUri.with({ path: e.target.value }))}
+              />
+            </div>
+            <Table ref={scrollParentRef}>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>名称</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <div
+                  style={{
+                    height: `${virtualizer.getTotalSize()}px`,
+                    width: "100%",
+                    position: "relative",
+                  }}
+                >
+                  {virtualizer.getVirtualItems().map((virtualRow) => (
+                    <TableRow
+                      className="block"
+                      key={virtualRow.index}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: `${virtualRow.size}px`,
+                        transform: `translateY(${virtualRow.start}px)`,
+                      }}
+                      onClick={() => {
+                        if (data[virtualRow.index].isDirectory) {
+                          setCurrentUri(
+                            currentUri.with({
+                              path:
+                                currentUri.path +
+                                (currentUri.path.endsWith("/") ? "" : "/") +
+                                data[virtualRow.index].name,
+                            }),
+                          );
+                        }
+                        if (data[virtualRow.index].isFile && kind === "file") {
+                          resolve(
+                            currentUri.with({
+                              path:
+                                currentUri.path +
+                                (currentUri.path.endsWith("/") ? "" : "/") +
+                                data[virtualRow.index].name,
+                            }),
+                          );
+                          setOpen(false);
+                          setTimeout(() => {
+                            SubWindow.close(winId!);
+                          }, 500);
+                        }
+                        if (data[virtualRow.index].isSymlink) {
+                          toast.warning("由于技术限制，暂不支持读取符号链接");
+                        }
+                      }}
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {data[virtualRow.index].isFile && <File size={16} />}
+                          {data[virtualRow.index].isDirectory && <Folder size={16} />}
+                          {data[virtualRow.index].isSymlink && <Link size={16} />}
+                          {data[virtualRow.index].name}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </div>
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+Dialog.file = async (title: string, kind: "file" | "directory"): Promise<URI | undefined> => {
+  return new Promise((resolve) => {
+    SubWindow.create({
+      titleBarOverlay: true,
+      closable: false,
+      rect: new Rectangle(Vector.same(100), Vector.same(-1)),
+      children: (
+        <Suspense>
+          <FileDialog {...{ title, kind, resolve }} />
+        </Suspense>
+      ),
     });
   });
 };

@@ -17,7 +17,7 @@ export class Path {
   }
 
   get parent() {
-    const parts = this.path.split(Path.sep);
+    const parts = this.path.replace(/\/$/g, "").split(Path.sep);
     parts.pop();
     return new Path(parts.join(Path.sep));
   }
@@ -41,7 +41,7 @@ export class Path {
     return parts.join(".");
   }
   join(path: string) {
-    return new Path(this.path + Path.sep + path);
+    return new Path(this.path + (this.path.endsWith(Path.sep) ? "" : Path.sep) + path);
   }
   toUri() {
     return URI.file(this.path);

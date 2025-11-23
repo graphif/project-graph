@@ -19,8 +19,10 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { Suspense, use, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Dialog } from "./ui/dialog";
 import { Input } from "./ui/input";
 import {
   Sidebar,
@@ -87,7 +89,11 @@ export default function WelcomePage() {
             </SidebarGroup>
             <SidebarGroup>
               <SidebarGroupLabel>常用文件夹</SidebarGroupLabel>
-              <SidebarGroupAction>
+              <SidebarGroupAction
+                onClick={async () => {
+                  toast((await Dialog.file("添加常用文件夹", "directory"))?.toString());
+                }}
+              >
                 <Plus />
               </SidebarGroupAction>
               <SidebarGroupContent>

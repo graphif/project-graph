@@ -12,6 +12,7 @@ import { Viewport } from "pixi-viewport";
 import { Application, Container, FederatedPointerEvent, Graphics, Point, PointData } from "pixi.js";
 import "pixi.js/math-extras";
 import { URI } from "vscode-uri";
+import { fileSystemProviders } from "./fileSystemProvider";
 import { MyWheelPlugin } from "./MyWheelPlugin";
 import { Settings } from "./service/Settings";
 import { MyText } from "./sprites/MyText";
@@ -92,7 +93,6 @@ export class Project extends EventEmitter<{
   }
 
   async init(
-    fileSystemProviders: Record<string, { new (...args: any[]): FileSystemProvider }> = {},
     services: ({ id?: string; new (...args: any[]): any } | false)[] = [],
     sprites: ({ new (...args: any[]): Container } | false)[] = [],
   ) {
@@ -271,8 +271,11 @@ export class Project extends EventEmitter<{
   }
 
   async save() {
-    await this.fs.write(this.uri, await this.dump());
+    const newUri = await this.fs.write(this.uri, await this.dump());
     this.state = ProjectState.Saved;
+    if (newUri) {
+      this.uri = newUri;
+    }
   }
 
   // 备份也要用到这个

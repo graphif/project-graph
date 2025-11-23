@@ -297,6 +297,12 @@ importers:
       "@tailwindcss/vite":
         specifier: ^4.1.11
         version: 4.1.11(rolldown-vite@7.0.4(@types/node@24.1.0)(esbuild@0.25.8)(jiti@2.4.2)(less@4.2.2)(sass-embedded@1.89.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))
+      "@tanstack/react-virtual":
+        specifier: ^3.13.12
+        version: 3.13.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@tanstack/virtual-core":
+        specifier: ^3.13.12
+        version: 3.13.12
       "@tauri-apps/api":
         specifier: ^2.6.0
         version: 2.6.0

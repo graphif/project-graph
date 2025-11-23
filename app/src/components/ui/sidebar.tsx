@@ -18,7 +18,7 @@ function Sidebar({
 }) {
   return (
     <div
-      className="text-sidebar-foreground group peer"
+      className="text-sidebar-foreground group peer h-full"
       data-state="open"
       data-variant={variant}
       data-side="left"
