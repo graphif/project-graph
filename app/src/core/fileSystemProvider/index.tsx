@@ -2,12 +2,15 @@ import { DirEntry, FileInfo } from "@tauri-apps/plugin-fs";
 import { URI } from "vscode-uri";
 import { FileSystemProviderDraft } from "./FileSystemProviderDraft";
 import { FileSystemProviderFile } from "./FileSystemProviderFile";
+import { FileSystemProviderHttp } from "./FileSystemProviderHttp";
 import { FileSystemProviderTest } from "./FileSystemProviderTest";
 
 export const fileSystemProviders: Record<string, new () => FileSystemProvider> = {
+  test: FileSystemProviderTest,
   file: FileSystemProviderFile,
   draft: FileSystemProviderDraft,
-  test: FileSystemProviderTest,
+  http: FileSystemProviderHttp,
+  https: FileSystemProviderHttp,
 };
 
 export interface FileSystemProvider {

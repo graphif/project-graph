@@ -613,8 +613,25 @@ function FileDialog({
               </Select>
               <Input
                 className="grow"
-                value={currentUri.path}
-                onChange={(e) => setCurrentUri(currentUri.with({ path: e.target.value }))}
+                value={currentUri.toString().replace(`${currentUri.scheme}://`, "")}
+                readOnly
+                onClick={async () => {
+                  const value = await Dialog.input("手动设置 URI", "请输入 URI 中除去协议的部分，或完整的 URI", {
+                    defaultValue: currentUri.toString().replace(/^[a-z]+:\/*/g, ""),
+                  });
+                  if (!value) return;
+                  let newUri: URI;
+                  if (value.match(/^[a-z]+:\/*/)) {
+                    newUri = URI.parse(value);
+                  } else {
+                    let path = value;
+                    if (!path.startsWith("/")) {
+                      path = "/" + path;
+                    }
+                    newUri = currentUri.with({ path });
+                  }
+                  setCurrentUri(newUri);
+                }}
               />
             </div>
             <Table ref={scrollParentRef}>
