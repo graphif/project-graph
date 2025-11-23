@@ -90,9 +90,6 @@ importers:
 
   app:
     dependencies:
-      "@ariakit/react":
-        specifier: ^0.4.18
-        version: 0.4.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       "@emoji-mart/data":
         specifier: 1.2.1
         version: 1.2.1
@@ -114,30 +111,12 @@ importers:
       "@msgpack/msgpack":
         specifier: ^3.1.2
         version: 3.1.2
-      "@octokit/rest":
-        specifier: ^22.0.0
-        version: 22.0.0
-      "@pixi/colord":
-        specifier: ^2.9.6
-        version: 2.9.6
-      "@pixi/core":
-        specifier: ^7.4.3
-        version: 7.4.3
       "@pixi/layout":
         specifier: ^3.2.0
         version: 3.2.0(@types/react@19.1.8)(pixi.js@8.13.2)(react@19.1.0)(yoga-layout@3.2.1)
-      "@pixi/math":
-        specifier: ^7.4.3
-        version: 7.4.3
-      "@pixi/ui":
-        specifier: ^2.2.7
-        version: 2.2.7(pixi.js@8.13.2)
       "@platejs/ai":
         specifier: ^49.2.14
         version: 49.2.14(platejs@49.2.12(@types/react@19.1.8)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)(slate-dom@0.116.0(slate@0.117.0))(slate@0.117.0)(use-sync-external-store@1.5.0(react@19.1.0)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6))
-      "@platejs/basic-nodes":
-        specifier: ^49.0.0
-        version: 49.0.0(platejs@49.2.12(@types/react@19.1.8)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)(slate-dom@0.116.0(slate@0.117.0))(slate@0.117.0)(use-sync-external-store@1.5.0(react@19.1.0)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       "@platejs/basic-styles":
         specifier: ^49.0.0
         version: 49.0.0(platejs@49.2.12(@types/react@19.1.8)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)(slate-dom@0.116.0(slate@0.117.0))(slate@0.117.0)(use-sync-external-store@1.5.0(react@19.1.0)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -156,9 +135,6 @@ importers:
       "@platejs/comment":
         specifier: ^49.0.0
         version: 49.0.0(platejs@49.2.12(@types/react@19.1.8)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)(slate-dom@0.116.0(slate@0.117.0))(slate@0.117.0)(use-sync-external-store@1.5.0(react@19.1.0)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      "@platejs/core":
-        specifier: ^49.2.12
-        version: 49.2.12(@types/react@19.1.8)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)(slate-dom@0.116.0(slate@0.117.0))(slate@0.117.0)(use-sync-external-store@1.5.0(react@19.1.0))
       "@platejs/date":
         specifier: ^49.0.2
         version: 49.0.2(platejs@49.2.12(@types/react@19.1.8)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)(slate-dom@0.116.0(slate@0.117.0))(slate@0.117.0)(use-sync-external-store@1.5.0(react@19.1.0)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -201,9 +177,6 @@ importers:
       "@platejs/selection":
         specifier: ^49.2.4
         version: 49.2.4(platejs@49.2.12(@types/react@19.1.8)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)(slate-dom@0.116.0(slate@0.117.0))(slate@0.117.0)(use-sync-external-store@1.5.0(react@19.1.0)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      "@platejs/slate":
-        specifier: ^49.2.4
-        version: 49.2.4
       "@platejs/suggestion":
         specifier: ^49.0.0
         version: 49.0.0(platejs@49.2.12(@types/react@19.1.8)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)(slate-dom@0.116.0(slate@0.117.0))(slate@0.117.0)(use-sync-external-store@1.5.0(react@19.1.0)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -216,9 +189,6 @@ importers:
       "@platejs/toggle":
         specifier: ^49.0.0
         version: 49.0.0(platejs@49.2.12(@types/react@19.1.8)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)(slate-dom@0.116.0(slate@0.117.0))(slate@0.117.0)(use-sync-external-store@1.5.0(react@19.1.0)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      "@platejs/utils":
-        specifier: ^49.2.12
-        version: 49.2.12(@types/react@19.1.8)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)(slate-dom@0.116.0(slate@0.117.0))(slate@0.117.0)(use-sync-external-store@1.5.0(react@19.1.0))
       "@radix-ui/react-alert-dialog":
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -240,27 +210,15 @@ importers:
       "@radix-ui/react-dropdown-menu":
         specifier: ^2.1.16
         version: 2.1.16(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      "@radix-ui/react-menu":
-        specifier: ^2.1.15
-        version: 2.1.15(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       "@radix-ui/react-menubar":
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       "@radix-ui/react-popover":
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      "@radix-ui/react-popper":
-        specifier: ^1.2.7
-        version: 1.2.7(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      "@radix-ui/react-primitive":
-        specifier: ^2.1.3
-        version: 2.1.3(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       "@radix-ui/react-progress":
         specifier: ^1.1.7
         version: 1.1.7(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      "@radix-ui/react-roving-focus":
-        specifier: ^1.1.11
-        version: 1.1.11(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       "@radix-ui/react-select":
         specifier: ^2.2.5
         version: 2.2.5(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -279,36 +237,21 @@ importers:
       "@radix-ui/react-tabs":
         specifier: ^1.1.12
         version: 1.1.12(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      "@radix-ui/react-toggle-group":
-        specifier: ^1.1.11
-        version: 1.1.11(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       "@radix-ui/react-toolbar":
         specifier: ^1.1.11
         version: 1.1.11(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       "@radix-ui/react-tooltip":
         specifier: ^1.2.7
         version: 1.2.7(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      "@react-scan/vite-plugin-react-scan":
-        specifier: ^0.1.8
-        version: 0.1.8(react-scan@0.4.3(@types/react@19.1.8)(next@15.4.3(@babel/core@7.28.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react-router-dom@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)(rollup@3.29.5))(rolldown-vite@7.0.4(@types/node@24.1.0)(esbuild@0.25.8)(jiti@2.4.2)(less@4.2.2)(sass-embedded@1.89.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))
-      "@swc-jotai/react-refresh":
-        specifier: ^0.3.0
-        version: 0.3.0
       "@tailwindcss/vite":
         specifier: ^4.1.11
         version: 4.1.11(rolldown-vite@7.0.4(@types/node@24.1.0)(esbuild@0.25.8)(jiti@2.4.2)(less@4.2.2)(sass-embedded@1.89.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))
       "@tanstack/react-virtual":
         specifier: ^3.13.12
         version: 3.13.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      "@tanstack/virtual-core":
-        specifier: ^3.13.12
-        version: 3.13.12
       "@tauri-apps/api":
         specifier: ^2.6.0
         version: 2.6.0
-      "@tauri-apps/cli":
-        specifier: ^2.6.2
-        version: 2.6.2
       "@tauri-apps/plugin-cli":
         specifier: ~2.4.0
         version: 2.4.0
@@ -330,9 +273,6 @@ importers:
       "@tauri-apps/plugin-os":
         specifier: ^2.3.0
         version: 2.3.0
-      "@tauri-apps/plugin-process":
-        specifier: ~2.3.0
-        version: 2.3.0
       "@tauri-apps/plugin-shell":
         specifier: 2.3.0
         version: 2.3.0
@@ -345,48 +285,15 @@ importers:
       "@tauri-apps/plugin-window-state":
         specifier: ^2.3.0
         version: 2.3.0
-      "@types/json-logic-js":
-        specifier: ^2.0.8
-        version: 2.0.8
-      "@types/lodash":
-        specifier: ^4.17.20
-        version: 4.17.20
-      "@types/markdown-it":
-        specifier: ^14.1.2
-        version: 14.1.2
-      "@types/md5":
-        specifier: ^2.3.5
-        version: 2.3.5
-      "@types/react":
-        specifier: ^19.1.8
-        version: 19.1.8
-      "@types/react-dom":
-        specifier: ^19.1.6
-        version: 19.1.6(@types/react@19.1.8)
-      "@types/uuid":
-        specifier: ^10.0.0
-        version: 10.0.0
       "@udecode/cn":
         specifier: ^49.0.15
         version: 49.0.15(@types/react@19.1.8)(class-variance-authority@0.7.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(tailwind-merge@3.3.1)
-      "@udecode/react-hotkeys":
-        specifier: ^37.0.0
-        version: 37.0.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      "@udecode/react-utils":
-        specifier: ^49.0.15
-        version: 49.0.15(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      "@udecode/utils":
-        specifier: ^47.2.7
-        version: 47.2.7
       "@vitejs/plugin-react-oxc":
         specifier: ^0.2.2
         version: 0.2.2(rolldown-vite@7.0.4(@types/node@24.1.0)(esbuild@0.25.8)(jiti@2.4.2)(less@4.2.2)(sass-embedded@1.89.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))
       "@zip.js/zip.js":
         specifier: ^2.7.63
         version: 2.7.63
-      bcrypt:
-        specifier: ^6.0.0
-        version: 6.0.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -396,9 +303,6 @@ importers:
       cmdk:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      csstype:
-        specifier: ^3.2.3
-        version: 3.2.3
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -411,24 +315,15 @@ importers:
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.1
-      framer-motion:
-        specifier: ^12.23.24
-        version: 12.23.24(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       fuse.js:
         specifier: ^7.1.0
         version: 7.1.0
-      html2canvas-pro:
-        specifier: ^1.5.11
-        version: 1.5.11
       i18next:
         specifier: ^25.3.1
         version: 25.3.1(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6))
       jotai:
         specifier: "catalog:"
         version: 2.12.5(@types/react@19.1.8)(react@19.1.0)
-      jsdom:
-        specifier: ^26.1.0
-        version: 26.1.0
       json-logic-js:
         specifier: ^2.0.5
         version: 2.0.5
@@ -447,33 +342,18 @@ importers:
       mathjax-full:
         specifier: ^3.2.2
         version: 3.2.2
-      md5:
-        specifier: ^2.3.0
-        version: 2.3.0
       mime:
         specifier: ^4.0.7
         version: 4.0.7
       motion:
         specifier: ^12.23.22
         version: 12.23.22(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      motion-dom:
-        specifier: ^12.23.23
-        version: 12.23.23
-      motion-utils:
-        specifier: ^12.23.6
-        version: 12.23.6
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       openai:
         specifier: ^5.8.2
         version: 5.8.2(ws@8.18.3)(zod@3.25.74)
-      pdf-lib:
-        specifier: ^1.17.1
-        version: 1.17.1
-      pixi-filters:
-        specifier: ^6.1.4
-        version: 6.1.4(pixi.js@8.13.2)
       pixi-viewport:
         specifier: ^6.0.3
         version: 6.0.3(pixi.js@8.13.2)
@@ -501,24 +381,12 @@ importers:
       react-player:
         specifier: 3.3.1
         version: 3.3.1(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      react-scan:
-        specifier: ^0.4.3
-        version: 0.4.3(@types/react@19.1.8)(next@15.4.3(@babel/core@7.28.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react-router-dom@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)(rollup@3.29.5)
       react-textarea-autosize:
         specifier: ^8.5.9
         version: 8.5.9(@types/react@19.1.8)(react@19.1.0)
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      rehype-katex:
-        specifier: ^7.0.1
-        version: 7.0.1
       rehype-react:
         specifier: ^8.0.0
         version: 8.0.0
-      remark:
-        specifier: ^15.0.1
-        version: 15.0.1
       remark-breaks:
         specifier: ^4.0.0
         version: 4.0.0
@@ -540,9 +408,6 @@ importers:
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.3.1
-      tailwind-scrollbar-hide:
-        specifier: ^4.0.0
-        version: 4.0.0(tailwindcss@4.1.11)
       tailwindcss:
         specifier: ^4.1.11
         version: 4.1.11
@@ -552,9 +417,6 @@ importers:
       tw-animate-css:
         specifier: ^1.3.6
         version: 1.3.6
-      typescript:
-        specifier: "catalog:"
-        version: 5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6)
       unified:
         specifier: ^11.0.5
         version: 11.0.5
@@ -570,9 +432,6 @@ importers:
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
-      valibot:
-        specifier: ^1.1.0
-        version: 1.1.0(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6))
       vconsole:
         specifier: ^3.15.1
         version: 3.15.1
@@ -585,21 +444,148 @@ importers:
       vite-plugin-svgr:
         specifier: ^4.3.0
         version: 4.3.0(rolldown-vite@7.0.4(@types/node@24.1.0)(esbuild@0.25.8)(jiti@2.4.2)(less@4.2.2)(sass-embedded@1.89.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))(rollup@3.29.5)(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6))
-      vitest:
-        specifier: 3.2.4
-        version: 3.2.4(@edge-runtime/vm@5.0.0)(@types/debug@4.1.12)(@types/node@24.1.0)(esbuild@0.25.8)(jiti@2.4.2)(jsdom@26.1.0)(less@4.2.2)(msw@2.7.3(@types/node@24.1.0)(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6)))(sass-embedded@1.89.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
       vscode-uri:
         specifier: ^3.1.0
         version: 3.1.0
-      webdav:
-        specifier: ^5.8.0
-        version: 5.8.0
       yaml:
         specifier: ^2.8.0
         version: 2.8.0
       zod:
         specifier: ^3.25.74
         version: 3.25.74
+    devDependencies:
+      "@ariakit/react":
+        specifier: ^0.4.18
+        version: 0.4.18(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@octokit/rest":
+        specifier: ^22.0.0
+        version: 22.0.0
+      "@pixi/colord":
+        specifier: ^2.9.6
+        version: 2.9.6
+      "@pixi/core":
+        specifier: ^7.4.3
+        version: 7.4.3
+      "@pixi/math":
+        specifier: ^7.4.3
+        version: 7.4.3
+      "@pixi/ui":
+        specifier: ^2.2.7
+        version: 2.2.7(pixi.js@8.13.2)
+      "@platejs/basic-nodes":
+        specifier: ^49.0.0
+        version: 49.0.0(platejs@49.2.12(@types/react@19.1.8)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)(slate-dom@0.116.0(slate@0.117.0))(slate@0.117.0)(use-sync-external-store@1.5.0(react@19.1.0)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@platejs/core":
+        specifier: ^49.2.12
+        version: 49.2.12(@types/react@19.1.8)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)(slate-dom@0.116.0(slate@0.117.0))(slate@0.117.0)(use-sync-external-store@1.5.0(react@19.1.0))
+      "@platejs/slate":
+        specifier: ^49.2.4
+        version: 49.2.4
+      "@platejs/utils":
+        specifier: ^49.2.12
+        version: 49.2.12(@types/react@19.1.8)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(scheduler@0.26.0)(slate-dom@0.116.0(slate@0.117.0))(slate@0.117.0)(use-sync-external-store@1.5.0(react@19.1.0))
+      "@radix-ui/react-menu":
+        specifier: ^2.1.15
+        version: 2.1.15(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@radix-ui/react-popper":
+        specifier: ^1.2.7
+        version: 1.2.7(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@radix-ui/react-primitive":
+        specifier: ^2.1.3
+        version: 2.1.3(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@radix-ui/react-roving-focus":
+        specifier: ^1.1.11
+        version: 1.1.11(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@radix-ui/react-toggle-group":
+        specifier: ^1.1.11
+        version: 1.1.11(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@react-scan/vite-plugin-react-scan":
+        specifier: ^0.1.8
+        version: 0.1.8(react-scan@0.4.3(@types/react@19.1.8)(next@15.4.3(@babel/core@7.28.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react-router-dom@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)(rollup@3.29.5))(rolldown-vite@7.0.4(@types/node@24.1.0)(esbuild@0.25.8)(jiti@2.4.2)(less@4.2.2)(sass-embedded@1.89.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))
+      "@swc-jotai/react-refresh":
+        specifier: ^0.3.0
+        version: 0.3.0
+      "@tanstack/virtual-core":
+        specifier: ^3.13.12
+        version: 3.13.12
+      "@tauri-apps/cli":
+        specifier: ^2.6.2
+        version: 2.6.2
+      "@types/json-logic-js":
+        specifier: ^2.0.8
+        version: 2.0.8
+      "@types/lodash":
+        specifier: ^4.17.20
+        version: 4.17.20
+      "@types/markdown-it":
+        specifier: ^14.1.2
+        version: 14.1.2
+      "@types/md5":
+        specifier: ^2.3.5
+        version: 2.3.5
+      "@types/react":
+        specifier: ^19.1.8
+        version: 19.1.8
+      "@types/react-dom":
+        specifier: ^19.1.6
+        version: 19.1.6(@types/react@19.1.8)
+      "@types/uuid":
+        specifier: ^10.0.0
+        version: 10.0.0
+      "@udecode/react-hotkeys":
+        specifier: ^37.0.0
+        version: 37.0.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@udecode/react-utils":
+        specifier: ^49.0.15
+        version: 49.0.15(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      "@udecode/utils":
+        specifier: ^47.2.7
+        version: 47.2.7
+      bcrypt:
+        specifier: ^6.0.0
+        version: 6.0.0
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+      framer-motion:
+        specifier: ^12.23.24
+        version: 12.23.24(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      html2canvas-pro:
+        specifier: ^1.5.11
+        version: 1.5.11
+      jsdom:
+        specifier: ^26.1.0
+        version: 26.1.0
+      md5:
+        specifier: ^2.3.0
+        version: 2.3.0
+      motion-dom:
+        specifier: ^12.23.23
+        version: 12.23.23
+      motion-utils:
+        specifier: ^12.23.6
+        version: 12.23.6
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
+      pixi-filters:
+        specifier: ^6.1.4
+        version: 6.1.4(pixi.js@8.13.2)
+      remark:
+        specifier: ^15.0.1
+        version: 15.0.1
+      tailwind-scrollbar-hide:
+        specifier: ^4.0.0
+        version: 4.0.0(tailwindcss@4.1.11)
+      typescript:
+        specifier: "catalog:"
+        version: 5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6)
+      valibot:
+        specifier: ^1.1.0
+        version: 1.1.0(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6))
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4(@edge-runtime/vm@5.0.0)(@types/debug@4.1.12)(@types/node@24.1.0)(esbuild@0.25.8)(jiti@2.4.2)(jsdom@26.1.0)(less@4.2.2)(msw@2.7.3(@types/node@24.1.0)(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6)))(sass-embedded@1.89.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0)
 
   packages/api:
     dependencies:
@@ -917,10 +903,6 @@ packages:
   "@bundled-es-modules/tough-cookie@0.1.6":
     resolution:
       { integrity: sha512-dvMHbL464C0zI+Yqxbz6kZ5TOEp7GLW+pry/RWndAR8MJQAXZ2rPmIs8tziTZjeIyhSNZgZbCePtfSbdWqStJw== }
-
-  "@buttercup/fetch@0.2.1":
-    resolution:
-      { integrity: sha512-sCgECOx8wiqY8NN1xN22BqqKzXYIG2AicNLlakOAI4f0WgyLVUbAigMf8CZhBtJxdudTcB1gD5lciqi44jwJvg== }
 
   "@changesets/apply-release-plan@7.0.12":
     resolution:
@@ -4109,10 +4091,6 @@ packages:
     resolution:
       { integrity: sha512-dm3bDsMuUngpIQdJ1jaMkMfyQpHyDcaTIKTFaAMHoKeUd+Is3UHO2uzhElr6ZZkfytIIyQtSVnCWdW2Kc58f3g== }
 
-  "@tauri-apps/plugin-process@2.3.0":
-    resolution:
-      { integrity: sha512-0DNj6u+9csODiV4seSxxRbnLpeGYdojlcctCuLOCgpH9X3+ckVZIEj6H7tRQ7zqWr7kSTEWnrxtAdBb0FbtrmQ== }
-
   "@tauri-apps/plugin-shell@2.3.0":
     resolution:
       { integrity: sha512-6GIRxO2z64uxPX4CCTuhQzefvCC0ew7HjdBhMALiGw74vFBDY95VWueAHOHgNOMV4UOUAFupyidN9YulTe5xlA== }
@@ -4783,10 +4761,6 @@ packages:
     resolution:
       { integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw== }
 
-  base-64@1.0.0:
-    resolution:
-      { integrity: sha512-kwDPIFCGx0NZHog36dj+tHiwP4QMzsZ3AgMViUBKI0+V5n4U0ufTCUMhnQ04diaRI8EX/QcPfql7zlhZ7j4zgg== }
-
   base64-arraybuffer@1.0.2:
     resolution:
       { integrity: sha512-I3yl4r9QB5ZRY3XuJVEPfc2XhZO6YweFPI+UovAzn+8/hb3oJ6lnysaFcjVpkCPfVWFUDvoZ8kmVDP7WyRtYtQ== }
@@ -4895,10 +4869,6 @@ packages:
     resolution:
       { integrity: sha512-PKA4BeSvBpQKQ8iPOGCSiell+N8P+Tf1DlwqmYhpe2gAhKPHn8EYOxVT+ShuGmhg8lN8XiSlS80yiExKXrURlw== }
     engines: { node: ">=12" }
-
-  byte-length@1.0.2:
-    resolution:
-      { integrity: sha512-ovBpjmsgd/teRmgcPh23d4gJvxDoXtAzEL9xTfMU8Yc2kqCDb7L9jAG0XHl1nzuGl+h3ebCIF1i62UFyA9V/2Q== }
 
   bytes@3.1.2:
     resolution:
@@ -5310,11 +5280,6 @@ packages:
   dashjs@5.0.3:
     resolution:
       { integrity: sha512-TXndNnCUjFjF2nYBxDVba+hWRpVkadkQ8flLp7kHkem+5+wZTfRShJCnVkPUosmjS0YPE9fVNLbYPJxHBeQZvA== }
-
-  data-uri-to-buffer@4.0.1:
-    resolution:
-      { integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A== }
-    engines: { node: ">= 12" }
 
   data-urls@5.0.0:
     resolution:
@@ -6015,11 +5980,6 @@ packages:
     resolution:
       { integrity: sha512-Atfo14OibSv5wAp4VWNsFYE1AchQRTv9cBGWET4pZWHzYshFSS9NQI6I57rdKn9croWVMbYFbLhJ+yJvmZIIHw== }
 
-  fast-xml-parser@4.5.3:
-    resolution:
-      { integrity: sha512-RKihhV+SHsIUGXObeVy9AXiBbFwkVk7Syp8XgwN5U3JV416+Gwp/GO9i0JYKmikykgz/UHRrrV4ROuZEo/T0ig== }
-    hasBin: true
-
   fastq@1.19.1:
     resolution:
       { integrity: sha512-GwLTyxkCXjXbxqIhTsMI2Nui8huMPtnxg7krajPJAjnEG/iiOS7i+zCtWGZR9G0NBKbXKh6X9m9UIsYX/N6vvQ== }
@@ -6042,11 +6002,6 @@ packages:
     peerDependenciesMeta:
       picomatch:
         optional: true
-
-  fetch-blob@3.2.0:
-    resolution:
-      { integrity: sha512-7yAQpD2UMJzLi1Dqv7qFYnPbaPx7ZfFK6PiIxQ4PfkGPyNyl2Ugx+a/umUonmKqjhM4DnfbMvdX6otXq83soQQ== }
-    engines: { node: ^12.20 || >= 14.13 }
 
   figures@3.2.0:
     resolution:
@@ -6111,11 +6066,6 @@ packages:
     resolution:
       { integrity: sha512-KrGhL9Q4zjj0kiUt5OO4Mr/A/jlI2jDYs5eHBpYHPcBEVSiipAvn2Ko2HnPe20rmcuuvMHNdZFp+4IlGTMF0Ow== }
     engines: { node: ">= 6" }
-
-  formdata-polyfill@4.0.10:
-    resolution:
-      { integrity: sha512-buewHzMvYL29jdeQTVILecSaZKnt/RJWjoZCF5OW60Z67/GmSLBkOFM7qh1PI3zFNtJbaZL5eQu1vLfazOwj4g== }
-    engines: { node: ">=12.20.0" }
 
   framer-motion@12.23.24:
     resolution:
@@ -6329,45 +6279,13 @@ packages:
       { integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ== }
     engines: { node: ">= 0.4" }
 
-  hast-util-from-dom@5.0.1:
-    resolution:
-      { integrity: sha512-N+LqofjR2zuzTjCPzyDUdSshy4Ma6li7p/c3pA78uTwzFgENbgbUrm2ugwsOdcjI1muO+o6Dgzp9p8WHtn/39Q== }
-
-  hast-util-from-html-isomorphic@2.0.0:
-    resolution:
-      { integrity: sha512-zJfpXq44yff2hmE0XmwEOzdWin5xwH+QIhMLOScpX91e/NSGPsAzNCvLQDIEPyO2TXi+lBmU6hjLIhV8MwP2kw== }
-
-  hast-util-from-html@2.0.3:
-    resolution:
-      { integrity: sha512-CUSRHXyKjzHov8yKsQjGOElXy/3EKpyX56ELnkHH34vDVw1N1XSQ1ZcAvTyAPtGqLTuKP/uxM+aLkSPqF/EtMw== }
-
-  hast-util-from-parse5@8.0.3:
-    resolution:
-      { integrity: sha512-3kxEVkEKt0zvcZ3hCRYI8rqrgwtlIOFMWkbclACvjlDw8Li9S2hk/d51OI0nr/gIpdMHNepwgOKqZ/sy0Clpyg== }
-
-  hast-util-is-element@3.0.0:
-    resolution:
-      { integrity: sha512-Val9mnv2IWpLbNPqc/pUem+a7Ipj2aHacCwgNfTiK0vJKl0LF+4Ba4+v1oPHFpf3bLYmreq0/l3Gud9S5OH42g== }
-
-  hast-util-parse-selector@4.0.0:
-    resolution:
-      { integrity: sha512-wkQCkSYoOGCRKERFWcxMVMOcYE2K1AaNLU8DXS9arxnLOUEWbOXKXiJUNzEpqZ3JOKpnha3jkFrumEjVliDe7A== }
-
   hast-util-to-jsx-runtime@2.3.6:
     resolution:
       { integrity: sha512-zl6s8LwNyo1P9uw+XJGvZtdFF1GdAkOg8ujOw+4Pyb76874fLps4ueHXDhXWdk6YHQ6OgUtinliG7RsYvCbbBg== }
 
-  hast-util-to-text@4.0.2:
-    resolution:
-      { integrity: sha512-KK6y/BN8lbaq654j7JgBydev7wuNMcID54lkRav1P0CaE1e47P72AWWPiGKXTJU271ooYzcvTAn/Zt0REnvc7A== }
-
   hast-util-whitespace@3.0.0:
     resolution:
       { integrity: sha512-88JUN06ipLwsnv+dVn+OIYOvAuvBMy/Qoi6O7mQHxdPXpjy+Cd6xRkWwux7DKO+4sYILtLBRIKgsdpS2gQc7qw== }
-
-  hastscript@9.0.1:
-    resolution:
-      { integrity: sha512-g7df9rMFX/SPi34tyGCyUBREQoKkapwdY/T04Qn9TDWfHhAYt4/I0gMVirzK5wEzeUqIjEB+LXC/ypb7Aqno5w== }
 
   headers-polyfill@4.0.3:
     resolution:
@@ -6393,10 +6311,6 @@ packages:
   hookable@5.5.3:
     resolution:
       { integrity: sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ== }
-
-  hot-patcher@2.0.1:
-    resolution:
-      { integrity: sha512-ECg1JFG0YzehicQaogenlcs2qg6WsXQsxtnbr1i696u5tLUjtJdQAh0u2g0Q5YV45f263Ta1GnUJsc8WIfJf4Q== }
 
   html-encoding-sniffer@4.0.0:
     resolution:
@@ -7068,10 +6982,6 @@ packages:
     resolution:
       { integrity: sha512-umfX9d3iuSxTQP4pnzLOz0HKnPg0FaUUIKcye2lOiz3KPu1Y3M3xlz76dISdFPQs37P9eJz1wUpcTS6KDPn9fA== }
     engines: { node: ^4.8.4 || ^6.10.1 || ^7.10.1 || >= 8.1.4 }
-
-  layerr@3.0.0:
-    resolution:
-      { integrity: sha512-tv754Ki2dXpPVApOrjTyRo4/QegVb9eVFq4mjqp4+NM5NaX7syQvN5BBNfV/ZpAHCEHV24XdUVrBAoka4jt3pA== }
 
   less@4.2.2:
     resolution:
@@ -7760,10 +7670,6 @@ packages:
     resolution:
       { integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw== }
 
-  nested-property@4.0.0:
-    resolution:
-      { integrity: sha512-yFehXNWRs4cM0+dz7QxCd06hTbWbSkV0ISsqBfkntU6TOY4Qm3Q88fRRLOddkGh2Qq6dZvnKVAahfhjcUvLnyA== }
-
   next-themes@0.4.6:
     resolution:
       { integrity: sha512-pZvgD5L0IEvX5/9GWyHMf3m8BKiVQwsCMHfoFosXtXBMnaS0ZnIJ9ST4b4NqLVKDEm8QBxoNNGNaBv2JNF6XNA== }
@@ -7802,20 +7708,9 @@ packages:
       { integrity: sha512-D9DI/gXHvVmjHS08SVch0Em8G5S1P+QWtU31appcKT/8wFSPRcdHadIFSAntdMMVM5zz+/DL+bL/gz3UDppqtg== }
     engines: { node: ^18 || ^20 || >= 21 }
 
-  node-domexception@1.0.0:
-    resolution:
-      { integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ== }
-    engines: { node: ">=10.5.0" }
-    deprecated: Use your platform's native DOMException instead
-
   node-fetch-native@1.6.6:
     resolution:
       { integrity: sha512-8Mc2HhqPdlIfedsuZoc3yioPuzp6b+L5jRCRY1QzuWZh2EGJVQrGppC6V6cF0bLdbW0+O2YpqCA25aF/1lvipQ== }
-
-  node-fetch@3.3.2:
-    resolution:
-      { integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA== }
-    engines: { node: ^12.20.0 || ^14.13.1 || >=16.0.0 }
 
   node-gyp-build@4.8.4:
     resolution:
@@ -8125,10 +8020,6 @@ packages:
   path-parse@1.0.7:
     resolution:
       { integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw== }
-
-  path-posix@1.0.0:
-    resolution:
-      { integrity: sha512-1gJ0WpNIiYcQydgg3Ed8KzvIqTsDpNwq+cjBCssvBtuTWjEqY1AW+i+OepiEMqDCzyro9B2sLAe4RBPajMYFiA== }
 
   path-to-regexp@6.3.0:
     resolution:
@@ -8642,10 +8533,6 @@ packages:
     resolution:
       { integrity: sha512-dYqgNSZbDwkaJ2ceRd9ojCGjBq+mOm9LmtXnAnEGyHhN/5R7iDW2TRw3h+o/jCFxus3P2LfWIIiwowAjANm7IA== }
     engines: { node: ">= 0.4" }
-
-  rehype-katex@7.0.1:
-    resolution:
-      { integrity: sha512-OiM2wrZ/wuhKkigASodFoo8wimG3H12LWQaH8qSPVJn9apWKFSH3YOCtbKpBorTVw/eI7cuT21XBbvwEswbIOA== }
 
   rehype-react@8.0.0:
     resolution:
@@ -9376,10 +9263,6 @@ packages:
     resolution:
       { integrity: sha512-TcccoMhJOM3OebGhSBEmp3UZ2SfDMZUEBdRA/9ynfLi8yYajyWX3JiXArcJt4Umh4vISpspkQIY8ZZoCqjbviA== }
 
-  strnum@1.1.2:
-    resolution:
-      { integrity: sha512-vrN+B7DBIoTTZjnPNewwhx6cBA/H+IS7rfW68n7XxC1y7uoiGQBxaKzqucGUgavX15dJgiGztLJ8vxuEzwqBdA== }
-
   style-to-js@1.1.17:
     resolution:
       { integrity: sha512-xQcBGDxJb6jjFCTzvQtfiPn6YvvP2O8U1MDIPNfJQlWMYfktPy+iGsHE7cssjs7y84d9fQaK4UF3RIJaAHSoYA== }
@@ -9860,10 +9743,6 @@ packages:
       { integrity: sha512-wMmuG+wkzeHh2KCE6yiDlHmKelN8iE/maxkUYMbmrS6iV8+n6eP1TH3yKKlepuF4hrkepinEGmBXdfo9XZUvAw== }
     engines: { node: ">=18.12.0" }
 
-  unist-util-find-after@5.0.0:
-    resolution:
-      { integrity: sha512-amQa0Ep2m6hE2g72AugUItjbuM8X8cGQnFoHk0pGfrFeT9GZhzN5SW8nRsiGKK7Aif4CrACPENkA6P/Lw6fHGQ== }
-
   unist-util-is@6.0.0:
     resolution:
       { integrity: sha512-2qCTHimwdxLfz+YzdGfkqNlH0tLi9xjTnHddPmJwtIG9MGsdbutfTc4P+haPD7l7Cjxf/WZj+we5qfVPvvxfYw== }
@@ -10000,11 +9879,6 @@ packages:
   uri-js@4.4.1:
     resolution:
       { integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg== }
-
-  url-join@5.0.0:
-    resolution:
-      { integrity: sha512-n2huDr9h9yzd6exQVnH/jU5mr+Pfx08LRXXZhkLLetAMESRj+anQsTAh940iMrIetKAmry9coFuZQ2jY8/p3WA== }
-    engines: { node: ^12.20.0 || ^14.13.1 || >=16.0.0 }
 
   url-parse@1.5.10:
     resolution:
@@ -10145,10 +10019,6 @@ packages:
     resolution:
       { integrity: sha512-7rjNSXYVyZG0mVZpUG2tfxwnoNtkcRCnwdSju+Zvpjf/r72iQa6kLpeThFMIKPuQ5CRnQQv6gnR3eNU6UGbC2Q== }
 
-  vfile-location@5.0.3:
-    resolution:
-      { integrity: sha512-5yXvWDEgqeiYiBe1lbxYF7UMAIm/IcopxMHrMQDq3nvKcjPKIhZklUKL+AE7J7uApI4kwe2snsK+eI6UTj9EHg== }
-
   vfile-message@4.0.2:
     resolution:
       { integrity: sha512-jRDZ1IMLttGj41KcZvlrYAaI3CfqpLpfpf+Mfig13viT6NKvRzWZ+lXz0Y5D60w6uJIBAOGq9mSHf0gktF0duw== }
@@ -10270,20 +10140,6 @@ packages:
     resolution:
       { integrity: sha512-ZzxBf288iALJseijWelmECm/1x7ZwQn3sMYIkDr2VvZp7r6SEKuT8D0O9Wiq6L9Nl5mazrOMcmiZE/2NCenaxw== }
     engines: { node: ">=8.10.0" }
-
-  web-namespaces@2.0.1:
-    resolution:
-      { integrity: sha512-bKr1DkiNa2krS7qxNtdrtHAmzuYGFQLiQ13TsorsdT6ULTkPLKuu5+GsFpDlg6JFjUTwX2DyhMPG2be8uPrqsQ== }
-
-  web-streams-polyfill@3.3.3:
-    resolution:
-      { integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw== }
-    engines: { node: ">= 8" }
-
-  webdav@5.8.0:
-    resolution:
-      { integrity: sha512-iuFG7NamJ41Oshg4930iQgfIpRrUiatPWIekeznYgEf2EOraTRcDPTjy7gIOMtkdpKTaqPk1E68NO5PAGtJahA== }
-    engines: { node: ">=14" }
 
   webidl-conversions@7.0.0:
     resolution:
@@ -10817,10 +10673,6 @@ snapshots:
       "@types/tough-cookie": 4.0.5
       tough-cookie: 4.1.4
     optional: true
-
-  "@buttercup/fetch@0.2.1":
-    optionalDependencies:
-      node-fetch: 3.3.2
 
   "@changesets/apply-release-plan@7.0.12":
     dependencies:
@@ -13464,10 +13316,6 @@ snapshots:
     dependencies:
       "@tauri-apps/api": 2.6.0
 
-  "@tauri-apps/plugin-process@2.3.0":
-    dependencies:
-      "@tauri-apps/api": 2.6.0
-
   "@tauri-apps/plugin-shell@2.3.0":
     dependencies:
       "@tauri-apps/api": 2.6.0
@@ -14120,8 +13968,6 @@ snapshots:
 
   balanced-match@1.0.2: {}
 
-  base-64@1.0.0: {}
-
   base64-arraybuffer@1.0.2: {}
 
   base64-js@1.5.1: {}
@@ -14218,8 +14064,6 @@ snapshots:
     dependencies:
       run-applescript: 5.0.0
     optional: true
-
-  byte-length@1.0.2: {}
 
   bytes@3.1.2:
     optional: true
@@ -14578,8 +14422,6 @@ snapshots:
       localforage: 1.10.0
       path-browserify: 1.0.1
       ua-parser-js: 1.0.40
-
-  data-uri-to-buffer@4.0.1: {}
 
   data-urls@5.0.0:
     dependencies:
@@ -15275,10 +15117,6 @@ snapshots:
   fast-uri@3.0.6:
     optional: true
 
-  fast-xml-parser@4.5.3:
-    dependencies:
-      strnum: 1.1.2
-
   fastq@1.19.1:
     dependencies:
       reusify: 1.1.0
@@ -15294,11 +15132,6 @@ snapshots:
   fdir@6.5.0(picomatch@4.0.3):
     optionalDependencies:
       picomatch: 4.0.3
-
-  fetch-blob@3.2.0:
-    dependencies:
-      node-domexception: 1.0.0
-      web-streams-polyfill: 3.3.3
 
   figures@3.2.0:
     dependencies:
@@ -15351,10 +15184,6 @@ snapshots:
       es-set-tostringtag: 2.1.0
       hasown: 2.0.2
       mime-types: 2.1.35
-
-  formdata-polyfill@4.0.10:
-    dependencies:
-      fetch-blob: 3.2.0
 
   framer-motion@12.23.24(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
@@ -15530,47 +15359,6 @@ snapshots:
     dependencies:
       function-bind: 1.1.2
 
-  hast-util-from-dom@5.0.1:
-    dependencies:
-      "@types/hast": 3.0.4
-      hastscript: 9.0.1
-      web-namespaces: 2.0.1
-
-  hast-util-from-html-isomorphic@2.0.0:
-    dependencies:
-      "@types/hast": 3.0.4
-      hast-util-from-dom: 5.0.1
-      hast-util-from-html: 2.0.3
-      unist-util-remove-position: 5.0.0
-
-  hast-util-from-html@2.0.3:
-    dependencies:
-      "@types/hast": 3.0.4
-      devlop: 1.1.0
-      hast-util-from-parse5: 8.0.3
-      parse5: 7.3.0
-      vfile: 6.0.3
-      vfile-message: 4.0.2
-
-  hast-util-from-parse5@8.0.3:
-    dependencies:
-      "@types/hast": 3.0.4
-      "@types/unist": 3.0.3
-      devlop: 1.1.0
-      hastscript: 9.0.1
-      property-information: 7.1.0
-      vfile: 6.0.3
-      vfile-location: 5.0.3
-      web-namespaces: 2.0.1
-
-  hast-util-is-element@3.0.0:
-    dependencies:
-      "@types/hast": 3.0.4
-
-  hast-util-parse-selector@4.0.0:
-    dependencies:
-      "@types/hast": 3.0.4
-
   hast-util-to-jsx-runtime@2.3.6:
     dependencies:
       "@types/estree": 1.0.8
@@ -15591,24 +15379,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  hast-util-to-text@4.0.2:
-    dependencies:
-      "@types/hast": 3.0.4
-      "@types/unist": 3.0.3
-      hast-util-is-element: 3.0.0
-      unist-util-find-after: 5.0.0
-
   hast-util-whitespace@3.0.0:
     dependencies:
       "@types/hast": 3.0.4
-
-  hastscript@9.0.1:
-    dependencies:
-      "@types/hast": 3.0.4
-      comma-separated-tokens: 2.0.3
-      hast-util-parse-selector: 4.0.0
-      property-information: 7.1.0
-      space-separated-tokens: 2.0.2
 
   headers-polyfill@4.0.3:
     optional: true
@@ -15628,8 +15401,6 @@ snapshots:
       react-is: 16.13.1
 
   hookable@5.5.3: {}
-
-  hot-patcher@2.0.1: {}
 
   html-encoding-sniffer@4.0.0:
     dependencies:
@@ -16204,8 +15975,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
     optional: true
-
-  layerr@3.0.0: {}
 
   less@4.2.2:
     dependencies:
@@ -17026,8 +16795,6 @@ snapshots:
   neo-async@2.6.2:
     optional: true
 
-  nested-property@4.0.0: {}
-
   next-themes@0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       react: 19.1.0
@@ -17064,16 +16831,8 @@ snapshots:
 
   node-addon-api@8.4.0: {}
 
-  node-domexception@1.0.0: {}
-
   node-fetch-native@1.6.6:
     optional: true
-
-  node-fetch@3.3.2:
-    dependencies:
-      data-uri-to-buffer: 4.0.1
-      fetch-blob: 3.2.0
-      formdata-polyfill: 4.0.10
 
   node-gyp-build@4.8.4: {}
 
@@ -17395,8 +17154,6 @@ snapshots:
 
   path-parse@1.0.7: {}
 
-  path-posix@1.0.0: {}
-
   path-to-regexp@6.3.0:
     optional: true
 
@@ -17575,7 +17332,8 @@ snapshots:
 
   quansync@0.2.10: {}
 
-  querystringify@2.2.0: {}
+  querystringify@2.2.0:
+    optional: true
 
   queue-microtask@1.2.3: {}
 
@@ -17704,7 +17462,7 @@ snapshots:
 
   react-scan@0.4.3(@types/react@19.1.8)(next@15.4.3(@babel/core@7.28.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react-router-dom@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-router@7.6.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)(rollup@3.29.5):
     dependencies:
-      "@babel/core": 7.28.0
+      "@babel/core": 7.28.4
       "@babel/generator": 7.28.0
       "@babel/types": 7.28.0
       "@clack/core": 0.3.5
@@ -17821,16 +17579,6 @@ snapshots:
       gopd: 1.2.0
       set-function-name: 2.0.2
 
-  rehype-katex@7.0.1:
-    dependencies:
-      "@types/hast": 3.0.4
-      "@types/katex": 0.16.7
-      hast-util-from-html-isomorphic: 2.0.0
-      hast-util-to-text: 4.0.2
-      katex: 0.16.22
-      unist-util-visit-parents: 6.0.1
-      vfile: 6.0.3
-
   rehype-react@8.0.0:
     dependencies:
       "@types/hast": 3.0.4
@@ -17909,7 +17657,8 @@ snapshots:
   require-from-string@2.0.2:
     optional: true
 
-  requires-port@1.0.0: {}
+  requires-port@1.0.0:
+    optional: true
 
   resolve-from@4.0.0: {}
 
@@ -18580,8 +18329,6 @@ snapshots:
     dependencies:
       js-tokens: 9.0.1
 
-  strnum@1.1.2: {}
-
   style-to-js@1.1.17:
     dependencies:
       style-to-object: 1.0.9
@@ -18980,11 +18727,6 @@ snapshots:
       unplugin-utils: 0.2.4
     optional: true
 
-  unist-util-find-after@5.0.0:
-    dependencies:
-      "@types/unist": 3.0.3
-      unist-util-is: 6.0.0
-
   unist-util-is@6.0.0:
     dependencies:
       "@types/unist": 3.0.3
@@ -19119,12 +18861,11 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  url-join@5.0.0: {}
-
   url-parse@1.5.10:
     dependencies:
       querystringify: 2.2.0
       requires-port: 1.0.0
+    optional: true
 
   url@0.11.4:
     dependencies:
@@ -19218,11 +18959,6 @@ snapshots:
   vditor@3.11.1:
     dependencies:
       diff-match-patch: 1.0.5
-
-  vfile-location@5.0.3:
-    dependencies:
-      "@types/unist": 3.0.3
-      vfile: 6.0.3
 
   vfile-message@4.0.2:
     dependencies:
@@ -19353,27 +19089,6 @@ snapshots:
       defaults: 1.0.4
 
   weakmap-polyfill@2.0.4: {}
-
-  web-namespaces@2.0.1: {}
-
-  web-streams-polyfill@3.3.3: {}
-
-  webdav@5.8.0:
-    dependencies:
-      "@buttercup/fetch": 0.2.1
-      base-64: 1.0.0
-      byte-length: 1.0.2
-      entities: 6.0.1
-      fast-xml-parser: 4.5.3
-      hot-patcher: 2.0.1
-      layerr: 3.0.0
-      md5: 2.3.0
-      minimatch: 9.0.5
-      nested-property: 4.0.0
-      node-fetch: 3.3.2
-      path-posix: 1.0.0
-      url-join: 5.0.0
-      url-parse: 1.5.10
 
   webidl-conversions@7.0.0: {}
 
