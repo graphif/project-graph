@@ -270,7 +270,7 @@ export class AutoAlign {
     // 检测树形结构
     if (!this.project.graphMethods.isTree(selectedRootEntity)) {
       // 不是树形结构，不做任何处理
-      toast.error("选择的节点必须是树形结构的根节点");
+      toast.error("选择的节点必须是树形结构，不能有菱形、环、等复杂结构");
       return;
     }
     this.project.autoLayoutFastTree.autoLayoutFastTreeMode(selectedRootEntity);

@@ -9,6 +9,7 @@ import { getTextSize } from "@/utils/font";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Line, Rectangle, Shape } from "@graphif/shapes";
+import { Value } from "platejs";
 
 @passExtraAtArg1
 @passObject
@@ -84,7 +85,7 @@ export class Section extends ConnectableEntity {
       isHidden = false,
       isCollapsed = false,
       children = [] as Entity[],
-      details = [],
+      details = [] as Value,
     } = {},
     public unknown = false,
   ) {
