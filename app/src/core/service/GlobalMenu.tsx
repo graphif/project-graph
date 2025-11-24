@@ -114,6 +114,7 @@ import {
   Workflow,
   Link,
   OctagonX,
+  Dices,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -128,6 +129,7 @@ import { DragFileIntoStageEngine } from "./dataManageService/dragFileIntoStageEn
 import { FeatureFlags } from "./FeatureFlags";
 import { Settings } from "./Settings";
 import { Telemetry } from "./Telemetry";
+import { Entity } from "../stage/stageObject/abstract/StageEntity";
 
 const Content = MenubarContent;
 const Item = MenubarItem;
@@ -666,6 +668,20 @@ export function GlobalMenu() {
           >
             <OctagonX />
             停止漂移
+          </Item>
+          <Item
+            onClick={() => {
+              if (!activeProject) return;
+              const entities = activeProject.stage.filter((entity) => entity instanceof Entity);
+              if (entities.length === 0) return;
+              const randomEntity = entities[Math.floor(Math.random() * entities.length)];
+              activeProject.stageManager.clearSelectAll();
+              randomEntity.isSelected = true;
+              activeProject.camera.resetBySelected();
+            }}
+          >
+            <Dices />
+            聚焦到随机实体
           </Item>
         </Content>
       </Menu>
