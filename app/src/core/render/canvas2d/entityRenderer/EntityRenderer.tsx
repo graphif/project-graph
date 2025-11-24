@@ -9,6 +9,7 @@ import { Section } from "@/core/stage/stageObject/entity/Section";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
+import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
@@ -190,6 +191,15 @@ export class EntityRenderer {
       this.project.collisionBoxRenderer.render(
         connectPoint.collisionBox,
         this.project.stageStyleManager.currentStyle.CollideBoxSelected,
+      );
+    }
+    if (this.project.camera.currentScale < 0.2 && !connectPoint.detailsManager.isEmpty()) {
+      const detailsText = DetailsManager.detailsToMarkdown(connectPoint.details);
+      this.project.textRenderer.renderTextFromCenter(
+        detailsText,
+        this.project.renderer.transformWorld2View(connectPoint.geometryCenter),
+        12, // 不随视野缩放而变化
+        this.project.stageStyleManager.currentStyle.StageObjectBorder,
       );
     }
   }

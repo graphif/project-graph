@@ -81,7 +81,7 @@ export class SectionPackManager {
       if (!textNode.isSelected) {
         continue;
       }
-      this.targetTextNodeToSection(textNode);
+      this.targetTextNodeToSection(textNode, false, true);
     }
     this.project.historyManager.recordStep();
   }
@@ -152,8 +152,13 @@ export class SectionPackManager {
    * 将指定的文本节点转换成Section，自动删除原来的TextNode
    * @param textNode 要转换的节点
    * @param ignoreEdges 是否忽略边的影响
+   * @param addConnectPoints 是否添加质点
    */
-  targetTextNodeToSection(textNode: TextNode, ignoreEdges: boolean = false): Section {
+  targetTextNodeToSection(
+    textNode: TextNode,
+    ignoreEdges: boolean = false,
+    addConnectPoints: boolean = false,
+  ): Section {
     // 获取这个节点的父级Section
     const fatherSections = this.project.sectionMethods.getFatherSections(textNode);
     const newSection = new Section(this.project, {
@@ -165,39 +170,39 @@ export class SectionPackManager {
     newSection.adjustLocationAndSize();
 
     // 创建左上角和右下角的质点
-    const radius = ConnectPoint.CONNECT_POINT_SHRINK_RADIUS;
-    const sectionRectangle = newSection.collisionBox.getRectangle();
+    if (addConnectPoints) {
+      const radius = ConnectPoint.CONNECT_POINT_SHRINK_RADIUS;
+      const sectionRectangle = newSection.collisionBox.getRectangle();
 
-    // 左上角质点
-    const topLeftLocation = sectionRectangle.location.clone();
-    const topLeftCollisionBox = new CollisionBox([new Rectangle(topLeftLocation, Vector.same(radius * 2))]);
-    const topLeftPoint = new ConnectPoint(this.project, {
-      collisionBox: topLeftCollisionBox,
-    });
+      // 左上角质点
+      const topLeftLocation = sectionRectangle.location.clone();
+      const topLeftCollisionBox = new CollisionBox([new Rectangle(topLeftLocation, Vector.same(radius * 2))]);
+      const topLeftPoint = new ConnectPoint(this.project, {
+        collisionBox: topLeftCollisionBox,
+      });
 
-    // 右下角质点
-    const bottomRightLocation = sectionRectangle.location
-      .clone()
-      .add(new Vector(sectionRectangle.size.x - radius * 2, sectionRectangle.size.y - radius * 2));
-    const bottomRightCollisionBox = new CollisionBox([new Rectangle(bottomRightLocation, Vector.same(radius * 2))]);
-    const bottomRightPoint = new ConnectPoint(this.project, {
-      collisionBox: bottomRightCollisionBox,
-    });
+      // 右下角质点
+      const bottomRightLocation = sectionRectangle.location
+        .clone()
+        .add(new Vector(sectionRectangle.size.x - radius * 2, sectionRectangle.size.y - radius * 2));
+      const bottomRightCollisionBox = new CollisionBox([new Rectangle(bottomRightLocation, Vector.same(radius * 2))]);
+      const bottomRightPoint = new ConnectPoint(this.project, {
+        collisionBox: bottomRightCollisionBox,
+      });
 
-    // 将质点添加到舞台
-    this.project.stageManager.add(topLeftPoint);
-    this.project.stageManager.add(bottomRightPoint);
+      // 将质点添加到舞台
+      this.project.stageManager.add(topLeftPoint);
+      this.project.stageManager.add(bottomRightPoint);
+
+      // 将质点放入Section
+      this.project.sectionInOutManager.goInSection([topLeftPoint, bottomRightPoint], newSection);
+    }
 
     // 将新的Section加入舞台
     this.project.stageManager.add(newSection);
     for (const fatherSection of fatherSections) {
       this.project.sectionInOutManager.goInSection([newSection], fatherSection);
-      // 将质点放入Section
-      // this.project.sectionInOutManager.goInSection([topLeftPoint, bottomRightPoint], fatherSection);
     }
-
-    // 将质点放入Section
-    this.project.sectionInOutManager.goInSection([topLeftPoint, bottomRightPoint], newSection);
 
     if (!ignoreEdges) {
       for (const edge of this.project.stageManager.getAssociations()) {
