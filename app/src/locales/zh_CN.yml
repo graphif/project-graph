@@ -558,6 +558,14 @@ settings:
     title: 退出编辑模式时自动格式化树形结构
     description: |
       当文本节点退出编辑模式时，自动对其所在的树形结构进行格式化布局
+  treeGenerateCameraBehavior:
+    title: 树形生长节点后的镜头行为选项
+    description: |
+      设置在使用树形深度生长或广度生长功能创建新节点后，镜头的行为方式
+    options:
+      none: 镜头不动
+      moveToNewNode: 镜头移动向新创建的节点
+      resetToTree: 重置视野，使视野覆盖当前树形结构的外接矩形
   enableDragAutoAlign:
     title: 鼠标拖动自动吸附对齐节点
     description: |

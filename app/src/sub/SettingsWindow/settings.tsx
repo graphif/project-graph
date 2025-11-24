@@ -276,6 +276,7 @@ const categories = {
       "autoLayoutWhenTreeGenerate",
       "enableBackslashGenerateNodeInInput",
       "textNodeAutoFormatTreeWhenExitEdit",
+      "treeGenerateCameraBehavior",
     ],
     gamepad: ["gamepadDeadzone"],
   },

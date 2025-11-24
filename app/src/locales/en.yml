@@ -453,6 +453,14 @@ settings:
     title: Auto Format Tree Structure When Exiting Edit Mode
     description: |
       Automatically formats the tree structure when a text node exits edit mode.
+  treeGenerateCameraBehavior:
+    title: Camera Behavior After Tree Node Generation
+    description: |
+      Set the camera behavior after creating new nodes using tree depth or breadth generation functions.
+    options:
+      none: Camera Remains Stationary
+      moveToNewNode: Move Camera to New Node
+      resetToTree: Reset View to Cover Entire Tree Structure
   enableDragAutoAlign:
     title: Enable Automatic Alignment When Dragging Nodes
     description: |

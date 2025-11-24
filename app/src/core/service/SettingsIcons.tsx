@@ -164,4 +164,5 @@ export const settingsIcons = {
   historyManagerMode: Undo,
   soundPitchVariationRange: ListMusic,
   textNodeAutoFormatTreeWhenExitEdit: ListTree,
+  treeGenerateCameraBehavior: Fullscreen,
 };

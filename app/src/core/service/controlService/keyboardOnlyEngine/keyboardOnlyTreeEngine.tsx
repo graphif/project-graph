@@ -231,8 +231,28 @@ export class KeyboardOnlyTreeEngine {
       },
       (1000 / 60) * 6,
     );
-    // 重置视野
-    this.project.camera.bombMove(newNode.collisionBox.getRectangle().center, 5);
+    // 根据设置决定镜头行为
+    switch (Settings.treeGenerateCameraBehavior) {
+      case "none":
+        // 镜头不动
+        break;
+      case "moveToNewNode":
+        // 镜头移动向新创建的节点
+        this.project.camera.bombMove(newNode.collisionBox.getRectangle().center, 5);
+        break;
+      case "resetToTree":
+        // 重置视野，使视野覆盖当前树形结构的外接矩形
+        if (rootNodeParents.length === 1) {
+          const rootNodeParent = rootNodeParents[0];
+          const allNodes = this.project.graphMethods.getSuccessorSet(rootNodeParent, true);
+          const treeBoundingRect = Rectangle.getBoundingRectangle(
+            allNodes.map((node) => node.collisionBox.getRectangle()),
+            10, // 添加一些 padding
+          );
+          this.project.camera.resetByRectangle(treeBoundingRect);
+        }
+        break;
+    }
   }
 
   /**
@@ -331,8 +351,28 @@ export class KeyboardOnlyTreeEngine {
       },
       (1000 / 60) * 6,
     );
-    // 重置视野
-    this.project.camera.bombMove(newNode.collisionBox.getRectangle().center, 5);
+    // 根据设置决定镜头行为
+    switch (Settings.treeGenerateCameraBehavior) {
+      case "none":
+        // 镜头不动
+        break;
+      case "moveToNewNode":
+        // 镜头移动向新创建的节点
+        this.project.camera.bombMove(newNode.collisionBox.getRectangle().center, 5);
+        break;
+      case "resetToTree":
+        // 重置视野，使视野覆盖当前树形结构的外接矩形
+        if (rootNodeParents.length === 1) {
+          const rootNodeParent = rootNodeParents[0];
+          const allNodes = this.project.graphMethods.getSuccessorSet(rootNodeParent, true);
+          const treeBoundingRect = Rectangle.getBoundingRectangle(
+            allNodes.map((node) => node.collisionBox.getRectangle()),
+            10, // 添加一些 padding
+          );
+          this.project.camera.resetByRectangle(treeBoundingRect);
+        }
+        break;
+    }
   }
 
   /**

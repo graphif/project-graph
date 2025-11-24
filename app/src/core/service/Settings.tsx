@@ -128,6 +128,9 @@ export const settingsSchema = z.object({
   allowAddCycleEdge: z.boolean().default(false),
   autoLayoutWhenTreeGenerate: z.boolean().default(true),
   textNodeAutoFormatTreeWhenExitEdit: z.boolean().default(false),
+  treeGenerateCameraBehavior: z
+    .union([z.literal("none"), z.literal("moveToNewNode"), z.literal("resetToTree")])
+    .default("moveToNewNode"),
   enableBackslashGenerateNodeInInput: z.boolean().default(false),
   gamepadDeadzone: z.number().min(0).max(1).default(0.1),
   showGrid: z.boolean().default(true),
