@@ -13,7 +13,7 @@ import {
 
 import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project } from "@/core/Project";
-import { activeProjectAtom, isClassroomModeAtom, projectsAtom, store } from "@/state";
+import { activeProjectAtom, isClassroomModeAtom, isDevAtom, projectsAtom, store } from "@/state";
 import AIWindow from "@/sub/AIWindow";
 import AttachmentsWindow from "@/sub/AttachmentsWindow";
 import LogicNodePanel from "@/sub/AutoComputeWindow";
@@ -147,7 +147,7 @@ export function GlobalMenu() {
   const [recentFiles, setRecentFiles] = useState<RecentFileManager.RecentFile[]>([]);
   const [version, setVersion] = useState<string>("");
   const [isUnstableVersion, setIsUnstableVersion] = useState(false);
-  const [isDev, setIsDev] = useState(false);
+  const [isDev, setIsDev] = useAtom(isDevAtom);
   const { t } = useTranslation("globalMenu");
 
   useEffect(() => {

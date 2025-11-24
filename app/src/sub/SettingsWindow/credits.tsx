@@ -3,6 +3,8 @@ import { cn } from "@/utils/cn";
 import { open } from "@tauri-apps/plugin-shell";
 import { Calendar, ExternalLink, Heart, Server, User } from "lucide-react";
 import "./assets/font.css";
+import { isDevAtom } from "@/state";
+import { useAtom } from "jotai";
 
 interface DonationData {
   user: string;
@@ -180,8 +182,9 @@ const donations: DonationData[] = [
  */
 export default function CreditsTab() {
   const totalAmount = donations.reduce((sum, donation) => sum + donation.amount, 0);
+  const [isDev] = useAtom(isDevAtom);
 
-  // 计算从2024年9月1日到现在的月数
+  // 计算从2024年9月1日到现在的天数
   const startDate = new Date(2024, 8, 1);
   const currentDate = new Date();
   const monthsDiff =
@@ -190,40 +193,58 @@ export default function CreditsTab() {
     (currentDate.getDate() >= startDate.getDate() ? 0 : -1);
   const actualMonths = Math.max(monthsDiff + 1, 1); // 至少为1个月
   const averageMonthlyAmount = totalAmount / actualMonths;
+  const diffTime = currentDate.getTime() - startDate.getTime();
+  const daysDiff = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const actualDays = Math.max(daysDiff + 1, 1); // 至少为1天
 
   return (
     <div className="mx-auto flex w-2/3 flex-col overflow-auto py-4">
       <div className="mb-4 flex gap-4">
-        <div className="bg-muted/50 flex flex-1 flex-col gap-2 rounded-lg border p-4">
-          <div className="flex items-center justify-center gap-2">
-            <Heart className="h-5 w-5" />
-            <span className="text-lg">合计</span>
-          </div>
-          <div
-            className={cn(
-              "flex items-end justify-center gap-2 text-center *:font-[DINPro]",
-              totalAmount < 0 ? "text-red-500" : "text-green-500",
-            )}
-          >
-            <span className="text-3xl">{totalAmount.toFixed(2)}</span>
-            <span className="text-xl">CNY</span>
-          </div>
-        </div>
-        <div className="bg-muted/50 flex flex-1 flex-col gap-2 rounded-lg border p-4">
-          <div className="flex items-center justify-center gap-2">
-            <Calendar className="h-5 w-5" />
-            <span className="text-lg">平均每月</span>
-          </div>
-          <div
-            className={cn(
-              "flex items-end justify-center gap-2 text-center *:font-[DINPro]",
-              averageMonthlyAmount < 0 ? "text-red-500" : "text-green-500",
-            )}
-          >
-            <span className="text-3xl">{averageMonthlyAmount.toFixed(2)}</span>
-            <span className="text-xl">CNY</span>
-          </div>
-        </div>
+        {!isDev ? (
+          <>
+            <div className="bg-muted/50 flex flex-1 flex-col gap-2 rounded-lg border p-4">
+              <div className="flex items-center justify-center gap-2">
+                <Heart className="h-5 w-5" />
+                <span className="text-lg">合计</span>
+              </div>
+              <div
+                className={cn(
+                  "flex items-end justify-center gap-2 text-center *:font-[DINPro]",
+                  totalAmount < 0 ? "text-red-500" : "text-green-500",
+                )}
+              >
+                <span className="text-3xl">{totalAmount.toFixed(2)}</span>
+                <span className="text-xl">CNY</span>
+              </div>
+            </div>
+            <div className="bg-muted/50 flex flex-1 flex-col gap-2 rounded-lg border p-4">
+              <div className="flex items-center justify-center gap-2">
+                <Calendar className="h-5 w-5" />
+                <span className="text-lg">平均每月</span>
+              </div>
+              <div
+                className={cn(
+                  "flex items-end justify-center gap-2 text-center *:font-[DINPro]",
+                  averageMonthlyAmount < 0 ? "text-red-500" : "text-green-500",
+                )}
+              >
+                <span className="text-3xl">{averageMonthlyAmount.toFixed(2)}</span>
+                <span className="text-xl">CNY</span>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="bg-muted/50 flex flex-1 flex-col items-center gap-2 rounded-lg border p-4 text-sm">
+              <p className="text-center">在过去的{actualDays}个日夜中，是屏幕前您的认可与支持，给了我们最温暖的鼓励</p>
+              <div className="flex flex-nowrap items-center justify-center gap-1">
+                <Heart className="size-4" />
+                <span className="text-sm">谨以此墙，致敬所有同行者</span>
+              </div>
+            </div>
+          </>
+        )}
+
         <Popover.Confirm
           title="提示"
           description="此列表并不是实时更新的，开发者将在您捐赠后的下一个版本中手动更新此列表，当您选择要捐赠时，请在开头添加备注“pg”，以便开发者能区分您的捐赠的项目是project-graph。"
