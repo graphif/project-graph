@@ -887,6 +887,7 @@ export const allKeyBinds: KeyBindItem[] = [
       for (const entity of entities) {
         project!.keyboardOnlyTreeEngine.adjustTreeNode(entity);
       }
+      project?.controller.pressingKeySet.clear(); // 解决 mac 按下后容易卡键
     },
   },
   {
