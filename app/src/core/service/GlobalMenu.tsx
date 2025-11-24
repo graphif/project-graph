@@ -113,6 +113,7 @@ import {
   View,
   Workflow,
   Link,
+  OctagonX,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -655,6 +656,16 @@ export function GlobalMenu() {
           >
             <MapPin />
             自定义视野位置
+          </Item>
+          <Item
+            onClick={() => {
+              if (!activeProject) return;
+              activeProject.camera.clearMoveCommander();
+              activeProject.camera.speed = Vector.getZero();
+            }}
+          >
+            <OctagonX />
+            停止漂移
           </Item>
         </Content>
       </Menu>
