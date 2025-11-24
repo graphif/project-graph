@@ -25,6 +25,7 @@ import { DateChecker } from "@/utils/dateChecker";
 import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
 import { ReferenceManager } from "@/core/stage/stageManager/concreteMethods/StageReferenceManager";
 import _ from "lodash";
+import { Settings } from "@/core/service/Settings";
 
 /**
  * 这里是专门存放代码相同的地方
@@ -119,6 +120,11 @@ export class ControllerUtils {
         // 实验
         this.finishChangeTextNode(clickedNode);
         await this.autoChangeTextNodeToReferenceBlock(this.project, clickedNode);
+        // 文本节点退出编辑模式后，检查是否需要自动格式化树形结构
+        if (Settings.textNodeAutoFormatTreeWhenExitEdit) {
+          // 格式化树形结构
+          this.project.keyboardOnlyTreeEngine.adjustTreeNode(clickedNode, false);
+        }
       });
   }
 

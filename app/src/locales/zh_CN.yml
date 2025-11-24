@@ -554,6 +554,10 @@ settings:
     title: 当在编辑模式下文本节点无内容时按Backspace键自动删除整个节点
     description: |
       开启后，在编辑文本节点且内容为空时，按下Backspace键会自动删除整个节点
+  textNodeAutoFormatTreeWhenExitEdit:
+    title: 退出编辑模式时自动格式化树形结构
+    description: |
+      当文本节点退出编辑模式时，自动对其所在的树形结构进行格式化布局
   enableDragAutoAlign:
     title: 鼠标拖动自动吸附对齐节点
     description: |

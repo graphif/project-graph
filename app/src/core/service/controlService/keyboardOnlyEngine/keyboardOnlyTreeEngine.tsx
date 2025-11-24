@@ -339,7 +339,7 @@ export class KeyboardOnlyTreeEngine {
    * 根据某个已经选中的节点，调整其所在树的结构
    * @param entity
    */
-  adjustTreeNode(entity: ConnectableEntity) {
+  adjustTreeNode(entity: ConnectableEntity, withEffect = true) {
     const rootNodeParents = this.project.graphMethods.getRoots(entity);
     const rootNode = rootNodeParents[0];
     this.project.autoAlign.autoLayoutSelectedFastTreeMode(rootNode);
@@ -352,18 +352,26 @@ export class KeyboardOnlyTreeEngine {
     );
     const rootNodeRect = rootNode.collisionBox.getRectangle();
 
-    // 使用成功阴影颜色作为闪烁特效颜色
-    const flashColor = this.project.stageStyleManager.currentStyle.effects.successShadow;
+    if (withEffect) {
+      // 使用成功阴影颜色作为闪烁特效颜色
+      const flashColor = this.project.stageStyleManager.currentStyle.effects.successShadow;
 
-    // 为树的外接矩形添加闪烁特效
-    this.project.effects.addEffect(
-      new RectangleRenderEffect(new ProgressNumber(0, 60), treeBoundingRect, flashColor.toTransparent(), flashColor, 3),
-    );
+      // 为树的外接矩形添加闪烁特效
+      this.project.effects.addEffect(
+        new RectangleRenderEffect(
+          new ProgressNumber(0, 60),
+          treeBoundingRect,
+          flashColor.toTransparent(),
+          flashColor,
+          3,
+        ),
+      );
 
-    // 为根节点添加闪烁特效
-    this.project.effects.addEffect(
-      new RectangleRenderEffect(new ProgressNumber(0, 60), rootNodeRect, flashColor.toTransparent(), flashColor, 4),
-    );
+      // 为根节点添加闪烁特效
+      this.project.effects.addEffect(
+        new RectangleRenderEffect(new ProgressNumber(0, 60), rootNodeRect, flashColor.toTransparent(), flashColor, 4),
+      );
+    }
 
     // 恢复选择状态
     rootNode.isSelected = false;

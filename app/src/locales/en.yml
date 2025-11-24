@@ -449,6 +449,10 @@ settings:
     title: Delete Text Node When Backspace Pressed on Empty Content
     description: |
       When enabled, pressing the Backspace key on an empty text node in edit mode will delete the entire node.
+  textNodeAutoFormatTreeWhenExitEdit:
+    title: Auto Format Tree Structure When Exiting Edit Mode
+    description: |
+      Automatically formats the tree structure when a text node exits edit mode.
   enableDragAutoAlign:
     title: Enable Automatic Alignment When Dragging Nodes
     description: |

@@ -163,4 +163,5 @@ export const settingsIcons = {
   clearHistoryWhenManualSave: Undo,
   historyManagerMode: Undo,
   soundPitchVariationRange: ListMusic,
+  textNodeAutoFormatTreeWhenExitEdit: ListTree,
 };

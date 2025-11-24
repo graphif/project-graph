@@ -272,7 +272,11 @@ const categories = {
       "textNodeBackspaceDeleteWhenEmpty",
     ],
     edge: ["allowAddCycleEdge", "autoAdjustLineEndpointsByMouseTrack", "enableRightClickConnect"],
-    generateNode: ["autoLayoutWhenTreeGenerate", "enableBackslashGenerateNodeInInput"],
+    generateNode: [
+      "autoLayoutWhenTreeGenerate",
+      "enableBackslashGenerateNodeInInput",
+      "textNodeAutoFormatTreeWhenExitEdit",
+    ],
     gamepad: ["gamepadDeadzone"],
   },
   performance: {
