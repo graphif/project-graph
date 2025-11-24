@@ -32,6 +32,7 @@ import { Suspense } from "react";
 import { toast } from "sonner";
 import { allSysInfo } from "tauri-plugin-system-info-api";
 import { URI } from "vscode-uri";
+import { ButtonGroup } from "./button-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
 import {
   Sidebar,
@@ -163,6 +164,11 @@ function ConfirmDialog({
   resolve: (value: boolean) => void;
 }) {
   const [open, setOpen] = React.useState(true);
+  const confirmButtonRef = React.useRef<HTMLButtonElement>(null);
+
+  React.useEffect(() => {
+    confirmButtonRef.current?.focus();
+  }, [confirmButtonRef]);
 
   return (
     <Dialog open={open}>
@@ -192,6 +198,7 @@ function ConfirmDialog({
                   SubWindow.close(winId!);
                 }, 500);
               }}
+              ref={confirmButtonRef}
             >
               确定
             </Button>
@@ -451,11 +458,13 @@ function FileDialog({
   winId,
   title,
   kind,
+  extensions,
   resolve,
 }: {
   winId?: string;
   title: string;
-  kind: "file" | "directory";
+  kind: "file" | "directory" | "save";
+  extensions?: string[];
   resolve: (value?: URI) => void;
 }) {
   const [open, setOpen] = React.useState(true);
@@ -470,6 +479,8 @@ function FileDialog({
   const fs = React.useMemo(() => new fileSystemProviders[currentUri.scheme](), [currentUri.scheme]);
   const [data, setData] = React.useState<DirEntry[]>([]);
   const scrollParentRef = React.useRef<HTMLTableElement>(null);
+  const [saveFileName, setSaveFileName] = React.useState<string>("");
+  const [saveFileExtension, setSaveFileExtension] = React.useState<string>(extensions ? extensions[0] : "");
 
   const virtualizer = useVirtualizer({
     count: data.length,
@@ -480,6 +491,7 @@ function FileDialog({
 
   React.useEffect(() => {
     (async () => {
+      setSaveFileName("");
       const entries = await fs.readDir(currentUri);
       // 排序：文件夹->文件->符号链接->隐藏的文件夹->隐藏的文件
       // 分别按照字母排序
@@ -501,6 +513,38 @@ function FileDialog({
     })();
   }, [currentUri]);
 
+  async function finishSave() {
+    const existingEntry = data.find((entry) => entry.name === `${saveFileName}.${saveFileExtension}`);
+    if (existingEntry) {
+      if (existingEntry.isDirectory) {
+        // 进入文件夹
+        setCurrentUri(
+          currentUri.with({
+            path: `${currentUri.path}${currentUri.path.endsWith("/") ? "" : "/"}${existingEntry.name}`,
+          }),
+        );
+        return;
+      }
+      // 覆盖提示
+      if (
+        !(await Dialog.confirm("文件已存在", `文件 ${saveFileName}.${saveFileExtension} 已存在，是否覆盖？`, {
+          destructive: true,
+        }))
+      ) {
+        return;
+      }
+    }
+    resolve(
+      currentUri.with({
+        path: `${currentUri.path}${currentUri.path.endsWith("/") ? "" : "/"}${saveFileName}.${saveFileExtension}`,
+      }),
+    );
+    setOpen(false);
+    setTimeout(() => {
+      SubWindow.close(winId!);
+    }, 500);
+  }
+
   return (
     <Dialog open={open}>
       <DialogContent showCloseButton={false} className="max-w-full! h-2/3 w-1/2">
@@ -509,6 +553,36 @@ function FileDialog({
             {kind === "file" ? <File /> : <Folder />}
             {title}
             <div className="grow" />
+            {kind === "save" && (
+              <ButtonGroup>
+                <Input
+                  className="w-72"
+                  placeholder="文件名"
+                  value={saveFileName}
+                  onChange={(e) => setSaveFileName(e.target.value)}
+                  autoFocus
+                  onKeyUp={(e) => {
+                    if (e.key === "Enter" && saveFileName) {
+                      finishSave();
+                    }
+                  }}
+                />
+                {extensions && (
+                  <Select value={saveFileExtension} onValueChange={(ext) => setSaveFileExtension(ext)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {extensions.map((ext) => (
+                        <SelectItem key={ext} value={ext} onSelect={() => setSaveFileExtension(ext)}>
+                          .{ext}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </ButtonGroup>
+            )}
             <Button
               variant="outline"
               onClick={() => {
@@ -534,6 +608,12 @@ function FileDialog({
               >
                 <Check />
                 选择当前目录
+              </Button>
+            )}
+            {kind === "save" && (
+              <Button disabled={!saveFileName} onClick={finishSave}>
+                <Check />
+                保存
               </Button>
             )}
           </DialogTitle>
@@ -599,40 +679,42 @@ function FileDialog({
               >
                 <ArrowUp />
               </Button>
-              <Select value={currentUri.scheme} onValueChange={(scheme) => setCurrentUri(URI.from({ scheme }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(fileSystemProviders).map((scheme) => (
-                    <SelectItem key={scheme} value={scheme}>
-                      {scheme}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                className="grow"
-                value={currentUri.toString().replace(`${currentUri.scheme}://`, "")}
-                readOnly
-                onClick={async () => {
-                  const value = await Dialog.input("手动设置 URI", "请输入 URI 中除去协议的部分，或完整的 URI", {
-                    defaultValue: currentUri.toString().replace(/^[a-z]+:\/*/g, ""),
-                  });
-                  if (!value) return;
-                  let newUri: URI;
-                  if (value.match(/^[a-z]+:\/*/)) {
-                    newUri = URI.parse(value);
-                  } else {
-                    let path = value;
-                    if (!path.startsWith("/")) {
-                      path = "/" + path;
+              <ButtonGroup className="grow">
+                <Select value={currentUri.scheme} onValueChange={(scheme) => setCurrentUri(URI.from({ scheme }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(fileSystemProviders).map((scheme) => (
+                      <SelectItem key={scheme} value={scheme}>
+                        {scheme}:
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  className="grow"
+                  value={currentUri.toString().replace(`${currentUri.scheme}://`, "")}
+                  readOnly
+                  onClick={async () => {
+                    const value = await Dialog.input("手动设置 URI", "请输入 URI 中除去协议的部分，或完整的 URI", {
+                      defaultValue: currentUri.toString().replace(/^[a-z]+:\/*/g, ""),
+                    });
+                    if (!value) return;
+                    let newUri: URI;
+                    if (value.match(/^[a-z]+:\/*/)) {
+                      newUri = URI.parse(value);
+                    } else {
+                      let path = value;
+                      if (!path.startsWith("/")) {
+                        path = "/" + path;
+                      }
+                      newUri = currentUri.with({ path });
                     }
-                    newUri = currentUri.with({ path });
-                  }
-                  setCurrentUri(newUri);
-                }}
-              />
+                    setCurrentUri(newUri);
+                  }}
+                />
+              </ButtonGroup>
             </div>
             <Table ref={scrollParentRef}>
               <TableHeader>
@@ -671,19 +753,24 @@ function FileDialog({
                             }),
                           );
                         }
-                        if (data[virtualRow.index].isFile && kind === "file") {
-                          resolve(
-                            currentUri.with({
-                              path:
-                                currentUri.path +
-                                (currentUri.path.endsWith("/") ? "" : "/") +
-                                data[virtualRow.index].name,
-                            }),
-                          );
-                          setOpen(false);
-                          setTimeout(() => {
-                            SubWindow.close(winId!);
-                          }, 500);
+                        if (data[virtualRow.index].isFile) {
+                          if (kind === "file") {
+                            resolve(
+                              currentUri.with({
+                                path:
+                                  currentUri.path +
+                                  (currentUri.path.endsWith("/") ? "" : "/") +
+                                  data[virtualRow.index].name,
+                              }),
+                            );
+                            setOpen(false);
+                            setTimeout(() => {
+                              SubWindow.close(winId!);
+                            }, 500);
+                          }
+                          if (kind === "save") {
+                            setSaveFileName(data[virtualRow.index].name);
+                          }
                         }
                         if (data[virtualRow.index].isSymlink) {
                           toast.warning("由于技术限制，暂不支持读取符号链接");
@@ -709,7 +796,11 @@ function FileDialog({
     </Dialog>
   );
 }
-Dialog.file = async (title: string, kind: "file" | "directory"): Promise<URI | undefined> => {
+Dialog.file = async (
+  title: string,
+  kind: "file" | "directory" | "save",
+  extensions?: string[],
+): Promise<URI | undefined> => {
   return new Promise((resolve) => {
     SubWindow.create({
       titleBarOverlay: true,
@@ -717,7 +808,7 @@ Dialog.file = async (title: string, kind: "file" | "directory"): Promise<URI | u
       rect: new Rectangle(Vector.same(100), Vector.same(-1)),
       children: (
         <Suspense>
-          <FileDialog {...{ title, kind, resolve }} />
+          <FileDialog {...{ title, kind, extensions, resolve }} />
         </Suspense>
       ),
     });

@@ -1,7 +1,6 @@
-import { FileSystemProvider } from "@/core/fileSystemProvider";
+import { Dialog } from "@/components/ui/dialog";
+import { FileSystemProvider, fileSystemProviders } from "@/core/fileSystemProvider";
 import { encode } from "@msgpack/msgpack";
-import { save } from "@tauri-apps/plugin-dialog";
-import { writeFile } from "@tauri-apps/plugin-fs";
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
 import { URI } from "vscode-uri";
 
@@ -22,15 +21,12 @@ export class FileSystemProviderDraft implements FileSystemProvider {
   }
   async write(_uri: URI, content: Uint8Array) {
     // 先弹窗让用户选择路径
-    const path = await save({
-      title: "保存草稿",
-      filters: [{ name: "Project Graph", extensions: ["prg"] }],
-    });
-    if (!path) {
+    const newUri = await Dialog.file("保存文件", "save", ["prg"]);
+    if (!newUri) {
       throw new Error("未选择路径");
     }
-    const newUri = URI.file(path);
-    await writeFile(newUri.fsPath, content);
+    const fs = new fileSystemProviders[newUri.scheme]();
+    await fs.write(newUri, content);
     return newUri;
   }
   async remove() {}

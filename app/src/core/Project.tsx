@@ -112,7 +112,7 @@ export class Project extends EventEmitter<{
     this.pixi.ticker.minFPS = Settings.minFps;
     // 注册文件系统
     for (const scheme in fileSystemProviders) {
-      this.fileSystemProviders.set(scheme, new fileSystemProviders[scheme](this));
+      this.fileSystemProviders.set(scheme, new fileSystemProviders[scheme]());
     }
     if (!this.fs) {
       throw new Error(`[Project] 未注册 ${this.uri.scheme} 协议的文件系统提供器`);
@@ -367,12 +367,6 @@ export enum ProjectState {
    * 已上传到云端
    */
   Saved,
-  /**
-   * "已暂存"
-   * 未写入到原始文件中，但是已经暂存到数据目录
-   * 未上传到云端，但是已经暂存到本地
-   */
-  Stashed,
   /**
    * "未保存"
    * 未写入到原始文件中，也未暂存到数据目录（真·未保存）
