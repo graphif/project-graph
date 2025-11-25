@@ -334,4 +334,17 @@ export namespace PathString {
     }
     return result;
   }
+
+  /**
+   * 对文件名进行安全处理，防止文件名中包含特殊字符
+   * @param fileName
+   */
+  export function fileNameSafity(fileName: string) {
+    const dangerousChars = "\n .<>{}[]*&^%$#@?+=`'\"|!~/\\";
+    for (const char of dangerousChars) {
+      fileName = fileName.replaceAll(char, "_");
+    }
+    fileName = getShortedFileName(fileName, 20);
+    return fileName;
+  }
 }

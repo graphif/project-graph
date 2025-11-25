@@ -67,8 +67,12 @@ export class AutoSaveBackupService {
       if (currentHash === this.lastBackupHash) {
         return;
       }
-      const backupDir = await join(await appCacheDir(), "auto-backup-v2");
-      this.backupCurrentProject(backupDir);
+      const backupDir = await join(
+        await appCacheDir(),
+        "auto-backup-v2",
+        PathString.fileNameSafity(this.getOriginalFileName()),
+      );
+      await this.backupCurrentProject(backupDir);
 
       // 更新上次备份的哈希值
       this.lastBackupHash = currentHash;
