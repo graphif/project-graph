@@ -409,6 +409,10 @@ settings:
     title: 自动备份最大数量
     description: |
       自动备份的最大数量，超过此数量将会删除旧的备份文件
+  autoBackupCustomPath:
+    title: 自定义自动备份路径
+    description: |
+      设置自动备份文件的保存路径，如果为空则使用默认路径
   scaleExponent:
     title: 视角缩放速度
     description: |

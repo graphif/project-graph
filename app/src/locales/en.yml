@@ -642,7 +642,10 @@ settings:
   autoBackupLimitCount:
     title: Max Auto Backup Count
     description: "The maximum number of auto-backups, beyond which old backup files
-      will be deleted.\n"
+      will be deleted."
+  autoBackupCustomPath:
+    title: Custom Auto Backup Path
+    description: "Set the save path for auto backup files, use default path if empty."
   showTextNodeBorder:
     title: Show Text Node Border
     description: "Controls whether to show the text node border or not.\n"

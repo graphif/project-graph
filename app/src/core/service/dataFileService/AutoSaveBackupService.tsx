@@ -67,11 +67,47 @@ export class AutoSaveBackupService {
       if (currentHash === this.lastBackupHash) {
         return;
       }
-      const backupDir = await join(
-        await appCacheDir(),
-        "auto-backup-v2",
-        PathString.fileNameSafity(this.getOriginalFileName()),
-      );
+
+      // 确定备份目录路径
+      let backupDir;
+
+      // 检查是否设置了自定义备份路径
+      if (Settings.autoBackupCustomPath) {
+        try {
+          // 使用自定义备份路径，为每个项目创建子目录
+          backupDir = await join(Settings.autoBackupCustomPath, PathString.fileNameSafity(this.getOriginalFileName()));
+          if (!(await exists(backupDir))) {
+            try {
+              await mkdir(backupDir, { recursive: true });
+            } catch (err) {
+              // 创建失败，显示错误提示并使用默认路径
+              toast.error(`无法在自定义路径创建备份目录: ${err}`);
+              // 重置为使用默认路径
+              backupDir = await join(
+                await appCacheDir(),
+                "auto-backup-v2",
+                PathString.fileNameSafity(this.getOriginalFileName()),
+              );
+            }
+          }
+        } catch (err) {
+          // 使用自定义路径出错，回退到默认路径
+          toast.error(`使用自定义备份路径出错: ${err}`);
+          backupDir = await join(
+            await appCacheDir(),
+            "auto-backup-v2",
+            PathString.fileNameSafity(this.getOriginalFileName()),
+          );
+        }
+      } else {
+        // 使用默认备份路径
+        backupDir = await join(
+          await appCacheDir(),
+          "auto-backup-v2",
+          PathString.fileNameSafity(this.getOriginalFileName()),
+        );
+      }
+
       await this.backupCurrentProject(backupDir);
 
       // 更新上次备份的哈希值

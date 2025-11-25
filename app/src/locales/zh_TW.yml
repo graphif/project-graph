@@ -533,7 +533,10 @@ settings:
       cover: 半透明覆蓋框體（最佳效果）
   autoBackupLimitCount:
     title: 自動備份最大數量
-    description: "自動備份的最大數量，超過此數量將會刪除舊的備份文件\n"
+    description: "自動備份的最大數量，超過此數量將會刪除舊的備份文件"
+  autoBackupCustomPath:
+    title: 自訂自動備份路徑
+    description: "設定自動備份文件的儲存路徑，如果為空則使用預設路徑"
   compressPastedImages:
     title: 是否壓縮要貼到舞台的圖片
     description: "開啟後，要貼到舞台的圖片會被壓縮，以解省加載文件時的記憶體壓力和硬碟壓力\n"

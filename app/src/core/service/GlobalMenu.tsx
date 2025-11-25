@@ -296,12 +296,24 @@ export function GlobalMenu() {
           </Item>
           <Item
             onClick={async () => {
+              if (Settings.autoBackupCustomPath && Settings.autoBackupCustomPath.trim()) {
+                await shellOpen(Settings.autoBackupCustomPath.trim());
+              } else {
+                toast.error("未设置自定义备份路径");
+              }
+            }}
+          >
+            <FolderClock />
+            打开自定义备份文件夹
+          </Item>
+          <Item
+            onClick={async () => {
               const path = await appCacheDir();
               await shellOpen(path);
             }}
           >
             <FolderClock />
-            打开备份文件夹
+            打开默认备份文件夹
           </Item>
           <Separator />
           <Sub>
