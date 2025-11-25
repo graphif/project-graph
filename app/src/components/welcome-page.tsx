@@ -4,15 +4,7 @@ import { Path } from "@/utils/path";
 import { getVersion } from "@tauri-apps/api/app";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import { writeFile } from "@tauri-apps/plugin-fs";
-import {
-  Earth,
-  FilePlus,
-  FolderOpen,
-  Info,
-  PersonStanding,
-  Settings as SettingsIcon,
-  TableProperties,
-} from "lucide-react";
+import { Earth, FilePlus, FolderOpen, Info, Map, Settings as SettingsIcon, TableProperties } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import SettingsWindow from "../sub/SettingsWindow";
@@ -28,6 +20,7 @@ export default function WelcomePage() {
   const [recentFiles, setRecentFiles] = useState<RecentFileManager.RecentFile[]>([]);
   const { t } = useTranslation("welcome");
   const [appVersion, setAppVersion] = useState("unknown");
+  const [isDownloadingGuideFile, setIsDownloadingGuideFile] = useState(false);
 
   useEffect(() => {
     refresh();
@@ -61,21 +54,35 @@ export default function WelcomePage() {
             <div className="grid grid-cols-2 grid-rows-2 *:flex *:w-max *:cursor-pointer *:items-center *:gap-2 *:hover:opacity-75 *:active:scale-90 sm:gap-2 sm:gap-x-4">
               <div
                 onClick={() => {
+                  if (isDownloadingGuideFile) {
+                    return;
+                  }
+                  setIsDownloadingGuideFile(true);
                   toast.promise(
                     async () => {
                       const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-2.0.prg");
                       const dir = await tempDir();
                       const path = await join(dir, `tutorial-${crypto.randomUUID()}.prg`);
                       await writeFile(path, u8a);
-                      await onOpenFile(URI.file(path), "新手引导");
+                      await onOpenFile(URI.file(path), "功能说明书");
                     },
                     {
-                      loading: "正在下载新手引导文件",
+                      loading: "正在下载功能说明书",
+                      error: (err) => {
+                        console.error("下载功能说明书失败:", err);
+                        return (
+                          `下载功能说明书失败，可以尝试访问${AssetsRepository.getGuideFileUrl("tutorials/tutorial-2.0.prg")}，请确保您能访问github。` +
+                          err
+                        );
+                      },
+                      finally: () => {
+                        setIsDownloadingGuideFile(false);
+                      },
                     },
                   );
                 }}
               >
-                <PersonStanding />
+                <Map className={cn(isDownloadingGuideFile && "animate-spin")} />
                 <span className="hidden sm:inline">{t("newUserGuide")}</span>
               </div>
               <div onClick={onNewDraft}>

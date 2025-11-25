@@ -89,7 +89,7 @@ import {
   Network,
   Palette,
   Paperclip,
-  PersonStanding,
+  Map,
   PictureInPicture2,
   Plus,
   Rabbit,
@@ -1166,15 +1166,15 @@ export function GlobalMenu() {
                   const dir = await tempDir();
                   const path = await join(dir, `tutorial-${crypto.randomUUID()}.prg`);
                   await writeFile(path, u8a);
-                  await onOpenFile(URI.file(path), "新手引导");
+                  await onOpenFile(URI.file(path), "功能说明书");
                 },
                 {
-                  loading: "正在下载新手引导文件",
+                  loading: "正在下载功能说明书文件",
                 },
               );
             }}
           >
-            <PersonStanding />
+            <Map />
             {t("about.guide")}
           </Item>
           <Sub>

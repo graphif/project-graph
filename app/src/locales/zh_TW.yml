@@ -5,7 +5,7 @@ welcome:
   github: GitHub
   bilibili: 嗶哩嗶哩
   openRecentFiles: 打开最近的文件
-  newUserGuide: 新手引导
+  newUserGuide: 功能说明书
   qq: QQ 群組
 
 about:
@@ -1231,7 +1231,7 @@ globalMenu:
     classroomModeHint: 左上角菜单按钮仅仅是透明了，并没有消失
   about:
     title: 关于
-    guide: 新手引导
+    guide: 功能说明书
   unstable:
     title: 测试版
     notRelease: 此版本并非正式版

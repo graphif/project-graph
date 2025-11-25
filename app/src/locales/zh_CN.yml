@@ -3,7 +3,7 @@ welcome:
   newDraft: 新建草稿
   openFile: 打开文件
   openRecentFiles: 打开最近
-  newUserGuide: 新手引导
+  newUserGuide: 功能说明书
   settings: 设置
   about: 关于
   website: 官网
@@ -91,7 +91,7 @@ globalMenu:
     classroomModeHint: 左上角菜单按钮仅仅是透明了，并没有消失
   about:
     title: 关于
-    guide: 新手引导
+    guide: 功能说明书
   unstable:
     title: 测试版
     notRelease: 此版本并非正式版
@@ -166,7 +166,7 @@ settings:
     description: |
       开启后，屏幕上会有一行提示文本。
       如果您已经熟悉了软件，建议关闭此项以减少屏幕占用
-      更多更详细的提示还是建议看菜单栏中的“新手引导”或官网文档。
+      更多更详细的提示还是建议看菜单栏中的“功能说明书”或官网文档。
   isClassroomMode:
     title: 专注模式
     description: |
