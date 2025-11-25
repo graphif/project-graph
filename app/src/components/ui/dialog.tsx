@@ -189,7 +189,7 @@ Dialog.input = (
                 onChange={(e) => setValue(e.target.value)}
                 placeholder={placeholder}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  if (e.key === "Enter" && e.shiftKey) {
                     e.preventDefault();
                     e.stopPropagation();
                     resolve(value);
@@ -231,7 +231,7 @@ Dialog.input = (
                     }, 500);
                   }}
                 >
-                  确定（Enter）
+                  确定（Shift+Enter）
                 </Button>
               </DialogFooter>
             </DialogHeader>
