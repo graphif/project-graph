@@ -26,7 +26,7 @@ export class ControllerNodeConnectionClass extends ControllerClass {
   private _controlKeyEventRegistered = false;
 
   private onControlKeyDown = (event: KeyboardEvent) => {
-    if (isMac && event.key === "Control" && !this._isControlKeyDown) {
+    if (isMac && event.key === "Control" && !this._isControlKeyDown && Settings.macEnableControlToCut) {
       this._isControlKeyDown = true;
       // 模拟鼠标按下事件
       const fakeMouseEvent = new MouseEvent("mousedown", {
@@ -40,7 +40,7 @@ export class ControllerNodeConnectionClass extends ControllerClass {
   };
 
   private onControlKeyUp = (event: KeyboardEvent) => {
-    if (isMac && event.key === "Control" && this._isControlKeyDown) {
+    if (isMac && event.key === "Control" && this._isControlKeyDown && Settings.macEnableControlToCut) {
       this._isControlKeyDown = false;
       // 模拟鼠标松开事件
       const fakeMouseEvent = new MouseEvent("mouseup", {
