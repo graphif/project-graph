@@ -13,6 +13,7 @@ import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { Section } from "@/core/stage/stageObject/entity/Section";
+import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 
 /**
  * 贝塞尔曲线
@@ -67,14 +68,55 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
   public renderNormalState(edge: LineEdge): void {
     const start = edge.bodyLine.start;
     const end = edge.bodyLine.end;
-    const startDirection =
-      edge.source instanceof ConnectPoint
-        ? Vector.getZero()
-        : edge.source.collisionBox.getRectangle().getNormalVectorAt(start);
-    const endDirection =
-      edge.target instanceof ConnectPoint
-        ? Vector.getZero()
-        : edge.target.collisionBox.getRectangle().getNormalVectorAt(end);
+
+    // 计算连线方向
+    const lineDirection = end.subtract(start).normalize();
+
+    let startDirection: Vector;
+    let endDirection: Vector;
+
+    if (edge.source instanceof ConnectPoint) {
+      startDirection = Vector.getZero();
+    } else {
+      const sourceRect = edge.source.collisionBox.getRectangle();
+      // 检查是否是图片节点的精确位置（不在边缘上）
+      const isSourceExactPosition =
+        edge.source instanceof ImageNode &&
+        start.x !== sourceRect.left &&
+        start.x !== sourceRect.right &&
+        start.y !== sourceRect.top &&
+        start.y !== sourceRect.bottom;
+
+      if (isSourceExactPosition) {
+        // 对于图片节点的精确位置，使用连线方向作为法线向量
+        startDirection = lineDirection;
+      } else {
+        // 否则使用矩形边缘的法线向量
+        startDirection = sourceRect.getNormalVectorAt(start);
+      }
+    }
+
+    if (edge.target instanceof ConnectPoint) {
+      endDirection = Vector.getZero();
+    } else {
+      const targetRect = edge.target.collisionBox.getRectangle();
+      // 检查是否是图片节点的精确位置（不在边缘上）
+      const isTargetExactPosition =
+        edge.target instanceof ImageNode &&
+        end.x !== targetRect.left &&
+        end.x !== targetRect.right &&
+        end.y !== targetRect.top &&
+        end.y !== targetRect.bottom;
+
+      if (isTargetExactPosition) {
+        // 对于图片节点的精确位置，使用连线方向的反方向作为法线向量
+        endDirection = lineDirection.multiply(-1);
+      } else {
+        // 否则使用矩形边缘的法线向量
+        endDirection = targetRect.getNormalVectorAt(end);
+      }
+    }
+
     let edgeWidth = 2;
     if (edge.target instanceof Section && edge.source instanceof Section) {
       const rect1 = edge.source.collisionBox.getRectangle();
@@ -84,6 +126,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
         100,
       );
     }
+
     const curve = new SymmetryCurve(
       start,
       startDirection,
@@ -91,6 +134,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       endDirection,
       Math.max(50, Math.abs(Math.min(Math.abs(start.x - end.x), Math.abs(start.y - end.y))) / 2),
     );
+
     // 曲线模式先不屏蔽箭头，有点不美观，空出来一段距离
     this.renderArrowCurve(
       curve,
