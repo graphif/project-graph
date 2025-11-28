@@ -119,8 +119,8 @@ export class Renderer {
   // 渲染一切实体相关的要素
   private renderStageElementsWithoutReactions(viewRectangle: Rectangle) {
     this.project.entityRenderer.renderAllSectionsBackground(viewRectangle);
-    this.renderEdges(viewRectangle);
     this.renderEntities(viewRectangle);
+    this.renderEdges(viewRectangle); // 先渲染实体再渲染连线，因为连线要在图片上面
     this.project.entityRenderer.renderAllSectionsBigTitle(viewRectangle);
     this.renderTags();
     // debug

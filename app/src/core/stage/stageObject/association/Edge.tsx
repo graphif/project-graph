@@ -5,6 +5,7 @@ import { Vector } from "@graphif/data-structures";
 import { serializable } from "@graphif/serializer";
 import { Line, Rectangle } from "@graphif/shapes";
 import { ConnectPoint } from "../entity/ConnectPoint";
+import { ImageNode } from "../entity/ImageNode";
 
 /**
  * 连接两个实体的有向边
@@ -42,6 +43,7 @@ export abstract class Edge extends ConnectableAssociation {
   /**
    * 获取两个实体之间的直线
    * 此直线两端在两个实体外接矩形的边缘，延长后可过两个实体外接矩形的中心
+   * 但对于图片节点，如果rate是精确值（不是旧的默认值），则直接使用内部位置
    */
   get bodyLine(): Line {
     const sourceRectangle = this.source.collisionBox.getRectangle();
@@ -54,15 +56,34 @@ export abstract class Edge extends ConnectableAssociation {
     let startPoint: Vector;
     let endPoint: Vector;
 
+    // 检查是否是旧的默认值
+    const isOldDefaultRate = (rate: Vector): boolean => {
+      // 旧的默认值：中心、左、右、上、下
+      return (
+        (rate.x === 0.5 && rate.y === 0.5) || // 中心
+        (rate.x === 0.01 && rate.y === 0.5) || // 左
+        (rate.x === 0.99 && rate.y === 0.5) || // 右
+        (rate.x === 0.5 && rate.y === 0.01) || // 上
+        (rate.x === 0.5 && rate.y === 0.99) // 下
+      );
+    };
+
     if (this.source instanceof ConnectPoint) {
       startPoint = this.source.geometryCenter;
+    } else if (this.source instanceof ImageNode && !isOldDefaultRate(this.sourceRectangleRate)) {
+      // 对于图片节点，如果是精确值（不是旧的默认值），直接使用内部位置
+      startPoint = edgeCenterLine.start;
     } else {
-      // 这个函数性能损耗可能稍微高一点点，所以放在else里
+      // 否则渲染在外接矩形边缘上
       startPoint = sourceRectangle.getLineIntersectionPoint(edgeCenterLine);
     }
     if (this.target instanceof ConnectPoint) {
       endPoint = this.target.geometryCenter;
+    } else if (this.target instanceof ImageNode && !isOldDefaultRate(this.targetRectangleRate)) {
+      // 对于图片节点，如果是精确值（不是旧的默认值），直接使用内部位置
+      endPoint = edgeCenterLine.end;
     } else {
+      // 否则渲染在外接矩形边缘上
       endPoint = targetRectangle.getLineIntersectionPoint(edgeCenterLine);
     }
     return new Line(startPoint, endPoint);

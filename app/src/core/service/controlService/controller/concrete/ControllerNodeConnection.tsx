@@ -7,6 +7,7 @@ import { SoundService } from "@/core/service/feedbackService/SoundService";
 import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
+import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { CursorNameEnum } from "@/types/cursors";
 import { Direction } from "@/types/directions";
 import { isMac } from "@/utils/platform";
@@ -149,6 +150,11 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     }
   };
 
+  // 记录拖拽起始点在图片上的精确位置
+  private _startImageLocation: Map<string, Vector> = new Map();
+  // 记录拖拽结束点在图片上的精确位置
+  private _endImageLocation: Vector | null = null;
+
   private onMouseDown(event: MouseEvent) {
     const pressWorldLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
 
@@ -161,6 +167,17 @@ export class ControllerNodeConnectionClass extends ControllerClass {
       this.project.stageManager.findConnectableEntityByLocation(pressWorldLocation);
     if (clickedConnectableEntity === null) {
       return;
+    }
+
+    // 记录起始点在图片上的精确位置
+    if (clickedConnectableEntity instanceof ImageNode) {
+      const rect = clickedConnectableEntity.collisionBox.getRectangle();
+      // 计算鼠标在图片内部的相对位置 (0-1之间)
+      const relativeX = (pressWorldLocation.x - rect.location.x) / rect.size.x;
+      const relativeY = (pressWorldLocation.y - rect.location.y) / rect.size.y;
+      this._startImageLocation.set(clickedConnectableEntity.uuid, new Vector(relativeX, relativeY));
+    } else {
+      this._startImageLocation.clear();
     }
 
     // 右键点击了某个节点
@@ -285,6 +302,16 @@ export class ControllerNodeConnectionClass extends ControllerClass {
   private mouseUp(event: MouseEvent) {
     const releaseWorldLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
     const releaseTargetEntity = this.project.stageManager.findConnectableEntityByLocation(releaseWorldLocation);
+
+    // 记录结束点在图片上的精确位置
+    this._endImageLocation = null;
+    if (releaseTargetEntity && releaseTargetEntity instanceof ImageNode) {
+      const rect = releaseTargetEntity.collisionBox.getRectangle();
+      // 计算鼠标在图片内部的相对位置 (0-1之间)
+      const relativeX = (releaseWorldLocation.x - rect.location.x) / rect.size.x;
+      const relativeY = (releaseWorldLocation.y - rect.location.y) / rect.size.y;
+      this._endImageLocation = new Vector(relativeX, relativeY);
+    }
 
     // 根据轨迹判断方向
     let sourceDirection: Direction | null = null;
@@ -435,6 +462,8 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     this.connectFromEntities = [];
     this.connectToEntity = null;
     this._isUsing = false;
+    this._startImageLocation.clear();
+    this._endImageLocation = null;
   }
 
   private dragMultiConnect(
@@ -447,36 +476,57 @@ export class ControllerNodeConnectionClass extends ControllerClass {
 
     const isPressC = this.project.controller.pressingKeySet.has("c");
     let sourceRectRate: [number, number] = [0.5, 0.5];
-    switch (sourceDirection) {
-      case Direction.Left:
-        sourceRectRate = [0.01, 0.5];
-        break;
-      case Direction.Right:
-        sourceRectRate = [0.99, 0.5];
-        break;
-      case Direction.Up:
-        sourceRectRate = [0.5, 0.01];
-        break;
-      case Direction.Down:
-        sourceRectRate = [0.5, 0.99];
-        break;
+
+    // 如果是从图片节点发出，使用精确位置
+    if (this.connectFromEntities.length === 1) {
+      const fromEntity = this.connectFromEntities[0];
+      if (fromEntity instanceof ImageNode) {
+        const startPos = this._startImageLocation.get(fromEntity.uuid);
+        if (startPos) {
+          sourceRectRate = [startPos.x, startPos.y];
+        }
+      }
+    } else {
+      // 否则使用方向计算
+      switch (sourceDirection) {
+        case Direction.Left:
+          sourceRectRate = [0.01, 0.5];
+          break;
+        case Direction.Right:
+          sourceRectRate = [0.99, 0.5];
+          break;
+        case Direction.Up:
+          sourceRectRate = [0.5, 0.01];
+          break;
+        case Direction.Down:
+          sourceRectRate = [0.5, 0.99];
+          break;
+      }
     }
-    // 计算出源头位置
+
+    // 计算目标位置
     let targetRectRate: [number, number] = [0.5, 0.5];
-    switch (targetDirection) {
-      case Direction.Left:
-        targetRectRate = [0.01, 0.5];
-        break;
-      case Direction.Right:
-        targetRectRate = [0.99, 0.5];
-        break;
-      case Direction.Up:
-        targetRectRate = [0.5, 0.01];
-        break;
-      case Direction.Down:
-        targetRectRate = [0.5, 0.99];
-        break;
+    // 如果是连接到图片节点，使用精确位置
+    if (connectToEntity instanceof ImageNode && this._endImageLocation) {
+      targetRectRate = [this._endImageLocation.x, this._endImageLocation.y];
+    } else {
+      // 否则使用方向计算
+      switch (targetDirection) {
+        case Direction.Left:
+          targetRectRate = [0.01, 0.5];
+          break;
+        case Direction.Right:
+          targetRectRate = [0.99, 0.5];
+          break;
+        case Direction.Up:
+          targetRectRate = [0.5, 0.01];
+          break;
+        case Direction.Down:
+          targetRectRate = [0.5, 0.99];
+          break;
+      }
     }
+
     // 连线
     this.project.stageManager.connectMultipleEntities(
       this.connectFromEntities,
