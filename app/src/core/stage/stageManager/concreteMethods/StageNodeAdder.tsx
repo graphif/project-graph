@@ -11,6 +11,7 @@ import { MarkdownNode, parseMarkdownToJSON } from "@/utils/markdownParse";
 import { Color, MonoStack, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { DetailsManager } from "../../stageObject/tools/entityDetailsManager";
+import { LineEdge } from "../../stageObject/association/LineEdge";
 
 /**
  * 包含增加节点的方法
@@ -326,7 +327,13 @@ export class NodeAdder {
       if (nodeStack.peek()) {
         nodeStack.push(node, indent);
         const fatherNode = nodeStack.unsafeGet(nodeStack.length - 2);
-        this.project.nodeConnector.connectEntityFast(fatherNode, node);
+        // 创建从父节点右侧到子节点左侧的连线
+        const newEdge = new LineEdge(this.project, {
+          associationList: [fatherNode, node],
+          targetRectangleRate: new Vector(0.01, 0.5), // 目标节点左侧边缘
+          sourceRectangleRate: new Vector(0.99, 0.5), // 源节点右侧边缘
+        });
+        this.project.stageManager.add(newEdge);
       }
     }
   }
@@ -385,7 +392,14 @@ export class NodeAdder {
       monoStack.push(node, deepLevel);
       // 连接父节点
       const fatherNode = monoStack.unsafeGet(monoStack.length - 2);
-      this.project.stageManager.connectEntity(fatherNode, node);
+      // 创建从父节点右侧到子节点左侧的连线
+      const newEdge = new LineEdge(this.project, {
+        associationList: [fatherNode, node],
+        targetRectangleRate: new Vector(0.01, 0.5), // 目标节点左侧边缘
+        sourceRectangleRate: new Vector(0.99, 0.5), // 源节点右侧边缘
+      });
+      this.project.stageManager.add(newEdge);
+      this.project.stageManager.updateReferences();
     };
 
     dfsMarkdownNode(markdownJson[0], 0);
