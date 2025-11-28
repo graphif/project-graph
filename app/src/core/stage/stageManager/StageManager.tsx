@@ -386,6 +386,21 @@ export class StageManager {
   }
 
   /**
+   * 获取选中内容的边界矩形
+   * @returns
+   */
+  getBoundingBoxOfSelected(): Rectangle {
+    const selectedObjects = this.getSelectedStageObjects();
+    if (selectedObjects.length === 0) {
+      // 如果没有选中任何对象，返回一个默认的矩形
+      return new Rectangle(Vector.getZero(), new Vector(100, 100));
+    }
+
+    const rectangles = selectedObjects.map((obj) => obj.collisionBox.getRectangle());
+    return Rectangle.getBoundingRectangle(rectangles);
+  }
+
+  /**
    * 判断某一点是否有实体存在（排除实体的被Section折叠）
    * @param location
    * @returns

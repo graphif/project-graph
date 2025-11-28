@@ -5,6 +5,8 @@ import { RecentFileManager } from "../dataFileService/RecentFileManager";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { sleep } from "@/utils/sleep";
 import { Rectangle } from "@graphif/shapes";
+import { toast } from "sonner";
+import { Vector } from "@graphif/data-structures";
 
 /**
  * 从一个文件中生成截图
@@ -14,11 +16,15 @@ export namespace GenerateScreenshot {
    * 创建临时Canvas并渲染Project
    * @param project 项目实例
    * @param targetRect 目标矩形区域
+   * @param maxDimension 自定义最大边长度，默认为1920
    * @returns 截图的Blob对象
    */
-  async function renderProjectToBlob(project: Project, targetRect: Rectangle): Promise<Blob> {
-    // 计算缩放比例，确保最终截图宽高不超过1920
-    const maxDimension = 1920;
+  async function renderProjectToBlob(
+    project: Project,
+    targetRect: Rectangle,
+    maxDimension: number = 1920,
+  ): Promise<Blob> {
+    // 计算缩放比例，确保最终截图宽高不超过maxDimension
     let scaleFactor = 1;
     if (targetRect.width > maxDimension || targetRect.height > maxDimension) {
       const widthRatio = maxDimension / targetRect.width;
@@ -27,6 +33,9 @@ export namespace GenerateScreenshot {
     }
     project.camera.currentScale = scaleFactor;
     project.camera.targetScale = scaleFactor;
+
+    // 设置相机位置到目标矩形的中心
+    project.camera.location = targetRect.center;
 
     // 创建临时Canvas
     const tempCanvas = document.createElement("canvas");
@@ -87,9 +96,14 @@ export namespace GenerateScreenshot {
    * 根据文件名和Section框名生成截图
    * @param fileName 文件名
    * @param sectionName Section框名
+   * @param maxDimension 自定义最大边长度，默认为1920
    * @returns 截图的Blob对象
    */
-  export async function generateSection(fileName: string, sectionName: string): Promise<Blob | undefined> {
+  export async function generateSection(
+    fileName: string,
+    sectionName: string,
+    maxDimension: number = 1920,
+  ): Promise<Blob | undefined> {
     try {
       // 加载项目
       const recentFiles = await RecentFileManager.getRecentFiles();
@@ -114,7 +128,7 @@ export namespace GenerateScreenshot {
       project.camera.location = sectionRect.center;
 
       // 渲染并获取截图
-      const blob = await renderProjectToBlob(project, sectionRect);
+      const blob = await renderProjectToBlob(project, sectionRect, maxDimension);
 
       project.dispose();
       return blob;
@@ -127,9 +141,10 @@ export namespace GenerateScreenshot {
   /**
    * 生成整个文件内容的广视野截图
    * @param fileName 文件名
+   * @param maxDimension 自定义最大边长度，默认为1920
    * @returns 截图的Blob对象
    */
-  export async function generateFullView(fileName: string): Promise<Blob | undefined> {
+  export async function generateFullView(fileName: string, maxDimension: number = 1920): Promise<Blob | undefined> {
     try {
       // 加载项目
       const recentFiles = await RecentFileManager.getRecentFiles();
@@ -151,12 +166,53 @@ export namespace GenerateScreenshot {
       const fullRect = new Rectangle(stageCenter.subtract(stageSize.divide(2)), stageSize);
 
       // 渲染并获取截图
-      const blob = await renderProjectToBlob(project, fullRect);
+      const blob = await renderProjectToBlob(project, fullRect, maxDimension);
 
       project.dispose();
       return blob;
     } catch (error) {
       console.error("生成广视野截图失败", error);
+      return undefined;
+    }
+  }
+
+  /**
+   * 从当前活动项目生成截图
+   * @param project 当前活动项目
+   * @param targetRect 目标矩形区域
+   * @param maxDimension 自定义最大边长度，默认为1920
+   * @returns 截图的Blob对象
+   */
+  export async function generateFromActiveProject(
+    project: Project,
+    targetRect: Rectangle,
+    maxDimension: number = 1920,
+  ): Promise<Blob | undefined> {
+    try {
+      // 保存原始相机状态
+      const originalScale = project.camera.currentScale;
+      const originalTargetScale = project.camera.targetScale;
+      const originalLocation = project.camera.location.clone();
+
+      try {
+        // 添加40px的外边距留白
+        const margin = 40;
+        const expandedRect = new Rectangle(
+          targetRect.location.subtract(new Vector(margin, margin)),
+          targetRect.size.add(new Vector(margin * 2, margin * 2)),
+        );
+
+        // 渲染并获取截图
+        const blob = await renderProjectToBlob(project, expandedRect, maxDimension);
+        return blob;
+      } finally {
+        // 恢复原始相机状态
+        project.camera.currentScale = originalScale;
+        project.camera.targetScale = originalTargetScale;
+        project.camera.location = originalLocation;
+      }
+    } catch (error) {
+      toast.error("从当前活动项目生成截图失败" + JSON.stringify(error));
       return undefined;
     }
   }

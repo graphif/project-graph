@@ -18,6 +18,7 @@ import AIWindow from "@/sub/AIWindow";
 import AttachmentsWindow from "@/sub/AttachmentsWindow";
 import LogicNodePanel from "@/sub/AutoComputeWindow";
 import ExportPngWindow from "@/sub/ExportPngWindow";
+import NewExportPngWindow from "@/sub/NewExportPngWindow";
 import FindWindow from "@/sub/FindWindow";
 import GenerateNodeTree, {
   GenerateNodeGraph,
@@ -429,10 +430,32 @@ export function GlobalMenu() {
                   </Item>
                 </SubContent>
               </Sub>
-              <Item onClick={() => ExportPngWindow.open()}>
-                <FileImage />
-                PNG
-              </Item>
+              <Sub>
+                <SubTrigger>
+                  <FileImage />
+                  PNG
+                </SubTrigger>
+                <SubContent>
+                  <Item onClick={() => ExportPngWindow.open()}>
+                    <FileImage />
+                    PNG（旧版）
+                  </Item>
+                  <Item
+                    onClick={async () => {
+                      // 导出选中内容为PNG（新版）
+                      const selectedEntities = activeProject!.stageManager.getSelectedEntities();
+                      if (selectedEntities.length === 0) {
+                        toast.warning("没有选中任何内容");
+                        return;
+                      }
+                      NewExportPngWindow.open("selected");
+                    }}
+                  >
+                    <MousePointer2 />
+                    导出选中内容为PNG
+                  </Item>
+                </SubContent>
+              </Sub>
               {/*<Item>
                 <FileType />
                 Markdown
