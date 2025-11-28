@@ -1,4 +1,4 @@
-import { FileSystemProvider } from "@/core/fileSystemProvider";
+import { FileSystemProvider } from "@/core/fs";
 import { DirEntry } from "@tauri-apps/plugin-fs";
 import { fetch } from "@tauri-apps/plugin-http";
 import { toast } from "sonner";

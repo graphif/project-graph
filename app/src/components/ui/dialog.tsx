@@ -19,7 +19,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { fileSystemProviders } from "@/core/fileSystemProvider";
+import { fileSystemProviders } from "@/core/fs";
 import { SubWindow } from "@/core/service/SubWindow";
 import { cn } from "@/utils/cn";
 import { Vector } from "@graphif/data-structures";

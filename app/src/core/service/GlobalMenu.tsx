@@ -37,7 +37,7 @@ import { isTauri } from "@tauri-apps/api/core";
 import { appCacheDir, dataDir, join, tempDir } from "@tauri-apps/api/path";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { readFile, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import { useAtom } from "jotai";
 import {
@@ -107,6 +107,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
+import { fs } from "../fs";
 import { TextNode } from "../sprites/TextNode";
 import { ProjectUpgrader } from "../stage/ProjectUpgrader";
 import { AssetsRepository } from "./AssetsRepository";
@@ -1151,13 +1152,13 @@ export async function onOpenFile(uri?: URI, source: string = "unknown") {
     uri = URI.file(path);
   }
 
-  let upgraded: ReturnType<typeof ProjectUpgrader.convertVAnyToN1> extends Promise<infer T> ? T : never = {
+  let upgraded: Awaited<ReturnType<typeof ProjectUpgrader.convertVAnyToN1>> = {
     data: [],
     attachments: new Map(),
   };
 
   // 读取文件内容并判断格式
-  const fileData = await readFile(uri.fsPath);
+  const fileData = await fs.read(uri);
 
   // 检查是否是以 '{' 开头的 JSON 文件
   if (fileData[0] === 0x7b) {
@@ -1208,16 +1209,16 @@ export async function onOpenFile(uri?: URI, source: string = "unknown") {
   const loadServiceTime = performance.now() - t;
   await RecentFileManager.addRecentFileByUri(uri);
   await initProjectWithAllServices(project);
-  if (upgraded) {
+  if (upgraded.data.length > 0) {
     project.stage = deserialize(upgraded.data, project);
     project.attachments = upgraded.attachments;
   }
   const readFileTime = performance.now() - t;
   store.set(projectsAtom, [...store.get(projectsAtom), project]);
   store.set(activeProjectAtom, project);
-  setTimeout(() => {
-    project.camera.reset();
-  }, 100);
+  // setTimeout(() => {
+  //   project.camera.reset();
+  // }, 100);
   Telemetry.event("打开文件", {
     loadServiceTime,
     readFileTime,

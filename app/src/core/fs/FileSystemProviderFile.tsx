@@ -1,4 +1,4 @@
-import { FileSystemProvider } from "@/core/fileSystemProvider";
+import { FileSystemProvider } from "@/core/fs";
 import { exists, mkdir, readDir, readFile, remove, rename, stat, writeFile } from "@tauri-apps/plugin-fs";
 import { URI } from "vscode-uri";
 

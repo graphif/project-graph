@@ -1,4 +1,4 @@
-import { FileSystemProvider } from "@/core/fileSystemProvider";
+import { FileSystemProvider } from "@/core/fs";
 
 export class FileSystemProviderTest implements FileSystemProvider {
   async read() {

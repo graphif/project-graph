@@ -1,5 +1,5 @@
 import { Dialog } from "@/components/ui/dialog";
-import { FileSystemProvider, fileSystemProviders } from "@/core/fileSystemProvider";
+import { FileSystemProvider, fileSystemProviders } from "@/core/fs";
 import { encode } from "@msgpack/msgpack";
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
 import { URI } from "vscode-uri";

@@ -1,4 +1,4 @@
-import { FileSystemProvider, Service } from "@/core/interfaces/Service";
+import { Service } from "@/core/interfaces/Service";
 import { StageObject } from "@/core/sprites/abstract/StageObject";
 import { nextProjectIdAtom, projectsAtom, store } from "@/state";
 import { ObservableArray } from "@graphif/data-structures";
@@ -12,7 +12,7 @@ import { Viewport } from "pixi-viewport";
 import { Application, Container, FederatedPointerEvent, Graphics, Point, PointData } from "pixi.js";
 import "pixi.js/math-extras";
 import { URI } from "vscode-uri";
-import { fileSystemProviders } from "./fileSystemProvider";
+import { fs } from "./fs";
 import { MyWheelPlugin } from "./MyWheelPlugin";
 import { Settings } from "./service/Settings";
 import { MyText } from "./sprites/MyText";
@@ -29,12 +29,6 @@ export class Project extends EventEmitter<{
   public viewport!: Viewport;
 
   private readonly services = new Map<string, Service>();
-  /**
-   * 工程文件的URI
-   * key: 服务ID
-   * value: 服务实例
-   */
-  private readonly fileSystemProviders = new Map<string, FileSystemProvider>();
   private _uri: URI;
   private _state: ProjectState = ProjectState.Unsaved;
   private _stage = new ObservableArray<StageObject>(this.onStageAdd.bind(this), this.onStageRemove.bind(this), []);
@@ -54,11 +48,6 @@ export class Project extends EventEmitter<{
   constructor(uri: URI) {
     super();
     this._uri = uri;
-    if (import.meta.hot) {
-      import.meta.hot.on("vite:beforeUpdate", () => {
-        this.dispose();
-      });
-    }
     if (import.meta.env.DEV) {
       (window as any).project = this;
     }
@@ -110,45 +99,6 @@ export class Project extends EventEmitter<{
     });
     this.pixi.ticker.maxFPS = Settings.maxFps;
     this.pixi.ticker.minFPS = Settings.minFps;
-    // 注册文件系统
-    for (const scheme in fileSystemProviders) {
-      this.fileSystemProviders.set(scheme, new fileSystemProviders[scheme]());
-    }
-    if (!this.fs) {
-      throw new Error(`[Project] 未注册 ${this.uri.scheme} 协议的文件系统提供器`);
-    }
-    try {
-      const fileContent = await this.fs.read(this.uri);
-      const reader = new ZipReader(new Uint8ArrayReader(fileContent));
-      const entries = await reader.getEntries();
-      let serializedStageObjects: any[] = [];
-      let tags: string[] = [];
-      for (const entry of entries) {
-        if (entry.filename === "stage.msgpack") {
-          const stageRawData = await entry.getData!(new Uint8ArrayWriter());
-          serializedStageObjects = this.decoder.decode(stageRawData) as any[];
-        } else if (entry.filename === "tags.msgpack") {
-          const tagsRawData = await entry.getData!(new Uint8ArrayWriter());
-          tags = this.decoder.decode(tagsRawData) as string[];
-        } else if (entry.filename.startsWith("attachments/")) {
-          const match = entry.filename.trim().match(/^attachments\/([a-zA-Z0-9-]+)\.([a-zA-Z0-9]+)$/);
-          if (!match) {
-            console.warn("[Project] 附件文件名不符合规范: %s", entry.filename);
-            continue;
-          }
-          const uuid = match[1];
-          const ext = match[2];
-          const type = mime.getType(ext) || "application/octet-stream";
-          const attachment = await entry.getData!(new BlobWriter(type));
-          this.attachments.set(uuid, attachment);
-        }
-      }
-      this.stage = deserialize(serializedStageObjects, this);
-      this.tags = tags;
-    } catch (e) {
-      console.warn(e);
-    }
-    this.state = ProjectState.Saved;
 
     // const fpsText = this.pixi.stage.addChild(
     //   new MyText("0", {
@@ -202,8 +152,6 @@ export class Project extends EventEmitter<{
     // .wheel({
     //   lineHeight: 0,
     // });
-    this.viewport.cullable = true;
-    this.viewport.cullableChildren = true;
     this.pixi.stage.addChild(this.viewport);
 
     const origin = new Graphics();
@@ -225,6 +173,40 @@ export class Project extends EventEmitter<{
       positionText.position = e.client.add(new Point(30, 30));
     });
 
+    // viewport初始化了以后再加载文件
+    try {
+      const fileContent = await fs.read(this.uri);
+      const reader = new ZipReader(new Uint8ArrayReader(fileContent));
+      const entries = await reader.getEntries();
+      let serializedStageObjects: any[] = [];
+      let tags: string[] = [];
+      for (const entry of entries) {
+        if (entry.filename === "stage.msgpack") {
+          const stageRawData = await entry.getData!(new Uint8ArrayWriter());
+          serializedStageObjects = this.decoder.decode(stageRawData) as any[];
+        } else if (entry.filename === "tags.msgpack") {
+          const tagsRawData = await entry.getData!(new Uint8ArrayWriter());
+          tags = this.decoder.decode(tagsRawData) as string[];
+        } else if (entry.filename.startsWith("attachments/")) {
+          const match = entry.filename.trim().match(/^attachments\/([a-zA-Z0-9-]+)\.([a-zA-Z0-9]+)$/);
+          if (!match) {
+            console.warn("[Project] 附件文件名不符合规范: %s", entry.filename);
+            continue;
+          }
+          const uuid = match[1];
+          const ext = match[2];
+          const type = mime.getType(ext) || "application/octet-stream";
+          const attachment = await entry.getData!(new BlobWriter(type));
+          this.attachments.set(uuid, attachment);
+        }
+      }
+      this.stage = deserialize(serializedStageObjects, this);
+      this.tags = tags;
+    } catch (e) {
+      console.warn(e);
+    }
+    this.state = ProjectState.Saved;
+
     for (const sprite of sprites) {
       if (!sprite) continue;
       this.viewport.addChild(new sprite(this));
@@ -233,6 +215,8 @@ export class Project extends EventEmitter<{
       if (!service) continue;
       this.loadService(service);
     }
+
+    console.log(this.stage, this.viewport.children);
   }
 
   /**
@@ -271,15 +255,14 @@ export class Project extends EventEmitter<{
   }
 
   async save() {
-    const newUri = await this.fs.write(this.uri, await this.dump());
+    const newUri = await fs.write(this.uri, await this.dumpToArchive());
     this.state = ProjectState.Saved;
     if (newUri) {
       this.uri = newUri;
     }
   }
 
-  // 备份也要用到这个
-  async dump() {
+  async dumpToArchive(): Promise<Uint8Array> {
     const serializedStage = serialize(this.stage);
     const encodedStage = this.encoder.encode(serializedStage);
     const uwriter = new Uint8ArrayWriter();
@@ -295,10 +278,6 @@ export class Project extends EventEmitter<{
 
     const fileContent = await uwriter.getData();
     return fileContent;
-  }
-
-  get fs(): FileSystemProvider {
-    return this.fileSystemProviders.get(this.uri.scheme)!;
   }
 
   addAttachment(data: Blob) {
@@ -331,10 +310,12 @@ export class Project extends EventEmitter<{
   }
 
   private onStageAdd(it: StageObject) {
-    this.viewport?.addChild(it);
+    if (!this.viewport) throw new Error("Viewport is not initialized");
+    this.viewport.addChild(it);
   }
   private onStageRemove(it: StageObject) {
-    this.viewport?.removeChild(it);
+    if (!this.viewport) throw new Error("Viewport is not initialized");
+    this.viewport.removeChild(it);
   }
   get stage(): StageObject[] {
     return this._stage;
@@ -342,6 +323,8 @@ export class Project extends EventEmitter<{
   set stage(value: StageObject[]) {
     this.viewport?.removeChild(...this._stage);
     this._stage = new ObservableArray(this.onStageAdd.bind(this), this.onStageRemove.bind(this), value);
+    console.trace("1");
+    console.log(this.stage);
   }
 
   getStageObjectAt(point: PointData): StageObject | null {
