@@ -90,7 +90,7 @@ import {
   Network,
   Palette,
   Paperclip,
-  Map,
+  Map as MapIcon,
   PictureInPicture2,
   Plus,
   Rabbit,
@@ -1197,7 +1197,7 @@ export function GlobalMenu() {
               );
             }}
           >
-            <Map />
+            <MapIcon />
             {t("about.guide")}
           </Item>
           <Sub>
