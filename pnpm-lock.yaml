@@ -102,6 +102,15 @@ importers:
       "@graphif/data-structures":
         specifier: workspace:*
         version: link:../packages/data-structures
+      "@graphif/fs":
+        specifier: workspace:^
+        version: link:../packages/fs
+      "@graphif/fs-http":
+        specifier: workspace:^
+        version: link:../packages/fs-http
+      "@graphif/fs-tauri":
+        specifier: workspace:^
+        version: link:../packages/fs-tauri
       "@graphif/serializer":
         specifier: workspace:*
         version: link:../packages/serializer
@@ -647,6 +656,57 @@ importers:
       unplugin-original-class-name:
         specifier: ^1.0.0
         version: 1.0.0(@farmfe/core@1.7.10)(@nuxt/kit@3.17.7)(@nuxt/schema@3.17.7)(esbuild@0.25.8)(rollup@3.29.5)(vite@6.3.5(@types/node@24.1.0)(jiti@2.4.2)(less@4.2.2)(lightningcss@1.30.1)(sass-embedded@1.89.2)(terser@5.39.0)(tsx@4.20.3)(yaml@2.8.0))(webpack@5.100.1(esbuild@0.25.8))
+    devDependencies:
+      tsdown:
+        specifier: "catalog:"
+        version: 0.12.9(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6))
+      typescript:
+        specifier: "catalog:"
+        version: 5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6)
+
+  packages/fs:
+    dependencies:
+      vscode-uri:
+        specifier: ^3.1.0
+        version: 3.1.0
+    devDependencies:
+      tsdown:
+        specifier: "catalog:"
+        version: 0.12.9(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6))
+      typescript:
+        specifier: "catalog:"
+        version: 5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6)
+
+  packages/fs-http:
+    dependencies:
+      "@graphif/fs":
+        specifier: workspace:^
+        version: link:../fs
+      "@tauri-apps/plugin-fs":
+        specifier: ~2.4.0
+        version: 2.4.0
+      vscode-uri:
+        specifier: ^3.1.0
+        version: 3.1.0
+    devDependencies:
+      tsdown:
+        specifier: "catalog:"
+        version: 0.12.9(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6))
+      typescript:
+        specifier: "catalog:"
+        version: 5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6)
+
+  packages/fs-tauri:
+    dependencies:
+      "@graphif/fs":
+        specifier: workspace:^
+        version: link:../fs
+      "@tauri-apps/plugin-fs":
+        specifier: ~2.4.0
+        version: 2.4.0
+      vscode-uri:
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       tsdown:
         specifier: "catalog:"
@@ -8303,10 +8363,6 @@ packages:
     engines: { node: ">=10" }
     hasBin: true
 
-  mlly@1.7.4:
-    resolution:
-      { integrity: sha512-qmdSIPC4bDJXgZTCR7XosJiNKySV7O215tsPtDN9iEO/7q/76b/ijtgRu/+epFXSJhijtTCCGp3DWS549P3xKw== }
-
   mlly@1.8.0:
     resolution:
       { integrity: sha512-l8D9ODSRWLe2KHJSifWGwBqpTZXIXTeo8mlKjY+E2HAakaTeNpqAyBZ8GSqLzHgw4XmHmC8whvpjJNMbFZN7/g== }
@@ -12555,7 +12611,7 @@ snapshots:
       jiti: 2.4.2
       klona: 2.0.6
       knitwork: 1.2.0
-      mlly: 1.7.4
+      mlly: 1.8.0
       ohash: 2.0.11
       pathe: 2.0.3
       pkg-types: 2.2.0
@@ -17656,7 +17712,7 @@ snapshots:
 
   local-pkg@1.1.1:
     dependencies:
-      mlly: 1.7.4
+      mlly: 1.8.0
       pkg-types: 2.2.0
       quansync: 0.2.10
     optional: true
@@ -18348,14 +18404,6 @@ snapshots:
   mj-context-menu@0.6.1: {}
 
   mkdirp@3.0.1: {}
-
-  mlly@1.7.4:
-    dependencies:
-      acorn: 8.15.0
-      pathe: 2.0.3
-      pkg-types: 1.3.1
-      ufo: 1.6.1
-    optional: true
 
   mlly@1.8.0:
     dependencies:
@@ -20498,7 +20546,7 @@ snapshots:
       estree-walker: 3.0.3
       local-pkg: 1.1.1
       magic-string: 0.30.17
-      mlly: 1.7.4
+      mlly: 1.8.0
       pathe: 2.0.3
       picomatch: 4.0.3
       pkg-types: 2.2.0

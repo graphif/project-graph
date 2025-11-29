@@ -1,10 +1,13 @@
 import { Dialog } from "@/components/ui/dialog";
-import { FileSystemProvider, fileSystemProviders } from "@/core/fs";
+import { FsProvider } from "@graphif/fs";
 import { encode } from "@msgpack/msgpack";
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
 import { URI } from "vscode-uri";
+import { fs } from ".";
 
-export class FileSystemProviderDraft implements FileSystemProvider {
+export class FsProviderDraft implements FsProvider {
+  static schemes = ["draft"];
+
   async read() {
     // 创建空白文件
     const encodedStage = encode([]);
@@ -25,7 +28,6 @@ export class FileSystemProviderDraft implements FileSystemProvider {
     if (!newUri) {
       throw new Error("未选择路径");
     }
-    const fs = new fileSystemProviders[newUri.scheme]();
     await fs.write(newUri, content);
     return newUri;
   }

@@ -1,8 +1,10 @@
-import { FileSystemProvider } from "@/core/fs";
+import { FileInfo, FsProvider } from "@graphif/fs";
 import { exists, mkdir, readDir, readFile, remove, rename, stat, writeFile } from "@tauri-apps/plugin-fs";
 import { URI } from "vscode-uri";
 
-export class FileSystemProviderFile implements FileSystemProvider {
+export class FsProviderTauri implements FsProvider {
+  static schemes = ["file"];
+
   async read(uri: URI) {
     return await readFile(uri.fsPath);
   }
@@ -25,6 +27,13 @@ export class FileSystemProviderFile implements FileSystemProvider {
     return await rename(oldUri.fsPath, newUri.fsPath);
   }
   async stat(uri: URI) {
-    return await stat(uri.fsPath);
+    const data = await stat(uri.fsPath);
+    // Replace all `undefined` with `null`
+    for (const key in data) {
+      if (data[key as keyof typeof data] === undefined) {
+        (data as any)[key] = null;
+      }
+    }
+    return data as FileInfo;
   }
 }

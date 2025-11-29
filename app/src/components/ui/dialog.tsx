@@ -19,7 +19,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { fileSystemProviders } from "@/core/fs";
+import { fs } from "@/core/fs";
 import { SubWindow } from "@/core/service/SubWindow";
 import { cn } from "@/utils/cn";
 import { Vector } from "@graphif/data-structures";
@@ -476,7 +476,6 @@ function FileDialog({
   const documentDir = React.use(documentDirPromise);
 
   const [currentUri, setCurrentUri] = React.useState<URI>(URI.file("/"));
-  const fs = React.useMemo(() => new fileSystemProviders[currentUri.scheme](), [currentUri.scheme]);
   const [data, setData] = React.useState<DirEntry[]>([]);
   const scrollParentRef = React.useRef<HTMLTableElement>(null);
   const [saveFileName, setSaveFileName] = React.useState<string>("");
@@ -685,7 +684,7 @@ function FileDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.keys(fileSystemProviders).map((scheme) => (
+                    {Object.keys(fs.providers.keys()).map((scheme) => (
                       <SelectItem key={scheme} value={scheme}>
                         {scheme}:
                       </SelectItem>

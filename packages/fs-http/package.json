@@ -1,0 +1,30 @@
+{
+  "name": "@graphif/fs-http",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "type-check": "tsc"
+  },
+  "devDependencies": {
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  },
+  "dependencies": {
+    "@graphif/fs": "workspace:^",
+    "@tauri-apps/plugin-fs": "~2.4.0",
+    "vscode-uri": "^3.1.0"
+  }
+}
