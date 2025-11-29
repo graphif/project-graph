@@ -1,238 +1,223 @@
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import Markdown from "@/components/ui/markdown";
-import { Textarea } from "@/components/ui/textarea";
-import { AITools } from "@/core/service/dataManageService/aiEngine/AITools";
+import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
+import {
+  Message,
+  MessageAction,
+  MessageActions,
+  MessageContent,
+  MessageResponse,
+} from "@/components/ai-elements/message";
+import {
+  PromptInput,
+  PromptInputActionAddAttachments,
+  PromptInputActionMenu,
+  PromptInputActionMenuContent,
+  PromptInputActionMenuTrigger,
+  PromptInputAttachment,
+  PromptInputAttachments,
+  PromptInputBody,
+  PromptInputButton,
+  PromptInputFooter,
+  PromptInputHeader,
+  PromptInputSelect,
+  PromptInputSelectContent,
+  PromptInputSelectItem,
+  PromptInputSelectTrigger,
+  PromptInputSelectValue,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputTools,
+} from "@/components/ai-elements/prompt-input";
+import { Reasoning, ReasoningContent, ReasoningTrigger } from "@/components/ai-elements/reasoning";
+import { Source, Sources, SourcesContent, SourcesTrigger } from "@/components/ai-elements/sources";
 import { Settings } from "@/core/service/Settings";
 import { SubWindow } from "@/core/service/SubWindow";
-import { activeProjectAtom } from "@/state";
-import SettingsWindow from "@/sub/SettingsWindow";
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { useChat } from "@ai-sdk/react";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { useAtom } from "jotai";
-import { Bot, BrainCircuit, ChevronRight, FolderOpen, Loader2, Send, SettingsIcon, User, Wrench } from "lucide-react";
-import OpenAI from "openai";
-import { Fragment, useRef, useState } from "react";
+import { fetch } from "@tauri-apps/plugin-http";
+import { convertToModelMessages, DefaultChatTransport, streamText } from "ai";
+import { CopyIcon, GlobeIcon, Loader, RefreshCcwIcon } from "lucide-react";
+import { useState } from "react";
+
+const aiProvider = createOpenAICompatible({
+  name: "custom",
+  baseURL: Settings.aiApiBaseUrl,
+  apiKey: Settings.aiApiKey,
+  includeUsage: true,
+  fetch,
+});
+
+const customTransportFetch = async (_input: RequestInfo | URL, init?: RequestInit) => {
+  const m = JSON.parse(init?.body as string);
+  const result = streamText({
+    model: aiProvider(Settings.aiModel),
+    messages: convertToModelMessages(m.messages),
+    abortSignal: init?.signal as AbortSignal | undefined,
+  });
+  return result.toUIMessageStreamResponse();
+};
+
+const models = [
+  {
+    name: "DeepSeek V3.1",
+    value: "deepseek/deepseek-v3.1-terminus",
+  },
+];
 
 export default function AIWindow() {
-  const [project] = useAtom(activeProjectAtom);
-  const [inputValue, setInputValue] = useState("");
-  const [messages, setMessages] = useState<(OpenAI.ChatCompletionMessageParam & { tokens?: number })[]>([
-    {
-      role: "system",
-      content:
-        "尽可能尝试使用工具解决问题，如果实在不行才能问用户。TextNode正常情况下高度为75，多个节点叠起来时需要适当留padding。节点正常情况下的颜色应该是透明[0,0,0,0]，注意透明色并非是“看不见文本”",
-    },
-  ]);
-  const [requesting, setRequesting] = useState(false);
-  const [totalInputTokens, setTotalInputTokens] = useState(0);
-  const [totalOutputTokens, setTotalOutputTokens] = useState(0);
-  const messagesElRef = useRef<HTMLDivElement>(null);
-  const [showTokenCount] = Settings.use("aiShowTokenCount");
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
+      fetch: customTransportFetch,
+    }),
+  });
+  const [input, setInput] = useState("");
 
-  function addMessage(message: OpenAI.ChatCompletionMessageParam & { tokens?: number }) {
-    setMessages((prev) => [...prev, message]);
-  }
-  function setLastMessage(msg: OpenAI.ChatCompletionMessageParam) {
-    setMessages((prev) => {
-      const newMessages = [...prev];
-      newMessages[newMessages.length - 1] = msg;
-      return newMessages;
-    });
-  }
-
-  function scrollToBottom() {
-    if (messagesElRef.current) {
-      messagesElRef.current.scrollTo({ top: messagesElRef.current.scrollHeight });
-    }
-  }
-
-  async function run(msgs: OpenAI.ChatCompletionMessageParam[] = [...messages, { role: "user", content: inputValue }]) {
-    if (!project) return;
-    scrollToBottom();
-    setRequesting(true);
-    try {
-      const stream = await project.aiEngine.chat(msgs);
-      addMessage({
-        role: "assistant",
-        content: "Requesting...",
-      });
-      const streamingMsg: OpenAI.ChatCompletionAssistantMessageParam = {
-        role: "assistant",
-        content: "",
-        tool_calls: [],
-      };
-      let lastChunk: OpenAI.ChatCompletionChunk | null = null;
-      for await (const chunk of stream) {
-        const delta = chunk.choices[0].delta;
-        streamingMsg.content! += delta.content ?? "";
-        const toolCalls = delta.tool_calls || [];
-
-        for (const toolCall of toolCalls) {
-          if (typeof streamingMsg.tool_calls !== "undefined") {
-            const index =
-              toolCall.index !== undefined
-                ? toolCall.index
-                : toolCall.type
-                  ? streamingMsg.tool_calls.length
-                  : streamingMsg.tool_calls.length - 1;
-
-            // 确保索引有效
-            if (index >= streamingMsg.tool_calls.length) {
-              streamingMsg.tool_calls[index] = {
-                id: toolCall.id || crypto.randomUUID(),
-                type: "function",
-                function: {
-                  name: "",
-                  arguments: "",
-                },
-              };
-            }
-
-            // 更新工具调用信息
-            if (toolCall.id) streamingMsg.tool_calls[index].id = toolCall.id;
-            if (toolCall.function?.name) streamingMsg.tool_calls[index].function.name += toolCall.function.name;
-            if (toolCall.function?.arguments)
-              streamingMsg.tool_calls[index].function.arguments += toolCall.function.arguments;
-          }
-        }
-
-        setLastMessage(streamingMsg);
-        scrollToBottom();
-        lastChunk = chunk;
-      }
-      setRequesting(false);
-      if (!lastChunk) return;
-      if (!lastChunk.usage) return;
-      setTotalInputTokens((v) => v + lastChunk.usage!.prompt_tokens);
-      setTotalOutputTokens((v) => v + lastChunk.usage!.completion_tokens);
-      scrollToBottom();
-      // 如果有工具调用，执行工具调用
-      console.log(streamingMsg.tool_calls);
-      if (streamingMsg.tool_calls && streamingMsg.tool_calls.length > 0) {
-        const toolMsgs: OpenAI.ChatCompletionToolMessageParam[] = [];
-        for (const toolCall of streamingMsg.tool_calls) {
-          const tool = AITools.handlers.get(toolCall.function.name);
-          if (!tool) {
-            return;
-          }
-          let observation = "";
-          try {
-            const result = await tool(project, JSON.parse(toolCall.function.arguments));
-            if (typeof result === "string") {
-              observation = result;
-            } else if (typeof result === "object") {
-              observation = JSON.stringify(result);
-            } else {
-              observation = String(result);
-            }
-          } catch (e) {
-            observation = `工具调用失败：${(e as Error).message}`;
-          }
-          const msg = {
-            role: "tool" as const,
-            content: observation,
-            tool_call_id: toolCall.id!,
-          };
-          addMessage(msg);
-          toolMsgs.push(msg);
-        }
-        // 工具调用结束后，重新发送消息，让模型继续思考
-        run([...msgs, streamingMsg, ...toolMsgs]);
-      }
-    } catch (e) {
-      addMessage({
-        role: "assistant",
-        content: String(e),
-      });
-    }
-  }
-
-  return project ? (
-    <div className="flex h-full flex-col p-2">
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto" ref={messagesElRef}>
-        {messages.map((msg, i) =>
-          msg.role === "user" ? (
-            <div key={i} className="flex justify-end">
-              <div className="max-w-11/12 bg-accent text-accent-foreground rounded-2xl rounded-br-none px-3 py-2">
-                {msg.content as string}
-              </div>
+  return (
+    <div className="flex h-full flex-col">
+      {/*<div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
+        {messages.map((msg) =>
+          msg.role === "user"
+            ? msg.parts.map((part, i) =>
+                part.type === "text" ? (
+                  <div
+                    key={i}
+                    className="bg-accent text-accent-foreground ml-auto rounded-lg rounded-br-none px-2 py-1.5"
+                  >
+                    {part.text}
+                  </div>
+                ) : null,
+              )
+            : msg.role === "assistant"
+              ? msg.parts.map((part, i) =>
+                  part.type === "text" ? (
+                    <div key={i}>
+                      {part.text}
+                    </div>
+                  ) : null,
+                )
+              : null,
+        )}
+      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          sendMessage({ text: input });
+          setInput("");
+        }}
+        className="flex gap-2 border-t border-white/5 p-3"
+      >
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Type your prompt..."
+          className="flex-1 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-white/30 focus:outline-none"
+        />
+      </form>*/}
+      <Conversation className="h-full">
+        <ConversationContent>
+          {messages.map((message) => (
+            <div key={message.id}>
+              {message.role === "assistant" &&
+                message.parts.filter((part) => part.type === "source-url").length > 0 && (
+                  <Sources>
+                    <SourcesTrigger count={message.parts.filter((part) => part.type === "source-url").length} />
+                    {message.parts
+                      .filter((part) => part.type === "source-url")
+                      .map((part, i) => (
+                        <SourcesContent key={`${message.id}-${i}`}>
+                          <Source key={`${message.id}-${i}`} href={part.url} title={part.url} />
+                        </SourcesContent>
+                      ))}
+                  </Sources>
+                )}
+              {message.parts.map((part, i) => {
+                switch (part.type) {
+                  case "text":
+                    return (
+                      <Message key={`${message.id}-${i}`} from={message.role}>
+                        <MessageContent>
+                          <MessageResponse>{part.text}</MessageResponse>
+                        </MessageContent>
+                        {message.role === "assistant" && i === messages.length - 1 && (
+                          <MessageActions>
+                            <MessageAction label="Retry">
+                              <RefreshCcwIcon className="size-3" />
+                            </MessageAction>
+                            <MessageAction onClick={() => navigator.clipboard.writeText(part.text)} label="Copy">
+                              <CopyIcon className="size-3" />
+                            </MessageAction>
+                          </MessageActions>
+                        )}
+                      </Message>
+                    );
+                  case "reasoning":
+                    return (
+                      <Reasoning
+                        key={`${message.id}-${i}`}
+                        className="w-full"
+                        isStreaming={
+                          status === "streaming" && i === message.parts.length - 1 && message.id === messages.at(-1)?.id
+                        }
+                      >
+                        <ReasoningTrigger />
+                        <ReasoningContent>{part.text}</ReasoningContent>
+                      </Reasoning>
+                    );
+                  default:
+                    return null;
+                }
+              })}
             </div>
-          ) : msg.role === "assistant" ? (
-            <div key={i} className="flex flex-col gap-2">
-              {msg.content && typeof msg.content === "string" && (
-                <>
-                  {msg.content.startsWith("<think>") && (
-                    <Collapsible className="group/collapsible" defaultOpen={!msg.content.includes("</think>")}>
-                      <CollapsibleTrigger className="flex items-center gap-2">
-                        <BrainCircuit />
-                        <span>思考中</span>
-                        <ChevronRight className="transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="animate-none! mt-2 rounded-lg border px-3 py-2 opacity-50">
-                        <span className="text-sm">
-                          <Markdown source={msg.content.split("<think>")[1].split("</think>")[0]} />
-                        </span>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  )}
-                  <Markdown
-                    source={msg.content.includes("</think>") ? msg.content.split("</think>")[1] : msg.content}
-                  />
-                </>
-              )}
-              {msg.tool_calls &&
-                msg.tool_calls.map((toolCall) => (
-                  <Collapsible className="group/collapsible" key={toolCall.id}>
-                    <CollapsibleTrigger className="flex items-center gap-2">
-                      <Wrench />
-                      <span>{toolCall.function.name}</span>
-                      <ChevronRight className="transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="animate-none! mt-2 rounded-lg border px-3 py-2 opacity-50">
-                      <span className="text-sm">
-                        <Markdown source={`\`\`\`json\n${toolCall.function.arguments}\n\`\`\``} />
-                      </span>
-                    </CollapsibleContent>
-                  </Collapsible>
+          ))}
+          {status === "submitted" && <Loader />}
+        </ConversationContent>
+        <ConversationScrollButton />
+      </Conversation>
+
+      <PromptInput
+        onSubmit={(e) => {
+          sendMessage(e);
+          setInput("");
+        }}
+        className="mt-4"
+        globalDrop
+        multiple
+      >
+        <PromptInputHeader>
+          <PromptInputAttachments>{(attachment) => <PromptInputAttachment data={attachment} />}</PromptInputAttachments>
+        </PromptInputHeader>
+        <PromptInputBody>
+          <PromptInputTextarea onChange={(e) => setInput(e.target.value)} value={input} />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputTools>
+            <PromptInputActionMenu>
+              <PromptInputActionMenuTrigger />
+              <PromptInputActionMenuContent>
+                <PromptInputActionAddAttachments />
+              </PromptInputActionMenuContent>
+            </PromptInputActionMenu>
+            <PromptInputButton variant="ghost">
+              <GlobeIcon size={16} />
+              <span>Search</span>
+            </PromptInputButton>
+            <PromptInputSelect value="deepseek/deepseek-v3.1-terminus">
+              <PromptInputSelectTrigger>
+                <PromptInputSelectValue />
+              </PromptInputSelectTrigger>
+              <PromptInputSelectContent>
+                {models.map((model) => (
+                  <PromptInputSelectItem key={model.value} value={model.value}>
+                    {model.name}
+                  </PromptInputSelectItem>
                 ))}
-            </div>
-          ) : (
-            <Fragment key={i} />
-          ),
-        )}
-      </div>
-      <div className="mb-2 flex gap-2">
-        <SettingsIcon className="cursor-pointer" onClick={() => SettingsWindow.open("settings")} />
-        {showTokenCount && (
-          <>
-            <div className="flex-1"></div>
-            <User />
-            <span>{totalInputTokens}</span>
-            <Bot />
-            <span>{totalOutputTokens}</span>
-          </>
-        )}
-        <div className="flex-1"></div>
-        {requesting ? (
-          <Loader2 className="animate-spin" />
-        ) : (
-          <Send
-            className="cursor-pointer"
-            onClick={() => {
-              if (!inputValue.trim()) return;
-              addMessage({ role: "user", content: inputValue });
-              setInputValue("");
-              run();
-            }}
-          />
-        )}
-      </div>
-      <Textarea placeholder="What can I say?" onChange={(e) => setInputValue(e.target.value)} value={inputValue} />
-    </div>
-  ) : (
-    <div className="flex flex-col gap-2 p-8">
-      <FolderOpen />
-      请先打开一个文件
+              </PromptInputSelectContent>
+            </PromptInputSelect>
+          </PromptInputTools>
+          <PromptInputSubmit disabled={!input && !status} status={status} />
+        </PromptInputFooter>
+      </PromptInput>
     </div>
   );
 }
