@@ -1143,13 +1143,8 @@ export async function onNewDraft() {
 }
 export async function onOpenFile(uri?: URI, source: string = "unknown") {
   if (!uri) {
-    const path = await open({
-      directory: false,
-      multiple: false,
-      filters: [{ name: "工程文件", extensions: ["prg", "json"] }],
-    });
-    if (!path) return;
-    uri = URI.file(path);
+    uri = await Dialog.file("打开文件", "file", ["prg"]);
+    if (!uri) return;
   }
 
   let upgraded: Awaited<ReturnType<typeof ProjectUpgrader.convertVAnyToN1>> = {

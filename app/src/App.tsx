@@ -15,7 +15,7 @@ import { register } from "@tauri-apps/plugin-global-shortcut";
 import { arch, platform, version } from "@tauri-apps/plugin-os";
 import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
 import { useAtom } from "jotai";
-import { CloudUpload, Copy, Dot, Home, Layers2, Minus, Pin, PinOff, Square, X } from "lucide-react";
+import { Copy, Dot, Home, Layers2, Minus, Pin, PinOff, Square, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { cpuInfo } from "tauri-plugin-system-info-api";
@@ -375,11 +375,7 @@ export default function App() {
           }}
         >
           <span className="text-sm">
-            {project.uri.scheme === "draft"
-              ? `临时草稿 (${project.uri.path})`
-              : project.uri.scheme === "file"
-                ? project.uri.path.split("/").pop()
-                : project.uri.toString()}
+            {project.uri.scheme === "draft" ? `临时草稿 (${project.uri.path})` : project.uri.path.split("/").pop()}
           </span>
           <div
             className="cursor-pointer overflow-hidden hover:opacity-75"
@@ -389,7 +385,6 @@ export default function App() {
             }}
           >
             {project.state === ProjectState.Saved && <X />}
-            {project.state === ProjectState.Stashed && <CloudUpload />}
             {project.state === ProjectState.Unsaved && <Dot className="scale-300" />}
           </div>
         </Button>
