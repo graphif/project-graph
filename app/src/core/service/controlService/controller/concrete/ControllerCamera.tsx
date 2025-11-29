@@ -6,7 +6,6 @@ import { ArrayFunctions } from "@/core/algorithm/arrayFunctions";
 import { Settings } from "@/core/service/Settings";
 import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
 import { ControllerCameraMac } from "@/core/service/controlService/controller/concrete/ControllerCamera/mac";
-import { EntityCreateFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityCreateFlashEffect";
 import { MouseTipFeedbackEffect } from "@/core/service/feedbackService/effectEngine/concrete/MouseTipFeedbackEffect";
 import { CursorNameEnum } from "@/types/cursors";
 import { openBrowserOrFileByEntity } from "@/utils/externalOpen";
@@ -328,8 +327,7 @@ export class ControllerCameraClass extends ControllerClass {
       // 不要在节点上滚动
       const entity = this.project.stageManager.findEntityByLocation(worldLocation);
       if (entity !== null) {
-        // 给这个entity一个特效
-        this.project.effects.addEffect(EntityCreateFlashEffect.fromRectangle(entity.collisionBox.getRectangle()));
+        // 删除发光特效：this.project.effects.addEffect(EntityCreateFlashEffect.fromRectangle(entity.collisionBox.getRectangle()));
       } else {
         if (Settings.mouseWheelWithCtrlMode === "zoom") {
           this.zoomCameraByMouseWheel(event);

@@ -12,6 +12,7 @@ import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
+import { Renderer } from "../renderer";
 
 /**
  * 处理节点相关的绘制
@@ -210,6 +211,13 @@ export class EntityRenderer {
       this.project.collisionBoxRenderer.render(
         imageNode.collisionBox,
         this.project.stageStyleManager.currentStyle.CollideBoxSelected,
+      );
+      // 绘制选中提示文字：ctrl+滚轮缩放大小
+      this.project.textRenderer.renderText(
+        "ctrl+滚轮缩放大小",
+        this.project.renderer.transformWorld2View(imageNode.rectangle.leftBottom.add(new Vector(0, 20))),
+        Renderer.FONT_SIZE * 0.5 * this.project.camera.currentScale,
+        this.project.stageStyleManager.currentStyle.StageObjectBorder,
       );
     }
     // 节点身体矩形
