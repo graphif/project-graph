@@ -1273,6 +1273,8 @@ export const allKeyBinds: KeyBindItem[] = [
 
 /**
  * 快捷键注册函数
+ * 现在所有非全局快捷键都由KeyBindsUI类在应用启动时统一注册
+ * 这个东西现在没用了
  */
 @service("keyBindsRegistrar")
 export class KeyBindsRegistrar {
@@ -1280,26 +1282,11 @@ export class KeyBindsRegistrar {
 
   /**
    * 注册所有快捷键
+   * 现在所有非全局快捷键都由KeyBindsUI类在应用启动时统一注册
    */
   async registerAllKeyBinds() {
-    for (const keyBind of allKeyBinds) {
-      // 这里只注册项目级别的快捷键
-      if (keyBind.isGlobal || keyBind.isUI) {
-        continue;
-      }
-      await this.project.keyBinds.create(
-        keyBind.id,
-        keyBind.defaultKey,
-        () => {
-          keyBind.onPress(this.project);
-        },
-        keyBind.onRelease
-          ? () => {
-              keyBind.onRelease!(this.project);
-            }
-          : undefined,
-      );
-    }
+    // 所有非全局快捷键都由KeyBindsUI类在应用启动时统一注册
+    // 这里不再需要注册项目级快捷键
   }
 }
 

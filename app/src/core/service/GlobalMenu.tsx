@@ -13,6 +13,7 @@ import {
 
 import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project } from "@/core/Project";
+import { KeyBindsUI } from "./controlService/shortcutKeysEngine/KeyBindsUI";
 import { activeProjectAtom, isClassroomModeAtom, isDevAtom, projectsAtom, store } from "@/state";
 import AIWindow from "@/sub/AIWindow";
 import AttachmentsWindow from "@/sub/AttachmentsWindow";
@@ -939,11 +940,8 @@ export function GlobalMenu() {
                 )
               ) {
                 try {
-                  const activeProject = store.get(activeProjectAtom);
-                  if (activeProject) {
-                    await activeProject.keyBinds.resetAllKeyBinds();
-                    toast.success("所有快捷键已重置为默认值");
-                  }
+                  await KeyBindsUI.resetAllKeyBinds();
+                  toast.success("所有快捷键已重置为默认值");
                 } catch (error) {
                   toast.error("重置快捷键失败");
                   console.error("重置快捷键失败:", error);

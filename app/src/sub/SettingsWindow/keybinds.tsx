@@ -13,9 +13,8 @@ import {
 } from "@/components/ui/sidebar";
 import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { allKeyBinds, getKeyBindTypeById } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
-import { activeProjectAtom, projectsAtom } from "@/state";
 import Fuse from "fuse.js";
-import { useAtom } from "jotai";
+
 import {
   AppWindow,
   Brush,
@@ -39,10 +38,11 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { createStore } from "@/utils/store";
+import { isMac } from "@/utils/platform";
+import { transEmacsKeyWinToMac } from "@/utils/emacs";
 
 export default function KeyBindsPage() {
-  const [activeProject] = useAtom(activeProjectAtom);
-  const [projects] = useAtom(projectsAtom);
   const [data, setData] = useState<[string, string][]>([]);
   const [currentGroup, setCurrentGroup] = useState<string>("search");
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -52,19 +52,28 @@ export default function KeyBindsPage() {
   const { t } = useTranslation("keyBinds");
   const { t: t2 } = useTranslation("keyBindsGroup");
 
-  // 这个代码不能去掉，否则打开设置界面会发现快捷键设置全被清空了
+  // 加载所有快捷键设置
   useEffect(() => {
-    if (activeProject) {
-      activeProject.keyBinds.entries().then((entries) => {
-        setData(entries);
-      });
-    }
-  }, [activeProject]);
+    const loadKeyBinds = async () => {
+      const store = await createStore("keybinds2.json");
+      const keyBinds: [string, string][] = [];
+      for (const keyBind of allKeyBinds.filter((keybindItem) => !keybindItem.isGlobal)) {
+        const savedKey = await store.get<string>(keyBind.id);
+        if (savedKey) {
+          keyBinds.push([keyBind.id, savedKey]);
+        } else {
+          keyBinds.push([keyBind.id, keyBind.defaultKey]);
+        }
+      }
+      setData(keyBinds);
+    };
+    loadKeyBinds();
+  }, []);
 
   useEffect(() => {
     (async () => {
       fuse.current = new Fuse(
-        (await activeProject?.keyBinds.entries())!.map(
+        data.map(
           ([key, value]) =>
             ({
               key,
@@ -123,12 +132,15 @@ export default function KeyBindsPage() {
         <RotateCw
           className="text-panel-details-text h-4 w-4 cursor-pointer opacity-0 transition-all hover:rotate-180 group-hover/field:opacity-100"
           onClick={() => {
-            const defaultValue = allKeyBinds.find((kb) => kb.id === id)?.defaultKey;
-            if (defaultValue) {
-              setData((data) => data.map((item) => (item[0] === id ? [id, defaultValue] : item)));
-              projects.forEach((project) => {
-                project.keyBinds.set(id, defaultValue);
-              });
+            const keyBind = allKeyBinds.find((kb) => kb.id === id);
+            if (keyBind) {
+              let defaultValue = keyBind.defaultKey;
+              // 应用Mac键位转换
+              if (isMac) {
+                defaultValue = transEmacsKeyWinToMac(defaultValue);
+              }
+              setData((data) => data.map((item) => (item[0] === id ? [id, defaultValue as string] : item)));
+              KeyBindsUI.changeOneUIKeyBind(id, defaultValue);
               Dialog.confirm(
                 `已重置为 '${defaultValue}'，但需要刷新页面后生效`,
                 "切换左侧选项卡即可更新页面显示，看到效果。",
@@ -150,19 +162,15 @@ export default function KeyBindsPage() {
             const keyBindType = getKeyBindTypeById(id);
             if (keyBindType === "global") {
               Dialog.confirm(`已重置为 '${value}'，但需要重启软件才能生效`, "");
-            } else if (keyBindType === "ui") {
-              KeyBindsUI.changeOneUIKeyBind(id, value);
             } else {
-              projects.forEach((project) => {
-                project.keyBinds.set(id, value);
-              });
+              KeyBindsUI.changeOneUIKeyBind(id, value);
             }
           }}
         />
       </Field>
     ));
 
-  return activeProject ? (
+  return (
     <div className="flex h-full">
       <Sidebar className="h-full overflow-auto">
         <SidebarContent>
@@ -240,8 +248,6 @@ export default function KeyBindsPage() {
         )}
       </div>
     </div>
-  ) : (
-    <Field color="warning" title="需要先打开一个工程文件才能编辑快捷键设置" />
   );
 }
 type ShortcutKeysGroup = {
