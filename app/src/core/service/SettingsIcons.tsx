@@ -144,6 +144,7 @@ export const settingsIcons = {
   showTextNodeBorder: Square,
   lineStyle: Spline,
   sectionBitTitleRenderType: SquareM,
+  sectionBigTitleThresholdRatio: Ratio,
   nodeDetailsPanel: AppWindow,
   alwaysShowDetails: ListCollapse,
   entityDetailsFontSize: CaseSensitive,

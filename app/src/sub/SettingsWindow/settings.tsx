@@ -216,7 +216,7 @@ const categories = {
     ],
     node: ["enableTagTextNodesBigDisplay", "showTextNodeBorder"],
     edge: ["lineStyle"],
-    section: ["sectionBitTitleRenderType"],
+    section: ["sectionBitTitleRenderType", "sectionBigTitleThresholdRatio"],
     entityDetails: [
       "nodeDetailsPanel",
       "alwaysShowDetails",

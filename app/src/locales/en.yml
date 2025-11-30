@@ -616,6 +616,11 @@ settings:
       top: Small text at the top
       cover: Semi-transparent overlay frame (optimal effect)
     title: The rendering type of the abbreviated main title in the frame
+  sectionBigTitleThresholdRatio:
+    title: Section Big Title Display Threshold
+    description: |
+      When the longest side of the section is less than this ratio of the longest side of the viewport, the big title will be displayed.
+      Range: 0-1
   macTrackpadAndMouseWheelDifference:
     options:
       tarckpadFloatAndWheelInt: The value of the trackpad is a decimal, while 

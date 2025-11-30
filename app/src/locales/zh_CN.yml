@@ -243,6 +243,11 @@ settings:
       none: 不渲染（节省性能）
       top: 顶部小字
       cover: 半透明覆盖框体（最佳效果）
+  sectionBigTitleThresholdRatio:
+    title: 框的缩略大标题显示阈值
+    description: |
+      当框的最长边小于视野范围最长边的此比例时，显示缩略大标题
+      取值范围：0-1
   alwaysShowDetails:
     title: 始终显示节点详细信息
     description: |
