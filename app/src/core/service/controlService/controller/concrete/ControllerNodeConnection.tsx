@@ -132,7 +132,7 @@ export class ControllerNodeConnectionClass extends ControllerClass {
   }
 
   public mousedown: (event: MouseEvent) => void = (event) => {
-    if (!(event.button == 2 || event.button == 0)) {
+    if (!(event.button === 2 || event.button === 0)) {
       return;
     }
     if (event.button === 0 && Settings.mouseLeftMode === "connectAndCut") {
@@ -286,7 +286,7 @@ export class ControllerNodeConnectionClass extends ControllerClass {
   }
 
   public mouseup: (event: MouseEvent) => void = (event) => {
-    if (!(event.button == 2 || event.button == 0)) {
+    if (!(event.button === 2 || event.button === 0)) {
       return;
     }
     if (!this.isConnecting()) {
@@ -325,7 +325,16 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     // 结束连线
     if (releaseTargetEntity !== null) {
       if (releaseTargetEntity.isSelected) {
-        // 如果鼠标释放的节点上是已经选中的节点，则不触发连接，防止和右键菜单冲突
+        // 如果鼠标释放的节点上是已经选中的节点
+        // 区分是拖拽松开连线还是点击松开连线
+        if (releaseWorldLocation.distance(this._lastRightMousePressLocation) < 5) {
+          // 距离过近，说明是点击事件，不触发连接，让右键菜单触发
+        } else {
+          // 距离足够远，说明是拖拽事件，完成连线
+          if (this.connectToEntity) {
+            this.dragMultiConnect(this.connectToEntity, sourceDirection, targetDirection);
+          }
+        }
       } else {
         // 在目标节点上弹起
 
