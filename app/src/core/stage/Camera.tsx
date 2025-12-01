@@ -179,7 +179,9 @@ export class Camera {
       friction = this.speed
         .normalize()
         .multiply(-1)
-        .multiply(Settings.moveFriction * speedSize ** this.frictionExponent);
+        .multiply(Settings.moveFriction * speedSize ** this.frictionExponent)
+        .limitX(-300, 300)
+        .limitY(-300, 300);
     }
 
     // 计算动力

@@ -630,6 +630,7 @@ export class Renderer {
       `shake: ${this.project.camera.shakeLocation.toString()}`,
       `location: ${this.project.camera.location.x.toFixed(2)}, ${this.project.camera.location.y.toFixed(2)}`,
       `location: ${this.project.camera.location.x}, ${this.project.camera.location.y}`,
+      `speed: ${this.project.camera.speed.x}, ${this.project.camera.speed.y}`,
       `window: ${this.w}x${this.h}`,
       `effect count: ${this.project.effects.effectsCount}`,
       `node count: ${this.renderedNodes} , ${this.project.stageManager.getTextNodes().length}`,
