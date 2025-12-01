@@ -89,6 +89,27 @@ if (import.meta.hot) {
   import.meta.hot.accept();
 }
 
+export enum ProjectState {
+  /**
+   * “已保存”
+   * 已写入到原始文件中
+   * 已上传到云端
+   */
+  Saved,
+  /**
+   * "已暂存"
+   * 未写入到原始文件中，但是已经暂存到数据目录
+   * 未上传到云端，但是已经暂存到本地
+   */
+  Stashed,
+  /**
+   * “未保存”
+   * 未写入到原始文件中，也未暂存到数据目录（真·未保存）
+   * 未上传到云端，也未暂存到本地
+   */
+  Unsaved,
+}
+
 /**
  * “工程”
  * 一个标签页对应一个工程，一个工程只能对应一个URI
@@ -111,6 +132,7 @@ export class Project extends EventEmitter<{
   private rafHandle = -1;
   private _uri: URI;
   private _state: ProjectState = ProjectState.Unsaved;
+  private _isSaving = false;
   public stage: StageObject[] = [];
   public tags: string[] = [];
   /**
@@ -318,8 +340,13 @@ export class Project extends EventEmitter<{
     // await writeFile(stashFilePath, encoded);
   }
   async save() {
-    await this.fs.write(this.uri, await this.getFileContent());
-    this.state = ProjectState.Saved;
+    try {
+      this.isSaving = true;
+      await this.fs.write(this.uri, await this.getFileContent());
+      this.state = ProjectState.Saved;
+    } finally {
+      this.isSaving = false;
+    }
   }
 
   // 反向引用数据
@@ -384,6 +411,16 @@ export class Project extends EventEmitter<{
 
   get state(): ProjectState {
     return this._state;
+  }
+
+  set isSaving(isSaving: boolean) {
+    if (isSaving === this._isSaving) return;
+    this._isSaving = isSaving;
+    this.emit("state-change", this._state);
+  }
+
+  get isSaving(): boolean {
+    return this._isSaving;
   }
 
   get isRunning(): boolean {
@@ -471,27 +508,6 @@ declare module "./Project" {
     autoSaveBackup: AutoSaveBackupService;
     referenceManager: ReferenceManager;
   }
-}
-
-export enum ProjectState {
-  /**
-   * “已保存”
-   * 已写入到原始文件中
-   * 已上传到云端
-   */
-  Saved,
-  /**
-   * "已暂存"
-   * 未写入到原始文件中，但是已经暂存到数据目录
-   * 未上传到云端，但是已经暂存到本地
-   */
-  Stashed,
-  /**
-   * “未保存”
-   * 未写入到原始文件中，也未暂存到数据目录（真·未保存）
-   * 未上传到云端，也未暂存到本地
-   */
-  Unsaved,
 }
 
 /**

@@ -82,6 +82,7 @@ export const ProjectTabs = memo(function ProjectTabs({
           className={cn(
             "hover:bg-primary/20 outline-inset h-full cursor-pointer rounded-none px-2 hover:opacity-100 sm:rounded-sm",
             activeProject?.uri.toString() === project.uri.toString() ? "bg-primary/70" : "bg-accent opacity-70",
+            project.isSaving && "animate-pulse",
           )}
           onMouseDown={(e) => {
             if (e.button === 0) {
@@ -107,19 +108,28 @@ export const ProjectTabs = memo(function ProjectTabs({
                 : project.uri.toString()}
           </span>
           <div
-            className="hover:rotate-15 cursor-pointer overflow-hidden transition-transform hover:scale-110 hover:opacity-100"
+            className="flex size-4 cursor-pointer items-center justify-center hover:opacity-100"
             onClick={(e) => {
               handleTabClose(project, e);
               SoundService.play.cuttingLineRelease();
             }}
           >
-            {project.state === ProjectState.Saved && <X className="scale-75 opacity-75" />}
-            {project.state === ProjectState.Stashed && <CloudUpload />}
-            {project.state === ProjectState.Unsaved && (
+            {project.isSaving ? (
+              <span className="grid size-3.5 animate-spin grid-cols-2">
+                <span className="border-1 border-accent-foreground w-full animate-pulse rounded-full p-0.5"></span>
+                <span className="border-1 border-accent-foreground w-full rounded-full p-0.5"></span>
+                <span className="border-1 border-accent-foreground w-full rounded-full p-0.5"></span>
+                <span className="border-1 border-accent-foreground w-full animate-pulse rounded-full p-0.5"></span>
+              </span>
+            ) : project.state === ProjectState.Saved ? (
+              <X className="scale-75 opacity-75" />
+            ) : project.state === ProjectState.Stashed ? (
+              <CloudUpload />
+            ) : (
               <Tooltip>
                 {/* 醒目提醒用户，崩溃了丢了文件别怪开发者提醒不到位 */}
                 <TooltipTrigger>
-                  <CircleAlert className="*:text-destructive! text-destructive! mt-1.5" />
+                  <CircleAlert className="*:text-destructive! text-destructive!" />
                 </TooltipTrigger>
                 <TooltipContent>未保存！</TooltipContent>
               </Tooltip>
