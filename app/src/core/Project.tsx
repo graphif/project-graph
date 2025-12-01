@@ -185,8 +185,17 @@ export class Project extends EventEmitter<{
       return;
     }
     try {
-      const fileContent = await this.fs.read(this.uri);
-      const reader = new ZipReader(new Uint8ArrayReader(fileContent));
+      let reader: ZipReader<Uint8Array>;
+      if (this.uri.scheme === "file" && typeof this.fs.readAsBlob === "function") {
+        // 对于文件系统中的大文件，使用 readAsBlob 方法创建 Blob 对象，避免一次性加载整个文件到内存
+        const blob = await this.fs.readAsBlob(this.uri);
+        reader = new ZipReader(new BlobReader(blob));
+      } else {
+        // 对于其他情况（如草稿文件或不支持 readAsBlob 的文件系统），继续使用 Uint8ArrayReader
+        const fileContent = await this.fs.read(this.uri);
+        reader = new ZipReader(new Uint8ArrayReader(fileContent));
+      }
+
       const entries = await reader.getEntries();
       let serializedStageObjects: any[] = [];
       let tags: string[] = [];
@@ -214,11 +223,18 @@ export class Project extends EventEmitter<{
           this.attachments.set(uuid, attachment);
         }
       }
+
       this.stage = deserialize(serializedStageObjects, this);
       this.tags = tags;
       this.references = references;
     } catch (e) {
-      console.warn(e);
+      console.error("[Project] 加载文件失败:", e);
+      // 显示更友好的错误提示
+      toast.error("加载文件失败: " + (e as Error).message);
+      // 确保舞台不为空，避免清空现有内容
+      if (!this.stage || this.stage.length === 0) {
+        this.stage = [];
+      }
     }
     this.state = ProjectState.Saved;
   }

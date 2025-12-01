@@ -6,6 +6,16 @@ export class FileSystemProviderFile implements FileSystemProvider {
   async read(uri: URI) {
     return await readFile(uri.fsPath);
   }
+
+  /**
+   * 直接从文件系统创建 Blob 对象，避免一次性加载整个文件到内存
+   */
+  async readAsBlob(uri: URI): Promise<Blob> {
+    const fileContent = await readFile(uri.fsPath);
+    // 转换为 Blob 可以接受的类型
+    return new Blob([fileContent.buffer as ArrayBuffer]);
+  }
+
   async readDir(uri: URI) {
     return await readDir(uri.fsPath);
   }
