@@ -39,7 +39,7 @@ function MenubarTrigger({ className, ...props }: React.ComponentProps<typeof Men
     <MenubarPrimitive.Trigger
       data-slot="menubar-trigger"
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground outline-hidden flex select-none items-center rounded-sm py-1 text-sm font-medium data-[disabled]:opacity-50 sm:px-2 [&_svg]:size-4 sm:[&_svg]:mr-1",
+        "focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground outline-hidden hover:bg-accent hover:text-accent-foreground flex select-none items-center rounded-sm py-1 text-sm font-medium data-[disabled]:opacity-50 sm:px-2 [&_svg]:size-4 sm:[&_svg]:mr-1",
         className,
       )}
       onMouseEnter={() => {
