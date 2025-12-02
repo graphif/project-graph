@@ -957,6 +957,11 @@ keyBinds:
       Reload the application and the current project file.
       This is equivalent to refreshing a web page in a browser.
       Warning: This action can cause loss of unsaved progress!
+  dagGraphAdjust:
+    title: Adjust DAG Layout
+    description: |
+      Automatically adjust the layout of selected nodes that form a Directed Acyclic Graph (DAG).
+      This feature is only available when the selected nodes form a DAG structure.
   undo:
     title: Undo
     description: Undo the last action

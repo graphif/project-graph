@@ -1106,6 +1106,11 @@ keyBinds:
     description: |
       主要用于关闭了键盘生长节点时触发的树形排布调整时使用
       可以通过此快捷键手动触发布局调整
+  dagGraphAdjust:
+    title: 调整当前选中节点群的DAG布局
+    description: |
+      对选中的有向无环图（DAG）结构进行自动布局调整
+      仅当选中节点构成DAG结构时可用
   gravityLayout:
     title: 持续按下引力式布局
     description: |

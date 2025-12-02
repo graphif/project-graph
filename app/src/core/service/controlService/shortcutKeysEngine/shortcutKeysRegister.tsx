@@ -890,6 +890,25 @@ export const allKeyBinds: KeyBindItem[] = [
       project?.controller.pressingKeySet.clear(); // 解决 mac 按下后容易卡键
     },
   },
+  /*------- DAG调整 -------*/
+  {
+    id: "dagGraphAdjust",
+    defaultKey: "A-S-d",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      const entities = project!.stageManager
+        .getSelectedEntities()
+        .filter((entity) => entity instanceof ConnectableEntity);
+      if (entities.length >= 2) {
+        if (project!.graphMethods.isDAGByNodes(entities)) {
+          project!.autoLayout.autoLayoutDAG(entities);
+        } else {
+          toast.error("选中的节点不构成有向无环图（DAG）");
+        }
+        project?.controller.pressingKeySet.clear(); // 解决 mac 按下后容易卡键
+      }
+    },
+  },
   {
     id: "gravityLayout",
     defaultKey: "g",

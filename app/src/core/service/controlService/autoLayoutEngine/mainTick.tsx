@@ -1,5 +1,8 @@
 import { Project, service } from "@/core/Project";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
+import { toast } from "sonner";
 
 /**
  * 计算一个节点的半径，半径是一个矩形中心到对角线的距离
@@ -43,6 +46,92 @@ export class AutoLayout {
 
   public setGravityLayoutEnd() {
     this.isGravityLayoutStart = false;
+  }
+
+  /**
+   * DAG布局算法输入数据结构
+   */
+  private getDAGLayoutInput(entities: ConnectableEntity[]): {
+    nodes: Array<{ id: string; rectangle: Rectangle }>;
+    edges: Array<{ from: string; to: string }>;
+  } {
+    // 构建节点映射，使用UUID作为唯一标识
+    const nodeMap = new Map<string, ConnectableEntity>();
+    const nodes = entities.map((entity) => {
+      nodeMap.set(entity.uuid, entity);
+      return {
+        id: entity.uuid,
+        rectangle: entity.collisionBox.getRectangle(),
+      };
+    });
+
+    // 构建边关系
+    const edges: Array<{ from: string; to: string }> = [];
+    for (const entity of entities) {
+      const children = this.project.graphMethods.nodeChildrenArray(entity);
+      for (const child of children) {
+        // 只包含选中实体之间的连接
+        if (nodeMap.has(child.uuid)) {
+          edges.push({
+            from: entity.uuid,
+            to: child.uuid,
+          });
+        }
+      }
+    }
+
+    return { nodes, edges };
+  }
+
+  /**
+   * DAG布局算法接口
+   * @param input 包含节点和边的DAG结构
+   * @returns 每个节点的新位置 { [nodeId: string]: Vector }
+   */
+  private computeDAGLayout(input: {
+    nodes: Array<{ id: string; rectangle: Rectangle }>;
+    edges: Array<{ from: string; to: string }>;
+  }): { [nodeId: string]: Vector } {
+    const { nodes, edges } = input;
+    console.log("DAG布局输入:", { nodes, edges });
+    // 目前返回空对象，后续由算法实现填充
+    return {};
+  }
+
+  /**
+   * DAG布局主函数
+   * @param entities 选中的实体列表
+   */
+  public autoLayoutDAG(entities: ConnectableEntity[]) {
+    try {
+      // 1. 准备算法输入数据
+      const input = this.getDAGLayoutInput(entities);
+
+      // 2. 调用DAG布局算法计算新位置
+      const newPositions = this.computeDAGLayout(input);
+
+      // 3. 应用计算结果到实际节点
+      const nodeMap = new Map<string, ConnectableEntity>();
+      entities.forEach((entity) => nodeMap.set(entity.uuid, entity));
+
+      // 4. 移动节点到新位置
+      for (const [nodeId, position] of Object.entries(newPositions)) {
+        const entity = nodeMap.get(nodeId);
+        if (entity) {
+          entity.moveTo(position);
+        }
+      }
+
+      // 5. 记录操作步骤，支持撤销
+      this.project.historyManager.recordStep();
+
+      // 6. 显示成功提示
+      toast.success("DAG布局已应用");
+    } catch (error) {
+      // 7. 错误处理
+      console.error("DAG布局失败:", error);
+      toast.error("DAG布局失败，请检查控制台日志");
+    }
   }
 
   /**

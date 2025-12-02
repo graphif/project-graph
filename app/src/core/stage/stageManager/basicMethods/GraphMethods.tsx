@@ -318,4 +318,50 @@ export class GraphMethods {
     if (!dfs(root)) return false;
     return visited.size === nodeSet.size;
   }
+
+  /** 判断一组节点在其诱导子图中是否构成有向无环图（DAG） */
+  public isDAGByNodes(nodes: ConnectableEntity[]): boolean {
+    if (nodes.length === 0) return false;
+    const nodeSet = new Set<string>(nodes.map((n) => n.uuid));
+
+    // 使用 Kahn算法检测DAG
+    // 1. 计算每个节点的入度
+    const inDegree: Map<string, number> = new Map();
+    const adjacency: Map<string, ConnectableEntity[]> = new Map();
+
+    // 初始化入度和邻接表
+    for (const node of nodes) {
+      inDegree.set(node.uuid, this.nodeParentArrayWithinSet(node, nodeSet).length);
+      adjacency.set(node.uuid, this.nodeChildrenArrayWithinSet(node, nodeSet));
+    }
+
+    // 2. 将所有入度为0的节点入队
+    const queue: ConnectableEntity[] = [];
+    for (const node of nodes) {
+      if (inDegree.get(node.uuid) === 0) {
+        queue.push(node);
+      }
+    }
+
+    // 3. 拓扑排序
+    let count = 0;
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      count++;
+
+      // 遍历所有邻接节点
+      for (const neighbor of adjacency.get(current.uuid)!) {
+        const neighborId = neighbor.uuid;
+        const newInDegree = inDegree.get(neighborId)! - 1;
+        inDegree.set(neighborId, newInDegree);
+
+        if (newInDegree === 0) {
+          queue.push(neighbor);
+        }
+      }
+    }
+
+    // 如果所有节点都被访问过，说明没有环，是DAG
+    return count === nodes.length;
+  }
 }

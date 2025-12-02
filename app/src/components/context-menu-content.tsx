@@ -120,6 +120,12 @@ export default function MyContextMenuContent() {
     });
   };
 
+  // 简化判断，只要选中了两个及以上的节点就显示按钮
+  const hasMultipleSelectedEntities = () => {
+    const selectedEntities = p.stageManager.getSelectedEntities();
+    return selectedEntities.length >= 2 && selectedEntities.every((entity) => entity instanceof ConnectableEntity);
+  };
+
   return (
     <Content>
       {/* 第一行 Ctrl+c/v/x del */}
@@ -372,6 +378,31 @@ export default function MyContextMenuContent() {
               onClick={() => p.layoutManager.layoutBySelected(p.layoutManager.layoutToTightSquare, true)}
             >
               <SquareSquare />
+            </Button>
+          </ContextMenuTooltip>
+        </Item>
+      )}
+
+      {/* DAG面板 */}
+      {hasMultipleSelectedEntities() && (
+        <Item className="bg-transparent! gap-0 p-0">
+          <ContextMenuTooltip keyId="dagGraphAdjust">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6"
+              onClick={() => {
+                const selectedEntities = p.stageManager
+                  .getSelectedEntities()
+                  .filter((entity) => entity instanceof ConnectableEntity);
+                if (p.graphMethods.isDAGByNodes(selectedEntities)) {
+                  p.autoLayout.autoLayoutDAG(selectedEntities);
+                } else {
+                  toast.error("选中的节点不构成有向无环图（DAG）");
+                }
+              }}
+            >
+              <Network />
             </Button>
           </ContextMenuTooltip>
         </Item>
