@@ -2,6 +2,7 @@ import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Project, service } from "@/core/Project";
 import { LineEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineEffect";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Settings } from "@/core/service/Settings";
 
 /**
  * 所有和旋转相关的操作
@@ -17,6 +18,9 @@ export class StageNodeRotate {
    * @param diffLocation
    */
   moveEdges(lastMoveLocation: Vector, diffLocation: Vector) {
+    if (!Settings.enableDragEdgeRotateStructure) {
+      return;
+    }
     for (const edge of this.project.stageManager.getLineEdges()) {
       if (edge.isSelected) {
         const startMouseDragLocation = lastMoveLocation.clone();

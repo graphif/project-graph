@@ -271,7 +271,12 @@ const categories = {
       "textNodeSelectAllWhenStartEditByKeyboard",
       "textNodeBackspaceDeleteWhenEmpty",
     ],
-    edge: ["allowAddCycleEdge", "autoAdjustLineEndpointsByMouseTrack", "enableRightClickConnect"],
+    edge: [
+      "allowAddCycleEdge",
+      "autoAdjustLineEndpointsByMouseTrack",
+      "enableRightClickConnect",
+      "enableDragEdgeRotateStructure",
+    ],
     generateNode: [
       "autoLayoutWhenTreeGenerate",
       "enableBackslashGenerateNodeInInput",

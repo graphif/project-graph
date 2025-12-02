@@ -294,6 +294,11 @@ settings:
     description: |
       開啟後，節點之間可以添加自迴圈，即節點與自身相連，用於狀態機繪製。
       預設關閉，因為不常用，容易誤觸發。
+  enableDragEdgeRotateStructure:
+    title: 允許拖曳連線旋轉結構
+    description: |
+      開啟後，可以通過拖曳選中的連線來旋轉節點結構
+      這允許您輕鬆調整相連節點的方向
   moveAmplitude:
     title: 視角移動加速度
     description: |

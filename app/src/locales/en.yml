@@ -365,6 +365,11 @@ settings:
     description: |
       When enabled, nodes can have self-loops, i.e., connections to themselves, which is useful for state machine diagrams.
       This is disabled by default because it is not commonly used and can be easily triggered by mistake.
+  enableDragEdgeRotateStructure:
+    title: Enable Drag Edge to Rotate Structure
+    description: |
+      When enabled, you can rotate the node structure by dragging selected edges.
+      This allows you to easily adjust the orientation of connected nodes.
   moveAmplitude:
     title: Camera Movement Amplitude
     description: |

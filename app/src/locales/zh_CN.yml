@@ -469,6 +469,11 @@ settings:
     description: |
       开启后，节点之间可以添加自环，即节点与自身相连，用于状态机绘制
       默认关闭，因为不常用，容易误触发
+  enableDragEdgeRotateStructure:
+    title: 允许拖拽连线旋转结构
+    description: |
+      开启后，可以通过拖拽选中的连线来旋转节点结构
+      这允许您轻松调整相连节点的方向
   autoLayoutWhenTreeGenerate:
     title: 生长节点时自动更新布局
     description: |
