@@ -5,6 +5,7 @@ import { Button } from "./components/ui/button";
 import { CircleAlert, CloudUpload, X } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./components/ui/tooltip";
 import { SoundService } from "./core/service/feedbackService/SoundService";
+import { toast } from "sonner";
 
 // 将 ProjectTabs 移出 App 组件，作为独立组件
 export const ProjectTabs = memo(function ProjectTabs({
@@ -110,8 +111,26 @@ export const ProjectTabs = memo(function ProjectTabs({
           <div
             className="flex size-4 cursor-pointer items-center justify-center hover:opacity-100"
             onClick={(e) => {
-              handleTabClose(project, e);
-              SoundService.play.cuttingLineRelease();
+              if (project.isSaving) {
+                // 如果正在保存中，显示提示
+                toast.warning("正在保存中，请勿擅自做多余的操作");
+                SoundService.play.cuttingLineRelease();
+              } else if (project.state === ProjectState.Unsaved) {
+                // 如果是未保存状态，根据项目类型执行不同操作
+                if (project.uri.scheme === "draft") {
+                  // 草稿文件，弹出对话框
+                  handleTabClose(project, e);
+                  SoundService.play.cuttingLineRelease();
+                } else {
+                  // 已有的文件，直接保存
+                  project.save();
+                  SoundService.play.cuttingLineRelease();
+                }
+              } else {
+                // 其他状态，执行关闭操作
+                handleTabClose(project, e);
+                SoundService.play.cuttingLineRelease();
+              }
             }}
           >
             {project.isSaving ? (

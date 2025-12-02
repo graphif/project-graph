@@ -272,7 +272,7 @@ settings:
       When enabled, entities will collide and squeeze each other, which may affect performance.
       It is recommended to disable this option, as entity collision and squeezing are not yet perfect and may cause stack overflow.
   autoNamerTemplate:
-    title: Auto-Naming Template
+    title: Auto-Naming Template for Node Creation
     description: |
       Input `{{i}}` to automatically replace the node name with a number, which will increment automatically when creating by double-clicking.
       For example, `n{{i}}` will be replaced with `n1`, `n2`, `n3`...
@@ -280,7 +280,7 @@ settings:
       Input `{{time}}` to automatically replace with the current time, which will update automatically when creating by double-clicking.
       These can be combined, such as `{{i}}-{{date}}-{{time}}`.
   autoNamerSectionTemplate:
-    title: Auto-Naming Group Template
+    title: Auto-Naming Template for Box Creation
     description: |
       Input `{{i}}` to automatically replace the node name with a number, which will increment automatically when creating by double-clicking.
       For example, `n{{i}}` will be replaced with `n1`, `n2`, `n3`...
