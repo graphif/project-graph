@@ -10,6 +10,7 @@ import { averageColors, Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";
 import { v4 } from "uuid";
+import { Settings } from "../Settings";
 
 export namespace TextNodeSmartTools {
   export function ttt(project: Project) {
@@ -428,43 +429,70 @@ export namespace TextNodeSmartTools {
     }
   }
 
-  const specialColorList = [new Color(59, 114, 60), new Color(61, 10, 11)];
-  const specialCharPrefix = ["✅", "❌"];
+  // 通用快捷编辑方法
+  export function quickEdit(project: Project, operationIndex: number) {
+    // 获取配置
+    const config = Settings.quickEdit.operations[operationIndex - 1];
+    if (!config.enabled) return;
 
-  export function okk(project: Project) {
     const selectedTextNodes = project.stageManager.getSelectedEntities().filter((node) => node instanceof TextNode);
     for (const node of selectedTextNodes) {
-      if (specialColorList.some((value) => value.equals(node.color))) {
+      // 处理颜色
+      if (config.toggle && node.color.toRGBAString() === config.color) {
         node.color = Color.Transparent;
       } else {
-        node.color = new Color(59, 114, 60);
+        // 解析颜色字符串为Color对象
+        const colorMatch = config.color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+))?\)/);
+        if (colorMatch) {
+          const [, r, g, b, a] = colorMatch;
+          node.color = new Color(parseInt(r), parseInt(g), parseInt(b), a ? parseFloat(a) : 1);
+        }
       }
-      if (specialCharPrefix.some((value) => node.text.startsWith(value + " "))) {
-        node.rename(node.text.slice(2));
+
+      // 处理文本内容
+      let newText = node.text;
+
+      // 检查是否需要移除前缀、后缀或替换
+      const hasPrefix = newText.startsWith(config.prefix);
+      const hasSuffix = newText.endsWith(config.suffix);
+
+      if (config.toggle && hasPrefix && hasSuffix) {
+        // 移除前缀和后缀
+        newText = newText.slice(config.prefix.length, -config.suffix.length);
       } else {
-        node.rename("✅ " + node.text);
+        // 添加前缀和后缀
+        newText = config.prefix + newText + config.suffix;
       }
+
+      // 处理替换内容
+      if (config.replace) {
+        if (config.toggle && newText === config.replace) {
+          // 替换内容的开关效果
+          newText = node.text;
+        } else {
+          newText = config.replace;
+        }
+      }
+
+      // 更新节点文本
+      if (node.text !== newText) {
+        node.rename(newText);
+      }
+
       project.controllerUtils.finishChangeTextNode(node);
     }
     project.stageManager.updateReferences();
   }
 
+  // 保持原有方法的兼容性
+  export function okk(project: Project) {
+    // 调用快捷编辑方法，使用第一个操作配置
+    quickEdit(project, 1);
+  }
+
   export function err(project: Project) {
-    const selectedTextNodes = project.stageManager.getSelectedEntities().filter((node) => node instanceof TextNode);
-    for (const node of selectedTextNodes) {
-      if (specialColorList.some((value) => value.equals(node.color))) {
-        node.color = Color.Transparent;
-      } else {
-        node.color = new Color(61, 10, 11);
-      }
-      if (specialCharPrefix.some((value) => node.text.startsWith(value + " "))) {
-        node.rename(node.text.slice(2));
-      } else {
-        node.rename("❌ " + node.text);
-      }
-      project.controllerUtils.finishChangeTextNode(node);
-    }
-    project.stageManager.updateReferences();
+    // 调用快捷编辑方法，使用第二个操作配置
+    quickEdit(project, 2);
   }
 
   /**

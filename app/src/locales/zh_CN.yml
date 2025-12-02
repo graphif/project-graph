@@ -127,6 +127,7 @@ settings:
       autoNamer: 自动命名
       autoSave: 自动保存
       autoBackup: 自动备份
+      quickEdit: 快捷编辑文本节点
     control:
       title: 控制
       mouse: 鼠标
@@ -391,6 +392,38 @@ settings:
     description: |
       当使用Ctrl+S快捷键手动保存文件时，自动清空操作历史记录。
       开启此选项可以减少内存占用并保持界面整洁。
+  quickEdit:
+    title: 快捷编辑
+    description: |
+      配置快捷编辑文本节点的操作
+  quickEdit.enabled:
+    title: 启用
+    description: |
+      是否启用该快捷编辑操作
+  quickEdit.color:
+    title: 颜色
+    description: |
+      应用到文本节点的背景颜色，支持rgba格式
+  quickEdit.prefix:
+    title: 开头添加内容
+    description: |
+      在文本节点开头添加的内容
+  quickEdit.suffix:
+    title: 末尾添加内容
+    description: |
+      在文本节点末尾添加的内容
+  quickEdit.replace:
+    title: 替换内容
+    description: |
+      替换文本节点的内容
+  quickEdit.toggle:
+    title: 开关效果
+    description: |
+      是否支持开关效果，再次执行操作时恢复原状
+  quickEdit.operation:
+    title: 操作
+  quickEdit.operation.description:
+    title: 快捷编辑操作的详细配置
   historyManagerMode:
     title: 历史记录管理器模式
     description: |

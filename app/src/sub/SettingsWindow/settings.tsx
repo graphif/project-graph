@@ -232,6 +232,7 @@ const categories = {
     autoNamer: ["autoNamerTemplate", "autoNamerSectionTemplate"],
     autoSave: ["autoSaveWhenClose", "autoSave", "autoSaveInterval"],
     autoBackup: ["autoBackup", "autoBackupInterval", "autoBackupLimitCount", "autoBackupCustomPath"],
+    quickEdit: ["quickEdit"], // 快捷编辑文本节点
   },
   control: {
     mouse: [
@@ -311,6 +312,7 @@ const categoryIcons = {
     autoNamer: Text,
     autoSave: Save,
     autoBackup: Folder,
+    quickEdit: Workflow, // 快捷编辑图标
   },
   control: {
     icon: Wrench,

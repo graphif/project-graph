@@ -307,6 +307,38 @@ settings:
     description: |
       Automatically clear operation history when manually saving files using Ctrl+S shortcut.
       Enabling this option can reduce memory usage and keep the interface clean.
+  quickEdit:
+    title: Quick Edit
+    description: |
+      Configure quick edit operations for text nodes
+  quickEdit.enabled:
+    title: Enabled
+    description: |
+      Whether to enable this quick edit operation
+  quickEdit.color:
+    title: Color
+    description: |
+      Background color applied to text nodes, supports rgba format
+  quickEdit.prefix:
+    title: Prefix
+    description: |
+      Content added to the beginning of text nodes
+  quickEdit.suffix:
+    title: Suffix
+    description: |
+      Content added to the end of text nodes
+  quickEdit.replace:
+    title: Replace
+    description: |
+      Replace text node content
+  quickEdit.toggle:
+    title: Toggle Effect
+    description: |
+      Whether to support toggle effect, restore original state when operation is executed again
+  quickEdit.operation:
+    title: Operation
+  quickEdit.operation.description:
+    title: Detailed configuration for quick edit operation
   autoBackup:
     title: Enable Auto-Backup
     description: |

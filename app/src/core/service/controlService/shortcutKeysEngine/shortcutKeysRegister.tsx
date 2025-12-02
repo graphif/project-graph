@@ -964,16 +964,16 @@ export const allKeyBinds: KeyBindItem[] = [
       }
     },
   },
-  {
-    id: "toggleCheckmarkOnTextNodes",
-    defaultKey: "o k k",
-    onPress: (project) => TextNodeSmartTools.okk(project!),
-  },
-  {
-    id: "toggleCheckErrorOnTextNodes",
-    defaultKey: "e r r",
-    onPress: (project) => TextNodeSmartTools.err(project!),
-  },
+  // {
+  //   id: "toggleCheckmarkOnTextNodes",
+  //   defaultKey: "o k k",
+  //   onPress: (project) => TextNodeSmartTools.okk(project!),
+  // },
+  // {
+  //   id: "toggleCheckErrorOnTextNodes",
+  //   defaultKey: "e r r",
+  //   onPress: (project) => TextNodeSmartTools.err(project!),
+  // },
   {
     id: "reverseImageColors",
     defaultKey: "r r r",
@@ -1268,6 +1268,48 @@ export const allKeyBinds: KeyBindItem[] = [
       e1.moveTo(p2);
       e2.moveTo(p1);
     },
+  },
+  // 快捷编辑操作1
+  {
+    id: "quickEdit1",
+    defaultKey: "o k k",
+    onPress: (project) => TextNodeSmartTools.quickEdit(project!, 1),
+  },
+  // 快捷编辑操作2
+  {
+    id: "quickEdit2",
+    defaultKey: "e r r",
+    onPress: (project) => TextNodeSmartTools.quickEdit(project!, 2),
+  },
+  // 快捷编辑操作3
+  {
+    id: "quickEdit3",
+    defaultKey: "",
+    onPress: (project) => TextNodeSmartTools.quickEdit(project!, 3),
+  },
+  // 快捷编辑操作4
+  {
+    id: "quickEdit4",
+    defaultKey: "",
+    onPress: (project) => TextNodeSmartTools.quickEdit(project!, 4),
+  },
+  // 快捷编辑操作5
+  {
+    id: "quickEdit5",
+    defaultKey: "",
+    onPress: (project) => TextNodeSmartTools.quickEdit(project!, 5),
+  },
+  // 快捷编辑操作6
+  {
+    id: "quickEdit6",
+    defaultKey: "",
+    onPress: (project) => TextNodeSmartTools.quickEdit(project!, 6),
+  },
+  // 快捷编辑操作7
+  {
+    id: "quickEdit7",
+    defaultKey: "",
+    onPress: (project) => TextNodeSmartTools.quickEdit(project!, 7),
   },
 ];
 

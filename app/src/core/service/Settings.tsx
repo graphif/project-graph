@@ -171,6 +171,35 @@ export const settingsSchema = z.object({
   stealthModeReverseMask: z.boolean().default(false),
   clearHistoryWhenManualSave: z.boolean().default(true),
   soundPitchVariationRange: z.number().min(0).max(1200).int().default(150),
+  // 快捷编辑设置
+  quickEdit: z
+    .object({
+      operations: z
+        .array(
+          z.object({
+            enabled: z.boolean().default(true),
+            color: z.string().default("transparent"),
+            prefix: z.string().default(""),
+            suffix: z.string().default(""),
+            replace: z.string().default(""),
+            toggle: z.boolean().default(true),
+          }),
+        )
+        .length(7)
+        .default([
+          // 操作1：默认OKK配置
+          { enabled: true, color: "rgba(59,114,60,0.2)", prefix: "✅ ", suffix: "", replace: "", toggle: true },
+          // 操作2：默认ERR配置
+          { enabled: true, color: "rgba(61,10,11,0.2)", prefix: "❌ ", suffix: "", replace: "", toggle: true },
+          // 操作3-7：默认配置
+          { enabled: true, color: "transparent", prefix: "", suffix: "", replace: "", toggle: true },
+          { enabled: true, color: "transparent", prefix: "", suffix: "", replace: "", toggle: true },
+          { enabled: true, color: "transparent", prefix: "", suffix: "", replace: "", toggle: true },
+          { enabled: true, color: "transparent", prefix: "", suffix: "", replace: "", toggle: true },
+          { enabled: true, color: "transparent", prefix: "", suffix: "", replace: "", toggle: true },
+        ]),
+    })
+    .default({ operations: [] }),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

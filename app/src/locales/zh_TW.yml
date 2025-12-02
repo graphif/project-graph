@@ -249,6 +249,38 @@ settings:
     description: |
       當使用Ctrl+S快捷鍵手動儲存檔案時，自動清空操作歷史記錄。
       開啟此選項可以減少記憶體佔用並保持介面整潔。
+  quickEdit:
+    title: 快捷編輯
+    description: |
+      配置快捷編輯文本節點的操作
+  quickEdit.enabled:
+    title: 啟用
+    description: |
+      是否啟用此快捷編輯操作
+  quickEdit.color:
+    title: 顏色
+    description: |
+      應用到文本節點的背景顏色，支援rgba格式
+  quickEdit.prefix:
+    title: 開頭添加內容
+    description: |
+      在文本節點開頭添加的內容
+  quickEdit.suffix:
+    title: 末尾添加內容
+    description: |
+      在文本節點末尾添加的內容
+  quickEdit.replace:
+    title: 替換內容
+    description: |
+      替換文本節點的內容
+  quickEdit.toggle:
+    title: 開關效果
+    description: |
+      是否支援開關效果，再次執行操作時恢復原狀
+  quickEdit.operation:
+    title: 操作
+  quickEdit.operation.description:
+    title: 快捷編輯操作的詳細配置
   autoBackup:
     title: 開啟自動備份
     description: |

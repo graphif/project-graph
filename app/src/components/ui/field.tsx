@@ -8,7 +8,7 @@ import { settingsIcons } from "@/core/service/SettingsIcons";
 import { Telemetry } from "@/core/service/Telemetry";
 import { cn } from "@/utils/cn";
 import _ from "lodash";
-import { ChevronRight, RotateCw } from "lucide-react";
+import { ChevronRight, RotateCw, Text } from "lucide-react";
 import React, { CSSProperties, Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -39,6 +39,118 @@ export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof 
 
   // @ts-expect-error fuck ts
   const Icon = settingsIcons[settingKey] ?? Fragment;
+
+  // 特殊处理quickEdit设置项
+  if (settingKey === "quickEdit") {
+    return (
+      <div className="w-full">
+        <Field
+          title={t(`${settingKey}.title`)}
+          description={t(`${settingKey}.description`, { defaultValue: "" })}
+          icon={<Icon />}
+          className="border-accent not-hover:rounded-none hover:bg-accent border-b transition"
+        >
+          <RotateCw
+            className="text-panel-details-text h-4 w-4 cursor-pointer opacity-0 hover:rotate-180 group-hover/field:opacity-100"
+            onClick={() => setValue(schema._def.defaultValue)}
+          />
+        </Field>
+
+        {/* 渲染7个快捷编辑操作的配置 */}
+        {value.operations.map((operation: any, index: number) => (
+          <FieldGroup
+            key={index}
+            title={`${t("quickEdit.operation")} ${index + 1}`}
+            description={t("quickEdit.operation.description")}
+            icon={<Text size={16} />}
+            className="mt-2"
+          >
+            <div className="grid grid-cols-2 gap-2 p-4">
+              {/* 启用状态 */}
+              <Field title={t("quickEdit.enabled")} description={t("quickEdit.enabled.description")}>
+                <Switch
+                  checked={operation.enabled}
+                  onCheckedChange={(checked) => {
+                    const newOperations = [...value.operations];
+                    newOperations[index] = { ...newOperations[index], enabled: checked };
+                    setValue({ ...value, operations: newOperations });
+                  }}
+                />
+              </Field>
+
+              {/* 颜色 */}
+              <Field title={t("quickEdit.color")} description={t("quickEdit.color.description")}>
+                <Input
+                  value={operation.color}
+                  onChange={(e) => {
+                    const newOperations = [...value.operations];
+                    newOperations[index] = { ...newOperations[index], color: e.target.value };
+                    setValue({ ...value, operations: newOperations });
+                  }}
+                  placeholder="rgba(0,0,0,0.2)"
+                  className="w-32"
+                />
+              </Field>
+
+              {/* 前缀 */}
+              <Field title={t("quickEdit.prefix")} description={t("quickEdit.prefix.description")}>
+                <Input
+                  value={operation.prefix}
+                  onChange={(e) => {
+                    const newOperations = [...value.operations];
+                    newOperations[index] = { ...newOperations[index], prefix: e.target.value };
+                    setValue({ ...value, operations: newOperations });
+                  }}
+                  placeholder="开头添加内容"
+                  className="w-32"
+                />
+              </Field>
+
+              {/* 后缀 */}
+              <Field title={t("quickEdit.suffix")} description={t("quickEdit.suffix.description")}>
+                <Input
+                  value={operation.suffix}
+                  onChange={(e) => {
+                    const newOperations = [...value.operations];
+                    newOperations[index] = { ...newOperations[index], suffix: e.target.value };
+                    setValue({ ...value, operations: newOperations });
+                  }}
+                  placeholder="末尾添加内容"
+                  className="w-32"
+                />
+              </Field>
+
+              {/* 替换内容 */}
+              <Field title={t("quickEdit.replace")} description={t("quickEdit.replace.description")}>
+                <Input
+                  value={operation.replace}
+                  onChange={(e) => {
+                    const newOperations = [...value.operations];
+                    newOperations[index] = { ...newOperations[index], replace: e.target.value };
+                    setValue({ ...value, operations: newOperations });
+                  }}
+                  placeholder="替换内容"
+                  className="w-32"
+                />
+              </Field>
+
+              {/* 开关效果 */}
+              <Field title={t("quickEdit.toggle")} description={t("quickEdit.toggle.description")}>
+                <Switch
+                  checked={operation.toggle}
+                  onCheckedChange={(checked) => {
+                    const newOperations = [...value.operations];
+                    newOperations[index] = { ...newOperations[index], toggle: checked };
+                    setValue({ ...value, operations: newOperations });
+                  }}
+                />
+              </Field>
+            </div>
+          </FieldGroup>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <Field

@@ -168,4 +168,6 @@ export const settingsIcons = {
   soundPitchVariationRange: ListMusic,
   textNodeAutoFormatTreeWhenExitEdit: ListTree,
   treeGenerateCameraBehavior: Fullscreen,
+  // 快捷编辑设置项图标
+  quickEdit: Text,
 };
