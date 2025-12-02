@@ -1,4 +1,5 @@
 import { Project } from "@/core/Project";
+import { ConvexHull } from "@/core/algorithm/geometry/convexHull";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { ConnectableAssociation } from "@/core/stage/stageObject/abstract/Association";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
@@ -37,15 +38,93 @@ export class MultiTargetUndirectedEdge extends ConnectableAssociation {
   public uuid: string;
 
   get collisionBox(): CollisionBox {
-    // 计算多个节点的外接矩形的中心点
-    const center = this.centerLocation;
-
-    const shapes: Shape[] = [];
-    for (const node of this.associationList) {
-      const line = new Line(center, node.collisionBox.getRectangle().center);
-      shapes.push(line);
+    // 根据不同的渲染类型生成不同的碰撞箱
+    if (this.renderType === "convex") {
+      // 凸包类型：使用凸包边缘的折线段作为碰撞箱
+      const shapes: Shape[] = [];
+      if (this.associationList.length >= 2) {
+        // 计算凸包点
+        const convexPoints: Vector[] = [];
+        this.associationList.map((node) => {
+          const nodeRectangle = node.collisionBox.getRectangle().expandFromCenter(this.padding);
+          convexPoints.push(nodeRectangle.leftTop);
+          convexPoints.push(nodeRectangle.rightTop);
+          convexPoints.push(nodeRectangle.rightBottom);
+          convexPoints.push(nodeRectangle.leftBottom);
+        });
+        if (this.text !== "") {
+          const textRectangle = this.textRectangle.expandFromCenter(this.padding);
+          convexPoints.push(textRectangle.leftTop);
+          convexPoints.push(textRectangle.rightTop);
+          convexPoints.push(textRectangle.rightBottom);
+          convexPoints.push(textRectangle.leftBottom);
+        }
+        // 计算凸包
+        const convexHull = ConvexHull.computeConvexHull(convexPoints);
+        // 将凸包点转换为连续的线段
+        for (let i = 0; i < convexHull.length; i++) {
+          const start = convexHull[i];
+          const end = convexHull[(i + 1) % convexHull.length];
+          shapes.push(new Line(start, end));
+        }
+      }
+      return new CollisionBox(shapes);
+    } else if (this.renderType === "circle") {
+      // 圆形类型：使用圆形边缘的折线段（多边形近似）作为碰撞箱
+      const shapes: Shape[] = [];
+      if (this.associationList.length >= 2) {
+        // 计算所有点
+        const allPoints: Vector[] = [];
+        this.associationList.map((node) => {
+          const nodeRectangle = node.collisionBox.getRectangle().expandFromCenter(this.padding);
+          allPoints.push(nodeRectangle.leftTop);
+          allPoints.push(nodeRectangle.rightTop);
+          allPoints.push(nodeRectangle.rightBottom);
+          allPoints.push(nodeRectangle.leftBottom);
+        });
+        if (this.text !== "") {
+          const textRectangle = this.textRectangle.expandFromCenter(this.padding);
+          allPoints.push(textRectangle.leftTop);
+          allPoints.push(textRectangle.rightTop);
+          allPoints.push(textRectangle.rightBottom);
+          allPoints.push(textRectangle.leftBottom);
+        }
+        // 计算圆心和半径
+        const center = Vector.averageMultiple(allPoints);
+        let maxDistance = 0;
+        for (const point of allPoints) {
+          const distance = center.distance(point);
+          if (distance > maxDistance) {
+            maxDistance = distance;
+          }
+        }
+        // 生成多边形顶点（20个顶点近似圆形）
+        const vertexCount = 20;
+        const vertices: Vector[] = [];
+        for (let i = 0; i < vertexCount; i++) {
+          const angle = (i / vertexCount) * Math.PI * 2;
+          const x = center.x + maxDistance * Math.cos(angle);
+          const y = center.y + maxDistance * Math.sin(angle);
+          vertices.push(new Vector(x, y));
+        }
+        // 将顶点转换为连续的线段
+        for (let i = 0; i < vertices.length; i++) {
+          const start = vertices[i];
+          const end = vertices[(i + 1) % vertices.length];
+          shapes.push(new Line(start, end));
+        }
+      }
+      return new CollisionBox(shapes);
+    } else {
+      // line类型：保持现有实现
+      const center = this.centerLocation;
+      const shapes: Shape[] = [];
+      for (const node of this.associationList) {
+        const line = new Line(center, node.collisionBox.getRectangle().center);
+        shapes.push(line);
+      }
+      return new CollisionBox(shapes);
     }
-    return new CollisionBox(shapes);
   }
 
   @serializable
