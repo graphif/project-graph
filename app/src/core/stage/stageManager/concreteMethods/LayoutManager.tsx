@@ -336,8 +336,59 @@ function getOptimalRowsCols(n: number): { rows: number; cols: number } {
  */
 
 // 从visual-file项目里抄过来的
-
 function sortRectangleGreedy(rectangles: Rectangle[], margin = 20): Rectangle[] {
+  if (rectangles.length <= 6) return arrangeRectangleInCompactByBranch(rectangles, margin);
+  function appendRight(origin: Rectangle, originalRect: Rectangle, existingRects: Rectangle[], margin = 20): Rectangle {
+    const candidate = new Rectangle(
+      new Vector(origin.right + margin, origin.location.y),
+      new Vector(originalRect.size.x, originalRect.size.y),
+    );
+
+    let hasCollision: boolean;
+    do {
+      hasCollision = false;
+      for (const existing of existingRects) {
+        if (candidate.isCollideWithRectangle(existing)) {
+          hasCollision = true;
+          // 调整位置：下移到底部并保持右侧对齐
+          candidate.location.y = existing.bottom;
+          candidate.location.x = Math.max(candidate.location.x, existing.right);
+          break;
+        }
+      }
+    } while (hasCollision);
+
+    return candidate;
+  }
+
+  function appendBottom(
+    origin: Rectangle,
+    originalRect: Rectangle,
+    existingRects: Rectangle[],
+    margin = 20,
+  ): Rectangle {
+    const candidate = new Rectangle(
+      new Vector(origin.location.x, origin.bottom + margin),
+      new Vector(originalRect.size.x, originalRect.size.y),
+    );
+
+    let hasCollision: boolean;
+    do {
+      hasCollision = false;
+      for (const existing of existingRects) {
+        if (candidate.isCollideWithRectangle(existing)) {
+          hasCollision = true;
+          // 调整位置：右移并保持底部对齐
+          candidate.location.x = existing.right;
+          candidate.location.y = Math.max(candidate.location.y, existing.bottom);
+          break;
+        }
+      }
+    } while (hasCollision);
+
+    return candidate;
+  }
+
   if (rectangles.length === 0) return [];
 
   // 处理第一个矩形
@@ -402,48 +453,303 @@ function sortRectangleGreedy(rectangles: Rectangle[], margin = 20): Rectangle[] 
   return ret;
 }
 
-function appendRight(origin: Rectangle, originalRect: Rectangle, existingRects: Rectangle[], margin = 20): Rectangle {
-  const candidate = new Rectangle(
-    new Vector(origin.right + margin, origin.location.y),
-    new Vector(originalRect.size.x, originalRect.size.y),
+// function arrangeRectangleInCompactByDivide(rectangles: Rectangle[], margin = 20): Rectangle[] {
+//   if (rectangles.length <= 6) return arrangeRectangleInCompactByBranch(rectangles, margin);
+//   // 保存原始矩形的索引，以便后续恢复顺序
+//   const indexedRectangles = rectangles.map((rect, index) => ({ rect, originalIndex: index }));
+//   // 按面积排序
+//   indexedRectangles.sort((a, b) => a.rect.size.x * a.rect.size.y - b.rect.size.x * b.rect.size.y);
+//   // 提取排序后的矩形进行布局
+//   const sortedRects = indexedRectangles.map((item) => item.rect);
+//   const arrangedRects = arrangeRectangleInCompactByDivideHelper(sortedRects, margin);
+//   // 创建一个映射，将原始索引映射到排列后的矩形
+//   const indexToRectMap = new Map<number, Rectangle>();
+//   indexedRectangles.forEach((item, index) => {
+//     indexToRectMap.set(item.originalIndex, arrangedRects[index]);
+//   });
+//   // 按照原始顺序重新排列矩形
+//   const result: Rectangle[] = [];
+//   for (let i = 0; i < rectangles.length; i++) {
+//     result.push(indexToRectMap.get(i)!);
+//   }
+//   return result;
+
+//   function arrangeRectangleInCompactByDivideHelper(rectangles: Rectangle[], margin = 20): Rectangle[] {
+//     const n = rectangles.length;
+//     if (n < 4) {
+//       const ret: Rectangle[] = [
+//         new Rectangle(new Vector(0, 0), new Vector(rectangles[0].size.x, rectangles[0].size.y)),
+//       ];
+//       if (n >= 2) {
+//         ret.push(
+//           new Rectangle(
+//             new Vector(ret[0].width + margin, ret[0].height - rectangles[1].height),
+//             new Vector(rectangles[1].size.x, rectangles[1].size.y),
+//           ),
+//         );
+//       }
+//       if (n === 3) {
+//         ret.push(
+//           new Rectangle(
+//             new Vector((ret[0].width + margin + ret[1].width) / 2 - rectangles[2].width / 2, ret[0].height + margin),
+//             new Vector(rectangles[2].size.x, rectangles[2].size.y),
+//           ),
+//         );
+//       }
+//       return ret;
+//     }
+//     const subs: Rectangle[][] = [
+//       arrangeRectangleInCompactByDivide(rectangles.slice(0, n / 4), margin),
+//       arrangeRectangleInCompactByDivide(rectangles.slice(n / 4, n / 2), margin),
+//       arrangeRectangleInCompactByDivide(rectangles.slice(n / 2, (n / 4) * 3), margin),
+//       arrangeRectangleInCompactByDivide(rectangles.slice((n / 4) * 3, n), margin),
+//     ];
+//     const bods = subs.map((sub) => Rectangle.getBoundingRectangle(sub));
+//     for (const r of subs[1]) {
+//       r.location = r.location.add(new Vector(bods[0].width + margin, bods[0].height - bods[1].height));
+//     }
+//     for (const r of subs[2]) {
+//       r.location = r.location.add(new Vector(bods[0].width - bods[2].width, bods[0].height + margin));
+//     }
+//     for (const r of subs[3]) {
+//       r.location = r.location.add(new Vector(bods[0].width + margin, bods[0].height + margin));
+//     }
+//     return subs[0].concat(subs[1], subs[2], subs[3]);
+//   }
+// }
+
+/**
+ * 使用分支限界法计算矩形的最优紧凑布局，寻找最小外接正方形
+ *
+ * @param rectangles 要排列的矩形数组
+ * @param margin 矩形之间的间距，默认为20
+ * @returns 排列后的矩形数组，保持原始矩形的顺序
+ *
+ * @remarks
+ * 时间复杂度：理论上为 O(n!)，其中n是矩形数量。由于采用了多种剪枝策略，
+ * 实际运行时间会显著低于理论上限，但仍随矩形数量呈指数增长。
+ *
+ * 性能建议：
+ * - 对于n ≤ 6个矩形：可以快速计算出最优解
+ * - 对于n > 6个矩形：计算时间会明显增加，可能需要较长等待时间
+ * - 对于大规模矩形布局问题，建议使用启发式算法替代
+ *
+ * 算法特点：
+ * - 使用优先队列管理搜索状态
+ * - 大矩形优先放置策略
+ * - 多层剪枝优化搜索空间
+ * - 仅返回完整的最优解
+ */
+function arrangeRectangleInCompactByBranch(rectangles: Rectangle[], margin = 20): Rectangle[] {
+  if (rectangles.length === 0) return [];
+
+  // 定义状态接口，表示放置进度和当前布局情况
+  interface State {
+    placedRectangles: Rectangle[];
+    remainingIndices: number[];
+    // 当前布局的外接矩形信息
+    currentWidth: number;
+    currentHeight: number;
+    // 启发式值，用于分支限界
+    heuristicValue: number;
+  }
+
+  // 按面积从大到小排序矩形，优先放置大矩形
+  const sortedIndices = Array.from({ length: rectangles.length }, (_, i) => i).sort(
+    (a, b) => rectangles[b].size.x * rectangles[b].size.y - rectangles[a].size.x * rectangles[a].size.y,
   );
 
-  let hasCollision: boolean;
-  do {
-    hasCollision = false;
-    for (const existing of existingRects) {
-      if (candidate.isCollideWithRectangle(existing)) {
-        hasCollision = true;
-        // 调整位置：下移到底部并保持右侧对齐
-        candidate.location.y = existing.bottom;
-        candidate.location.x = Math.max(candidate.location.x, existing.right);
-        break;
-      }
-    }
-  } while (hasCollision);
+  // 计算矩形的总面积，用于启发式估计
+  const totalArea = rectangles.reduce((sum, rect) => sum + rect.size.x * rect.size.y, 0);
 
-  return candidate;
-}
+  // 计算最小可能的边长（基于总面积的理论下限）
+  const minPossibleSide = Math.ceil(Math.sqrt(totalArea));
 
-function appendBottom(origin: Rectangle, originalRect: Rectangle, existingRects: Rectangle[], margin = 20): Rectangle {
-  const candidate = new Rectangle(
-    new Vector(origin.location.x, origin.bottom + margin),
-    new Vector(originalRect.size.x, originalRect.size.y),
+  // 用于存储最优解
+  let bestSolution: Rectangle[] = [];
+  let bestSideLength = Infinity; // 初始化为无穷大，确保第一个解会被接受
+
+  // 计算启发式值：更精确地估计剩余矩形放置后的最小可能边长
+  function calculateHeuristic(currentSide: number, placedArea: number): number {
+    // 计算剩余面积
+    const remainingArea = totalArea - placedArea;
+    // 计算剩余矩形的最小可能边长增量并用于启发式计算
+    const minAdditionalSide = Math.ceil(Math.sqrt(remainingArea));
+    // 启发式值：当前边长与基于总面积的理论最小边长的最大值
+    // 考虑剩余面积的影响，提供更准确的估计
+    return Math.max(currentSide, minPossibleSide, currentSide + minAdditionalSide * 0.3); // 使用0.3系数平衡准确性和性能
+  }
+
+  // 初始状态：放置第一个矩形（最大的）
+  const firstRect = new Rectangle(
+    new Vector(0, 0),
+    new Vector(rectangles[sortedIndices[0]].size.x, rectangles[sortedIndices[0]].size.y),
   );
 
-  let hasCollision: boolean;
-  do {
-    hasCollision = false;
-    for (const existing of existingRects) {
-      if (candidate.isCollideWithRectangle(existing)) {
-        hasCollision = true;
-        // 调整位置：右移并保持底部对齐
-        candidate.location.x = existing.right;
-        candidate.location.y = Math.max(candidate.location.y, existing.bottom);
-        break;
+  const firstRectArea = firstRect.size.x * firstRect.size.y;
+  const firstHeuristic = calculateHeuristic(Math.max(firstRect.size.x, firstRect.size.y), firstRectArea);
+
+  // 使用优先队列来管理搜索状态，按照启发式值排序
+  const priorityQueue: State[] = [
+    {
+      placedRectangles: [firstRect],
+      remainingIndices: sortedIndices.slice(1),
+      currentWidth: firstRect.size.x,
+      currentHeight: firstRect.size.y,
+      heuristicValue: firstHeuristic,
+    },
+  ];
+
+  // 检查两个矩形是否重叠（确保间距至少为margin）
+  function checkCollision(newRect: Rectangle, placedRects: Rectangle[], margin: number): boolean {
+    return placedRects.some(
+      (rect) =>
+        !(
+          newRect.right + margin <= rect.left ||
+          newRect.left >= rect.right + margin ||
+          newRect.bottom + margin <= rect.top ||
+          newRect.top >= rect.bottom + margin
+        ),
+    );
+  }
+
+  // 生成可能的放置位置
+  function generatePossiblePositions(rect: Rectangle, placedRects: Rectangle[], margin: number): Vector[] {
+    const positions: Set<string> = new Set(); // 使用Set避免重复位置
+
+    // 如果还没有放置任何矩形，只返回原点位置
+    if (placedRects.length === 0) {
+      return [new Vector(0, 0)];
+    }
+
+    // 基于已放置矩形的边缘生成候选位置，确保间距正好为margin
+    placedRects.forEach((placed) => {
+      // 右侧位置（与左侧矩形间距正好为margin）
+      positions.add(`${placed.right + margin},${placed.top}`);
+      positions.add(`${placed.right + margin},${placed.bottom - rect.size.y}`);
+      positions.add(`${placed.right + margin},${placed.top + (placed.size.y - rect.size.y) / 2}`);
+
+      // 底部位置（与上方矩形间距正好为margin）
+      positions.add(`${placed.left},${placed.bottom + margin}`);
+      positions.add(`${placed.right - rect.size.x},${placed.bottom + margin}`);
+      positions.add(`${placed.left + (placed.size.x - rect.size.x) / 2},${placed.bottom + margin}`);
+
+      // 左侧位置（与右侧矩形间距正好为margin）
+      positions.add(`${placed.left - rect.size.x - margin},${placed.top}`);
+      positions.add(`${placed.left - rect.size.x - margin},${placed.bottom - rect.size.y}`);
+      positions.add(`${placed.left - rect.size.x - margin},${placed.top + (placed.size.y - rect.size.y) / 2}`);
+
+      // 顶部位置（与下方矩形间距正好为margin）
+      positions.add(`${placed.left},${placed.top - rect.size.y - margin}`);
+      positions.add(`${placed.right - rect.size.x},${placed.top - rect.size.y - margin}`);
+      positions.add(`${placed.left + (placed.size.x - rect.size.x) / 2},${placed.top - rect.size.y - margin}`);
+    });
+
+    // 将Set中的字符串位置转换回Vector对象并过滤负坐标
+    return (
+      Array.from(positions)
+        .map((posStr) => {
+          const [x, y] = posStr.split(",").map(Number);
+          return new Vector(x, y);
+        })
+        .filter((pos) => pos.x >= 0 && pos.y >= 0)
+        // 按位置的紧凑程度排序：优先选择靠近原点的位置
+        .sort((a, b) => {
+          const distanceA = a.x + a.y;
+          const distanceB = b.x + b.y;
+          return distanceA - distanceB;
+        })
+    );
+  }
+
+  // 分支限界搜索：专注于寻找最优解
+  while (priorityQueue.length > 0) {
+    // 取出启发式值最小的状态（优先队列排序后取最后一个）
+    priorityQueue.sort((a, b) => a.heuristicValue - b.heuristicValue); // 升序排序
+    const state = priorityQueue.pop()!;
+
+    // 剪枝：如果当前状态的启发式值已经大于等于最佳解的边长，则跳过
+    if (state.heuristicValue >= bestSideLength) {
+      continue;
+    }
+
+    // 如果没有剩余矩形，这是一个完整解，检查是否是最优解
+    if (state.remainingIndices.length === 0) {
+      const currentSideLength = Math.max(state.currentWidth, state.currentHeight);
+      // 只接受完整解，并且只有当它比当前最优解更好时才更新
+      if (currentSideLength < bestSideLength) {
+        bestSideLength = currentSideLength;
+        bestSolution = state.placedRectangles;
+      }
+      continue;
+    }
+
+    // 取出下一个要放置的矩形索引
+    const nextIndex = state.remainingIndices[0];
+    const remainingIndices = state.remainingIndices.slice(1);
+    const nextRect = rectangles[nextIndex];
+
+    // 计算已放置矩形的总面积
+    const placedArea = state.placedRectangles.reduce((sum, rect) => sum + rect.size.x * rect.size.y, 0);
+
+    // 生成可能的放置位置
+    const possiblePositions = generatePossiblePositions(nextRect, state.placedRectangles, margin);
+
+    // 尝试每个可能的位置
+    for (const position of possiblePositions) {
+      const newRect = new Rectangle(position, new Vector(nextRect.size.x, nextRect.size.y));
+
+      // 检查是否与已放置的矩形冲突
+      if (!checkCollision(newRect, state.placedRectangles, margin)) {
+        const newPlacedRectangles = [...state.placedRectangles, newRect];
+        const newWidth = Math.max(state.currentWidth, newRect.right);
+        const newHeight = Math.max(state.currentHeight, newRect.bottom);
+        const newSideLength = Math.max(newWidth, newHeight);
+
+        // 剪枝：如果新的边长已经大于等于当前最优解的边长，则跳过
+        if (newSideLength >= bestSideLength) {
+          continue;
+        }
+
+        // 计算新状态的启发式值
+        const newPlacedArea = placedArea + newRect.size.x * newRect.size.y;
+        const heuristicValue = calculateHeuristic(newSideLength, newPlacedArea);
+
+        // 剪枝：如果启发式值已经大于等于当前最优解的边长，则跳过
+        if (heuristicValue >= bestSideLength) {
+          continue;
+        }
+
+        // 将新状态加入优先队列
+        priorityQueue.push({
+          placedRectangles: newPlacedRectangles,
+          remainingIndices,
+          currentWidth: newWidth,
+          currentHeight: newHeight,
+          heuristicValue,
+        });
       }
     }
-  } while (hasCollision);
+  }
 
-  return candidate;
+  // 确保只返回完整的最优解
+  if (bestSolution.length !== rectangles.length) {
+    // 如果没有找到完整解（理论上不应该发生，除非搜索空间被完全剪枝），返回按原始顺序的矩形
+    return rectangles.map((rect) => rect.clone());
+  }
+
+  // 按照原始顺序返回矩形
+  const result: Rectangle[] = [];
+  for (let i = 0; i < rectangles.length; i++) {
+    // 找到原始索引对应的矩形
+    const originalIndex = sortedIndices.findIndex((sortedIdx) => sortedIdx === i);
+    if (originalIndex >= 0 && originalIndex < bestSolution.length) {
+      result[i] = bestSolution[originalIndex];
+    } else {
+      // 如果找不到对应关系，使用原始矩形
+      result[i] = rectangles[i].clone();
+    }
+  }
+
+  return result;
 }
