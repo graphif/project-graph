@@ -582,8 +582,13 @@ export default function MyContextMenuContent() {
                 <SubContent>
                   <Item onClick={() => TextNodeSmartTools.insertNodeToTree(p)}>
                     <GitPullRequestCreateArrow />
-                    嫁接
-                    <span className="text-xs opacity-50">需要叠放在线上</span>
+                    嫁接到连线中
+                    <span className="text-xs opacity-50">[q, e]</span>
+                  </Item>
+                  <Item onClick={() => TextNodeSmartTools.removeNodeFromTree(p)}>
+                    <ArrowLeftFromLine />
+                    从连线中摘除
+                    <span className="text-xs opacity-50">[q, r]</span>
                   </Item>
                   <Item onClick={() => ConnectNodeSmartTools.connectDown(p)}>
                     <MoveDown />

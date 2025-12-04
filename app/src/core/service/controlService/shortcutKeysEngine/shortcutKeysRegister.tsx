@@ -1288,6 +1288,22 @@ export const allKeyBinds: KeyBindItem[] = [
       e2.moveTo(p1);
     },
   },
+
+  /*------- 节点相关 -------*/
+  {
+    id: "graftNodeToTree",
+    defaultKey: "q e",
+    onPress: (project) => {
+      TextNodeSmartTools.insertNodeToTree(project!);
+    },
+  },
+  {
+    id: "removeNodeFromTree",
+    defaultKey: "q r",
+    onPress: (project) => {
+      TextNodeSmartTools.removeNodeFromTree(project!);
+    },
+  },
 ];
 
 /**

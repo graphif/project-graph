@@ -985,6 +985,10 @@ keyBindsGroup:
     title: 图片相关
     description: |
       关于图片的一些功能
+  node:
+    title: 节点相关
+    description: |
+      关于节点的一些功能，如嫁接、摘除等
 
 keyBinds:
   title: 快捷键绑定
@@ -1477,6 +1481,14 @@ keyBinds:
   changeColorHueMajorDown:
     title: 将所选实体的颜色色相大幅减少
     description: 不能对没有上色的或者透明的实体使用
+  graftNodeToTree:
+    title: 嫁接节点到树
+    description: |
+      将选中的节点嫁接到碰撞到的连线上，保持原连线方向
+  removeNodeFromTree:
+    title: 从树中摘除节点
+    description: |
+      将选中的节点从树中摘出来，并重新连接前后节点
 
   toggleTextNodeSizeMode:
     title: 将选中的文本节点，切换大小调整模式

@@ -1173,6 +1173,10 @@ keyBindsGroup:
     title: 图片相关
     description: |
       关于图片的一些功能
+  node:
+    title: 节点相关
+    description: |
+      关于节点的一些功能，如嫁接、摘除等
 
 globalMenu:
   file:

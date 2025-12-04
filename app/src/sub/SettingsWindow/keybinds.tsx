@@ -47,7 +47,13 @@ export default function KeyBindsPage() {
   const [currentGroup, setCurrentGroup] = useState<string>("search");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchResult, setSearchResult] = useState<string[]>([]);
-  const fuse = useRef<Fuse<{ key: string; value: string; i18n: { title: string; description: string } }>>(null);
+  const fuse = useRef<
+    Fuse<{
+      key: string;
+      value: string;
+      i18n: { title: string; description: string };
+    }>
+  >(null);
 
   const { t } = useTranslation("keyBinds");
   const { t: t2 } = useTranslation("keyBindsGroup");
@@ -81,7 +87,10 @@ export default function KeyBindsPage() {
               i18n: t(key, { returnObjects: true }),
             }) as any,
         ),
-        { keys: ["key", "value", "i18n.title", "i18n.description"], useExtendedSearch: true },
+        {
+          keys: ["key", "value", "i18n.title", "i18n.description"],
+          useExtendedSearch: true,
+        },
       );
     })();
   }, [data, t]);
@@ -415,11 +424,19 @@ const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "reverseEdges",
       "reverseSelectedNodeEdge",
       "createUndirectedEdgeFromEntities",
-      "connectAllSelectedEntities",
-      "connectLeftToRight",
-      "connectTopToBottom",
       "selectAllEdges",
       "createConnectPointWhenDragConnecting",
+    ],
+  },
+  {
+    title: "node",
+    icon: <Network />,
+    keys: [
+      "graftNodeToTree",
+      "removeNodeFromTree",
+      "connectTopToBottom",
+      "connectLeftToRight",
+      "connectAllSelectedEntities",
     ],
   },
   {

@@ -1391,9 +1391,13 @@ keyBindsGroup:
     description: |
       Functions used for aligning entities
   image:
-    title: 图片相关
+    title: Image
     description: |
-      关于图片的一些功能
+      Image related functions
+  node:
+    title: Node Related
+    description: |
+      Node related functions, such as grafting and removing nodes
 controlSettingsGroup:
   mouse:
     title: Mouse Settings
