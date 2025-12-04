@@ -325,19 +325,14 @@ export class ControllerCameraClass extends ControllerClass {
       this.project.controller.pressingKeySet.has("meta")
     ) {
       // 不要在节点上滚动
-      const entity = this.project.stageManager.findEntityByLocation(worldLocation);
-      if (entity !== null) {
-        // 删除发光特效：this.project.effects.addEffect(EntityCreateFlashEffect.fromRectangle(entity.collisionBox.getRectangle()));
-      } else {
-        if (Settings.mouseWheelWithCtrlMode === "zoom") {
-          this.zoomCameraByMouseWheel(event);
-        } else if (Settings.mouseWheelWithCtrlMode === "move") {
-          this.moveYCameraByMouseWheel(event);
-        } else if (Settings.mouseWheelWithCtrlMode === "moveX") {
-          this.moveXCameraByMouseWheel(event);
-        } else if (Settings.mouseWheelWithCtrlMode === "none") {
-          return;
-        }
+      if (Settings.mouseWheelWithCtrlMode === "zoom") {
+        this.zoomCameraByMouseWheel(event);
+      } else if (Settings.mouseWheelWithCtrlMode === "move") {
+        this.moveYCameraByMouseWheel(event);
+      } else if (Settings.mouseWheelWithCtrlMode === "moveX") {
+        this.moveXCameraByMouseWheel(event);
+      } else if (Settings.mouseWheelWithCtrlMode === "none") {
+        return;
       }
     } else if (this.project.controller.pressingKeySet.has("alt")) {
       if (Settings.mouseWheelWithAltMode === "zoom") {

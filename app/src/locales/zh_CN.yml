@@ -474,6 +474,11 @@ settings:
     description: |
       开启后，可以通过拖拽选中的连线来旋转节点结构
       这允许您轻松调整相连节点的方向
+  enableCtrlWheelRotateStructure:
+    title: 允许Ctrl+鼠标滚轮旋转结构
+    description: |
+      开启后，可以按住Ctrl键（Mac系统为Command键）并滚动鼠标滚轮来旋转节点结构
+      这允许您精确调整相连节点的方向
   autoLayoutWhenTreeGenerate:
     title: 生长节点时自动更新布局
     description: |

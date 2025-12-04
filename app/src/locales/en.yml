@@ -370,6 +370,11 @@ settings:
     description: |
       When enabled, you can rotate the node structure by dragging selected edges.
       This allows you to easily adjust the orientation of connected nodes.
+  enableCtrlWheelRotateStructure:
+    title: Enable Ctrl+Mouse Wheel to Rotate Structure
+    description: |
+      When enabled, you can rotate the node structure by holding Ctrl (Command on Mac) and scrolling the mouse wheel.
+      This allows you to precisely adjust the orientation of connected nodes.
   moveAmplitude:
     title: Camera Movement Amplitude
     description: |

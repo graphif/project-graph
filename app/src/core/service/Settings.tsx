@@ -58,6 +58,7 @@ export const settingsSchema = z.object({
   autoBackupLimitCount: z.number().min(1).max(500).int().default(10),
   autoBackupCustomPath: z.string().default(""),
   enableDragEdgeRotateStructure: z.boolean().default(true),
+  enableCtrlWheelRotateStructure: z.boolean().default(false),
   aiApiBaseUrl: z.string().default("https://generativelanguage.googleapis.com/v1beta/openai/"),
   aiApiKey: z.string().default(""),
   aiModel: z.string().default("gemini-2.5-flash"),

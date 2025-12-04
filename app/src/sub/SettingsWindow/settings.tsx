@@ -247,6 +247,7 @@ const categories = {
       "mouseSideWheelMode",
       "macMouseWheelIsSmoothed",
       "macEnableControlToCut",
+      "enableCtrlWheelRotateStructure",
     ],
     touchpad: ["enableWindowsTouchPad", "macTrackpadAndMouseWheelDifference", "macTrackpadScaleSensitivity"],
     cameraMove: [

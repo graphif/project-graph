@@ -299,6 +299,11 @@ settings:
     description: |
       開啟後，可以通過拖曳選中的連線來旋轉節點結構
       這允許您輕鬆調整相連節點的方向
+  enableCtrlWheelRotateStructure:
+    title: 允許Ctrl+滑鼠滾輪旋轉結構
+    description: |
+      開啟後，可以按住Ctrl鍵（Mac系統為Command鍵）並滾動滑鼠滾輪來旋轉節點結構
+      這允許您精確調整相連節點的方向
   moveAmplitude:
     title: 視角移動加速度
     description: |

@@ -16,8 +16,12 @@ import { Vector } from "@graphif/data-structures";
  */
 export class ControllerAssociationReshapeClass extends ControllerClass {
   public mousewheel: (event: WheelEvent) => void = (event: WheelEvent) => {
+    // 只有当旋转设置启用、按下了正确的键，并且鼠标悬停在文本节点上时，才处理旋转事件
     if (
-      isMac ? this.project.controller.pressingKeySet.has("meta") : this.project.controller.pressingKeySet.has("control")
+      Settings.enableCtrlWheelRotateStructure &&
+      (isMac
+        ? this.project.controller.pressingKeySet.has("meta")
+        : this.project.controller.pressingKeySet.has("control"))
     ) {
       const location = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
       const hoverNode = this.project.stageManager.findTextNodeByLocation(location);
@@ -28,8 +32,12 @@ export class ControllerAssociationReshapeClass extends ControllerClass {
         } else {
           this.project.stageNodeRotate.rotateNodeDfs(hoverNode, hoverNode, -10, []);
         }
+        // 处理完旋转事件后返回
+        return;
       }
     }
+    // 否则，不处理该事件，让相机控制器处理
+    // 这样当旋转设置关闭，或者鼠标不在节点上时，Ctrl+鼠标滚轮可以正常滚动视野
   };
 
   public lastMoveLocation: Vector = Vector.getZero();
