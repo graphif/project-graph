@@ -487,16 +487,17 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     let sourceRectRate: [number, number] = [0.5, 0.5];
 
     // 如果是从图片节点发出，使用精确位置
-    if (this.connectFromEntities.length === 1) {
+    const isSingleImageSource =
+      this.connectFromEntities.length === 1 && this.connectFromEntities[0] instanceof ImageNode;
+
+    if (isSingleImageSource) {
       const fromEntity = this.connectFromEntities[0];
-      if (fromEntity instanceof ImageNode) {
-        const startPos = this._startImageLocation.get(fromEntity.uuid);
-        if (startPos) {
-          sourceRectRate = [startPos.x, startPos.y];
-        }
+      const startPos = this._startImageLocation.get(fromEntity.uuid);
+      if (startPos) {
+        sourceRectRate = [startPos.x, startPos.y];
       }
     } else {
-      // 否则使用方向计算
+      // 非图片节点或多重连接，使用方向计算
       switch (sourceDirection) {
         case Direction.Left:
           sourceRectRate = [0.01, 0.5];
