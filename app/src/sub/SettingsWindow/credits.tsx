@@ -20,6 +20,8 @@ const donations: DonationData[] = [
   // { user: "MacBook", note: "littlefean", amount: -7599.2 },
   { user: "域名 project-graph.top", note: "zty012", amount: -13.66 },
   // 以下为捐赠用户
+  { user: "星尘_", note: "brokenstring加油！", amount: 30 },
+  { user: "百乐", note: "", amount: 50 },
   { user: "Ryouji", note: "项目很好用，期待超越xmind", amount: 20 },
   { user: "熱切", note: "", amount: 20 },
   { user: "熊猫斯坦", note: "啥时候考虑上架思源笔记挂件市场", amount: 50 },
@@ -237,15 +239,14 @@ export default function CreditsTab() {
             </div>
           </>
         ) : (
-          <>
-            <div className="bg-muted/50 flex flex-1 flex-col items-center gap-2 rounded-lg border p-4 text-sm">
-              <p className="text-center">在过去的{actualDays}个日夜中，是屏幕前您的认可与支持，给了我们最温暖的鼓励</p>
-              <div className="flex flex-nowrap items-center justify-center gap-1">
-                <Heart className="size-4" />
-                <span className="text-sm">谨以此墙，致敬所有同行者</span>
-              </div>
+          <div className="bg-muted/50 flex flex-1 flex-col items-center gap-2 rounded-lg border p-4 text-sm">
+            <p className="text-center">在过去的{actualDays}个日夜中，是屏幕前您的认可与支持，给了我们最温暖的鼓励</p>
+            <p className="text-xs opacity-50">您的支持可以让开发者的维护更持久，激励我们研究并创新</p>
+            <div className="flex flex-nowrap items-center justify-center gap-1">
+              <Heart className="size-4" />
+              <span className="text-sm">谨以此墙，致敬所有同行者</span>
             </div>
-          </>
+          </div>
         )}
 
         <Popover.Confirm
