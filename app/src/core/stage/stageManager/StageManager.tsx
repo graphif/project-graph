@@ -457,10 +457,13 @@ export class StageManager {
     }
     this.deleteEntities(selectedEntities);
 
-    for (const edge of this.getEdges()) {
-      if (edge.isSelected) {
-        this.deleteEdge(edge);
-        this.project.effects.addEffects(this.project.edgeRenderer.getCuttingEffects(edge));
+    // 处理所有类型的边，包括普通边和多目标无向边
+    for (const association of this.getAssociations()) {
+      if (association.isSelected) {
+        this.deleteAssociation(association);
+        if (association instanceof Edge) {
+          this.project.effects.addEffects(this.project.edgeRenderer.getCuttingEffects(association));
+        }
       }
     }
   }

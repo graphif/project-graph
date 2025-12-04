@@ -38,6 +38,7 @@ export class DeleteManager {
     this.registerHandler(PenStroke, this.deletePenStroke.bind(this));
     this.registerHandler(SvgNode, this.deleteSvgNode.bind(this));
     this.registerHandler(ReferenceBlockNode, this.deleteReferenceBlockNode.bind(this));
+    this.registerHandler(MultiTargetUndirectedEdge, this.deleteMultiTargetUndirectedEdge.bind(this));
   }
 
   deleteEntities(deleteNodes: Entity[]) {
