@@ -3,8 +3,8 @@ import { SubWindow } from "@/core/service/SubWindow";
 import { activeProjectAtom, store } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { Brush, Info, Keyboard, Palette, SettingsIcon, User } from "lucide-react";
-import { useState } from "react";
+import { Brush, Info, Keyboard, Loader2, Palette, SettingsIcon, User } from "lucide-react";
+import { Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
 import AboutTab from "./about";
 import AppearanceTab from "./appearance";
@@ -56,7 +56,16 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
         <AboutTab />
       </TabsContent>
       <TabsContent value="credits" className="overflow-auto">
-        <CreditsTab />
+        <Suspense
+          fallback={
+            <div className="text-muted-foreground flex h-full w-full flex-col items-center justify-center gap-4 p-4">
+              <Loader2 className="animate-spin" />
+              正在加载数据
+            </div>
+          }
+        >
+          <CreditsTab />
+        </Suspense>
       </TabsContent>
     </Tabs>
   );
