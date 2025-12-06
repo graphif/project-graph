@@ -22,7 +22,8 @@ backup_*
 # mac下开发需要忽略
 .DS_Store
 
-
+# linux
+.directory
 
 .nx/cache
 .nx/workspace-data

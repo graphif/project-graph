@@ -1,5 +1,5 @@
 import { Dialog } from "@/components/ui/dialog";
-import { latex2svg } from "@/utils/latex";
+import { latex2svg } from "@graphif/latex";
 import { serializable } from "@graphif/serializer";
 import { type ColorSource, Point } from "pixi.js";
 import { Value } from "platejs";

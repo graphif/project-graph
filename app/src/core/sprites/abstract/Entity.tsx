@@ -1,6 +1,6 @@
 import { Project } from "@/core/Project";
 import { StageObject } from "@/core/sprites/abstract/StageObject";
-import { on } from "@/utils/on";
+import { on } from "@graphif/on";
 import { serializable } from "@graphif/serializer";
 import { DestroyOptions, FederatedPointerEvent, ObservablePoint, Point } from "pixi.js";
 import type { Value } from "platejs";

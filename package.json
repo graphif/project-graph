@@ -52,5 +52,8 @@
       "typescript": "patches/typescript.patch"
     }
   },
-  "packageManager": "pnpm@10.6.5"
+  "packageManager": "pnpm@10.6.5",
+  "dependencies": {
+    "tsx": "^4.20.6"
+  }
 }

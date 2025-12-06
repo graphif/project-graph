@@ -1,6 +1,5 @@
 packages:
   - "app"
-  - "docs"
   - "packages/*"
 
 overrides:
@@ -12,3 +11,10 @@ catalog:
   typescript: 5.9.2
   tsdown: ^0.12.9
   jotai: ^2.12.5
+
+# 以下为性能优化
+resolutionMode: lowest-direct
+autoInstallPeers: true
+preferOffline: true
+hoist: false
+childConcurrency: 12

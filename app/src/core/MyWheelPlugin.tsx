@@ -213,6 +213,10 @@ export class MyWheelPlugin extends Plugin {
     const step = (-e.deltaY * (e.deltaMode ? this.options.lineHeight : 1)) / 200;
     const change = Math.pow(2, (1 + this.options.percent) * step);
 
+    if (Math.abs(change - 1) < 0.001) {
+      return;
+    }
+
     if (this.isAxisX()) {
       this.targetScale.x *= change;
     }
@@ -236,6 +240,10 @@ export class MyWheelPlugin extends Plugin {
       const sign = this.options.reverse ? -1 : 1;
       const step = (sign * -e.deltaY * (e.deltaMode ? this.options.lineHeight : 1)) / 500;
       const change = Math.pow(2, (1 + this.options.percent) * step);
+
+      if (Math.abs(change - 1) < 0.001) {
+        return !this.parent.options.passiveWheel;
+      }
 
       // Instead of changing scale directly, update the target scale.
       // The update() loop will handle the animation and positioning.

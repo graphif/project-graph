@@ -15,7 +15,6 @@ import { URI } from "vscode-uri";
 import { fs } from "./fs";
 import { MyWheelPlugin } from "./MyWheelPlugin";
 import { Settings } from "./service/Settings";
-import { MyText } from "./sprites/MyText";
 
 export class Project extends EventEmitter<{
   "state-change": [state: ProjectState];
@@ -96,6 +95,7 @@ export class Project extends EventEmitter<{
       )[Settings.powerPreference],
       resizeTo: window,
       antialias: Settings.antialias,
+      hello: true,
     });
     this.pixi.ticker.maxFPS = Settings.maxFps;
     this.pixi.ticker.minFPS = Settings.minFps;
@@ -159,19 +159,19 @@ export class Project extends EventEmitter<{
     origin.fill(0xff0000);
     this.viewport.addChild(origin);
 
-    const positionText = this.pixi.stage.addChild(
-      new MyText("0,0", {
-        style: { fontSize: 12 },
-        x: 10,
-        y: 30,
-      }),
-    );
+    // const positionText = this.pixi.stage.addChild(
+    //   new MyText("0,0", {
+    //     style: { fontSize: 12 },
+    //     x: 10,
+    //     y: 30,
+    //   }),
+    // );
 
-    this.viewport.on("pointermove", (e) => {
-      const worldPos = this.viewport.toWorld(e.client);
-      positionText.text = `${worldPos.x.toFixed(0)},${worldPos.y.toFixed(0)}`;
-      positionText.position = e.client.add(new Point(30, 30));
-    });
+    // this.viewport.on("pointermove", (e) => {
+    //   const worldPos = this.viewport.toWorld(e.client);
+    //   positionText.text = `${worldPos.x.toFixed(0)},${worldPos.y.toFixed(0)}`;
+    //   positionText.position = e.client.add(new Point(30, 30));
+    // });
 
     // viewport初始化了以后再加载文件
     try {

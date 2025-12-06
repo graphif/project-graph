@@ -1,5 +1,5 @@
 import { Project } from "@/core/Project";
-import { BindEvents, on } from "@/utils/on";
+import { BindEvents, on } from "@graphif/on";
 import { id, serializable } from "@graphif/serializer";
 import { LayoutContainer } from "@pixi/layout/components";
 import { DestroyOptions, FederatedPointerEvent, Graphics, PointData, Rectangle } from "pixi.js";
