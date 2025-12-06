@@ -8,6 +8,7 @@ import { Rectangle } from "@graphif/shapes";
 import { useAtom } from "jotai";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 /**
  * 根据纯文本生成树状结构
@@ -16,9 +17,30 @@ import { useTranslation } from "react-i18next";
 export default function GenerateNodeTree() {
   const [text, setText] = useState("");
   const [indention, setIndention] = useState("4");
+  const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
   const [activeProject] = useAtom(activeProjectAtom);
+
+  const handleGenerate = async () => {
+    if (!activeProject) return;
+
+    setIsLoading(true);
+    try {
+      const startTime = Date.now();
+      activeProject.stageManager.generateNodeTreeByText(text, parseInt(indention) || 4);
+      const endTime = Date.now();
+      const duration = Math.round(endTime - startTime);
+
+      toast.success(`${t("actions.generate.generateNodeTreeByText")} ${t("actions.success")}`, {
+        description: `${t("actions.generate.generatedIn")} ${duration}ms`,
+      });
+    } catch {
+      toast.error(`${t("actions.generate.generateNodeTreeByText")} ${t("actions.failed")}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-4 p-6">
@@ -51,12 +73,11 @@ export default function GenerateNodeTree() {
         />
       </div>
       <div className="flex justify-end gap-2">
-        <Button
-          onClick={() => {
-            activeProject?.stageManager.generateNodeTreeByText(text, parseInt(indention) || 4);
-          }}
-        >
-          {t("actions.confirm")}
+        <Button onClick={handleGenerate} disabled={isLoading} className="relative">
+          {isLoading && (
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin"></span>
+          )}
+          {isLoading ? `${t("actions.generating")}...` : t("actions.confirm")}
         </Button>
       </div>
     </div>
@@ -69,9 +90,30 @@ export default function GenerateNodeTree() {
  */
 export function GenerateNodeTreeByMarkdown() {
   const [text, setText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
   const [activeProject] = useAtom(activeProjectAtom);
+
+  const handleGenerate = async () => {
+    if (!activeProject) return;
+
+    setIsLoading(true);
+    try {
+      const startTime = Date.now();
+      activeProject.stageManager.generateNodeByMarkdown(text);
+      const endTime = Date.now();
+      const duration = Math.round(endTime - startTime);
+
+      toast.success(`${t("actions.generate.generateNodeTreeByMarkdown")} ${t("actions.success")}`, {
+        description: `${t("actions.generate.generatedIn")} ${duration}ms`,
+      });
+    } catch {
+      toast.error(`${t("actions.generate.generateNodeTreeByMarkdown")} ${t("actions.failed")}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-4 p-6">
@@ -91,12 +133,11 @@ export function GenerateNodeTreeByMarkdown() {
         className="min-h-[200px]"
       />
       <div className="flex justify-end gap-2">
-        <Button
-          onClick={() => {
-            activeProject?.stageManager.generateNodeByMarkdown(text);
-          }}
-        >
-          {t("actions.confirm")}
+        <Button onClick={handleGenerate} disabled={isLoading} className="relative">
+          {isLoading && (
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin"></span>
+          )}
+          {isLoading ? `${t("actions.generating")}...` : t("actions.confirm")}
         </Button>
       </div>
     </div>
@@ -121,9 +162,30 @@ GenerateNodeTreeByMarkdown.open = () => {
 
 export function GenerateNodeGraph() {
   const [text, setText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
   const [activeProject] = useAtom(activeProjectAtom);
+
+  const handleGenerate = async () => {
+    if (!activeProject) return;
+
+    setIsLoading(true);
+    try {
+      const startTime = Date.now();
+      activeProject.stageManager.generateNodeGraphByText(text);
+      const endTime = Date.now();
+      const duration = Math.round(endTime - startTime);
+
+      toast.success(`${t("actions.generate.generateNodeGraphByText")} ${t("actions.success")}`, {
+        description: `${t("actions.generate.generatedIn")} ${duration}ms`,
+      });
+    } catch {
+      toast.error(`${t("actions.generate.generateNodeGraphByText")} ${t("actions.failed")}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div>
@@ -138,12 +200,11 @@ export function GenerateNodeGraph() {
         className="min-h-[200px]"
       />
       <div className="flex justify-end gap-2">
-        <Button
-          onClick={() => {
-            activeProject?.stageManager.generateNodeGraphByText(text);
-          }}
-        >
-          {t("actions.confirm")}
+        <Button onClick={handleGenerate} disabled={isLoading} className="relative">
+          {isLoading && (
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin"></span>
+          )}
+          {isLoading ? `${t("actions.generating")}...` : t("actions.confirm")}
         </Button>
       </div>
     </div>
@@ -164,9 +225,30 @@ GenerateNodeGraph.open = () => {
  */
 export function GenerateNodeMermaid() {
   const [text, setText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
   const [activeProject] = useAtom(activeProjectAtom);
+
+  const handleGenerate = async () => {
+    if (!activeProject) return;
+
+    setIsLoading(true);
+    try {
+      const startTime = Date.now();
+      activeProject.stageManager.generateNodeMermaidByText(text);
+      const endTime = Date.now();
+      const duration = Math.round(endTime - startTime);
+
+      toast.success(`${t("actions.generate.generateNodeMermaidByText")} ${t("actions.success")}`, {
+        description: `${t("actions.generate.generatedIn")} ${duration}ms`,
+      });
+    } catch {
+      toast.error(`${t("actions.generate.generateNodeMermaidByText")} ${t("actions.failed")}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div>
@@ -189,12 +271,11 @@ export function GenerateNodeMermaid() {
         className="min-h-[200px]"
       />
       <div className="flex justify-end gap-2">
-        <Button
-          onClick={() => {
-            activeProject?.stageManager.generateNodeMermaidByText(text);
-          }}
-        >
-          {t("actions.confirm")}
+        <Button onClick={handleGenerate} disabled={isLoading} className="relative">
+          {isLoading && (
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin"></span>
+          )}
+          {isLoading ? `${t("actions.generating")}...` : t("actions.confirm")}
         </Button>
       </div>
     </div>

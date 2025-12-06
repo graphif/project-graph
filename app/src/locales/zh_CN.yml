@@ -52,7 +52,11 @@ globalMenu:
     clearStage: 清空舞台
     cancel: 取消
     confirm: 确定
+    generating: 生成中
+    success: 成功
+    failed: 失败
     generate:
+      generatedIn: 生成耗时
       title: 生成
       generateNodeTreeByText: 根据纯文本生成树状结构
       generateNodeTreeByTextDescription: 请输入树状结构文本，每行代表一个节点，缩进表示层级关系

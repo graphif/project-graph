@@ -749,7 +749,11 @@ globalMenu:
     clearStage: Clear Stage
     cancel: Cancel
     confirm: Confirm
+    generating: Generating
+    success: Success
+    failed: Failed
     generate:
+      generatedIn: Generated in
       title: Generate
       generateNodeTreeByText: Generate Tree Structure from Plain Text
       generateNodeTreeByTextDescription: Enter tree structure text, each line represents a node, indentation represents hierarchical relationships
