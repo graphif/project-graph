@@ -78,6 +78,7 @@ import {
   SquareDashedBottomCode,
   RefreshCcwDot,
   CornerUpRight,
+  Workflow,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -402,7 +403,7 @@ export default function MyContextMenuContent() {
                 }
               }}
             >
-              <Network />
+              <Workflow />
             </Button>
           </ContextMenuTooltip>
         </Item>
@@ -580,12 +581,12 @@ export default function MyContextMenuContent() {
                   连接相关
                 </SubTrigger>
                 <SubContent>
-                  <Item onClick={() => TextNodeSmartTools.insertNodeToTree(p)}>
+                  <Item onClick={() => ConnectNodeSmartTools.insertNodeToTree(p)}>
                     <GitPullRequestCreateArrow />
                     嫁接到连线中
                     <span className="text-xs opacity-50">[q, e]</span>
                   </Item>
-                  <Item onClick={() => TextNodeSmartTools.removeNodeFromTree(p)}>
+                  <Item onClick={() => ConnectNodeSmartTools.removeNodeFromTree(p)}>
                     <ArrowLeftFromLine />
                     从连线中摘除
                     <span className="text-xs opacity-50">[q, r]</span>

@@ -1294,14 +1294,14 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "graftNodeToTree",
     defaultKey: "q e",
     onPress: (project) => {
-      TextNodeSmartTools.insertNodeToTree(project!);
+      ConnectNodeSmartTools.insertNodeToTree(project!);
     },
   },
   {
     id: "removeNodeFromTree",
     defaultKey: "q r",
     onPress: (project) => {
-      TextNodeSmartTools.removeNodeFromTree(project!);
+      ConnectNodeSmartTools.removeNodeFromTree(project!);
     },
   },
 ];
