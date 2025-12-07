@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/menubar";
 
 import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
-import { Project } from "@/core/Project";
+import { Project, ProjectState } from "@/core/Project";
 import { KeyBindsUI } from "./controlService/shortcutKeysEngine/KeyBindsUI";
 import { activeProjectAtom, isClassroomModeAtom, isDevAtom, projectsAtom, store } from "@/state";
 import AIWindow from "@/sub/AIWindow";
@@ -1601,7 +1601,7 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
                     toast.success(`已从同名TXT文件导入 ${lines.length} 条内容到舞台左下角`);
 
                     // 设置项目状态为未保存
-                    project.state = 1; // ProjectState.Unsaved
+                    project.state = ProjectState.Unsaved;
                   }
                 }
               } catch (e) {
