@@ -67,6 +67,7 @@ import {
   Ungroup,
   VenetianMask,
   WholeWord,
+  File,
 } from "lucide-react";
 
 export const settingsIcons = {
@@ -172,4 +173,5 @@ export const settingsIcons = {
   soundPitchVariationRange: ListMusic,
   textNodeAutoFormatTreeWhenExitEdit: ListTree,
   treeGenerateCameraBehavior: Fullscreen,
+  autoImportTxtFileWhenOpenPrg: File,
 };

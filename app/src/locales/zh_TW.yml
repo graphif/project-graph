@@ -575,6 +575,9 @@ settings:
   soundPitchVariationRange:
     title: 音效音調随机變化範圍
     description: 控制音效播放時音調隨機變化的程度。範圍：0-1200音分（1200音分=1個八度，100音分=1個半音）。值越大，音調變化越明顯。
+  autoImportTxtFileWhenOpenPrg:
+    title: 打開PRG檔案時自動匯入同名TXT檔案
+    description: 啟用後，打開PRG檔案時會自動匯入同一資料夾下同名TXT檔案的內容，並以文字節點形式新增到舞台左下角。
 
 app:
   unsaved: "(未保存)"

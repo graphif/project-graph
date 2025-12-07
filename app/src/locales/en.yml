@@ -686,6 +686,9 @@ settings:
   soundPitchVariationRange:
     title: Sound Pitch Variation
     description: Controls how much the pitch of sound effects varies randomly. Range for 0-1200 cents (1200 cents = 1 octave, 100 cents = 1 semitone). Higher values create more noticeable variations.
+  autoImportTxtFileWhenOpenPrg:
+    title: Auto Import TXT File When Opening PRG
+    description: When enabled, automatically imports content from a TXT file with the same name as the PRG file when opening it. The content will be added as text nodes at the bottom left corner of the stage.
 plugins:
   welcome:
     title: Welcome to the Plugin System

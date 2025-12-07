@@ -28,6 +28,7 @@ import {
   Clock,
   Cpu,
   Eye,
+  File,
   Folder,
   Gamepad,
   Layers,
@@ -232,6 +233,7 @@ const categories = {
     autoNamer: ["autoNamerTemplate", "autoNamerSectionTemplate"],
     autoSave: ["autoSaveWhenClose", "autoSave", "autoSaveInterval"],
     autoBackup: ["autoBackup", "autoBackupInterval", "autoBackupLimitCount", "autoBackupCustomPath"],
+    autoImport: ["autoImportTxtFileWhenOpenPrg"],
   },
   control: {
     mouse: [
@@ -317,6 +319,7 @@ const categoryIcons = {
     autoNamer: Text,
     autoSave: Save,
     autoBackup: Folder,
+    autoImport: File,
   },
   control: {
     icon: Wrench,

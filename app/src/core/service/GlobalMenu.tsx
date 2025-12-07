@@ -132,6 +132,8 @@ import { FeatureFlags } from "./FeatureFlags";
 import { Settings } from "./Settings";
 import { Telemetry } from "./Telemetry";
 import { Entity } from "../stage/stageObject/abstract/StageEntity";
+import { Rectangle } from "@graphif/shapes";
+import { CollisionBox } from "../stage/stageObject/collisionBox/collisionBox";
 
 const Content = MenubarContent;
 const Item = MenubarItem;
@@ -1544,6 +1546,70 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
             readFileTime,
             source,
           });
+
+          // 处理同名TXT文件内容（仅在用户直接打开文件且设置项开启时执行，生成双链时跳过）
+          if (
+            Settings.autoImportTxtFileWhenOpenPrg &&
+            source !== "ReferenceBlockNode跳转打开-prg文件" &&
+            source !== "ReferencesWindow跳转打开-prg文件"
+          ) {
+            setTimeout(async () => {
+              try {
+                // 构建TXT文件路径
+                const prgPath = uri.fsPath;
+                const txtPath = prgPath.replace(/\.prg$/, ".txt");
+
+                // 检查TXT文件是否存在
+                if (await exists(txtPath)) {
+                  // 读取TXT文件内容
+                  const txtContent = await readFile(txtPath);
+                  const lines = new TextDecoder()
+                    .decode(txtContent)
+                    .split("\n")
+                    .filter((line) => line.trim() !== "");
+
+                  if (lines.length > 0) {
+                    // 获取舞台上所有实体
+                    const entities = project.stageManager.getEntities();
+
+                    // 计算外接矩形
+                    let startY = 0;
+                    if (entities.length > 0) {
+                      const boundingRect = Rectangle.getBoundingRectangle(
+                        entities.map((entity) => entity.collisionBox.getRectangle()),
+                      );
+                      startY = boundingRect.bottom;
+                    }
+
+                    // 创建并添加文本节点
+                    for (let i = 0; i < lines.length; i++) {
+                      const line = lines[i];
+                      const textNode = new TextNode(project, {
+                        text: line,
+                        collisionBox: new CollisionBox([
+                          new Rectangle(new Vector(0, startY + i * 100), new Vector(300, 100)),
+                        ]),
+                        sizeAdjust: "auto",
+                      });
+                      project.stageManager.add(textNode);
+                    }
+
+                    // 清空TXT文件内容，避免下次打开时重复吸入
+                    await writeFile(txtPath, new TextEncoder().encode(""));
+
+                    // 显示Toast提示
+                    toast.success(`已从同名TXT文件导入 ${lines.length} 条内容到舞台左下角`);
+
+                    // 设置项目状态为未保存
+                    project.state = 1; // ProjectState.Unsaved
+                  }
+                }
+              } catch (e) {
+                console.warn("处理TXT文件时发生错误:", e);
+              }
+            }, 200);
+          }
+
           return `耗时 ${readFileTime}ms，共 ${project.stage.length} 个舞台对象，${project.attachments.size} 个附件`;
         },
         error: (e) => {

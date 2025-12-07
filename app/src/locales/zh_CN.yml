@@ -131,6 +131,7 @@ settings:
       autoNamer: 自动命名
       autoSave: 自动保存
       autoBackup: 自动备份
+      autoImport: 自动导入
     control:
       title: 控制
       mouse: 鼠标
@@ -791,6 +792,9 @@ settings:
   soundPitchVariationRange:
     title: 音效音调随机变化范围
     description: 控制音效播放时音调随机变化的程度。范围：0-1200音分（1200音分=1个八度，100音分=1个半音）。值越大，音调变化越明显，越像游戏一样有趣。
+  autoImportTxtFileWhenOpenPrg:
+    title: 打开PRG文件时自动导入同名TXT文件
+    description: 启用后，打开PRG文件时会自动导入同一文件夹下同名TXT文件的内容，并以文本节点形式添加到舞台左下角。
 
 
 effects:
