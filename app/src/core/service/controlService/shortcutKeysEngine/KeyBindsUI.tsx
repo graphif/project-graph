@@ -120,6 +120,7 @@ export namespace KeyBindsUI {
 
   function check() {
     const activeProject = store.get(activeProjectAtom);
+    let executed = false;
     for (const uiKeyBind of allUIKeyBinds) {
       if (matchEmacsKeyPress(uiKeyBind.key, userEventQueue.arrayList)) {
         uiKeyBind.onPress(activeProject);
@@ -127,9 +128,12 @@ export namespace KeyBindsUI {
         if (uiKeyBind.onRelease && uiKeyBind.key.length === 1) {
           pressedSingleKeyBinds.add(uiKeyBind.key);
         }
-        // 执行了快捷键之后，清空队列
-        userEventQueue.clear();
+        executed = true;
       }
+    }
+    // 执行了快捷键之后，清空队列
+    if (executed) {
+      userEventQueue.clear();
     }
   }
 
