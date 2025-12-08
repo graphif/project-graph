@@ -1600,6 +1600,11 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
                     // 显示Toast提示
                     toast.success(`已从同名TXT文件导入 ${lines.length} 条内容到舞台左下角`);
 
+                    // 发送遥测
+                    Telemetry.event("txt_content_imported", {
+                      line_count: lines.length,
+                    });
+
                     // 设置项目状态为未保存
                     project.state = ProjectState.Unsaved;
                   }
