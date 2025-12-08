@@ -205,7 +205,7 @@ export default function CreditsTab() {
   return (
     <div className="mx-auto flex w-2/3 flex-col overflow-auto py-4">
       <div className="mb-4 flex gap-4">
-        {!isDev ? (
+        {isDev ? (
           <>
             <div className="bg-muted/50 flex flex-1 flex-col gap-2 rounded-lg border p-4">
               <div className="flex items-center justify-center gap-2">
