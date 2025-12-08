@@ -2,6 +2,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Project } from "@/core/Project";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
@@ -496,6 +497,23 @@ export namespace TextNodeSmartTools {
     const fileName = referenceName.split("#")[0];
     const sectionName = referenceName.split("#")[1] || "";
 
+    // 1. 获取所有与原节点相关的连线
+    const associations = project.stageManager.getAssociations();
+    const relatedEdges: (Edge | MultiTargetUndirectedEdge)[] = [];
+    for (const association of associations) {
+      if (association instanceof Edge) {
+        // 检查普通有向边
+        if (association.source === selectedNode || association.target === selectedNode) {
+          relatedEdges.push(association);
+        }
+      } else if (association instanceof MultiTargetUndirectedEdge) {
+        // 检查多目标无向边
+        if (association.associationList.includes(selectedNode)) {
+          relatedEdges.push(association);
+        }
+      }
+    }
+
     const referenceBlock = new ReferenceBlockNode(project, {
       collisionBox: new CollisionBox([
         new Rectangle(selectedNode.collisionBox.getRectangle().leftTop, new Vector(100, 100)),
@@ -505,7 +523,28 @@ export namespace TextNodeSmartTools {
     });
 
     project.stageManager.add(referenceBlock);
-    project.stageManager.delete(selectedNode); // TODO: 直接删除原有节点有隐患
+
+    // 2. 更新所有相关连线，将原节点替换为新的引用块节点
+    for (const edge of relatedEdges) {
+      if (edge instanceof Edge) {
+        // 更新普通有向边
+        if (edge.source === selectedNode) {
+          edge.source = referenceBlock;
+        }
+        if (edge.target === selectedNode) {
+          edge.target = referenceBlock;
+        }
+      } else if (edge instanceof MultiTargetUndirectedEdge) {
+        // 更新多目标无向边
+        const index = edge.associationList.indexOf(selectedNode);
+        if (index !== -1) {
+          edge.associationList[index] = referenceBlock;
+        }
+      }
+    }
+
+    // 3. 删除原节点
+    project.stageManager.delete(selectedNode);
     await project.referenceManager.insertRefDataToSourcePrgFile(fileName, sectionName);
   }
 }
