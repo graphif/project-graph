@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SubWindow } from "@/core/service/SubWindow";
+import { Telemetry } from "@/core/service/Telemetry";
 import { activeProjectAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -28,14 +29,27 @@ export default function GenerateNodeTree() {
     setIsLoading(true);
     try {
       const startTime = Date.now();
+      const lineCount = text.split("\n").length;
       activeProject.stageManager.generateNodeTreeByText(text, parseInt(indention) || 4);
       const endTime = Date.now();
       const duration = Math.round(endTime - startTime);
+
+      Telemetry.event("generate_node_tree_by_text", {
+        line_count: lineCount,
+        duration: duration,
+        success: true,
+      });
 
       toast.success(`${t("actions.generate.generateNodeTreeByText")} ${t("actions.success")}`, {
         description: `${t("actions.generate.generatedIn")} ${duration}ms`,
       });
     } catch {
+      const lineCount = text.split("\n").length;
+
+      Telemetry.event("generate_node_tree_by_text", {
+        line_count: lineCount,
+        success: false,
+      });
       toast.error(`${t("actions.generate.generateNodeTreeByText")} ${t("actions.failed")}`);
     } finally {
       setIsLoading(false);
@@ -101,14 +115,27 @@ export function GenerateNodeTreeByMarkdown() {
     setIsLoading(true);
     try {
       const startTime = Date.now();
+      const lineCount = text.split("\n").length;
       activeProject.stageManager.generateNodeByMarkdown(text);
       const endTime = Date.now();
       const duration = Math.round(endTime - startTime);
+
+      Telemetry.event("generate_node_tree_by_markdown", {
+        line_count: lineCount,
+        duration: duration,
+        success: true,
+      });
 
       toast.success(`${t("actions.generate.generateNodeTreeByMarkdown")} ${t("actions.success")}`, {
         description: `${t("actions.generate.generatedIn")} ${duration}ms`,
       });
     } catch {
+      const lineCount = text.split("\n").length;
+
+      Telemetry.event("generate_node_tree_by_markdown", {
+        line_count: lineCount,
+        success: false,
+      });
       toast.error(`${t("actions.generate.generateNodeTreeByMarkdown")} ${t("actions.failed")}`);
     } finally {
       setIsLoading(false);
@@ -173,14 +200,27 @@ export function GenerateNodeGraph() {
     setIsLoading(true);
     try {
       const startTime = Date.now();
+      const lineCount = text.split("\n").length;
       activeProject.stageManager.generateNodeGraphByText(text);
       const endTime = Date.now();
       const duration = Math.round(endTime - startTime);
+
+      Telemetry.event("generate_node_graph_by_text", {
+        line_count: lineCount,
+        duration: duration,
+        success: true,
+      });
 
       toast.success(`${t("actions.generate.generateNodeGraphByText")} ${t("actions.success")}`, {
         description: `${t("actions.generate.generatedIn")} ${duration}ms`,
       });
     } catch {
+      const lineCount = text.split("\n").length;
+
+      Telemetry.event("generate_node_graph_by_text", {
+        line_count: lineCount,
+        success: false,
+      });
       toast.error(`${t("actions.generate.generateNodeGraphByText")} ${t("actions.failed")}`);
     } finally {
       setIsLoading(false);
@@ -236,14 +276,27 @@ export function GenerateNodeMermaid() {
     setIsLoading(true);
     try {
       const startTime = Date.now();
+      const lineCount = text.split("\n").length;
       activeProject.stageManager.generateNodeMermaidByText(text);
       const endTime = Date.now();
       const duration = Math.round(endTime - startTime);
+
+      Telemetry.event("generate_node_mermaid_by_text", {
+        line_count: lineCount,
+        duration: duration,
+        success: true,
+      });
 
       toast.success(`${t("actions.generate.generateNodeMermaidByText")} ${t("actions.success")}`, {
         description: `${t("actions.generate.generatedIn")} ${duration}ms`,
       });
     } catch {
+      const lineCount = text.split("\n").length;
+
+      Telemetry.event("generate_node_mermaid_by_text", {
+        line_count: lineCount,
+        success: false,
+      });
       toast.error(`${t("actions.generate.generateNodeMermaidByText")} ${t("actions.failed")}`);
     } finally {
       setIsLoading(false);

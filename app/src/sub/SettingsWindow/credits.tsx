@@ -2,9 +2,11 @@ import { Popover } from "@/components/ui/popover";
 import { cn } from "@/utils/cn";
 import { open } from "@tauri-apps/plugin-shell";
 import { Calendar, ExternalLink, Heart, Server, User } from "lucide-react";
+import { Telemetry } from "@/core/service/Telemetry";
 import "./assets/font.css";
 import { isDevAtom } from "@/state";
 import { useAtom } from "jotai";
+import { useEffect, useRef, useState } from "react";
 
 interface DonationData {
   user: string;
@@ -188,6 +190,8 @@ const donations: DonationData[] = [
 export default function CreditsTab() {
   const totalAmount = donations.reduce((sum, donation) => sum + donation.amount, 0);
   const [isDev] = useAtom(isDevAtom);
+  const [hasSentScrollToBottom, setHasSentScrollToBottom] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // 计算从2024年9月1日到现在的天数
   const startDate = new Date(2024, 8, 1);
@@ -202,8 +206,32 @@ export default function CreditsTab() {
   const daysDiff = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   const actualDays = Math.max(daysDiff + 1, 1); // 至少为1天
 
+  useEffect(() => {
+    Telemetry.event("credits_opened");
+  }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      if (hasSentScrollToBottom) return;
+
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
+
+      if (isBottom) {
+        Telemetry.event("credits_scrolled_to_bottom");
+        setHasSentScrollToBottom(true);
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [hasSentScrollToBottom]);
+
   return (
-    <div className="mx-auto flex w-2/3 flex-col overflow-auto py-4">
+    <div ref={containerRef} className="mx-auto flex w-2/3 flex-col overflow-auto py-4" style={{ maxHeight: "80vh" }}>
       <div className="mb-4 flex gap-4">
         {isDev ? (
           <>
@@ -252,7 +280,10 @@ export default function CreditsTab() {
         <Popover.Confirm
           title="提示"
           description="此列表并不是实时更新的，开发者将在您捐赠后的下一个版本中手动更新此列表，当您选择要捐赠时，请在开头添加备注“pg”，以便开发者能区分您的捐赠的项目是project-graph。"
-          onConfirm={() => open("https://2y.nz/pgdonate")}
+          onConfirm={() => {
+            Telemetry.event("credits_donate_clicked");
+            open("https://2y.nz/pgdonate");
+          }}
         >
           <div className="bg-muted/50 **:cursor-pointer group flex flex-1 cursor-pointer flex-col justify-center gap-2 rounded-lg border p-4">
             <div className="flex items-center justify-center gap-2">

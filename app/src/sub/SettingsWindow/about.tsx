@@ -65,9 +65,9 @@ export default function AboutTab() {
         <div className="rounded-md border p-4">
           <div className="text-xs opacity-50">开发者</div>
           <div className="mt-1 font-medium">
-            <Author name="Littlefean" url="https://github.com/Littlefean" />,{" "}
+            <Author name="Littlefean(阿岳)" url="https://github.com/Littlefean" />,{" "}
             <Author name="zty012" url="https://github.com/zty012" />,{" "}
-            <Author name="Rutubet" url="https://github.com/Rutubet" /> 以及所有贡献者
+            <Author name="Rutubet(小劫)" url="https://github.com/Rutubet" /> 以及所有贡献者
           </div>
         </div>
         <div className="**:cursor-pointer cursor-pointer rounded-md border p-4">
