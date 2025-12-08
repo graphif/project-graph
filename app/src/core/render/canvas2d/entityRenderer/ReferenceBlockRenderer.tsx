@@ -25,27 +25,7 @@ export class ReferenceBlockRenderer {
       1 * this.project.camera.currentScale,
     );
 
-    // 选中状态
-    if (referenceBlockNode.isSelected) {
-      this.project.collisionBoxRenderer.render(
-        referenceBlockNode.collisionBox,
-        this.project.stageStyleManager.currentStyle.CollideBoxSelected,
-      );
-
-      // 在引用块底部添加提示文本
-      const bottomCenter = this.project.renderer.transformWorld2View(
-        referenceBlockNode.rectangle.location.add(
-          new Vector(referenceBlockNode.rectangle.size.x / 2, referenceBlockNode.rectangle.size.y + 15),
-        ),
-      );
-      this.project.textRenderer.renderTextFromCenter(
-        "双击跳转到源头位置",
-        bottomCenter,
-        10 * this.project.camera.currentScale,
-        this.project.stageStyleManager.currentStyle.StageObjectBorder,
-      );
-    }
-
+    // 先渲染图片内容
     if (referenceBlockNode.state === "loading") {
       // 渲染加载状态
       this.project.textRenderer.renderTextFromCenter(
@@ -87,10 +67,7 @@ export class ReferenceBlockRenderer {
           lineWidth,
         );
       }
-      return;
-    }
-
-    if (referenceBlockNode.state === "notFound" || !referenceBlockNode.bitmap) {
+    } else if (referenceBlockNode.state === "notFound" || !referenceBlockNode.bitmap) {
       const rect = referenceBlockNode.collisionBox.getRectangle();
       // 渲染错误状态
       this.project.textRenderer.renderMultiLineTextFromCenter(
@@ -100,30 +77,64 @@ export class ReferenceBlockRenderer {
         rect.width * 2 * this.project.camera.currentScale,
         this.project.stageStyleManager.currentStyle.effects.warningShadow,
       );
-      return;
+    } else {
+      // 渲染图片
+      this.project.imageRenderer.renderImageBitmap(
+        referenceBlockNode.bitmap,
+        this.project.renderer.transformWorld2View(referenceBlockNode.collisionBox.getRectangle().location),
+        referenceBlockNode.scale,
+      );
+
+      if (referenceBlockNode.state === "success") {
+        let expand = 4;
+        let lightColor = this.project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(0.5);
+        let darkColor = this.project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(0.8);
+        if (referenceBlockNode.isSelected) {
+          expand = 16;
+          lightColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected;
+          darkColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected.toNewAlpha(1);
+        }
+        const baseRect = referenceBlockNode.collisionBox.getRectangle();
+        // 渲染外层括号
+        this.renderBrackets(baseRect.expandFromCenter(expand + 4), darkColor);
+        // 渲染内层括号
+        this.renderBrackets(baseRect.expandFromCenter(expand), lightColor);
+      }
     }
 
-    // 渲染图片
-    this.project.imageRenderer.renderImageBitmap(
-      referenceBlockNode.bitmap,
-      this.project.renderer.transformWorld2View(referenceBlockNode.collisionBox.getRectangle().location),
-      referenceBlockNode.scale,
-    );
+    // 然后渲染选中效果和缩放控制点，确保显示在图片上方
+    // 选中状态
+    if (referenceBlockNode.isSelected) {
+      this.project.collisionBoxRenderer.render(
+        referenceBlockNode.collisionBox,
+        this.project.stageStyleManager.currentStyle.CollideBoxSelected,
+      );
 
-    if (referenceBlockNode.state === "success") {
-      let expand = 4;
-      let lightColor = this.project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(0.5);
-      let darkColor = this.project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(0.8);
-      if (referenceBlockNode.isSelected) {
-        expand = 16;
-        lightColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected;
-        darkColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected.toNewAlpha(1);
-      }
-      const baseRect = referenceBlockNode.collisionBox.getRectangle();
-      // 渲染外层括号
-      this.renderBrackets(baseRect.expandFromCenter(expand + 4), darkColor);
-      // 渲染内层括号
-      this.renderBrackets(baseRect.expandFromCenter(expand), lightColor);
+      // 在引用块底部添加提示文本
+      const bottomCenter = this.project.renderer.transformWorld2View(
+        referenceBlockNode.rectangle.location.add(
+          new Vector(referenceBlockNode.rectangle.size.x / 2, referenceBlockNode.rectangle.size.y + 15),
+        ),
+      );
+      this.project.textRenderer.renderTextFromCenter(
+        "双击跳转到源头位置",
+        bottomCenter,
+        10 * this.project.camera.currentScale,
+        this.project.stageStyleManager.currentStyle.StageObjectBorder,
+      );
+
+      // 渲染右下角缩放控制点
+      const resizeHandleRect = referenceBlockNode.getResizeHandleRect();
+      this.project.shapeRenderer.renderRect(
+        new Rectangle(
+          this.project.renderer.transformWorld2View(resizeHandleRect.location),
+          resizeHandleRect.size.multiply(this.project.camera.currentScale),
+        ),
+        this.project.stageStyleManager.currentStyle.CollideBoxSelected,
+        this.project.stageStyleManager.currentStyle.StageObjectBorder,
+        2 * this.project.camera.currentScale,
+        8 * this.project.camera.currentScale,
+      );
     }
   }
 

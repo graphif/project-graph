@@ -1,5 +1,6 @@
 import { Project, service } from "@/core/Project";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
+import { Rectangle } from "@graphif/shapes";
 
 /**
  * 渲染SVG节点
@@ -15,6 +16,19 @@ export class SvgNodeRenderer {
       this.project.collisionBoxRenderer.render(
         svgNode.collisionBox,
         this.project.stageStyleManager.currentStyle.CollideBoxSelected,
+      );
+
+      // 渲染右下角缩放控制点
+      const resizeHandleRect = svgNode.getResizeHandleRect();
+      this.project.shapeRenderer.renderRect(
+        new Rectangle(
+          this.project.renderer.transformWorld2View(resizeHandleRect.location),
+          resizeHandleRect.size.multiply(this.project.camera.currentScale),
+        ),
+        this.project.stageStyleManager.currentStyle.CollideBoxSelected,
+        this.project.stageStyleManager.currentStyle.StageObjectBorder,
+        2 * this.project.camera.currentScale,
+        8 * this.project.camera.currentScale,
       );
     }
     this.project.imageRenderer.renderImageElement(

@@ -29,6 +29,11 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
     const pressWorldLocation = this.project.renderer.transformView2World(this.mouseDownViewLocation);
     this.lastMoveLocation = pressWorldLocation.clone();
 
+    // 检查是否点击了缩放控制点，如果是，就不要触发移动事件
+    if (this.project.controllerUtils.isClickedResizeRect(pressWorldLocation)) {
+      return;
+    }
+
     const clickedStageObject = this.project.controllerUtils.getClickedStageObject(pressWorldLocation);
 
     // 防止跳跃式移动的时候改变选中内容

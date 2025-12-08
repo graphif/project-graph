@@ -14,6 +14,9 @@ import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
+import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
+import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import AutoCompleteWindow from "@/sub/AutoCompleteWindow";
 import NodeDetailsWindow from "@/sub/NodeDetailsWindow";
 import { Direction } from "@/types/directions";
@@ -353,7 +356,18 @@ export class ControllerUtils {
     const selectedEntities = this.project.stageManager.getSelectedStageObjects();
 
     for (const selectedEntity of selectedEntities) {
-      if (selectedEntity instanceof TextNode) {
+      // 检查是否是支持缩放的实体类型
+      if (
+        selectedEntity instanceof TextNode ||
+        selectedEntity instanceof ImageNode ||
+        selectedEntity instanceof SvgNode ||
+        selectedEntity instanceof ReferenceBlockNode
+      ) {
+        // 对TextNode进行特殊处理，只在手动模式下允许缩放
+        if (selectedEntity instanceof TextNode && selectedEntity.sizeAdjust === "auto") {
+          continue;
+        }
+
         const resizeRect = selectedEntity.getResizeHandleRect();
         if (resizeRect.isPointIn(clickedLocation)) {
           // 点中了扩大缩小的东西

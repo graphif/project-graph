@@ -1,5 +1,6 @@
 import { Project } from "@/core/Project";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { ResizeAble } from "@/core/stage/stageObject/abstract/StageObjectInterface";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
@@ -21,7 +22,7 @@ import { Rectangle } from "@graphif/shapes";
  */
 @passExtraAtArg1
 @passObject
-export class ImageNode extends ConnectableEntity {
+export class ImageNode extends ConnectableEntity implements ResizeAble {
   isHiddenBySectionCollapse: boolean = false;
   @id
   @serializable
@@ -170,5 +171,36 @@ export class ImageNode extends ConnectableEntity {
         }
       }, "image/png");
     });
+  }
+
+  /**
+   * 处理拖拽缩放逻辑
+   * @param delta 拖拽距离向量
+   */
+  resizeHandle(delta: Vector) {
+    if (!this.bitmap) return;
+
+    // 计算当前图片的实际显示尺寸
+    const currentDisplayWidth = this.bitmap.width * this.scale;
+
+    // 根据delta计算新的显示尺寸（只使用delta.x，保持等比例缩放）
+    const newDisplayWidth = Math.max(currentDisplayWidth + delta.x, this.bitmap.width * 0.1);
+
+    // 计算新的缩放比例
+    const newScale = newDisplayWidth / this.bitmap.width;
+
+    // 更新缩放比例，使用现有的scaleUpdate方法保持一致性
+    const scaleDiff = newScale - this.scale;
+    this.scaleUpdate(scaleDiff);
+  }
+
+  /**
+   * 获取缩放控制点矩形
+   * 返回右下角的一个小矩形，用于拖拽缩放
+   */
+  getResizeHandleRect(): Rectangle {
+    const rect = this.collisionBox.getRectangle();
+    // 创建一个25x25的矩形，位于图片右下角
+    return new Rectangle(new Vector(rect.right - 25, rect.bottom - 25), new Vector(25, 25));
   }
 }
