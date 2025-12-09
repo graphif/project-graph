@@ -4,12 +4,12 @@ welcome:
   website: 網站
   github: GitHub
   bilibili: 嗶哩嗶哩
-  openRecentFiles: 打开最近的文件
-  newUserGuide: 功能说明书
+  openRecentFiles: 打開最近的檔案
+  newUserGuide: 功能說明書
   qq: QQ 群組
 
 about:
-  title: Project Graph 计划投射
+  title: Project Graph 計劃投射
   intro:
   - 軟體介紹
   - 這是一個基於tauri框架的快速繪製節點圖的工具，可以用於專案拓撲圖繪製、快速頭腦風暴草稿
@@ -583,16 +583,34 @@ app:
   unsaved: "(未保存)"
   comingSoon: 即將到來……
   draftUnsaved: ' 草稿無法自動保存，需手動保存 '
+
+contextMenu:
+  createTextNode: 建立文字節點
+  createConnectPoint: 建立連接點
+  packToSection: 打包到 Section
+  createMTUEdgeLine: 建立無向邊
+  createMTUEdgeConvex: 建立凸包
+  convertToSection: 轉換為 Section
+  toggleSectionCollapse: 切換折疊狀態
+  changeColor: 變更顏色
+  resetColor: 重置顏色
+  switchMTUEdgeArrow: 切換箭頭方向
+  mtuEdgeArrowOuter: 箭頭向外
+  mtuEdgeArrowInner: 箭頭向內
+  mtuEdgeArrowNone: 關閉箭頭顯示
+  switchMTUEdgeRenderType: 切換渲染類型
+  convertToDirectedEdge: 轉換為有向邊
+
 appMenu:
   file:
     title: 檔案
     items:
       new: 新建草稿
-      newFile: 新建文件
+      newFile: 新建檔案
       open: 打開
       save: 保存
       saveAs: 另存為
-      recent: 最近打開
+      recent: 最近開啟
       backup: 手動備份
   location:
     title: 位置
@@ -1180,6 +1198,22 @@ keyBindsGroup:
     title: 节点相关
     description: |
       关于节点的一些功能，如嫁接、摘除等
+
+controlSettingsGroup:
+  mouse:
+    title: 滑鼠設定
+  touchpad:
+    title: 觸控板設定
+  textNode:
+    title: 文字節點設定
+  gamepad:
+    title: 遊戲手柄設定
+
+visualSettingsGroup:
+  basic:
+    title: 基本設定
+  background:
+    title: 背景設定
 
 globalMenu:
   file:

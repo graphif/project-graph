@@ -8,6 +8,12 @@ welcome:
   about: 关于
   website: 官网
   title: Project Graph
+  language: 语言
+  next: 下一步
+  github: GitHub
+  bilibili: Bilibili
+  qq: QQ群
+  subtitle: 基于图论的无限画布思维导图软件
 
 globalMenu:
   file:
@@ -1001,6 +1007,22 @@ keyBindsGroup:
     title: 节点相关
     description: |
       关于节点的一些功能，如嫁接、摘除等
+
+controlSettingsGroup:
+  mouse:
+    title: 鼠标设置
+  touchpad:
+    title: 触摸板设置
+  textNode:
+    title: 文本节点设置
+  gamepad:
+    title: 游戏手柄设置
+
+visualSettingsGroup:
+  basic:
+    title: 基本设置
+  background:
+    title: 背景设置
 
 keyBinds:
   title: 快捷键绑定

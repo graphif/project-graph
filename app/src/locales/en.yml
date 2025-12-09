@@ -601,9 +601,9 @@ settings:
     title: MacBook trackpad two-finger zoom sensitivity
     description: The larger the value, the faster the scaling speed
   macEnableControlToCut:
-    title: mac下是否启用 control键按下来开始刀斩
+    title: Enable Control Key to Start Cutting on Mac
     description:
-      按下control键，在舞台上移动鼠标，再松开control键，完成一次刀斩
+      Press and hold the Control key, move the mouse on the stage, then release the Control key to complete a cut
   mouseSideWheelMode:
     title: Mouse Side Scroll Wheel Mode
     description: "The side scroll wheel is the roller on the thumb\n"
@@ -790,6 +790,23 @@ globalMenu:
     mayHaveBugs: May contain bugs and unfinished features
     reportBug: "Report Bug: Comment in Issue #487"
     test: Test Function
+
+contextMenu:
+  createTextNode: Create Text Node
+  createConnectPoint: Create Connection Point
+  packToSection: Pack into Section
+  createMTUEdgeLine: Create Undirected Edge
+  createMTUEdgeConvex: Create Convex Hull
+  convertToSection: Convert to Section
+  toggleSectionCollapse: Toggle Collapse State
+  changeColor: Change Color
+  resetColor: Reset Color
+  switchMTUEdgeArrow: Switch Arrow Direction
+  mtuEdgeArrowOuter: Arrow Pointing Outward
+  mtuEdgeArrowInner: Arrow Pointing Inward
+  mtuEdgeArrowNone: Disable Arrow Display
+  switchMTUEdgeRenderType: Switch Render Type
+  convertToDirectedEdge: Convert to Directed Edge
 
 appMenu:
   file:
