@@ -1144,6 +1144,10 @@ effects:
   PenStrokeDeletedEffect:
     title: 塗鴉被刪除時的消失特效
     description: "塗鴉被刪除時，出現消失的特效\n"
+  switchStealthMode:
+    title: 切換潛行模式
+    description: 按下後，開啟或關閉潛行模式，僅顯示滑鼠周圍的圓形區域，用於專注查看部分內容
+
 keyBindsGroup:
   otherKeys:
     title: 未分類的快捷鍵

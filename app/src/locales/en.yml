@@ -1279,6 +1279,9 @@ keyBinds:
   reverseImageColors:
     title: Reverse Image Colors
     description: Reverse the colors of selected images (makes white background black and vice versa)
+  switchStealthMode:
+    title: Toggle Stealth Mode
+    description: Press to enable or disable stealth mode, which only displays a circular area around the mouse for focused viewing
 effects:
   RectangleLittleNoteEffect:
     title: Rectangle Glimmer Hint Effect

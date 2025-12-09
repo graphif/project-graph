@@ -320,6 +320,7 @@ const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "clickStartFilePanelButton",
       "switchActiveProject",
       "switchActiveProjectReversed",
+      "switchStealthMode",
     ],
   },
   {

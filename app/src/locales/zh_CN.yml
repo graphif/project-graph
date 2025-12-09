@@ -1551,6 +1551,9 @@ keyBinds:
   textNodeTreeToSection:
     title: 将文本节点树转换为框嵌套结构
     description: 将选中的文本节点树结构转换为框嵌套结构
+  switchStealthMode:
+    title: 切换潜行模式
+    description: 按下后，开启或关闭潜行模式，仅显示鼠标周围的圆形区域，用于专注查看部分内容
 
   switchActiveProject:
     title: 切换当前项目
