@@ -22,6 +22,9 @@ const donations: DonationData[] = [
   // { user: "MacBook", note: "littlefean", amount: -7599.2 },
   { user: "域名 project-graph.top", note: "zty012", amount: -13.66 },
   // 以下为捐赠用户
+  { user: "张锋律师", note: "张锋律师", amount: 88 },
+  { user: "RoLinAike", note: "make it better! --RoLinAike", amount: 100.1 },
+  { user: "bona", note: "祝pg长长久久", amount: 9.9 },
   { user: "星尘_", note: "brokenstring加油！", amount: 30 },
   { user: "百乐", note: "", amount: 50 },
   { user: "Ryouji", note: "项目很好用，期待超越xmind", amount: 20 },
