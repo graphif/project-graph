@@ -113,7 +113,10 @@ export class SectionRenderer {
     // 计算视野范围矩形的最长边
     const viewMaxSide = Math.max(viewRect.size.x, viewRect.size.y);
     // 判断是否需要渲染大标题形态
-    if (sectionMaxSide >= viewMaxSide * Settings.sectionBigTitleThresholdRatio) {
+    if (
+      sectionMaxSide >= viewMaxSide * Settings.sectionBigTitleThresholdRatio ||
+      this.project.camera.currentScale > Settings.sectionBigTitleCameraScaleThreshold
+    ) {
       return;
     }
     this.project.shapeRenderer.renderRect(
@@ -154,7 +157,10 @@ export class SectionRenderer {
     // 计算视野范围矩形的最长边
     const viewMaxSide = Math.max(viewRect.size.x, viewRect.size.y);
     // 判断是否需要渲染大标题形态
-    if (sectionMaxSide >= viewMaxSide * Settings.sectionBigTitleThresholdRatio) {
+    if (
+      sectionMaxSide >= viewMaxSide * Settings.sectionBigTitleThresholdRatio ||
+      this.project.camera.currentScale > Settings.sectionBigTitleCameraScaleThreshold
+    ) {
       return;
     }
     const fontSize = 20 * (0.5 * this.project.camera.currentScale + 0.5);

@@ -150,6 +150,7 @@ export const settingsIcons = {
   lineStyle: Spline,
   sectionBitTitleRenderType: SquareM,
   sectionBigTitleThresholdRatio: Ratio,
+  sectionBigTitleCameraScaleThreshold: ScanEye,
   nodeDetailsPanel: AppWindow,
   alwaysShowDetails: ListCollapse,
   entityDetailsFontSize: CaseSensitive,

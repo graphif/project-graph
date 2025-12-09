@@ -59,7 +59,10 @@ export class EntityRenderer {
    * 统一渲染全部框的大标题
    */
   renderAllSectionsBigTitle(viewRectangle: Rectangle) {
-    if (Settings.sectionBitTitleRenderType === "none") {
+    if (
+      Settings.sectionBitTitleRenderType === "none" ||
+      this.project.camera.currentScale > Settings.sectionBigTitleCameraScaleThreshold
+    ) {
       return;
     }
     // 从最深层的最小框开始渲染

@@ -37,6 +37,7 @@ export const settingsSchema = z.object({
   renderOverTimeWhenNoManipulateTime: z.number().min(1).max(10).int().default(5),
   ignoreTextNodeTextRenderLessThanCameraScale: z.number().min(0.01).max(0.3).default(0.065),
   sectionBigTitleThresholdRatio: z.number().min(0).max(1).default(0.15),
+  sectionBigTitleCameraScaleThreshold: z.number().min(0.01).max(1).default(0.25),
   cacheTextAsBitmap: z.boolean().default(false),
   textCacheSize: z.number().default(100),
   textScalingBehavior: z
