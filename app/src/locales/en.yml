@@ -991,6 +991,13 @@ keyBinds:
       Reload the application and the current project file.
       This is equivalent to refreshing a web page in a browser.
       Warning: This action can cause loss of unsaved progress!
+  toggleCheckmarkOnTextNodes:
+    title: Toggle Checkmark on Text Nodes
+    description: Only works on text nodes, press again to remove checkmark
+  toggleCheckErrorOnTextNodes:
+    title: Toggle Error Mark on Text Nodes
+    description: Only works on text nodes, press again to remove error mark
+      
   dagGraphAdjust:
     title: Adjust DAG Layout
     description: |

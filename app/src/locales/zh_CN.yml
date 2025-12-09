@@ -1413,6 +1413,9 @@ keyBinds:
   toggleCheckmarkOnTextNodes:
     title: 将选中的文本节点都打上对勾✅，并标为绿色
     description: 仅对文本节点生效，选中后再输入一次可以取消对勾
+  toggleCheckErrorOnTextNodes:
+    title: 将选中的文本节点都打上错误❌，并标为红色
+    description: 仅对文本节点生效，选中后再输入一次可以取消错误标记
   switchToDarkTheme:
     title: 切换成黑色主题
     description: 切换后需要在舞台上划一刀才生生效

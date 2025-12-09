@@ -752,6 +752,12 @@ keyBinds:
   reload:
     title: 重載應用
     description: "重載應用，重新加載當前工程文件\n等同於瀏覽器刷新網頁\n這個功能很危險！會導致未保存的進度丟失！\n"
+  toggleCheckmarkOnTextNodes:
+    title: 將選中的文本節點都打上對勾✅，並標為綠色
+    description: 僅對文本節點生效，選中後再輸入一次可以取消對勾
+  toggleCheckErrorOnTextNodes:
+    title: 將選中的文本節點都打上錯誤❌，並標為紅色
+    description: 僅對文本節點生效，選中後再輸入一次可以取消錯誤標記
   undo:
     title: 撤銷
     description: 撤銷上一次操作
