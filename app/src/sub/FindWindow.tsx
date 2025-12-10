@@ -2,13 +2,21 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { SearchScope } from "@/core/service/dataManageService/contentSearchEngine/contentSearchEngine";
 import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 import { SubWindow } from "@/core/service/SubWindow";
 import { activeProjectAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useAtom } from "jotai";
-import { CaseSensitive, MessageCircleQuestionMark, SquareDashedMousePointer, Telescope } from "lucide-react";
+import {
+  CaseSensitive,
+  MessageCircleQuestionMark,
+  Square,
+  SquareDashedTopSolid,
+  SquareDashedMousePointer,
+  Telescope,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -21,6 +29,8 @@ export default function FindWindow() {
   const [searchResults, setSearchResults] = useState<{ title: string; uuid: string }[]>([]);
   // 是否开启快速瞭望模式
   const [isMouseEnterCameraMovable, setIsMouseEnterCameraMovable] = useState(false);
+  // 搜索范围
+  const [searchScope, setSearchScope] = useState<SearchScope>(SearchScope.ALL);
   const [project] = useAtom(activeProjectAtom);
 
   const selectAllResult = () => {
@@ -37,6 +47,11 @@ export default function FindWindow() {
     if (!project) return;
     project.contentSearch.isCaseSensitive = isCaseSensitive;
   }, [project, isCaseSensitive]);
+
+  useEffect(() => {
+    if (!project) return;
+    project.contentSearch.searchScope = searchScope;
+  }, [project, searchScope]);
 
   const clearSearch = () => {
     setSearchString("");
@@ -92,11 +107,58 @@ export default function FindWindow() {
           </TooltipTrigger>
           <TooltipContent>区分大小写</TooltipContent>
         </Tooltip>
+
+        {/* 搜索范围选择按钮组 */}
+        <Tooltip>
+          <TooltipTrigger>
+            <Button
+              size="icon"
+              variant={searchScope === SearchScope.ALL ? "default" : "outline"}
+              onClick={() => {
+                setSearchScope(SearchScope.ALL);
+              }}
+            >
+              <Square />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>搜索整个舞台</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger>
+            <Button
+              size="icon"
+              variant={searchScope === SearchScope.SELECTED ? "default" : "outline"}
+              onClick={() => {
+                setSearchScope(SearchScope.SELECTED);
+              }}
+            >
+              <SquareDashedTopSolid />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>只搜索选中的内容</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger>
+            <Button
+              size="icon"
+              variant={searchScope === SearchScope.SELECTED_BOUNDS ? "default" : "outline"}
+              onClick={() => {
+                setSearchScope(SearchScope.SELECTED_BOUNDS);
+              }}
+            >
+              <SquareDashedMousePointer />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>搜索选中内容的外接矩形范围</TooltipContent>
+        </Tooltip>
+
         {searchResults.length > 0 && (
           <Tooltip>
             <TooltipTrigger>
               <Button size="icon" variant="outline" onClick={selectAllResult}>
-                <SquareDashedMousePointer />
+                <SquareDashedTopSolid strokeWidth={1.5} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>将全部结果选中</TooltipContent>
