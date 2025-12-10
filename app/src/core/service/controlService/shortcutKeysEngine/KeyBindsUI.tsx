@@ -118,7 +118,25 @@ export namespace KeyBindsUI {
     pressedSingleKeyBinds.clear();
   }
 
+  /**
+   * 检查是否应该处理键盘事件
+   * 当有文本输入元素获得焦点时，不处理键盘事件
+   */
+  function shouldProcessKeyboardEvent() {
+    return !(
+      document.activeElement?.tagName === "INPUT" ||
+      document.activeElement?.tagName === "TEXTAREA" ||
+      document.activeElement?.getAttribute("contenteditable") === "true"
+    );
+  }
+
   function check() {
+    // 如果有文本输入元素获得焦点，不处理键盘事件
+    if (!shouldProcessKeyboardEvent()) {
+      // 清空队列，防止事件积累
+      userEventQueue.clear();
+      return;
+    }
     const activeProject = store.get(activeProjectAtom);
     let executed = false;
     for (const uiKeyBind of allUIKeyBinds) {
@@ -142,11 +160,21 @@ export namespace KeyBindsUI {
     check();
   }
   function onKeyDown(event: KeyboardEvent) {
+    // 如果有文本输入元素获得焦点，不处理键盘事件
+    if (!shouldProcessKeyboardEvent()) {
+      // 清空队列，防止事件积累
+      userEventQueue.clear();
+      return;
+    }
     if (["control", "alt", "shift", "meta"].includes(event.key.toLowerCase())) return;
     enqueue(event);
     check();
   }
   function onKeyUp(event: KeyboardEvent) {
+    // 如果有文本输入元素获得焦点，不处理键盘事件
+    if (!shouldProcessKeyboardEvent()) {
+      return;
+    }
     const activeProject = store.get(activeProjectAtom);
     const key = event.key;
 
