@@ -6,6 +6,7 @@ import { serializable } from "@graphif/serializer";
 import { Line, Rectangle } from "@graphif/shapes";
 import { ConnectPoint } from "../entity/ConnectPoint";
 import { ImageNode } from "../entity/ImageNode";
+import { ReferenceBlockNode } from "../entity/ReferenceBlockNode";
 
 /**
  * 连接两个实体的有向边
@@ -70,8 +71,11 @@ export abstract class Edge extends ConnectableAssociation {
 
     if (this.source instanceof ConnectPoint) {
       startPoint = this.source.geometryCenter;
-    } else if (this.source instanceof ImageNode && !isOldDefaultRate(this.sourceRectangleRate)) {
-      // 对于图片节点，如果是精确值（不是旧的默认值），直接使用内部位置
+    } else if (
+      (this.source instanceof ImageNode || this.source instanceof ReferenceBlockNode) &&
+      !isOldDefaultRate(this.sourceRectangleRate)
+    ) {
+      // 对于图片或引用块节点，如果是精确值（不是旧的默认值），直接使用内部位置
       startPoint = edgeCenterLine.start;
     } else {
       // 否则渲染在外接矩形边缘上
@@ -79,8 +83,11 @@ export abstract class Edge extends ConnectableAssociation {
     }
     if (this.target instanceof ConnectPoint) {
       endPoint = this.target.geometryCenter;
-    } else if (this.target instanceof ImageNode && !isOldDefaultRate(this.targetRectangleRate)) {
-      // 对于图片节点，如果是精确值（不是旧的默认值），直接使用内部位置
+    } else if (
+      (this.target instanceof ImageNode || this.target instanceof ReferenceBlockNode) &&
+      !isOldDefaultRate(this.targetRectangleRate)
+    ) {
+      // 对于图片或引用块节点，如果是精确值（不是旧的默认值），直接使用内部位置
       endPoint = edgeCenterLine.end;
     } else {
       // 否则渲染在外接矩形边缘上

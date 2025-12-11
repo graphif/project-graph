@@ -14,6 +14,7 @@ import { ConnectableEntity } from "@/core/stage/stageObject/abstract/Connectable
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 
 /**
  * 贝塞尔曲线
@@ -79,16 +80,16 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       startDirection = Vector.getZero();
     } else {
       const sourceRect = edge.source.collisionBox.getRectangle();
-      // 检查是否是图片节点的精确位置（不在边缘上）
+      // 检查是否是图片或引用块节点的精确位置（不在边缘上）
       const isSourceExactPosition =
-        edge.source instanceof ImageNode &&
+        (edge.source instanceof ImageNode || edge.source instanceof ReferenceBlockNode) &&
         start.x !== sourceRect.left &&
         start.x !== sourceRect.right &&
         start.y !== sourceRect.top &&
         start.y !== sourceRect.bottom;
 
       if (isSourceExactPosition) {
-        // 对于图片节点的精确位置，使用连线方向作为法线向量
+        // 对于图片或引用块节点的精确位置，使用连线方向作为法线向量
         startDirection = lineDirection;
       } else {
         // 否则使用矩形边缘的法线向量
@@ -100,16 +101,16 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       endDirection = Vector.getZero();
     } else {
       const targetRect = edge.target.collisionBox.getRectangle();
-      // 检查是否是图片节点的精确位置（不在边缘上）
+      // 检查是否是图片或引用块节点的精确位置（不在边缘上）
       const isTargetExactPosition =
-        edge.target instanceof ImageNode &&
+        (edge.target instanceof ImageNode || edge.target instanceof ReferenceBlockNode) &&
         end.x !== targetRect.left &&
         end.x !== targetRect.right &&
         end.y !== targetRect.top &&
         end.y !== targetRect.bottom;
 
       if (isTargetExactPosition) {
-        // 对于图片节点的精确位置，使用连线方向的反方向作为法线向量
+        // 对于图片或引用块节点的精确位置，使用连线方向的反方向作为法线向量
         endDirection = lineDirection.multiply(-1);
       } else {
         // 否则使用矩形边缘的法线向量
