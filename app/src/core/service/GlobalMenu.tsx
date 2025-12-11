@@ -283,7 +283,7 @@ export function GlobalMenu() {
               });
               if (!path) return;
               activeProject!.uri = URI.file(path);
-              RecentFileManager.addRecentFileByUri(activeProject!.uri);
+              await RecentFileManager.addRecentFileByUri(activeProject!.uri);
               await activeProject!.save();
             }}
           >
@@ -1529,7 +1529,7 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
       },
       {
         loading: "正在打开文件...",
-        success: () => {
+        success: async () => {
           if (upgraded) {
             project.stage = deserialize(upgraded.data, project);
             project.attachments = upgraded.attachments;
@@ -1540,7 +1540,7 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
           setTimeout(() => {
             project.camera.reset();
           }, 100);
-          RecentFileManager.addRecentFileByUri(uri);
+          await RecentFileManager.addRecentFileByUri(uri);
           Telemetry.event("打开文件", {
             loadServiceTime,
             readFileTime,

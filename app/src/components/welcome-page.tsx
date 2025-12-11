@@ -139,7 +139,7 @@ export default function WelcomePage() {
                   {isLoading && lastClickFileURIPath === file.uri.fsPath && (
                     <LoaderCircle className={cn(isLoading && "animate-spin")} />
                   )}
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-1">
                     <span className="text-sm">{new Path(file.uri).nameWithoutExt}</span>
                     <span className="text-xs opacity-50">{file.uri.fsPath}</span>
                   </div>
