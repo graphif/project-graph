@@ -38,6 +38,7 @@ export const settingsSchema = z.object({
   ignoreTextNodeTextRenderLessThanCameraScale: z.number().min(0.01).max(0.3).default(0.065),
   sectionBigTitleThresholdRatio: z.number().min(0).max(1).default(0.15),
   sectionBigTitleCameraScaleThreshold: z.number().min(0.01).max(1).default(0.25),
+  sectionBigTitleOpacity: z.number().min(0).max(1).default(0.5),
   cacheTextAsBitmap: z.boolean().default(false),
   textCacheSize: z.number().default(100),
   textScalingBehavior: z

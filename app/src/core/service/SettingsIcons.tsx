@@ -151,6 +151,7 @@ export const settingsIcons = {
   sectionBitTitleRenderType: SquareM,
   sectionBigTitleThresholdRatio: Ratio,
   sectionBigTitleCameraScaleThreshold: ScanEye,
+  sectionBigTitleOpacity: Blend,
   nodeDetailsPanel: AppWindow,
   alwaysShowDetails: ListCollapse,
   entityDetailsFontSize: CaseSensitive,

@@ -263,6 +263,10 @@ settings:
     description: |
       当摄像机缩放比例大于此阈值时，不显示缩略大标题
       摄像机缩放比例需要打开调试信息才能显示
+  sectionBigTitleOpacity:
+    title: 框的缩略大标题透明度
+    description: |
+      控制半透明覆盖大标题的透明度，取值范围0-1
   alwaysShowDetails:
     title: 始终显示节点详细信息
     description: |

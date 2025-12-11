@@ -631,6 +631,15 @@ settings:
     description: |
       When the longest side of the section is less than this ratio of the longest side of the viewport, the big title will be displayed.
       Range: 0-1
+  sectionBigTitleCameraScaleThreshold:
+    title: Section Big Title Camera Scale Threshold
+    description: |
+      When the camera scale is greater than this threshold, the big title will not be displayed.
+      The camera scale needs debugging information to be displayed.
+  sectionBigTitleOpacity:
+    title: Section Big Title Opacity
+    description: |
+      Control the opacity of the semi-transparent cover big title, range 0-1
   macTrackpadAndMouseWheelDifference:
     options:
       tarckpadFloatAndWheelInt: The value of the trackpad is a decimal, while 

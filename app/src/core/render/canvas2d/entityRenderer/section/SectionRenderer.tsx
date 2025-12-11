@@ -125,8 +125,8 @@ export class SectionRenderer {
         section.rectangle.size.multiply(this.project.camera.currentScale),
       ),
       section.color.a === 0
-        ? this.project.stageStyleManager.currentStyle.Background.toNewAlpha(0.5)
-        : section.color.toNewAlpha(0.5),
+        ? this.project.stageStyleManager.currentStyle.Background.toNewAlpha(Settings.sectionBigTitleOpacity)
+        : section.color.toNewAlpha(Settings.sectionBigTitleOpacity),
       this.project.stageStyleManager.currentStyle.StageObjectBorder,
       2 * this.project.camera.currentScale,
     );
@@ -169,8 +169,8 @@ export class SectionRenderer {
     const leftTopFontViewLocation = leftTopViewLocation.subtract(new Vector(0, fontSize));
     const bgColor =
       section.color.a === 0
-        ? this.project.stageStyleManager.currentStyle.Background.toNewAlpha(0.5)
-        : section.color.toNewAlpha(0.5);
+        ? this.project.stageStyleManager.currentStyle.Background.toNewAlpha(Settings.sectionBigTitleOpacity)
+        : section.color.toNewAlpha(Settings.sectionBigTitleOpacity);
 
     const textColor =
       section.color.a === 1

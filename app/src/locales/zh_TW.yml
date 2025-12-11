@@ -541,6 +541,19 @@ settings:
       none: 不渲染（節省性能）
       top: 頂部小字
       cover: 半透明覆蓋框體（最佳效果）
+  sectionBigTitleThresholdRatio:
+    title: 框的縮略大標題顯示閾值
+    description: |
+      當框的最長邊小於視野範圍最長邊的此比例時，顯示縮略大標題
+  sectionBigTitleCameraScaleThreshold:
+    title: 框的縮略大標題相機縮放閾值
+    description: |
+      當攝影機縮放比例大於此閾值時，不顯示縮略大標題
+      攝影機縮放比例需要開啟調試資訊才能顯示
+  sectionBigTitleOpacity:
+    title: 框的縮略大標題透明度
+    description: |
+      控制半透明覆蓋大標題的透明度，取值範圍0-1
   autoBackupLimitCount:
     title: 自動備份最大數量
     description: "自動備份的最大數量，超過此數量將會刪除舊的備份文件"
