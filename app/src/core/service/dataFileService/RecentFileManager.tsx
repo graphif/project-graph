@@ -20,7 +20,7 @@ export namespace RecentFileManager {
 
   export async function init() {
     store = await createStore("recent-files2.json");
-    store.save();
+    await store.save();
   }
 
   /**
@@ -41,7 +41,7 @@ export namespace RecentFileManager {
       "recentFiles",
       existingFiles.map((f) => ({ ...f, uri: f.uri.toString() })),
     ); // 更新存储
-    store.save();
+    await store.save();
   }
 
   export async function addRecentFileByUri(uri: URI) {
@@ -68,7 +68,7 @@ export namespace RecentFileManager {
       "recentFiles",
       existingFiles.map((f) => ({ ...f, uri: f.uri.toString() })),
     ); // 更新存储
-    store.save();
+    await store.save();
   }
 
   /**
@@ -84,7 +84,7 @@ export namespace RecentFileManager {
         "recentFiles",
         existingFiles.map((f) => ({ ...f, uri: f.uri.toString() })),
       ); // 更新存储
-      store.save();
+      await store.save();
       return true;
     }
     return false;
@@ -95,7 +95,7 @@ export namespace RecentFileManager {
    */
   export async function clearAllRecentFiles() {
     await store.set("recentFiles", []); // 清空列表
-    store.save();
+    await store.save();
   }
 
   /**
@@ -154,7 +154,7 @@ export namespace RecentFileManager {
       "recentFiles",
       recentFiles.map((f) => ({ ...f, uri: f.uri.toString() })),
     ); // 更新存储
-    store.save();
+    await store.save();
   }
 
   /**
@@ -162,6 +162,6 @@ export namespace RecentFileManager {
    */
   export async function clearRecentFiles() {
     await store.set("recentFiles", []); // 清空列表
-    store.save();
+    await store.save();
   }
 }

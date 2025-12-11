@@ -4,7 +4,16 @@ import { Path } from "@/utils/path";
 import { getVersion } from "@tauri-apps/api/app";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import { writeFile } from "@tauri-apps/plugin-fs";
-import { Earth, FilePlus, FolderOpen, Info, Map, Settings as SettingsIcon, TableProperties } from "lucide-react";
+import {
+  Earth,
+  FilePlus,
+  FolderOpen,
+  Info,
+  LoaderCircle,
+  Map as MapIcon,
+  Settings as SettingsIcon,
+  TableProperties,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import SettingsWindow from "../sub/SettingsWindow";
@@ -21,6 +30,8 @@ export default function WelcomePage() {
   const { t } = useTranslation("welcome");
   const [appVersion, setAppVersion] = useState("unknown");
   const [isDownloadingGuideFile, setIsDownloadingGuideFile] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastClickFileURIPath, setLastClickFileURIPath] = useState("");
 
   useEffect(() => {
     refresh();
@@ -30,8 +41,10 @@ export default function WelcomePage() {
   }, []);
 
   async function refresh() {
+    setIsLoading(true);
     await RecentFileManager.sortTimeRecentFiles();
     setRecentFiles(await RecentFileManager.getRecentFiles());
+    setIsLoading(false);
   }
 
   return (
@@ -82,7 +95,7 @@ export default function WelcomePage() {
                   );
                 }}
               >
-                <Map className={cn(isDownloadingGuideFile && "animate-spin")} />
+                <MapIcon className={cn(isDownloadingGuideFile && "animate-spin")} />
                 <span className="hidden sm:inline">{t("newUserGuide")}</span>
               </div>
               <div onClick={onNewDraft}>
@@ -101,25 +114,35 @@ export default function WelcomePage() {
                 <span className="hidden text-xs opacity-50 sm:inline">{isMac ? "⌘ + O" : "Ctrl + O"}</span>
               </div>
             </div>
-            <div
-              className={cn(
-                "hidden flex-col gap-2 *:flex *:flex-col *:transition-opacity *:*:last:opacity-50 *:hover:opacity-75 sm:flex",
-              )}
-            >
+            <div className={cn("hidden flex-col gap-2 *:transition-opacity *:hover:opacity-75 sm:flex")}>
               {recentFiles.slice(0, 6).map((file, index) => (
                 <div
+                  className="flex flex-row items-center gap-2"
                   key={index}
                   onClick={async () => {
+                    if (isLoading) {
+                      toast.error("正在打开文件，请稍后");
+                      return;
+                    }
+                    setIsLoading(true);
+                    setLastClickFileURIPath(file.uri.fsPath);
                     try {
                       await onOpenFile(file.uri, "欢迎页面-最近打开的文件");
                       await refresh();
                     } catch (e) {
                       toast.error(e as string);
                     }
+                    setIsLoading(false);
+                    setLastClickFileURIPath("");
                   }}
                 >
-                  <span className="text-sm">{new Path(file.uri).nameWithoutExt}</span>
-                  <span className="text-xs">{file.uri.fsPath}</span>
+                  {isLoading && lastClickFileURIPath === file.uri.fsPath && (
+                    <LoaderCircle className={cn(isLoading && "animate-spin")} />
+                  )}
+                  <div className="flex flex-col gap-2">
+                    <span className="text-sm">{new Path(file.uri).nameWithoutExt}</span>
+                    <span className="text-xs opacity-50">{file.uri.fsPath}</span>
+                  </div>
                 </div>
               ))}
             </div>
