@@ -14,7 +14,6 @@ import { ConnectableEntity } from "@/core/stage/stageObject/abstract/Connectable
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 
 /**
  * 贝塞尔曲线
@@ -82,7 +81,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       const sourceRect = edge.source.collisionBox.getRectangle();
       // 检查是否是图片或引用块节点的精确位置（不在边缘上）
       const isSourceExactPosition =
-        (edge.source instanceof ImageNode || edge.source instanceof ReferenceBlockNode) &&
+        (edge.source instanceof ImageNode || edge.source.constructor.name === "ReferenceBlockNode") &&
         start.x !== sourceRect.left &&
         start.x !== sourceRect.right &&
         start.y !== sourceRect.top &&
@@ -103,7 +102,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       const targetRect = edge.target.collisionBox.getRectangle();
       // 检查是否是图片或引用块节点的精确位置（不在边缘上）
       const isTargetExactPosition =
-        (edge.target instanceof ImageNode || edge.target instanceof ReferenceBlockNode) &&
+        (edge.target instanceof ImageNode || edge.target.constructor.name === "ReferenceBlockNode") &&
         end.x !== targetRect.left &&
         end.x !== targetRect.right &&
         end.y !== targetRect.top &&

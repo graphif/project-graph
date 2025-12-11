@@ -8,7 +8,6 @@ import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { CursorNameEnum } from "@/types/cursors";
 import { Direction } from "@/types/directions";
 import { isMac } from "@/utils/platform";
@@ -171,7 +170,10 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     }
 
     // 记录起始点在图片或引用块上的精确位置
-    if (clickedConnectableEntity instanceof ImageNode || clickedConnectableEntity instanceof ReferenceBlockNode) {
+    if (
+      clickedConnectableEntity instanceof ImageNode ||
+      clickedConnectableEntity.constructor.name === "ReferenceBlockNode"
+    ) {
       const rect = clickedConnectableEntity.collisionBox.getRectangle();
       // 计算鼠标在内部的相对位置 (0-1之间)
       const relativeX = (pressWorldLocation.x - rect.location.x) / rect.size.x;
@@ -308,7 +310,7 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     this._endImageLocation = null;
     if (
       releaseTargetEntity &&
-      (releaseTargetEntity instanceof ImageNode || releaseTargetEntity instanceof ReferenceBlockNode)
+      (releaseTargetEntity instanceof ImageNode || releaseTargetEntity.constructor.name === "ReferenceBlockNode")
     ) {
       const rect = releaseTargetEntity.collisionBox.getRectangle();
       // 计算鼠标在内部的相对位置 (0-1之间)
@@ -493,7 +495,8 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     // 如果是从图片或引用块节点发出，使用精确位置
     const isSingleImageOrReferenceSource =
       this.connectFromEntities.length === 1 &&
-      (this.connectFromEntities[0] instanceof ImageNode || this.connectFromEntities[0] instanceof ReferenceBlockNode);
+      (this.connectFromEntities[0] instanceof ImageNode ||
+        this.connectFromEntities[0].constructor.name === "ReferenceBlockNode");
 
     if (isSingleImageOrReferenceSource) {
       const fromEntity = this.connectFromEntities[0];
@@ -523,7 +526,7 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     let targetRectRate: [number, number] = [0.5, 0.5];
     // 如果是连接到图片或引用块节点，使用精确位置
     if (
-      (connectToEntity instanceof ImageNode || connectToEntity instanceof ReferenceBlockNode) &&
+      (connectToEntity instanceof ImageNode || connectToEntity.constructor.name === "ReferenceBlockNode") &&
       this._endImageLocation
     ) {
       targetRectRate = [this._endImageLocation.x, this._endImageLocation.y];

@@ -6,7 +6,6 @@ import { serializable } from "@graphif/serializer";
 import { Line, Rectangle } from "@graphif/shapes";
 import { ConnectPoint } from "../entity/ConnectPoint";
 import { ImageNode } from "../entity/ImageNode";
-import { ReferenceBlockNode } from "../entity/ReferenceBlockNode";
 
 /**
  * 连接两个实体的有向边
@@ -72,7 +71,7 @@ export abstract class Edge extends ConnectableAssociation {
     if (this.source instanceof ConnectPoint) {
       startPoint = this.source.geometryCenter;
     } else if (
-      (this.source instanceof ImageNode || this.source instanceof ReferenceBlockNode) &&
+      (this.source instanceof ImageNode || this.source.constructor.name === "ReferenceBlockNode") &&
       !isOldDefaultRate(this.sourceRectangleRate)
     ) {
       // 对于图片或引用块节点，如果是精确值（不是旧的默认值），直接使用内部位置
@@ -84,7 +83,7 @@ export abstract class Edge extends ConnectableAssociation {
     if (this.target instanceof ConnectPoint) {
       endPoint = this.target.geometryCenter;
     } else if (
-      (this.target instanceof ImageNode || this.target instanceof ReferenceBlockNode) &&
+      (this.target instanceof ImageNode || this.target.constructor.name === "ReferenceBlockNode") &&
       !isOldDefaultRate(this.targetRectangleRate)
     ) {
       // 对于图片或引用块节点，如果是精确值（不是旧的默认值），直接使用内部位置
