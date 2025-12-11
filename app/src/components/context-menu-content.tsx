@@ -568,7 +568,7 @@ export default function MyContextMenuContent() {
                   p.stageManager
                     .getSelectedEntities()
                     .filter((it) => it instanceof TextNode)
-                    .map((it) => p.sectionPackManager.targetTextNodeToSection(it))
+                    .map((it) => p.sectionPackManager.targetTextNodeToSection(it, false, true))
                 }
               >
                 <Package />
