@@ -63,7 +63,7 @@ export abstract class Association extends StageObject {
         minY = pos.y;
       }
     }
-    return new ObservablePoint({ _onUpdate() {} }, minX, minY);
+    return new ObservablePoint(this, minX, minY);
   }
   get x() {
     return this.position.x;
@@ -102,30 +102,23 @@ export class AssociationMember {
 
   /** 锚点的世界坐标 */
   get position(): Point {
-    // HACK: 2025/10/6 发现ObservablePoint.clone不会把observer去掉
-    const pos = this.entity.position.clone({ _onUpdate() {} });
     // pos是左上角坐标
+    const cloned = this.entity.position.clone({ _onUpdate() {} });
+    const bounds = this.entity.getBounds();
+    const w = bounds.width;
+    const h = bounds.height;
     switch (this.anchor) {
       case "center":
-        pos.x += this.entity.width / 2;
-        pos.y += this.entity.height / 2;
-        break;
+        return cloned.add(new Point(w / 2, h / 2));
       case "top":
-        pos.x += this.entity.width / 2;
-        break;
+        return cloned.add(new Point(w / 2, 0));
       case "bottom":
-        pos.x += this.entity.width / 2;
-        pos.y += this.entity.height;
-        break;
+        return cloned.add(new Point(w / 2, h));
       case "left":
-        pos.y += this.entity.height / 2;
-        break;
+        return cloned.add(new Point(0, h / 2));
       case "right":
-        pos.x += this.entity.width;
-        pos.y += this.entity.height / 2;
-        break;
+        return cloned.add(new Point(w, h / 2));
     }
-    return pos;
   }
 
   /** 往旁边偏移 */

@@ -323,7 +323,6 @@ export class Project extends EventEmitter<{
   set stage(value: StageObject[]) {
     this.viewport?.removeChild(...this._stage);
     this._stage = new ObservableArray(this.onStageAdd.bind(this), this.onStageRemove.bind(this), value);
-    console.trace("1");
     console.log(this.stage);
   }
 

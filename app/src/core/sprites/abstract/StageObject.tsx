@@ -61,14 +61,14 @@ export abstract class StageObject extends LayoutContainer {
   destroy(options?: DestroyOptions): void {
     super.destroy(options);
     this.project.stage = this.project.stage.filter((s) => s !== this);
-  }
-
-  /**
-   * 仅从数据层中移除自己
-   */
-  removeFromParent(): void {
-    super.removeFromParent();
-    this.project.stage = this.project.stage.filter((s) => s !== this);
+    // 清理有关的关系
+    for (const so of this.project.stage) {
+      if ("members" in so && Array.isArray(so.members)) {
+        if (so.members.find((m) => m.entity === this)) {
+          so.destroy();
+        }
+      }
+    }
   }
 
   /**

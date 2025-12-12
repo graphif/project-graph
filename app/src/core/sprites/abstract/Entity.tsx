@@ -1,8 +1,10 @@
 import { Project } from "@/core/Project";
+import { Settings } from "@/core/service/Settings";
 import { StageObject } from "@/core/sprites/abstract/StageObject";
 import { on } from "@graphif/on";
 import { serializable } from "@graphif/serializer";
-import { DestroyOptions, FederatedPointerEvent, ObservablePoint, Point } from "pixi.js";
+import gsap from "gsap";
+import { DestroyOptions, FederatedPointerEvent, Graphics, ObservablePoint, Point, Rectangle } from "pixi.js";
 import type { Value } from "platejs";
 import { LineEdge } from "../LineEdge";
 import { Section } from "../Section";
@@ -15,77 +17,52 @@ import { AssociationMember } from "./Association";
  */
 export abstract class Entity extends StageObject {
   /*
-   * 这两个是实例属性而不是静态属性
-   * 一方面，保持和pixi的风格一致
-   * 另一方面，这样方便通过一个实例判断是否能有子节点，比如stageObject.allowGraphChildren，而不需要获取构造函数
-   * pixi用实例属性的原因如下:
-   * zty012: Why is Container.allowChildren an instance property? Shouldn't it be a static property instead?
-   * LunarRaid: Really it should be a per-class getter, but it's basically being treated as such.
-   * LunarRaid: It's utilized to determine if Container subclasses can have children or not. Most can't.
+   * 允许关联
    */
   allowAssociation: boolean = true;
 
   /**
-   * [
-   *  { type: 'p', children: [{ text: 'Serialize just this paragraph.' }] },
-   *  { type: 'h1', children: [{ text: 'And this heading.' }] }
-   * ]
+   * 实体内容数据
    */
   @serializable
   public details: Value = [];
 
+  // 交互状态
   private startWorldPoint = new Point(0, 0);
   private linking = false;
   private tempLineEdge: TempLineEdge | null = null;
 
+  // 连线指示器
+  private sourceIndicator: Graphics | null = null;
+  private targetIndicator: Graphics | null = null;
+  private currentTarget: Entity | null = null;
+
+  // 记录上一次的锚点，用于判断是否需要动画
+  private lastSourceAnchor: string | null = null;
+  private lastTargetAnchor: string | null = null;
+
   constructor(project: Project) {
     super(project);
 
-    this.tempLineEdge = new TempLineEdge(this.project, {
-      members: [new AssociationMember(this, "right")],
-      endPoint: new Point(0, 0),
-    });
+    // 初始化临时连接线
+    this.tempLineEdge = new TempLineEdge(this.project);
 
+    // 监听全局对象进入事件，用于处理连线吸附
     this.project.on("pointer-enter-stage-object", this.onPointerEnterHandler);
   }
 
-  private onPointerEnterHandler = (so: any, e: any) => {
-    if (this.linking && so instanceof Entity) {
-      // 检测鼠标在舞台对象的哪个1/4区域，即上/下/左/右四个三角形的区域
-      const pos = this.project.viewport.toWorld(e.client);
-      const bounds = so.getBounds().rectangle;
-      let anchor: "left" | "right" | "top" | "bottom";
-      const centerX = bounds.x + bounds.width / 2;
-      const centerY = bounds.y + bounds.height / 2;
-      const dx = pos.x - centerX;
-      const dy = pos.y - centerY;
-      if (Math.abs(dx) > Math.abs(dy)) {
-        // 左右区域
-        if (dx < 0) {
-          anchor = "left";
-        } else {
-          anchor = "right";
-        }
-      } else {
-        // 上下区域
-        if (dy < 0) {
-          anchor = "top";
-        } else {
-          anchor = "bottom";
-        }
-      }
-      const onPointerUp = () => {
-        this.linking = false;
-        this.project.stage.push(
-          new LineEdge(this.project, {
-            members: [new AssociationMember(this, this.tempLineEdge!.source.anchor), new AssociationMember(so, anchor)],
-          }),
-        );
-      };
-      so.once("pointerup", onPointerUp);
-      so.once("pointerleave", () => {
-        so.off("pointerup", onPointerUp);
-      });
+  /**
+   * 处理鼠标进入其他对象时的逻辑（主要用于连线目标检测）
+   */
+  private onPointerEnterHandler = (so: StageObject) => {
+    // 只有在正在连线，且目标是另一个 Entity 时才处理
+    if (this.linking && so instanceof Entity && so !== this) {
+      // 如果已经是当前目标，不做处理，避免动画重置
+      if (this.currentTarget === so) return;
+
+      this.currentTarget = so;
+      // 初始化目标指示器
+      this.updateTargetIndicator(true);
     }
   };
 
@@ -93,55 +70,81 @@ export abstract class Entity extends StageObject {
   protected _Entity_pointerdown(e: FederatedPointerEvent) {
     const world = this.project.viewport.toWorld(e.client);
     this.startWorldPoint.copyFrom(world);
+
+    // 右键点击开始连线
     if (e.button === 2) {
       this.linking = true;
-      this.tempLineEdge!.endPoint.copyFrom(world);
+      this.tempLineEdge!.sourcePoint = world;
+      this.tempLineEdge!.targetPoint = world;
+      // 将临时线加入舞台
       this.project.stage.push(this.tempLineEdge!);
+
+      // 初始化源指示器
+      this.updateSourceIndicator(true);
     }
   }
 
   @on("pointerup")
   protected _Entity_pointerup(e: FederatedPointerEvent) {
-    const world = this.project.viewport.toWorld(e.client);
-    if (e.button === 2 && world.equals(this.startWorldPoint) && !this.linking) {
-      // 触发右键菜单
-      this.project.emit("context-menu", e.client);
-    }
-    this.linking = false;
-    this.tempLineEdge!.removeFromParent();
-    if (e.altKey) {
-      e.stopPropagation();
-      // 检测碰到了哪个Section
-      const target = this.project.stage
-        .filter((it) => it instanceof Section)
-        .find((section) => {
-          const bounds = section.getBounds().rectangle;
-          return bounds.contains(world.x, world.y);
-        });
-      if (target) {
-        target.members.push(new AssociationMember(this));
-      }
-    }
+    this.handlePointerUp(e);
   }
 
   @on("pointerupoutside")
   protected _Entity_pointerupoutside(e: FederatedPointerEvent) {
+    this.handlePointerUp(e);
+  }
+
+  /**
+   * 统一处理 pointerup 和 pointerupoutside
+   */
+  private handlePointerUp(e: FederatedPointerEvent) {
     const world = this.project.viewport.toWorld(e.client);
-    if (e.button === 2 && world.equals(this.startWorldPoint) && !this.linking) {
-      // 触发右键菜单
+
+    // 处理右键菜单：如果是右键，且没有移动（或移动很小），且不是在连线拖拽中
+    const dist = Math.sqrt(
+      Math.pow(world.x - this.startWorldPoint.x, 2) + Math.pow(world.y - this.startWorldPoint.y, 2),
+    );
+    const isClick = dist < 5; // 5px 容差
+
+    if (e.button === 2 && isClick) {
       this.project.emit("context-menu", e.client);
     }
+
+    // 创建连线
+    if (this.linking && this.currentTarget && this.tempLineEdge) {
+      // 根据sourceRotation算出sourceAnchor
+      const sourceAnchor = getAnchorByRotation(this.tempLineEdge.sourceRotation);
+      const targetAnchor = getBestAnchor(this.currentTarget.getBounds().rectangle, e.client);
+      this.project.stage.push(
+        new LineEdge(this.project, {
+          members: [new AssociationMember(this, sourceAnchor), new AssociationMember(this.currentTarget, targetAnchor)],
+        }),
+      );
+    }
+
+    // 无论如何，松开鼠标意味着连线操作结束
     this.linking = false;
-    this.tempLineEdge!.removeFromParent();
+    if (this.tempLineEdge) {
+      this.tempLineEdge.destroy();
+    }
+
+    // 清理指示器
+    this.removeSourceIndicator();
+    this.removeTargetIndicator();
+    this.currentTarget = null;
+
+    // 处理 Alt + 拖拽放入 Section
     if (e.altKey) {
       e.stopPropagation();
-      // 检测碰到了哪个Section
+      // 检测碰到了哪个 Section
       const target = this.project.stage
-        .filter((it) => it instanceof Section)
+        .filter((it): it is Section => it instanceof Section)
         .find((section) => {
+          // 使用屏幕坐标进行碰撞检测
           const bounds = section.getBounds().rectangle;
-          return bounds.contains(world.x, world.y);
+          return bounds.contains(e.client.x, e.client.y);
         });
+
       if (target) {
         target.members.push(new AssociationMember(this));
       }
@@ -149,45 +152,56 @@ export abstract class Entity extends StageObject {
   }
 
   @on("globalpointermove")
-  protected _Entity_globalpointermove(e: any) {
-    if (this.linking) {
-      const pos = this.project.viewport.toWorld(e.client);
-      const bounds = this.getBounds();
-      // 检测鼠标位置是否在「自己的边缘～边缘向外扩展2px」,如果碰到了就设置anchor，否则什么都不做
-      if (
-        pos.x >= bounds.left - 2 &&
-        pos.x <= bounds.right + 2 &&
-        pos.y >= bounds.top - 2 &&
-        pos.y <= bounds.bottom + 2
-      ) {
-        // 碰到了
-        let anchor: "left" | "right" | "top" | "bottom";
-        const leftDist = Math.abs(pos.x - bounds.left);
-        const rightDist = Math.abs(pos.x - bounds.right);
-        const topDist = Math.abs(pos.y - bounds.top);
-        const bottomDist = Math.abs(pos.y - bounds.bottom);
-        const minDist = Math.min(leftDist, rightDist, topDist, bottomDist);
-        switch (minDist) {
-          case leftDist:
-            anchor = "left";
-            break;
-          case rightDist:
-            anchor = "right";
-            break;
-          case topDist:
-            anchor = "top";
-            break;
-          case bottomDist:
-            anchor = "bottom";
-            break;
-          default:
-            anchor = "right";
-        }
-        this.tempLineEdge!.source.anchor = anchor;
+  protected _Entity_globalpointermove(e: FederatedPointerEvent) {
+    if (this.linking && this.tempLineEdge) {
+      // 1. 更新临时线段的终点 (需要世界坐标)
+      const worldPos = this.project.viewport.toWorld(e.client);
+      // 只有在没有目标时才跟随鼠标，否则跟随目标指示器
+      if (!this.currentTarget) {
+        this.tempLineEdge!.targetPoint = worldPos;
       }
-      // 把临时线段的终点设置为当前鼠标位置
-      const world = this.project.viewport.toWorld(e.client);
-      this.tempLineEdge!.endPoint.copyFrom(world);
+
+      // 2. 动态更新源对象的锚点：只有鼠标在节点 Settings.lineEdgeSourceAnchorSnapRange 范围内才吸附，否则不吸附（保持上一次锚点）
+      const screenPos = e.client;
+      const bounds = this.getBounds().rectangle;
+      const snapBounds = new Rectangle(
+        bounds.x - Settings.lineEdgeSourceAnchorSnapRange,
+        bounds.y - Settings.lineEdgeSourceAnchorSnapRange,
+        bounds.width + Settings.lineEdgeSourceAnchorSnapRange * 2,
+        bounds.height + Settings.lineEdgeSourceAnchorSnapRange * 2,
+      );
+
+      if (snapBounds.contains(screenPos.x, screenPos.y)) {
+        this.tempLineEdge.sourceRotation = getRotationByAnchor(getBestAnchor(bounds, screenPos));
+      }
+
+      this.tempLineEdge.position.copyFrom({
+        x: Math.min(this.tempLineEdge.sourcePoint!.x, this.tempLineEdge.targetPoint!.x),
+        y: Math.min(this.tempLineEdge.sourcePoint!.y, this.tempLineEdge.targetPoint!.y),
+      });
+
+      // 3. 检测目标对象是否超出范围 (Buffer Zone 50px)
+      if (this.currentTarget) {
+        const targetBounds = this.currentTarget.getBounds().rectangle;
+        const targetExtendedBounds = new Rectangle(
+          targetBounds.x - Settings.lineEdgeTargetAnchorSnapRange,
+          targetBounds.y - Settings.lineEdgeTargetAnchorSnapRange,
+          targetBounds.width + Settings.lineEdgeTargetAnchorSnapRange * 2,
+          targetBounds.height + Settings.lineEdgeTargetAnchorSnapRange * 2,
+        );
+        if (!targetExtendedBounds.contains(screenPos.x, screenPos.y)) {
+          this.currentTarget = null;
+          this.removeTargetIndicator();
+          // 目标丢失，立即跟随鼠标
+          this.tempLineEdge!.targetPoint = worldPos;
+        }
+      }
+
+      // 4. 更新指示器位置
+      this.updateSourceIndicator();
+      if (this.currentTarget) {
+        this.updateTargetIndicator(false, e.client);
+      }
     }
   }
 
@@ -197,7 +211,7 @@ export abstract class Entity extends StageObject {
   }
 
   destroy(options?: DestroyOptions): void {
-    // 移除所有事件监听器
+    // 移除全局事件监听器
     if (this.onPointerEnterHandler) {
       this.project.off("pointer-enter-stage-object", this.onPointerEnterHandler);
     }
@@ -208,6 +222,220 @@ export abstract class Entity extends StageObject {
       this.tempLineEdge = null;
     }
 
+    // 清理指示器
+    this.removeSourceIndicator();
+    this.removeTargetIndicator();
+
     super.destroy(options);
+  }
+
+  // --- 指示器相关方法 ---
+
+  private updateSourceIndicator(forceCreate = false) {
+    if (!this.tempLineEdge) return;
+    const anchor = getAnchorByRotation(this.tempLineEdge.sourceRotation);
+
+    if (!this.sourceIndicator || forceCreate) {
+      this.removeSourceIndicator();
+      this.sourceIndicator = this.createIndicatorGraphics(0x3b82f6); // Blue
+      this.project.viewport.addChild(this.sourceIndicator);
+      this.lastSourceAnchor = null;
+    }
+
+    this.animateIndicator(this.sourceIndicator, this, anchor, this.lastSourceAnchor);
+    this.lastSourceAnchor = anchor;
+  }
+
+  private updateTargetIndicator(forceCreate = false, mouseClientPos?: Point) {
+    if (!this.currentTarget) return;
+
+    let anchor: "left" | "right" | "top" | "bottom" = "left"; // default
+    if (mouseClientPos) {
+      const screenBounds = this.currentTarget.getBounds().rectangle;
+      anchor = getBestAnchor(screenBounds, mouseClientPos);
+    } else if (this.lastTargetAnchor) {
+      anchor = this.lastTargetAnchor as any;
+    }
+
+    if (!this.targetIndicator || forceCreate) {
+      this.removeTargetIndicator();
+      this.targetIndicator = this.createIndicatorGraphics(0x10b981); // Green
+      this.project.viewport.addChild(this.targetIndicator);
+      this.lastTargetAnchor = null;
+    }
+
+    this.animateIndicator(this.targetIndicator, this.currentTarget, anchor, this.lastTargetAnchor);
+    this.lastTargetAnchor = anchor;
+  }
+
+  private createIndicatorGraphics(color: number): Graphics {
+    const g = new Graphics();
+    // 画一个矩形作为线，中心点在 (0,0)
+    // 初始长度为 1，宽度为 4 (线条粗细)
+    // 之后通过 scale.y 来调整长度
+    g.rect(-2, -0.5, 4, 1);
+    g.fill({ color, alpha: 1 });
+    g.zIndex = 9999;
+    return g;
+  }
+
+  private animateIndicator(
+    g: Graphics,
+    entity: Entity,
+    anchor: "left" | "right" | "top" | "bottom",
+    lastAnchor: string | null,
+  ) {
+    const bounds = entity.getWorldBounds().rectangle;
+    const centerX = bounds.x + bounds.width / 2;
+    const centerY = bounds.y + bounds.height / 2;
+
+    let targetRotation = 0;
+    let targetX = 0;
+    let targetY = 0;
+    let targetLength = 0;
+
+    const syncTempLineEdge = () => {
+      if (!this.tempLineEdge) return;
+      if (g === this.sourceIndicator) {
+        this.tempLineEdge.sourcePoint = g.position;
+        this.tempLineEdge.sourceRotation = g.rotation;
+        this.tempLineEdge.refresh();
+      } else if (g === this.targetIndicator) {
+        this.tempLineEdge.targetPoint = g.position;
+        this.tempLineEdge.targetRotation = g.rotation;
+        this.tempLineEdge.refresh();
+      }
+    };
+
+    // 计算目标状态
+    targetRotation = getRotationByAnchor(anchor);
+    switch (anchor) {
+      case "right":
+        targetX = centerX + bounds.width / 2;
+        targetY = centerY;
+        targetLength = bounds.height;
+        break;
+      case "bottom":
+        targetX = centerX;
+        targetY = centerY + bounds.height / 2;
+        targetLength = bounds.width;
+        break;
+      case "left":
+        targetX = centerX - bounds.width / 2;
+        targetY = centerY;
+        targetLength = bounds.height;
+        break;
+      case "top":
+        targetX = centerX;
+        targetY = centerY - bounds.height / 2;
+        targetLength = bounds.width;
+        break;
+    }
+
+    // 处理旋转角度的连续性 (最短路径)
+    if (g.rotation !== targetRotation) {
+      const PI = Math.PI;
+      const PI2 = PI * 2;
+      let diff = (targetRotation - g.rotation) % PI2;
+      if (diff < -PI) diff += PI2;
+      if (diff > PI) diff -= PI2;
+
+      const finalRotation = g.rotation + diff;
+
+      // 如果是第一次显示，直接设置
+      if (lastAnchor === null) {
+        g.rotation = targetRotation;
+        g.position.set(targetX, targetY);
+        g.scale.y = targetLength;
+        syncTempLineEdge();
+        // 进场动画
+        gsap.from(g.scale, { x: 2, y: targetLength * 2, duration: 0.3, ease: "back.out" });
+      } else {
+        // 状态变化动画
+        gsap.to(g, { rotation: finalRotation, duration: 0.3, ease: "power2.out", onUpdate: syncTempLineEdge });
+        gsap.to(g.position, { x: targetX, y: targetY, duration: 0.3, ease: "power2.out", onUpdate: syncTempLineEdge });
+        gsap.to(g.scale, { y: targetLength, duration: 0.3, ease: "power2.out" });
+      }
+    } else {
+      // 位置和大小可能因为 Entity 移动/缩放而改变，即使 anchor 没变
+      // 这里不使用动画，直接跟随，避免延迟
+      g.position.set(targetX, targetY);
+      g.scale.y = targetLength;
+      syncTempLineEdge();
+    }
+  }
+
+  private removeSourceIndicator() {
+    if (this.sourceIndicator) {
+      gsap.killTweensOf(this.sourceIndicator);
+      gsap.killTweensOf(this.sourceIndicator.position);
+      gsap.killTweensOf(this.sourceIndicator.scale);
+      this.sourceIndicator.destroy();
+      this.sourceIndicator = null;
+    }
+    this.lastSourceAnchor = null;
+    if (this.tempLineEdge) {
+      this.tempLineEdge.sourcePoint = null;
+      this.tempLineEdge.sourceRotation = null;
+    }
+  }
+
+  private removeTargetIndicator() {
+    if (this.targetIndicator) {
+      gsap.killTweensOf(this.targetIndicator);
+      gsap.killTweensOf(this.targetIndicator.position);
+      gsap.killTweensOf(this.targetIndicator.scale);
+      this.targetIndicator.destroy();
+      this.targetIndicator = null;
+    }
+    this.lastTargetAnchor = null;
+    if (this.tempLineEdge) {
+      this.tempLineEdge.targetRotation = null;
+    }
+  }
+}
+
+/**
+ * 计算点相对于矩形中心的方位（上下左右）
+ * 用于确定连线的目标锚点
+ */
+function getBestAnchor(bounds: Rectangle, point: Point): "left" | "right" | "top" | "bottom" {
+  const centerX = bounds.x + bounds.width / 2;
+  const centerY = bounds.y + bounds.height / 2;
+  // Normalize distance by dimensions to handle aspect ratio
+  const dx = (point.x - centerX) / bounds.width;
+  const dy = (point.y - centerY) / bounds.height;
+
+  if (Math.abs(dx) > Math.abs(dy)) {
+    // 左右区域
+    return dx < 0 ? "left" : "right";
+  } else {
+    // 上下区域
+    return dy < 0 ? "top" : "bottom";
+  }
+}
+
+function getAnchorByRotation(rotation: number | null): "left" | "right" | "top" | "bottom" {
+  if (rotation === null) return "right"; // default
+
+  // Normalize degrees to [-180, 180) so 270° becomes -90° (top)
+  let deg = (rotation * 180) / Math.PI;
+  deg = ((((deg + 180) % 360) + 360) % 360) - 180;
+
+  if (deg >= -45 && deg < 45) return "right";
+  if (deg >= 45 && deg < 135) return "bottom";
+  if (deg >= 135 || deg < -135) return "left";
+  return "top";
+}
+function getRotationByAnchor(anchor: "left" | "right" | "top" | "bottom"): number {
+  switch (anchor) {
+    case "right":
+      return 0;
+    case "bottom":
+      return (90 * Math.PI) / 180;
+    case "left":
+      return (180 * Math.PI) / 180;
+    case "top":
+      return (270 * Math.PI) / 180;
   }
 }

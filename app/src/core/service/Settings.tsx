@@ -151,6 +151,8 @@ export const settingsSchema = z.object({
   minFps: z.number().min(1).max(360).int().default(30),
   mouseTrail: z.boolean().default(false),
   antialias: z.boolean().default(true),
+  lineEdgeSourceAnchorSnapRange: z.number().min(0).max(300).int().default(50),
+  lineEdgeTargetAnchorSnapRange: z.number().min(0).max(300).int().default(50),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

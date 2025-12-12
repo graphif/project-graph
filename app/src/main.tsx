@@ -17,6 +17,8 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { getMatches } from "@tauri-apps/plugin-cli";
 import { exists } from "@tauri-apps/plugin-fs";
 import "driver.js/dist/driver.css";
+import { gsap } from "gsap";
+import { PixiPlugin } from "gsap/PixiPlugin";
 import i18next from "i18next";
 import { Provider } from "jotai";
 import { Color, Container, ObservablePoint, Point } from "pixi.js";
@@ -29,6 +31,8 @@ import App from "./App";
 import { KeyBinds } from "./core/service/controlService/shortcutKeysEngine/KeyBinds";
 import { onOpenFile } from "./core/service/GlobalMenu";
 import "./css/index.css";
+
+gsap.registerPlugin(PixiPlugin);
 
 serializableFallback(Color, "value");
 serializableFallback(Container, "position");

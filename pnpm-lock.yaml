@@ -361,6 +361,9 @@ importers:
       fuse.js:
         specifier: ^7.1.0
         version: 7.1.0
+      gsap:
+        specifier: ^3.13.0
+        version: 3.13.0
       i18next:
         specifier: ^25.3.1
         version: 25.3.1(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6))
@@ -6952,6 +6955,10 @@ packages:
     resolution:
       { integrity: sha512-mS1lbMsxgQj6hge1XZ6p7GPhbrtFwUFYi3wRzXAC/FmYnyXMTvvI3td3rjmQ2u8ewXueaSvRPWaEcgVVOT9Jnw== }
     engines: { node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0 }
+
+  gsap@3.13.0:
+    resolution:
+      { integrity: sha512-QL7MJ2WMjm1PHWsoFrAQH/J8wUeqZvMtHO58qdekHpCfhvhSL4gSiz6vJf5EeMP0LOn3ZCprL2ki/gjED8ghVw== }
 
   hachure-fill@0.5.2:
     resolution:
@@ -16878,6 +16885,8 @@ snapshots:
 
   graphql@16.11.0:
     optional: true
+
+  gsap@3.13.0: {}
 
   hachure-fill@0.5.2: {}
 
