@@ -349,7 +349,7 @@ export default function App() {
     >
       <Button
         variant={activeProject ? "outline" : "secondary"}
-        className={cn("backdrop-blur-sm", !activeProject && "border-primary border-t-2")}
+        className={cn("backdrop-blur-lg", !activeProject && "border-primary border-t-2")}
         onClick={() => {
           setActiveProject(undefined);
         }}
@@ -361,7 +361,7 @@ export default function App() {
           key={project.uri.toString()}
           variant={activeProject?.uri.toString() === project.uri.toString() ? "secondary" : "outline"}
           className={cn(
-            "backdrop-blur-sm",
+            "backdrop-blur-lg",
             activeProject?.uri.toString() === project.uri.toString() && "border-primary border-t-2",
           )}
           onClick={() => {
@@ -406,7 +406,7 @@ export default function App() {
         <GlobalMenu />
         <ProjectTabs />
         <div className="h-full flex-1 cursor-grab active:cursor-grabbing" data-tauri-drag-region></div>
-        <div className="bg-background/50 shadow-xs flex h-full items-center rounded-md border backdrop-blur-sm">
+        <div className="bg-background/50 shadow-xs flex h-full items-center rounded-md border backdrop-blur-lg">
           {/* 开启穿透点击 */}
           <Button
             variant="ghost"
