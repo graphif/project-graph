@@ -54,7 +54,7 @@ export class Cutter extends Graphics {
         // 标记与线相交的舞台对象
         project.stage.forEach((it) => {
           const rect = it.getWorldBounds().rectangle;
-          if (this.lineIntersectsRect(startPoint, currentPoint, rect)) {
+          if (it.allowCutting && this.lineIntersectsRect(startPoint, currentPoint, rect)) {
             toBeDeleted.add(it);
             // 画一个框提示
             this.roundRect(rect.x - 8, rect.y - 8, rect.width + 16, rect.height + 16, 16);

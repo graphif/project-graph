@@ -7,6 +7,7 @@ import { Decoder, Encoder } from "@msgpack/msgpack";
 import "@pixi/layout";
 import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, ZipWriter } from "@zip.js/zip.js";
 import { EventEmitter } from "eventemitter3";
+import PixiPlugin from "gsap/PixiPlugin";
 import mime from "mime";
 import { Viewport } from "pixi-viewport";
 import { Application, Container, FederatedPointerEvent, Graphics, Point, PointData } from "pixi.js";
@@ -307,6 +308,7 @@ export class Project extends EventEmitter<{
   mount(wrapper: HTMLElement) {
     wrapper.innerHTML = "";
     wrapper.appendChild(this.pixi.canvas);
+    PixiPlugin.registerPIXI(this.pixi);
   }
 
   private onStageAdd(it: StageObject) {

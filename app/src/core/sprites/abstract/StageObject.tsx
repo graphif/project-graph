@@ -15,6 +15,9 @@ export abstract class StageObject extends LayoutContainer {
   static SELECTION_OUTLINE_LABEL = "selection-outline";
   static SELECTION_OUTLINE_PADDING = 8;
 
+  allowCutting: boolean = true;
+  allowSelection: boolean = true;
+
   @id
   @serializable
   public uuid: string = crypto.randomUUID();

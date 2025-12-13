@@ -29,7 +29,7 @@ export class RegionPicker extends Graphics {
       // 点击选中节点
       const clickedEntity = project.getStageObjectAt(startPoint);
       if (clickedEntity) {
-        console.log("Clicked entity:", clickedEntity);
+        if (!clickedEntity.allowSelection) return;
         // 先取消其他节点的选中状态
         project.stage.forEach((it) => {
           it.selected = false;
@@ -108,6 +108,7 @@ export class RegionPicker extends Graphics {
         });
         // 选中区域内的节点
         project.stage.forEach((it) => {
+          if (!it.allowSelection) return;
           if (isWindowSelection) {
             it.selected = rect.containsRect(it.getWorldBounds().rectangle);
           } else {

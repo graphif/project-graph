@@ -124,9 +124,6 @@ export abstract class Entity extends StageObject {
 
     // 无论如何，松开鼠标意味着连线操作结束
     this.linking = false;
-    if (this.tempLineEdge) {
-      this.tempLineEdge.destroy();
-    }
 
     // 清理指示器
     this.removeSourceIndicator();
@@ -148,6 +145,32 @@ export abstract class Entity extends StageObject {
       if (target) {
         target.members.push(new AssociationMember(this));
       }
+    }
+
+    if (this.tempLineEdge) {
+      gsap.to(this.tempLineEdge, {
+        pixi: {
+          alpha: 0,
+        },
+        duration: 0.3,
+        ease: "power2.in",
+        onComplete: () => {
+          // 从舞台移除临时线段
+          const index = this.project.stage.indexOf(this.tempLineEdge!);
+          if (index !== -1) {
+            this.project.stage.splice(index, 1);
+          }
+          // 重置临时线段状态
+          this.tempLineEdge!.sourcePoint = null;
+          this.tempLineEdge!.targetPoint = null;
+          this.tempLineEdge!.sourceRotation = null;
+          this.tempLineEdge!.targetRotation = null;
+          // 重置透明度，供下次使用
+          gsap.set(this.tempLineEdge!, {
+            alpha: 1,
+          });
+        },
+      });
     }
   }
 
@@ -215,17 +238,6 @@ export abstract class Entity extends StageObject {
     if (this.onPointerEnterHandler) {
       this.project.off("pointer-enter-stage-object", this.onPointerEnterHandler);
     }
-
-    // 清理临时线段
-    if (this.tempLineEdge) {
-      this.tempLineEdge.destroy();
-      this.tempLineEdge = null;
-    }
-
-    // 清理指示器
-    this.removeSourceIndicator();
-    this.removeTargetIndicator();
-
     super.destroy(options);
   }
 
@@ -349,12 +361,27 @@ export abstract class Entity extends StageObject {
         g.scale.y = targetLength;
         syncTempLineEdge();
         // 进场动画
-        gsap.from(g.scale, { x: 2, y: targetLength * 2, duration: 0.3, ease: "back.out" });
+        gsap.from(g, {
+          pixi: {
+            scaleX: 2,
+            scaleY: targetLength * 2,
+          },
+          duration: 0.3,
+          ease: "back.out",
+        });
       } else {
         // 状态变化动画
-        gsap.to(g, { rotation: finalRotation, duration: 0.3, ease: "power2.out", onUpdate: syncTempLineEdge });
-        gsap.to(g.position, { x: targetX, y: targetY, duration: 0.3, ease: "power2.out", onUpdate: syncTempLineEdge });
-        gsap.to(g.scale, { y: targetLength, duration: 0.3, ease: "power2.out" });
+        gsap.to(g, {
+          rotation: finalRotation,
+          pixi: {
+            x: targetX,
+            y: targetY,
+            scaleY: targetLength,
+          },
+          duration: 0.3,
+          ease: "power2.out",
+          onUpdate: syncTempLineEdge,
+        });
       }
     } else {
       // 位置和大小可能因为 Entity 移动/缩放而改变，即使 anchor 没变

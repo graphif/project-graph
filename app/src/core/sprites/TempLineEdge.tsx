@@ -3,6 +3,8 @@ import { Project } from "../Project";
 import { Association, AssociationMember } from "./abstract/Association";
 
 export class TempLineEdge extends Association {
+  allowCutting: boolean = false;
+  allowSelection: boolean = false;
   eventMode?: EventMode | undefined = "none";
 
   // Overrides for animation syncing
@@ -98,7 +100,10 @@ export class TempLineEdge extends Association {
   _onUpdate(value: any) {
     if (!this.members) return;
     this.refresh();
-    if (!value) return;
-    console.log("set position to", value.x, value.y);
+    super._onUpdate(value);
+  }
+
+  myContainsPoint(): boolean {
+    return false;
   }
 }
