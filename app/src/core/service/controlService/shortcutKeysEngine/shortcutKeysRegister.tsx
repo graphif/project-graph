@@ -1016,6 +1016,7 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "b l a c k k",
     onPress: () => {
       toast.info("切换到暗黑主题");
+      Settings.theme = "dark";
       Themes.applyThemeById("dark");
     },
     isUI: true,
@@ -1025,6 +1026,7 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "w h i t e e",
     onPress: () => {
       toast.info("切换到明亮主题");
+      Settings.theme = "light";
       Themes.applyThemeById("light");
     },
     isUI: true,
@@ -1034,6 +1036,7 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "p a r k k",
     onPress: () => {
       toast.info("切换到公园主题");
+      Settings.theme = "park";
       Themes.applyThemeById("park");
     },
     isUI: true,
@@ -1043,6 +1046,7 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "m k l m k l",
     onPress: () => {
       toast.info("切换到马卡龙主题");
+      Settings.theme = "macaron";
       Themes.applyThemeById("macaron");
     },
     isUI: true,
@@ -1052,6 +1056,7 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "m l d m l d",
     onPress: () => {
       toast.info("切换到莫兰迪主题");
+      Settings.theme = "morandi";
       Themes.applyThemeById("morandi");
     },
     isUI: true,
