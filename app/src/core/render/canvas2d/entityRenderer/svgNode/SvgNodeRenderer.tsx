@@ -20,15 +20,22 @@ export class SvgNodeRenderer {
 
       // 渲染右下角缩放控制点
       const resizeHandleRect = svgNode.getResizeHandleRect();
+      const viewResizeHandleRect = new Rectangle(
+        this.project.renderer.transformWorld2View(resizeHandleRect.location),
+        resizeHandleRect.size.multiply(this.project.camera.currentScale),
+      );
       this.project.shapeRenderer.renderRect(
-        new Rectangle(
-          this.project.renderer.transformWorld2View(resizeHandleRect.location),
-          resizeHandleRect.size.multiply(this.project.camera.currentScale),
-        ),
+        viewResizeHandleRect,
         this.project.stageStyleManager.currentStyle.CollideBoxSelected,
         this.project.stageStyleManager.currentStyle.StageObjectBorder,
         2 * this.project.camera.currentScale,
         8 * this.project.camera.currentScale,
+      );
+      // 渲染箭头指示
+      this.project.shapeRenderer.renderResizeArrow(
+        viewResizeHandleRect,
+        this.project.stageStyleManager.currentStyle.StageObjectBorder,
+        2 * this.project.camera.currentScale,
       );
     }
     this.project.imageRenderer.renderImageElement(

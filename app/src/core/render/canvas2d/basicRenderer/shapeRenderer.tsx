@@ -263,4 +263,47 @@ export class ShapeRenderer {
     this.project.canvas.ctx.lineCap = "round"; // 线段末端圆角
     this.project.canvas.ctx.stroke();
   }
+
+  /**
+   * 渲染缩放控制点的箭头指示
+   * 在矩形的左上角和右下角绘制箭头，用于提示用户可以拖拽缩放
+   * @param rect 缩放控制点矩形
+   * @param color 箭头颜色
+   * @param strokeWidth 箭头线条宽度
+   */
+  renderResizeArrow(rect: Rectangle, color: Color, strokeWidth: number) {
+    const x = rect.location.x;
+    const y = rect.location.y;
+    const w = rect.size.x;
+    const h = rect.size.y;
+    const arrowSize = Math.min(w, h) * 0.6;
+    const offset = strokeWidth * 5;
+    const shortLineSize = arrowSize * 0.01;
+
+    this.project.canvas.ctx.beginPath();
+    this.project.canvas.ctx.strokeStyle = color.toString();
+    this.project.canvas.ctx.lineWidth = strokeWidth;
+    this.project.canvas.ctx.lineCap = "round";
+    this.project.canvas.ctx.lineJoin = "round";
+
+    // 左上角箭头 - 指向左上，绘制在矩形外部
+    // 主箭头
+    this.project.canvas.ctx.moveTo(x + arrowSize, y - offset);
+    this.project.canvas.ctx.lineTo(x - offset, y - offset);
+    this.project.canvas.ctx.lineTo(x - offset, y + arrowSize);
+    // 添加短斜线
+    this.project.canvas.ctx.moveTo(x - offset, y - offset);
+    this.project.canvas.ctx.lineTo(x + shortLineSize, y + shortLineSize);
+
+    // 右下角箭头 - 指向右下，绘制在矩形外部
+    // 主箭头
+    this.project.canvas.ctx.moveTo(x + w - arrowSize, y + h + offset);
+    this.project.canvas.ctx.lineTo(x + w + offset, y + h + offset);
+    this.project.canvas.ctx.lineTo(x + w + offset, y + h - arrowSize);
+    // 添加短斜线
+    this.project.canvas.ctx.moveTo(x + w + offset, y + h + offset);
+    this.project.canvas.ctx.lineTo(x + w - shortLineSize, y + h - shortLineSize);
+
+    this.project.canvas.ctx.stroke();
+  }
 }

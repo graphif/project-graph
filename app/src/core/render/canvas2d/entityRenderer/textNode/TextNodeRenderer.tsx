@@ -61,12 +61,20 @@ export class TextNodeRenderer {
       );
       // 改变大小的拖拽
       if (node.sizeAdjust === "manual") {
+        const resizeHandleRect = node.getResizeHandleRect();
+        const viewResizeHandleRect = this.project.renderer.transformWorld2View(resizeHandleRect);
         this.project.shapeRenderer.renderRect(
-          this.project.renderer.transformWorld2View(node.getResizeHandleRect()),
+          viewResizeHandleRect,
           this.project.stageStyleManager.currentStyle.CollideBoxSelected,
           this.project.stageStyleManager.currentStyle.StageObjectBorder,
           2 * this.project.camera.currentScale,
           8 * this.project.camera.currentScale,
+        );
+        // 渲染箭头指示
+        this.project.shapeRenderer.renderResizeArrow(
+          viewResizeHandleRect,
+          this.project.stageStyleManager.currentStyle.StageObjectBorder,
+          2 * this.project.camera.currentScale,
         );
       }
     }
