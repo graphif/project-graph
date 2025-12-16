@@ -25,10 +25,11 @@ export class NodeConnector {
       if (fromNode.uuid === toNode.uuid && fromNode instanceof ConnectPoint) {
         return false;
       }
-      if (this.project.graphMethods.isConnected(fromNode, toNode)) {
-        // 已经连接过了，不需要再次连接
-        return false;
-      }
+      // 2.7 开始，允许多重边
+      // if (this.project.graphMethods.isConnected(fromNode, toNode)) {
+      //   // 已经连接过了，不需要再次连接
+      //   return false;
+      // }
       return true;
     } else {
       return false;
