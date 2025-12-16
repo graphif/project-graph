@@ -54,9 +54,14 @@ export default function WelcomePage() {
         <div className="flex flex-col sm:gap-2">
           <div className="flex items-center gap-2">
             <span className="sm:text-3xl">{t("title")}</span>
-            <span className="border-card-foreground/30 hidden border-2 opacity-50 sm:inline sm:rounded-lg sm:px-2 sm:py-1 md:text-lg">
+            <a
+              href="https://graphif.dev/docs/app/misc/history"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="border-card-foreground/30 hover:border-primary/90 hidden cursor-pointer border-2 opacity-50 sm:inline sm:rounded-lg sm:px-2 sm:py-1 md:text-lg"
+            >
               {appVersion}
-            </span>
+            </a>
           </div>
           <div className="hidden text-xs opacity-50 sm:block sm:text-lg">{t("slogan")}</div>
         </div>
