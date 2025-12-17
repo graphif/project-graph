@@ -126,8 +126,20 @@ export class DetailsManager {
     return value;
   }
 
-  // TODO:
+  /**
+   * 合并多个详细信息为一个
+   * @param detailsList 要合并的详细信息列表
+   * @returns 合并后的详细信息
+   */
   public static mergeDetails(detailsList: Value[]): Value {
-    return detailsList[0];
+    // 创建一个空的Value数组
+    const mergedDetails: Value = [];
+
+    // 遍历所有details，将它们的内容合并到一个数组中
+    for (const details of detailsList) {
+      mergedDetails.push(...details);
+    }
+
+    return mergedDetails;
   }
 }
