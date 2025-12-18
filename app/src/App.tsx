@@ -261,6 +261,30 @@ export default function App() {
     getCurrentWindow()
       .onCloseRequested(async (e) => {
         e.preventDefault();
+
+        // 检查是否有未保存的项目
+        const unsavedProjects = projects.filter(
+          (project) => project.state === ProjectState.Unsaved || project.state === ProjectState.Stashed,
+        );
+
+        if (unsavedProjects.length > 0) {
+          // 弹出警告对话框
+          const response = await Dialog.buttons(
+            "检测到未保存文件",
+            `当前有 ${unsavedProjects.length} 个未保存的文件。直接关闭可能有文件被清空的风险，建议先手动保存文件。`,
+            [
+              { id: "cancel", label: "取消", variant: "ghost" },
+              { id: "continue", label: "继续关闭", variant: "destructive" },
+            ],
+          );
+
+          if (response === "cancel") {
+            // 用户选择取消关闭，返回
+            return;
+          }
+          // 用户选择继续关闭，执行原有关闭流程
+        }
+
         try {
           for (const project of projects) {
             console.log("尝试关闭", project);
