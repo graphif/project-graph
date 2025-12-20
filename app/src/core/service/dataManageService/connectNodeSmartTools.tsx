@@ -80,8 +80,12 @@ export namespace ConnectNodeSmartTools {
     // 再检测一下，收集到的所有LineEdge是否是同一个
     const sourceUUIDList = collideEdges.map((edge) => edge.source.uuid);
     if (new Set(sourceUUIDList).size === 1) {
+      // const sourceNode = collideEdges[0].source;
+      // 检测是否有多个连线从同一个源节点出发
       const sourceNode = collideEdges[0].source;
-      // 保存原连线的方向属性
+      const isMultiEdgesFromSameSource = collideEdges.every((edge) => edge.source.uuid === sourceNode.uuid);
+
+      // 保存原连线的属性
       const originalEdges = collideEdges.map((edge) => ({
         targetNode: edge.target,
         sourceRectangleRate: edge.sourceRectangleRate,
@@ -92,28 +96,55 @@ export namespace ConnectNodeSmartTools {
       // 删除所有已有的连线
       collideEdges.forEach((edge) => project.stageManager.deleteAssociation(edge));
 
-      originalEdges.forEach((originalEdge) => {
-        // source -> selected：使用原连线的sourceRectangleRate
+      if (isMultiEdgesFromSameSource) {
+        // 从同一个源节点出发的多条连线，只创建一条源节点到新节点的连线
         project.stageManager.add(
           new LineEdge(project, {
             associationList: [sourceNode, selectedNode],
-            text: originalEdge.text,
-            sourceRectangleRate: originalEdge.sourceRectangleRate,
-            targetRectangleRate: new Vector(0.5, 0.5),
-            color: originalEdge.color,
+            text: originalEdges[0].text, // 使用第一条连线的文本
+            sourceRectangleRate: originalEdges[0].sourceRectangleRate.clone(), // 继承源节点的端点格式
+            targetRectangleRate: originalEdges[0].targetRectangleRate.clone(), // 左端点接收
+            color: originalEdges[0].color.clone(),
           }),
         );
-        // selected -> target：使用原连线的targetRectangleRate
-        project.stageManager.add(
-          new LineEdge(project, {
-            associationList: [selectedNode, originalEdge.targetNode],
-            text: originalEdge.text,
-            sourceRectangleRate: new Vector(0.5, 0.5),
-            targetRectangleRate: originalEdge.targetRectangleRate,
-            color: originalEdge.color,
-          }),
-        );
-      });
+
+        // 创建从新节点到各个目标节点的连线
+        originalEdges.forEach((originalEdge) => {
+          project.stageManager.add(
+            new LineEdge(project, {
+              associationList: [selectedNode, originalEdge.targetNode],
+              text: originalEdge.text,
+              sourceRectangleRate: originalEdge.sourceRectangleRate.clone(),
+              targetRectangleRate: originalEdge.targetRectangleRate.clone(), // 继承原连线的target端点格式
+              color: originalEdge.color.clone(),
+            }),
+          );
+        });
+      } else {
+        // 处理不同源节点的情况
+        originalEdges.forEach((originalEdge) => {
+          // source -> selected：保持原连线的source端点格式，target端使用左端点接收
+          project.stageManager.add(
+            new LineEdge(project, {
+              associationList: [sourceNode, selectedNode],
+              text: originalEdge.text,
+              sourceRectangleRate: originalEdge.sourceRectangleRate.clone(),
+              targetRectangleRate: originalEdge.targetRectangleRate.clone(),
+              color: originalEdge.color.clone(),
+            }),
+          );
+          // selected -> target：source端使用右端点发出，保持原连线的target端点格式
+          project.stageManager.add(
+            new LineEdge(project, {
+              associationList: [selectedNode, originalEdge.targetNode],
+              text: originalEdge.text,
+              sourceRectangleRate: originalEdge.sourceRectangleRate.clone(),
+              targetRectangleRate: originalEdge.targetRectangleRate.clone(),
+              color: originalEdge.color.clone(),
+            }),
+          );
+        });
+      }
 
       project.historyManager.recordStep();
     } else {
