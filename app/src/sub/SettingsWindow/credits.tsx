@@ -23,6 +23,7 @@ const donations: DonationData[] = [
   { user: "域名 project-graph.top", note: "zty012", amount: -13.66 },
   // 以下为捐赠用户
   { user: "心弦", note: "", amount: 10 },
+  { user: "腾", note: "PG，就是我想要的功能", amount: 50 },
   { user: "Entropy", note: "大千世界中难得的，我心目中的完美软件～感谢大佬开发！", amount: 20 },
   { user: "潮汐", note: "在思维导图方面比obsidian的白板及插件更强", amount: 20 },
   { user: "V", note: "pg这软件太棒了，感谢你们", amount: 20 },
