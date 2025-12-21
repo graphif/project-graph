@@ -10,7 +10,7 @@ import { EventEmitter } from "eventemitter3";
 import PixiPlugin from "gsap/PixiPlugin";
 import mime from "mime";
 import { Viewport } from "pixi-viewport";
-import { Application, Container, FederatedPointerEvent, Graphics, Point, PointData } from "pixi.js";
+import { Application, Container, FederatedPointerEvent, Point, PointData } from "pixi.js";
 import "pixi.js/math-extras";
 import { URI } from "vscode-uri";
 import { fs } from "./fs";
@@ -155,10 +155,10 @@ export class Project extends EventEmitter<{
     // });
     this.pixi.stage.addChild(this.viewport);
 
-    const origin = new Graphics();
-    origin.circle(0, 0, 5);
-    origin.fill(0xff0000);
-    this.viewport.addChild(origin);
+    // const origin = new Graphics();
+    // origin.circle(0, 0, 5);
+    // origin.fill(0xff0000);
+    // this.viewport.addChild(origin);
 
     // const positionText = this.pixi.stage.addChild(
     //   new MyText("0,0", {

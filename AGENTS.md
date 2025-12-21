@@ -28,7 +28,7 @@
 
 ## 代码要求
 
-1.  **代码风格**: 严格遵守项目根目录下的 `.eslintrc.js` 和 `.prettierrc` 配置。
+1.  **代码风格**: 严格遵守项目根目录下的 `.oxlintrc.json` 和 `.prettierrc` 配置。
 2.  **Rust 健壮性**: 所有暴露给前端调用的 Rust 函数（Tauri commands）必须在内部捕获并处理所有潜在错误。绝对不能出现 `panic`，否则将导致整个应用程序崩溃。
 3.  **TypeScript 规范**:
     - 允许使用 `namespace` 组织代码 (`@typescript-eslint/no-namespace`: "off")。
@@ -45,8 +45,35 @@
     - `app/src/core/Project.tsx`
     - `app/src/core/loadAllServices.tsx`
     - `app/src/core/sprites/` 目录下的所有文件
-- **给 Copilot 的指示**:
+- **给 Agent 的指示**:
   - 在进行任何与渲染、画布或图形对象相关的开发时，**请务必参考上述已重构目录中的代码风格和架构模式**。
   - **避免学习或使用**项目其他部分中存在的旧的 Canvas2D 实现方式。
   - 所有新的渲染相关功能都应基于 Pixi.js v8 实现。
-  - **重要**: 作为重构的一部分, `@graphif/shapes` 和 `@graphif/data-structures` 包中的数据结构正在被废弃。对于新代码，请**优先使用 Pixi.js 内置的数据类型** (例如 `PIXI.Point`, `PIXI.Rectangle`) 来替代。
+  - **重要**: 作为重构的一部分, `@graphif/shapes` 和 `@graphif/data-structures` 包中的数据结构正在被废弃。对于新代码，请**优先使用 Pixi.js 内置的数据类型** (例如 `Point`, `Rectangle`) 来替代。
+
+## 需要注意的地方
+
+- `ObservablePoint` 的 `clone` 方法**不会**清空监听器，需要使用 `.clone({ onChange() {} })` 来创建一个没有监听器的副本。
+- 始终使用 `StageObject` 或子类的 `myContainsPoint` 和 `myIntersects` 方法，而不是直接使用 `Bound` 对象的方法。
+
+## API
+
+### [`Settings`](app/src/core/service/Settings.tsx)
+
+用于读取和写入应用设置。
+
+有关设置项的描述，请参阅 [`zh_CN.yml`](app/src/locales/zh_CN.yml) 中的 `settings` 部分。
+
+```ts
+import { Settings } from "@/core/service/Settings";
+// 读取设置
+const value = Settings.someSettingKey;
+// 写入设置
+Settings.someSettingKey = newValue;
+// React hook
+const [value, setValue] = Settings.use("someSettingKey");
+// 监听设置变化
+Settings.watch("someSettingKey", (newValue) => {
+  console.log("Setting changed:", newValue);
+});
+```
