@@ -103,21 +103,22 @@ export class AssociationMember {
   /** 锚点的世界坐标 */
   get position(): Point {
     // pos是左上角坐标
-    const cloned = this.entity.position.clone({ _onUpdate() {} });
-    const bounds = this.entity.getBounds();
+    const bounds = this.entity.getWorldBounds();
     const w = bounds.width;
     const h = bounds.height;
+    const x = bounds.x;
+    const y = bounds.y;
     switch (this.anchor) {
       case "center":
-        return cloned.add(new Point(w / 2, h / 2));
+        return new Point(x + w / 2, y + h / 2);
       case "top":
-        return cloned.add(new Point(w / 2, 0));
+        return new Point(x + w / 2, y);
       case "bottom":
-        return cloned.add(new Point(w / 2, h));
+        return new Point(x + w / 2, y + h);
       case "left":
-        return cloned.add(new Point(0, h / 2));
+        return new Point(x, y + h / 2);
       case "right":
-        return cloned.add(new Point(w, h / 2));
+        return new Point(x + w, y + h / 2);
     }
   }
 
