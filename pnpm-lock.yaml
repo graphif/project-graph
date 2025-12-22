@@ -739,38 +739,6 @@ importers:
         version: 5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6)
 
   packages/on:
-    dependencies:
-      pixi.js:
-        specifier: ^8.13.2
-        version: 8.13.2
-    devDependencies:
-      tsdown:
-        specifier: "catalog:"
-        version: 0.12.9(typescript@5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6))
-      typescript:
-        specifier: "catalog:"
-        version: 5.9.2(patch_hash=3e406bcbc915a43404e343869d7ea80317c7237f58067404369e459a4634c1b6)
-
-  packages/prg:
-    dependencies:
-      "@graphif/serializer":
-        specifier: workspace:^
-        version: link:../serializer
-      "@msgpack/msgpack":
-        specifier: ^3.1.2
-        version: 3.1.2
-      "@zip.js/zip.js":
-        specifier: ^2.7.63
-        version: 2.7.63
-      mime:
-        specifier: ^4.0.7
-        version: 4.0.7
-      nanoid:
-        specifier: ^5.1.6
-        version: 5.1.6
-      vscode-uri:
-        specifier: ^3.1.0
-        version: 3.1.0
     devDependencies:
       tsdown:
         specifier: "catalog:"

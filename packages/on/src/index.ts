@@ -1,14 +1,16 @@
-import { Container } from "pixi.js";
-
-const EVENT_LISTENERS = Symbol("PIXI_EVENT_LISTENERS");
+const EVENT_LISTENERS = Symbol("GRAPHIF_ON_EVENT_LISTENERS");
 
 interface EventConfig {
   eventName: string;
   methodName: string | symbol;
 }
+interface EventEmitter {
+  on(event: string, fn: (...args: any[]) => void): this;
+  off(event: string, fn: (...args: any[]) => void): this;
+}
 
 export const on =
-  <T extends Container>(eventName: Parameters<T["on"]>[0]) =>
+  <T extends EventEmitter>(eventName: Parameters<T["on"]>[0]) =>
   (target: T, property: string) => {
     // target 在方法装饰器中指向类的 prototype
     const list = (Reflect.get(target, EVENT_LISTENERS) || []) as EventConfig[];

@@ -23,7 +23,5 @@
     "tsdown": "catalog:",
     "typescript": "catalog:"
   },
-  "dependencies": {
-    "pixi.js": "^8.13.2"
-  }
+  "dependencies": {}
 }

@@ -1,4 +1,5 @@
 import { LazyStore } from "@tauri-apps/plugin-store";
+import { nanoid } from "nanoid";
 import { useEffect, useState } from "react";
 import z from "zod";
 
@@ -194,12 +195,17 @@ try {
 export const Settings = new Proxy<
   Settings & {
     watch: (key: keyof Settings, callback: (value: any) => void) => () => void;
+    createWatchService: (
+      key: keyof Settings,
+      callback: (value: any) => void,
+    ) => { id?: string; new (...args: any[]): any };
     use: <T extends keyof Settings>(key: T) => [Settings[T], (newValue: Settings[T]) => void];
   }
 >(
   {
     ...savedSettings,
     watch: () => () => {},
+    createWatchService: () => class {},
     use: () => [undefined as any, () => {}],
   },
   {
@@ -223,8 +229,26 @@ export const Settings = new Proxy<
             }
             listeners[key].push(callback);
             callback(target[key]);
-            return () => {
+            const unwatch = () => {
               listeners[key] = listeners[key]?.filter((cb) => cb !== callback);
+            };
+            return unwatch;
+          };
+        }
+        case "createWatchService": {
+          return (key: keyof Settings, callback: (value: any) => void) => {
+            return class {
+              static id: string = `SettingsWatchService$${String(key)}$${nanoid()}`;
+              constructor() {
+                if (!listeners[key]) {
+                  listeners[key] = [];
+                }
+                listeners[key].push(callback);
+                callback(target[key]);
+              }
+              dispose() {
+                listeners[key] = listeners[key]?.filter((cb) => cb !== callback);
+              }
             };
           };
         }

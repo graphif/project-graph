@@ -235,8 +235,6 @@ settings:
       也能很直观的知道当前的视野缩放倍数
   windowBackgroundAlpha:
     title: 窗口背景透明度
-    description: |
-      需要重新打开文件才能生效
   showDebug:
     title: 显示调试信息
     description: |
@@ -743,13 +741,11 @@ settings:
       需要重新打开文件才能生效
   maxFps:
     title: 最大帧率
-    description: |
-      需要重新打开文件才能生效
   minFps:
     title: 最小帧率
     description: |
+      并不是超频
       当实际帧率低于该值时，引擎会将逻辑帧时间锁定到此值的倒数秒，用来保证动画不会变慢
-      需要重新打开文件才能生效
   mouseTrail:
     title: 鼠标拖尾效果
     description: |

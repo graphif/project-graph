@@ -10,19 +10,14 @@ import { EventEmitter } from "eventemitter3";
 import PixiPlugin from "gsap/PixiPlugin";
 import mime from "mime";
 import { Viewport } from "pixi-viewport";
-import { Application, Container, FederatedPointerEvent, Point, PointData } from "pixi.js";
+import { Application, Container, PointData } from "pixi.js";
 import "pixi.js/math-extras";
 import { URI } from "vscode-uri";
 import { fs } from "./fs";
 import { MyWheelPlugin } from "./MyWheelPlugin";
 import { Settings } from "./service/Settings";
 
-export class Project extends EventEmitter<{
-  "state-change": [state: ProjectState];
-  "context-menu": [location: Point];
-  "pointer-enter-stage-object": [so: StageObject, event: FederatedPointerEvent];
-  "pointer-leave-stage-object": [so: StageObject, event: FederatedPointerEvent];
-}> {
+export class Project extends EventEmitter {
   static readonly latestVersion = 18;
 
   public readonly pixi = new Application();
@@ -217,7 +212,22 @@ export class Project extends EventEmitter<{
       this.loadService(service);
     }
 
-    console.log(this.stage, this.viewport.children);
+    // 开始监听设置变化
+    this.loadService(
+      Settings.createWatchService("windowBackgroundAlpha", (value) => {
+        this.pixi.renderer.background.alpha = value;
+      }),
+    );
+    this.loadService(
+      Settings.createWatchService("maxFps", (value) => {
+        this.pixi.ticker.maxFPS = value;
+      }),
+    );
+    this.loadService(
+      Settings.createWatchService("minFps", (value) => {
+        this.pixi.ticker.minFPS = value;
+      }),
+    );
   }
 
   /**
@@ -340,8 +350,15 @@ declare module "./Project" {
    * 在这里用语法糖定义就能优雅的绕过这个限制
    * 服务加载的顺序在调用registerService()时确定
    */
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  interface Project {}
+  // interface Project
+  //   extends EventEmitter<{
+  //     "state-change": [state: ProjectState];
+  //     "context-menu": [location: Point];
+  //     "pointer-enter-stage-object": [so: StageObject, event: FederatedPointerEvent];
+  //     "pointer-leave-stage-object": [so: StageObject, event: FederatedPointerEvent];
+  //   }> {
+  //   _?: never;
+  // }
 }
 
 export enum ProjectState {
