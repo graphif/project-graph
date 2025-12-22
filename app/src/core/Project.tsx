@@ -1,4 +1,4 @@
-import { Service } from "@/core/interfaces/Service";
+import { Service, ServiceConstructor } from "@/core/interfaces/Service";
 import { StageObject } from "@/core/sprites/abstract/StageObject";
 import { nextProjectIdAtom, projectsAtom, store } from "@/state";
 import { ObservableArray } from "@graphif/data-structures";
@@ -63,21 +63,40 @@ export class Project extends EventEmitter {
   /**
    * 立刻加载一个新的服务
    */
-  private loadService(service: { id?: string; new (...args: any[]): any }) {
+  private loadService(service: ServiceConstructor) {
     if (!service.id) {
       service.id = crypto.randomUUID();
       console.warn("[Project] 服务 %o 未指定 ID，自动生成：%s", service, service.id);
     }
     const inst = new service(this);
     this.services.set(service.id, inst);
-    if ("tick" in inst) {
+    if ("tick" in inst && typeof inst.tick === "function") {
       this.pixi.ticker.add(inst.tick, inst);
     }
+    // if ("subServices" in inst && Array.isArray(inst.subServices)) {
+    //   // 子服务不用加入 services map，但需要加入 ticker
+    //   for (const subService of inst.subServices) {
+    //     if ("tick" in subService && typeof subService.tick === "function") {
+    //       this.pixi.ticker.add(subService.tick, subService);
+    //     }
+    //   }
+    //   // 修改父服务的 dispose 方法，释放子服务
+    //   const parentDispose = inst.dispose?.bind(inst);
+    //   inst.dispose = () => {
+    //     for (const subService of inst.subServices!) {
+    //       const result = subService.dispose?.();
+    //       if (result instanceof Promise) {
+    //         result.catch((e) => console.error(e));
+    //       }
+    //     }
+    //     parentDispose?.();
+    //   };
+    // }
     this[service.id as keyof this] = inst as this[keyof this];
   }
 
   async init(
-    services: ({ id?: string; new (...args: any[]): any } | false)[] = [],
+    services: (ServiceConstructor | false)[] = [],
     sprites: ({ new (...args: any[]): Container } | false)[] = [],
   ) {
     await this.pixi.init({

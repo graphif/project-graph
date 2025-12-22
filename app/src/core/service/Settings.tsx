@@ -2,6 +2,7 @@ import { LazyStore } from "@tauri-apps/plugin-store";
 import { nanoid } from "nanoid";
 import { useEffect, useState } from "react";
 import z from "zod";
+import { ServiceConstructor } from "../interfaces/Service";
 
 export const settingsSchema = z.object({
   language: z.union([z.literal("en"), z.literal("zh_CN"), z.literal("zh_TW")]).default("zh_CN"),
@@ -195,10 +196,7 @@ try {
 export const Settings = new Proxy<
   Settings & {
     watch: (key: keyof Settings, callback: (value: any) => void) => () => void;
-    createWatchService: (
-      key: keyof Settings,
-      callback: (value: any) => void,
-    ) => { id?: string; new (...args: any[]): any };
+    createWatchService: (key: keyof Settings, callback: (value: any) => void) => ServiceConstructor;
     use: <T extends keyof Settings>(key: T) => [Settings[T], (newValue: Settings[T]) => void];
   }
 >(

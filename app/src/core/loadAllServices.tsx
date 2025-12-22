@@ -1,5 +1,4 @@
 import { Project } from "@/core/Project";
-import { Settings } from "./service/Settings";
 import { BackgroundGrid } from "./sprites/BackgroundGrid";
 import { Cutter } from "./sprites/Cutter";
 import { GlobalContextMenuTrigger } from "./sprites/GlobalContextMenuTrigger";
@@ -12,8 +11,5 @@ import { RegionPicker } from "./sprites/RegionPicker";
  * @param project
  */
 export function initProjectWithAllServices(project: Project) {
-  return project.init(
-    [],
-    [BackgroundGrid, Settings.mouseTrail && MouseTrail, NodeAdder, RegionPicker, GlobalContextMenuTrigger, Cutter],
-  );
+  return project.init([], [BackgroundGrid, MouseTrail, NodeAdder, RegionPicker, GlobalContextMenuTrigger, Cutter]);
 }

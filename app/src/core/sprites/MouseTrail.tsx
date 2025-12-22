@@ -1,5 +1,6 @@
 import { Project } from "@/core/Project";
 import { Container, Graphics, Point } from "pixi.js";
+import { Settings } from "../service/Settings";
 
 /* ════════════════════════════════════════════════════════════
    单个拖尾粒子的数据结构
@@ -73,6 +74,10 @@ export class MouseTrail extends Container {
 
     /* 每帧在 ticker 中轮询检查鼠标位置变化 */
     this.project.pixi.ticker.add(this.updateTrail, this);
+
+    Settings.watch("mouseTrail", (value) => {
+      this.enabled = value;
+    });
   }
 
   /* ────────────────────────────────────────────
@@ -159,10 +164,6 @@ export class MouseTrail extends Container {
       this.trailGraphics.lineTo(endParticle.position.x, endParticle.position.y);
       this.trailGraphics.stroke({ width: 3.5, color: 0xffffff, alpha });
     }
-  }
-
-  setEnabled(enabled: boolean) {
-    this.enabled = enabled;
   }
 
   clear() {
