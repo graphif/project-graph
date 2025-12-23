@@ -65,6 +65,11 @@ export class Camera {
    */
   readonly shakeLocation: Vector = Vector.getZero();
 
+  /**
+   * 记录的摄像机位置和缩放大小
+   */
+  private savedCameraState: { location: Vector; scale: number } | null = null;
+
   // pageup / pagedown 爆炸式移动
 
   private readonly shockMoveDiffLocationsQueue = new Queue<Vector>();
@@ -358,5 +363,34 @@ export class Camera {
 
   resetLocationToZero() {
     this.bombMove(Vector.getZero());
+  }
+
+  /**
+   * 保存当前摄像机状态
+   * 只有在当前没有保存状态的情况下才保存
+   */
+  saveCameraState() {
+    // 只有在当前没有保存状态的情况下才保存
+    if (!this.savedCameraState) {
+      this.savedCameraState = {
+        location: this.location.clone(),
+        scale: this.currentScale,
+      };
+    }
+  }
+
+  /**
+   * 恢复之前保存的摄像机状态
+   * 恢复后清除保存的状态，以便下次使用
+   */
+  restoreCameraState() {
+    if (this.savedCameraState) {
+      this.location = this.savedCameraState.location.clone();
+      this.targetLocationByScale = this.savedCameraState.location.clone();
+      this.currentScale = this.savedCameraState.scale;
+      this.targetScale = this.savedCameraState.scale;
+      // 恢复后清除保存的状态，以便下次使用
+      this.savedCameraState = null;
+    }
   }
 }

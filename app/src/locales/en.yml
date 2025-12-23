@@ -1029,6 +1029,10 @@ keyBinds:
     description: |
       If no content is selected, reset the viewport based on all content.
       If content is selected, reset the viewport based on the selected content.
+  restoreCameraState:
+    title: Restore View State
+    description: |
+      After pressing this, it restores to the camera position and zoom level recorded when pressing the F key earlier.
   resetCameraScale:
     title: Reset Zoom
     description: Reset the viewport zoom to the standard size

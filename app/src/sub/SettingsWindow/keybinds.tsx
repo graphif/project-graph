@@ -289,6 +289,7 @@ const shortcutKeysGroups: ShortcutKeysGroup[] = [
     icon: <Fullscreen />,
     keys: [
       "resetView",
+      "restoreCameraState",
       "resetCameraScale",
       "masterBrakeCheckout",
       "masterBrakeControl",

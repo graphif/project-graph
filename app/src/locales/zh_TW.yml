@@ -788,6 +788,10 @@ keyBinds:
     description: |
       如果沒有選擇任何內容，則根據全部內容重置視野；
       如果有選擇內容，則根據選中內容重置視野
+  restoreCameraState:
+    title: 恢復視野狀態
+    description: |
+      按下後，恢復到之前按下F鍵時記錄的攝影機位置和縮放大小
   resetCameraScale:
     title: 重置縮放
     description: 將視野縮放重置為標準大小

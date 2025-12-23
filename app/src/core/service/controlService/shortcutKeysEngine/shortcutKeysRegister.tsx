@@ -107,7 +107,16 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "F",
     onPress: (project) => {
       if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.camera.saveCameraState();
       project!.camera.resetBySelected();
+    },
+  },
+  {
+    id: "restoreCameraState",
+    defaultKey: "S-F",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.camera.restoreCameraState();
     },
   },
   {
