@@ -108,6 +108,7 @@ export const settingsSchema = z.object({
   moveFriction: z.number().min(0).max(1).default(0.1),
   scaleExponent: z.number().min(0).max(1).default(0.11),
   cameraResetViewPaddingRate: z.number().min(1).max(2).default(1.5),
+  cameraResetMaxScale: z.number().min(0.1).max(10).multipleOf(0.1).default(3),
   scaleCameraByMouseLocation: z.boolean().default(true),
   cameraKeyboardScaleRate: z.number().min(0).max(3).default(0.2),
   rectangleSelectWhenRight: z.union([z.literal("intersect"), z.literal("contain")]).default("intersect"),

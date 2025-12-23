@@ -267,6 +267,7 @@ const categories = {
     cameraZoom: [
       "scaleExponent",
       "cameraResetViewPaddingRate",
+      "cameraResetMaxScale",
       "scaleCameraByMouseLocation",
       "cameraKeyboardScaleRate",
     ],

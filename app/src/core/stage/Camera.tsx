@@ -343,9 +343,9 @@ export class Camera {
 
     const selectedRectangleSize = viewRectangle.size.multiply(Settings.cameraResetViewPaddingRate);
 
-    // 再取max 1.5 是为了防止缩放过大
+    // 再取max是为了防止缩放过大
     this.currentScale = Math.min(
-      Settings.cameraResetViewPaddingRate,
+      Settings.cameraResetMaxScale,
       Math.min(this.project.renderer.h / selectedRectangleSize.y, this.project.renderer.w / selectedRectangleSize.x),
     );
     this.targetScale = this.currentScale;

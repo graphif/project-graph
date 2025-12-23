@@ -103,6 +103,7 @@ export const settingsIcons = {
   moveFriction: Move,
   scaleExponent: ScanEye,
   cameraResetViewPaddingRate: Fullscreen,
+  cameraResetMaxScale: Fullscreen,
   scaleCameraByMouseLocation: ScanEye,
   cameraKeyboardScaleRate: ScanEye,
   rectangleSelectWhenRight: SquareArrowDownRight,

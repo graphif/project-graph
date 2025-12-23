@@ -360,6 +360,12 @@ settings:
       Due to zoom level adjustments, there may be some padding around the edges.
       A value of 1 means no padding at all (very close-up view).
       A value of 2 means the padding is exactly one times the content size.
+  cameraResetMaxScale:
+    title: Maximum Zoom Level After Resetting Camera View
+    description: |
+      When you select a very small node, the camera won't fully cover the area of this node, otherwise it would be too large.
+      Instead, it will zoom in to a maximum value, which can be adjusted through this option.
+      It is recommended to observe the currentScale in debug mode to adjust this value.
   allowAddCycleEdge:
     title: Allow Adding Self-Loops Between Nodes
     description: |

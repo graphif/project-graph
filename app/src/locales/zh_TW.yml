@@ -494,6 +494,12 @@ settings:
   cameraResetViewPaddingRate:
     title: 根據選擇節點重置視野時，邊緣留白係數
     description: "框選一堆節點或一個節點，並按下快捷鍵或點擊按鈕來重置視野後\n視野會調整大小和位置，確保所有選中內容出現在螢幕中央並完全覆蓋\n由於視野縮放大小原因，因此邊緣可能會有留白\n值為1 表示邊緣完全不留白。（非常放大的觀察）\n值為2 表示留白内容恰好為自身内容的一倍\n"
+  cameraResetMaxScale:
+    title: 攝影機重置視野後最大的縮放值
+    description: "選中一個面積很小的節點時，攝影機不會完全覆蓋這個節點的面積範圍，否則太大了。
+而是會放大到一個最大值，這個最大值可以透過此選項來調整
+建議開啟debug模式下觀察 currentScale 來調整此值
+"
   uiSwitchButtonOnSoundFile:
     title: 按鈕點擊開關按鈕時打開的聲音
     description: "按鈕點擊開關按鈕時打開的聲音文件路徑\n"
