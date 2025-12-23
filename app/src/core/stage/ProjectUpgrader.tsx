@@ -9,6 +9,9 @@ import { toast } from "sonner";
 import { DetailsManager } from "./stageObject/tools/entityDetailsManager";
 
 export namespace ProjectUpgrader {
+  /** N系列的最新版本 */
+  export const NLatestVersion = 2;
+
   /**
    * 1.0~1.8 系列版本的json文件升级，
    * 注意：在2.0后改为了 内部含有msgpack的 .prg文件格式因此，
@@ -16,7 +19,7 @@ export namespace ProjectUpgrader {
    * @param data 原始json数据
    * @returns 升级后的json数据
    */
-  export function upgradeVAnyToVRelease(data: Record<string, any>): Record<string, any> {
+  export function upgradeVAnyToVLatest(data: Record<string, any>): Record<string, any> {
     data = convertV1toV2(data);
     data = convertV2toV3(data);
     data = convertV3toV4(data);
@@ -331,9 +334,37 @@ export namespace ProjectUpgrader {
     return data;
   }
 
+  /**
+   * N版本的prg文件升级，从任意N版本升级到最新N版本
+   * @param data 原始N版本数据
+   * @returns 升级后的N版本数据
+   */
+  export function upgradeNAnyToNLatest(data: any[], metadata: any): [any[], any] {
+    [data, metadata] = convertN1toN2(data, metadata);
+    return [data, metadata];
+  }
+
+  /**
+   * 将N1版本升级到N2版本
+   * @param data N1版本数据
+   * @returns N2版本数据
+   */
+  function convertN1toN2(data: any[], metadata: any): [any[], any] {
+    // 为LineEdge添加lineType属性，默认值为'solid'
+    for (const item of data) {
+      if (item._ === "LineEdge") {
+        // 如果lineType属性不存在，添加默认值
+        if (!item.lineType) {
+          item.lineType = "solid";
+        }
+      }
+    }
+    return [data, { ...metadata, dataVersion: 2, versionType: "N" }];
+  }
+
   export async function convertVAnyToN1(json: Record<string, any>, uri: URI) {
     // 升级json数据到最新版本
-    json = ProjectUpgrader.upgradeVAnyToVRelease(json);
+    json = ProjectUpgrader.upgradeVAnyToVLatest(json);
     let isHaveImageNode = false;
     const uuidMap = new Map<string, Record<string, any>>();
     const resultStage: Record<string, any>[] = [];
@@ -599,7 +630,7 @@ export namespace ProjectUpgrader {
             color: toColor(association.color),
             sourceRectangleRate: toVector(association.sourceRectRate),
             targetRectangleRate: toVector(association.targetRectRate),
-            lineType: "solid",
+            // lineType: "solid",
           });
           break;
         }
