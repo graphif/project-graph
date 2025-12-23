@@ -19,6 +19,8 @@ export class LineEdge extends Edge {
   public text: string;
   @serializable
   public color: Color = Color.Transparent;
+  @serializable
+  public lineType: string = "solid";
 
   get collisionBox(): CollisionBox {
     return EdgeCollisionBoxGetter.getCollisionBox(this);
@@ -45,6 +47,7 @@ export class LineEdge extends Edge {
       color = Color.Transparent,
       sourceRectangleRate = Vector.same(0.5),
       targetRectangleRate = Vector.same(0.5),
+      lineType = "solid",
     },
     /** true表示解析状态，false表示解析完毕 */
     public unknown = false,
@@ -56,6 +59,7 @@ export class LineEdge extends Edge {
     this.color = color;
     this.sourceRectangleRate = sourceRectangleRate;
     this.targetRectangleRate = targetRectangleRate;
+    this.lineType = lineType;
 
     this.adjustSizeByText();
   }

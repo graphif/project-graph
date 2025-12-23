@@ -140,6 +140,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       curve,
       edge.color.equals(Color.Transparent) ? this.project.stageStyleManager.currentStyle.StageObjectBorder : edge.color,
       edgeWidth,
+      edge,
     );
     this.renderText(curve, edge);
   }
@@ -170,6 +171,8 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
     this.renderArrowCurve(
       curve,
       edge.color.equals(Color.Transparent) ? this.project.stageStyleManager.currentStyle.StageObjectBorder : edge.color,
+      2,
+      edge,
     );
     this.renderText(curve, edge);
   }
@@ -293,7 +296,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
    * 渲染curve及箭头,curve.end即箭头头部
    * @param curve
    */
-  private renderArrowCurve(curve: SymmetryCurve, color: Color, width = 2): void {
+  private renderArrowCurve(curve: SymmetryCurve, color: Color, width = 2, edge?: LineEdge): void {
     // 绘制曲线本体
     curve.endDirection = curve.endDirection.normalize();
     const end = curve.end.clone();
@@ -312,7 +315,17 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
     //   )
     //   lastPoint = line.end;
     // }
-    this.project.worldRenderUtils.renderSymmetryCurve(curve, color, width);
+    // 虚拟边默认使用实线
+    if (edge && (edge.lineType || "solid") === "dashed") {
+      this.project.worldRenderUtils.renderDashedSymmetryCurve(
+        curve,
+        color,
+        width,
+        10 * this.project.camera.currentScale,
+      );
+    } else {
+      this.project.worldRenderUtils.renderSymmetryCurve(curve, color, width);
+    }
     // 画箭头
     const endPoint = end.add(curve.endDirection.multiply(2));
     this.project.edgeRenderer.renderArrowHead(endPoint, curve.endDirection.multiply(-1), size, color);

@@ -9,7 +9,14 @@ import { toast } from "sonner";
 import { DetailsManager } from "./stageObject/tools/entityDetailsManager";
 
 export namespace ProjectUpgrader {
-  export function upgrade(data: Record<string, any>): Record<string, any> {
+  /**
+   * 1.0~1.8 系列版本的json文件升级，
+   * 注意：在2.0后改为了 内部含有msgpack的 .prg文件格式因此，
+   * 此函数仅作为旧版本文件的迁移函数
+   * @param data 原始json数据
+   * @returns 升级后的json数据
+   */
+  export function upgradeVAnyToVRelease(data: Record<string, any>): Record<string, any> {
     data = convertV1toV2(data);
     data = convertV2toV3(data);
     data = convertV3toV4(data);
@@ -326,7 +333,7 @@ export namespace ProjectUpgrader {
 
   export async function convertVAnyToN1(json: Record<string, any>, uri: URI) {
     // 升级json数据到最新版本
-    json = ProjectUpgrader.upgrade(json);
+    json = ProjectUpgrader.upgradeVAnyToVRelease(json);
     let isHaveImageNode = false;
     const uuidMap = new Map<string, Record<string, any>>();
     const resultStage: Record<string, any>[] = [];
@@ -592,6 +599,7 @@ export namespace ProjectUpgrader {
             color: toColor(association.color),
             sourceRectangleRate: toVector(association.sourceRectRate),
             targetRectangleRate: toVector(association.targetRectRate),
+            lineType: "solid",
           });
           break;
         }

@@ -67,11 +67,16 @@ export class WorldRenderUtils {
    * @param curve
    */
   renderBezierCurve(curve: CubicBezierCurve, color: Color, width: number): void {
-    curve.start = this.project.renderer.transformWorld2View(curve.start);
-    curve.end = this.project.renderer.transformWorld2View(curve.end);
-    curve.ctrlPt1 = this.project.renderer.transformWorld2View(curve.ctrlPt1);
-    curve.ctrlPt2 = this.project.renderer.transformWorld2View(curve.ctrlPt2);
-    this.project.curveRenderer.renderBezierCurve(curve, color, width * this.project.camera.currentScale);
+    // 创建新的曲线对象，避免修改原始曲线数据
+    const viewStart = this.project.renderer.transformWorld2View(curve.start);
+    const viewEnd = this.project.renderer.transformWorld2View(curve.end);
+    const viewCtrlPt1 = this.project.renderer.transformWorld2View(curve.ctrlPt1);
+    const viewCtrlPt2 = this.project.renderer.transformWorld2View(curve.ctrlPt2);
+
+    // 使用视图坐标系下的点创建新的贝塞尔曲线
+    const viewBezier = new CubicBezierCurve(viewStart, viewCtrlPt1, viewCtrlPt2, viewEnd);
+
+    this.project.curveRenderer.renderBezierCurve(viewBezier, color, width * this.project.camera.currentScale);
   }
 
   /**
@@ -80,6 +85,28 @@ export class WorldRenderUtils {
    */
   renderSymmetryCurve(curve: SymmetryCurve, color: Color, width: number): void {
     this.renderBezierCurve(curve.bezier, color, width);
+  }
+
+  /**
+   * 绘制一条虚线对称曲线
+   * @param curve
+   */
+  renderDashedSymmetryCurve(curve: SymmetryCurve, color: Color, width: number, dashLength: number): void {
+    // 创建新的曲线对象，避免修改原始曲线数据
+    const viewStart = this.project.renderer.transformWorld2View(curve.start);
+    const viewEnd = this.project.renderer.transformWorld2View(curve.end);
+    const viewCtrlPt1 = this.project.renderer.transformWorld2View(curve.bezier.ctrlPt1);
+    const viewCtrlPt2 = this.project.renderer.transformWorld2View(curve.bezier.ctrlPt2);
+
+    // 使用视图坐标系下的点创建新的贝塞尔曲线
+    const viewBezier = new CubicBezierCurve(viewStart, viewCtrlPt1, viewCtrlPt2, viewEnd);
+
+    this.project.curveRenderer.renderDashedBezierCurve(
+      viewBezier,
+      color,
+      width * this.project.camera.currentScale,
+      dashLength,
+    );
   }
 
   renderLaser(start: Vector, end: Vector, width: number, color: Color): void {

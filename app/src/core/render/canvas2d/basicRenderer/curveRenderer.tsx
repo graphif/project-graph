@@ -218,6 +218,32 @@ export class CurveRenderer {
   }
 
   /**
+   * 绘制一条虚线贝塞尔曲线
+   * @param curve
+   * @param color
+   * @param width
+   * @param dashLength 虚线的长度
+   */
+  renderDashedBezierCurve(curve: CubicBezierCurve, color: Color, width: number, dashLength: number): void {
+    this.project.canvas.ctx.setLineDash([dashLength, dashLength]);
+    this.project.canvas.ctx.beginPath();
+    this.project.canvas.ctx.moveTo(curve.start.x, curve.start.y);
+    this.project.canvas.ctx.bezierCurveTo(
+      curve.ctrlPt1.x,
+      curve.ctrlPt1.y,
+      curve.ctrlPt2.x,
+      curve.ctrlPt2.y,
+      curve.end.x,
+      curve.end.y,
+    );
+    this.project.canvas.ctx.lineWidth = width;
+    this.project.canvas.ctx.strokeStyle = color.toString();
+    this.project.canvas.ctx.stroke();
+    // 重置线型
+    this.project.canvas.ctx.setLineDash([]);
+  }
+
+  /**
    * 绘制一条对称曲线
    * @param curve
    */

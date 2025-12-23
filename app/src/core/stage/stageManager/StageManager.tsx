@@ -18,7 +18,7 @@ import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { Direction } from "@/types/directions";
-import { Serialized } from "@/types/node";
+// import { Serialized } from "@/types/node";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";
@@ -88,9 +88,9 @@ export class StageManager {
   getUrlNodes(): UrlNode[] {
     return this.project.stage.filter((node) => node instanceof UrlNode);
   }
-  getPortalNodes(): PortalNode[] {
-    return this.project.stage.filter((node) => node instanceof PortalNode);
-  }
+  // getPortalNodes(): PortalNode[] {
+  //   return this.project.stage.filter((node) => node instanceof PortalNode);
+  // }
   getPenStrokes(): PenStroke[] {
     return this.project.stage.filter((node) => node instanceof PenStroke);
   }
@@ -581,10 +581,10 @@ export class StageManager {
     this.project.nodeConnector.reverseEdges(selectedEdges);
   }
 
-  addSerializedData(serializedData: Serialized.File, diffLocation = new Vector(0, 0)) {
-    this.project.serializedDataAdder.addSerializedData(serializedData, diffLocation);
-    this.project.historyManager.recordStep();
-  }
+  // addSerializedData(serializedData: Serialized.File, diffLocation = new Vector(0, 0)) {
+  //   this.project.serializedDataAdder.addSerializedData(serializedData, diffLocation);
+  //   this.project.historyManager.recordStep();
+  // }
 
   generateNodeTreeByText(text: string, indention: number = 4, location = this.project.camera.location) {
     this.project.nodeAdder.addNodeTreeByText(text, indention, location);
@@ -812,6 +812,16 @@ export class StageManager {
     for (const edge of selectedCREdge) {
       edge.tension -= 0.25;
       edge.tension = Math.max(0, edge.tension);
+    }
+  }
+
+  /**
+   * 设置选中Edge的线条类型
+   */
+  setSelectedEdgeLineType(lineType: string) {
+    const selectedEdges = this.getSelectedAssociations().filter((edge) => edge instanceof LineEdge);
+    for (const edge of selectedEdges) {
+      edge.lineType = lineType;
     }
   }
 
