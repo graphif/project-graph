@@ -1,0 +1,1550 @@
+welcome:
+  slogan: 基於圖論的思維框架圖繪製軟體
+  newDraft: 新增草稿
+  openFile: 開啟檔案
+  openRecentFiles: 開啟最近
+  newUserGuide: 功能說明書
+  settings: 設定
+  about: 關於
+  website: 官網
+  title: Project Graph
+  language: 語言
+  next: 下一步
+  github: GitHub
+  bilibili: Bilibili
+  qq: QQ群
+  subtitle: 基於圖論的無限畫布心智圖軟體
+globalMenu:
+  file:
+    title: 文件
+    new: 新增臨時草稿
+    open: 打開
+    recentFiles: 最近開啟的檔案
+    clear: 清空
+    save: 儲存
+    saveAs: 另存新檔
+    import: 匯入
+    importFromFolder: 根據資料夾生成框框巢狀圖
+    export: 匯出
+    exportAsSVG: 匯出為 SVG
+    exportAll: 匯出全部內容
+    plainTextType:
+      exportAllNodeGraph: 匯出 全部的 網狀關係
+      exportSelectedNodeGraph: 匯出 選取的 網狀關係
+      exportSelectedNodeTree: 匯出 選取的 樹狀關係（純文字縮排）
+      exportSelectedNodeTreeMarkdown: 匯出選取的樹狀關係（Markdown 格式）
+      exportSelectedNodeGraphMermaid: 根據 選中的 巢狀網狀關係（Mermaid格式）
+    exportSelected: 匯出選取內容
+    plainText: 純文字
+    exportSuccess: 匯出成功
+    attachments: 附件管理器
+    tags: 標籤管理器
+  view:
+    title: 視野
+    resetViewAll: 根據全部內容重設視野
+    resetViewSelected: 根據選取內容重設視野
+    resetViewScale: 重置視野縮放至標準大小
+    moveViewToOrigin: 移動視野到座標軸原點
+  actions:
+    title: 操作
+    search: 搜尋
+    refresh: 重新整理
+    undo: 撤销
+    redo: 重做
+    releaseKeys: 放開按鍵
+    confirmClearStage: 確認清空舞台？
+    irreversible: 此操作無法撤銷！
+    clearStage: 清空舞台
+    cancel: 取消
+    confirm: 確定
+    generating: 生成中
+    success: 成功
+    failed: 失敗
+    generate:
+      generatedIn: 生成耗時
+      title: 生成
+      generateNodeTreeByText: 根據純文字生成樹狀結構
+      generateNodeTreeByTextDescription: 請輸入樹狀結構文字，每行代表一個節點，縮排表示層級關係
+      generateNodeTreeByTextPlaceholder: 輸入樹狀結構文本...
+      generateNodeTreeByMarkdown: 根據 Markdown 文本生成樹狀結構
+      generateNodeTreeByMarkdownDescription: '# 標題一：軟體開發文件範例
+
+
+        ## 標題二：專案環境設定
+
+        在開始開發之前，請確保您的電腦已安裝必要的軟體與工具。
+
+
+        ### 標題三：安裝步驟
+
+        1. 下載並安裝最新版本的 Node.js。
+
+        2. 使用 `npm install` 指令安裝專案所需的相依套件。
+
+
+        ## 標題二：程式碼規範
+
+        請遵循以下字串處理的規範：
+
+        *   使用樣板字面值（Template Literals）進行字串拼接。
+
+        *   確保所有變數名稱皆具備語意化。
+
+
+        ### 標題三：範例程式碼
+
+        ```javascript
+
+        const message = "歡迎來到專案開發中心";
+
+        console.log(message);
+
+        ```
+
+
+        #### 標題四：聯絡資訊
+
+        若有任何問題，請查閱專案文件或聯繫系統管理員。'
+      generateNodeTreeByMarkdownPlaceholder: '將以下簡體中文轉換成繁體中文（台灣用語）。
+
+        規則：
+
+        1. 只轉換簡體中文為繁體中文
+
+        2. 英文、數字、符號、程式碼保持不變
+
+        3. 不要添加任何解釋，只輸出轉換後的結果
+
+        4. 保持原有的格式和換行
+
+
+        輸入markdown格式文本...'
+      indention: 縮排字元數
+      generateNodeGraphByText: 根據純文字生成網狀結構
+      generateNodeGraphByTextDescription: 請輸入網狀結構文字，每行代表一個關係，每一行的格式為 `XXX --> XXX`
+      generateNodeGraphByTextPlaceholder: '張三 -喜歡-> 李四
+
+        李四 -討厭-> 王五
+
+        王五 -欣賞-> 張三
+
+        A --> B
+
+        B --> C
+
+        C --> D'
+      generateNodeMermaidByText: 根據mermaid文本生成框巢狀網狀結構
+      generateNodeMermaidByTextDescription: 支援 graph TD 格式的 mermaid 文字，可自動辨識 Section
+        並建立巢狀結構
+      generateNodeMermaidByTextPlaceholder: "graph TD;\n  A[Section A] --> B[Section\
+        \ B];\n  A --> C[普通節點];\n  B --> D[另一個節點];\n;"
+  settings:
+    title: 設定
+    appearance: 個人化
+  ai:
+    title: AI
+    openAIPanel: 打開 AI 面板
+  window:
+    title: 視圖
+    fullscreen: 全螢幕
+    classroomMode: 專注模式
+    classroomModeHint: 左上角選單按鈕僅僅是透明了，並沒有消失
+  about:
+    title: 關於
+    guide: 功能說明書
+  unstable:
+    title: 測試版
+    notRelease: 此版本並非正式版
+    mayHaveBugs: 可能包含 Bug 和未完善的功能
+    reportBug: '回報 Bug: 在 Issue #487 中留言'
+    test: 測試功能
+contextMenu:
+  createTextNode: 建立文字節點
+  createConnectPoint: 建立質點
+  packToSection: 打包為框
+  createMTUEdgeLine: 建立無向邊
+  createMTUEdgeConvex: 建立凸包
+  convertToSection: 轉換為框
+  toggleSectionCollapse: 切換摺疊狀態
+  changeColor: 更改顏色
+  resetColor: 重設
+  switchMTUEdgeArrow: 切換箭頭形態
+  mtuEdgeArrowOuter: 箭頭外向
+  mtuEdgeArrowInner: 箭頭內向
+  mtuEdgeArrowNone: 關閉箭頭顯示
+  switchMTUEdgeRenderType: 切換渲染形態
+  convertToDirectedEdge: 轉換為有向邊
+settings:
+  title: 設定
+  categories:
+    ai:
+      title: AI
+      api: API
+    automation:
+      title: 自動化
+      autoNamer: 自動命名
+      autoSave: 自動儲存
+      autoBackup: 自動備份
+      autoImport: 自動匯入
+    control:
+      title: 控制
+      mouse: 滑鼠
+      touchpad: 觸控板
+      cameraMove: 視野移動
+      cameraZoom: 視野縮放
+      rectangleSelect: 框選
+      textNode: 文字節點
+      edge: 連線
+      generateNode: 透過鍵盤生長節點
+      gamepad: 遊戲手把
+    visual:
+      title: 視覺
+      basic: 基礎
+      background: 背景
+      node: 節點樣式
+      edge: 連線樣式
+      section: “框”的樣式
+      entityDetails: 實體詳情
+      debug: 偵錯
+      miniWindow: 迷你視窗
+      experimental: 實驗性功能
+    performance:
+      title: 效能
+      memory: 記憶體
+      cpu: CPU
+      render: 渲染
+      experimental: 開發中的功能
+  language:
+    title: 語言
+    options:
+      en: English
+      zh_CN: 簡體中文
+      zh_TW: 繁體中文
+  showTipsOnUI:
+    title: 在 UI 中顯示提示訊息
+    description: '開啟後，螢幕上會有一行提示文字。
+
+      如果您已經熟悉了軟體，建議關閉此項以減少螢幕佔用
+
+      更多更詳細的提示還是建議看功能表列中的“功能說明書”或官網文件。'
+  isClassroomMode:
+    title: 專注模式
+    description: '用於教學、培訓等場景。
+
+      開啟後視窗頂部按鈕會透明，滑鼠懸浮上去會恢復，可以修改進入退出專注模式的快捷鍵'
+  autoAdjustLineEndpointsByMouseTrack:
+    title: 根據滑鼠拖曳軌跡自動調整生成連線的端點位置
+    description: '開啟後，在拖曳連線時會根據滑鼠移動軌跡自動調整連線端點在實體上的位置
+
+      關閉後，連線端點將始終位於實體中心'
+  enableRightClickConnect:
+    title: 啟用右鍵點擊式連線功能
+    description: '開啟後，選取實體並右鍵點擊其他實體時會自動建立連線，且右鍵選單僅在空白處顯示
+
+      關閉後，可以在實體上右鍵直接開啟選單，不會自動建立連線'
+  lineStyle:
+    title: 連線樣式
+    options:
+      straight: 直線
+      bezier: 貝茲曲線
+      vertical: 垂直折線
+  isRenderCenterPointer:
+    title: 顯示中心十字準星
+    description: 開啟後，螢幕中心中心會顯示一個十字準星，用於用於指示快捷鍵建立節點的位置
+  showGrid:
+    title: 顯示網格
+  showBackgroundHorizontalLines:
+    title: 顯示水平背景線
+    description: 水平線和垂直線可以同時開啟，實現網格效果
+  showBackgroundVerticalLines:
+    title: 顯示垂直背景線
+  showBackgroundDots:
+    title: 顯示背景點
+    description: 這些背景點是水平線和垂直線的交點，實現洞洞板的效果
+  showBackgroundCartesian:
+    title: 顯示背景直角座標系
+    description: '開啟後，將會顯示x軸、y軸和刻度數字
+
+      可以用於觀測一些節點的絕對座標位置
+
+      也能很直觀地知道當前的視野縮放倍數'
+  windowBackgroundAlpha:
+    title: 視窗背景透明度
+    description: '*從1改到小於1的值需要重新開啟檔案才能生效'
+  windowBackgroundOpacityAfterOpenClickThrough:
+    title: 開啟點擊穿透後的視窗背景透明度
+    description: 設定在開啟點擊穿透功能後視窗背景的透明度
+  windowBackgroundOpacityAfterCloseClickThrough:
+    title: 關閉點擊穿透後的視窗背景透明度
+    description: 設定在關閉點擊穿透功能後視窗背景的透明度
+  showDebug:
+    title: 顯示偵錯資訊
+    description: '通常為開發者使用
+
+      開啟後，螢幕左上角將會顯示偵錯資訊。
+
+      若您遇到bug截圖回饋時，建議開啟此選項。'
+  enableTagTextNodesBigDisplay:
+    title: 標籤文字節點巨大化顯示
+    description: '開啟後，標籤文字節點的顯示在攝影機縮小到廣袤的全域視野時，
+
+      標籤會巨大化顯示，以便更容易辨識整個檔案的佈局分佈'
+  showTextNodeBorder:
+    title: 顯示文字節點邊框
+    description: 控制是否顯示文字節點的邊框
+  sectionBitTitleRenderType:
+    title: 框的縮略大標題渲染類型
+    options:
+      none: 不渲染（節省效能）
+      top: 頂部小字
+      cover: 半透明覆蓋框體（最佳效果）
+  sectionBigTitleThresholdRatio:
+    title: 框的縮略大標題顯示閾值
+    description: 當框的最長邊小於視野範圍最長邊的此比例時，顯示縮略大標題
+  sectionBigTitleCameraScaleThreshold:
+    title: 框的縮略大標題相機縮放閾值
+    description: '當攝影機縮放比例大於此閾值時，不顯示縮略大標題
+
+      攝影機縮放比例需要打開偵錯資訊才能顯示'
+  sectionBigTitleOpacity:
+    title: 框的縮略大標題透明度
+    description: 控制半透明覆蓋大標題的透明度，取值範圍0-1
+  alwaysShowDetails:
+    title: 始終顯示節點詳細資訊
+    description: 開啟後，無需滑鼠移動到節點上時，才顯示節點的詳細資訊。
+  nodeDetailsPanel:
+    title: 節點詳細資訊面板
+    options:
+      small: 小型面板
+      vditor: vditor markdown 編輯器
+  useNativeTitleBar:
+    title: 使用原生標題列（需要重新啟動應用程式）
+    description: 開啟後，視窗頂端將會出現原生的標題列，而不是模擬的標題列。
+  protectingPrivacy:
+    title: 隱私保護
+    description: '用於回報問題截圖時，開啟此項之後將根據所選模式取代文字，以保護隱私。
+
+      僅作顯示層面的取代，不會影響真實資料
+
+      回報完畢後可再關閉，復原'
+  protectingPrivacyMode:
+    title: 隱私保護模式
+    description: 選擇隱私保護時的文字替換方式
+    options:
+      secretWord: 統一替換（漢字→㊙，字母→a/A，數字→6）
+      caesar: 凱撒位移（所有字元往後移動一位）
+  entityDetailsFontSize:
+    title: 實體詳細資訊字體大小
+    description: 設定舞台上渲染的實體詳細資訊的文字大小，單位為畫素
+  entityDetailsLinesLimit:
+    title: 實體詳細資訊行數限制
+    description: 限制舞台上渲染的實體詳細資訊的最大行數，超過限制的部分將被省略
+  entityDetailsWidthLimit:
+    title: 實體詳細資訊寬度限制
+    description: 限制舞台上渲染的實體詳細資訊的最大寬度（單位為px像素，可參考背景網格座標軸），超過限制的部分將被換行
+  windowCollapsingWidth:
+    title: 迷你視窗的寬度
+    description: 點擊切換至迷你視窗時，視窗的寬度，單位為像素
+  windowCollapsingHeight:
+    title: 迷你視窗的高度
+    description: 點擊切換至迷你視窗時，視窗的高度，單位為像素
+  limitCameraInCycleSpace:
+    title: 開啟循環空間限制攝影機移動
+    description: '開啟後，攝影機只能在一個矩形區域內移動
+
+      可以防止攝影機移動到很遠的地方迷路
+
+      該矩形區域會形成一個循環空間，類似於無邊貪食蛇遊戲中的地圖
+
+      走到最上面會回到最下面，走到最左邊會回到最右邊
+
+      注意：該功能還在實驗階段'
+  cameraCycleSpaceSizeX:
+    title: 迴圈空間寬度
+    description: 迴圈空間的寬度，單位為像素
+  cameraCycleSpaceSizeY:
+    title: 循環空間高度
+    description: 迴圈空間的高度，單位為畫素
+  renderEffect:
+    title: 渲染特效
+    description: 是否渲染特效，如果卡頓可以關閉
+  compatibilityMode:
+    title: 相容模式
+    description: 開啟後，軟體會使用另一種渲染方式
+  historySize:
+    title: 歷史紀錄大小
+    description: '這個數值決定了您最多ctrl+z復原的次數
+
+      如果您的電腦記憶體非常少，可以適當調小這個值'
+  compressPastedImages:
+    title: 是否壓縮貼上到舞台的圖片
+    description: 開啟後，貼上到舞台的圖片會被壓縮，以節省載入檔案時的記憶體壓力和磁碟壓力
+  maxPastedImageSize:
+    title: 貼上到舞台的圖片的尺寸限制（像素）
+    description: '長或寬超過此尺寸的圖片，其長或寬的最大值將會被限制為此大小
+
+      同時保持長寬比不變，僅在開啟“壓縮貼上到舞台的圖片”時生效'
+  isPauseRenderWhenManipulateOvertime:
+    title: 超過一定時間未操作舞台，暫停渲染
+    description: 開啟後，超過若干秒未做出舞台操作，舞台渲染會暫停，以節省CPU/GPU資源。
+  renderOverTimeWhenNoManipulateTime:
+    title: 超時停止渲染舞台的時間（秒）
+    description: '超過一定時間未做出舞台操作，舞台渲染會停止，以節省CPU/GPU資源。
+
+      必須在上述“逾時暫停渲染”選項開啟後才會生效。'
+  ignoreTextNodeTextRenderLessThanCameraScale:
+    title: 當攝影機縮放倍數小於一定值時，不渲染文字節點內的文字及其詳細資訊
+    description: '開啟後，當攝影機縮放倍數小於一定值時，(也就是觀察宏觀狀態時)
+
+      不渲染文字節點內的文字及其詳細資訊，這樣可以提高渲染效能，但會導致文字節點的文字內容無法顯示'
+  isEnableEntityCollision:
+    title: 實體碰撞偵測
+    description: '開啟後，實體之間會進行碰撞擠壓移動，可能會影響效能。
+
+      建議關閉此項，目前實體碰撞擠壓還不完善，可能導致堆疊溢位'
+  autoRefreshStageByMouseAction:
+    title: 滑鼠操作時自動刷新舞台
+    description: '開啟後，滑鼠操作(拖曳移動視野)會自動重新整理舞台
+
+      防止出現開啟某個檔案後，圖片未載入成功還需手動重新整理的情況'
+  autoNamerTemplate:
+    title: 建立節點時自動命名範本
+    description: '輸入`{{i}}` 代表節點名稱會自動替換為編號，雙擊建立時可以自動累加數字。
+
+      例如`n{{i}}` 會自動替換為`n1`, `n2`, `n3`…
+
+      輸入`{{date}}` 會自動替換為目前日期，雙擊建立時可以自動更新日期。autoNamerTemplate
+
+      輸入`{{time}}` 會自動替換為目前時間，雙擊建立時可以自動更新時間。
+
+      可以組合使用，例如`{{i}}-{{date}}-{{time}}`'
+  autoNamerSectionTemplate:
+    title: 建立框時自動命名範本
+    description: '輸入`{{i}}` 代表節點名稱會自動替換為編號，雙擊建立時可以自動累加數字。
+
+      例如`n{{i}}` 會自動替換為`n1`, `n2`, `n3`…
+
+      輸入`{{date}}` 會自動替換為目前日期，雙擊建立時可以自動更新日期。
+
+      輸入`{{time}}` 會自動替換為目前時間，雙擊建立時可以自動更新時間。
+
+      可以組合使用，例如`{{i}}-{{date}}-{{time}}`'
+  autoSaveWhenClose:
+    title: 點擊視窗右上角關閉按鈕時自動儲存專案檔案
+    description: '關閉軟體時，如果有未儲存的專案檔案，會彈出提示框詢問是否儲存。
+
+      開啟此選項後，關閉軟體時會自動儲存專案檔案。
+
+      所以，建議開啟此選項。'
+  autoSave:
+    title: 開啟自動儲存
+    description: '自動儲存目前檔案
+
+      此功能目前僅對已有路徑的檔案有效，不對草稿檔案生效！'
+  autoSaveInterval:
+    title: 開啟自動儲存間隔（秒）
+    description: 注意：目前計時時間僅在軟體視窗啟動時計時，軟體最小化後不會計時。
+  clearHistoryWhenManualSave:
+    title: 使用快捷鍵手動儲存時，自動清空歷史紀錄
+    description: '當使用Ctrl+S快捷鍵手動儲存檔案時，自動清空操作歷史紀錄。
+
+      開啟此選項可以減少記憶體佔用並保持介面整潔。'
+  historyManagerMode:
+    title: 歷史紀錄管理員模式
+    description: '選擇歷史紀錄的管理方式：
+
+      memoryEfficient - 記憶體高效模式，使用增量儲存，省記憶體但可能在復原/重做時稍慢
+
+      timeEfficient - 時間高效模式，使用完整快照儲存，操作回應快但可能佔用更多記憶體'
+    options:
+      memoryEfficient: 記憶體高效模式
+      timeEfficient: 時間高效模式
+  autoBackup:
+    title: 開啟自動備份
+    description: '自動備份目前檔案到備份資料夾
+
+      如果是草稿，則會儲存在指定的路徑'
+  autoBackupInterval:
+    title: 自動備份間隔（秒）
+    description: '自動備份過於頻繁可能會產生大量的備份檔案
+
+      進而佔用磁碟空間'
+  autoBackupLimitCount:
+    title: 自動備份最大數量
+    description: 自動備份的最大數量，超過此數量將會刪除舊的備份檔案
+  autoBackupCustomPath:
+    title: 自訂自動備份路徑
+    description: 設定自動備份檔案的儲存路徑，如果為空則使用預設路徑
+  scaleExponent:
+    title: 視角縮放速度
+    description: '《目前縮放倍數》會不斷地以一定倍率無限逼近《目標縮放倍數》
+
+      當逼近得足夠近時（小於0.0001），會自動停止縮放
+
+      值為1代表縮放會立刻完成，沒有中間的過渡效果
+
+      值為0代表縮放永遠都不會完成，可模擬鎖死效果
+
+      注意：若您在縮放畫面時感到卡頓，請調成1'
+  cameraKeyboardScaleRate:
+    title: 視角縮放鍵盤速率
+    description: '每次透過一次按鍵來縮放視野時，視野的縮放倍率
+
+      值為0.2代表每次放大會變為原本的1.2倍，縮小為原本的0.8倍
+
+      值為0代表禁止透過鍵盤縮放'
+  scaleCameraByMouseLocation:
+    title: 視角縮放根據滑鼠位置
+    description: '開啟後，縮放視角的中心點是滑鼠的位置
+
+      關閉後，縮放視角的中心點是目前視野的中心'
+  allowMoveCameraByWSAD:
+    title: 允許使用W S A D按鍵移動視角
+    description: '開啟後，可以使用W S A D按鍵來上下左右移動視角
+
+      關閉後，只能使用滑鼠來移動視角，不會造成無限捲動螢幕bug'
+  allowGlobalHotKeys:
+    title: 允許使用全域熱鍵
+    description: 開啟後，可以使用全域熱鍵來觸發一些操作
+  cameraFollowsSelectedNodeOnArrowKeys:
+    title: 透過方向鍵切換選取節點時，視野跟隨移動
+    description: 開啟後，使用鍵盤移動節點選取框時，視野跟隨移動
+  cameraKeyboardMoveReverse:
+    title: 視角移動鍵盤反向
+    description: '開啟後，W S A D按鍵的移動視角方向會相反
+
+      原本的移動邏輯是移動懸浮在畫面上的攝影機，但如果看成是移動整個舞台，這樣就反了
+
+      於是就有了這個選項'
+  cameraResetViewPaddingRate:
+    title: 根據選擇節點重置視野時，邊緣留白係數
+    description: '框選一堆節點或一個節點，並按下快速鍵或點擊按鈕來重設視野後
+
+      視野會調整大小和位置，確保所有選取內容出現在螢幕中央並完全涵蓋
+
+      由於視野縮放大小原因，此時邊緣可能會有留白
+
+      值為 1 表示邊緣完全不留白。（非常放大的觀察）
+
+      值為 2 表示留白內容恰好為自身內容的一倍'
+  cameraResetMaxScale:
+    title: 攝影機重設視野後最大的縮放值
+    description: '選取一個面積很小的節點時，攝影機不會完全覆蓋這個節點的面積範圍，否則太大了。
+
+      而是會放大到一個最大值，這個最大值可以透過此選項來調整
+
+      建議開啟 debug 模式下觀察 currentScale 來調整此值'
+  allowAddCycleEdge:
+    title: 允許在節點之間添加自環
+    description: '開啟後，節點之間可以添加自環，即節點與自身相連，用於狀態機繪製
+
+      預設關閉，因為不常用，容易誤觸發'
+  enableDragEdgeRotateStructure:
+    title: 允許拖曳連線旋轉結構
+    description: '開啟後，可以透過拖曳選取的連線來旋轉節點結構
+
+      這允許您輕鬆調整相連節點的方向'
+  enableCtrlWheelRotateStructure:
+    title: 允許Ctrl+滑鼠滾輪旋轉結構
+    description: '開啟後，可以按住 Ctrl 鍵（Mac 系統為 Command 鍵）並捲動滑鼠滾輪來旋轉節點結構
+
+      這允許您精確調整相連節點的方向'
+  autoLayoutWhenTreeGenerate:
+    title: 生長節點時自動更新佈局
+    description: '開啟後，生長節點時自動更新佈局
+
+      此處的生長節點指tab和\鍵生長節點'
+  enableBackslashGenerateNodeInInput:
+    title: 在輸入狀態下也能透過反斜線建立同級節點
+    description: '開啟後，在文字節點編輯狀態下，按下反斜線鍵（\）也可以建立同級節點
+
+      關閉後，只有在非編輯狀態下才能透過反斜線鍵建立同級節點'
+  moveAmplitude:
+    title: 視角移動加速度
+    description: '此設定項用於 使用W S A D按鍵來上下左右移動視角時的情境
+
+      可將攝影機看成一個能朝四個方向噴氣的 懸浮飛機
+
+      此加速度值代表著噴氣的動力大小，需要結合下面的摩擦力設定來調整速度'
+  moveFriction:
+    title: 視角移動摩擦力係數
+    description: '此設定項用於 使用W S A D按鍵來上下左右移動視角時的情景
+
+      摩擦係數越大，滑動的距離越小，摩擦係數越小，滑動的距離越遠
+
+      此值=0時代表 絕對光滑'
+  gamepadDeadzone:
+    title: 遊戲搖桿死區
+    description: '此設定項用於 遊戲手把控制視角時的情境
+
+      手把的輸入值在0-1之間，此值越小，手把的輸入越敏感
+
+      死區越大，手把的輸入越趨於0或1，不會產生太大的變化
+
+      死區越小，手把的輸入越趨於中間值，會產生較大的變化'
+  mouseRightDragBackground:
+    title: 右鍵拖曳背景的操作
+    options:
+      cut: 斬斷並刪除物體
+      moveCamera: 移動視野
+  enableSpaceKeyMouseLeftDrag:
+    title: 啟用空白鍵+滑鼠左鍵拖曳移動
+    description: 按下空白鍵並使用滑鼠左鍵拖曳來移動視野
+  mouseLeftMode:
+    title: 左鍵模式切換
+    options:
+      selectAndMove: 選擇並移動
+      draw: 畫圖
+      connectAndCut: 連線與劈砍
+  doubleClickMiddleMouseButton:
+    title: 雙擊滑鼠中鍵
+    description: '將滾輪鍵快速按下兩次時執行的操作。預設是重設視野。
+
+      關閉此選項，可以防止誤觸發。'
+    options:
+      adjustCamera: 調整視野
+      none: 无操作
+  textNodeContentLineBreak:
+    title: 文字節點換行方案
+    options:
+      enter: Enter
+      ctrlEnter: ctrl + Enter
+      altEnter: alt + Enter
+      shiftEnter: shift + Enter
+    description: '注意不要和文字節點退出編輯模式的按鍵一樣了，這樣會導致衝突
+
+      進而導致無法換行'
+  textNodeStartEditMode:
+    title: 文字節點進入編輯模式
+    options:
+      enter: Enter
+      ctrlEnter: ctrl + Enter
+      altEnter: alt + Enter
+      shiftEnter: shift + Enter
+      space: 空白鍵
+    description: 實際上按F2鍵也可以進入編輯模式，這裡還可以再加選一種
+  textNodeExitEditMode:
+    title: 文字節點退出編輯模式
+    options:
+      enter: Enter
+      ctrlEnter: ctrl + Enter
+      altEnter: alt + Enter
+      shiftEnter: shift + Enter
+    description: 實際上按Esc鍵也可以退出，這裡還可以再加選一種
+  textNodeSelectAllWhenStartEditByMouseClick:
+    title: 文字節點透過按兩下開始編輯時自動全選內容
+    description: '開啟後，在文字節點開始編輯時，會全選文字內容
+
+      如果您編輯內容通常是為了直接更改全部內容，建議開啟此選項
+
+      如果更可能是為了追加內容，建議關閉此選項'
+  textNodeSelectAllWhenStartEditByKeyboard:
+    title: 文本節點透過鍵盤開始編輯時自動全選內容
+    description: 開啟後，在您按下文字節點編輯模式的按鍵時，會全選文字內容
+  textNodeBackspaceDeleteWhenEmpty:
+    title: 當在編輯模式下文字節點無內容時按 Backspace 鍵自動刪除整個節點
+    description: 開啟後，在編輯文字節點且內容為空時，按下 Backspace 鍵會自動刪除整個節點
+  textNodeAutoFormatTreeWhenExitEdit:
+    title: 退出編輯模式時自動格式化樹狀結構
+    description: 當文字節點退出編輯模式時，自動對其所在的樹狀結構進行格式化佈局
+  treeGenerateCameraBehavior:
+    title: 樹狀生長節點後的鏡頭行為選項
+    description: 設定在使用樹狀深度生長或廣度生長功能建立新節點後，鏡頭的行為方式
+    options:
+      none: 鏡頭不動
+      moveToNewNode: 鏡頭移動向新建立的節點
+      resetToTree: 重置視野，使視野覆蓋目前樹狀結構的外接矩形
+  enableDragAutoAlign:
+    title: 滑鼠拖曳自動吸附對齊節點
+    description: 開啟後，拖曳節點並放開時會與其他節點在x軸、y軸方向對齊
+  enableDragAlignToGrid:
+    title: 拖曳實體時，貼齊網格
+    description: 建議在顯示中開啟橫向和縱向格線，並關閉自動貼齊對齊
+  enableWindowsTouchPad:
+    title: 允許觸控板雙指移動操作
+    description: '在 Windows 系統中，雙指上下移動會被辨識為滾輪事件。
+
+      雙指左右移動會被辨識成滑鼠橫向滾輪的捲動事件。
+
+      如果您是筆記型電腦操作並使用外接滑鼠，建議關閉此選項。'
+  macTrackpadAndMouseWheelDifference:
+    title: macbook 的觸控板與滑鼠滾輪區分邏輯
+    description: 有的macbook滑鼠滾輪是整數，觸控板是小數，有的則相反 您需要根據實際情況選擇一下區分邏輯 區分方法可點擊7次關於介面的軟體logo進入“測試介面”後，滑動滾輪和觸控板查看數據回饋
+    options:
+      trackpadIntAndWheelFloat: 觸控板是整數，滑鼠捲動是小數
+      tarckpadFloatAndWheelInt: 觸控板是小數，滑鼠捲動是整數
+  macTrackpadScaleSensitivity:
+    title: macbook 的觸控板雙指縮放靈敏度
+    description: 值越大，缩放的速度越快
+  macEnableControlToCut:
+    title: mac下是否啟用 control鍵按下來開始刀斬
+    description: 按下 Control 鍵，在舞台上移動滑鼠，再鬆開 Control 鍵，完成一次刀斬
+  macMouseWheelIsSmoothed:
+    title: macbook 的滑鼠滾輪是否平滑
+    description: 有的macbook滑鼠滾輪是平滑的，有的則是捲動一格觸發一次 可能取決於您是否安裝了Mos等滑鼠修改軟體
+  mouseSideWheelMode:
+    title: 滑鼠側邊滾輪模式
+    description: '侧边滚轮就是大拇指上的滚轮
+
+      '
+    options:
+      zoom: 缩放
+      move: 縱向移動
+      moveX: 橫向移動
+      none: 无操作
+      cameraMoveToMouse: 將視野向滑鼠位置移動
+      adjustWindowOpacity: 調整視窗透明度
+      adjustPenStrokeWidth: 调整画笔粗细
+  mouseWheelMode:
+    title: 滑鼠滾輪模式
+    options:
+      zoom: 缩放
+      move: 縱向移動
+      moveX: 橫向移動
+      none: 无操作
+  mouseWheelWithShiftMode:
+    title: 按住 Shift 時，滑鼠滾輪模式
+    options:
+      zoom: 缩放
+      move: 縱向移動
+      moveX: 橫向移動
+      none: 无操作
+  mouseWheelWithCtrlMode:
+    title: 按住 Ctrl 時，滑鼠滾輪模式
+    description: '提示：这里的 Ctrl 是 Control
+
+      '
+    options:
+      zoom: 缩放
+      move: 縱向移動
+      moveX: 橫向移動
+      none: 无操作
+  mouseWheelWithAltMode:
+    title: 按住 Alt 時，滑鼠滾輪模式
+    description: '此功能於2025年4月10日新增
+
+      目前發現還存在問題：win系統下滑動滾輪後需要再點擊一次螢幕才能操作舞台
+
+      提示：這裡的 Alt 是 Option'
+    options:
+      zoom: 缩放
+      move: 縱向移動
+      moveX: 橫向移動
+      none: 无操作
+  rectangleSelectWhenLeft:
+    title: 向左框選的策略
+    description: '選擇滑鼠向左框選的策略，包含完全覆蓋框選和碰撞框選
+
+      完全覆蓋框選是指矩形框選框必須完全覆蓋實體的外接矩形
+
+      碰撞框選是指矩形框選框只要碰到一點點實體的外接矩形，就能夠選中了'
+    options:
+      intersect: 碰撞框選
+      contain: 完全覆蓋框選
+  rectangleSelectWhenRight:
+    title: 向右框選的策略
+    description: 選擇滑鼠向右框選的策略
+    options:
+      intersect: 碰撞框選
+      contain: 完全覆蓋框選
+  cuttingLineStartSoundFile:
+    title: 斬斷線開始的聲音檔案
+    description: 斬斷線右鍵按下開始時播放的聲音檔案路徑
+  connectLineStartSoundFile:
+    title: 連接線開始的聲音檔案
+    description: 連接線右鍵按下開始時播放的聲音檔案路徑
+  connectFindTargetSoundFile:
+    title: 連接線吸附到目標上的聲音檔案
+    description: 連接線吸附到目標上時播放的聲音檔案路徑
+  cuttingLineReleaseSoundFile:
+    title: 斩断线释放的声音文件
+    description: 釋放的時候就是看到刀光刃特效的時候
+  alignAndAttachSoundFile:
+    title: 對齊的聲音檔案
+    description: 滑鼠拖曳時，對齊節點時播放的聲音檔案路徑
+  uiButtonEnterSoundFile:
+    title: 滑鼠進入按鈕區域的聲音
+    description: 滑鼠進入按鈕區域的聲音
+  uiButtonClickSoundFile:
+    title: 按鈕點擊時的聲音檔案
+    description: 按鈕點擊時播放的聲音檔案路徑
+  uiSwitchButtonOnSoundFile:
+    title: 按鈕點擊開關按鈕時打開的聲音
+    description: 按鈕點擊開關按鈕時開啟的聲音檔案路徑
+  uiSwitchButtonOffSoundFile:
+    title: 按鈕點擊開關按鈕時關閉的聲音
+    description: 按鈕點擊開關按鈕時關閉的聲音檔案路徑
+  agreeTerms:
+    title: 同意用户协议
+    description: '请您仔细阅读并同意用户协议
+
+      '
+  allowTelemetry:
+    title: 參與使用者體驗改進計畫
+    description: '如果您啟用此項，我們會收集您的使用資料，幫助我們改進軟體
+
+      傳送的資料僅用於統計，不會包含您的個人隱私資訊
+
+      您的資料會在中國香港的雲端伺服器上儲存，不會傳送到國外'
+  aiApiBaseUrl:
+    title: AI API 地址
+    description: 目前僅支援 OpenAI 格式的 API
+  aiApiKey:
+    title: AI API 密钥
+    description: '密钥将会明文存储在本地
+
+      '
+  aiModel:
+    title: AI 模型
+  cacheTextAsBitmap:
+    title: 開啟點陣式渲染文字
+    description: '開啟後，文字節點的點陣圖快取將會被保留，以提升渲染速度
+
+      但可能會造成模糊'
+  textCacheSize:
+    title: 文本缓存限制
+    description: '預設情況下會對頻繁渲染的文本進行快取，以提升渲染速度
+
+      如果值過大可能會導致記憶體佔用過高造成卡頓甚至當機
+
+      值為 0 代表停用快取，每次渲染都會重新渲染文本
+
+      *重新開啟檔案時生效'
+  textScalingBehavior:
+    title: 攝影機縮放時的文字渲染方式
+    options:
+      temp: 每一帧都重新渲染文本，不使用缓存
+      nearestCache: 使用文本大小最接近的缓存，缩放再渲染
+      cacheEveryTick: 每一帧都重新渲染文本，并且缓存
+  textIntegerLocationAndSizeRender:
+    title: 文字整數位置和大小渲染
+    description: '開啟後，一切文字的大小和位置都是整數，以節省渲染效能。
+
+      但會出現文字抖動現象。建議配合視角縮放速度調整成1一起使用。
+
+      如果您的電腦使用體驗非常卡頓，尤其是在縮放和移動的情況下，可以開啟此選項。'
+  antialiasing:
+    title: 抗锯齿
+    description: '*重新開啟檔案時生效'
+    options:
+      disabled: 關閉
+      low: 低
+      medium: 中
+      high: 高
+  isStealthModeEnabled:
+    title: 潜行模式
+    description: 摸魚專用，配合視窗透明效果更佳
+  stealthModeScopeRadius:
+    title: 潜行模式范围半径
+    description: 狙擊鏡的半徑
+  stealthModeReverseMask:
+    title: 反向遮罩
+    description: 開啟後，狙擊鏡中心區域會被遮罩，只顯示周圍區域
+  soundPitchVariationRange:
+    title: 音效音调随机变化范围
+    description: 控制音效播放時音高隨機變化的程度。範圍：0-1200音分（1200音分=1個八度，100音分=1個半音）。值越大，音高變化越明顯，越像遊戲一樣有趣。
+  autoImportTxtFileWhenOpenPrg:
+    title: 開啟 PRG 檔案時自動匯入同名 TXT 檔案
+    description: 啟用後，開啟 PRG 檔案時會自動匯入同一資料夾下同名 TXT 檔案的內容，並以文字節點形式新增到舞台左下角。
+effects:
+  CircleChangeRadiusEffect:
+    title: 圆形变换半径效果
+    description: 質點被框選後波紋放大
+  CircleFlameEffect:
+    title: 圆形径向渐变光闪
+    description: 存在於各種特效細節中，預劈砍直線與實體矩形切割時、斬斷連線時的中點閃爍等
+  EntityAlignEffect:
+    title: 實體對齊效果
+    description: 滑鼠拖曳吸附對齊時產生的高亮虛線
+  EntityCreateDashEffect:
+    title: 實體建立粉塵凝聚效果
+    description: '實體建立時，實體周圍出現粉塵凝聚
+
+      由於不夠美觀，已經廢棄，不會出現'
+  EntityCreateFlashEffect:
+    title: 实体边框发光效果
+    description: '在ctrl+滾輪轉動實體樹、縮放圖片、建立節點等情況下出現
+
+      若渲染效能較差，建議關閉此選項'
+  EntityCreateLineEffect:
+    title: 实体散发电路板式线条辐射效果
+    description: '已经废弃，不会出现
+
+      '
+  EntityDashTipEffect:
+    title: 實體提示性的粉塵抖動
+    description: 出現在實體輸入編輯結束或進入時，實體周圍出現抖動的粉塵
+  EntityJumpMoveEffect:
+    title: 實體跳躍移動效果
+    description: '實體跳躍移動時，實體出現一個象徵性的跳躍弧線幻影
+
+      用來表示偽 z 軸的跨越層級移動'
+  EntityShakeEffect:
+    title: 實體抖動效果
+    description: 像“TickTock”Logo 一樣的抖動特效，用於實體出現警告性質的提示
+  EntityShrinkEffect:
+    title: 实体缩小消失效果
+    description: 使用Delete鍵刪除實體時，實體出現縮小消失的效果
+  ExplodeDashEffect:
+    title: 粉尘爆炸效果
+    description: 用劈砍刪除實體時，出現粉塵爆炸
+  LineCuttingEffect:
+    title: 劈砍時的刀光
+    description: 劈砍時，出現類似水果忍者一樣的刀光
+  LineEffect:
+    title: 直线段淡出效果
+    description: 用於拖曳旋轉子樹時，連線劃過虛影
+  NodeMoveShadowEffect:
+    title: 節點移動時摩擦地面的粒子效果
+    description: 佈局造成的移動可能也會出現一閃而過的粒子
+  PenStrokeDeletedEffect:
+    title: 塗鴉被刪除時的消失特效
+    description: 塗鴉被刪除時，出現消失的特效
+  PointDashEffect:
+    title: 在某点出迸发万有引力式的粒子效果
+    description: 由於萬有引力影響效能，此特效已關閉，不會出現
+  RectangleLittleNoteEffect:
+    title: 矩形闪烁提示效果
+    description: 在邏輯節點執行時，邏輯節點會閃爍此效果
+  RectangleNoteEffect:
+    title: 矩形存在提示效果
+    description: '高亮提示某個矩形範圍，搜尋節點或定位時會高亮提示
+
+      關閉後會看不到矩形高亮效果'
+  RectanglePushInEffect:
+    title: 矩形四顶点划至另一矩形四顶点的效果
+    description: '用於提示實體的跨越框層移動、方向鍵切換選取
+
+      目前開發者由於偷懶，此效果引用了四個劈砍線效果。
+
+      若關閉了劈砍線效果，則此效果會看不見'
+  RectangleRenderEffect:
+    title: 矩形位置提示效果
+    description: 用於在吸附拖曳對齊時，顯示實體即將吸附到的目標位置
+  RectangleSplitTwoPartEffect:
+    title: 矩形被切成兩塊的特效
+    description: 僅存在於劈砍特效（也有可能是四塊）
+  TechLineEffect:
+    title: （基础特效）折线段效果
+    description: 此特效是其他特效的組成部分，若關閉則其他特效可能會受到影響
+  TextRaiseEffectLocated:
+    title: 固定位置的文字節點懸浮上升效果
+    description: 文字節點懸浮上升效果，用於提示重要資訊
+  ViewFlashEffect:
+    title: 視野閃爍效果
+    description: '全螢幕閃白/閃黑等效果
+
+      光敏性癲癇患者請關閉此選項'
+  ViewOutlineFlashEffect:
+    title: 視野輪廓閃爍效果
+    description: 視野輪廓閃爍效果
+  ZapLineEffect:
+    title: （基础特效）闪电线效果
+    description: 此特效是其他特效的組成部分，若關閉則其他特效可能會受到影響
+  MouseTipFeedbackEffect:
+    title: 滑鼠互動提示特效
+    description: 在滑鼠進行縮放視野等操作時，滑鼠旁邊會出現特效提示，例如一個變大或變小的圓圈
+  RectangleSlideEffect:
+    title: 矩形滑動尾翼特效
+    description: 用於垂直方向鍵盤移動實體
+keyBindsGroup:
+  otherKeys:
+    title: 未分類的快速鍵
+    description: '未分類的快捷鍵，
+
+      此處若發現無翻譯的無效快捷鍵項，可能是由於版本升級而未清理舊快捷鍵導致出現的殘留
+
+      可手動清理 keybinds.json 檔案中的對應項'
+  basic:
+    title: 基礎快捷鍵
+    description: 基本的快速鍵，用於常用的功能
+  camera:
+    title: 摄像机控制
+    description: 用於控制攝影機移動、縮放
+  app:
+    title: 应用控制
+    description: '用于控制应用的一些功能
+
+      '
+  ui:
+    title: UI控制
+    description: '用于控制UI的一些功能
+
+      '
+  draw:
+    title: 涂鸦
+    description: 塗鴉相關功能
+  select:
+    title: 切換選擇
+    description: 使用鍵盤來切換選取的實體
+  moveEntity:
+    title: 移動實體
+    description: 用於移動實體的一些功能
+  generateTextNodeInTree:
+    title: 生長節點
+    description: 透過鍵盤生長節點（Xmind使用者習慣）
+  generateTextNodeRoundedSelectedNode:
+    title: 在選取節點周圍生成節點
+    description: 按下後，在選取節點周圍生成節點
+  aboutTextNode:
+    title: 關於文字節點
+    description: 和文字節點相關的一切快捷鍵，分割、合併、建立等
+  section:
+    title: Section框
+    description: Section框相關功能
+  leftMouseModeCheckout:
+    title: 左鍵模式切換
+    description: 關於左鍵模式的切換
+  edge:
+    title: 連線相關
+    description: 關於連線的一些功能
+  expandSelect:
+    title: 擴散選擇
+    description: 擴散選取節點相關的快速鍵
+  themes:
+    title: 主题切换
+    description: 切換主題相關的快捷鍵
+  align:
+    title: 對齊相關
+    description: 關於實體對齊的一些功能
+  image:
+    title: 圖片相關
+    description: 關於圖片的一些功能
+  node:
+    title: 節點相關
+    description: 關於節點的一些功能，如嫁接、摘除等
+controlSettingsGroup:
+  mouse:
+    title: 滑鼠設定
+  touchpad:
+    title: 觸控板設定
+  textNode:
+    title: 文字節點設定
+  gamepad:
+    title: 遊戲手把設定
+visualSettingsGroup:
+  basic:
+    title: 基本設定
+  background:
+    title: 背景設定
+keyBinds:
+  title: 快速鍵綁定
+  none: 未綁定快捷鍵
+  test:
+    title: 测试
+    description: 僅用於測試快速鍵自定義綁定功能功能
+  reload:
+    title: 重载应用
+    description: '重新載入應用程式，重新載入目前專案檔案
+
+      等同於瀏覽器重新整理網頁
+
+      這個功能很危險！會導致未儲存的進度遺失！'
+  saveFile:
+    title: 保存文件
+    description: 儲存目前專案檔案，若目前檔案是草稿則另存新檔
+  newDraft:
+    title: 新建草稿
+    description: '新增一個草稿檔案，並切換到該檔案
+
+      若目前檔案未儲存則無法切換'
+  newFileAtCurrentProjectDir:
+    title: 在目前專案目錄下新增檔案
+    description: '在目前專案目錄下建立一個專案檔，並切換到該檔案（用於快速建立檔案）
+
+      若目前檔案為草稿狀態則無法建立'
+  openFile:
+    title: 開啟檔案
+    description: 選擇一個曾經儲存的json/prg檔案並開啟
+  undo:
+    title: 撤销
+    description: 撤销上一次操作
+  redo:
+    title: 取消撤销
+    description: 取消上一次撤销操作
+  resetView:
+    title: 重置視野
+    description: '如果沒有選擇任何內容，則根據全部內容重置視野；
+
+      如果有選擇內容，則根據選取內容重置視野'
+  restoreCameraState:
+    title: 恢復視野狀態
+    description: 按下後，恢復到之前按下F鍵時記錄的攝影機位置和縮放大小
+  resetCameraScale:
+    title: 重置缩放
+    description: 將視野縮放重設為標準大小
+  folderSection:
+    title: 摺疊或展開Section框
+    description: 按下後選取的 Section 框會切換摺疊或展開狀態
+  reverseEdges:
+    title: 反转连线的方向
+    description: '按下後，選取的連線的方向會變成相反方向
+
+      例如，原先是 A -> B，按下後變成 B -> A
+
+      此功能的意義在於快速建立一個節點連向多個節點的情況
+
+      因為目前的連線只能一次性做到多連一。'
+  reverseSelectedNodeEdge:
+    title: 反轉選取的節點的所有連線的方向
+    description: '按下後，所有框選選中的節點中
+
+      每個節點的所有連線都會反轉方向
+
+      進而實現更快捷的一連多'
+  createUndirectedEdgeFromEntities:
+    title: 選取的實體之間建立無向連線
+    description: 按下後，選取的兩個或多個實體之間會建立一條無向連線
+  packEntityToSection:
+    title: 將選取的實體打包到Section框中
+    description: 按下後，選取的實體會自動包裹到新 Section 框中
+  unpackEntityFromSection:
+    title: Section框拆包，轉換為文字節點
+    description: '按下後，選取的Section框中的實體會被拆解，自身轉換成一個文字節點
+
+      內部的實體將會掉落在外面'
+  textNodeToSection:
+    title: 將選取的文字節點轉換成Section框
+    description: '按下後，選取的文字節點會被轉換成 Section 框
+
+      可以用於 section 框的快速建立'
+  deleteSelectedStageObjects:
+    title: 刪除選取的舞台物件
+    description: '按下後，選取的舞台物件會被刪除
+
+      舞台物件包括實體（節點和Section等獨立存在的東西）和關係（節點之間的連線）
+
+      預設是delete鍵，您可以改成backspace鍵'
+  editEntityDetails:
+    title: 編輯選取實體的詳細資訊
+    description: '按下後，選取的實體的詳細資訊會被開啟編輯
+
+      只有選取的物件數量為1時才有效'
+  openColorPanel:
+    title: 開啟顏色面板快速鍵
+    description: 按下後，開啟顏色面板，可用於快速切換節點顏色
+  switchDebugShow:
+    title: 切换调试信息显示
+    description: '按下後，切換偵錯資訊顯示
+
+      偵錯資訊顯示在螢幕左上角，通常為開發者使用
+
+      開啟後，螢幕左上角將會顯示偵錯資訊。
+
+      若您遇到bug截圖回報時，建議開啟此選項。'
+  generateNodeTreeWithDeepMode:
+    title: 生長子層節點
+    description: '按下後，瞬間生長一個節點並放置在當前選取節點的右側
+
+      如果對節點設定了生長方向，則會按照生長方向生長子節點（若無設定則預設向右生長）
+
+      同時自動排版整個節點樹的結構，確保其是一個向右的樹狀結構
+
+      使用此功能前先確保已選取一個節點、且該節點所在結構為樹狀結構'
+  generateNodeTreeWithBroadMode:
+    title: 生長同級節點
+    description: '按下後，瞬間生長一個同級節點並放置在目前選取節點的下方
+
+      同時自動排版整個節點樹的結構，確保其是一個向下的樹狀結構
+
+      使用此功能前先確保已選取一個節點、且該節點存在父級節點'
+  generateNodeGraph:
+    title: 生長自由節點
+    description: '按下後，出現一個虛擬生長位置
+
+      此時，按下“I J K L”鍵自由調整生長位置
+
+      再次按下該鍵，退出自由生長模式
+
+      使用此功能前先確保已選中一個節點'
+  createConnectPointWhenDragConnecting:
+    title: 拖曳連線時，按下此鍵，建立質點中轉
+    description: 當拖曳連線時，按下此鍵，建立質點中轉
+  treeGraphAdjust:
+    title: 調整目前節點所在樹狀結構的樹狀佈局
+    description: '主要用於關閉了鍵盤生長節點時觸發的樹狀佈局調整時使用
+
+      可以透過此快速鍵手動觸發佈局調整'
+  dagGraphAdjust:
+    title: 調整目前選取節點群的DAG佈局
+    description: '對選取的有向無環圖（DAG）結構進行自動佈局調整
+
+      僅當選取節點構成 DAG 結構時可用'
+  gravityLayout:
+    title: 持續按下引力式佈局
+    description: '選取一堆連線的節點群後，持續按下該鍵可以進行引力式佈局。
+
+      注意此鍵若想自訂，只能設定為單個非修飾鍵，否則可能有未知bug。'
+  setNodeTreeDirectionLeft:
+    title: 設定目前節點的樹狀生長方向為向左
+    description: '需要選取節點後按下此快捷鍵
+
+      設定後，在此節點上按Tab生長時，會向左生長子節點'
+  setNodeTreeDirectionRight:
+    title: 設定目前節點的樹狀生長方向為向右
+    description: '需要選取節點後按下此快速鍵
+
+      設定後，在此節點上按 Tab 生長時，會向右生長子節點'
+  setNodeTreeDirectionUp:
+    title: 設定目前節點的樹狀生長方向為向上
+    description: '需要選取節點後按下此快捷鍵
+
+      設定後，在此節點上按 Tab 生長時，會向上生長子節點'
+  setNodeTreeDirectionDown:
+    title: 設定目前節點的樹狀生長方向為向下
+    description: '需要選取節點後按下此快捷鍵
+
+      設定後，在此節點上按 Tab 生長時，會向下生長子節點'
+  masterBrakeCheckout:
+    title: 手煞：開啟/關閉透過按鍵控制攝影機移動
+    description: '按下後會切換是否允許 “W S A D”鍵控制攝影機移動
+
+      可以用於臨時禁止攝影機移動，在輸入密技鍵或含有WSAD的快捷鍵時防止視野移動'
+  masterBrakeControl:
+    title: 脚刹：停止摄像机飘移
+    description: 按下後，停止攝影機飄移，並將速度設為0
+  selectAll:
+    title: 全選
+    description: 按下後，所有節點和連線都會被選取
+  createTextNodeFromCameraLocation:
+    title: 在視野中心位置建立文字節點
+    description: '按下後，在目前視野中心的位置建立一個文字節點
+
+      等同於滑鼠雙擊建立節點的功能'
+  createTextNodeFromMouseLocation:
+    title: 在滑鼠位置建立文字節點
+    description: '按下後，在滑鼠懸浮位置建立一個文字節點
+
+      等同於滑鼠單擊建立節點的功能'
+  createTextNodeFromSelectedTop:
+    title: 在目前選取的節點正上方建立文字節點
+    description: 按下後，在目前選取的節點正上方建立一個文字節點
+  createTextNodeFromSelectedDown:
+    title: 在目前選取的節點正下方建立文字節點
+    description: 按下後，在目前選取的節點正下方建立一個文字節點
+  createTextNodeFromSelectedLeft:
+    title: 在目前選取的節點左側建立文字節點
+    description: 按下後，在目前選取的節點左側建立一個文字節點
+  createTextNodeFromSelectedRight:
+    title: 在目前選取的節點右側建立文字節點
+    description: 按下後，在目前選取的節點右側建立一個文字節點
+  selectUp:
+    title: 選取上方節點
+    description: 按下後，選取上方節點
+  selectDown:
+    title: 選取下方節點
+    description: 按下後，選取下方節點
+  selectLeft:
+    title: 選取左側節點
+    description: 按下後，選取左側節點
+  selectRight:
+    title: 選取右側節點
+    description: 按下後，選取右側節點
+  selectAdditionalUp:
+    title: 附加選取上方節點
+    description: 按下後，附加選取上方節點
+  selectAdditionalDown:
+    title: 附加選取下方節點
+    description: 按下後，附加選取下方節點
+  selectAdditionalLeft:
+    title: 附加選取左側節點
+    description: 按下後，附加選取左側節點
+  selectAdditionalRight:
+    title: 附加選取右側節點
+    description: 按下後，附加選取右側節點
+  moveUpSelectedEntities:
+    title: 向上移動所有選取的實體
+    description: 按下後，所有選取的實體會向上移動一個固定距離
+  moveDownSelectedEntities:
+    title: 向下移動所有選取的實體
+    description: 按下後，所有選取的實體會向下移動一個固定距離
+  moveLeftSelectedEntities:
+    title: 向左移動所有選取的實體
+    description: 按下後，所有選取的實體會向左移動一個固定距離
+  moveRightSelectedEntities:
+    title: 向右移動所有選取的實體
+    description: 按下後，所有選取的實體會向右移動一個固定距離
+  jumpMoveUpSelectedEntities:
+    title: 跳躍向上移動所有選取的實體
+    description: 按下後，所有選取的實體會跳躍向上移動一個固定距離，能夠跳入或者跳出Section框
+  jumpMoveDownSelectedEntities:
+    title: 跳躍向下移動所有選取的實體
+    description: 按下後，所有選取的實體會跳躍向下移動一個固定距離，能夠跳入或者跳出Section框
+  jumpMoveLeftSelectedEntities:
+    title: 跳躍向左移動所有選取的實體
+    description: 按下後，所有選取的實體會跳躍向左移動一個固定距離，能夠跳入或者跳出 Section 框
+  jumpMoveRightSelectedEntities:
+    title: 跳躍向右移動所有選取的實體
+    description: 按下後，所有選取的實體會跳躍向右移動一個固定距離，能夠跳入或者跳出Section框
+  CameraScaleZoomIn:
+    title: 視野放大
+    description: 按下後，視野放大
+  CameraScaleZoomOut:
+    title: 視野縮小
+    description: 按下後，視野縮小
+  CameraPageMoveUp:
+    title: 視野向上翻頁式移動
+  CameraPageMoveDown:
+    title: 視野向下翻頁式移動
+  CameraPageMoveLeft:
+    title: 視野向左翻頁式移動
+  CameraPageMoveRight:
+    title: 視野向右翻頁式移動
+  exitSoftware:
+    title: 退出软件
+    description: 按下后，退出软件
+  checkoutProtectPrivacy:
+    title: 进入或退出隐私保护模式
+    description: '按下後，舞台上的全部文字將會被加密，無法被其他人看到
+
+      按下後，舞台上的全部文字將會解密，其他人可以看到
+
+      可以用於截圖回報問題、突然有人看你的螢幕時使用，並且你的內容是感情問題（？）時使用'
+  openTextNodeByContentExternal:
+    title: 以網頁瀏覽器或本機檔案形式開啟選取節點的內容
+    description: '按下後，舞台上所有選取的文字節點都會被以預設方式或瀏覽器方式開啟。
+
+      例如一個節點內容為 "D:/Desktop/a.txt"，選取此節點按下快捷鍵之後，能以系統預設方式開啟此檔案
+
+      如果節點內容為網頁網址 "https://project-graph.top"，會以系統預設瀏覽器開啟網頁內容'
+  checkoutClassroomMode:
+    title: 进入或退出专注模式
+    description: '按下后，进入专注模式，所有UI都会隐藏，顶部按钮会透明化处理
+
+      再按一次恢复
+
+      '
+  checkoutWindowOpacityMode:
+    title: 切換視窗透明度模式
+    description: '按下後，視窗進入完全透明模式，再按一次將進入完全不透明模式
+
+      注意要配合舞台顏色風格進行設置。例如：黑色模式下文字為白色，論文白模式下文字為黑色。
+
+      如果視窗下層內容為白色背景，建議切換舞台到論文白模式。'
+  windowOpacityAlphaIncrease:
+    title: 視窗不透明度增加
+    description: '按下後，視窗不透明度（alpha）值增加0.2，往不透明的方向改變，最大值為1
+
+      當不能再增加時，會有視窗邊緣閃爍提示'
+  windowOpacityAlphaDecrease:
+    title: 視窗不透明度減少
+    description: '按下後，視窗不透明度（alpha）值減少0.2，往透明的方向改變，最小值為0
+
+      如果您的鍵盤沒有小鍵盤的純減號鍵，可以改成橫排數字0右側的減號與底線共用鍵'
+  searchText:
+    title: 搜索文本
+    description: '按下後，打開搜尋框，可以輸入搜尋內容
+
+      搜尋框支援部分比對，例如輸入 "a" 能搜尋到 "apple" 等'
+  clickAppMenuSettingsButton:
+    title: 打開設定頁面
+    description: 按下此鍵可代替滑鼠點擊功能表列裡的設定介面按鈕
+  clickTagPanelButton:
+    title: 開啟/關閉標籤面板
+    description: 按下此鍵可代替滑鼠點擊頁面上的標籤面板展開關閉按鈕
+  clickAppMenuRecentFileButton:
+    title: 開啟最近開啟檔案清單
+    description: 按下此鍵可代替滑鼠點擊功能表列裡的最近開啟檔案列表按鈕
+  clickStartFilePanelButton:
+    title: 開啟/關閉啟動檔案清單
+    description: 按下此鍵可代替滑鼠點擊功能表列裡的啟動檔案列表展開關閉按鈕
+  copy:
+    title: 复制
+    description: 按下後，複製選取的內容
+  paste:
+    title: 粘贴
+    description: 按下后，粘贴剪贴板内容
+  pasteWithOriginLocation:
+    title: 原位粘贴
+    description: 按下后，粘贴的内容会与原位置重叠
+  selectEntityByPenStroke:
+    title: 塗鴉與實體的擴散選擇
+    description: '選取一個塗鴉或者實體後，按下此鍵，會擴散選取該實體周圍的實體
+
+      如果目前選取的是塗鴉，則擴散選取塗鴉觸碰到的實體
+
+      如果目前選取的是實體，則擴散選取觸碰到的所有塗鴉
+
+      多次按下後可以多次交替擴散'
+  expandSelectEntity:
+    title: 擴散選擇節點
+    description: 按下後，實體的選取狀態會轉移到子節點上
+  expandSelectEntityReversed:
+    title: 反向擴散選擇節點
+    description: 按下後，實體的選取狀態會轉移到父節點上
+  expandSelectEntityKeepLastSelected:
+    title: 擴散選擇節點（保留目前節點的選擇狀態）
+    description: 按下後，實體的選取狀態會轉移到子節點上，同時保留目前節點的選取狀態
+  expandSelectEntityReversedKeepLastSelected:
+    title: 反向擴散選擇節點（保留目前節點的選擇狀態）
+    description: 按下後，實體的選取狀態會轉移到父節點上，同時保留目前節點的選取狀態
+  checkoutLeftMouseToSelectAndMove:
+    title: 設定左鍵為“選取/移動”模式
+    description: 也就是滑鼠左鍵切換為正常模式
+  checkoutLeftMouseToDrawing:
+    title: 設定左鍵為“塗鴉”模式
+    description: 也就是滑鼠左鍵切換為塗鴉模式，在工具列中有對應按鈕
+  checkoutLeftMouseToConnectAndCutting:
+    title: 設定左鍵為“連線/斬斷”模式
+    description: 也就是滑鼠左鍵切換為連線/斬斷 模式，在工具列中有對應按鈕
+  checkoutLeftMouseToConnectAndCuttingOnlyPressed:
+    title: 設定左鍵為“連線/斬斷”模式（僅按下時）
+    description: 放開時切換回預設的滑鼠模式
+  penStrokeWidthIncrease:
+    title: 涂鸦笔画变粗
+    description: 按下后，笔画变粗
+  penStrokeWidthDecrease:
+    title: 涂鸦笔画变细
+    description: 按下后，笔画变细
+  screenFlashEffect:
+    title: 屏幕闪黑特效
+    description: 類似於秘笈鍵中的hello world，測試出現黑屏的效果時則證明秘笈鍵系統正常運行了
+  alignNodesToInteger:
+    title: 將所有可連接節點的座標位置對齊到整數
+    description: 可以大幅度减小json文件的体积
+  toggleCheckmarkOnTextNodes:
+    title: 將選取的文字節點都打上勾✅，並標為綠色
+    description: 僅對文字節點生效，選取後再輸入一次可以取消勾選
+  toggleCheckErrorOnTextNodes:
+    title: 將選取的文字節點都打上錯誤❌，並標為紅色
+    description: 僅對文字節點生效，選取後再輸入一次可以取消錯誤標記
+  switchToDarkTheme:
+    title: 切换成黑色主题
+    description: 切换后需要在舞台上划一刀才生生效
+  switchToLightTheme:
+    title: 切换成白色主题
+    description: 切换后需要在舞台上划一刀才生生效
+  switchToParkTheme:
+    title: 切换成公园主题
+    description: 切换后需要在舞台上划一刀才生生效
+  switchToMacaronTheme:
+    title: 切换成马卡龙主题
+    description: 切换后需要在舞台上划一刀才生生效
+  switchToMorandiTheme:
+    title: 切换成莫兰迪主题
+    description: 切换后需要在舞台上划一刀才生生效
+  increasePenAlpha:
+    title: 增加笔刷不透明度通道值
+    description: ''
+  decreasePenAlpha:
+    title: 减少笔刷不透明度通道值
+    description: ''
+  alignTop:
+    title: 頂端對齊
+    description: 數字鍵盤的向上
+  alignBottom:
+    title: 下對齊
+    description: 數字小鍵盤的向下
+  alignLeft:
+    title: 左對齊
+    description: 小鍵盤的向左
+  alignRight:
+    title: 右對齊
+    description: 小鍵盤的向右
+  alignHorizontalSpaceBetween:
+    title: 相等間距水平對齊
+    description: 小鍵盤的左右左右，晃一晃就等間距了
+  alignVerticalSpaceBetween:
+    title: 相等間距垂直對齊
+    description: 小鍵盤的上下上下，晃一晃就等間距了
+  alignCenterHorizontal:
+    title: 水平置中對齊
+    description: 小鍵盤：先中，然後左右
+  alignCenterVertical:
+    title: 垂直置中對齊
+    description: 小鍵盤：先中，然後上下
+  alignLeftToRightNoSpace:
+    title: 向右緊密堆積一排
+    description: 小鍵盤橫著從左到右穿一串
+  alignTopToBottomNoSpace:
+    title: 向下緊密堆積一列
+    description: 小鍵盤直著從上到下穿一串
+  layoutToSquare:
+    title: 松散方阵排列
+  layoutToTightSquare:
+    title: 緊密堆積
+  layoutToTightSquareDeep:
+    title: 遞迴緊密堆積
+  adjustSelectedTextNodeWidthMin:
+    title: 統一寬度為最小值
+    description: 僅對文字節點生效，將所有選取節點的寬度統一為最小值
+  adjustSelectedTextNodeWidthMax:
+    title: 統一寬度為最大值
+    description: 僅對文字節點生效，將所有選取節點的寬度統一為最大值
+  adjustSelectedTextNodeWidthAverage:
+    title: 統一寬度為平均值
+    description: 僅對文字節點生效，將所有選取節點的寬度統一為平均值
+  connectAllSelectedEntities:
+    title: 將所有選取實體進行全連接
+    description: 用於特殊教學場景或圖論教學，"- -"開頭表示連線相關
+  connectLeftToRight:
+    title: 將所有選取實體按照從左到右的擺放位置進行連接
+    description: ''
+  connectTopToBottom:
+    title: 將所有選取實體按照從上到下的擺放位置進行連接
+    description: ''
+  selectAllEdges:
+    title: 選取所有連線
+    description: 僅選擇所有視野內的連線
+  colorSelectedRed:
+    title: 將所有選取物體染色為純紅色
+    description: 具體為：(239, 68, 68)，僅作快速標註用
+  increaseBrightness:
+    title: 將所選實體的顏色亮度增加
+    description: 不能對沒有上色的或者透明的實體使用，b是brightness，句號鍵也是>鍵，可以看成往右走，數值增大
+  decreaseBrightness:
+    title: 將所選實體的顏色亮度減少
+    description: 不能對沒有上色的或者透明的實體使用，b是brightness，逗號鍵也是<鍵，可以看成往左走，數值減小
+  gradientColor:
+    title: 將所選實體的顏色漸變
+    description: 後續打算做成更改色相環，目前還不完善
+  changeColorHueUp:
+    title: 將所選實體的顏色色相增加
+    description: 不能對沒有上色的或者透明的實體使用
+  changeColorHueDown:
+    title: 將所選實體的顏色色相減少
+    description: 不能對沒有上色的或者透明的實體使用
+  changeColorHueMajorUp:
+    title: 將所選實體的顏色色相大幅增加
+    description: 不能對沒有上色的或者透明的實體使用
+  changeColorHueMajorDown:
+    title: 將所選實體的顏色色相大幅減少
+    description: 不能對沒有上色的或者透明的實體使用
+  graftNodeToTree:
+    title: 嫁接節點到樹
+    description: 將選取的節點嫁接到碰撞到的連線上，保持原連線方向
+  removeNodeFromTree:
+    title: 從樹中摘除節點
+    description: 將選取的節點從樹中摘出來，並重新連接前後節點
+  toggleTextNodeSizeMode:
+    title: 將選取的文字節點切換大小調整模式
+    description: 僅對文字節點生效，auto模式：輸入文字不能自動換行，manual模式：寬度為框的寬度，寬度超出自動換行
+  splitTextNodes:
+    title: 將選取的文字節點，剋(kēi)成小塊
+    description: 僅對文字節點生效，根據標點符號、空格、換行符等進行分割，將其分割成小塊
+  mergeTextNodes:
+    title: 將選取的多個文字節點，挼ruá（合併）成一個文字節點，顏色也會取平均值
+    description: 僅對文字節點生效，順序按從上到下排列，節點的位置按節點矩形左上角頂點座標為準
+  swapTextAndDetails:
+    title: 詳略交換
+    description: 將所有選取的文字節點的詳細資訊和實際內容進行交換，連按5次e，主要用於直接貼上的文字內容想寫入詳細資訊
+  reverseImageColors:
+    title: 反轉圖片顏色
+    description: 反轉選取圖片的顏色（將白色背景變為黑色，反之亦然）
+  treeReverseY:
+    title: 縱向反轉樹狀結構
+    description: 選取樹狀結構的根節點，將其縱向反轉
+  treeReverseX:
+    title: 橫向反轉樹狀結構
+    description: 選取樹狀結構的根節點，將其橫向反轉
+  textNodeTreeToSection:
+    title: 將文字節點樹轉換為框巢狀結構
+    description: 將選取的文字節點樹結構轉換為框巢狀結構
+  switchActiveProject:
+    title: 切換目前專案
+    description: 按下後，切換到下一個專案
+  switchActiveProjectReversed:
+    title: 切換目前專案（反序）
+    description: 按下後，切換到上一個專案
+sounds:
+  soundEnabled: 音效開關
