@@ -85,6 +85,7 @@ import { Telemetry } from "./service/Telemetry";
 import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
 import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageReferenceManager";
 import { ProjectUpgrader } from "./stage/ProjectUpgrader";
+import { ProjectMetadata, createDefaultMetadata, isValidMetadata } from "@/types/metadata";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -214,7 +215,7 @@ export class Project extends EventEmitter<{
       let serializedStageObjects: any[] = [];
       let tags: string[] = [];
       let references: { sections: Record<string, string[]>; files: string[] } = { sections: {}, files: [] };
-      let metadata: { dataVersion: number; dataVersionType: string } = { dataVersion: 1, dataVersionType: "N" };
+      let metadata: ProjectMetadata = createDefaultMetadata("2.0.0");
 
       for (const entry of entries) {
         if (entry.filename === "stage.msgpack") {
@@ -228,7 +229,14 @@ export class Project extends EventEmitter<{
           references = this.decoder.decode(referenceRawData) as { sections: Record<string, string[]>; files: string[] };
         } else if (entry.filename === "metadata.msgpack") {
           const metadataRawData = await entry.getData!(new Uint8ArrayWriter());
-          metadata = this.decoder.decode(metadataRawData) as { dataVersion: number; dataVersionType: string };
+          const decodedMetadata = this.decoder.decode(metadataRawData) as any;
+          // 验证并规范化 metadata
+          if (isValidMetadata(decodedMetadata)) {
+            metadata = decodedMetadata;
+          } else {
+            // 如果格式不正确，使用默认值
+            metadata = createDefaultMetadata("2.0.0");
+          }
         } else if (entry.filename.startsWith("attachments/")) {
           const match = entry.filename.trim().match(/^attachments\/([a-zA-Z0-9-]+)\.([a-zA-Z0-9]+)$/);
           if (!match) {
@@ -244,9 +252,7 @@ export class Project extends EventEmitter<{
       }
 
       // 升级数据
-      if (metadata.dataVersionType === "N") {
-        [serializedStageObjects, metadata] = ProjectUpgrader.upgradeNAnyToNLatest(serializedStageObjects, metadata);
-      }
+      [serializedStageObjects, metadata] = ProjectUpgrader.upgradeNAnyToNLatest(serializedStageObjects, metadata);
 
       this.stage = deserialize(serializedStageObjects, this);
       this.tags = tags;
@@ -364,10 +370,7 @@ export class Project extends EventEmitter<{
 
   // 反向引用数据
   public references: { sections: Record<string, string[]>; files: string[] } = { sections: {}, files: [] };
-  public metadata: { dataVersion: number; dataVersionType: string } = {
-    dataVersion: ProjectUpgrader.NLatestVersion,
-    dataVersionType: "N",
-  };
+  public metadata: ProjectMetadata = createDefaultMetadata(ProjectUpgrader.NLatestVersion);
 
   // 更新引用信息的方法已经在changeTextNodeToReferenceBlock中直接实现，这里暂时不需要单独的方法
 

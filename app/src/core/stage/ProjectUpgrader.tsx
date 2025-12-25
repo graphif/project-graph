@@ -1,4 +1,5 @@
 import { Serialized } from "@/types/node";
+import { ProjectMetadata } from "@/types/metadata";
 import { Path } from "@/utils/path";
 import { readFile } from "@tauri-apps/plugin-fs";
 import { v4 as uuidv4 } from "uuid";
@@ -10,7 +11,27 @@ import { DetailsManager } from "./stageObject/tools/entityDetailsManager";
 
 export namespace ProjectUpgrader {
   /** N系列的最新版本 */
-  export const NLatestVersion = 2;
+  export const NLatestVersion = "2.1.0";
+
+  /**
+   * 比较两个版本号字符串（格式：x.y.z）
+   * @param version1 版本1
+   * @param version2 版本2
+   * @returns 如果 version1 < version2 返回 -1，如果 version1 > version2 返回 1，如果相等返回 0
+   */
+  function compareVersion(version1: string, version2: string): number {
+    const v1Parts = version1.split(".").map(Number);
+    const v2Parts = version2.split(".").map(Number);
+    const maxLength = Math.max(v1Parts.length, v2Parts.length);
+
+    for (let i = 0; i < maxLength; i++) {
+      const v1Part = v1Parts[i] || 0;
+      const v2Part = v2Parts[i] || 0;
+      if (v1Part < v2Part) return -1;
+      if (v1Part > v2Part) return 1;
+    }
+    return 0;
+  }
 
   /**
    * 1.0~1.8 系列版本的json文件升级，
@@ -337,19 +358,27 @@ export namespace ProjectUpgrader {
   /**
    * N版本的prg文件升级，从任意N版本升级到最新N版本
    * @param data 原始N版本数据
-   * @returns 升级后的N版本数据
+   * @param metadata 原始metadata
+   * @returns 升级后的N版本数据和metadata
    */
-  export function upgradeNAnyToNLatest(data: any[], metadata: any): [any[], any] {
-    [data, metadata] = convertN1toN2(data, metadata);
+  export function upgradeNAnyToNLatest(data: any[], metadata: any): [any[], ProjectMetadata] {
+    const currentVersion = metadata?.version || "2.0.0";
+
+    // 如果版本小于 2.1.0，需要升级
+    if (compareVersion(currentVersion, "2.1.0") < 0) {
+      [data, metadata] = convertN1toN2(data, metadata);
+    }
+
     return [data, metadata];
   }
 
   /**
-   * 将N1版本升级到N2版本
-   * @param data N1版本数据
-   * @returns N2版本数据
+   * 将 2.0.0 版本升级到 2.1.0 版本
+   * @param data 2.0.0版本数据
+   * @param metadata 2.0.0版本metadata
+   * @returns 2.1.0版本数据和metadata
    */
-  function convertN1toN2(data: any[], metadata: any): [any[], any] {
+  function convertN1toN2(data: any[], metadata: any): [any[], ProjectMetadata] {
     // 为LineEdge添加lineType属性，默认值为'solid'
     for (const item of data) {
       if (item._ === "LineEdge") {
@@ -359,7 +388,7 @@ export namespace ProjectUpgrader {
         }
       }
     }
-    return [data, { ...metadata, dataVersion: 2, versionType: "N" }];
+    return [data, { ...metadata, version: "2.1.0" }];
   }
 
   export async function convertVAnyToN1(json: Record<string, any>, uri: URI) {
