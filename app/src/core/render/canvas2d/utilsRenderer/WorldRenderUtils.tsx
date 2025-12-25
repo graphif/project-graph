@@ -109,6 +109,28 @@ export class WorldRenderUtils {
     );
   }
 
+  /**
+   * 绘制一条双实线对称曲线
+   * @param curve
+   */
+  renderDoubleSymmetryCurve(curve: SymmetryCurve, color: Color, width: number, gap: number): void {
+    // 创建新的曲线对象，避免修改原始曲线数据
+    const viewStart = this.project.renderer.transformWorld2View(curve.start);
+    const viewEnd = this.project.renderer.transformWorld2View(curve.end);
+    const viewCtrlPt1 = this.project.renderer.transformWorld2View(curve.bezier.ctrlPt1);
+    const viewCtrlPt2 = this.project.renderer.transformWorld2View(curve.bezier.ctrlPt2);
+
+    // 使用视图坐标系下的点创建新的贝塞尔曲线
+    const viewBezier = new CubicBezierCurve(viewStart, viewCtrlPt1, viewCtrlPt2, viewEnd);
+
+    this.project.curveRenderer.renderDoubleBezierCurve(
+      viewBezier,
+      color,
+      width * this.project.camera.currentScale,
+      gap,
+    );
+  }
+
   renderLaser(start: Vector, end: Vector, width: number, color: Color): void {
     this.project.canvas.ctx.shadowColor = color.toString();
     this.project.canvas.ctx.shadowBlur = 15;

@@ -198,6 +198,25 @@ export class CurveRenderer {
   }
 
   /**
+   * 绘制一条双实线
+   * 通过绘制两条平行的实线来实现双实线效果
+   * @param start
+   * @param end
+   * @param color
+   * @param width
+   * @param gap 两条线之间的间距
+   */
+  renderDoubleLine(start: Vector, end: Vector, color: Color, width: number, gap: number): void {
+    const direction = end.subtract(start).normalize();
+    const perpendicular = new Vector(-direction.y, direction.x).multiply(gap / 2);
+
+    // 绘制第一条线（上方/左侧）
+    this.renderSolidLine(start.add(perpendicular), end.add(perpendicular), color, width);
+    // 绘制第二条线（下方/右侧）
+    this.renderSolidLine(start.subtract(perpendicular), end.subtract(perpendicular), color, width);
+  }
+
+  /**
    * 绘制一条贝塞尔曲线
    * @param curve
    */
@@ -241,6 +260,46 @@ export class CurveRenderer {
     this.project.canvas.ctx.stroke();
     // 重置线型
     this.project.canvas.ctx.setLineDash([]);
+  }
+
+  /**
+   * 绘制一条双实线贝塞尔曲线
+   * 通过绘制两条平行的贝塞尔曲线来实现双实线效果
+   * @param curve
+   * @param color
+   * @param width
+   * @param gap 两条线之间的间距
+   */
+  renderDoubleBezierCurve(curve: CubicBezierCurve, color: Color, width: number, gap: number): void {
+    // 计算起点和终点的方向向量
+    const startDirection = curve.ctrlPt1.subtract(curve.start).normalize();
+    const endDirection = curve.end.subtract(curve.ctrlPt2).normalize();
+
+    // 计算垂直于方向的向量（用于偏移）
+    const startPerpendicular = new Vector(-startDirection.y, startDirection.x).multiply(gap / 2);
+    const endPerpendicular = new Vector(-endDirection.y, endDirection.x).multiply(gap / 2);
+
+    // 计算控制点的偏移（使用起点和终点的平均方向）
+    const midDirection = endDirection.add(startDirection).normalize();
+    const midPerpendicular = new Vector(-midDirection.y, midDirection.x).multiply(gap / 2);
+
+    // 创建第一条曲线（上方/左侧）
+    const curve1 = new CubicBezierCurve(
+      curve.start.add(startPerpendicular),
+      curve.ctrlPt1.add(midPerpendicular),
+      curve.ctrlPt2.add(midPerpendicular),
+      curve.end.add(endPerpendicular),
+    );
+    this.renderBezierCurve(curve1, color, width);
+
+    // 创建第二条曲线（下方/右侧）
+    const curve2 = new CubicBezierCurve(
+      curve.start.subtract(startPerpendicular),
+      curve.ctrlPt1.subtract(midPerpendicular),
+      curve.ctrlPt2.subtract(midPerpendicular),
+      curve.end.subtract(endPerpendicular),
+    );
+    this.renderBezierCurve(curve2, color, width);
   }
 
   /**

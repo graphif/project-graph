@@ -57,8 +57,11 @@ export class StraightEdgeRenderer extends EdgeRendererClass {
       ? this.project.stageStyleManager.currentStyle.StageObjectBorder
       : edge.color;
 
-    if ((edge.lineType || "solid") === "dashed") {
+    const lineType = edge.lineType || "solid";
+    if (lineType === "dashed") {
       this.project.curveRenderer.renderDashedLine(start, end, edgeColor, width, 10 * this.project.camera.currentScale);
+    } else if (lineType === "double") {
+      this.project.curveRenderer.renderDoubleLine(start, end, edgeColor, width, 5 * this.project.camera.currentScale);
     } else {
       this.project.curveRenderer.renderSolidLine(start, end, edgeColor, width);
     }

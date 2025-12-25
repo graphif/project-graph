@@ -79,6 +79,7 @@ import {
   RefreshCcwDot,
   CornerUpRight,
   Workflow,
+  Equal,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -744,6 +745,15 @@ export default function MyContextMenuContent() {
               >
                 <SquareDashedBottomCode />
                 虚线
+              </Item>
+              <Item
+                onClick={() => {
+                  p.stageManager.setSelectedEdgeLineType("double");
+                  p.historyManager.recordStep();
+                }}
+              >
+                <Equal />
+                双实线
               </Item>
             </SubContent>
           </Sub>

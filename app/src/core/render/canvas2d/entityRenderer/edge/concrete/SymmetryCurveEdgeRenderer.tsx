@@ -315,13 +315,21 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
     //   )
     //   lastPoint = line.end;
     // }
-    // 虚拟边默认使用实线
-    if (edge && (edge.lineType || "solid") === "dashed") {
+    // 根据 lineType 选择渲染方式
+    const lineType = edge?.lineType || "solid";
+    if (lineType === "dashed") {
       this.project.worldRenderUtils.renderDashedSymmetryCurve(
         curve,
         color,
         width,
         10 * this.project.camera.currentScale,
+      );
+    } else if (lineType === "double") {
+      this.project.worldRenderUtils.renderDoubleSymmetryCurve(
+        curve,
+        color,
+        width,
+        5 * this.project.camera.currentScale,
       );
     } else {
       this.project.worldRenderUtils.renderSymmetryCurve(curve, color, width);
