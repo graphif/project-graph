@@ -45,6 +45,7 @@ export class ControllerUtils {
    */
   editTextNode(clickedNode: TextNode, selectAll = true) {
     this.project.controller.isCameraLocked = true;
+    const originalText = clickedNode.text;
     const rectWorld = clickedNode.collisionBox.getRectangle();
     const rectView = this.project.renderer.transformWorld2View(rectWorld);
     const fontColor = (
@@ -118,8 +119,9 @@ export class ControllerUtils {
         SubWindow.close(lastAutoCompleteWindowId);
         clickedNode!.isEditing = false;
         this.project.controller.isCameraLocked = false;
-        // this.project.historyManager.recordStep();
-
+        if (originalText !== clickedNode.text) {
+          this.project.historyManager.recordStep();
+        }
         // 实验
         this.finishChangeTextNode(clickedNode);
         await this.autoChangeTextNodeToReferenceBlock(this.project, clickedNode);
