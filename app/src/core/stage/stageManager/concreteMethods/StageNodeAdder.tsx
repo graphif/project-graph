@@ -25,12 +25,15 @@ export class NodeAdder {
   /**
    * 通过点击位置增加节点
    * @param clickWorldLocation
-   * @returns
+   * 如果是直接创建，则需要记录位置，如果是通过已有位置创建，则还需要调整一次位置，此时不需要记录
+   * @param shouldRecordHistory
+   * @returns 创建节点的uuid
    */
   async addTextNodeByClick(
     clickWorldLocation: Vector,
     addToSections: Section[],
     selectCurrent = false,
+    shouldRecordHistory = true,
   ): Promise<string> {
     const autoFillColor = this.getAutoColor();
     const node = new TextNode(this.project, {
@@ -58,8 +61,9 @@ export class NodeAdder {
       }
       node.isSelected = true;
     }
-
-    this.project.historyManager.recordStep();
+    if (shouldRecordHistory) {
+      this.project.historyManager.recordStep();
+    }
     return node.uuid;
   }
 
@@ -100,7 +104,7 @@ export class NodeAdder {
       createLocation = entityRectangle.rightCenter.add(new Vector(distanceLength, 0));
     }
     addToSections = this.project.sectionMethods.getFatherSections(selectedEntity);
-    const uuid = await this.addTextNodeByClick(createLocation, addToSections, selectCurrent);
+    const uuid = await this.addTextNodeByClick(createLocation, addToSections, selectCurrent, false);
     const newNode = this.project.stageManager.getTextNodeByUUID(uuid);
     if (!newNode) {
       throw new Error("Failed to add node");
@@ -131,6 +135,7 @@ export class NodeAdder {
       newNode.moveTo(targetLocation);
     }
     this.project.historyManager.recordStep();
+    // 创建时没有记录，这里调整完位置再记录
     return uuid;
   }
 
