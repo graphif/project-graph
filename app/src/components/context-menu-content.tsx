@@ -734,7 +734,7 @@ export default function MyContextMenuContent() {
                   p.historyManager.recordStep();
                 }}
               >
-                <SquareSquare />
+                <Slash />
                 实线
               </Item>
               <Item
@@ -743,7 +743,7 @@ export default function MyContextMenuContent() {
                   p.historyManager.recordStep();
                 }}
               >
-                <SquareDashedBottomCode />
+                <Ellipsis />
                 虚线
               </Item>
               <Item

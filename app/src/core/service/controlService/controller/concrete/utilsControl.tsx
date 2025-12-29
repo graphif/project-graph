@@ -118,7 +118,7 @@ export class ControllerUtils {
         SubWindow.close(lastAutoCompleteWindowId);
         clickedNode!.isEditing = false;
         this.project.controller.isCameraLocked = false;
-        // this.project.historyManager.recordStep();
+        this.project.historyManager.recordStep();
 
         // 实验
         this.finishChangeTextNode(clickedNode);
