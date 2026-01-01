@@ -1,6 +1,7 @@
 import { Project, service } from "@/core/Project";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Direction } from "@/types/directions";
 import { ProgressNumber, Vector } from "@graphif/data-structures";
@@ -175,7 +176,7 @@ export class KeyboardOnlyTreeEngine {
     });
 
     // 设置新节点的字体大小
-    newNode.fontScaleLevel = newFontScaleLevel;
+    newNode.setFontScaleLevel(newFontScaleLevel);
     this.project.stageManager.add(newNode);
 
     // 如果是在框里，则把新生长的节点也纳入到框里
@@ -311,7 +312,7 @@ export class KeyboardOnlyTreeEngine {
     });
 
     // 设置新节点的字体大小
-    newNode.fontScaleLevel = newFontScaleLevel;
+    newNode.setFontScaleLevel(newFontScaleLevel);
     this.project.stageManager.add(newNode);
     // 如果是在框里，则把新生长的节点也纳入到框里
     const fatherSections = this.project.sectionMethods.getFatherSections(parent);
@@ -462,16 +463,24 @@ export class KeyboardOnlyTreeEngine {
     let sameDirectionSiblings: ConnectableEntity[] = [];
     switch (preDirection) {
       case "right":
-        sameDirectionSiblings = parentOutEdges.filter((edge) => edge.isLeftToRight()).map((edge) => edge.target);
+        sameDirectionSiblings = parentOutEdges
+          .filter((edge) => edge instanceof Edge && edge.isLeftToRight())
+          .map((edge) => edge.target);
         break;
       case "left":
-        sameDirectionSiblings = parentOutEdges.filter((edge) => edge.isRightToLeft()).map((edge) => edge.target);
+        sameDirectionSiblings = parentOutEdges
+          .filter((edge) => edge instanceof Edge && edge.isRightToLeft())
+          .map((edge) => edge.target);
         break;
       case "down":
-        sameDirectionSiblings = parentOutEdges.filter((edge) => edge.isTopToBottom()).map((edge) => edge.target);
+        sameDirectionSiblings = parentOutEdges
+          .filter((edge) => edge instanceof Edge && edge.isTopToBottom())
+          .map((edge) => edge.target);
         break;
       case "up":
-        sameDirectionSiblings = parentOutEdges.filter((edge) => edge.isBottomToTop()).map((edge) => edge.target);
+        sameDirectionSiblings = parentOutEdges
+          .filter((edge) => edge instanceof Edge && edge.isBottomToTop())
+          .map((edge) => edge.target);
         break;
     }
 

@@ -123,6 +123,8 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     this.collisionBox = collisionBox;
     this.color = color;
     this.sizeAdjust = sizeAdjust;
+    // 初始化字体大小缓存
+    this.updateFontSizeCache();
     // if (this.text.length < TextNode.enableResizeCharCount) {
     //   this.adjustSizeByText();
     // }
@@ -134,10 +136,27 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
   }
 
   /**
+   * 字体大小缓存，避免重复计算
+   */
+  private fontSizeCache: number = Renderer.FONT_SIZE;
+
+  /**
    * 获取当前字体大小
    */
   public getFontSize(): number {
-    return Renderer.FONT_SIZE * Math.pow(2, this.fontScaleLevel);
+    return this.fontSizeCache;
+  }
+
+  /**
+   * 更新字体大小缓存
+   */
+  private updateFontSizeCache(): void {
+    this.fontSizeCache = Renderer.FONT_SIZE * Math.pow(2, this.fontScaleLevel);
+  }
+
+  public setFontScaleLevel(level: number) {
+    this.fontScaleLevel = level;
+    this.updateFontSizeCache();
   }
 
   /**
@@ -145,6 +164,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
    */
   public increaseFontSize(): void {
     this.fontScaleLevel++;
+    this.updateFontSizeCache();
     if (this.sizeAdjust === "auto") {
       this.adjustSizeByText();
     }
@@ -155,6 +175,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
    */
   public decreaseFontSize(): void {
     this.fontScaleLevel--;
+    this.updateFontSizeCache();
     if (this.sizeAdjust === "auto") {
       this.adjustSizeByText();
     }
