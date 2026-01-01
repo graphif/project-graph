@@ -984,7 +984,8 @@ function ContextMenuTooltip({ keyId, children = <></> }: { keyId: string; childr
   useEffect(() => {
     activeProject?.keyBinds.get(keyId)?.then((key) => {
       if (key) {
-        const parsed = parseEmacsKey(key);
+        const keyStr = typeof key === "string" ? key : key.key;
+        const parsed = parseEmacsKey(keyStr);
         if (parsed.length > 0) {
           setKeySeq(parsed);
         } else {

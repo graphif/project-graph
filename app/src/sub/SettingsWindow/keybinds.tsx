@@ -2,6 +2,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import KeyBind from "@/components/ui/key-bind";
+import { Switch } from "@/components/ui/switch";
 import {
   Sidebar,
   SidebarContent,
@@ -42,8 +43,14 @@ import { createStore } from "@/utils/store";
 import { isMac } from "@/utils/platform";
 import { transEmacsKeyWinToMac } from "@/utils/emacs";
 
+interface KeyBindData {
+  id: string;
+  key: string;
+  isEnabled: boolean;
+}
+
 export default function KeyBindsPage() {
-  const [data, setData] = useState<[string, string][]>([]);
+  const [data, setData] = useState<KeyBindData[]>([]);
   const [currentGroup, setCurrentGroup] = useState<string>("search");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchResult, setSearchResult] = useState<string[]>([]);
@@ -51,6 +58,7 @@ export default function KeyBindsPage() {
     Fuse<{
       key: string;
       value: string;
+      isEnabled: boolean;
       i18n: { title: string; description: string };
     }>
   >(null);
@@ -62,14 +70,27 @@ export default function KeyBindsPage() {
   useEffect(() => {
     const loadKeyBinds = async () => {
       const store = await createStore("keybinds2.json");
-      const keyBinds: [string, string][] = [];
+      const keyBinds: KeyBindData[] = [];
       for (const keyBind of allKeyBinds.filter((keybindItem) => !keybindItem.isGlobal)) {
-        const savedKey = await store.get<string>(keyBind.id);
-        if (savedKey) {
-          keyBinds.push([keyBind.id, savedKey]);
+        const savedData = await store.get<any>(keyBind.id);
+        let key: string;
+        let isEnabled: boolean;
+
+        if (!savedData) {
+          // 没有保存过，走默认设置
+          key = keyBind.defaultKey;
+          isEnabled = keyBind.defaultEnabled !== false;
+        } else if (typeof savedData === "string") {
+          // 兼容旧数据结构
+          key = savedData;
+          isEnabled = keyBind.defaultEnabled !== false;
         } else {
-          keyBinds.push([keyBind.id, keyBind.defaultKey]);
+          // 已经保存过完整配置
+          key = savedData.key;
+          isEnabled = savedData.isEnabled !== false;
         }
+
+        keyBinds.push({ id: keyBind.id, key, isEnabled });
       }
       setData(keyBinds);
     };
@@ -80,15 +101,16 @@ export default function KeyBindsPage() {
     (async () => {
       fuse.current = new Fuse(
         data.map(
-          ([key, value]) =>
+          (item) =>
             ({
-              key,
-              value,
-              i18n: t(key, { returnObjects: true }),
+              key: item.id,
+              value: item.key,
+              isEnabled: item.isEnabled,
+              i18n: t(item.id, { returnObjects: true }),
             }) as any,
         ),
         {
-          keys: ["key", "value", "i18n.title", "i18n.description"],
+          keys: ["key", "value", "isEnabled", "i18n.title", "i18n.description"],
           useExtendedSearch: true,
         },
       );
@@ -108,9 +130,9 @@ export default function KeyBindsPage() {
   const getUnGroupedKeys = () => {
     return data
       .filter((item) => {
-        return !shortcutKeysGroups.some((group) => group.keys.includes(item[0]));
+        return !shortcutKeysGroups.some((group) => group.keys.includes(item.id));
       })
-      .map((item) => item[0]);
+      .map((item) => item.id);
   };
 
   const allGroups = [
@@ -130,54 +152,76 @@ export default function KeyBindsPage() {
 
   // 渲染快捷键项
   const renderKeyFields = (keys: string[]) =>
-    keys.map((id) => (
-      <Field
-        key={id}
-        icon={<Keyboard />}
-        title={t(`${id}.title`, { defaultValue: id })}
-        description={t(`${id}.description`, { defaultValue: "" })}
-        className="border-accent border-b"
-      >
-        <RotateCw
-          className="text-panel-details-text h-4 w-4 cursor-pointer opacity-0 transition-all hover:rotate-180 group-hover/field:opacity-100"
-          onClick={() => {
-            const keyBind = allKeyBinds.find((kb) => kb.id === id);
-            if (keyBind) {
-              let defaultValue = keyBind.defaultKey;
-              // 应用Mac键位转换
-              if (isMac) {
-                defaultValue = transEmacsKeyWinToMac(defaultValue);
-              }
-              setData((data) => data.map((item) => (item[0] === id ? [id, defaultValue as string] : item)));
-              KeyBindsUI.changeOneUIKeyBind(id, defaultValue);
-              Dialog.confirm(
-                `已重置为 '${defaultValue}'，但需要刷新页面后生效`,
-                "切换左侧选项卡即可更新页面显示，看到效果。",
-              );
-            }
-          }}
-        />
-        <KeyBind
-          defaultValue={data.find((item) => item[0] === id)?.[1]}
-          onChange={(value) => {
-            setData((data) =>
-              data.map((item) => {
-                if (item[0] === id) {
-                  return [id, value];
+    keys.map((id) => {
+      const keyBindData = data.find((item) => item.id === id);
+      const keyBind = allKeyBinds.find((kb) => kb.id === id);
+      return (
+        <Field
+          key={id}
+          icon={<Keyboard />}
+          title={t(`${id}.title`, { defaultValue: id })}
+          description={t(`${id}.description`, { defaultValue: "" })}
+          className="border-accent border-b"
+        >
+          <div className="flex items-center gap-2">
+            <RotateCw
+              className="text-panel-details-text h-4 w-4 cursor-pointer opacity-0 transition-all hover:rotate-180 group-hover/field:opacity-100"
+              onClick={() => {
+                if (keyBind) {
+                  let defaultValue = keyBind.defaultKey;
+                  // 应用Mac键位转换
+                  if (isMac) {
+                    defaultValue = transEmacsKeyWinToMac(defaultValue);
+                  }
+                  setData((data) => data.map((item) => (item.id === id ? { ...item, key: defaultValue } : item)));
+                  KeyBindsUI.changeOneUIKeyBind(id, defaultValue);
+                  Dialog.confirm(
+                    `已重置为 '${defaultValue}'，但需要刷新页面后生效`,
+                    "切换左侧选项卡即可更新页面显示，看到效果。",
+                  );
                 }
-                return item;
-              }),
-            );
-            const keyBindType = getKeyBindTypeById(id);
-            if (keyBindType === "global") {
-              Dialog.confirm(`已重置为 '${value}'，但需要重启软件才能生效`, "");
-            } else {
-              KeyBindsUI.changeOneUIKeyBind(id, value);
-            }
-          }}
-        />
-      </Field>
-    ));
+              }}
+            />
+            <KeyBind
+              defaultValue={keyBindData?.key}
+              onChange={(value) => {
+                setData((data) =>
+                  data.map((item) => {
+                    if (item.id === id) {
+                      return { ...item, key: value };
+                    }
+                    return item;
+                  }),
+                );
+                const keyBindType = getKeyBindTypeById(id);
+                if (keyBindType === "global") {
+                  Dialog.confirm(`已重置为 '${value}'，但需要重启软件才能生效`, "");
+                } else {
+                  KeyBindsUI.changeOneUIKeyBind(id, value);
+                }
+              }}
+            />
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-sm">启用</span>
+              <Switch
+                checked={keyBindData?.isEnabled || false}
+                onCheckedChange={async (checked) => {
+                  setData((data) =>
+                    data.map((item) => {
+                      if (item.id === id) {
+                        return { ...item, isEnabled: checked };
+                      }
+                      return item;
+                    }),
+                  );
+                  await KeyBindsUI.toggleEnabled(id);
+                }}
+              />
+            </div>
+          </div>
+        </Field>
+      );
+    });
 
   return (
     <div className="flex h-full">

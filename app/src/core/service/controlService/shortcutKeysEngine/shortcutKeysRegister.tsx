@@ -39,6 +39,8 @@ interface KeyBindItem {
   isGlobal?: boolean;
   // UI级别快捷键
   isUI?: boolean;
+  // 默认是否启用
+  defaultEnabled?: boolean;
 }
 
 export const allKeyBinds: KeyBindItem[] = [

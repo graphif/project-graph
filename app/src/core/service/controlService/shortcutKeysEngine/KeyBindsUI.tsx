@@ -20,12 +20,15 @@ export namespace KeyBindsUI {
     userEventQueue.enqueue(event);
   }
 
-  let allUIKeyBinds: {
+  interface UIKeyBind {
     id: string;
     key: string;
+    isEnabled: boolean;
     onPress: (project?: Project) => void;
     onRelease?: (project?: Project) => void;
-  }[] = [];
+  }
+
+  let allUIKeyBinds: UIKeyBind[] = [];
 
   const registerSet = new Set<string>();
 
@@ -37,19 +40,30 @@ export namespace KeyBindsUI {
   export async function registerAllUIKeyBinds() {
     const store = await createStore("keybinds2.json");
     for (const keybind of allKeyBinds.filter((keybindItem) => !keybindItem.isGlobal)) {
-      const savedKey = await store.get<string>(keybind.id);
-      if (!savedKey) {
+      const savedData = await store.get<any>(keybind.id);
+      let key: string;
+      let isEnabled: boolean;
+
+      if (!savedData) {
         // 没有保存过，走默认设置
-        let defaultKey = keybind.defaultKey;
+        key = keybind.defaultKey;
         if (isMac) {
-          defaultKey = transEmacsKeyWinToMac(defaultKey);
+          key = transEmacsKeyWinToMac(key);
         }
-        await store.set(keybind.id, defaultKey);
-        KeyBindsUI.registerOneUIKeyBind(keybind.id, defaultKey, keybind.onPress, keybind.onRelease);
+        isEnabled = keybind.defaultEnabled !== false;
+        await store.set(keybind.id, { key, isEnabled });
+      } else if (typeof savedData === "string") {
+        // 兼容旧数据结构
+        key = savedData;
+        isEnabled = keybind.defaultEnabled !== false;
+        await store.set(keybind.id, { key, isEnabled });
       } else {
-        // 已经保存过了，走保存值
-        KeyBindsUI.registerOneUIKeyBind(keybind.id, savedKey, keybind.onPress, keybind.onRelease);
+        // 已经保存过完整配置
+        key = savedData.key;
+        isEnabled = savedData.isEnabled !== false;
       }
+
+      KeyBindsUI.registerOneUIKeyBind(keybind.id, key, isEnabled, keybind.onPress, keybind.onRelease);
     }
     await store.save();
   }
@@ -58,14 +72,20 @@ export namespace KeyBindsUI {
    * 只会在软件启动的时候注册一次
    * 其他情况下，只会在修改快捷键的时候进行重新修改值
    */
-  export async function registerOneUIKeyBind(id: string, key: string, onPress = () => {}, onRelease?: () => void) {
+  export async function registerOneUIKeyBind(
+    id: string,
+    key: string,
+    isEnabled: boolean = true,
+    onPress = () => {},
+    onRelease?: () => void,
+  ) {
     if (registerSet.has(id)) {
       // 防止开发时热更新重复注册
       console.warn(`Keybind ${id} 已经注册过了`);
       return;
     }
     registerSet.add(id);
-    allUIKeyBinds.push({ id, key, onPress, onRelease });
+    allUIKeyBinds.push({ id, key, isEnabled, onPress, onRelease });
   }
 
   /**
@@ -82,8 +102,40 @@ export namespace KeyBindsUI {
     });
 
     const store = await createStore("keybinds2.json");
-    await store.set(id, key);
+    const currentConfig = await store.get<any>(id);
+    await store.set(id, {
+      key,
+      isEnabled: currentConfig?.isEnabled !== false,
+    });
     await store.save();
+  }
+
+  /**
+   * 用于切换快捷键启用状态
+   * @param id
+   * @returns 新的启用状态
+   */
+  export async function toggleEnabled(id: string): Promise<boolean> {
+    let newEnabledState = true;
+
+    allUIKeyBinds = allUIKeyBinds.map((it) => {
+      if (it.id === id) {
+        newEnabledState = !it.isEnabled;
+        return { ...it, isEnabled: newEnabledState };
+      }
+      return it;
+    });
+
+    const store = await createStore("keybinds2.json");
+    const currentConfig = await store.get<any>(id);
+    const keybind = allKeyBinds.find((kb) => kb.id === id);
+    await store.set(id, {
+      key: currentConfig?.key || keybind?.defaultKey || "",
+      isEnabled: newEnabledState,
+    });
+    await store.save();
+
+    return newEnabledState;
   }
 
   /**
@@ -140,6 +192,10 @@ export namespace KeyBindsUI {
     const activeProject = store.get(activeProjectAtom);
     let executed = false;
     for (const uiKeyBind of allUIKeyBinds) {
+      // 如果快捷键未启用，跳过
+      if (!uiKeyBind.isEnabled) {
+        continue;
+      }
       if (matchEmacsKeyPress(uiKeyBind.key, userEventQueue.arrayList)) {
         uiKeyBind.onPress(activeProject);
         // 如果是单键快捷键且有onRelease回调，记录为已按下状态
@@ -180,6 +236,10 @@ export namespace KeyBindsUI {
 
     // 检查是否有对应的单键快捷键需要处理松开事件
     for (const uiKeyBind of allUIKeyBinds) {
+      // 如果快捷键未启用，跳过
+      if (!uiKeyBind.isEnabled) {
+        continue;
+      }
       if (uiKeyBind.onRelease && uiKeyBind.key === key && pressedSingleKeyBinds.has(key)) {
         uiKeyBind.onRelease(activeProject);
         pressedSingleKeyBinds.delete(key);

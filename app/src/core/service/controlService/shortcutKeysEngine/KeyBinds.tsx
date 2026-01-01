@@ -7,6 +7,14 @@ import { Store } from "@tauri-apps/plugin-store";
 import { isKeyBindHasRelease } from "./shortcutKeysRegister";
 
 /**
+ * 快捷键配置接口
+ */
+interface KeyBindConfig {
+  key: string;
+  isEnabled: boolean;
+}
+
+/**
  * 用于管理快捷键绑定
  */
 @service("keyBinds")
@@ -17,34 +25,59 @@ export class KeyBinds {
     (async () => {
       this.store = await createStore("keybinds2.json");
       await this.project.keyBindsRegistrar.registerAllKeyBinds();
-      if ((await this.store.values()).find((it) => typeof it !== "string")) {
-        // 重置store
-        await this.store.clear();
-      }
+      // 不再重置store，支持新的数据结构
     })();
   }
 
-  async set(id: string, key: string) {
+  async set(id: string, config: KeyBindConfig) {
     if (!this.store) {
       throw new Error("Store not initialized.");
     }
-    await this.store.set(id, key);
+    await this.store.set(id, config);
     if (this.callbacks[id]) {
-      this.callbacks[id].forEach((callback) => callback(key));
+      this.callbacks[id].forEach((callback) => callback(config));
     }
   }
 
   /**
-   * 获取曾经设置过的快捷键 按法
+   * 获取快捷键配置
    * @param id
    * @returns
    */
-  async get(id: string): Promise<string | null> {
+  async get(id: string): Promise<KeyBindConfig | null> {
     if (!this.store) {
       throw new Error("Store not initialized.");
     }
-    const data = await this.store.get<string>(id);
-    return data || null;
+    const data = await this.store.get<KeyBindConfig | string>(id);
+    if (!data) {
+      return null;
+    }
+    // 兼容旧数据结构
+    if (typeof data === "string") {
+      return {
+        key: data,
+        isEnabled: true,
+      };
+    }
+    return data;
+  }
+
+  /**
+   * 切换快捷键启用状态
+   * @param id
+   * @returns
+   */
+  async toggleEnabled(id: string): Promise<boolean> {
+    const config = await this.get(id);
+    if (!config) {
+      return true;
+    }
+    const newConfig = {
+      ...config,
+      isEnabled: !config.isEnabled,
+    };
+    await this.set(id, newConfig);
+    return newConfig.isEnabled;
   }
 
   /**
@@ -53,7 +86,7 @@ export class KeyBinds {
    * @param callback
    * @returns
    */
-  watch(key: string, callback: (value: string) => void) {
+  watch(key: string, callback: (value: KeyBindConfig) => void) {
     if (!this.callbacks[key]) {
       this.callbacks[key] = [];
     }
@@ -75,13 +108,13 @@ export class KeyBinds {
 
   /**
    * 获取所有快捷键绑定
-   * @returns [[key, value], [key, value], ...], 具体来说是 [["copy", "C-c"], ["paste", "C-v"], ...]
+   * @returns [[key, value], [key, value], ...], 具体来说是 [["copy", {key: "C-c", isEnabled: true}], ...]
    */
   async entries() {
     if (!this.store) {
       throw new Error("Keybind Store not initialized.");
     }
-    return await this.store.entries<string>();
+    return await this.store.entries<KeyBindConfig | string>();
   }
 
   // 仅用于初始化软件时注册快捷键
@@ -96,9 +129,16 @@ export class KeyBinds {
    * @param defaultKey 例如 "C-A-S-t" 表示 Ctrl+Alt+Shift+t，如果是mac，会自动将C-和M-互换！！
    * @param onPress 按下后的执行函数
    * @param onReleaes 松开按键后执行的函数
+   * @param defaultEnabled 默认是否启用
    * @returns
    */
-  async create(id: string, defaultKey: string, onPress = () => {}, onReleaes?: () => void): Promise<_Bind> {
+  async create(
+    id: string,
+    defaultKey: string,
+    onPress = () => {},
+    onReleaes?: () => void,
+    defaultEnabled: boolean = true,
+  ): Promise<_Bind> {
     if (this.registeredIdSet.has(id)) {
       throw new Error(`Keybind ${id} 已经注册过了`);
     }
@@ -106,18 +146,31 @@ export class KeyBinds {
       defaultKey = transEmacsKeyWinToMac(defaultKey);
     }
     this.registeredIdSet.add(id);
-    let userSetKey = await this.get(id);
-    if (!userSetKey) {
+    let userConfig = await this.get(id);
+    if (!userConfig) {
       // 注册新的快捷键
-      await this.set(id, defaultKey);
-      userSetKey = defaultKey;
+      const newConfig: KeyBindConfig = {
+        key: defaultKey,
+        isEnabled: defaultEnabled,
+      };
+      await this.set(id, newConfig);
+      userConfig = newConfig;
+    } else if (typeof userConfig === "string") {
+      // 兼容旧数据结构
+      const newConfig: KeyBindConfig = {
+        key: userConfig,
+        isEnabled: defaultEnabled,
+      };
+      await this.set(id, newConfig);
+      userConfig = newConfig;
     }
-    const obj = new _Bind(this.project, id, userSetKey, onPress, onReleaes);
+    const obj = new _Bind(this.project, id, userConfig.key, userConfig.isEnabled, onPress, onReleaes);
     // 将绑定对象添加到集合中，以便后续清理
     this.bindSet.add(obj);
     // 监听快捷键变化
     this.watch(id, (value) => {
-      obj.key = value;
+      obj.key = value.key;
+      obj.isEnabled = value.isEnabled;
     });
     return obj;
   }
@@ -153,6 +206,8 @@ class _Bind {
   // @ts-expect-error // TODO: dblclick
   private lastMatch: number = 0;
   private events = new Queue<MouseEvent | KeyboardEvent | WheelEvent>();
+  // 是否启用
+  public isEnabled: boolean;
 
   private enqueue(event: MouseEvent | KeyboardEvent | WheelEvent) {
     // 队列里面最多20个（因为秘籍键长度最大20）
@@ -166,6 +221,11 @@ class _Bind {
    * 每发生一个事件，都会调用这个函数
    */
   private check() {
+    // 如果快捷键未启用，直接返回
+    if (!this.isEnabled) {
+      return;
+    }
+
     if (
       matchEmacsKeyPress(
         this.key,
@@ -199,9 +259,11 @@ class _Bind {
     private readonly project: Project,
     public id: string,
     public key: string,
+    isEnabled: boolean,
     private readonly onPress: () => void,
     private readonly onRelease?: () => void,
   ) {
+    this.isEnabled = isEnabled;
     // 有任意事件时，管它是什么，都放进队列
     this.project.canvas.element.addEventListener("mousedown", this.onMouseDown);
     this.project.canvas.element.addEventListener("keydown", this.onKeyDown);
