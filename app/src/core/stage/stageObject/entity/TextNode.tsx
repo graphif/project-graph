@@ -106,6 +106,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       collisionBox = new CollisionBox([new Rectangle(Vector.getZero(), Vector.getZero())]),
       color = Color.Transparent,
       sizeAdjust = "auto",
+      fontScaleLevel = 0,
     }: {
       uuid?: string;
       text?: string;
@@ -113,6 +114,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       color?: Color;
       sizeAdjust?: "auto" | "manual";
       collisionBox?: CollisionBox;
+      fontScaleLevel?: number;
     },
     public unknown = false,
   ) {
@@ -123,6 +125,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     this.collisionBox = collisionBox;
     this.color = color;
     this.sizeAdjust = sizeAdjust;
+    this.fontScaleLevel = fontScaleLevel;
     // 初始化字体大小缓存
     this.updateFontSizeCache();
     // if (this.text.length < TextNode.enableResizeCharCount) {
