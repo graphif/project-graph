@@ -139,7 +139,7 @@ export namespace KeyBindsUI {
   }
 
   /**
-   * 重置所有快捷键为默认值
+   * 重置所有快捷键为默认值（包括快捷键值和启用状态）
    */
   export async function resetAllKeyBinds() {
     const store = await createStore("keybinds2.json");
@@ -150,6 +150,92 @@ export namespace KeyBindsUI {
     allUIKeyBinds = [];
     // 重新注册所有快捷键
     await registerAllUIKeyBinds();
+  }
+
+  /**
+   * 仅重置所有快捷键的启用状态为默认值
+   */
+  export async function resetAllKeyBindsEnabledState() {
+    const store = await createStore("keybinds2.json");
+
+    // 遍历所有非全局快捷键
+    for (const keybind of allKeyBinds.filter((keybindItem) => !keybindItem.isGlobal)) {
+      const currentConfig = await store.get<any>(keybind.id);
+
+      // 如果存在当前配置，只重置isEnabled字段，保留key字段
+      if (currentConfig) {
+        await store.set(keybind.id, {
+          key: currentConfig.key,
+          isEnabled: keybind.defaultEnabled !== false,
+        });
+      } else {
+        // 如果不存在配置，使用默认值创建
+        let defaultValue = keybind.defaultKey;
+        if (isMac) {
+          defaultValue = transEmacsKeyWinToMac(defaultValue);
+        }
+        await store.set(keybind.id, {
+          key: defaultValue,
+          isEnabled: keybind.defaultEnabled !== false,
+        });
+      }
+    }
+
+    await store.save();
+
+    // 更新内存中的快捷键配置
+    for (const uiKeyBind of allUIKeyBinds) {
+      const keybind = allKeyBinds.find((kb) => kb.id === uiKeyBind.id);
+      if (keybind) {
+        uiKeyBind.isEnabled = keybind.defaultEnabled !== false;
+      }
+    }
+  }
+
+  /**
+   * 仅重置所有快捷键的值为默认值，保留启用状态
+   */
+  export async function resetAllKeyBindsValues() {
+    const store = await createStore("keybinds2.json");
+
+    // 遍历所有非全局快捷键
+    for (const keybind of allKeyBinds.filter((keybindItem) => !keybindItem.isGlobal)) {
+      const currentConfig = await store.get<any>(keybind.id);
+
+      // 应用Mac键位转换
+      let defaultValue = keybind.defaultKey;
+      if (isMac) {
+        defaultValue = transEmacsKeyWinToMac(defaultValue);
+      }
+
+      // 如果存在当前配置，只重置key字段，保留isEnabled字段
+      if (currentConfig) {
+        await store.set(keybind.id, {
+          key: defaultValue,
+          isEnabled: currentConfig.isEnabled !== false,
+        });
+      } else {
+        // 如果不存在配置，使用默认值创建
+        await store.set(keybind.id, {
+          key: defaultValue,
+          isEnabled: keybind.defaultEnabled !== false,
+        });
+      }
+    }
+
+    await store.save();
+
+    // 更新内存中的快捷键配置
+    for (const uiKeyBind of allUIKeyBinds) {
+      const keybind = allKeyBinds.find((kb) => kb.id === uiKeyBind.id);
+      if (keybind) {
+        let defaultValue = keybind.defaultKey;
+        if (isMac) {
+          defaultValue = transEmacsKeyWinToMac(defaultValue);
+        }
+        uiKeyBind.key = defaultValue;
+      }
+    }
   }
 
   // 跟踪当前按下的单键快捷键

@@ -256,6 +256,143 @@ export default function KeyBindsPage() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
+                <div className="bg-border my-2 h-px w-full"></div>
+                <div className="text-muted-foreground p-2 text-sm">重置选项：</div>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    onClick={async () => {
+                      const confirmed = await Dialog.confirm(
+                        "确认重置所有快捷键？",
+                        "此操作将重置所有快捷键的值和启用状态为默认值，是否继续？",
+                      );
+                      if (confirmed) {
+                        await KeyBindsUI.resetAllKeyBinds();
+                        // 重新加载数据
+                        const store = await createStore("keybinds2.json");
+                        const keyBinds: KeyBindData[] = [];
+                        for (const keyBind of allKeyBinds.filter((keybindItem) => !keybindItem.isGlobal)) {
+                          const savedData = await store.get<any>(keyBind.id);
+                          let key: string;
+                          let isEnabled: boolean;
+
+                          if (!savedData) {
+                            // 没有保存过，走默认设置
+                            key = keyBind.defaultKey;
+                            isEnabled = keyBind.defaultEnabled !== false;
+                          } else if (typeof savedData === "string") {
+                            // 兼容旧数据结构
+                            key = savedData;
+                            isEnabled = keyBind.defaultEnabled !== false;
+                          } else {
+                            // 已经保存过完整配置
+                            key = savedData.key;
+                            isEnabled = savedData.isEnabled !== false;
+                          }
+
+                          keyBinds.push({ id: keyBind.id, key, isEnabled });
+                        }
+                        setData(keyBinds);
+                        Dialog.confirm("已重置所有快捷键", "所有快捷键的值和启用状态已恢复为默认值。");
+                      }
+                    }}
+                  >
+                    <div>
+                      <RotateCw className="h-4 w-4" />
+                      <span>重置所有（值+状态）</span>
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    onClick={async () => {
+                      const confirmed = await Dialog.confirm(
+                        "确认仅重置快捷键值？",
+                        "此操作将仅重置所有快捷键的值为默认值，保留当前启用状态，是否继续？",
+                      );
+                      if (confirmed) {
+                        await KeyBindsUI.resetAllKeyBindsValues();
+                        // 重新加载数据
+                        const store = await createStore("keybinds2.json");
+                        const keyBinds: KeyBindData[] = [];
+                        for (const keyBind of allKeyBinds.filter((keybindItem) => !keybindItem.isGlobal)) {
+                          const savedData = await store.get<any>(keyBind.id);
+                          let key: string;
+                          let isEnabled: boolean;
+
+                          if (!savedData) {
+                            // 没有保存过，走默认设置
+                            key = keyBind.defaultKey;
+                            isEnabled = keyBind.defaultEnabled !== false;
+                          } else if (typeof savedData === "string") {
+                            // 兼容旧数据结构
+                            key = savedData;
+                            isEnabled = keyBind.defaultEnabled !== false;
+                          } else {
+                            // 已经保存过完整配置
+                            key = savedData.key;
+                            isEnabled = savedData.isEnabled !== false;
+                          }
+
+                          keyBinds.push({ id: keyBind.id, key, isEnabled });
+                        }
+                        setData(keyBinds);
+                        Dialog.confirm("已重置快捷键值", "所有快捷键的值已恢复为默认值，启用状态保持不变。");
+                      }
+                    }}
+                  >
+                    <div>
+                      <Keyboard className="h-4 w-4" />
+                      <span>仅重置快捷键值</span>
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    onClick={async () => {
+                      const confirmed = await Dialog.confirm(
+                        "确认仅重置启用状态？",
+                        "此操作将仅重置所有快捷键的启用状态为默认值，保留当前快捷键值，是否继续？",
+                      );
+                      if (confirmed) {
+                        await KeyBindsUI.resetAllKeyBindsEnabledState();
+                        // 重新加载数据
+                        const store = await createStore("keybinds2.json");
+                        const keyBinds: KeyBindData[] = [];
+                        for (const keyBind of allKeyBinds.filter((keybindItem) => !keybindItem.isGlobal)) {
+                          const savedData = await store.get<any>(keyBind.id);
+                          let key: string;
+                          let isEnabled: boolean;
+
+                          if (!savedData) {
+                            // 没有保存过，走默认设置
+                            key = keyBind.defaultKey;
+                            isEnabled = keyBind.defaultEnabled !== false;
+                          } else if (typeof savedData === "string") {
+                            // 兼容旧数据结构
+                            key = savedData;
+                            isEnabled = keyBind.defaultEnabled !== false;
+                          } else {
+                            // 已经保存过完整配置
+                            key = savedData.key;
+                            isEnabled = savedData.isEnabled !== false;
+                          }
+
+                          keyBinds.push({ id: keyBind.id, key, isEnabled });
+                        }
+                        setData(keyBinds);
+                        Dialog.confirm("已重置启用状态", "所有快捷键的启用状态已恢复为默认值，快捷键值保持不变。");
+                      }
+                    }}
+                  >
+                    <div>
+                      <Switch className="h-4 w-4" />
+                      <span>仅重置启用状态</span>
+                    </div>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
