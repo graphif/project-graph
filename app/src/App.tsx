@@ -380,7 +380,7 @@ export default function App() {
 
   return (
     <div
-      className="bg-stage-background relative flex h-full w-full flex-col overflow-clip sm:gap-2 sm:p-2"
+      className="bg-stage-background relative flex h-full w-full flex-col overflow-clip rounded-lg sm:gap-2 sm:p-2"
       onContextMenu={(e) => e.preventDefault()}
     >
       {/* 菜单 | 标签页 | ...移动窗口区域... | 窗口控制按钮 */}
