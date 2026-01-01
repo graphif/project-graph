@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import z from "zod";
 
 export const settingsSchema = z.object({
-  language: z.union([z.literal("en"), z.literal("zh_CN"), z.literal("zh_TW")]).default("zh_CN"),
+  language: z.union([z.literal("en"), z.literal("zh_CN"), z.literal("zh_TW"), z.literal("zh_TWC")]).default("zh_CN"),
   isClassroomMode: z.boolean().default(false),
   windowBackgroundAlpha: z.number().min(0).max(1).default(0.9),
   windowBackgroundOpacityAfterOpenClickThrough: z.number().min(0).max(1).default(0),

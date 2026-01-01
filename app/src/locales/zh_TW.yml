@@ -190,6 +190,7 @@ settings:
 
 
         繁體中文'
+      zh_TWC: 接地氣繁體中文
   showTipsOnUI:
     title: 在 UI 中顯示提示信息
     description: '開啟後，屏幕上會有一行提示文本。

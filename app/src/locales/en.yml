@@ -117,6 +117,7 @@ settings:
       en: English
       zh_CN: Simplified Chinese
       zh_TW: Traditional Chinese
+      zh_TWC: 接地气繁体中文
   showTipsOnUI:
     title: Show Tips on UI
     description: |
