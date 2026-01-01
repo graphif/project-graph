@@ -583,6 +583,8 @@ const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "splitTextNodes",
       "mergeTextNodes",
       "swapTextAndDetails",
+      "decreaseFontSize",
+      "increaseFontSize",
     ],
   },
   {

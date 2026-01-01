@@ -1490,6 +1490,12 @@ keyBinds:
   toggleTextNodeSizeMode:
     title: 將選中的文本節點，切換大小調整模式
     description: 僅對文本節點生效，auto模式：輸入文字不能自動換行，manual模式：寬度為框的寬度，寬度超出自動換行
+  decreaseFontSize:
+    title: 減小選中的文本節點字體大小
+    description: 僅對文本節點生效，按下Ctrl+-減小選中的文本節點字體大小
+  increaseFontSize:
+    title: 增大選中的文本節點字體大小
+    description: 僅對文本節點生效，按下Ctrl+=增大選中的文本節點字體大小
   splitTextNodes:
     title: 將選中的文本節點，剋(kēi)成小塊
     description: 僅對文本節點生效，根據標點符號，空格、換行符等進行分割，將其分割成小塊

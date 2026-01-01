@@ -1175,6 +1175,12 @@ keyBinds:
   exitSoftware:
     title: Exit Software
     description: Exit the software when pressed
+  decreaseFontSize:
+    title: Decrease Font Size
+    description: Decrease the font size of selected text nodes. Only works on text nodes. Press Ctrl+- to decrease.
+  increaseFontSize:
+    title: Increase Font Size
+    description: Increase the font size of selected text nodes. Only works on text nodes. Press Ctrl+= to increase.
   checkoutProtectPrivacy:
     title: Enter/Exit Privacy Protection Mode
     description: |

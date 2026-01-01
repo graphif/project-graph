@@ -1308,6 +1308,38 @@ export const allKeyBinds: KeyBindItem[] = [
     },
   },
 
+  /*------- 字体大小调整 -------*/
+  {
+    id: "decreaseFontSize",
+    defaultKey: "C--",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      const selectedTextNodes = project!.stageManager
+        .getSelectedEntities()
+        .filter((node) => node instanceof TextNode) as TextNode[];
+      if (selectedTextNodes.length === 0) return;
+      project!.historyManager.recordStep();
+      for (const node of selectedTextNodes) {
+        node.decreaseFontSize();
+      }
+    },
+  },
+  {
+    id: "increaseFontSize",
+    defaultKey: "C-=",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      const selectedTextNodes = project!.stageManager
+        .getSelectedEntities()
+        .filter((node) => node instanceof TextNode) as TextNode[];
+      if (selectedTextNodes.length === 0) return;
+      project!.historyManager.recordStep();
+      for (const node of selectedTextNodes) {
+        node.increaseFontSize();
+      }
+    },
+  },
+
   /*------- 节点相关 -------*/
   {
     id: "graftNodeToTree",
