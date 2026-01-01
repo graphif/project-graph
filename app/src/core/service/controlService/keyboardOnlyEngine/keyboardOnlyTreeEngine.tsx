@@ -159,6 +159,9 @@ export class KeyboardOnlyTreeEngine {
       }
     }
 
+    // 计算新节点的字体大小
+    const newFontScaleLevel = this.calculateNewNodeFontScaleLevel(rootNode, direction);
+
     // 创建位置寻找完毕
     const newNode = new TextNode(this.project, {
       text: defaultText,
@@ -170,6 +173,9 @@ export class KeyboardOnlyTreeEngine {
       ]),
       sizeAdjust: (rootNode instanceof TextNode ? rootNode.sizeAdjust : "auto") as "auto" | "manual",
     });
+
+    // 设置新节点的字体大小
+    newNode.fontScaleLevel = newFontScaleLevel;
     this.project.stageManager.add(newNode);
 
     // 如果是在框里，则把新生长的节点也纳入到框里
@@ -287,6 +293,10 @@ export class KeyboardOnlyTreeEngine {
     // 当前选择的节点的正下方创建一个节点
     // 找到创建点
     const newLocation = currentSelectNode.collisionBox.getRectangle().leftBottom.add(new Vector(0, 1));
+
+    // 计算新节点的字体大小
+    const newFontScaleLevel = this.calculateNewNodeFontScaleLevel(parent, preDirection);
+
     const newNode = new TextNode(this.project, {
       text: nextNodeName,
       details: [],
@@ -299,6 +309,9 @@ export class KeyboardOnlyTreeEngine {
       ]),
       sizeAdjust: parent instanceof TextNode ? (parent.sizeAdjust as "auto" | "manual") : "auto",
     });
+
+    // 设置新节点的字体大小
+    newNode.fontScaleLevel = newFontScaleLevel;
     this.project.stageManager.add(newNode);
     // 如果是在框里，则把新生长的节点也纳入到框里
     const fatherSections = this.project.sectionMethods.getFatherSections(parent);
@@ -423,6 +436,60 @@ export class KeyboardOnlyTreeEngine {
    */
   onDeleteCurrentNode() {
     // TODO
+  }
+
+  /**
+   * 计算新节点的字体大小
+   * @param parentNode 父节点
+   * @param preDirection 预方向
+   * @returns 新节点的字体缩放级别
+   */
+  private calculateNewNodeFontScaleLevel(
+    parentNode: ConnectableEntity,
+    preDirection: "right" | "left" | "down" | "up",
+  ): number {
+    // 默认值
+    let newFontScaleLevel = 0;
+
+    // 如果父节点是文本节点，先使用父节点的字体大小
+    if (parentNode instanceof TextNode) {
+      newFontScaleLevel = parentNode.fontScaleLevel;
+    }
+
+    // 获取父节点的出边
+    const parentOutEdges = this.project.graphMethods.getOutgoingEdges(parentNode);
+    // 根据预方向过滤出同方向的兄弟节点
+    let sameDirectionSiblings: ConnectableEntity[] = [];
+    switch (preDirection) {
+      case "right":
+        sameDirectionSiblings = parentOutEdges.filter((edge) => edge.isLeftToRight()).map((edge) => edge.target);
+        break;
+      case "left":
+        sameDirectionSiblings = parentOutEdges.filter((edge) => edge.isRightToLeft()).map((edge) => edge.target);
+        break;
+      case "down":
+        sameDirectionSiblings = parentOutEdges.filter((edge) => edge.isTopToBottom()).map((edge) => edge.target);
+        break;
+      case "up":
+        sameDirectionSiblings = parentOutEdges.filter((edge) => edge.isBottomToTop()).map((edge) => edge.target);
+        break;
+    }
+
+    // 过滤出文本节点类型的兄弟节点
+    const textNodeSiblings = sameDirectionSiblings.filter((sibling) => sibling instanceof TextNode) as TextNode[];
+
+    // 检查兄弟节点的字体大小是否一致
+    if (textNodeSiblings.length > 0) {
+      const firstSiblingFontScale = textNodeSiblings[0].fontScaleLevel;
+      const allSame = textNodeSiblings.every((sibling) => sibling.fontScaleLevel === firstSiblingFontScale);
+
+      // 如果所有同方向兄弟节点字体大小一致，使用相同大小
+      if (allSame) {
+        newFontScaleLevel = firstSiblingFontScale;
+      }
+    }
+
+    return newFontScaleLevel;
   }
 }
 
