@@ -51,10 +51,7 @@ export class SectionRenderer {
   private renderNoCollapse(section: Section) {
     let borderWidth = 2 * this.project.camera.currentScale;
     if (Settings.sectionBitTitleRenderType !== "none") {
-      borderWidth =
-        this.project.camera.currentScale > Settings.ignoreTextNodeTextRenderLessThanCameraScale
-          ? 2 * this.project.camera.currentScale
-          : 2;
+      borderWidth = this.project.camera.currentScale > 0.065 ? 2 * this.project.camera.currentScale : 2;
     }
     // 注意：这里只能画边框
     this.project.shapeRenderer.renderRect(
@@ -68,10 +65,7 @@ export class SectionRenderer {
       Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
     );
 
-    if (
-      this.project.camera.currentScale > Settings.ignoreTextNodeTextRenderLessThanCameraScale &&
-      !section.isEditingTitle
-    ) {
+    if (this.project.camera.currentScale > 0.065 && !section.isEditingTitle) {
       // 正常显示标题
       this.project.textRenderer.renderText(
         section.text,

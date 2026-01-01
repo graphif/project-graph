@@ -145,9 +145,7 @@ export class MultiTargetUndirectedEdgeRenderer {
       convexPoints.map((point) => this.project.renderer.transformWorld2View(point)),
       edgeColor.toNewAlpha(0.5),
       // 当视野缩放足够小时，边框固定粗细
-      this.project.camera.currentScale <= Settings.ignoreTextNodeTextRenderLessThanCameraScale
-        ? 8
-        : 8 * this.project.camera.currentScale,
+      this.project.camera.currentScale <= 0.065 ? 8 : 8 * this.project.camera.currentScale,
     );
   }
 
@@ -194,7 +192,7 @@ export class MultiTargetUndirectedEdgeRenderer {
       Color.Transparent,
       edgeColor.toNewAlpha(0.5),
       // 当视野缩放足够小时，边框固定粗细
-      this.project.camera.currentScale <= Settings.ignoreTextNodeTextRenderLessThanCameraScale
+      this.project.camera.currentScale <= Settings.ignoreTextNodeTextRenderLessThanFontSize
         ? 8
         : 8 * this.project.camera.currentScale,
     );

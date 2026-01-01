@@ -35,7 +35,7 @@ export const settingsSchema = z.object({
   autoRefreshStageByMouseAction: z.boolean().default(true),
   isPauseRenderWhenManipulateOvertime: z.boolean().default(false),
   renderOverTimeWhenNoManipulateTime: z.number().min(1).max(10).int().default(5),
-  ignoreTextNodeTextRenderLessThanCameraScale: z.number().min(0.01).max(0.3).default(0.065),
+  ignoreTextNodeTextRenderLessThanFontSize: z.number().min(1).max(15).default(5),
   sectionBigTitleThresholdRatio: z.number().min(0).max(1).default(0.15),
   sectionBigTitleCameraScaleThreshold: z.number().min(0.01).max(1).default(0.25),
   sectionBigTitleOpacity: z.number().min(0).max(1).default(0.5),

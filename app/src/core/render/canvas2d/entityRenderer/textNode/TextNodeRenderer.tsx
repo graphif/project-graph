@@ -22,7 +22,8 @@ export class TextNodeRenderer {
 
     // 节点身体矩形
     let fillColor = node.color;
-    if (this.project.camera.currentScale < Settings.ignoreTextNodeTextRenderLessThanCameraScale && fillColor.a === 0) {
+    let renderedFontSize = node.getFontSize() * this.project.camera.currentScale;
+    if (renderedFontSize < Settings.ignoreTextNodeTextRenderLessThanFontSize && fillColor.a === 0) {
       const color = this.project.stageStyleManager.currentStyle.StageObjectBorder.clone();
       color.a = 0.2;
       fillColor = color;
@@ -49,7 +50,8 @@ export class TextNodeRenderer {
     }
 
     // 视野缩放过小就不渲染内部文字
-    if (this.project.camera.currentScale > Settings.ignoreTextNodeTextRenderLessThanCameraScale) {
+    renderedFontSize = node.getFontSize() * this.project.camera.currentScale;
+    if (renderedFontSize > Settings.ignoreTextNodeTextRenderLessThanFontSize) {
       this.renderTextNodeTextLayer(node);
     }
 

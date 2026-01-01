@@ -393,9 +393,9 @@ settings:
     description: '超過一定時間未做出舞台操作，舞台渲染會停止，以節省CPU/GPU資源。
 
       必須在上述“逾時暫停渲染”選項開啟後才會生效。'
-  ignoreTextNodeTextRenderLessThanCameraScale:
-    title: 當攝影機縮放倍數小於一定值時，不渲染文字節點內的文字及其詳細資訊
-    description: '開啟後，當攝影機縮放倍數小於一定值時，(也就是觀察宏觀狀態時)
+  ignoreTextNodeTextRenderLessThanFontSize:
+    title: 當渲染字體大小小於一定值時，不渲染文字節點內的文字及其詳細資訊
+    description: '開啟後，當文字節點的渲染字體大小小於一定值時，(也就是觀察宏觀狀態時)
 
       不渲染文字節點內的文字及其詳細資訊，這樣可以提高渲染效能，但會導致文字節點的文字內容無法顯示'
   isEnableEntityCollision:

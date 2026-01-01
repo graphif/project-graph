@@ -360,10 +360,10 @@ settings:
     description: |
       超过一定时间未做出舞台操作，舞台渲染会停止，以节省CPU/GPU资源。
       必须在上述“超时暂停渲染”选项开启后才会生效。
-  ignoreTextNodeTextRenderLessThanCameraScale:
-    title: 当摄像机缩放倍数小于一定值时，不渲染文本节点内的文字及其详细信息
+  ignoreTextNodeTextRenderLessThanFontSize:
+    title: 当渲染字体大小小于一定值时，不渲染文本节点内的文字及其详细信息
     description: |
-      开启后，当摄像机缩放倍数小于一定值时，(也就是观察宏观状态时)
+      开启后，当文本节点的渲染字体大小小于一定值时，(也就是观察宏观状态时)
       不渲染文本节点内的文字及其详细信息，这样可以提高渲染性能，但会导致文本节点的文字内容无法显示
   isEnableEntityCollision:
     title: 实体碰撞检测

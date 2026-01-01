@@ -110,7 +110,7 @@ export class EntityRenderer {
       }
       this.project.sectionRenderer.render(section);
       // details右上角小按钮
-      if (this.project.camera.currentScale > Settings.ignoreTextNodeTextRenderLessThanCameraScale) {
+      if (this.project.camera.currentScale > 0.065) {
         this.project.entityDetailsButtonRenderer.render(section);
       }
       this.renderEntityDebug(section);
@@ -151,7 +151,7 @@ export class EntityRenderer {
       this.project.referenceBlockRenderer.render(entity);
     }
     // details右上角小按钮
-    if (this.project.camera.currentScale > Settings.ignoreTextNodeTextRenderLessThanCameraScale) {
+    if (this.project.camera.currentScale > Settings.ignoreTextNodeTextRenderLessThanFontSize) {
       this.project.entityDetailsButtonRenderer.render(entity);
     }
     // 渲染详细信息

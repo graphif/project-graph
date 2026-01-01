@@ -126,7 +126,7 @@ export const settingsIcons = {
   autoRefreshStageByMouseAction: RefreshCcwDot,
   isPauseRenderWhenManipulateOvertime: Hourglass,
   renderOverTimeWhenNoManipulateTime: Hourglass,
-  ignoreTextNodeTextRenderLessThanCameraScale: ScanText,
+  ignoreTextNodeTextRenderLessThanFontSize: ScanText,
   cacheTextAsBitmap: Layers,
   textCacheSize: MemoryStick,
   textScalingBehavior: Text,

@@ -301,7 +301,7 @@ const categories = {
       "isPauseRenderWhenManipulateOvertime",
       "renderOverTimeWhenNoManipulateTime",
       "scaleExponent",
-      "ignoreTextNodeTextRenderLessThanCameraScale",
+      "ignoreTextNodeTextRenderLessThanFontSize",
       "cacheTextAsBitmap",
       "textCacheSize",
       "textScalingBehavior",
