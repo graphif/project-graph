@@ -13,6 +13,7 @@ import {
   Map as MapIcon,
   Settings as SettingsIcon,
   TableProperties,
+  AlertTriangle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -24,6 +25,7 @@ import { join, tempDir } from "@tauri-apps/api/path";
 import { URI } from "vscode-uri";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
 import { isMac } from "@/utils/platform";
+import { cpuInfo } from "tauri-plugin-system-info-api";
 
 export default function WelcomePage() {
   const [recentFiles, setRecentFiles] = useState<RecentFileManager.RecentFile[]>([]);
@@ -32,11 +34,19 @@ export default function WelcomePage() {
   const [isDownloadingGuideFile, setIsDownloadingGuideFile] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [lastClickFileURIPath, setLastClickFileURIPath] = useState("");
+  const [isAmdCpu, setIsAmdCpu] = useState(false);
 
   useEffect(() => {
     refresh();
     (async () => {
       setAppVersion(await getVersion());
+      try {
+        const cpu = await cpuInfo();
+        const cpuBrand = cpu.cpus[0].brand;
+        setIsAmdCpu(cpuBrand.includes("AMD"));
+      } catch (e) {
+        console.error("检测CPU信息失败:", e);
+      }
     })();
   }, []);
 
@@ -64,6 +74,12 @@ export default function WelcomePage() {
             </a>
           </div>
           <div className="hidden text-xs opacity-50 sm:block sm:text-lg">{t("slogan")}</div>
+          {isAmdCpu && (
+            <div className="flex items-center gap-2 rounded-lg border p-3 text-sm text-red-600">
+              <AlertTriangle />
+              <span>您的设备（AMD CPU）可能无法正常使用该软件</span>
+            </div>
+          )}
         </div>
         {/* 底部区域 */}
         <div className="flex sm:gap-16">
