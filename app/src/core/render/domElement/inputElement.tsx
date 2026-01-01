@@ -186,6 +186,15 @@ export class InputElement {
         this.project.controller.resetCountdownTimer();
         onChange(textareaElement.value, textareaElement);
       });
+
+      // 在输入之前判断是否进行了撤销操作，此监听器在keydown之后触发
+      let hasTextareaUndone = false;
+      textareaElement.addEventListener("beforeinput", (event: InputEvent) => {
+        if (event.inputType === "historyUndo") {
+          hasTextareaUndone = true;
+        }
+      });
+
       let isComposing = false;
       textareaElement.addEventListener("compositionstart", () => {
         isComposing = true;
@@ -278,6 +287,16 @@ export class InputElement {
           resolve(textareaElement.value);
           onChange(textareaElement.value, textareaElement);
           removeElement();
+        } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+          // 如果按下了撤销键但没撤销，则textarea撤销栈已空，认为用户的想法是退出编辑
+          setTimeout(() => {
+            if (!hasTextareaUndone) {
+              resolve(textareaElement.value);
+              onChange(textareaElement.value, textareaElement);
+              removeElement();
+            }
+          }, 10); // 延迟10ms再检测撤销操作是否完成
+          hasTextareaUndone = false; // 重置标志
         }
 
         const breakLine = () => {
