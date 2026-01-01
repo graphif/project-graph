@@ -86,6 +86,7 @@ export const allKeyBinds: KeyBindItem[] = [
       }
     },
     isUI: true,
+    defaultEnabled: false,
   },
 
   /*------- 课堂/专注模式 -------*/
@@ -101,6 +102,7 @@ export const allKeyBinds: KeyBindItem[] = [
       Settings.isClassroomMode = !Settings.isClassroomMode;
     },
     isUI: true,
+    defaultEnabled: false,
   },
 
   /*------- 相机/视图 -------*/
@@ -693,6 +695,7 @@ export const allKeyBinds: KeyBindItem[] = [
       createFileAtCurrentProjectDir(activeProject, async () => {});
     },
     isUI: true,
+    defaultEnabled: false,
   },
   {
     id: "openFile",
