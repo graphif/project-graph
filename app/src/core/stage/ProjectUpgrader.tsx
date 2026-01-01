@@ -11,7 +11,7 @@ import { DetailsManager } from "./stageObject/tools/entityDetailsManager";
 
 export namespace ProjectUpgrader {
   /** N系列的最新版本 */
-  export const NLatestVersion = "2.1.0";
+  export const NLatestVersion = "2.2.0";
 
   /**
    * 比较两个版本号字符串（格式：x.y.z）
@@ -369,6 +369,11 @@ export namespace ProjectUpgrader {
       [data, metadata] = convertN1toN2(data, metadata);
     }
 
+    // 如果版本小于 2.2.0，需要升级
+    if (compareVersion(currentVersion, "2.2.0") < 0) {
+      [data, metadata] = convertN2toN3(data, metadata);
+    }
+
     return [data, metadata];
   }
 
@@ -389,6 +394,25 @@ export namespace ProjectUpgrader {
       }
     }
     return [data, { ...metadata, version: "2.1.0" }];
+  }
+
+  /**
+   * 将 2.1.0 版本升级到 2.2.0 版本
+   * @param data 2.1.0版本数据
+   * @param metadata 2.1.0版本metadata
+   * @returns 2.2.0版本数据和metadata
+   */
+  function convertN2toN3(data: any[], metadata: any): [any[], ProjectMetadata] {
+    // 为TextNode添加fontScaleLevel属性，默认值为0
+    for (const item of data) {
+      if (item._ === "TextNode") {
+        // 如果fontScaleLevel属性不存在，添加默认值
+        if (item.fontScaleLevel === undefined) {
+          item.fontScaleLevel = 0;
+        }
+      }
+    }
+    return [data, { ...metadata, version: "2.2.0" }];
   }
 
   export async function convertVAnyToN1(json: Record<string, any>, uri: URI) {

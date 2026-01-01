@@ -36,6 +36,13 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
    */
   public isAiGenerating: boolean = false;
 
+  /**
+   * 字体缩放级别，整数，基准值为0，对应默认字体大小
+   * 计算公式：finalFontSize = Renderer.FONT_SIZE * Math.pow(2, fontScaleLevel)
+   */
+  @serializable
+  public fontScaleLevel: number = 0;
+
   public static enableResizeCharCount = 20;
 
   /**
@@ -127,12 +134,39 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
   }
 
   /**
+   * 获取当前字体大小
+   */
+  public getFontSize(): number {
+    return Renderer.FONT_SIZE * Math.pow(2, this.fontScaleLevel);
+  }
+
+  /**
+   * 放大字体
+   */
+  public increaseFontSize(): void {
+    this.fontScaleLevel++;
+    if (this.sizeAdjust === "auto") {
+      this.adjustSizeByText();
+    }
+  }
+
+  /**
+   * 缩小字体
+   */
+  public decreaseFontSize(): void {
+    this.fontScaleLevel--;
+    if (this.sizeAdjust === "auto") {
+      this.adjustSizeByText();
+    }
+  }
+
+  /**
    * 调整后的矩形是当前文字加了一圈padding之后的大小
    */
   private adjustSizeByText() {
     this.collisionBox.shapes[0] = new Rectangle(
       this.rectangle.location.clone(),
-      getMultiLineTextSize(this.text, Renderer.FONT_SIZE, 1.5).add(Vector.same(Renderer.NODE_PADDING).multiply(2)),
+      getMultiLineTextSize(this.text, this.getFontSize(), 1.5).add(Vector.same(Renderer.NODE_PADDING).multiply(2)),
     );
   }
 
@@ -169,7 +203,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     newSize.x = Math.max(75, newSize.x);
     const newTextSize = this.project.textRenderer.measureMultiLineTextSize(
       this.text,
-      Renderer.FONT_SIZE,
+      this.getFontSize(),
       newSize.x - Renderer.NODE_PADDING * 2,
       1.5,
     );

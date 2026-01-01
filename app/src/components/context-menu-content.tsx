@@ -653,6 +653,34 @@ export default function MyContextMenuContent() {
                   其他
                 </SubTrigger>
                 <SubContent>
+                  <Item
+                    onClick={() => {
+                      const selectedTextNodes = p.stageManager
+                        .getSelectedEntities()
+                        .filter((it) => it instanceof TextNode);
+                      for (const textNode of selectedTextNodes) {
+                        textNode.increaseFontSize();
+                      }
+                      p.historyManager.recordStep();
+                    }}
+                  >
+                    <Maximize2 />
+                    放大字体
+                  </Item>
+                  <Item
+                    onClick={() => {
+                      const selectedTextNodes = p.stageManager
+                        .getSelectedEntities()
+                        .filter((it) => it instanceof TextNode);
+                      for (const textNode of selectedTextNodes) {
+                        textNode.decreaseFontSize();
+                      }
+                      p.historyManager.recordStep();
+                    }}
+                  >
+                    <Minimize2 />
+                    缩小字体
+                  </Item>
                   <Item onClick={() => TextNodeSmartTools.changeTextNodeToReferenceBlock(p)}>
                     <SquareDashedBottomCode />
                     将选中的文本节点转换为引用块

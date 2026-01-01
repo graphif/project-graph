@@ -105,7 +105,7 @@ export class ControllerUtils {
           minHeight: `${rectView.height.toFixed(2)}px`,
           // height: `${rectView.height.toFixed(2)}px`,
           padding: Renderer.NODE_PADDING * this.project.camera.currentScale + "px",
-          fontSize: Renderer.FONT_SIZE * this.project.camera.currentScale + "px",
+          fontSize: clickedNode.getFontSize() * this.project.camera.currentScale + "px",
           backgroundColor: "transparent",
           color: fontColor,
           outline: `solid ${1 * this.project.camera.currentScale}px ${this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.1).toString()}`,

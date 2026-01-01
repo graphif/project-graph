@@ -201,11 +201,13 @@ export class TextNodeRenderer {
       return;
     }
 
+    const fontSize = node.getFontSize() * this.project.camera.currentScale;
+
     if (node.text === undefined) {
       this.project.textRenderer.renderTextFromCenter(
         "undefined",
         this.project.renderer.transformWorld2View(node.rectangle.center),
-        Renderer.FONT_SIZE * this.project.camera.currentScale,
+        fontSize,
         node.color.a === 1
           ? colorInvert(node.color)
           : colorInvert(this.project.stageStyleManager.currentStyle.Background),
@@ -220,7 +222,7 @@ export class TextNodeRenderer {
           this.project.textRenderer.renderTextFromCenter(
             getLogicNodeRenderName(logicNodeName),
             this.project.renderer.transformWorld2View(node.rectangle.center),
-            Renderer.FONT_SIZE * this.project.camera.currentScale,
+            fontSize,
             node.color.a === 1
               ? colorInvert(node.color)
               : colorInvert(this.project.stageStyleManager.currentStyle.Background),
@@ -232,7 +234,7 @@ export class TextNodeRenderer {
         this.project.textRenderer.renderTextFromCenter(
           node.text,
           this.project.renderer.transformWorld2View(node.rectangle.center),
-          Renderer.FONT_SIZE * this.project.camera.currentScale,
+          fontSize,
           node.color.a === 1
             ? colorInvert(node.color)
             : colorInvert(this.project.stageStyleManager.currentStyle.Background),
@@ -254,9 +256,9 @@ export class TextNodeRenderer {
       this.project.textRenderer.renderMultiLineText(
         node.text,
         this.project.renderer.transformWorld2View(
-          node.rectangle.location.add(Vector.same(Renderer.NODE_PADDING)).add(new Vector(0, Renderer.FONT_SIZE / 4)),
+          node.rectangle.location.add(Vector.same(Renderer.NODE_PADDING)).add(new Vector(0, node.getFontSize() / 4)),
         ),
-        Renderer.FONT_SIZE * this.project.camera.currentScale,
+        fontSize,
         // Infinity,
         node.sizeAdjust === "manual"
           ? (node.rectangle.size.x - Renderer.NODE_PADDING * 2) * this.project.camera.currentScale
