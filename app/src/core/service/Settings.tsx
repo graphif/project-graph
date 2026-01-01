@@ -76,7 +76,7 @@ export const settingsSchema = z.object({
     .default("moveX"),
   mouseWheelWithCtrlMode: z
     .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none")])
-    .default("move"),
+    .default("none"),
   mouseWheelWithAltMode: z
     .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none")])
     .default("none"),
