@@ -1,12 +1,13 @@
 import { Popover } from "@/components/ui/popover";
 import { cn } from "@/utils/cn";
 import { open } from "@tauri-apps/plugin-shell";
-import { Calendar, ExternalLink, Heart, Server, User } from "lucide-react";
+import { AlertCircle, Calendar, ExternalLink, Heart, Loader, Server, User } from "lucide-react";
 import { Telemetry } from "@/core/service/Telemetry";
 import "./assets/font.css";
 import { isDevAtom } from "@/state";
 import { useAtom } from "jotai";
 import { useEffect, useRef, useState } from "react";
+import { fetch } from "@tauri-apps/plugin-http";
 
 interface DonationData {
   user: string;
@@ -15,8 +16,9 @@ interface DonationData {
   currency?: string;
 }
 
-// 新的在前
-const donations: DonationData[] = [
+// 此列表为2025年的捐赠记录，自2026年起将不再写入源代码，转为云控。
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const donations_: DonationData[] = [
   { user: "购买服务器", note: "zty012", amount: -480 },
   // { user: "域名 2y.nz", note: "zty012", amount: -151.8 },
   // { user: "MacBook", note: "littlefean", amount: -7599.2 },
@@ -216,10 +218,31 @@ const donations: DonationData[] = [
  * @returns
  */
 export default function CreditsTab() {
+  const [donations, setDonations] = useState<DonationData[]>([]);
   const totalAmount = donations.reduce((sum, donation) => sum + donation.amount, 0);
   const [isDev] = useAtom(isDevAtom);
   const [hasSentScrollToBottom, setHasSentScrollToBottom] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    setIsLoading(true);
+
+    fetch(import.meta.env.LR_API_BASE_URL + "/api/donations")
+      .then((res) => res.json())
+      .then((data) => {
+        setDonations(data);
+      })
+      .catch((e) => {
+        console.log(e);
+        setIsError(true);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
 
   // 计算从2024年9月1日到现在的天数
   const startDate = new Date(2024, 8, 1);
@@ -324,18 +347,35 @@ export default function CreditsTab() {
           </div>
         </Popover.Confirm>
       </div>
-
+      {isLoading && (
+        <div className="bg-muted/50 mb-4 inline-flex w-full break-inside-avoid flex-col gap-2 rounded-lg border p-4">
+          <div className="flex items-center justify-center gap-2">
+            <Loader className="h-5 w-5 animate-spin" />
+            <span className="text-lg">加载中...</span>
+          </div>
+        </div>
+      )}
       <div className="columns-1 gap-4 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5">
-        {donations.map((donation, index) => (
-          <Donation
-            key={index}
-            user={donation.user}
-            note={donation.note}
-            amount={donation.amount}
-            currency={donation.currency}
-          />
-        ))}
+        {!isLoading &&
+          !isError &&
+          donations.map((donation, index) => (
+            <Donation
+              key={index}
+              user={donation.user}
+              note={donation.note}
+              amount={donation.amount}
+              currency={donation.currency}
+            />
+          ))}
       </div>
+      {!isLoading && isError && (
+        <div className="flex h-64 w-full flex-col justify-center">
+          <div className="flex items-center justify-center gap-2">
+            <AlertCircle className="h-5 w-5" />
+            <span className="text-lg">支持者名单加载失败，请检查网络，或更新到最新版本，或联系开发者以获取帮助</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
