@@ -94,7 +94,7 @@ export default function WelcomePage() {
                   setIsDownloadingGuideFile(true);
                   toast.promise(
                     async () => {
-                      const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-2.0.prg");
+                      const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-main-2.9.prg");
                       const dir = await tempDir();
                       const path = await join(dir, `tutorial-${crypto.randomUUID()}.prg`);
                       await writeFile(path, u8a);
@@ -105,7 +105,7 @@ export default function WelcomePage() {
                       error: (err) => {
                         console.error("下载功能说明书失败:", err);
                         return (
-                          `下载功能说明书失败，可以尝试访问${AssetsRepository.getGuideFileUrl("tutorials/tutorial-2.0.prg")}，请确保您能访问github。` +
+                          `下载功能说明书失败，可以尝试访问${AssetsRepository.getGuideFileUrl("tutorials/tutorial-main-2.9.prg")}，请确保您能访问github。` +
                           err
                         );
                       },

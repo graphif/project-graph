@@ -91,7 +91,6 @@ import {
   Network,
   Palette,
   Paperclip,
-  Map as MapIcon,
   PictureInPicture2,
   Plus,
   Rabbit,
@@ -117,6 +116,9 @@ import {
   Link,
   OctagonX,
   Dices,
+  FileBadge,
+  FileSpreadsheet,
+  FileBox,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -1181,31 +1183,76 @@ export function GlobalMenu() {
             <MessageCircleWarning />
             {t("about.title")}
           </Item>
-          <Item
-            onClick={async () => {
-              toast.promise(
-                async () => {
-                  const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-2.0.prg");
-                  const dir = await tempDir();
-                  const path = await join(dir, `tutorial-${crypto.randomUUID()}.prg`);
-                  await writeFile(path, u8a);
-                  await onOpenFile(URI.file(path), "功能说明书");
-                },
-                {
-                  loading: "正在下载功能说明书文件",
-                },
-              );
-            }}
-          >
-            <MapIcon />
-            {t("about.guide")}
-          </Item>
+
           <Sub>
             <SubTrigger>
               <BookOpenText />
               图文教程
             </SubTrigger>
             <SubContent>
+              <Item
+                onClick={async () => {
+                  toast.promise(
+                    async () => {
+                      const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-main-2.9.prg");
+                      const dir = await tempDir();
+                      const path = await join(dir, `tutorial-${crypto.randomUUID()}.prg`);
+                      await writeFile(path, u8a);
+                      await onOpenFile(URI.file(path), "功能说明书");
+                    },
+                    {
+                      loading: "正在下载功能说明书文件",
+                      success: "下载完成",
+                      error: "下载失败，请检查网络或联系开发者",
+                    },
+                  );
+                }}
+              >
+                <FileBadge />
+                {t("about.guide")}
+              </Item>
+              <Item
+                onClick={async () => {
+                  toast.promise(
+                    async () => {
+                      const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-shortcut-keys-2.9.prg");
+                      const dir = await tempDir();
+                      const path = await join(dir, `tutorial-${crypto.randomUUID()}.prg`);
+                      await writeFile(path, u8a);
+                      await onOpenFile(URI.file(path), "快捷键文档");
+                    },
+                    {
+                      loading: "正在下载快捷键文档",
+                      success: "下载完成",
+                      error: "下载失败，请检查网络或联系开发者",
+                    },
+                  );
+                }}
+              >
+                <FileSpreadsheet />
+                快捷键文档
+              </Item>
+              <Item
+                onClick={async () => {
+                  toast.promise(
+                    async () => {
+                      const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-logic-nodes-2.9.prg");
+                      const dir = await tempDir();
+                      const path = await join(dir, `tutorial-${crypto.randomUUID()}.prg`);
+                      await writeFile(path, u8a);
+                      await onOpenFile(URI.file(path), "逻辑节点文档");
+                    },
+                    {
+                      loading: "正在下载逻辑节点文档",
+                      success: "下载完成",
+                      error: "下载失败，请检查网络或联系开发者",
+                    },
+                  );
+                }}
+              >
+                <FileBox />
+                逻辑节点文档
+              </Item>
               <Item
                 onClick={() => {
                   shellOpen("https://project-graph.top/docs/app/features/feature/camera");
