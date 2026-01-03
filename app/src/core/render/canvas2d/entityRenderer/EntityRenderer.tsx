@@ -151,7 +151,7 @@ export class EntityRenderer {
       this.project.referenceBlockRenderer.render(entity);
     }
     // details右上角小按钮
-    if (this.project.camera.currentScale > Settings.ignoreTextNodeTextRenderLessThanFontSize) {
+    if (this.project.camera.currentScale > 0.065) {
       this.project.entityDetailsButtonRenderer.render(entity);
     }
     // 渲染详细信息
