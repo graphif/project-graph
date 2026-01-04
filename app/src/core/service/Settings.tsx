@@ -132,6 +132,10 @@ export const settingsSchema = z.object({
   textNodeSelectAllWhenStartEditByMouseClick: z.boolean().default(true),
   textNodeSelectAllWhenStartEditByKeyboard: z.boolean().default(false),
   textNodeBackspaceDeleteWhenEmpty: z.boolean().default(false),
+  textNodeBigContentThresholdWhenPaste: z.number().min(1).max(1000).int().default(20),
+  textNodePasteSizeAdjustMode: z
+    .union([z.literal("auto"), z.literal("manual"), z.literal("autoByLength")])
+    .default("autoByLength"),
   allowAddCycleEdge: z.boolean().default(false),
   autoLayoutWhenTreeGenerate: z.boolean().default(true),
   textNodeAutoFormatTreeWhenExitEdit: z.boolean().default(false),

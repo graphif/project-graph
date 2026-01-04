@@ -466,6 +466,18 @@ settings:
     title: Delete Text Node When Backspace Pressed on Empty Content
     description: |
       When enabled, pressing the Backspace key on an empty text node in edit mode will delete the entire node.
+  textNodeBigContentThresholdWhenPaste:
+    title: Text Node Big Content Threshold When Paste
+    description: |
+      When pasting directly onto the stage, if the text length exceeds this value, manual line break mode will be used.
+  textNodePasteSizeAdjustMode:
+    title: Text Node Paste Size Adjust Mode
+    description: |
+      Control how text nodes adjust their size when pasted.
+    options:
+      auto: Always Auto Adjust
+      manual: Always Manual Adjust
+      autoByLength: Auto Adjust By Length
   textNodeAutoFormatTreeWhenExitEdit:
     title: Auto Format Tree Structure When Exiting Edit Mode
     description: |

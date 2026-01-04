@@ -12,6 +12,7 @@ import { RectanglePushInEffect } from "../../feedbackService/effectEngine/concre
 import { isMermaidGraphString, isSvgString } from "./stringValidTools";
 import { toast } from "sonner";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
+import { Settings } from "@/core/service/Settings";
 
 /**
  * 专门处理文本粘贴的服务
@@ -83,16 +84,48 @@ export class CopyEngineText {
           let collisionBox = new CollisionBox([
             new Rectangle(this.project.renderer.transformView2World(MouseLocation.vector()), Vector.getZero()),
           ]);
-          const isBigContent = item.length > 20;
-          if (isBigContent) {
-            collisionBox = new CollisionBox([
-              new Rectangle(this.project.renderer.transformView2World(MouseLocation.vector()), new Vector(400, 100)),
-            ]);
+          const threshold = Settings.textNodeBigContentThresholdWhenPaste;
+          const pasteMode = Settings.textNodePasteSizeAdjustMode;
+
+          let sizeAdjust: "auto" | "manual";
+          let isBigContent = false;
+
+          switch (pasteMode) {
+            case "manual":
+              sizeAdjust = "manual";
+              collisionBox = new CollisionBox([
+                new Rectangle(this.project.renderer.transformView2World(MouseLocation.vector()), new Vector(400, 100)),
+              ]);
+              break;
+            case "auto":
+              sizeAdjust = "auto";
+              break;
+            case "autoByLength":
+            default:
+              isBigContent = item.length > threshold;
+              sizeAdjust = isBigContent ? "manual" : "auto";
+              if (isBigContent) {
+                collisionBox = new CollisionBox([
+                  new Rectangle(
+                    this.project.renderer.transformView2World(MouseLocation.vector()),
+                    new Vector(400, 100),
+                  ),
+                ]);
+              }
+              break;
           }
+
+          // Debug mode toast
+          if (Settings.showDebug) {
+            toast.info(
+              `粘贴内容长度: ${item.length}, 阈值: ${threshold}, 粘贴模式: ${pasteMode}, 最终换行模式: ${sizeAdjust === "manual" ? "手动换行" : "自动换行"}`,
+            );
+          }
+
           entity = new TextNode(this.project, {
             text: item,
             collisionBox,
-            sizeAdjust: isBigContent ? "manual" : "auto",
+            sizeAdjust,
           });
           entity.move(
             new Vector(-entity.collisionBox.getRectangle().width / 2, -entity.collisionBox.getRectangle().height / 2),

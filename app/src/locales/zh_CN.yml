@@ -599,6 +599,18 @@ settings:
     title: 当在编辑模式下文本节点无内容时按Backspace键自动删除整个节点
     description: |
       开启后，在编辑文本节点且内容为空时，按下Backspace键会自动删除整个节点
+  textNodeBigContentThresholdWhenPaste:
+    title: 粘贴时文本节点大内容阈值
+    description: |
+      当直接在舞台上粘贴文本时，如果文本长度超过此值，将使用手动换行模式
+  textNodePasteSizeAdjustMode:
+    title: 文本节点粘贴大小调整模式
+    description: |
+      控制粘贴文本节点时的大小调整方式
+    options:
+      auto: 总是自动调整
+      manual: 总是手动调整
+      autoByLength: 根据长度自动调整
   textNodeAutoFormatTreeWhenExitEdit:
     title: 退出编辑模式时自动格式化树形结构
     description: |

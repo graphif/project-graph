@@ -645,6 +645,16 @@ settings:
   textNodeBackspaceDeleteWhenEmpty:
     title: 當在編輯模式下文字節點無內容時按 Backspace 鍵自動刪除整個節點
     description: 開啟後，在編輯文字節點且內容為空時，按下 Backspace 鍵會自動刪除整個節點
+  textNodeBigContentThresholdWhenPaste:
+    title: 貼上時文字節點大內容閾值
+    description: 當直接在舞台上貼上文字時，如果文字長度超過此值，將使用手動換行模式
+  textNodePasteSizeAdjustMode:
+    title: 文字節點貼上大小調整模式
+    description: 控制貼上文字節點時的大小調整方式
+    options:
+      auto: 總是自動調整
+      manual: 總是手動調整
+      autoByLength: 根據長度自動調整
   textNodeAutoFormatTreeWhenExitEdit:
     title: 退出編輯模式時自動格式化樹狀結構
     description: 當文字節點退出編輯模式時，自動對其所在的樹狀結構進行格式化佈局

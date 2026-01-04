@@ -114,6 +114,8 @@ export const settingsIcons = {
   textNodeSelectAllWhenStartEditByMouseClick: TextCursorInput,
   textNodeSelectAllWhenStartEditByKeyboard: TextCursorInput,
   textNodeBackspaceDeleteWhenEmpty: Delete,
+  textNodeBigContentThresholdWhenPaste: ArrowDownNarrowWide,
+  textNodePasteSizeAdjustMode: Scaling,
   allowAddCycleEdge: RotateCw,
   enableDragEdgeRotateStructure: SplinePointer,
   enableCtrlWheelRotateStructure: RefreshCcw,

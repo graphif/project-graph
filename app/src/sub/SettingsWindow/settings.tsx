@@ -279,6 +279,8 @@ const categories = {
       "textNodeSelectAllWhenStartEditByMouseClick",
       "textNodeSelectAllWhenStartEditByKeyboard",
       "textNodeBackspaceDeleteWhenEmpty",
+      "textNodeBigContentThresholdWhenPaste",
+      "textNodePasteSizeAdjustMode",
     ],
     edge: [
       "allowAddCycleEdge",
