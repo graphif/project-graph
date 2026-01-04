@@ -5,7 +5,18 @@ import { cn } from "@/utils/cn";
 import { PathString } from "@/utils/pathString";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { DoorClosed, DoorOpen, Import, LoaderPinwheel, Trash2, X, Link, HardDriveDownload } from "lucide-react";
+import {
+  DoorClosed,
+  DoorOpen,
+  Import,
+  LoaderPinwheel,
+  Trash2,
+  X,
+  Link,
+  HardDriveDownload,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import React, { ChangeEventHandler, useEffect } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -17,6 +28,43 @@ import { SoundService } from "@/core/service/feedbackService/SoundService";
 import { useAtom } from "jotai";
 import { activeProjectAtom } from "@/state";
 import { DragFileIntoStageEngine } from "@/core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
+
+/**
+ * 文件名隐私保护加密函数（强制使用凯撒移位）
+ * @param fileName 文件名
+ * @returns 加密后的文件名
+ */
+function encryptFileName(fileName: string): string {
+  // 凯撒移位加密：所有字符往后移动一位
+  return fileName
+    .split("")
+    .map((char) => {
+      const code = char.charCodeAt(0);
+
+      // 对于可打印ASCII字符进行移位
+      if (code >= 32 && code <= 126) {
+        // 特殊处理：'z' 移到 'a'，'Z' 移到 'A'，'9' 移到 '0'
+        if (char === "z") return "a";
+        if (char === "Z") return "A";
+        if (char === "9") return "0";
+        // 其他字符直接 +1
+        return String.fromCharCode(code + 1);
+      }
+
+      // 对于中文字符，进行移位加密
+      if (code >= 0x4e00 && code <= 0x9fa5) {
+        // 中文字符在Unicode范围内循环移位
+        // 0x4e00是汉字起始，0x9fa5是汉字结束，总共约20902个汉字
+        const shiftedCode = code + 1;
+        // 如果超过汉字范围，则回到起始位置
+        return String.fromCharCode(shiftedCode <= 0x9fa5 ? shiftedCode : 0x4e00);
+      }
+
+      // 其他字符保持不变
+      return char;
+    })
+    .join("");
+}
 
 // 嵌套文件夹结构类型
 type FolderNode = {
@@ -52,6 +100,7 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
   const [isShowDeleteEveryItem, setIsShowDeleteEveryItem] = React.useState<boolean>(false);
   const [isShowDoorEveryItem, setIsShowDoorEveryItem] = React.useState<boolean>(false);
   const [isNestedView, setIsNestedView] = React.useState<boolean>(false);
+  const [isLocalPrivacyMode, setIsLocalPrivacyMode] = React.useState<boolean>(false);
 
   // 选择文件夹并导入PRG文件
   const importPrgFilesFromFolder = async () => {
@@ -235,10 +284,13 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
   };
 
   // 递归渲染文件夹组件
-  const FolderComponent: React.FC<{ folder: FolderNode }> = ({ folder }) => {
+  const FolderComponent: React.FC<{ folder: FolderNode; isPrivacyMode?: boolean }> = ({
+    folder,
+    isPrivacyMode = false,
+  }) => {
     return (
       <div className="bg-muted/50 my-1 rounded-lg border p-1">
-        <div className="mb-2 font-bold">{folder.name}</div>
+        <div className="mb-2 font-bold">{isPrivacyMode ? encryptFileName(folder.name) : folder.name}</div>
 
         {/* 显示当前文件夹中的文件 */}
         {folder.files.length > 0 && (
@@ -266,7 +318,11 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
                   SoundService.play.mouseClickButton();
                 }}
               >
-                {PathString.getShortedFileName(PathString.absolute2file(decodeURI(file.uri.toString())), 12)}
+                {isPrivacyMode
+                  ? encryptFileName(
+                      PathString.getShortedFileName(PathString.absolute2file(decodeURI(file.uri.toString())), 12),
+                    )
+                  : PathString.getShortedFileName(PathString.absolute2file(decodeURI(file.uri.toString())), 12)}
                 {isShowDeleteEveryItem && (
                   <button
                     onClick={async (e) => {
@@ -322,7 +378,7 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
         {Object.values(folder.subFolders).length > 0 && (
           <div className="pl-2">
             {Object.values(folder.subFolders).map((subFolder) => (
-              <FolderComponent key={subFolder.path} folder={subFolder} />
+              <FolderComponent key={subFolder.path} folder={subFolder} isPrivacyMode={isPrivacyMode} />
             ))}
           </div>
         )}
@@ -412,6 +468,24 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
             </>
           )}
         </button>
+        <button
+          onClick={() => {
+            setIsLocalPrivacyMode((prev) => !prev);
+          }}
+          className="bg-primary/10 flex gap-2 rounded-md p-2 transition-colors"
+        >
+          {isLocalPrivacyMode ? (
+            <>
+              <EyeOff />
+              <span>关闭隐私模式</span>
+            </>
+          ) : (
+            <>
+              <Eye />
+              <span>开启隐私模式</span>
+            </>
+          )}
+        </button>
       </div>
       <div className="flex w-full flex-col items-baseline justify-center px-4 text-xs">
         <p>{currentShowPath}</p>
@@ -435,7 +509,7 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
       {isNestedView ? (
         <div className="flex w-full flex-col overflow-auto p-1">
           {Object.values(buildFolderTree(recentFilesFiltered)).map((rootFolder) => (
-            <FolderComponent key={rootFolder.path} folder={rootFolder} />
+            <FolderComponent key={rootFolder.path} folder={rootFolder} isPrivacyMode={isLocalPrivacyMode} />
           ))}
         </div>
       ) : (
@@ -466,7 +540,11 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
                 SoundService.play.mouseClickButton();
               }}
             >
-              {PathString.getShortedFileName(PathString.absolute2file(decodeURI(file.uri.toString())), 15)}
+              {isLocalPrivacyMode
+                ? encryptFileName(
+                    PathString.getShortedFileName(PathString.absolute2file(decodeURI(file.uri.toString())), 15),
+                  )
+                : PathString.getShortedFileName(PathString.absolute2file(decodeURI(file.uri.toString())), 15)}
               {isShowDeleteEveryItem && (
                 <button
                   onClick={async (e) => {
