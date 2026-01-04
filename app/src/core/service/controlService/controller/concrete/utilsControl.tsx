@@ -287,10 +287,14 @@ export class ControllerUtils {
     });
   }
 
-  async addTextNodeByLocation(location: Vector, selectCurrent: boolean = false) {
+  async addTextNodeByLocation(location: Vector, selectCurrent: boolean = false, autoEdit: boolean = false) {
     const sections = this.project.sectionMethods.getSectionsByInnerLocation(location);
     // 新建节点
     const uuid = await this.project.nodeAdder.addTextNodeByClick(location, sections, selectCurrent);
+    if (autoEdit) {
+      // 自动进入编辑模式
+      this.textNodeInEditModeByUUID(uuid);
+    }
     return uuid;
   }
   createConnectPoint(location: Vector) {

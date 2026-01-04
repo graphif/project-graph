@@ -264,7 +264,7 @@ export const allKeyBinds: KeyBindItem[] = [
       if (!project!.keyboardOnlyEngine.isOpenning()) return;
       project!.camera.clearMoveCommander();
       project!.camera.speed = Vector.getZero();
-      project!.controllerUtils.addTextNodeByLocation(project!.camera.location, true);
+      project!.controllerUtils.addTextNodeByLocation(project!.camera.location, true, true);
     },
   },
   {
@@ -276,6 +276,7 @@ export const allKeyBinds: KeyBindItem[] = [
       project!.camera.speed = Vector.getZero();
       project!.controllerUtils.addTextNodeByLocation(
         project!.renderer.transformView2World(MouseLocation.vector()),
+        true,
         true,
       );
     },
