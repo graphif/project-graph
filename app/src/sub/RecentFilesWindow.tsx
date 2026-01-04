@@ -288,9 +288,19 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
     folder,
     isPrivacyMode = false,
   }) => {
+    // 检查是否有子文件夹
+    const hasSubFolders = Object.values(folder.subFolders).length > 0;
+    // 如果没有子文件夹，只包含文件，设置最大宽度
+
     return (
-      <div className="bg-muted/50 my-1 rounded-lg border p-1">
-        <div className="mb-2 font-bold">{isPrivacyMode ? encryptFileName(folder.name) : folder.name}</div>
+      <div
+        className={cn(
+          "bg-muted/50 m-1 inline-block rounded-lg border p-1",
+          !hasSubFolders && "max-w-96",
+          hasSubFolders && "",
+        )}
+      >
+        <div className="mb-2 ml-1 font-bold">{isPrivacyMode ? encryptFileName(folder.name) : folder.name}</div>
 
         {/* 显示当前文件夹中的文件 */}
         {folder.files.length > 0 && (
@@ -377,9 +387,11 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
         {/* 递归渲染子文件夹 */}
         {Object.values(folder.subFolders).length > 0 && (
           <div className="pl-2">
-            {Object.values(folder.subFolders).map((subFolder) => (
-              <FolderComponent key={subFolder.path} folder={subFolder} isPrivacyMode={isPrivacyMode} />
-            ))}
+            {Object.values(folder.subFolders)
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((subFolder) => (
+                <FolderComponent key={subFolder.path} folder={subFolder} isPrivacyMode={isPrivacyMode} />
+              ))}
           </div>
         )}
       </div>
