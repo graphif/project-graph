@@ -18,6 +18,14 @@ import { useAtom } from "jotai";
 import { activeProjectAtom } from "@/state";
 import { DragFileIntoStageEngine } from "@/core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 
+// 嵌套文件夹结构类型
+type FolderNode = {
+  name: string;
+  path: string;
+  files: RecentFileManager.RecentFile[];
+  subFolders: Record<string, FolderNode>;
+};
+
 /**
  * 最近文件面板按钮
  * @returns
@@ -43,6 +51,7 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
 
   const [isShowDeleteEveryItem, setIsShowDeleteEveryItem] = React.useState<boolean>(false);
   const [isShowDoorEveryItem, setIsShowDoorEveryItem] = React.useState<boolean>(false);
+  const [isNestedView, setIsNestedView] = React.useState<boolean>(false);
 
   // 选择文件夹并导入PRG文件
   const importPrgFilesFromFolder = async () => {
@@ -171,9 +180,159 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
     }
   };
 
+  // 将最近文件转换为嵌套文件夹结构
+  const buildFolderTree = (files: RecentFileManager.RecentFile[]): Record<string, FolderNode> => {
+    const root: Record<string, FolderNode> = {};
+
+    files.forEach((file) => {
+      try {
+        const fsPath = file.uri.fsPath;
+
+        // 获取目录路径 - 使用完整的文件路径
+        const dirPath = PathString.dirPath(fsPath);
+        const dirParts = dirPath.split(/[\\/]/).filter(Boolean);
+
+        // 获取磁盘根目录（如C:, D:）
+        const diskRoot = dirParts[0] || "unknown";
+
+        if (!root[diskRoot]) {
+          root[diskRoot] = {
+            name: diskRoot,
+            path: diskRoot + "/",
+            files: [],
+            subFolders: {},
+          };
+        }
+
+        let currentFolder = root[diskRoot];
+
+        // 构建子文件夹结构
+        for (let i = 1; i < dirParts.length; i++) {
+          const folderName = dirParts[i];
+          const folderPath = dirParts.slice(0, i + 1).join("/");
+
+          if (!currentFolder.subFolders[folderName]) {
+            currentFolder.subFolders[folderName] = {
+              name: folderName,
+              path: folderPath,
+              files: [],
+              subFolders: {},
+            };
+          }
+
+          currentFolder = currentFolder.subFolders[folderName];
+        }
+
+        // 添加文件到当前文件夹
+        currentFolder.files.push(file);
+      } catch (error) {
+        console.error("处理文件路径时出错:", error, file);
+        // 跳过这个文件，继续处理其他文件
+      }
+    });
+
+    return root;
+  };
+
+  // 递归渲染文件夹组件
+  const FolderComponent: React.FC<{ folder: FolderNode }> = ({ folder }) => {
+    return (
+      <div className="bg-muted/50 my-1 rounded-lg border p-1">
+        <div className="mb-2 font-bold">{folder.name}</div>
+
+        {/* 显示当前文件夹中的文件 */}
+        {folder.files.length > 0 && (
+          <div className="mb-4 flex flex-wrap gap-2">
+            {folder.files.map((file, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "bg-muted relative flex max-w-48 origin-left cursor-pointer flex-col items-center gap-2 rounded-lg border p-1 px-2 py-1 opacity-75 transition-opacity hover:opacity-100",
+                )}
+                onMouseEnter={() => {
+                  // 在嵌套视图中，我们不需要跟踪当前选中的索引
+                  SoundService.play.mouseEnterButton();
+                }}
+                onClick={() => {
+                  if (isShowDeleteEveryItem) {
+                    toast.warning("当前正在删除阶段，请退出删除阶段才能打开文件，或点击删除按钮删除该文件");
+                    return;
+                  }
+                  if (isShowDoorEveryItem) {
+                    toast.warning("当前正在添加传送门阶段，请退出添加传送门阶段才能打开文件，或点击按钮添加传送门");
+                    return;
+                  }
+                  checkoutFile(file);
+                  SoundService.play.mouseClickButton();
+                }}
+              >
+                {PathString.getShortedFileName(PathString.absolute2file(decodeURI(file.uri.toString())), 12)}
+                {isShowDeleteEveryItem && (
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const result = await RecentFileManager.removeRecentFileByUri(file.uri);
+                      if (result) {
+                        updateRecentFiles();
+                      } else {
+                        toast.warning("删除失败");
+                      }
+                    }}
+                    className="bg-destructive absolute -right-2 -top-2 cursor-pointer rounded-full transition-colors hover:scale-110"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+                {isShowDoorEveryItem && (
+                  <>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        const filePath = PathString.uppercaseAbsolutePathDiskChar(file.uri.fsPath).replaceAll(
+                          "\\",
+                          "/",
+                        );
+                        addCurrentFileToCurrentProject(filePath, false);
+                      }}
+                      className="bg-primary absolute -top-2 right-4 cursor-pointer rounded-full transition-colors hover:scale-110"
+                    >
+                      <Link size={16} />
+                    </button>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        const filePath = PathString.uppercaseAbsolutePathDiskChar(file.uri.fsPath).replaceAll(
+                          "\\",
+                          "/",
+                        );
+                        addCurrentFileToCurrentProject(filePath, true);
+                      }}
+                      className="bg-primary absolute -right-2 -top-2 cursor-pointer rounded-full transition-colors hover:scale-110"
+                    >
+                      <HardDriveDownload size={16} />
+                    </button>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 递归渲染子文件夹 */}
+        {Object.values(folder.subFolders).length > 0 && (
+          <div className="pl-2">
+            {Object.values(folder.subFolders).map((subFolder) => (
+              <FolderComponent key={subFolder.path} folder={subFolder} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className={cn("flex h-full flex-col items-center gap-2")}>
-      <div className="flex w-full flex-wrap items-center gap-2 p-4">
+      <div className="flex w-full flex-wrap items-center gap-2 p-1">
         <Input
           placeholder="请输入要筛选的文件"
           onChange={onInputChange}
@@ -235,6 +394,24 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
             </>
           )}
         </button>
+        <button
+          onClick={() => {
+            setIsNestedView((prev) => !prev);
+          }}
+          className="bg-primary/10 flex gap-2 rounded-md p-2 transition-colors"
+        >
+          {isNestedView ? (
+            <>
+              <HardDriveDownload />
+              <span>切换到平铺视图</span>
+            </>
+          ) : (
+            <>
+              <HardDriveDownload />
+              <span>切换到嵌套视图</span>
+            </>
+          )}
+        </button>
       </div>
       <div className="flex w-full flex-col items-baseline justify-center px-4 text-xs">
         <p>{currentShowPath}</p>
@@ -254,77 +431,86 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
         </div>
       )}
 
-      <div className="flex w-full flex-wrap gap-2 p-4">
-        {recentFilesFiltered.map((file, index) => (
-          <div
-            key={index}
-            className={cn(
-              "bg-muted/50 relative flex max-w-64 origin-left cursor-pointer flex-col items-center gap-2 rounded-lg border p-4 px-2 py-1 opacity-75",
-              {
-                "opacity-100": index === currentPreselect,
-              },
-            )}
-            onMouseEnter={() => {
-              setCurrentPreselect(index);
-              SoundService.play.mouseEnterButton();
-            }}
-            onClick={() => {
-              if (isShowDeleteEveryItem) {
-                toast.warning("当前正在删除阶段，请退出删除阶段才能打开文件，或点击删除按钮删除该文件");
-                return;
-              }
-              if (isShowDoorEveryItem) {
-                toast.warning("当前正在添加传送门阶段，请退出添加传送门阶段才能打开文件，或点击按钮添加传送门");
-                return;
-              }
-              checkoutFile(file);
-              SoundService.play.mouseClickButton();
-            }}
-          >
-            {PathString.getShortedFileName(PathString.absolute2file(decodeURI(file.uri.toString())), 15)}
-            {isShowDeleteEveryItem && (
-              <button
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  const result = await RecentFileManager.removeRecentFileByUri(file.uri);
-                  if (result) {
-                    updateRecentFiles();
-                  } else {
-                    toast.warning("删除失败");
-                  }
-                }}
-                className="bg-destructive absolute -right-2 -top-2 cursor-pointer rounded-full transition-colors hover:scale-110"
-              >
-                <X size={20} />
-              </button>
-            )}
-            {isShowDoorEveryItem && (
-              <button
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  const filePath = PathString.uppercaseAbsolutePathDiskChar(file.uri.fsPath).replaceAll("\\", "/");
-                  addCurrentFileToCurrentProject(filePath, false);
-                }}
-                className="bg-primary absolute -top-2 right-4 cursor-pointer rounded-full transition-colors hover:scale-110"
-              >
-                <Link size={20} />
-              </button>
-            )}
-            {isShowDoorEveryItem && (
-              <button
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  const filePath = PathString.uppercaseAbsolutePathDiskChar(file.uri.fsPath).replaceAll("\\", "/");
-                  addCurrentFileToCurrentProject(filePath, true);
-                }}
-                className="bg-primary absolute -right-2 -top-2 cursor-pointer rounded-full transition-colors hover:scale-110"
-              >
-                <HardDriveDownload size={20} />
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
+      {/* 根据视图模式渲染不同的内容 */}
+      {isNestedView ? (
+        <div className="flex w-full flex-col overflow-auto p-1">
+          {Object.values(buildFolderTree(recentFilesFiltered)).map((rootFolder) => (
+            <FolderComponent key={rootFolder.path} folder={rootFolder} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex w-full flex-wrap gap-2 p-1">
+          {recentFilesFiltered.map((file, index) => (
+            <div
+              key={index}
+              className={cn(
+                "bg-muted/50 relative flex max-w-64 origin-left cursor-pointer flex-col items-center gap-2 rounded-lg border p-1 px-2 py-1 opacity-75",
+                {
+                  "opacity-100": index === currentPreselect,
+                },
+              )}
+              onMouseEnter={() => {
+                setCurrentPreselect(index);
+                SoundService.play.mouseEnterButton();
+              }}
+              onClick={() => {
+                if (isShowDeleteEveryItem) {
+                  toast.warning("当前正在删除阶段，请退出删除阶段才能打开文件，或点击删除按钮删除该文件");
+                  return;
+                }
+                if (isShowDoorEveryItem) {
+                  toast.warning("当前正在添加传送门阶段，请退出添加传送门阶段才能打开文件，或点击按钮添加传送门");
+                  return;
+                }
+                checkoutFile(file);
+                SoundService.play.mouseClickButton();
+              }}
+            >
+              {PathString.getShortedFileName(PathString.absolute2file(decodeURI(file.uri.toString())), 15)}
+              {isShowDeleteEveryItem && (
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const result = await RecentFileManager.removeRecentFileByUri(file.uri);
+                    if (result) {
+                      updateRecentFiles();
+                    } else {
+                      toast.warning("删除失败");
+                    }
+                  }}
+                  className="bg-destructive absolute -right-2 -top-2 cursor-pointer rounded-full transition-colors hover:scale-110"
+                >
+                  <X size={20} />
+                </button>
+              )}
+              {isShowDoorEveryItem && (
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const filePath = PathString.uppercaseAbsolutePathDiskChar(file.uri.fsPath).replaceAll("\\", "/");
+                    addCurrentFileToCurrentProject(filePath, false);
+                  }}
+                  className="bg-primary absolute -top-2 right-4 cursor-pointer rounded-full transition-colors hover:scale-110"
+                >
+                  <Link size={20} />
+                </button>
+              )}
+              {isShowDoorEveryItem && (
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const filePath = PathString.uppercaseAbsolutePathDiskChar(file.uri.fsPath).replaceAll("\\", "/");
+                    addCurrentFileToCurrentProject(filePath, true);
+                  }}
+                  className="bg-primary absolute -right-2 -top-2 cursor-pointer rounded-full transition-colors hover:scale-110"
+                >
+                  <HardDriveDownload size={20} />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
