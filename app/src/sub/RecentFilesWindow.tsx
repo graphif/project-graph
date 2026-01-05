@@ -315,7 +315,7 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
                   // 在嵌套视图中，我们不需要跟踪当前选中的索引
                   SoundService.play.mouseEnterButton();
                 }}
-                onClick={() => {
+                onMouseDown={() => {
                   if (isShowDeleteEveryItem) {
                     toast.warning("当前正在删除阶段，请退出删除阶段才能打开文件，或点击删除按钮删除该文件");
                     return;
