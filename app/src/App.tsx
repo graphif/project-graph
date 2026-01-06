@@ -9,6 +9,7 @@ import { GlobalMenu } from "@/core/service/GlobalMenu";
 import { Settings } from "@/core/service/Settings";
 import { Telemetry } from "@/core/service/Telemetry";
 import { Themes } from "@/core/service/Themes";
+import { globalShortcutManager } from "@/core/service/controlService/shortcutKeysEngine/GlobalShortcutManager";
 import {
   activeProjectAtom,
   isClassroomModeAtom,
@@ -29,7 +30,6 @@ import { cpuInfo } from "tauri-plugin-system-info-api";
 import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { cn } from "./utils/cn";
 import { isMac, isWindows } from "./utils/platform";
-import { register } from "@tauri-apps/plugin-global-shortcut";
 import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { ProjectTabs } from "./ProjectTabs";
 import { DropWindowCover } from "./DropWindowCover";
@@ -41,8 +41,6 @@ export default function App() {
 
   const [projects, setProjects] = useAtom(projectsAtom);
   const [activeProject, setActiveProject] = useAtom(activeProjectAtom);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [___, setIsWindowAlwaysOnTop] = useAtom(isWindowAlwaysOnTopAtom);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   // const [isWide, setIsWide] = useState(false);
   const [telemetryEventSent, setTelemetryEventSent] = useState(false);
@@ -51,8 +49,6 @@ export default function App() {
   );
   const [ignoreMouseEvents, setIgnoreMouseEvents] = useState(false);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [__, setIsClickThroughEnabled] = useAtom(isClickThroughEnabledAtom);
 
   const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
 
@@ -137,49 +133,14 @@ export default function App() {
       }
     });
 
-    // TODO: 以后整一个全局快捷键系统
-    register("Alt+2", async (event) => {
-      if (event.state === "Pressed") {
-        setIsClickThroughEnabled((prev) => {
-          if (!Settings.allowGlobalHotKeys) {
-            toast.warning("已禁用全局快捷键");
-            return prev;
-          }
-          if (!prev) {
-            // 开启了穿透点击
-            Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterOpenClickThrough;
-            setIsWindowAlwaysOnTop(true);
-            getCurrentWindow().setAlwaysOnTop(true);
-          } else {
-            // 关闭了穿透点击
-            Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterCloseClickThrough;
-            setIsWindowAlwaysOnTop(false);
-            getCurrentWindow().setAlwaysOnTop(false);
-          }
-          getCurrentWindow().setIgnoreCursorEvents(!prev);
-          return !prev;
-        });
-      }
-    });
-
-    register("Alt+1", async (event) => {
-      if (event.state === "Pressed") {
-        if (!Settings.allowGlobalHotKeys) {
-          toast.warning("已禁用全局快捷键");
-          return;
-        }
-        console.log("开始呼出窗口");
-        // 呼出软件窗口
-        const window = getCurrentWindow();
-        await window.show();
-        await window.setSkipTaskbar(false);
-        await window.setFocus();
-      }
-    });
+    // 初始化全局快捷键管理
+    globalShortcutManager.init();
 
     return () => {
       unlisten1?.then((f) => f());
       KeyBindsUI.uiStopListen();
+      // 清理全局快捷键资源
+      globalShortcutManager.dispose();
     };
   }, []);
 
