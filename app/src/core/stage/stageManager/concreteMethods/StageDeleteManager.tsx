@@ -46,6 +46,7 @@ export class DeleteManager {
       const handler = this.findDeleteHandler(entity);
       handler?.(entity);
     }
+    this.project.stageManager.updateReferences();
   }
 
   private findDeleteHandler(entity: Entity) {
