@@ -105,12 +105,20 @@ export class ControllerAssociationReshapeClass extends ControllerClass {
     }
     const worldLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
     if (this.project.controller.isMouseDown[0]) {
-      if (
-        isMac
-          ? this.project.controller.pressingKeySet.has("meta")
-          : this.project.controller.pressingKeySet.has("control")
-      ) {
-        // 更改Edge的目标
+      const isControlPressed = isMac
+        ? this.project.controller.pressingKeySet.has("meta")
+        : this.project.controller.pressingKeySet.has("control");
+      const isShiftPressed = this.project.controller.pressingKeySet.has("shift");
+
+      if (isControlPressed && isShiftPressed) {
+        // 更改Edge的源节点 (Control+Shift 组合)
+        const entity = this.project.stageManager.findConnectableEntityByLocation(worldLocation);
+        if (entity !== null) {
+          // 找到目标，更改源节点
+          this.project.nodeConnector.changeSelectedEdgeSource(entity);
+        }
+      } else if (isControlPressed) {
+        // 更改Edge的目标节点 (仅 Control)
         const entity = this.project.stageManager.findConnectableEntityByLocation(worldLocation);
         if (entity !== null) {
           // 找到目标，更改目标

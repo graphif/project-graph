@@ -115,6 +115,20 @@ export class NodeConnector {
   }
 
   /**
+   * 单独改变一个节点的源连接点
+   * @param edge
+   * @param newSource
+   * @returns
+   */
+  private changeEdgeSource(edge: LineEdge, newSource: ConnectableEntity) {
+    if (edge.source.uuid === newSource.uuid) {
+      return;
+    }
+    edge.source = newSource;
+    this.project.stageManager.updateReferences();
+  }
+
+  /**
    * 改变所有选中的连线的目标节点
    * @param newTarget
    */
@@ -123,6 +137,21 @@ export class NodeConnector {
     for (const edge of selectedEdges) {
       if (edge instanceof LineEdge) {
         this.changeEdgeTarget(edge, newTarget);
+      }
+    }
+    // https://github.com/graphif/project-graph/issues/522
+    // this.project.historyManager.recordStep();
+  }
+
+  /**
+   * 改变所有选中的连线的源节点
+   * @param newSource
+   */
+  changeSelectedEdgeSource(newSource: ConnectableEntity) {
+    const selectedEdges = this.project.stageManager.getSelectedStageObjects().filter((obj) => obj instanceof LineEdge);
+    for (const edge of selectedEdges) {
+      if (edge instanceof LineEdge) {
+        this.changeEdgeSource(edge, newSource);
       }
     }
     // https://github.com/graphif/project-graph/issues/522
