@@ -75,9 +75,9 @@ export default function WelcomePage() {
           </div>
           <div className="hidden text-xs opacity-50 sm:block sm:text-lg">{t("slogan")}</div>
           {isAmdCpu && (
-            <div className="flex items-center gap-2 rounded-lg border p-3 text-sm text-red-600">
+            <div className="flex items-center gap-2 rounded-lg border p-3 text-sm text-yellow-600/75">
               <AlertTriangle />
-              <span>您的设备（AMD CPU）可能无法正常使用该软件</span>
+              <span>您的设备（AMD CPU）可能在大屏下使用时存在渲染卡顿问题</span>
             </div>
           )}
         </div>
