@@ -302,6 +302,16 @@ export class ControllerUtils {
     this.project.nodeAdder.addConnectPoint(location, sections);
   }
 
+  async addDiamondNodeByLocation(location: Vector, selectCurrent: boolean = false) {
+    const sections = this.project.sectionMethods.getSectionsByInnerLocation(location);
+    return await this.project.nodeAdder.addDiamondNodeByClick(location, sections, selectCurrent);
+  }
+
+  async addCircleNodeByLocation(location: Vector, selectCurrent: boolean = false) {
+    const sections = this.project.sectionMethods.getSectionsByInnerLocation(location);
+    return await this.project.nodeAdder.addCircleNodeByClick(location, sections, selectCurrent);
+  }
+
   addTextNodeFromCurrentSelectedNode(direction: Direction, selectCurrent = false) {
     this.project.nodeAdder.addTextNodeFromCurrentSelectedNode(direction, [], selectCurrent).then((uuid) => {
       setTimeout(() => {

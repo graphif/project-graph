@@ -1,5 +1,5 @@
 import { Color, Vector } from "@graphif/data-structures";
-import { Circle, CubicCatmullRomSpline, Line, Rectangle, SymmetryCurve } from "@graphif/shapes";
+import { Circle, CubicCatmullRomSpline, Diamond, Line, Rectangle, SymmetryCurve } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 
@@ -35,6 +35,10 @@ export class CollisionBoxRenderer {
           color,
           10 * scale,
         );
+      } else if (shape instanceof Diamond) {
+        const vertices = shape.getVertices();
+        const viewVertices = vertices.map((v) => this.project.renderer.transformWorld2View(v));
+        this.project.shapeRenderer.renderPolygonAndFill(viewVertices, Color.Transparent, color, 8 * scale);
       } else if (shape instanceof Line) {
         this.project.curveRenderer.renderSolidLine(
           this.project.renderer.transformWorld2View(shape.start),

@@ -16,6 +16,8 @@ import { EntityDetailsButtonRenderer } from "@/core/render/canvas2d/entityRender
 import { EntityRenderer } from "@/core/render/canvas2d/entityRenderer/EntityRenderer";
 import { MultiTargetUndirectedEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/multiTargetUndirectedEdge/MultiTargetUndirectedEdgeRenderer";
 import { SectionRenderer } from "@/core/render/canvas2d/entityRenderer/section/SectionRenderer";
+import { CircleNodeRenderer } from "@/core/render/canvas2d/entityRenderer/circleNode/CircleNodeRenderer";
+import { DiamondNodeRenderer } from "@/core/render/canvas2d/entityRenderer/diamondNode/DiamondNodeRenderer";
 import { SvgNodeRenderer } from "@/core/render/canvas2d/entityRenderer/svgNode/SvgNodeRenderer";
 import { TextNodeRenderer } from "@/core/render/canvas2d/entityRenderer/textNode/TextNodeRenderer";
 import { UrlNodeRenderer } from "@/core/render/canvas2d/entityRenderer/urlNode/urlNodeRenderer";
@@ -152,6 +154,8 @@ export function loadAllServicesBeforeInit(project: Project): void {
   project.loadService(SvgNodeRenderer);
   project.loadService(TextNodeRenderer);
   project.loadService(UrlNodeRenderer);
+  project.loadService(DiamondNodeRenderer);
+  project.loadService(CircleNodeRenderer);
   project.loadService(ReferenceBlockRenderer);
   project.loadService(BackgroundRenderer);
   project.loadService(SearchContentHighlightRenderer);

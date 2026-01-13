@@ -2,6 +2,8 @@ import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
+import { CircleNode } from "@/core/stage/stageObject/entity/CircleNode";
+import { DiamondNode } from "@/core/stage/stageObject/entity/DiamondNode";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
@@ -149,6 +151,10 @@ export class EntityRenderer {
       this.project.svgNodeRenderer.render(entity);
     } else if (entity instanceof ReferenceBlockNode) {
       this.project.referenceBlockRenderer.render(entity);
+    } else if (entity instanceof DiamondNode) {
+      this.project.diamondNodeRenderer.renderDiamondNode(entity);
+    } else if (entity instanceof CircleNode) {
+      this.project.circleNodeRenderer.renderCircleNode(entity);
     }
     // details右上角小按钮
     if (this.project.camera.currentScale > 0.065) {

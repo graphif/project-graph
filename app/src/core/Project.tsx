@@ -86,6 +86,8 @@ import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupS
 import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageReferenceManager";
 import { ProjectUpgrader } from "./stage/ProjectUpgrader";
 import { ProjectMetadata, createDefaultMetadata, isValidMetadata } from "@/types/metadata";
+import type { DiamondNodeRenderer } from "./render/canvas2d/entityRenderer/diamondNode/DiamondNodeRenderer";
+import type { CircleNodeRenderer } from "./render/canvas2d/entityRenderer/circleNode/CircleNodeRenderer";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -528,6 +530,8 @@ declare module "./Project" {
     stageStyleManager: StageStyleManager;
     autoSaveBackup: AutoSaveBackupService;
     referenceManager: ReferenceManager;
+    diamondNodeRenderer: DiamondNodeRenderer;
+    circleNodeRenderer: CircleNodeRenderer;
   }
 }
 

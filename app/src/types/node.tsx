@@ -106,6 +106,26 @@ export namespace Serialized {
   export function isSvgNode(obj: StageObject): obj is SvgNode {
     return obj.type === "core:svg_node";
   }
+  export type DiamondNode = Entity & {
+    type: "core:diamond_node";
+    size: Vector;
+    text: string;
+    color: Color;
+    sizeAdjust: TextNodeSizeAdjust;
+  };
+  export function isDiamondNode(obj: StageObject): obj is DiamondNode {
+    return obj.type === "core:diamond_node";
+  }
+  export type CircleNode = Entity & {
+    type: "core:circle_node";
+    radius: number;
+    text: string;
+    color: Color;
+    sizeAdjust: TextNodeSizeAdjust;
+  };
+  export function isCircleNode(obj: StageObject): obj is CircleNode {
+    return obj.type === "core:circle_node";
+  }
   // export type Edge = StageObject & {
   //   type: "core:edge";
   //   source: string;
@@ -170,7 +190,17 @@ export namespace Serialized {
     tension: number;
   };
 
-  export type CoreEntity = TextNode | Section | ConnectPoint | ImageNode | UrlNode | PenStroke | PortalNode | SvgNode;
+  export type CoreEntity =
+    | TextNode
+    | Section
+    | ConnectPoint
+    | ImageNode
+    | UrlNode
+    | PenStroke
+    | PortalNode
+    | SvgNode
+    | DiamondNode
+    | CircleNode;
   export function isCoreEntity(obj: StageObject): obj is CoreEntity {
     return obj.type.startsWith("core:");
   }

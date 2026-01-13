@@ -3,13 +3,15 @@ import { RectanglePushInEffect } from "@/core/service/feedbackService/effectEngi
 import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { CircleNode } from "@/core/stage/stageObject/entity/CircleNode";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
+import { DiamondNode } from "@/core/stage/stageObject/entity/DiamondNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Direction } from "@/types/directions";
 import { MarkdownNode, parseMarkdownToJSON } from "@/utils/markdownParse";
 import { Color, MonoStack, ProgressNumber, Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
+import { Circle, Diamond, Rectangle } from "@graphif/shapes";
 import { DetailsManager } from "../../stageObject/tools/entityDetailsManager";
 import { LineEdge } from "../../stageObject/association/LineEdge";
 
@@ -53,6 +55,84 @@ export class NodeAdder {
       );
     }
     // 处理选中问题
+    if (selectCurrent) {
+      for (const otherNode of this.project.stageManager.getTextNodes()) {
+        if (otherNode.isSelected) {
+          otherNode.isSelected = false;
+        }
+      }
+      node.isSelected = true;
+    }
+    if (shouldRecordHistory) {
+      this.project.historyManager.recordStep();
+    }
+    return node.uuid;
+  }
+
+  /**
+   * 通过点击位置增加菱形节点
+   */
+  async addDiamondNodeByClick(
+    clickWorldLocation: Vector,
+    addToSections: Section[],
+    selectCurrent = false,
+    shouldRecordHistory = true,
+  ): Promise<string> {
+    const autoFillColor = this.getAutoColor();
+    const node = new DiamondNode(this.project, {
+      text: await this.getAutoName(),
+      collisionBox: new CollisionBox([new Diamond(clickWorldLocation, Vector.same(120))]),
+      color: autoFillColor,
+    });
+    // 将node本身向左上角移动，使其居中
+    node.moveTo(node.rectangle.location.subtract(node.rectangle.size.divide(2)));
+    this.project.stageManager.add(node);
+
+    for (const section of addToSections) {
+      section.children.push(node);
+      section.adjustLocationAndSize();
+      this.project.effects.addEffect(
+        new RectanglePushInEffect(node.rectangle.clone(), section.rectangle.clone(), new ProgressNumber(0, 100)),
+      );
+    }
+    if (selectCurrent) {
+      for (const otherNode of this.project.stageManager.getTextNodes()) {
+        if (otherNode.isSelected) {
+          otherNode.isSelected = false;
+        }
+      }
+      node.isSelected = true;
+    }
+    if (shouldRecordHistory) {
+      this.project.historyManager.recordStep();
+    }
+    return node.uuid;
+  }
+
+  /**
+   * 通过点击位置增加圆形节点
+   */
+  async addCircleNodeByClick(
+    clickWorldLocation: Vector,
+    addToSections: Section[],
+    selectCurrent = false,
+    shouldRecordHistory = true,
+  ): Promise<string> {
+    const autoFillColor = this.getAutoColor();
+    const node = new CircleNode(this.project, {
+      text: await this.getAutoName(),
+      collisionBox: new CollisionBox([new Circle(clickWorldLocation, 60)]),
+      color: autoFillColor,
+    });
+    this.project.stageManager.add(node);
+
+    for (const section of addToSections) {
+      section.children.push(node);
+      section.adjustLocationAndSize();
+      this.project.effects.addEffect(
+        new RectanglePushInEffect(node.rectangle.clone(), section.rectangle.clone(), new ProgressNumber(0, 100)),
+      );
+    }
     if (selectCurrent) {
       for (const otherNode of this.project.stageManager.getTextNodes()) {
         if (otherNode.isSelected) {

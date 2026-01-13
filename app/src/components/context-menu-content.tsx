@@ -511,6 +511,22 @@ export default function MyContextMenuContent() {
             {t("createTextNode")}
           </Item>
           <Item
+            onClick={() =>
+              p.controllerUtils.addDiamondNodeByLocation(p.renderer.transformView2World(MouseLocation.vector()), true)
+            }
+          >
+            <SquareSquare className="rotate-45" />
+            创建菱形节点
+          </Item>
+          <Item
+            onClick={() =>
+              p.controllerUtils.addCircleNodeByLocation(p.renderer.transformView2World(MouseLocation.vector()), true)
+            }
+          >
+            <Dot className="size-5" />
+            创建圆形节点
+          </Item>
+          <Item
             onClick={() => p.controllerUtils.createConnectPoint(p.renderer.transformView2World(MouseLocation.vector()))}
           >
             <Dot />
