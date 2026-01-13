@@ -14,8 +14,11 @@ import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { Color, ProgressNumber } from "@graphif/data-structures";
 import { ReferenceBlockNode } from "../../stageObject/entity/ReferenceBlockNode";
 import { ConnectableEntity } from "../../stageObject/abstract/ConnectableEntity";
+import { StageObject } from "../../stageObject/abstract/StageObject";
+import { DiamondNode } from "../../stageObject/entity/DiamondNode";
+import { CircleNode } from "../../stageObject/entity/CircleNode";
 
-type DeleteHandler<T extends Entity> = (entity: T) => void;
+type DeleteHandler<T extends StageObject> = (object: T) => void;
 type Constructor<T> = { new (...args: any[]): T };
 
 /**
@@ -23,10 +26,10 @@ type Constructor<T> = { new (...args: any[]): T };
  */
 @service("deleteManager")
 export class DeleteManager {
-  private deleteHandlers = new Map<Constructor<Entity>, DeleteHandler<Entity>>();
+  private deleteHandlers = new Map<Constructor<StageObject>, DeleteHandler<StageObject>>();
   // 类型注册器，保证一个类型对应一个函数，绝对类型安全，同时可扩展
-  private registerHandler<T extends Entity>(constructor: Constructor<T>, handler: DeleteHandler<T>) {
-    this.deleteHandlers.set(constructor, handler as DeleteHandler<Entity>);
+  private registerHandler<T extends StageObject>(objectType: Constructor<T>, handler: DeleteHandler<T>) {
+    this.deleteHandlers.set(objectType, handler as DeleteHandler<StageObject>);
   }
 
   constructor(private readonly project: Project) {
@@ -39,6 +42,8 @@ export class DeleteManager {
     this.registerHandler(SvgNode, this.deleteSvgNode.bind(this));
     this.registerHandler(ReferenceBlockNode, this.deleteReferenceBlockNode.bind(this));
     this.registerHandler(MultiTargetUndirectedEdge, this.deleteMultiTargetUndirectedEdge.bind(this));
+    this.registerHandler(DiamondNode, this.deleteDiamondNode.bind(this));
+    this.registerHandler(CircleNode, this.deleteCircleNode.bind(this));
   }
 
   deleteEntities(deleteNodes: Entity[]) {
@@ -199,6 +204,24 @@ export class DeleteManager {
     }
   }
 
+  private deleteDiamondNode(entity: DiamondNode) {
+    if (this.project.stageManager.isEntityExists(entity.uuid)) {
+      this.project.stageManager.delete(entity);
+      this.project.effects.addEffect(
+        new ExplodeDashEffect(new ProgressNumber(0, 30), entity.collisionBox.getRectangle(), Color.White),
+      );
+      this.deleteEntityAfterClearAssociation(entity);
+    }
+  }
+  private deleteCircleNode(entity: CircleNode) {
+    if (this.project.stageManager.isEntityExists(entity.uuid)) {
+      this.project.stageManager.delete(entity);
+      this.project.effects.addEffect(
+        new ExplodeDashEffect(new ProgressNumber(0, 30), entity.collisionBox.getRectangle(), Color.White),
+      );
+      this.deleteEntityAfterClearAssociation(entity);
+    }
+  }
   deleteMultiTargetUndirectedEdge(edge: MultiTargetUndirectedEdge) {
     this.project.stageManager.delete(edge);
     this.project.stageManager.updateReferences();
