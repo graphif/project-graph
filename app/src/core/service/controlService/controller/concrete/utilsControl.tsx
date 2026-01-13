@@ -11,6 +11,8 @@ import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
+import { CircleNode } from "@/core/stage/stageObject/entity/CircleNode";
+import { DiamondNode } from "@/core/stage/stageObject/entity/DiamondNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
@@ -128,6 +130,138 @@ export class ControllerUtils {
           // 格式化树形结构
           this.project.keyboardOnlyTreeEngine.adjustTreeNode(clickedNode, false);
         }
+      });
+  }
+
+  /**
+   * 编辑菱形节点
+   * @param clickedNode
+   */
+  editDiamondNode(clickedNode: DiamondNode, selectAll = true) {
+    this.project.controller.isCameraLocked = true;
+    const rectWorld = clickedNode.collisionBox.getRectangle();
+    const rectView = this.project.renderer.transformWorld2View(rectWorld);
+    const fontColor = (
+      clickedNode.color.a === 1
+        ? colorInvert(clickedNode.color)
+        : colorInvert(this.project.stageStyleManager.currentStyle.Background)
+    ).toHexStringWithoutAlpha();
+    // 编辑节点
+    clickedNode.isEditing = true;
+    this.project.inputElement
+      .textarea(
+        clickedNode.text,
+        async (text, ele) => {
+          // onChange
+          clickedNode?.rename(text);
+          const rectWorld = clickedNode.collisionBox.getRectangle();
+          const rectView = this.project.renderer.transformWorld2View(rectWorld);
+          ele.style.height = "auto";
+          ele.style.height = `${rectView.height.toFixed(2) + 8}px`;
+          // 自动改变宽度
+          if (clickedNode.sizeAdjust === "manual") {
+            ele.style.width = "auto";
+            ele.style.width = `${rectView.width.toFixed(2) + 8}px`;
+          } else if (clickedNode.sizeAdjust === "auto") {
+            ele.style.width = "100vw";
+          }
+          // 自动调整它的外层框的大小
+          const fatherSections = this.project.sectionMethods.getFatherSectionsList(clickedNode);
+          for (const section of fatherSections) {
+            section.adjustLocationAndSize();
+          }
+        },
+        {
+          position: "fixed",
+          resize: "none",
+          boxSizing: "border-box",
+          overflow: "hidden",
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-all",
+          left: `${rectView.left.toFixed(2)}px`,
+          top: `${rectView.top.toFixed(2)}px`,
+          width: clickedNode.sizeAdjust === "manual" ? `${rectView.width.toFixed(2)}px` : "100vw",
+          minWidth: `${rectView.width.toFixed(2)}px`,
+          minHeight: `${rectView.height.toFixed(2)}px`,
+          padding: Renderer.NODE_PADDING * this.project.camera.currentScale + "px",
+          fontSize: clickedNode.getFontSize() * this.project.camera.currentScale + "px",
+          backgroundColor: "transparent",
+          color: fontColor,
+          outline: `solid ${1 * this.project.camera.currentScale}px ${this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.1).toString()}`,
+          borderRadius: `${Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale}px`,
+        },
+        selectAll,
+      )
+      .then(async () => {
+        clickedNode!.isEditing = false;
+        this.project.controller.isCameraLocked = false;
+        this.project.historyManager.recordStep();
+      });
+  }
+
+  /**
+   * 编辑圆形节点
+   * @param clickedNode
+   */
+  editCircleNode(clickedNode: CircleNode, selectAll = true) {
+    this.project.controller.isCameraLocked = true;
+    const rectWorld = clickedNode.collisionBox.getRectangle();
+    const rectView = this.project.renderer.transformWorld2View(rectWorld);
+    const fontColor = (
+      clickedNode.color.a === 1
+        ? colorInvert(clickedNode.color)
+        : colorInvert(this.project.stageStyleManager.currentStyle.Background)
+    ).toHexStringWithoutAlpha();
+    // 编辑节点
+    clickedNode.isEditing = true;
+    this.project.inputElement
+      .textarea(
+        clickedNode.text,
+        async (text, ele) => {
+          // onChange
+          clickedNode?.rename(text);
+          const rectWorld = clickedNode.collisionBox.getRectangle();
+          const rectView = this.project.renderer.transformWorld2View(rectWorld);
+          ele.style.height = "auto";
+          ele.style.height = `${rectView.height.toFixed(2) + 8}px`;
+          // 自动改变宽度
+          if (clickedNode.sizeAdjust === "manual") {
+            ele.style.width = "auto";
+            ele.style.width = `${rectView.width.toFixed(2) + 8}px`;
+          } else if (clickedNode.sizeAdjust === "auto") {
+            ele.style.width = "100vw";
+          }
+          // 自动调整它的外层框的大小
+          const fatherSections = this.project.sectionMethods.getFatherSectionsList(clickedNode);
+          for (const section of fatherSections) {
+            section.adjustLocationAndSize();
+          }
+        },
+        {
+          position: "fixed",
+          resize: "none",
+          boxSizing: "border-box",
+          overflow: "hidden",
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-all",
+          left: `${rectView.left.toFixed(2)}px`,
+          top: `${rectView.top.toFixed(2)}px`,
+          width: clickedNode.sizeAdjust === "manual" ? `${rectView.width.toFixed(2)}px` : "100vw",
+          minWidth: `${rectView.width.toFixed(2)}px`,
+          minHeight: `${rectView.height.toFixed(2)}px`,
+          padding: Renderer.NODE_PADDING * this.project.camera.currentScale + "px",
+          fontSize: clickedNode.getFontSize() * this.project.camera.currentScale + "px",
+          backgroundColor: "transparent",
+          color: fontColor,
+          outline: `solid ${1 * this.project.camera.currentScale}px ${this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.1).toString()}`,
+          borderRadius: `${Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale}px`,
+        },
+        selectAll,
+      )
+      .then(async () => {
+        clickedNode!.isEditing = false;
+        this.project.controller.isCameraLocked = false;
+        this.project.historyManager.recordStep();
       });
   }
 

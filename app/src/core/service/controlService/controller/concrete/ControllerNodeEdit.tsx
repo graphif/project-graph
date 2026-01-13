@@ -1,6 +1,8 @@
 import { Project } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
+import { CircleNode } from "@/core/stage/stageObject/entity/CircleNode";
+import { DiamondNode } from "@/core/stage/stageObject/entity/DiamondNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
@@ -40,6 +42,10 @@ export class ControllerNodeEditClass extends ControllerClass {
 
     if (clickedEntity instanceof TextNode) {
       this.project.controllerUtils.editTextNode(clickedEntity, Settings.textNodeSelectAllWhenStartEditByMouseClick);
+    } else if (clickedEntity instanceof DiamondNode) {
+      this.project.controllerUtils.editDiamondNode(clickedEntity, Settings.textNodeSelectAllWhenStartEditByMouseClick);
+    } else if (clickedEntity instanceof CircleNode) {
+      this.project.controllerUtils.editCircleNode(clickedEntity, Settings.textNodeSelectAllWhenStartEditByMouseClick);
     } else if (clickedEntity instanceof UrlNode) {
       const diffNodeLeftTopLocation = pressLocation.subtract(clickedEntity.rectangle.leftTop);
       if (diffNodeLeftTopLocation.y < UrlNode.titleHeight) {
