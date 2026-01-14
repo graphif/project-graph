@@ -24,7 +24,7 @@ export default function ToolbarContent() {
 
   return (
     <div className="absolute bottom-0 left-1/2 flex -translate-x-1/2 transform flex-col items-center justify-center">
-      <Toolbar className="">
+      <Toolbar className="bg-popover/95 supports-backdrop-blur:bg-popover/80 border-border/50 rounded-t-lg border-t px-2 py-1.5 shadow-xl backdrop-blur-md">
         <Tooltip>
           <TooltipTrigger>
             <Button

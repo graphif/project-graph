@@ -11,8 +11,9 @@ import KeyBindsPage from "./keybinds";
 import SettingsTab from "./settings";
 import ThemesTab from "./themes";
 import KeyBindsGlobalPage from "./keybindsGlobal";
+import QuickSettingsTab from "./quick-settings";
 
-type TabName = "settings" | "keybinds" | "appearance" | "about";
+type TabName = "settings" | "keybinds" | "appearance" | "about" | "quickSettings";
 
 export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab?: TabName }) {
   const [currentTab, setCurrentTab] = useState<TabName>(defaultTab);
@@ -26,6 +27,7 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
           <TabsTrigger value="keybindsGlobal">全局快捷键</TabsTrigger>
           <TabsTrigger value="appearance">个性化</TabsTrigger>
           <TabsTrigger value="themes">主题</TabsTrigger>
+          <TabsTrigger value="quickSettings">快捷设置</TabsTrigger>
           <TabsTrigger value="about">关于</TabsTrigger>
           <TabsTrigger value="credits">鸣谢</TabsTrigger>
         </TabsList>
@@ -45,6 +47,9 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
       </TabsContent>
       <TabsContent value="themes" className="overflow-auto">
         <ThemesTab />
+      </TabsContent>
+      <TabsContent value="quickSettings" className="overflow-auto">
+        <QuickSettingsTab />
       </TabsContent>
       <TabsContent value="about" className="overflow-auto">
         <AboutTab />

@@ -5,6 +5,7 @@ import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { StartFilesManager } from "@/core/service/dataFileService/StartFilesManager";
 import { ColorManager } from "@/core/service/feedbackService/ColorManager";
+import { QuickSettingsManager } from "@/core/service/QuickSettingsManager";
 import { Settings } from "@/core/service/Settings";
 import { Tutorials } from "@/core/service/Tourials";
 import { UserState } from "@/core/service/UserState";
@@ -46,6 +47,7 @@ const el = document.getElementById("root")!;
     Tutorials.init(),
     UserScriptsManager.init(),
     UserState.init(),
+    QuickSettingsManager.init(),
   ]);
   // 这些东西依赖上面的东西，所以单独一个Promise.all
   await Promise.all([loadLanguageFiles(), loadSyncModules()]);

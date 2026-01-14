@@ -34,6 +34,7 @@ import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/Key
 import { ProjectTabs } from "./ProjectTabs";
 import { DropWindowCover } from "./DropWindowCover";
 import ToolbarContent from "./components/toolbar-content";
+import RightToolbar from "./components/right-toolbar";
 
 export default function App() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -404,6 +405,9 @@ export default function App() {
 
       {/* 底部工具栏 */}
       {activeProject && <ToolbarContent />}
+
+      {/* 右侧工具栏 */}
+      {activeProject && <RightToolbar />}
 
       {/* 右上角关闭的触发角 */}
       {isWindows && (
