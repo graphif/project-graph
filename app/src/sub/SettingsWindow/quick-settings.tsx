@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { Fragment } from "react";
-import { GripVertical, Plus, Trash2, CircleQuestionMark } from "lucide-react";
+import { GripVertical, Plus, Trash2 } from "lucide-react";
 
 /**
  * 快捷设置项管理页面
@@ -79,7 +79,7 @@ export default function QuickSettingsTab() {
                 return (
                   <div key={settingKey as string} className="flex items-center gap-2 rounded-lg border p-3">
                     <GripVertical className="text-muted-foreground h-4 w-4 cursor-move" />
-                    {Icon !== Fragment ? <CircleQuestionMark className="h-4 w-4" /> : <div className="h-4 w-4" />}
+                    {Icon !== Fragment ? <Icon className="h-4 w-4" /> : <div className="h-4 w-4" />}
                     <span className="flex-1 text-sm">{title}</span>
                     <div className="flex gap-1">
                       <Button
@@ -126,7 +126,7 @@ export default function QuickSettingsTab() {
 
                 return (
                   <div key={settingKey as string} className="flex items-center gap-2 rounded-lg border p-3">
-                    {Icon !== Fragment ? <CircleQuestionMark className="h-4 w-4" /> : <div className="h-4 w-4" />}
+                    {Icon !== Fragment ? <Icon className="h-4 w-4" /> : <div className="h-4 w-4" />}
                     <span className="flex-1 text-sm">{title}</span>
                     <Button variant="outline" size="sm" onClick={() => handleAdd(settingKey)}>
                       <Plus className="mr-1 h-4 w-4" />
