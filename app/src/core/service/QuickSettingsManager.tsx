@@ -20,19 +20,17 @@ export namespace QuickSettingsManager {
   };
 
   /**
-   * 默认的快捷设置项列表（10个布尔类型的设置项）
+   * 默认的快捷设置项列表（8个布尔类型的设置项）
    */
   const DEFAULT_QUICK_SETTINGS: QuickSettingItem[] = [
-    { settingKey: "showBackgroundHorizontalLines" },
-    { settingKey: "showBackgroundVerticalLines" },
-    { settingKey: "showBackgroundCartesian" },
+    { settingKey: "isStealthModeEnabled" },
+    { settingKey: "stealthModeReverseMask" },
     { settingKey: "showTextNodeBorder" },
     { settingKey: "alwaysShowDetails" },
     { settingKey: "showDebug" },
-    { settingKey: "showGrid" },
-    { settingKey: "soundEnabled" },
-    { settingKey: "autoSave" },
-    { settingKey: "autoBackup" },
+    { settingKey: "enableDragAutoAlign" },
+    { settingKey: "allowMoveCameraByWSAD" },
+    { settingKey: "textIntegerLocationAndSizeRender" },
   ];
 
   export async function init() {
