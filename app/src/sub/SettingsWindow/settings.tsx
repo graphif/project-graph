@@ -201,6 +201,7 @@ const categories = {
     basic: [
       "language",
       "isClassroomMode",
+      "showQuickSettingsToolbar",
       "windowBackgroundAlpha",
       "windowBackgroundOpacityAfterOpenClickThrough",
       "windowBackgroundOpacityAfterCloseClickThrough",

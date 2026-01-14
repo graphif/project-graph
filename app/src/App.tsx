@@ -50,6 +50,7 @@ export default function App() {
   );
   const [ignoreMouseEvents, setIgnoreMouseEvents] = useState(false);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
+  const [showQuickSettingsToolbar, setShowQuickSettingsToolbar] = useState(Settings.showQuickSettingsToolbar);
 
   const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
 
@@ -95,6 +96,11 @@ export default function App() {
     // 监听主题样式切换
     Settings.watch("theme", (value) => {
       Themes.applyThemeById(value);
+    });
+
+    // 监听快捷设置工具栏显示设置
+    Settings.watch("showQuickSettingsToolbar", (value) => {
+      setShowQuickSettingsToolbar(value);
     });
 
     // 恢复窗口位置大小
@@ -407,7 +413,7 @@ export default function App() {
       {activeProject && <ToolbarContent />}
 
       {/* 右侧工具栏 */}
-      {activeProject && <RightToolbar />}
+      {activeProject && showQuickSettingsToolbar && <RightToolbar />}
 
       {/* 右上角关闭的触发角 */}
       {isWindows && (

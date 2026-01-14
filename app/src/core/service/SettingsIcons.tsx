@@ -140,6 +140,7 @@ export const settingsIcons = {
   showTipsOnUI: AppWindow,
   useNativeTitleBar: AppWindowMac,
   isClassroomMode: Presentation,
+  showQuickSettingsToolbar: Columns4,
   windowBackgroundAlpha: Blend,
   windowBackgroundOpacityAfterOpenClickThrough: Blend,
   windowBackgroundOpacityAfterCloseClickThrough: Blend,

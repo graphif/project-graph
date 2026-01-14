@@ -184,6 +184,11 @@ settings:
     description: |
       用于教学、培训等场景。
       开启后窗口顶部按钮会透明，鼠标悬浮上去会恢复，可以修改进入退出专注模式的快捷键
+  showQuickSettingsToolbar:
+    title: 显示快捷设置栏
+    description: |
+      控制是否在界面右侧显示快捷操作栏（快捷设置栏）。
+      快捷设置栏可以让您快速切换常用设置项的开关状态。
   autoAdjustLineEndpointsByMouseTrack:
     title: 根据鼠标拖动轨迹自动调整生成连线的端点位置
     description: |

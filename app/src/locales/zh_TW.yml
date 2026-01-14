@@ -217,6 +217,11 @@ settings:
 
       專注模式'
     description: 開啟後窗口頂部按鈕會透明，鼠標懸浮上去會恢復，可以修改進入退出專注模式的快捷鍵
+  showQuickSettingsToolbar:
+    title: 顯示快捷設置欄
+    description: '控制是否在介面右側顯示快捷操作欄（快捷設置欄）。
+
+      快捷設置欄可以讓您快速切換常用設置項的開關狀態。'
   autoAdjustLineEndpointsByMouseTrack:
     title: 根據鼠標拖動軌跡自動調整生成連線的端點位置
     description: '開啟後，在拖拽連線時會根據鼠標移動軌跡自動調整連線端點在實體上的位置

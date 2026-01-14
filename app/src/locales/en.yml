@@ -129,6 +129,11 @@ settings:
     description: |
       For teaching, training.
       When enabled, the buttons at the top of the window will become transparent, and they will revert when the mouse hovers over them. You can customize the shortcut keys to enter and exit focus mode.
+  showQuickSettingsToolbar:
+    title: Show Quick Settings Toolbar
+    description: |
+      Control whether to display the quick settings toolbar on the right side of the interface.
+      The quick settings toolbar allows you to quickly toggle common settings.
   autoAdjustLineEndpointsByMouseTrack:
     title: Auto Adjust Line Endpoints by Mouse Track
     description: |
