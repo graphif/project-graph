@@ -202,6 +202,113 @@ export class Project extends EventEmitter<{
   }
 
   /**
+   * 比较两个版本号字符串（格式：x.y.z）
+   * @param version1 版本1
+   * @param version2 版本2
+   * @returns 如果 version1 < version2 返回 -1，如果 version1 > version2 返回 1，如果相等返回 0
+   */
+  private compareVersion(version1: string, version2: string): number {
+    const v1Parts = version1.split(".").map(Number);
+    const v2Parts = version2.split(".").map(Number);
+    const maxLength = Math.max(v1Parts.length, v2Parts.length);
+
+    for (let i = 0; i < maxLength; i++) {
+      const v1Part = v1Parts[i] || 0;
+      const v2Part = v2Parts[i] || 0;
+      if (v1Part < v2Part) return -1;
+      if (v1Part > v2Part) return 1;
+    }
+    return 0;
+  }
+
+  /**
+   * 检查是否需要升级，如果需要则显示确认对话框
+   * @param currentVersion 当前文件版本
+   * @param latestVersion 最新版本
+   */
+  private async checkAndConfirmUpgrade(currentVersion: string, latestVersion: string): Promise<void> {
+    const needsUpgrade = this.compareVersion(currentVersion, latestVersion) < 0;
+
+    if (!needsUpgrade) {
+      return;
+    }
+
+    // 显示确认对话框
+    const response = await Dialog.buttons(
+      "检测到旧版本项目文件",
+      `当前文件版本为 ${currentVersion}，需要升级到 ${latestVersion} (是prg文件版本,非软件版本)。\n\n升级过程不可逆且可能存在风险，特别是对于大型文件，建议提前备份。是否继续升级？`,
+      [
+        { id: "cancel", label: "取消", variant: "ghost" },
+        { id: "upgrade", label: "确认升级" },
+      ],
+    );
+
+    if (response === "cancel") {
+      // 用户取消升级，抛出错误以便调用者知道操作被取消
+      throw new Error("用户取消了文件升级，文件未打开");
+    }
+
+    // 添加延迟，确保用户看到提示并给系统时间处理
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  /**
+   * 解析项目文件（ZIP格式），提取所有数据
+   * @returns 解析后的数据对象
+   */
+  private async parseProjectFile(): Promise<{
+    serializedStageObjects: any[];
+    tags: string[];
+    references: { sections: Record<string, string[]>; files: string[] };
+    metadata: ProjectMetadata;
+  }> {
+    const fileContent = await this.fs.read(this.uri);
+    const reader = new ZipReader(new Uint8ArrayReader(fileContent));
+    const entries = await reader.getEntries();
+
+    let serializedStageObjects: any[] = [];
+    let tags: string[] = [];
+    let references: { sections: Record<string, string[]>; files: string[] } = { sections: {}, files: [] };
+    let metadata: ProjectMetadata = createDefaultMetadata("2.0.0");
+
+    for (const entry of entries) {
+      if (entry.filename === "stage.msgpack") {
+        const stageRawData = await entry.getData!(new Uint8ArrayWriter());
+        serializedStageObjects = this.decoder.decode(stageRawData) as any[];
+      } else if (entry.filename === "tags.msgpack") {
+        const tagsRawData = await entry.getData!(new Uint8ArrayWriter());
+        tags = this.decoder.decode(tagsRawData) as string[];
+      } else if (entry.filename === "reference.msgpack") {
+        const referenceRawData = await entry.getData!(new Uint8ArrayWriter());
+        references = this.decoder.decode(referenceRawData) as { sections: Record<string, string[]>; files: string[] };
+      } else if (entry.filename === "metadata.msgpack") {
+        const metadataRawData = await entry.getData!(new Uint8ArrayWriter());
+        const decodedMetadata = this.decoder.decode(metadataRawData) as any;
+        // 验证并规范化 metadata
+        if (isValidMetadata(decodedMetadata)) {
+          metadata = decodedMetadata;
+        } else {
+          // 如果格式不正确，使用默认值
+          metadata = createDefaultMetadata("2.0.0");
+        }
+      } else if (entry.filename.startsWith("attachments/")) {
+        const match = entry.filename.trim().match(/^attachments\/([a-zA-Z0-9-]+)\.([a-zA-Z0-9]+)$/);
+        if (!match) {
+          console.warn("[Project] 附件文件名不符合规范: %s", entry.filename);
+          continue;
+        }
+        const uuid = match[1];
+        const ext = match[2];
+        const type = mime.getType(ext) || "application/octet-stream";
+        const attachment = await entry.getData!(new BlobWriter(type));
+        this.attachments.set(uuid, attachment);
+      }
+    }
+
+    return { serializedStageObjects, tags, references, metadata };
+  }
+
+  /**
    * 服务加载完成后再调用
    */
   async init() {
@@ -209,55 +316,25 @@ export class Project extends EventEmitter<{
       return;
     }
     try {
-      const fileContent = await this.fs.read(this.uri);
-      const reader = new ZipReader(new Uint8ArrayReader(fileContent));
-      const entries = await reader.getEntries();
-      let serializedStageObjects: any[] = [];
-      let tags: string[] = [];
-      let references: { sections: Record<string, string[]>; files: string[] } = { sections: {}, files: [] };
-      let metadata: ProjectMetadata = createDefaultMetadata("2.0.0");
+      // 解析项目文件
+      const { serializedStageObjects, tags, references, metadata } = await this.parseProjectFile();
 
-      for (const entry of entries) {
-        if (entry.filename === "stage.msgpack") {
-          const stageRawData = await entry.getData!(new Uint8ArrayWriter());
-          serializedStageObjects = this.decoder.decode(stageRawData) as any[];
-        } else if (entry.filename === "tags.msgpack") {
-          const tagsRawData = await entry.getData!(new Uint8ArrayWriter());
-          tags = this.decoder.decode(tagsRawData) as string[];
-        } else if (entry.filename === "reference.msgpack") {
-          const referenceRawData = await entry.getData!(new Uint8ArrayWriter());
-          references = this.decoder.decode(referenceRawData) as { sections: Record<string, string[]>; files: string[] };
-        } else if (entry.filename === "metadata.msgpack") {
-          const metadataRawData = await entry.getData!(new Uint8ArrayWriter());
-          const decodedMetadata = this.decoder.decode(metadataRawData) as any;
-          // 验证并规范化 metadata
-          if (isValidMetadata(decodedMetadata)) {
-            metadata = decodedMetadata;
-          } else {
-            // 如果格式不正确，使用默认值
-            metadata = createDefaultMetadata("2.0.0");
-          }
-        } else if (entry.filename.startsWith("attachments/")) {
-          const match = entry.filename.trim().match(/^attachments\/([a-zA-Z0-9-]+)\.([a-zA-Z0-9]+)$/);
-          if (!match) {
-            console.warn("[Project] 附件文件名不符合规范: %s", entry.filename);
-            continue;
-          }
-          const uuid = match[1];
-          const ext = match[2];
-          const type = mime.getType(ext) || "application/octet-stream";
-          const attachment = await entry.getData!(new BlobWriter(type));
-          this.attachments.set(uuid, attachment);
-        }
-      }
+      // 检查并确认升级
+      const currentVersion = metadata?.version || "2.0.0";
+      const latestVersion = ProjectUpgrader.NLatestVersion;
+      await this.checkAndConfirmUpgrade(currentVersion, latestVersion);
 
       // 升级数据
-      [serializedStageObjects, metadata] = ProjectUpgrader.upgradeNAnyToNLatest(serializedStageObjects, metadata);
+      const [upgradedStageObjects, upgradedMetadata] = ProjectUpgrader.upgradeNAnyToNLatest(
+        serializedStageObjects,
+        metadata,
+      );
 
-      this.stage = deserialize(serializedStageObjects, this);
+      // 应用升级后的数据
+      this.stage = deserialize(upgradedStageObjects, this);
       this.tags = tags;
       this.references = references;
-      this.metadata = metadata;
+      this.metadata = upgradedMetadata;
     } catch (e) {
       console.warn(e);
     }
