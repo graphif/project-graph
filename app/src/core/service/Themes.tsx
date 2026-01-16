@@ -2,7 +2,9 @@ import { camelCaseToDashCase } from "@/utils/font";
 import { parseYamlWithFrontmatter } from "@/utils/yaml";
 import { appLocalDataDir, join } from "@tauri-apps/api/path";
 import { mkdir, readDir, readTextFile, remove, writeTextFile } from "@tauri-apps/plugin-fs";
+import { toast } from "sonner";
 import YAML from "yaml";
+import { Settings } from "./Settings";
 
 export namespace Themes {
   export type Metadata = {
@@ -64,7 +66,13 @@ export namespace Themes {
   }
   /** 将主题CSS挂载到网页上 */
   export async function applyThemeById(themeId: string) {
-    await applyTheme((await getThemeById(themeId))?.content);
+    try {
+      const theme = await getThemeById(themeId);
+      await applyTheme(theme.content);
+    } catch {
+      toast.warning("主题文件不存在，已为您切换至默认主题");
+      Settings.theme = "dark";
+    }
   }
   export async function applyTheme(themeContent: any) {
     let styleEl = document.querySelector("#pg-theme");
