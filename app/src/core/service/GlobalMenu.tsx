@@ -136,6 +136,7 @@ import { Telemetry } from "./Telemetry";
 import { Entity } from "../stage/stageObject/abstract/StageEntity";
 import { Rectangle } from "@graphif/shapes";
 import { CollisionBox } from "../stage/stageObject/collisionBox/collisionBox";
+import { generateKeyboardLayout } from "./dataGenerateService/generateFromFolderEngine/GenerateFromFolderEngine";
 
 const Content = MenubarContent;
 const Item = MenubarItem;
@@ -346,6 +347,16 @@ export function GlobalMenu() {
               >
                 <FolderTree />
                 {t("file.importFromFolder")}
+              </Item>
+              <Item
+                disabled={!activeProject}
+                onClick={async () => {
+                  await generateKeyboardLayout(activeProject!);
+                  toast.success("键盘布局图已生成");
+                }}
+              >
+                <Keyboard />
+                {t("file.generateKeyboardLayout")}
               </Item>
               <Item
                 disabled={!activeProject}

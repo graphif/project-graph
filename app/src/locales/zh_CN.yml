@@ -26,6 +26,7 @@ globalMenu:
     saveAs: 另存为
     import: 导入
     importFromFolder: 根据文件夹生成框框嵌套图
+    generateKeyboardLayout: 根据当前快捷键配置生成键盘布局图
     export: 导出
     exportAsSVG: 导出为 SVG
     exportAll: 导出全部内容

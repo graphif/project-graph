@@ -25,6 +25,7 @@ globalMenu:
     saveAs: 另存新檔
     import: 匯入
     importFromFolder: 根據資料夾生成框框巢狀圖
+    generateKeyboardLayout: 根據目前快速鍵設定產生鍵盤佈局圖
     export: 匯出
     exportAsSVG: 匯出為 SVG
     exportAll: 匯出全部內容

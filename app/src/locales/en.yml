@@ -748,6 +748,7 @@ globalMenu:
     saveAs: Save As
     import: Import
     importFromFolder: Generate Nested Graph from Folder
+    generateKeyboardLayout: Generate Keyboard Layout from Current Keybindings
     export: Export
     exportAsSVG: Export as SVG
     exportAll: Export All Content

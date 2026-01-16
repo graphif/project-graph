@@ -446,7 +446,7 @@ type ShortcutKeysGroup = {
   keys: string[];
 };
 
-const shortcutKeysGroups: ShortcutKeysGroup[] = [
+export const shortcutKeysGroups: ShortcutKeysGroup[] = [
   {
     title: "basic",
     icon: <Keyboard />,
