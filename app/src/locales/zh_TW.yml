@@ -1148,6 +1148,11 @@ keyBinds:
   createConnectPointWhenDragConnecting:
     title: 拖拽連線時，按下此鍵，創建質點中轉
     description: 當拖拽連線時，按下此鍵，創建質點中轉
+  treeGraphAdjustSelectedAsRoot:
+    title: 以選中節點為根節點格式化樹形結構
+    description: |
+      以當前選中的節點作為根節點進行樹形結構格式化
+      不會查找整個樹的根節點，只格式化以選中節點為根的子樹
   treeGraphAdjust:
     title: 調整當前節點所在樹形結構的樹形排布
     description: '主要用於關閉了鍵盤生長節點時觸發的樹形排布調整時使用

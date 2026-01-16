@@ -1186,6 +1186,11 @@ keyBinds:
     description: |
       主要用于关闭了键盘生长节点时触发的树形排布调整时使用
       可以通过此快捷键手动触发布局调整
+  treeGraphAdjustSelectedAsRoot:
+    title: 以选中节点为根节点格式化树形结构
+    description: |
+      以当前选中的节点作为根节点进行树形结构格式化
+      不会查找整个树的根节点，只格式化以选中节点为根的子树
   dagGraphAdjust:
     title: 调整当前选中节点群的DAG布局
     description: |

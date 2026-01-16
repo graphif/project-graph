@@ -556,6 +556,7 @@ const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "generateNodeTreeWithBroadMode",
       "generateNodeGraph",
       "treeGraphAdjust",
+      "treeGraphAdjustSelectedAsRoot",
       "gravityLayout",
       "setNodeTreeDirectionUp",
       "setNodeTreeDirectionDown",

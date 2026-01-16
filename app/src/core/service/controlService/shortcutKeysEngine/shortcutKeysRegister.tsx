@@ -905,6 +905,21 @@ export const allKeyBinds: KeyBindItem[] = [
       project?.controller.pressingKeySet.clear(); // 解决 mac 按下后容易卡键
     },
   },
+  {
+    id: "treeGraphAdjustSelectedAsRoot",
+    defaultKey: "C-A-S-f",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      const entities = project!.stageManager
+        .getSelectedEntities()
+        .filter((entity) => entity instanceof ConnectableEntity);
+      for (const entity of entities) {
+        // 直接以选中节点为根节点进行格式化，不查找整个树的根节点
+        project!.autoAlign.autoLayoutSelectedFastTreeMode(entity);
+      }
+      project?.controller.pressingKeySet.clear(); // 解决 mac 按下后容易卡键
+    },
+  },
   /*------- DAG调整 -------*/
   {
     id: "dagGraphAdjust",

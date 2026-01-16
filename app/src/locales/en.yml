@@ -1036,6 +1036,11 @@ keyBinds:
     description: |
       Automatically adjust the layout of selected nodes that form a Directed Acyclic Graph (DAG).
       This feature is only available when the selected nodes form a DAG structure.
+  treeGraphAdjustSelectedAsRoot:
+    title: Format Tree Structure with Selected Node as Root
+    description: |
+      Format the tree structure using the currently selected node as the root node.
+      Does not search for the root of the entire tree, only formats the subtree rooted at the selected node.
   undo:
     title: Undo
     description: Undo the last action
