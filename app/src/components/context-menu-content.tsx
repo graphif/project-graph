@@ -6,12 +6,14 @@ import {
   ContextMenuSubContent,
   ContextMenuSubTrigger,
 } from "@/components/ui/context-menu";
+import { Dialog } from "@/components/ui/dialog";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { activeProjectAtom, contextMenuTooltipWordsAtom } from "@/state";
 import { Color } from "@graphif/data-structures";
 import { useAtom } from "jotai";
@@ -80,6 +82,7 @@ import {
   CornerUpRight,
   Workflow,
   Equal,
+  Save,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -96,6 +99,7 @@ import { parseEmacsKey } from "@/utils/emacs";
 import { ConnectNodeSmartTools } from "@/core/service/dataManageService/connectNodeSmartTools";
 import { ColorSmartTools } from "@/core/service/dataManageService/colorSmartTools";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
+import { exportImagesToProjectDirectory } from "@/utils/imageExport";
 
 const Content = ContextMenuContent;
 const Item = ContextMenuItem;
@@ -996,6 +1000,71 @@ export default function MyContextMenuContent() {
             </Item>
           </SubContent>
         </Sub>
+      )}
+
+      {/* 存在选中 ImageNode */}
+      {p.stageManager.getSelectedEntities().filter((it) => it instanceof ImageNode).length > 0 && (
+        <Item
+          onClick={async () => {
+            // 检查是否是草稿模式
+            if (p.isDraft) {
+              toast.error("请先保存项目后再导出图片");
+              return;
+            }
+
+            // 获取所有选中的 ImageNode
+            const selectedImageNodes = p.stageManager
+              .getSelectedEntities()
+              .filter((it) => it instanceof ImageNode) as ImageNode[];
+
+            if (selectedImageNodes.length === 0) {
+              toast.error("请选中图片节点");
+              return;
+            }
+
+            // 根据图片数量决定提示信息
+            const isBatch = selectedImageNodes.length > 1;
+            const promptMessage = isBatch
+              ? `请输入文件名（不含扩展名，将为 ${selectedImageNodes.length} 张图片添加数字后缀）`
+              : `请输入文件名（不含扩展名，将自动添加扩展名）`;
+
+            // 弹出输入框 - 只弹出一次
+            const fileName = await Dialog.input("另存图片", promptMessage, {
+              placeholder: "image",
+            });
+
+            if (!fileName) {
+              return; // 用户取消
+            }
+
+            // 验证文件名是否合法
+            const invalidChars = /[/\\:*?"<>|]/;
+            if (invalidChars.test(fileName)) {
+              toast.error('文件名包含非法字符：/ \\ : * ? " < > |');
+              return;
+            }
+
+            // 调用工具函数导出图片
+            const { successCount, failedCount } = await exportImagesToProjectDirectory(
+              selectedImageNodes,
+              p.uri.fsPath,
+              p.attachments,
+              fileName,
+            );
+
+            // 显示结果提示
+            if (successCount > 0 && failedCount === 0) {
+              toast.success(`成功保存 ${successCount} 张图片`);
+            } else if (successCount > 0 && failedCount > 0) {
+              toast.warning(`成功保存 ${successCount} 张图片，${failedCount} 张失败`);
+            } else {
+              toast.error(`保存失败，请检查文件名或文件权限`);
+            }
+          }}
+        >
+          <Save />
+          另存图片到当前prg所在目录下
+        </Item>
       )}
     </Content>
   );
