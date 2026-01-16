@@ -15,7 +15,7 @@ import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { activeProjectAtom, contextMenuTooltipWordsAtom } from "@/state";
-import { Color } from "@graphif/data-structures";
+import { Color, Vector } from "@graphif/data-structures";
 import { useAtom } from "jotai";
 import {
   AlignCenterHorizontal,
@@ -959,6 +959,27 @@ export default function MyContextMenuContent() {
           >
             <RefreshCcw />
             {t("switchMTUEdgeRenderType")}
+          </Item>
+
+          <Item
+            onClick={() => {
+              // 重置所有选中无向边的端点位置到中心
+              const selectedMTUEdges = p.stageManager
+                .getSelectedAssociations()
+                .filter((edge) => edge instanceof MultiTargetUndirectedEdge);
+              for (const multi_target_undirected_edge of selectedMTUEdges) {
+                // 重置中心位置到中心
+                multi_target_undirected_edge.centerRate = Vector.same(0.5);
+                // 重置每个节点的连接点位置到中心
+                multi_target_undirected_edge.rectRates = multi_target_undirected_edge.associationList.map(() =>
+                  Vector.same(0.5),
+                );
+              }
+              p.historyManager.recordStep();
+            }}
+          >
+            <AlignCenterHorizontal />
+            重置端点位置到中心
           </Item>
 
           <Item
