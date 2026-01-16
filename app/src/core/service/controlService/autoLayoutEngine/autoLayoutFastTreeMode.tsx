@@ -551,10 +551,14 @@ export class AutoLayoutFastTree {
       this.adjustChildrenTreesByRootNodeLocation(node, rightChildList, 150, "rightCenter");
 
       this.alignTrees(topChildList, "top", 20);
-      this.adjustChildrenTreesByRootNodeLocation(node, topChildList, 150, "topCenter");
+      // 如果是向上生长且只有一个子节点（唯一子节点），使用较短距离，否则使用150像素
+      const topGap = topChildList.length === 1 ? 50 : 150;
+      this.adjustChildrenTreesByRootNodeLocation(node, topChildList, topGap, "topCenter");
 
       this.alignTrees(bottomChildList, "bottom", 20);
-      this.adjustChildrenTreesByRootNodeLocation(node, bottomChildList, 150, "bottomCenter");
+      // 如果是向下生长且只有一个子节点（唯一子节点），使用较短距离，否则使用150像素
+      const bottomGap = bottomChildList.length === 1 ? 50 : 150;
+      this.adjustChildrenTreesByRootNodeLocation(node, bottomChildList, bottomGap, "bottomCenter");
 
       this.alignTrees(leftChildList, "left", 20);
       this.adjustChildrenTreesByRootNodeLocation(node, leftChildList, 150, "leftCenter");

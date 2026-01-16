@@ -119,10 +119,10 @@ export class KeyboardOnlyTreeEngine {
           createLocation = rect.leftCenter.add(new Vector(-100, 0));
           break;
         case "down":
-          createLocation = rect.bottomCenter.add(new Vector(0, 100));
+          createLocation = rect.bottomCenter.add(new Vector(0, 25));
           break;
         case "up":
-          createLocation = rect.topCenter.add(new Vector(0, -100));
+          createLocation = rect.topCenter.add(new Vector(0, -25));
           break;
       }
     } else {
