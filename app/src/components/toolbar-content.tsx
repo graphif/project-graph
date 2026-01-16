@@ -9,6 +9,8 @@ import { useEffect, useState } from "react";
 import { cn } from "@/utils/cn";
 import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import { Color } from "@graphif/data-structures";
+import { useAtom } from "jotai";
+import { isClassroomModeAtom } from "@/state";
 
 /**
  * 底部工具栏
@@ -16,6 +18,7 @@ import { Color } from "@graphif/data-structures";
  */
 export default function ToolbarContent() {
   const { t } = useTranslation("keyBinds");
+  const [isClassroomMode] = useAtom(isClassroomModeAtom);
 
   const [leftMouseMode, setLeftMouseMode] = useState(Settings.mouseLeftMode);
   useEffect(() => {
@@ -23,7 +26,12 @@ export default function ToolbarContent() {
   }, [Settings.mouseLeftMode]);
 
   return (
-    <div className="absolute bottom-0 left-1/2 flex -translate-x-1/2 transform flex-col items-center justify-center">
+    <div
+      className={cn(
+        "absolute bottom-0 left-1/2 flex -translate-x-1/2 transform flex-col items-center justify-center transition-all hover:opacity-100",
+        isClassroomMode && "opacity-0",
+      )}
+    >
       <Toolbar className="bg-popover/95 supports-backdrop-blur:bg-popover/80 border-border/50 rounded-t-lg border-t px-2 py-1.5 shadow-xl backdrop-blur-md">
         <Tooltip>
           <TooltipTrigger>

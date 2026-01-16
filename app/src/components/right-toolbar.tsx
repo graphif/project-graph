@@ -10,6 +10,8 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { cn } from "@/utils/cn";
 import { Fragment } from "react";
+import { useAtom } from "jotai";
+import { isClassroomModeAtom } from "@/state";
 
 /**
  * 单个快捷设置项按钮
@@ -100,6 +102,7 @@ function QuickSettingButton({
 export default function RightToolbar() {
   const [quickSettings, setQuickSettings] = useState<QuickSettingsManager.QuickSettingItem[]>([]);
   const [isHovered, setIsHovered] = useState(false);
+  const [isClassroomMode] = useAtom(isClassroomModeAtom);
 
   const loadQuickSettings = async () => {
     const items = await QuickSettingsManager.getQuickSettings();
@@ -128,7 +131,12 @@ export default function RightToolbar() {
   }, []);
 
   return (
-    <div className="absolute right-2 top-1/2 flex -translate-y-1/2 transform flex-col items-center justify-center">
+    <div
+      className={cn(
+        "absolute right-2 top-1/2 flex -translate-y-1/2 transform flex-col items-center justify-center transition-all hover:opacity-100",
+        isClassroomMode && "opacity-0",
+      )}
+    >
       <Toolbar
         className="bg-popover/95 supports-backdrop-blur:bg-popover/80 border-border/50 flex-col gap-0.5 rounded-lg border px-1 py-1.5 shadow-xl backdrop-blur-md"
         onMouseEnter={() => setIsHovered(true)}
