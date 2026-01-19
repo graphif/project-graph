@@ -174,6 +174,59 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
   }
 
   /**
+   * 交换图片的红蓝通道
+   * 将图片的红色和蓝色通道对调，绿色和alpha通道保持不变
+   * 并将处理后的图片数据保存到project.attachments中，实现持久化存储
+   */
+  swapRedBlueChannels() {
+    if (!this.bitmap) return;
+
+    // 创建临时canvas
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // 设置canvas尺寸
+    canvas.width = this.bitmap.width;
+    canvas.height = this.bitmap.height;
+
+    // 绘制原图
+    ctx.drawImage(this.bitmap, 0, 0);
+
+    // 获取图像数据
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    // 交换红色和蓝色通道
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i]; // R
+      const b = data[i + 2]; // B
+      data[i] = b; // R = B
+      data[i + 2] = r; // B = R
+      // data[i + 1] 保持不变（绿色通道）
+      // data[i + 3] 保持不变（alpha通道）
+    }
+
+    // 将修改后的图像数据绘制回canvas
+    ctx.putImageData(imageData, 0, 0);
+
+    // 创建新的ImageBitmap并保存到attachments中
+    createImageBitmap(imageData).then((newBitmap) => {
+      this.bitmap = newBitmap;
+
+      // 将canvas转换为Blob并保存到project.attachments中
+      canvas.toBlob((blob) => {
+        if (blob) {
+          // 创建新的attachmentId并替换原有数据
+          const newAttachmentId = this.project.addAttachment(blob);
+          // 更新当前节点的attachmentId
+          this.attachmentId = newAttachmentId;
+        }
+      }, "image/png");
+    });
+  }
+
+  /**
    * 处理拖拽缩放逻辑
    * @param delta 拖拽距离向量
    */

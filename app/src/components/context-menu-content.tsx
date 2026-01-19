@@ -84,6 +84,8 @@ import {
   Equal,
   Save,
 } from "lucide-react";
+import { Image as TauriImage } from "@tauri-apps/api/image";
+import { writeImage } from "@tauri-apps/plugin-clipboard-manager";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import tailwindColors from "tailwindcss/colors";
@@ -1025,67 +1027,137 @@ export default function MyContextMenuContent() {
 
       {/* 存在选中 ImageNode */}
       {p.stageManager.getSelectedEntities().filter((it) => it instanceof ImageNode).length > 0 && (
-        <Item
-          onClick={async () => {
-            // 检查是否是草稿模式
-            if (p.isDraft) {
-              toast.error("请先保存项目后再导出图片");
-              return;
-            }
+        <>
+          <Item
+            onClick={async () => {
+              // 获取所有选中的 ImageNode
+              const selectedImageNodes = p.stageManager
+                .getSelectedEntities()
+                .filter((it) => it instanceof ImageNode) as ImageNode[];
 
-            // 获取所有选中的 ImageNode
-            const selectedImageNodes = p.stageManager
-              .getSelectedEntities()
-              .filter((it) => it instanceof ImageNode) as ImageNode[];
+              if (selectedImageNodes.length === 0) {
+                toast.error("请选中图片节点");
+                return;
+              }
 
-            if (selectedImageNodes.length === 0) {
-              toast.error("请选中图片节点");
-              return;
-            }
+              // 复制第一张图片到剪贴板（如果有多张图片，只复制第一张）
+              const imageNode = selectedImageNodes[0];
+              const blob = p.attachments.get(imageNode.attachmentId);
+              if (blob) {
+                try {
+                  const arrayBuffer = await blob.arrayBuffer();
+                  const tauriImage = await TauriImage.fromBytes(new Uint8Array(arrayBuffer));
+                  await writeImage(tauriImage);
+                  if (selectedImageNodes.length === 1) {
+                    toast.success("已将选中的图片复制到系统剪贴板");
+                  } else {
+                    toast.success(`已将第1张图片复制到系统剪贴板（共${selectedImageNodes.length}张）`);
+                  }
+                } catch (error) {
+                  console.error("复制图片到剪贴板失败:", error);
+                  toast.error("复制图片到剪贴板失败");
+                }
+              } else {
+                toast.error("无法获取图片数据");
+              }
+            }}
+          >
+            <Clipboard />
+            复制图片到系统剪贴板
+          </Item>
+          <Item
+            onClick={() => {
+              // 获取所有选中的 ImageNode
+              const selectedImageNodes = p.stageManager
+                .getSelectedEntities()
+                .filter((it) => it instanceof ImageNode) as ImageNode[];
 
-            // 根据图片数量决定提示信息
-            const isBatch = selectedImageNodes.length > 1;
-            const promptMessage = isBatch
-              ? `请输入文件名（不含扩展名，将为 ${selectedImageNodes.length} 张图片添加数字后缀）`
-              : `请输入文件名（不含扩展名，将自动添加扩展名）`;
+              if (selectedImageNodes.length === 0) {
+                toast.error("请选中图片节点");
+                return;
+              }
 
-            // 弹出输入框 - 只弹出一次
-            const fileName = await Dialog.input("另存图片", promptMessage, {
-              placeholder: "image",
-            });
+              // 对每张图片进行红蓝通道对调
+              for (const imageNode of selectedImageNodes) {
+                imageNode.swapRedBlueChannels();
+              }
 
-            if (!fileName) {
-              return; // 用户取消
-            }
+              // 记录历史步骤
+              p.historyManager.recordStep();
 
-            // 验证文件名是否合法
-            const invalidChars = /[/\\:*?"<>|]/;
-            if (invalidChars.test(fileName)) {
-              toast.error('文件名包含非法字符：/ \\ : * ? " < > |');
-              return;
-            }
+              // 显示提示信息
+              if (selectedImageNodes.length === 1) {
+                toast.success("已对调图片的红蓝通道");
+              } else {
+                toast.success(`已对调 ${selectedImageNodes.length} 张图片的红蓝通道`);
+              }
+            }}
+          >
+            <ArrowLeftRight />
+            对调图片红蓝通道
+          </Item>
+          <Item
+            onClick={async () => {
+              // 检查是否是草稿模式
+              if (p.isDraft) {
+                toast.error("请先保存项目后再导出图片");
+                return;
+              }
 
-            // 调用工具函数导出图片
-            const { successCount, failedCount } = await exportImagesToProjectDirectory(
-              selectedImageNodes,
-              p.uri.fsPath,
-              p.attachments,
-              fileName,
-            );
+              // 获取所有选中的 ImageNode
+              const selectedImageNodes = p.stageManager
+                .getSelectedEntities()
+                .filter((it) => it instanceof ImageNode) as ImageNode[];
 
-            // 显示结果提示
-            if (successCount > 0 && failedCount === 0) {
-              toast.success(`成功保存 ${successCount} 张图片`);
-            } else if (successCount > 0 && failedCount > 0) {
-              toast.warning(`成功保存 ${successCount} 张图片，${failedCount} 张失败`);
-            } else {
-              toast.error(`保存失败，请检查文件名或文件权限`);
-            }
-          }}
-        >
-          <Save />
-          另存图片到当前prg所在目录下
-        </Item>
+              if (selectedImageNodes.length === 0) {
+                toast.error("请选中图片节点");
+                return;
+              }
+
+              // 根据图片数量决定提示信息
+              const isBatch = selectedImageNodes.length > 1;
+              const promptMessage = isBatch
+                ? `请输入文件名（不含扩展名，将为 ${selectedImageNodes.length} 张图片添加数字后缀）`
+                : `请输入文件名（不含扩展名，将自动添加扩展名）`;
+
+              // 弹出输入框 - 只弹出一次
+              const fileName = await Dialog.input("另存图片", promptMessage, {
+                placeholder: "image",
+              });
+
+              if (!fileName) {
+                return; // 用户取消
+              }
+
+              // 验证文件名是否合法
+              const invalidChars = /[/\\:*?"<>|]/;
+              if (invalidChars.test(fileName)) {
+                toast.error('文件名包含非法字符：/ \\ : * ? " < > |');
+                return;
+              }
+
+              // 调用工具函数导出图片
+              const { successCount, failedCount } = await exportImagesToProjectDirectory(
+                selectedImageNodes,
+                p.uri.fsPath,
+                p.attachments,
+                fileName,
+              );
+
+              // 显示结果提示
+              if (successCount > 0 && failedCount === 0) {
+                toast.success(`成功保存 ${successCount} 张图片`);
+              } else if (successCount > 0 && failedCount > 0) {
+                toast.warning(`成功保存 ${successCount} 张图片，${failedCount} 张失败`);
+              } else {
+                toast.error(`保存失败，请检查文件名或文件权限`);
+              }
+            }}
+          >
+            <Save />
+            另存图片到当前prg所在目录下
+          </Item>
+        </>
       )}
     </Content>
   );
