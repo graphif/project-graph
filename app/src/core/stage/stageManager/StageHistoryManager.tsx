@@ -93,28 +93,30 @@ class HistoryManagerTimeEfficient extends HistoryManagerAbs {
     }
 
     // 显示toast信息，与memoryEfficient版本保持一致
-    toast(
-      <div className="flex text-sm">
-        <span className="m-2 flex flex-col justify-center">
-          <span>当前历史位置</span>
-          <span className={cn(this.currentIndex === -1 && "text-red-500")}>{this.currentIndex + 1}</span>
-        </span>
-        <span className="m-2 flex flex-col justify-center">
-          <span>当前历史长度</span>
-          <span className={cn(this.history.length === Settings.historySize && "text-yellow-500")}>
-            {this.history.length}
+    if (Settings.showDebug) {
+      toast(
+        <div className="flex text-sm">
+          <span className="m-2 flex flex-col justify-center">
+            <span>当前历史位置</span>
+            <span className={cn(this.currentIndex === -1 && "text-red-500")}>{this.currentIndex + 1}</span>
           </span>
-        </span>
-        <span className="m-2 flex flex-col justify-center">
-          <span>限定历史长度</span>
-          <span className="opacity-50">{Settings.historySize}</span>
-        </span>
-        <span className="m-2 flex flex-col justify-center">
-          <span>内存占用估算</span>
-          <span className="text-blue-500">{this.estimateMemoryUsage()}</span>
-        </span>
-      </div>,
-    );
+          <span className="m-2 flex flex-col justify-center">
+            <span>当前历史长度</span>
+            <span className={cn(this.history.length === Settings.historySize && "text-yellow-500")}>
+              {this.history.length}
+            </span>
+          </span>
+          <span className="m-2 flex flex-col justify-center">
+            <span>限定历史长度</span>
+            <span className="opacity-50">{Settings.historySize}</span>
+          </span>
+          <span className="m-2 flex flex-col justify-center">
+            <span>内存占用估算</span>
+            <span className="text-blue-500">{this.estimateMemoryUsage()}</span>
+          </span>
+        </div>,
+      );
+    }
   }
 
   /**
@@ -127,30 +129,32 @@ class HistoryManagerTimeEfficient extends HistoryManagerAbs {
     }
 
     // 显示toast信息，与memoryEfficient版本保持一致
-    toast(
-      <div className="flex text-sm">
-        <span className="m-2 flex flex-col justify-center">
-          <span>当前历史位置</span>
-          <span className={cn(this.currentIndex === this.history.length - 1 && "text-green-500")}>
-            {this.currentIndex + 1}
+    if (Settings.showDebug) {
+      toast(
+        <div className="flex text-sm">
+          <span className="m-2 flex flex-col justify-center">
+            <span>当前历史位置</span>
+            <span className={cn(this.currentIndex === this.history.length - 1 && "text-green-500")}>
+              {this.currentIndex + 1}
+            </span>
           </span>
-        </span>
-        <span className="m-2 flex flex-col justify-center">
-          <span>当前历史长度</span>
-          <span className={cn(this.history.length === Settings.historySize && "text-yellow-500")}>
-            {this.history.length}
+          <span className="m-2 flex flex-col justify-center">
+            <span>当前历史长度</span>
+            <span className={cn(this.history.length === Settings.historySize && "text-yellow-500")}>
+              {this.history.length}
+            </span>
           </span>
-        </span>
-        <span className="m-2 flex flex-col justify-center">
-          <span>限定历史长度</span>
-          <span className="opacity-50">{Settings.historySize}</span>
-        </span>
-        <span className="m-2 flex flex-col justify-center">
-          <span>内存占用估算</span>
-          <span className="text-blue-500">{this.estimateMemoryUsage()}</span>
-        </span>
-      </div>,
-    );
+          <span className="m-2 flex flex-col justify-center">
+            <span>限定历史长度</span>
+            <span className="opacity-50">{Settings.historySize}</span>
+          </span>
+          <span className="m-2 flex flex-col justify-center">
+            <span>内存占用估算</span>
+            <span className="text-blue-500">{this.estimateMemoryUsage()}</span>
+          </span>
+        </div>,
+      );
+    }
   }
 
   /**
@@ -178,7 +182,9 @@ class HistoryManagerTimeEfficient extends HistoryManagerAbs {
     this.currentIndex = -1;
     this.initialStage = serialize(this.project.stage);
     this.project.state = ProjectState.Saved;
-    toast("历史记录已清空");
+    if (Settings.showDebug) {
+      toast("历史记录已清空");
+    }
   }
 }
 
@@ -280,24 +286,26 @@ class HistorymanagerMemoryEfficient extends HistoryManagerAbs {
       this.currentIndex--;
       this.project.stage = this.get(this.currentIndex);
     }
-    toast(
-      <div className="flex text-sm">
-        <span className="m-2 flex flex-col justify-center">
-          <span>当前历史位置</span>
-          <span className={cn(this.currentIndex === -1 && "text-red-500")}>{this.currentIndex + 1}</span>
-        </span>
-        <span className="m-2 flex flex-col justify-center">
-          <span>当前历史长度</span>
-          <span className={cn(this.deltas.length === Settings.historySize && "text-yellow-500")}>
-            {this.deltas.length}
+    if (Settings.showDebug) {
+      toast(
+        <div className="flex text-sm">
+          <span className="m-2 flex flex-col justify-center">
+            <span>当前历史位置</span>
+            <span className={cn(this.currentIndex === -1 && "text-red-500")}>{this.currentIndex + 1}</span>
           </span>
-        </span>
-        <span className="m-2 flex flex-col justify-center">
-          <span>限定历史长度</span>
-          <span className="opacity-50">{Settings.historySize}</span>
-        </span>
-      </div>,
-    );
+          <span className="m-2 flex flex-col justify-center">
+            <span>当前历史长度</span>
+            <span className={cn(this.deltas.length === Settings.historySize && "text-yellow-500")}>
+              {this.deltas.length}
+            </span>
+          </span>
+          <span className="m-2 flex flex-col justify-center">
+            <span>限定历史长度</span>
+            <span className="opacity-50">{Settings.historySize}</span>
+          </span>
+        </div>,
+      );
+    }
   }
 
   /**
@@ -308,26 +316,28 @@ class HistorymanagerMemoryEfficient extends HistoryManagerAbs {
       this.currentIndex++;
       this.project.stage = this.get(this.currentIndex);
     }
-    toast(
-      <div className="flex text-sm">
-        <span className="m-2 flex flex-col justify-center">
-          <span>当前历史位置</span>
-          <span className={cn(this.currentIndex === this.deltas.length - 1 && "text-green-500")}>
-            {this.currentIndex + 1}
+    if (Settings.showDebug) {
+      toast(
+        <div className="flex text-sm">
+          <span className="m-2 flex flex-col justify-center">
+            <span>当前历史位置</span>
+            <span className={cn(this.currentIndex === this.deltas.length - 1 && "text-green-500")}>
+              {this.currentIndex + 1}
+            </span>
           </span>
-        </span>
-        <span className="m-2 flex flex-col justify-center">
-          <span>当前历史长度</span>
-          <span className={cn(this.deltas.length === Settings.historySize && "text-yellow-500")}>
-            {this.deltas.length}
+          <span className="m-2 flex flex-col justify-center">
+            <span>当前历史长度</span>
+            <span className={cn(this.deltas.length === Settings.historySize && "text-yellow-500")}>
+              {this.deltas.length}
+            </span>
           </span>
-        </span>
-        <span className="m-2 flex flex-col justify-center">
-          <span>限定历史长度</span>
-          <span className="opacity-50">{Settings.historySize}</span>
-        </span>
-      </div>,
-    );
+          <span className="m-2 flex flex-col justify-center">
+            <span>限定历史长度</span>
+            <span className="opacity-50">{Settings.historySize}</span>
+          </span>
+        </div>,
+      );
+    }
   }
 
   get(index: number) {
@@ -360,7 +370,9 @@ class HistorymanagerMemoryEfficient extends HistoryManagerAbs {
     this.currentIndex = -1;
     this.initialStage = serialize(this.project.stage);
     this.project.state = ProjectState.Saved;
-    toast("历史记录已清空");
+    if (Settings.showDebug) {
+      toast("历史记录已清空");
+    }
   }
 }
 
