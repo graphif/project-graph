@@ -100,7 +100,9 @@ export class Project extends EventEmitter {
     sprites: ({ new (...args: any[]): Container } | false)[] = [],
   ) {
     await this.pixi.init({
-      backgroundAlpha: Settings.windowBackgroundAlpha,
+      // 先让pixi认为画布是不透明的
+      // pixi不支持将透明度从1改为小于1的值
+      backgroundAlpha: Settings.windowBackgroundAlpha === 1 ? 0.99 : Settings.windowBackgroundAlpha,
       powerPreference: (
         {
           highPerformance: "high-performance",
@@ -112,6 +114,10 @@ export class Project extends EventEmitter {
       antialias: Settings.antialias,
       hello: true,
     });
+    // 改回正常的值
+    if (Settings.windowBackgroundAlpha === 1) {
+      this.pixi.renderer.background.alpha = 1;
+    }
     this.pixi.ticker.maxFPS = Settings.maxFps;
     this.pixi.ticker.minFPS = Settings.minFps;
 
