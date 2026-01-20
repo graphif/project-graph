@@ -71,7 +71,10 @@ export default function AboutTab() {
           </div>
         </div>
         <div className="**:cursor-pointer cursor-pointer rounded-md border p-4">
-          <div className="text-xs opacity-50">仓库</div>
+          <div className="text-xs opacity-50">官网与仓库</div>
+          <div className="mt-1 font-medium underline underline-offset-4" onClick={() => open("https://graphif.dev/")}>
+            graphif.dev
+          </div>
           <div
             className="mt-1 font-medium underline underline-offset-4"
             onClick={() => open("https://github.com/graphif/project-graph")}

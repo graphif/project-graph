@@ -819,7 +819,7 @@ settings:
       high: 高
   isStealthModeEnabled:
     title: 潜行模式
-    description: 摸鱼专用，配合窗口透明效果更佳
+    description: 开启后鼠标中心出现遮罩（具体形状可在设置中修改），可用于记忆化练习等遮盖场景。
   stealthModeScopeRadius:
     title: 潜行模式范围半径
     description: |
