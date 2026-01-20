@@ -10,6 +10,8 @@ export namespace GlobalMaskRenderer {
       renderCircleMask(project, mouseLocation, reverse);
     } else if (Settings.stealthModeMaskShape === "square") {
       renderSquareMask(project, mouseLocation, reverse);
+    } else if (Settings.stealthModeMaskShape === "topLeft") {
+      renderTopLeftQuadrantMask(project, mouseLocation, reverse);
     }
   }
 
@@ -71,6 +73,44 @@ export namespace GlobalMaskRenderer {
       ctx.rect(squareX, squareY, sideLength, sideLength);
       ctx.fillStyle = "rgba(0, 0, 0, 1)"; // 设置填充颜色为完全不透明的黑色
       ctx.fill();
+      // 恢复合成模式
+      ctx.globalCompositeOperation = "source-over";
+    }
+  }
+
+  /**
+   * 渲染鼠标位置的左上角象限遮罩
+   * 只显示鼠标左上方的矩形区域
+   * @param project
+   * @param mouseLocation
+   * @param reverse
+   */
+  function renderTopLeftQuadrantMask(project: Project, mouseLocation: { x: number; y: number }, reverse = false) {
+    if (Settings.isStealthModeEnabled) {
+      const ctx = project.canvas.ctx;
+      // 设置合成模式
+      if (reverse) {
+        ctx.globalCompositeOperation = "destination-out";
+      } else {
+        ctx.globalCompositeOperation = "destination-in";
+      }
+
+      // 获取鼠标位置
+      const mouseX = mouseLocation.x;
+      const mouseY = mouseLocation.y;
+
+      // 绘制左上角象限矩形区域
+      // 从鼠标位置向左延伸到画布左边缘，向上延伸到画布上边缘
+      ctx.beginPath();
+      ctx.rect(
+        0, // 从画布最左边开始
+        0, // 从画布最上边开始
+        mouseX, // 宽度到鼠标x位置
+        mouseY, // 高度到鼠标y位置
+      );
+      ctx.fillStyle = "rgba(0, 0, 0, 1)";
+      ctx.fill();
+
       // 恢复合成模式
       ctx.globalCompositeOperation = "source-over";
     }

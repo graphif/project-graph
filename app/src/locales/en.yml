@@ -566,6 +566,7 @@ settings:
     options:
       circle: Circle
       square: Square
+      topLeft: Top-Left Quadrant
 
   # Sounds
   cuttingLineStartSoundFile:

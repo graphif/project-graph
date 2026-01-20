@@ -835,6 +835,7 @@ settings:
     options:
       circle: 圆形
       square: 正方形
+      topLeft: 左上角象限
   soundPitchVariationRange:
     title: 音效音调随机变化范围
     description: 控制音效播放时音调随机变化的程度。范围：0-1200音分（1200音分=1个八度，100音分=1个半音）。值越大，音调变化越明显，越像游戏一样有趣。

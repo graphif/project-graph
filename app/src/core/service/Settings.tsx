@@ -179,7 +179,7 @@ export const settingsSchema = z.object({
   isStealthModeEnabled: z.boolean().default(false),
   stealthModeScopeRadius: z.number().min(10).max(500).int().default(150),
   stealthModeReverseMask: z.boolean().default(false),
-  stealthModeMaskShape: z.union([z.literal("circle"), z.literal("square")]).default("circle"),
+  stealthModeMaskShape: z.union([z.literal("circle"), z.literal("square"), z.literal("topLeft")]).default("circle"),
   clearHistoryWhenManualSave: z.boolean().default(true),
   soundPitchVariationRange: z.number().min(0).max(1200).int().default(150),
   autoImportTxtFileWhenOpenPrg: z.boolean().default(false),
