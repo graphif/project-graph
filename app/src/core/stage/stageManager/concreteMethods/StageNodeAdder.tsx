@@ -374,13 +374,12 @@ export class NodeAdder {
       }
     };
     const monoStack = new MonoStack<TextNode>();
-    monoStack.push(
-      new TextNode(this.project, {
-        text: "root",
-        collisionBox: new CollisionBox([new Rectangle(diffLocation, Vector.same(100))]),
-      }),
-      -1,
-    );
+    const rootNode = new TextNode(this.project, {
+      text: "root",
+      collisionBox: new CollisionBox([new Rectangle(diffLocation, Vector.same(100))]),
+    });
+    this.project.stageManager.add(rootNode);
+    monoStack.push(rootNode, -1);
 
     let visitedCount = 0;
 
