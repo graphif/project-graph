@@ -87,8 +87,7 @@ export class Renderer {
     this.renderBackground();
     this.renderMainStageElements(viewRectangle);
 
-    // 潜行模式 - 只显示鼠标周围的一个圆形区域
-    GlobalMaskRenderer.renderCircleMask(this.project, MouseLocation, Settings.stealthModeReverseMask);
+    GlobalMaskRenderer.renderMask(this.project, MouseLocation.vector(), Settings.stealthModeReverseMask);
 
     this.renderViewElements(viewRectangle);
   }

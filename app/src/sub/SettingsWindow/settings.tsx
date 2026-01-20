@@ -215,6 +215,7 @@ const categories = {
       "isStealthModeEnabled",
       "stealthModeScopeRadius",
       "stealthModeReverseMask",
+      "stealthModeMaskShape",
     ],
     node: ["enableTagTextNodesBigDisplay", "showTextNodeBorder"],
     edge: ["lineStyle"],

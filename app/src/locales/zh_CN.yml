@@ -828,6 +828,13 @@ settings:
     title: 反向遮罩
     description: |
       开启后，狙击镜中心区域会被遮罩，只显示周围区域
+  stealthModeMaskShape:
+    title: 潜行模式遮罩形状
+    description: |
+      选择潜行模式下显示区域的形状
+    options:
+      circle: 圆形
+      square: 正方形
   soundPitchVariationRange:
     title: 音效音调随机变化范围
     description: 控制音效播放时音调随机变化的程度。范围：0-1200音分（1200音分=1个八度，100音分=1个半音）。值越大，音调变化越明显，越像游戏一样有趣。

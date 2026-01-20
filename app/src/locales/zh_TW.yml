@@ -835,6 +835,12 @@ settings:
   stealthModeReverseMask:
     title: 反向遮罩
     description: 開啟後，狙擊鏡中心區域會被遮罩，只顯示周圍區域
+  stealthModeMaskShape:
+    title: 潛行模式遮罩形狀
+    description: 選擇潛行模式下顯示區域的形狀
+    options:
+      circle: 圓形
+      square: 正方形
   soundPitchVariationRange:
     title: 音效音調隨機變化範圍
     description: 控制音效播放時音調隨機變化的程度。範圍：0-1200音分（1200音分=1個八度，100音分=1個半音）。值越大，音調變化越明顯，越像遊戲一樣有趣。

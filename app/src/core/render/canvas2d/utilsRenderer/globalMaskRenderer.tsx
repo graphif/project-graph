@@ -5,13 +5,21 @@ import { Settings } from "@/core/service/Settings";
  * 全局遮罩渲染器
  */
 export namespace GlobalMaskRenderer {
+  export function renderMask(project: Project, mouseLocation: { x: number; y: number }, reverse = false) {
+    if (Settings.stealthModeMaskShape === "circle") {
+      renderCircleMask(project, mouseLocation, reverse);
+    } else if (Settings.stealthModeMaskShape === "square") {
+      renderSquareMask(project, mouseLocation, reverse);
+    }
+  }
+
   /**
    * 渲染鼠标位置的圆形遮罩
    * @param project
    * @param mouseLocation
    * @param reverse
    */
-  export function renderCircleMask(project: Project, mouseLocation: { x: number; y: number }, reverse = false) {
+  function renderCircleMask(project: Project, mouseLocation: { x: number; y: number }, reverse = false) {
     if (Settings.isStealthModeEnabled) {
       const ctx = project.canvas.ctx;
       // 设置合成模式为目标输入模式
@@ -41,7 +49,7 @@ export namespace GlobalMaskRenderer {
    * @param mouseLocation
    * @param reverse
    */
-  export function renderSquareMask(project: Project, mouseLocation: { x: number; y: number }, reverse = false) {
+  function renderSquareMask(project: Project, mouseLocation: { x: number; y: number }, reverse = false) {
     if (Settings.isStealthModeEnabled) {
       const ctx = project.canvas.ctx;
       // 设置合成模式为目标输入模式

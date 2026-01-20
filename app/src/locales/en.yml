@@ -559,6 +559,13 @@ settings:
     title: Reverse Mask
     description: |
       When enabled, the center area of the scope will be masked, only showing the surrounding area.
+  stealthModeMaskShape:
+    title: Stealth Mode Mask Shape
+    description: |
+      Choose the shape of the visible area in stealth mode
+    options:
+      circle: Circle
+      square: Square
 
   # Sounds
   cuttingLineStartSoundFile:

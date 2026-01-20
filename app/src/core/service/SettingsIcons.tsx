@@ -68,6 +68,7 @@ import {
   VenetianMask,
   WholeWord,
   File,
+  Pentagon,
 } from "lucide-react";
 
 export const settingsIcons = {
@@ -180,4 +181,5 @@ export const settingsIcons = {
   textNodeAutoFormatTreeWhenExitEdit: ListTree,
   treeGenerateCameraBehavior: Fullscreen,
   autoImportTxtFileWhenOpenPrg: File,
+  stealthModeMaskShape: Pentagon,
 };
