@@ -567,6 +567,7 @@ settings:
       circle: Circle
       square: Square
       topLeft: Top-Left Quadrant
+      smartContext: Smart Context (Section or Entity)
 
   # Sounds
   cuttingLineStartSoundFile:
