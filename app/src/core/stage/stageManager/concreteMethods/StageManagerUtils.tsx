@@ -67,18 +67,28 @@ export class StageUtils {
   }
 
   isNameConflictWithTextNodes(name: string): boolean {
+    // 获取当前视野范围
+    const viewportRect = this.project.renderer.getCoverWorldRectangle();
     for (const node of this.project.stageManager.getTextNodes()) {
-      if (node.text === name) {
-        return true;
+      // 仅检查视野内的节点
+      if (viewportRect.isCollideWith(node.rectangle)) {
+        if (node.text === name) {
+          return true;
+        }
       }
     }
     return false;
   }
 
   isNameConflictWithSections(name: string): boolean {
+    // 获取当前视野范围
+    const viewportRect = this.project.renderer.getCoverWorldRectangle();
     for (const section of this.project.stageManager.getSections()) {
-      if (section.text === name) {
-        return true;
+      // 仅检查视野内的 section
+      if (viewportRect.isCollideWith(section.rectangle)) {
+        if (section.text === name) {
+          return true;
+        }
       }
     }
     return false;
