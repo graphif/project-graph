@@ -1,5 +1,5 @@
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+// import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
 
 /**
@@ -11,40 +11,40 @@ export namespace PenStrokeMethods {
    * @param entities 可以代表选中的实体，但不包括涂鸦
    * 返回的结果集合中，不包含传入的实体，只包括额外扩散后的波及实体，也包括涂鸦
    */
-  export function getAllRoundedStickEntities(entities: Entity[]): Entity[] {
-    const result: Set<string> = new Set();
+  // function getAllRoundedStickEntities(entities: Entity[]): Entity[] {
+  //   const result: Set<string> = new Set();
 
-    const dfs = (entity: ConnectableEntity) => {
-      if (result.has(entity.uuid)) {
-        return;
-      }
-      result.add(entity.uuid);
-      // 遍历这个实体触碰到的所有涂鸦
-      const touchingPenStrokes: PenStroke[] = getTouchingPenStrokes(entity);
-      // 将所有涂鸦添加到结果集合中
-      for (const penStroke of touchingPenStrokes) {
-        result.add(penStroke.uuid);
-        // 遍历这个涂鸦触碰到的所有实体
-        const touchingEntities: ConnectableEntity[] = getConnectableEntitiesByPenStroke(penStroke);
-        // 将所有实体添加到结果集合中
-        for (const touchingEntity of touchingEntities) {
-          dfs(touchingEntity);
-        }
-      }
-    };
+  //   const dfs = (entity: ConnectableEntity) => {
+  //     if (result.has(entity.uuid)) {
+  //       return;
+  //     }
+  //     result.add(entity.uuid);
+  //     // 遍历这个实体触碰到的所有涂鸦
+  //     const touchingPenStrokes: PenStroke[] = getTouchingPenStrokes(entity);
+  //     // 将所有涂鸦添加到结果集合中
+  //     for (const penStroke of touchingPenStrokes) {
+  //       result.add(penStroke.uuid);
+  //       // 遍历这个涂鸦触碰到的所有实体
+  //       const touchingEntities: ConnectableEntity[] = getConnectableEntitiesByPenStroke(penStroke);
+  //       // 将所有实体添加到结果集合中
+  //       for (const touchingEntity of touchingEntities) {
+  //         dfs(touchingEntity);
+  //       }
+  //     }
+  //   };
 
-    for (const entity of entities) {
-      if (entity instanceof ConnectableEntity) {
-        dfs(entity);
-      }
-    }
+  //   for (const entity of entities) {
+  //     if (entity instanceof ConnectableEntity) {
+  //       dfs(entity);
+  //     }
+  //   }
 
-    // 最后再排除最开始传入的实体
-    for (const entity of entities) {
-      result.delete(entity.uuid);
-    }
-    return this.project.stageManager.getEntitiesByUUIDs(Array.from(result));
-  }
+  //   // 最后再排除最开始传入的实体
+  //   for (const entity of entities) {
+  //     result.delete(entity.uuid);
+  //   }
+  //   return this.project.stageManager.getEntitiesByUUIDs(Array.from(result));
+  // }
 
   /**
    * 此函数最终由快捷键调用
@@ -71,7 +71,7 @@ export namespace PenStrokeMethods {
    * @param entity
    * @returns
    */
-  export function getTouchingPenStrokes(entity: ConnectableEntity): PenStroke[] {
+  function getTouchingPenStrokes(entity: ConnectableEntity): PenStroke[] {
     const touchingPenStrokes: PenStroke[] = [];
     for (const penStroke of this.project.stageManager.getPenStrokes()) {
       if (isConnectableEntityCollideWithPenStroke(entity, penStroke)) {
@@ -85,7 +85,7 @@ export namespace PenStrokeMethods {
    * 获取一个涂鸦触碰到的所有实体
    * @param penStroke
    */
-  export function getConnectableEntitiesByPenStroke(penStroke: PenStroke): ConnectableEntity[] {
+  function getConnectableEntitiesByPenStroke(penStroke: PenStroke): ConnectableEntity[] {
     const touchingEntities: ConnectableEntity[] = [];
     for (const entity of this.project.stageManager.getConnectableEntity()) {
       if (isConnectableEntityCollideWithPenStroke(entity, penStroke)) {
