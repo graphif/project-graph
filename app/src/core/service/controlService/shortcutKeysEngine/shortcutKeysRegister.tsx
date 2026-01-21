@@ -5,6 +5,7 @@ import { RectangleSlideEffect } from "@/core/service/feedbackService/effectEngin
 import { ViewFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewFlashEffect";
 import { ViewOutlineFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewOutlineFlashEffect";
 import { Settings } from "@/core/service/Settings";
+import { SubWindow } from "@/core/service/SubWindow";
 import { Themes } from "@/core/service/Themes";
 import { PenStrokeMethods } from "@/core/stage/stageManager/basicMethods/PenStrokeMethods";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
@@ -51,6 +52,17 @@ export const allKeyBinds: KeyBindItem[] = [
       Dialog.buttons("测试快捷键", "您按下了自定义的测试快捷键，这一功能是测试开发所用，可在设置中更改触发方式", [
         { id: "close", label: "关闭" },
       ]),
+    isUI: true,
+  },
+
+  /*------- 窗口管理 -------*/
+  {
+    id: "closeAllSubWindows",
+    defaultKey: "Escape",
+    onPress: () => {
+      if (!SubWindow.hasOpenWindows()) return;
+      SubWindow.closeAll();
+    },
     isUI: true,
   },
 

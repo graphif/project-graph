@@ -1337,6 +1337,10 @@ keyBinds:
   reverseImageColors:
     title: Reverse Image Colors
     description: Reverse the colors of selected images (makes white background black and vice versa)
+  closeAllSubWindows:
+    title: Close All Sub-Windows
+    description: Closes all currently open sub-windows (e.g., Settings, AI, Color panels) and restores focus to the main stage.
+  
 effects:
   RectangleLittleNoteEffect:
     title: Rectangle Glimmer Hint Effect

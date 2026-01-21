@@ -101,6 +101,16 @@ export namespace SubWindow {
           subWindowsAtom,
           store.get(subWindowsAtom).filter((window) => window.id !== id),
         );
+
+        // 焦点恢复逻辑：关闭窗口后，将焦点移至 z-index 最高的剩余窗口
+        const remainingWindows = store.get(subWindowsAtom);
+        if (remainingWindows.length > 0) {
+          // 找到 z-index 最高的窗口
+          const highestZIndexWindow = remainingWindows.reduce((highest, current) =>
+            current.zIndex > highest.zIndex ? current : highest,
+          );
+          focus(highestZIndexWindow.id);
+        }
       });
     }, 500);
   }
@@ -115,5 +125,25 @@ export namespace SubWindow {
   }
   export function get(id: string) {
     return store.get(subWindowsAtom).find((window) => window.id === id)!;
+  }
+  /**
+   * 关闭所有打开的子窗口
+   * 会遍历所有窗口并调用 close(id) 方法
+   * 每个窗口的关闭动画会独立执行
+   */
+  export function closeAll() {
+    const windows = store.get(subWindowsAtom);
+    // 遍历所有窗口并调用 close 方法
+    // close 方法会自动处理事件监听器的清理
+    windows.forEach((window) => {
+      close(window.id);
+    });
+  }
+  /**
+   * 检查是否有打开的子窗口
+   * @returns 如果有至少一个打开的窗口则返回 true，否则返回 false
+   */
+  export function hasOpenWindows(): boolean {
+    return store.get(subWindowsAtom).length > 0;
   }
 }

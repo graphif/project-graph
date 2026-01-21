@@ -56,6 +56,7 @@ export default function FindWindow() {
   const clearSearch = () => {
     setSearchString("");
     setSearchResults([]);
+    project?.contentSearch.startSearch("", false);
   };
 
   useEffect(() => {

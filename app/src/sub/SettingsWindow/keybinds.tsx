@@ -503,6 +503,7 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "switchActiveProject",
       "switchActiveProjectReversed",
       "switchStealthMode",
+      "closeAllSubWindows",
     ],
   },
   {
