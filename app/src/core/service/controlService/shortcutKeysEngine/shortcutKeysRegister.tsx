@@ -6,6 +6,7 @@ import { ViewFlashEffect } from "@/core/service/feedbackService/effectEngine/con
 import { ViewOutlineFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewOutlineFlashEffect";
 import { Settings } from "@/core/service/Settings";
 import { Themes } from "@/core/service/Themes";
+import { PenStrokeMethods } from "@/core/stage/stageManager/basicMethods/PenStrokeMethods";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
@@ -799,7 +800,7 @@ export const allKeyBinds: KeyBindItem[] = [
     onPress: (project) => {
       // 现在不生效了，不过也没啥用
       if (!project!.keyboardOnlyEngine.isOpenning()) return;
-      // PenStrokeMethods.selectEntityByPenStroke();
+      PenStrokeMethods.selectEntityByPenStroke(project!);
     },
   },
   {
