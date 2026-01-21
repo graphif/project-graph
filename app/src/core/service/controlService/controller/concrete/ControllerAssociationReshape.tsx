@@ -142,6 +142,14 @@ export class ControllerAssociationReshapeClass extends ControllerClass {
     if (event.button !== 0) {
       return;
     }
+
+    // 如果是空格键拖拽视野，不要记录历史
+    if (this.project.controller.camera.isPreGrabbingWhenSpace || this.project.controller.pressingKeySet.has(" ")) {
+      this.project.controller.isMovingEdge = false;
+      this.project.controller.setCursorNameHook(CursorNameEnum.Default);
+      return;
+    }
+
     if (this.project.controller.isMovingEdge) {
       this.project.historyManager.recordStep(); // 鼠标抬起了，移动结束，记录历史过程
       this.project.controller.isMovingEdge = false;
