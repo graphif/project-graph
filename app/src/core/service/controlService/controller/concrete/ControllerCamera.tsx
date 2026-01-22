@@ -13,6 +13,7 @@ import { isIpad, isMac } from "@/utils/platform";
 import { LimitLengthQueue, Vector } from "@graphif/data-structures";
 
 /**
+ *
  * 处理键盘按下事件
  * @param event - 键盘事件
  */
@@ -284,7 +285,6 @@ export class ControllerCameraClass extends ControllerClass {
       console.log(event);
       let delta = 0;
 
-      // 有点问题，先赌一下
       if (isMac) {
         delta = event.deltaX > 0 ? -10 : 10;
       } else {

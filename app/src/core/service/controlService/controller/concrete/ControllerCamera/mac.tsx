@@ -53,7 +53,9 @@ export class ControllerCameraMac {
   private readonly FINGER_SCALE_MIN_DETECT_TIME = 2; // s
   // 上次检测时间
   private lastDetectTime = Date.now();
-  private currentWheelMode: "fingerScale" | "mouseWheel" = "fingerScale";
+
+  // 默认鼠标滚轮，否则mac鼠标用户一打开文件会缩放过于灵敏
+  private currentWheelMode: "fingerScale" | "mouseWheel" = "mouseWheel";
   /**
    * 检测识别双指缩放
    * @param event
