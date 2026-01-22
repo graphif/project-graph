@@ -193,7 +193,20 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       getMultiLineTextSize(this.text, this.getFontSize(), 1.5).add(Vector.same(Renderer.NODE_PADDING).multiply(2)),
     );
   }
-
+  private adjustHeightByText() {
+    const wrapWidth = this.rectangle.size.x - Renderer.NODE_PADDING * 2;
+    const newTextSize = this.project.textRenderer.measureMultiLineTextSize(
+      this.text,
+      this.getFontSize(),
+      wrapWidth,
+      1.5,
+    );
+    this.collisionBox.shapes[0] = new Rectangle(
+      this.rectangle.location.clone(),
+      new Vector(this.rectangle.size.x, newTextSize.y + Renderer.NODE_PADDING * 2),
+    );
+    this.updateFatherSectionByMove();
+  }
   /**
    * 强制触发自动调整大小
    */
@@ -216,6 +229,8 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     // }
     if (this.sizeAdjust === "auto") {
       this.adjustSizeByText();
+    } else if (this.sizeAdjust === "manual") {
+      this.adjustHeightByText();
     }
   }
 

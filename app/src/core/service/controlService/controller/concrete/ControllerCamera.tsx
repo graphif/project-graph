@@ -282,7 +282,7 @@ export class ControllerCameraClass extends ControllerClass {
   private dealStealthMode(event: WheelEvent) {
     if (Settings.isStealthModeEnabled && this.project.controller.pressingKeySet.has("shift")) {
       console.log(event);
-      let delta;
+      let delta = 0;
 
       // 有点问题，先赌一下
       if (isMac) {
