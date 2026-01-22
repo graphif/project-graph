@@ -11,6 +11,30 @@ const lastRelease = execSync(
 // 获取 Git 提交记录
 const commits = execSync(`git log ${lastRelease}.. --pretty=format:"%s" --reverse`).toString().trim();
 
+/**
+ * 生成降级版本的changelog（直接使用commit标题）
+ * @param {string} commits - commit标题列表，用换行分隔
+ * @returns {string} 格式化的changelog
+ */
+function generateFallbackChangelog(commits) {
+  if (!commits || commits.trim() === "") {
+    return "## 更新内容\n\n本次更新暂无变更记录。";
+  }
+
+  const commitList = commits
+    .split("\n")
+    .filter((line) => line.trim() !== "")
+    .map((commit) => `- ${commit}`)
+    .join("\n");
+
+  return `## 更新内容
+
+> ⚠️ 注意：由于AI总结更新的内容服务不可用，以下内容为直接提取的commit记录
+
+${commitList}
+`;
+}
+
 // 定义提示信息
 const prompt = `
 你是一个专业的软件文档撰写助手，负责将开发团队提供的commit历史记录转换为用户友好的更新日志（Changelog）。用户会提供git历史记录信息。
@@ -71,45 +95,51 @@ alt跳入框时，显示框会变大多少的虚线边缘
 `;
 
 // 发送请求到 API
-const response = fetch(
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=" +
-    process.env.GEMINI_API_KEY,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      system_instruction: {
-        parts: [
-          {
-            text: prompt,
-          },
-        ],
+try {
+  const response = await fetch(
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=" +
+      process.env.GEMINI_API_KEY,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-      contents: [
-        {
+      body: JSON.stringify({
+        system_instruction: {
           parts: [
             {
-              text: commits,
+              text: prompt,
             },
           ],
         },
-      ],
-    }),
-  },
-);
+        contents: [
+          {
+            parts: [
+              {
+                text: commits,
+              },
+            ],
+          },
+        ],
+      }),
+    },
+  );
 
-response
-  .then((res) => res.json())
-  .then((data) => {
-    const changelog = data.candidates[0].content.parts[0].text;
-    const finalChangelog = `以下内容为AI根据git历史自动生成总结，不保证完全准确
+  if (!response.ok) {
+    throw new Error(`API request failed with status ${response.status}`);
+  }
+
+  const data = await response.json();
+  const changelog = data.candidates[0].content.parts[0].text;
+  const finalChangelog = `以下内容为AI根据git历史自动生成总结，不保证完全准确
 
 ${changelog}
 `;
-    console.log(finalChangelog);
-  })
-  .catch((err) => {
-    console.error(err);
-  });
+  console.log(finalChangelog);
+} catch (err) {
+  console.error("AI生成changelog失败，使用降级方案:", err.message);
+  
+  // 降级方案：直接输出commit列表
+  const fallbackChangelog = generateFallbackChangelog(commits);
+  console.log(fallbackChangelog);
+}
