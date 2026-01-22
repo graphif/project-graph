@@ -104,6 +104,7 @@ export const settingsSchema = z.object({
   allowMoveCameraByWSAD: z.boolean().default(false),
   allowGlobalHotKeys: z.boolean().default(true),
   cameraFollowsSelectedNodeOnArrowKeys: z.boolean().default(false),
+  arrowKeySelectOnlyInViewport: z.boolean().default(false),
   cameraKeyboardMoveReverse: z.boolean().default(false),
   moveAmplitude: z.number().min(0).max(10).default(2),
   moveFriction: z.number().min(0).max(1).default(0.1),

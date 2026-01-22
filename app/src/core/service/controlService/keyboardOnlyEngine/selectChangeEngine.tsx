@@ -304,10 +304,19 @@ export class SelectChangeEngine {
    */
   collectTopNodes(node: ConnectableEntity): ConnectableEntity[] {
     const topNodes: ConnectableEntity[] = [];
+    const limitToViewport = Settings.arrowKeySelectOnlyInViewport;
+    const viewportRect = limitToViewport ? this.project.renderer.getCoverWorldRectangle() : null;
+
     for (const otherNode of this.project.stageManager.getConnectableEntity()) {
       if (otherNode.uuid === node.uuid) continue;
       const otherNodeRect = otherNode.collisionBox.getRectangle();
       const nodeRect = node.collisionBox.getRectangle();
+
+      // 如果开启了视野限制，检查节点是否在视野内
+      if (limitToViewport && viewportRect && !viewportRect.isCollideWith(otherNodeRect)) {
+        continue;
+      }
+
       if (otherNodeRect.center.y < nodeRect.center.y) {
         // 先保证是在上方，然后计算相对的角度
         const direction = otherNodeRect.center.subtract(nodeRect.center).normalize();
@@ -322,10 +331,19 @@ export class SelectChangeEngine {
 
   collectBottomNodes(node: ConnectableEntity): ConnectableEntity[] {
     const bottomNodes: ConnectableEntity[] = [];
+    const limitToViewport = Settings.arrowKeySelectOnlyInViewport;
+    const viewportRect = limitToViewport ? this.project.renderer.getCoverWorldRectangle() : null;
+
     for (const otherNode of this.project.stageManager.getConnectableEntity()) {
       if (otherNode.uuid === node.uuid) continue;
       const otherNodeRect = otherNode.collisionBox.getRectangle();
       const nodeRect = node.collisionBox.getRectangle();
+
+      // 如果开启了视野限制，检查节点是否在视野内
+      if (limitToViewport && viewportRect && !viewportRect.isCollideWith(otherNodeRect)) {
+        continue;
+      }
+
       if (otherNodeRect.center.y > nodeRect.center.y) {
         // 先保证是在下方，然后计算相对的角度
         const direction = otherNodeRect.center.subtract(nodeRect.center).normalize();
@@ -340,10 +358,19 @@ export class SelectChangeEngine {
 
   collectLeftNodes(node: ConnectableEntity): ConnectableEntity[] {
     const leftNodes: ConnectableEntity[] = [];
+    const limitToViewport = Settings.arrowKeySelectOnlyInViewport;
+    const viewportRect = limitToViewport ? this.project.renderer.getCoverWorldRectangle() : null;
+
     for (const otherNode of this.project.stageManager.getConnectableEntity()) {
       if (otherNode.uuid === node.uuid) continue;
       const otherNodeRect = otherNode.collisionBox.getRectangle();
       const nodeRect = node.collisionBox.getRectangle();
+
+      // 如果开启了视野限制，检查节点是否在视野内
+      if (limitToViewport && viewportRect && !viewportRect.isCollideWith(otherNodeRect)) {
+        continue;
+      }
+
       if (otherNodeRect.center.x < nodeRect.center.x) {
         // 先保证是在左边，然后计算相对的角度
         const direction = otherNodeRect.center.subtract(nodeRect.center).normalize();
@@ -358,10 +385,19 @@ export class SelectChangeEngine {
 
   collectRightNodes(node: ConnectableEntity): ConnectableEntity[] {
     const rightNodes: ConnectableEntity[] = [];
+    const limitToViewport = Settings.arrowKeySelectOnlyInViewport;
+    const viewportRect = limitToViewport ? this.project.renderer.getCoverWorldRectangle() : null;
+
     for (const otherNode of this.project.stageManager.getConnectableEntity()) {
       if (otherNode.uuid === node.uuid) continue;
       const otherNodeRect = otherNode.collisionBox.getRectangle();
       const nodeRect = node.collisionBox.getRectangle();
+
+      // 如果开启了视野限制，检查节点是否在视野内
+      if (limitToViewport && viewportRect && !viewportRect.isCollideWith(otherNodeRect)) {
+        continue;
+      }
+
       if (otherNodeRect.center.x > nodeRect.center.x) {
         // 先保证是在右边，然后计算相对的角度
         const direction = otherNodeRect.center.subtract(nodeRect.center).normalize();

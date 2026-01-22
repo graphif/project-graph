@@ -182,4 +182,5 @@ export const settingsIcons = {
   treeGenerateCameraBehavior: Fullscreen,
   autoImportTxtFileWhenOpenPrg: File,
   stealthModeMaskShape: Pentagon,
+  arrowKeySelectOnlyInViewport: ScanEye,
 };

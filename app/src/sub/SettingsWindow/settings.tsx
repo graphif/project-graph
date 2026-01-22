@@ -259,13 +259,7 @@ const categories = {
       "enableCtrlWheelRotateStructure",
     ],
     touchpad: ["enableWindowsTouchPad", "macTrackpadAndMouseWheelDifference", "macTrackpadScaleSensitivity"],
-    cameraMove: [
-      "allowMoveCameraByWSAD",
-      "cameraFollowsSelectedNodeOnArrowKeys",
-      "cameraKeyboardMoveReverse",
-      "moveAmplitude",
-      "moveFriction",
-    ],
+    cameraMove: ["allowMoveCameraByWSAD", "cameraKeyboardMoveReverse", "moveAmplitude", "moveFriction"],
     cameraZoom: [
       "scaleExponent",
       "cameraResetViewPaddingRate",
@@ -273,7 +267,12 @@ const categories = {
       "scaleCameraByMouseLocation",
       "cameraKeyboardScaleRate",
     ],
-    rectangleSelect: ["rectangleSelectWhenRight", "rectangleSelectWhenLeft"],
+    objectSelect: [
+      "rectangleSelectWhenRight",
+      "rectangleSelectWhenLeft",
+      "cameraFollowsSelectedNodeOnArrowKeys",
+      "arrowKeySelectOnlyInViewport",
+    ],
     textNode: [
       "textNodeStartEditMode",
       "textNodeContentLineBreak",
@@ -337,7 +336,7 @@ const categoryIcons = {
     touchpad: Touchpad,
     cameraMove: Camera,
     cameraZoom: ZoomIn,
-    rectangleSelect: SquareDashedMousePointer,
+    objectSelect: SquareDashedMousePointer,
     textNode: TextSelect,
     edge: ArrowUpRight,
     generateNode: Network,

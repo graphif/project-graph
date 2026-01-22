@@ -158,7 +158,7 @@ settings:
       touchpad: 觸摸板
       cameraMove: 視野移動
       cameraZoom: 視野縮放
-      rectangleSelect: 框選
+      objectSelect: 框選
       textNode: 文本節點
       edge: 連線
       generateNode: 通過鍵盤生長節點
@@ -511,6 +511,11 @@ settings:
   cameraFollowsSelectedNodeOnArrowKeys:
     title: 通過方向鍵切換選中節點時，視野跟隨移動
     description: 開啟後，使用鍵盤移動節點選擇框時，視野跟隨移動
+  arrowKeySelectOnlyInViewport:
+    title: 方向鍵切換選擇限制在視野內
+    description: '開啟後，使用方向鍵（上下左右）切換選擇節點時，只會選擇當前視野內可見的物體。
+
+      關閉後，可以選擇到視野外的物體（相機會自動跟隨）。'
   cameraKeyboardMoveReverse:
     title: 視角移動鍵盤反向
     description: '開啟後，W S A D按鍵的移動視角方向會相反

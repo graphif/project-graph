@@ -156,7 +156,7 @@ settings:
       touchpad: 触摸板
       cameraMove: 视野移动
       cameraZoom: 视野缩放
-      rectangleSelect: 框选
+      objectSelect: 物体选择
       textNode: 文本节点
       edge: 连线
       generateNode: 通过键盘生长节点
@@ -487,6 +487,11 @@ settings:
     title: 通过方向键切换选中节点时，视野跟随移动
     description: |
       开启后，使用键盘移动节点选择框时，视野跟随移动
+  arrowKeySelectOnlyInViewport:
+    title: 方向键切换选择限制在视野内
+    description: |
+      开启后，使用方向键（上下左右）切换选择节点时，只会选择当前视野内可见的物体。
+      关闭后，可以选择到视野外的物体（相机会自动跟随）。
   cameraKeyboardMoveReverse:
     title: 视角移动键盘反向
     description: |

@@ -368,6 +368,11 @@ settings:
     title: Follow Selected Node with Arrow Keys
     description: |
       When enabled, the viewport will follow when switching selected nodes using the arrow keys.
+  arrowKeySelectOnlyInViewport:
+    title: Limit Arrow Key Selection to Viewport
+    description: |
+      When enabled, using arrow keys to switch selection will only select visible objects within the current viewport.
+      When disabled, objects outside the viewport can be selected (camera will follow automatically).
   cameraKeyboardMoveReverse:
     title: Reverse Camera Movement with Keyboard
     description: |
