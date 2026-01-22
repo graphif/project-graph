@@ -119,6 +119,7 @@ import {
   FileBadge,
   FileSpreadsheet,
   FileBox,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -132,6 +133,7 @@ import { RecentFileManager } from "./dataFileService/RecentFileManager";
 import { DragFileIntoStageEngine } from "./dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { FeatureFlags } from "./FeatureFlags";
 import { Settings } from "./Settings";
+import { SubWindow } from "./SubWindow";
 import { Telemetry } from "./Telemetry";
 import { Entity } from "../stage/stageObject/abstract/StageEntity";
 import { Rectangle } from "@graphif/shapes";
@@ -155,6 +157,7 @@ export function GlobalMenu() {
   const [version, setVersion] = useState<string>("");
   const [isUnstableVersion, setIsUnstableVersion] = useState(false);
   const [isDev, setIsDev] = useAtom(isDevAtom);
+  const subWindows = SubWindow.use();
   const { t } = useTranslation("globalMenu");
 
   useEffect(() => {
@@ -779,6 +782,15 @@ export function GlobalMenu() {
           >
             <Keyboard />
             {t("actions.releaseKeys")}
+          </Item>
+          <Item
+            disabled={subWindows.length === 0}
+            onClick={() => {
+              SubWindow.closeAll();
+            }}
+          >
+            <X />
+            关闭所有子窗口
           </Item>
           {/* 生成子菜单 */}
           <Sub>
