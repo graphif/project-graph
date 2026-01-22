@@ -35,6 +35,7 @@ export default function WelcomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [lastClickFileURIPath, setLastClickFileURIPath] = useState("");
   const [isAmdCpu, setIsAmdCpu] = useState(false);
+  const [currentSlogan, setCurrentSlogan] = useState("");
 
   useEffect(() => {
     refresh();
@@ -48,7 +49,17 @@ export default function WelcomePage() {
         console.error("检测CPU信息失败:", e);
       }
     })();
-  }, []);
+
+    // 随机选择 slogan
+    const slogans = t("slogans", { returnObjects: true }) as string[];
+    if (Array.isArray(slogans) && slogans.length > 0) {
+      const randomIndex = Math.floor(Math.random() * slogans.length);
+      setCurrentSlogan(slogans[randomIndex]);
+    } else {
+      // 降级到默认 slogan
+      setCurrentSlogan(t("slogan"));
+    }
+  }, [t]);
 
   async function refresh() {
     setIsLoading(true);
@@ -73,11 +84,11 @@ export default function WelcomePage() {
               {appVersion}
             </a>
           </div>
-          <div className="hidden text-xs opacity-50 sm:block sm:text-lg">{t("slogan")}</div>
+          <div className="hidden text-xs opacity-50 sm:block sm:text-lg">{currentSlogan || t("slogan")}</div>
           {isAmdCpu && (
             <div className="flex items-center gap-2 rounded-lg border p-3 text-sm text-yellow-600/75">
               <AlertTriangle />
-              <span>您的设备（AMD CPU）可能在大屏下使用时存在渲染卡顿问题</span>
+              <span>您的设备（AMD CPU）可能在大屏(4k)下使用时存在渲染卡顿问题</span>
             </div>
           )}
         </div>

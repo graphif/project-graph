@@ -1,4 +1,20 @@
 welcome:
+  slogan: Infinite canvas mind mapping software based on graph theory
+  slogans:
+    - Infinite canvas mind mapping software based on graph theory
+    - Unleash your design on the infinite plane
+    - Let thoughts flow freely between nodes and edges
+    - Build your knowledge network with graph theory
+    - From chaos to order, from nodes to systems
+    - Visualize thinking, topological management
+    - Infinite canvas, infinite possibilities
+    - Connect ideas, sketch the big picture
+    - Not just mind maps, but thinking frameworks
+    - Graph theory-powered visual thinking tool
+  newDraft: New Draft
+  openFile: Open File
+  settings: Settings
+  about: About
   language: Language
   next: Next
   website: Website
