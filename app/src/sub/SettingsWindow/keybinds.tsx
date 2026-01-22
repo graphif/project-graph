@@ -504,6 +504,7 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "switchActiveProjectReversed",
       "switchStealthMode",
       "closeAllSubWindows",
+      "toggleFullscreen",
     ],
   },
   {

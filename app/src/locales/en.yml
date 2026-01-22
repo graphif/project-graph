@@ -1356,6 +1356,9 @@ keyBinds:
   closeAllSubWindows:
     title: Close All Sub-Windows
     description: Closes all currently open sub-windows (e.g., Settings, AI, Color panels) and restores focus to the main stage.
+  toggleFullscreen:
+    title: Toggle Fullscreen
+    description: Toggle the application window between fullscreen and windowed mode.
   
 effects:
   RectangleLittleNoteEffect:

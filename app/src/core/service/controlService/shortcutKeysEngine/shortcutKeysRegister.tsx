@@ -12,7 +12,8 @@ import { ConnectableEntity } from "@/core/stage/stageObject/abstract/Connectable
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { activeProjectAtom, projectsAtom, store } from "@/state";
+import { activeProjectAtom, isWindowMaxsizedAtom, projectsAtom, store } from "@/state";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 // import ColorWindow from "@/sub/ColorWindow";
 import FindWindow from "@/sub/FindWindow";
 // import KeyboardRecentFilesWindow from "@/sub/KeyboardRecentFilesWindow";
@@ -62,6 +63,21 @@ export const allKeyBinds: KeyBindItem[] = [
     onPress: () => {
       if (!SubWindow.hasOpenWindows()) return;
       SubWindow.closeAll();
+    },
+    isUI: true,
+  },
+  {
+    id: "toggleFullscreen",
+    defaultKey: "F11",
+    onPress: async () => {
+      const window = getCurrentWindow();
+      // 如果当前已经是最大化的状态，设置为非最大化
+      if (await window.isMaximized()) {
+        store.set(isWindowMaxsizedAtom, false);
+      }
+      // 切换全屏状态
+      const isFullscreen = await window.isFullscreen();
+      await window.setFullscreen(!isFullscreen);
     },
     isUI: true,
   },

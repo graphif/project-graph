@@ -1596,5 +1596,8 @@ keyBinds:
   closeAllSubWindows:
     title: 關閉所有子窗口
     description: 關閉當前所有打開的子窗口（如設置、AI、顏色面板等），並將焦點恢復至主畫布。
+  toggleFullscreen:
+    title: 切換全屏
+    description: 在全屏和窗口模式之間切換應用窗口。
 sounds:
   soundEnabled: 音效開關

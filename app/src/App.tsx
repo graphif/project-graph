@@ -57,22 +57,6 @@ export default function App() {
   // const { t } = useTranslation("app");
 
   useEffect(() => {
-    window.addEventListener("keyup", async (event) => {
-      // 这两个按键有待添加到自定义快捷键，但他们函数内部用到了useState，还不太清楚怎么改
-      // ——littlefean（2024年12月27日）
-      if (event.key === "F11") {
-        // 如果当前已经是最大化的状态
-        if (await getCurrentWindow().isMaximized()) {
-          _setMaximized(false);
-        }
-        getCurrentWindow()
-          .isFullscreen()
-          .then((isFullscreen) => {
-            getCurrentWindow().setFullscreen(!isFullscreen);
-          });
-      }
-    });
-
     // 注册UI级别快捷键
     KeyBindsUI.registerAllUIKeyBinds();
     KeyBindsUI.uiStartListen();
