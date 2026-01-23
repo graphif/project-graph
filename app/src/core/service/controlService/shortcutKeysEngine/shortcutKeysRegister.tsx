@@ -68,7 +68,7 @@ export const allKeyBinds: KeyBindItem[] = [
   },
   {
     id: "toggleFullscreen",
-    defaultKey: isMac ? "C-F11" : "F11",
+    defaultKey: "C-F11",
     onPress: async () => {
       const window = getCurrentWindow();
       // 如果当前已经是最大化的状态，设置为非最大化
