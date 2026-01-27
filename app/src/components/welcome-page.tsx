@@ -37,6 +37,39 @@ export default function WelcomePage() {
   const [isAmdCpu, setIsAmdCpu] = useState(false);
   const [currentSlogan, setCurrentSlogan] = useState("");
 
+  // 中文 slogan 列表（展示一些有趣特性或技巧）
+  const slogans = [
+    "思维框架图和思维导图的区别在于，思维框架图不局限于树形结构，可以自由连接节点，形成用于分析项目结构的网络结构",
+    "目前一般不建议一个prg文件超过50MB，否则文件过大可能影响性能，保存缓慢",
+    "格式化树形结构时，需要保证每个连线都是一种标准化的方向的连线，例如向右的连线从源头右侧发出，目标左侧接收",
+    "alt shift f 可以格式化树形结构，它源自于 VS Code 格式化代码的快捷键。每当按下这个快捷键时，左手像个兰花指。",
+    "移动视野有13种方法，具体可以在官网的摄像机章节查看",
+    "这个软件不是传统的思维导图软件",
+    "打开一个文件后，ctrl + 0 可以直接透明窗口。可以用于一边看视频一边纯键盘操作",
+    "WSAD可以移动视野。但其他软件的全局快捷键可能会干扰此软件监听WSAD的松开事件，进而导致视野一直朝着某方向移动，可以手动触发一次松开解决",
+    "当视野放大到极限时会回到宏观视角。源自《围观尽头》",
+    "F键可以快速聚焦视野到选中的物体，再按下shift+F可以快速回到按下F键之前的宏观视角",
+    "选中图片后右下角有一个绿色按钮，可以拖拽改变大小",
+    "向左框选和向右框选逻辑不同，源自CAD，框选可以大幅度提升自由布局的移动效率",
+    "windows系统中，可以将此软件的exe放入zip中，直接双击预览打开zip文件然后双击打开内部的exe，可以逃过某些禁止运行exe电脑的限制",
+    "软件是开源的，可以放心使用。可参考MIT和GPL-3.0双许可协议",
+    "prg文件是软件的专有格式，用于存储思维框架图数据。本质是一个zip压缩包，解压后可以看到里面的图片文件",
+    "windows系统中，跨文件复制需要在一个软件中打开两个标签页，而非直接双击prg文件打开两个软件",
+    "当一个文本节点的内容恰好为一个文件的绝对路径或者网页URL时，可以 中键双击/快捷键/右键 直接打开这个文件或者网页",
+    "按住ctrl键框选，可以实现反选。进而可以实现先选中一些节点，再用反选框选一次，选中所有的连线。",
+    "框选优先级：框选起点所在Section框 > 节点 > 连线",
+    "文本节点的字体大小是指数级别的，因为缩放视野时鼠标滚动的圈数和视野内大小变化尺度也是指数级别的。",
+    "WSAD移动时，如果是高空飞行，移动速度会很快，如果是低空飞行，移动速度会很慢。",
+    "选中两个节点，按两次数字4，可以左对齐，6是右对齐，8、2是上下对齐，看九宫格小键盘非常直观",
+    "当脑机接口与视网膜投屏实现的那一天出现时，这个软件的生命就终结了，获许会以一种新的形态出现",
+    "小特性：鼠标在空白地方拖出一个框选框不松手时，按下ctrl+G会直接创建一个框选框大小的Section框。用于自顶向下的绘制大板块结构",
+    "不要当一个囤积知识的笔记拷贝者，而是要当一个知识的创造者与思考者。",
+    "鼠标移动到窗口顶部空白地方时会出现一个带颜色的框，可以拖动这个区域来移动整个软件窗口",
+    "当窗口缩小到足够小时，导航栏等UI会变得极小，可以当成一个迷你小窗口软件来使用",
+    "windows系统中，右上角的小黄点可以用于想关闭软件时，直接鼠标无脑顶到右上角直接点击关闭。不需要再看x的位置并瞄准了",
+    "推荐使用新版的导出PNG图片功能而非旧版的拼接图片导出功能",
+  ];
+
   useEffect(() => {
     refresh();
     (async () => {
@@ -51,15 +84,9 @@ export default function WelcomePage() {
     })();
 
     // 随机选择 slogan
-    const slogans = t("slogans", { returnObjects: true }) as string[];
-    if (Array.isArray(slogans) && slogans.length > 0) {
-      const randomIndex = Math.floor(Math.random() * slogans.length);
-      setCurrentSlogan(slogans[randomIndex]);
-    } else {
-      // 降级到默认 slogan
-      setCurrentSlogan(t("slogan"));
-    }
-  }, [t]);
+    const randomIndex = Math.floor(Math.random() * slogans.length);
+    setCurrentSlogan(slogans[randomIndex]);
+  }, []);
 
   async function refresh() {
     setIsLoading(true);
@@ -84,7 +111,7 @@ export default function WelcomePage() {
               {appVersion}
             </a>
           </div>
-          <div className="hidden text-xs opacity-50 sm:block sm:text-lg">{currentSlogan || t("slogan")}</div>
+          <div className="hidden text-xs opacity-50 sm:block">{currentSlogan}</div>
           {isAmdCpu && (
             <div className="flex items-center gap-2 rounded-lg border p-3 text-sm text-yellow-600/75">
               <AlertTriangle />
