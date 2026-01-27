@@ -96,6 +96,7 @@ import { openBrowserOrFile } from "@/utils/externalOpen";
 import { ReactNode, useEffect, useState } from "react";
 import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import ColorWindow from "@/sub/ColorWindow";
+import ColorPaletteWindow from "@/sub/ColorPaletteWindow";
 import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
 import { parseEmacsKey } from "@/utils/emacs";
 import { ConnectNodeSmartTools } from "@/core/service/dataManageService/connectNodeSmartTools";
@@ -458,6 +459,13 @@ export default function MyContextMenuContent() {
                   }}
                 >
                   打开调色板
+                </Item>
+                <Item
+                  onClick={() => {
+                    ColorPaletteWindow.open();
+                  }}
+                >
+                  打开舞台颜色分布表
                 </Item>
               </SubContent>
             </Sub>
