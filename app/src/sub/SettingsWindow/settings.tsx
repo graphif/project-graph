@@ -224,6 +224,7 @@ const categories = {
       "sectionBigTitleThresholdRatio",
       "sectionBigTitleCameraScaleThreshold",
       "sectionBigTitleOpacity",
+      "sectionBackgroundFillMode",
     ],
     entityDetails: [
       "nodeDetailsPanel",

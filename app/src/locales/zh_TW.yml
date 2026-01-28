@@ -311,6 +311,15 @@ settings:
   sectionBigTitleOpacity:
     title: 框的縮略大標題透明度
     description: 控制半透明覆蓋大標題的透明度，取值範圍0-1
+  sectionBackgroundFillMode:
+    title: 框的背景顏色填充方式
+    description: |
+      控制section框的背景顏色填充方式
+      完整填充：填充整個框的背景（默認方式，有透明度化和遮罩順序判斷）
+      僅標題條：只填充頂部標題那一小條的部分
+    options:
+      full: 完整填充
+      titleOnly: 僅標題條
   alwaysShowDetails:
     title: 始終顯示節點詳細信息
     description: 開啟後，無需鼠標移動到節點上時，才顯示節點的詳細信息。

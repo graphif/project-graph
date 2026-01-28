@@ -694,6 +694,15 @@ settings:
     title: Section Big Title Opacity
     description: |
       Control the opacity of the semi-transparent cover big title, range 0-1
+  sectionBackgroundFillMode:
+    title: Section Background Fill Mode
+    description: |
+      Control how the section background color is filled
+      Full: Fill the entire section background (default, with opacity and mask order judgment)
+      Title Only: Only fill the top title bar
+    options:
+      full: Full Fill
+      titleOnly: Title Only
   macTrackpadAndMouseWheelDifference:
     options:
       tarckpadFloatAndWheelInt: The value of the trackpad is a decimal, while 

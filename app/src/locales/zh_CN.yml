@@ -285,6 +285,15 @@ settings:
     title: 框的缩略大标题透明度
     description: |
       控制半透明覆盖大标题的透明度，取值范围0-1
+  sectionBackgroundFillMode:
+    title: 框的背景颜色填充方式
+    description: |
+      控制section框的背景颜色填充方式
+      完整填充：填充整个框的背景（默认方式，有透明度化和遮罩顺序判断）
+      仅标题条：只填充顶部标题那一小条的部分
+    options:
+      full: 完整填充
+      titleOnly: 仅标题条
   alwaysShowDetails:
     title: 始终显示节点详细信息
     description: |

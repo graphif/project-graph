@@ -79,18 +79,36 @@ export class SectionRenderer {
   }
 
   renderBackgroundColor(section: Section) {
-    const color = section.color.clone();
-    color.a = Math.min(color.a, 0.5);
-    this.project.shapeRenderer.renderRect(
-      new Rectangle(
+    if (Settings.sectionBackgroundFillMode === "titleOnly") {
+      // 只填充顶部标题条（不透明）
+      const color = section.color.clone();
+      const titleBarHeight = (Renderer.FONT_SIZE + Renderer.NODE_PADDING * 2) * this.project.camera.currentScale;
+      const titleBarRect = new Rectangle(
         this.project.renderer.transformWorld2View(section.rectangle.location),
-        section.rectangle.size.multiply(this.project.camera.currentScale),
-      ),
-      color,
-      Color.Transparent,
-      0,
-      Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
-    );
+        new Vector(section.rectangle.size.x * this.project.camera.currentScale, titleBarHeight),
+      );
+      this.project.shapeRenderer.renderRect(
+        titleBarRect,
+        color,
+        Color.Transparent,
+        0,
+        Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+      );
+    } else {
+      // 完整填充（默认方式，有透明度化和遮罩顺序判断）
+      const color = section.color.clone();
+      color.a = Math.min(color.a, 0.5);
+      this.project.shapeRenderer.renderRect(
+        new Rectangle(
+          this.project.renderer.transformWorld2View(section.rectangle.location),
+          section.rectangle.size.multiply(this.project.camera.currentScale),
+        ),
+        color,
+        Color.Transparent,
+        0,
+        Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+      );
+    }
   }
 
   /**

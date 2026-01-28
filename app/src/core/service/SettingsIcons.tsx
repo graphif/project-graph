@@ -157,6 +157,7 @@ export const settingsIcons = {
   sectionBigTitleThresholdRatio: Ratio,
   sectionBigTitleCameraScaleThreshold: ScanEye,
   sectionBigTitleOpacity: Blend,
+  sectionBackgroundFillMode: Layers,
   nodeDetailsPanel: AppWindow,
   alwaysShowDetails: ListCollapse,
   entityDetailsFontSize: CaseSensitive,
