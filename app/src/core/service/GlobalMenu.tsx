@@ -14,7 +14,6 @@ import {
 import { initProjectWithAllServices } from "@/core/loadAllServices";
 import { Project } from "@/core/Project";
 import { activeProjectAtom, isClassroomModeAtom, projectsAtom, store } from "@/state";
-import AIWindow from "@/sub/AIWindow";
 import AttachmentsWindow from "@/sub/AttachmentsWindow";
 import ExportPngWindow from "@/sub/ExportPngWindow";
 import FindWindow from "@/sub/FindWindow";
@@ -52,7 +51,6 @@ import {
   CircleDot,
   Columns4,
   Dumbbell,
-  ExternalLink,
   File,
   FileClock,
   FileCode,
@@ -752,12 +750,7 @@ export function GlobalMenu() {
           <Bot />
           {t("ai.title")}
         </Trigger>
-        <Content>
-          <Item onClick={() => AIWindow.open()}>
-            <ExternalLink />
-            {t("ai.openAIPanel")}
-          </Item>
-        </Content>
+        <Content></Content>
       </Menu>
 
       {/* 视图 */}
