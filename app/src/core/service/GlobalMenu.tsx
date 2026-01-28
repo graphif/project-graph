@@ -92,7 +92,6 @@ import {
   Palette,
   Paperclip,
   PictureInPicture2,
-  Plus,
   Rabbit,
   Radiation,
   Redo,
@@ -104,6 +103,7 @@ import {
   SettingsIcon,
   SquareDashedMousePointer,
   SquareSquare,
+  Sparkles,
   Tag,
   TestTube2,
   TextQuote,
@@ -402,6 +402,14 @@ export function GlobalMenu() {
               >
                 <Images />
                 导入SVG图片
+              </Item>
+              <Separator />
+              <Item disabled className="text-sm">
+                更多导入请访问 顶部导航栏 -
+                <Axe className="mx-0.5 inline-block h-3 w-3 align-middle" />
+                操作 -
+                <Sparkles className="mx-0.5 inline-block h-3 w-3 align-middle" />
+                生成
               </Item>
             </SubContent>
           </Sub>
@@ -795,7 +803,7 @@ export function GlobalMenu() {
           {/* 生成子菜单 */}
           <Sub>
             <SubTrigger>
-              <Plus />
+              <Sparkles />
               {t("actions.generate.title")}
             </SubTrigger>
             <SubContent>
