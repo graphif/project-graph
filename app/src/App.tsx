@@ -78,6 +78,17 @@ export default function App() {
         event.preventDefault();
     });
 
+    // 阻止触摸板缩放手势
+    window.addEventListener(
+      "wheel",
+      (event) => {
+        if (event.ctrlKey) {
+          event.preventDefault();
+        }
+      },
+      { passive: false },
+    );
+
     // 全局错误处理
     window.addEventListener("error", (event) => {
       console.error("捕获到全局错误：", event.error);
