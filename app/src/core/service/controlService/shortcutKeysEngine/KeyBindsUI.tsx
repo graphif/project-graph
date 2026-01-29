@@ -314,7 +314,7 @@ export namespace KeyBindsUI {
   }
   function onKeyUp(event: KeyboardEvent) {
     // 如果有文本输入元素获得焦点，不处理键盘事件
-    if (!shouldProcessKeyboardEvent()) {
+    if (!isMac && !shouldProcessKeyboardEvent()) {
       return;
     }
     const activeProject = store.get(activeProjectAtom);
