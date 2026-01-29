@@ -51,6 +51,7 @@ export default function App() {
   const [ignoreMouseEvents, setIgnoreMouseEvents] = useState(false);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
   const [showQuickSettingsToolbar, setShowQuickSettingsToolbar] = useState(Settings.showQuickSettingsToolbar);
+  const [windowBackgroundAlpha, setWindowBackgroundAlpha] = useState(Settings.windowBackgroundAlpha);
 
   const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
 
@@ -83,8 +84,13 @@ export default function App() {
     });
 
     // 监听快捷设置工具栏显示设置
-    Settings.watch("showQuickSettingsToolbar", (value) => {
+    const unwatchShowQuickSettingsToolbar = Settings.watch("showQuickSettingsToolbar", (value) => {
       setShowQuickSettingsToolbar(value);
+    });
+
+    // 监听窗口背景不透明度
+    const unwatchWindowBackgroundAlpha = Settings.watch("windowBackgroundAlpha", (value) => {
+      setWindowBackgroundAlpha(value);
     });
 
     // 恢复窗口位置大小
@@ -131,6 +137,8 @@ export default function App() {
       unlisten1?.then((f) => f());
       KeyBindsUI.uiStopListen();
       // 清理全局快捷键资源
+      unwatchShowQuickSettingsToolbar();
+      unwatchWindowBackgroundAlpha();
       globalShortcutManager.dispose();
     };
   }, []);
@@ -331,83 +339,87 @@ export default function App() {
   );
 
   return (
-    <div
-      className="bg-stage-background relative flex h-full w-full flex-col overflow-clip rounded-lg sm:gap-2 sm:p-2"
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      {/* 菜单 | 标签页 | ...移动窗口区域... | 窗口控制按钮 */}
+    <>
+      {/* 这是一个底层的 div，用于在拖拽改变窗口大小时填充背景，防止窗口出现透明闪烁 */}
+      <div className="fixed inset-0 z-[-1] bg-[var(--stage-background)]" style={{ opacity: windowBackgroundAlpha }} />
       <div
-        className={cn(
-          "z-10 flex h-4 transition-all hover:opacity-100 sm:h-9 sm:gap-2",
-          isClassroomMode && "opacity-0",
-          ignoreMouseEvents && "pointer-events-none",
-        )}
+        className="relative flex h-full w-full flex-col overflow-clip rounded-lg sm:gap-2 sm:p-2"
+        onContextMenu={(e) => e.preventDefault()}
       >
+        {/* 菜单 | 标签页 | ...移动窗口区域... | 窗口控制按钮 */}
         <div
-          className="hover:bg-primary/25 h-full min-w-6 cursor-grab transition-colors active:cursor-grabbing sm:hidden"
-          data-tauri-drag-region
-        />
-        {isMac && <WindowButtons />}
-        <GlobalMenu />
-        <div
-          className="hover:bg-primary/25 h-full flex-1 cursor-grab transition-colors hover:*:opacity-100 active:cursor-grabbing sm:rounded-sm sm:hover:border"
-          data-tauri-drag-region
-        />
-        {!isMac && <WindowButtons />}
-      </div>
-
-      <ProjectTabs
-        projects={projects}
-        activeProject={activeProject}
-        onTabClick={handleTabClick}
-        onTabClose={handleTabClose}
-        isClassroomMode={isClassroomMode}
-        ignoreMouseEvents={ignoreMouseEvents}
-      />
-
-      {/* canvas */}
-      <div className="absolute inset-0 overflow-hidden" ref={canvasWrapperRef}></div>
-
-      {/* 没有项目处于打开状态时，显示欢迎页面 */}
-      {projects.length === 0 && (
-        <div className="absolute inset-0 overflow-hidden *:h-full *:w-full">
-          <Welcome />
+          className={cn(
+            "z-10 flex h-4 transition-all hover:opacity-100 sm:h-9 sm:gap-2",
+            isClassroomMode && "opacity-0",
+            ignoreMouseEvents && "pointer-events-none",
+          )}
+        >
+          <div
+            className="hover:bg-primary/25 h-full min-w-6 cursor-grab transition-colors active:cursor-grabbing sm:hidden"
+            data-tauri-drag-region
+          />
+          {isMac && <WindowButtons />}
+          <GlobalMenu />
+          <div
+            className="hover:bg-primary/25 h-full flex-1 cursor-grab transition-colors hover:*:opacity-100 active:cursor-grabbing sm:rounded-sm sm:hover:border"
+            data-tauri-drag-region
+          />
+          {!isMac && <WindowButtons />}
         </div>
-      )}
 
-      {/* 右键菜单 */}
-      <ContextMenu>
-        <ContextMenuTrigger>
-          <div ref={contextMenuTriggerRef} />
-        </ContextMenuTrigger>
-        <MyContextMenuContent />
-      </ContextMenu>
+        <ProjectTabs
+          projects={projects}
+          activeProject={activeProject}
+          onTabClick={handleTabClick}
+          onTabClose={handleTabClose}
+          isClassroomMode={isClassroomMode}
+          ignoreMouseEvents={ignoreMouseEvents}
+        />
 
-      {/* ======= */}
-      {/* <ErrorHandler /> */}
+        {/* canvas */}
+        <div className="absolute inset-0 overflow-hidden" ref={canvasWrapperRef}></div>
 
-      {/* <PGCanvas /> */}
+        {/* 没有项目处于打开状态时，显示欢迎页面 */}
+        {projects.length === 0 && (
+          <div className="absolute inset-0 overflow-hidden *:h-full *:w-full">
+            <Welcome />
+          </div>
+        )}
 
-      {/* <FloatingOutlet />
+        {/* 右键菜单 */}
+        <ContextMenu>
+          <ContextMenuTrigger>
+            <div ref={contextMenuTriggerRef} />
+          </ContextMenuTrigger>
+          <MyContextMenuContent />
+        </ContextMenu>
+
+        {/* ======= */}
+        {/* <ErrorHandler /> */}
+
+        {/* <PGCanvas /> */}
+
+        {/* <FloatingOutlet />
       <RenderSubWindows /> */}
 
-      <RenderSubWindows />
+        <RenderSubWindows />
 
-      {/* 底部工具栏 */}
-      {activeProject && <ToolbarContent />}
+        {/* 底部工具栏 */}
+        {activeProject && <ToolbarContent />}
 
-      {/* 右侧工具栏 */}
-      {activeProject && showQuickSettingsToolbar && <RightToolbar />}
+        {/* 右侧工具栏 */}
+        {activeProject && showQuickSettingsToolbar && <RightToolbar />}
 
-      {/* 右上角关闭的触发角 */}
-      {isWindows && (
-        <div
-          className="absolute right-0 top-0 z-50 h-1 w-1 cursor-pointer rounded-bl-xl bg-red-600 transition-all hover:h-10 hover:w-10 hover:bg-yellow-500"
-          onClick={() => getCurrentWindow().close()}
-        ></div>
-      )}
-      {dropMouseLocation !== "notInWindowZone" && <DropWindowCover dropMouseLocation={dropMouseLocation} />}
-    </div>
+        {/* 右上角关闭的触发角 */}
+        {isWindows && (
+          <div
+            className="absolute right-0 top-0 z-50 h-1 w-1 cursor-pointer rounded-bl-xl bg-red-600 transition-all hover:h-10 hover:w-10 hover:bg-yellow-500"
+            onClick={() => getCurrentWindow().close()}
+          ></div>
+        )}
+        {dropMouseLocation !== "notInWindowZone" && <DropWindowCover dropMouseLocation={dropMouseLocation} />}
+      </div>
+    </>
   );
 }
 

@@ -96,7 +96,7 @@ export default function WelcomePage() {
   }
 
   return (
-    <div className="flex h-full w-full items-center justify-center bg-[var(--stage-background)]">
+    <div className="flex h-full w-full items-center justify-center">
       <div className="m-2 flex flex-col p-4 sm:gap-8">
         {/* 顶部标题区域 */}
         <div className="flex flex-col sm:gap-2">
