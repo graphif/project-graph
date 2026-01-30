@@ -335,6 +335,12 @@ export class Project extends EventEmitter<{
       this.tags = tags;
       this.references = references;
       this.metadata = upgradedMetadata;
+
+      // 更新引用关系，包括双向线的偏移状态
+      // 注意：这里需要在服务加载后才能调用，所以需要检查服务是否已加载
+      if (this.getService("stageManager")) {
+        this.stageManager.updateReferences();
+      }
     } catch (e) {
       console.warn(e);
     }

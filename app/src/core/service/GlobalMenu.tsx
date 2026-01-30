@@ -1611,6 +1611,8 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
           if (upgraded) {
             project.stage = deserialize(upgraded.data, project);
             project.attachments = upgraded.attachments;
+            // 更新引用关系，包括双向线的偏移状态
+            project.stageManager.updateReferences();
           }
           const readFileTime = performance.now() - t;
           store.set(projectsAtom, [...store.get(projectsAtom), project]);
