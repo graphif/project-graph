@@ -46,7 +46,7 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
     ctx.set_fonts(fonts);
 }
 
-/// 创建一个包含 Lucide 图标的 RichText
-pub fn ic(icon: lucide_icons::Icon) -> egui::RichText {
-    egui::RichText::new(char::from(icon).to_string())
+/// 获取 Lucide 图标的 Unicode 字符串
+pub fn ic(icon: lucide_icons::Icon) -> String {
+    char::from(icon).to_string()
 }
