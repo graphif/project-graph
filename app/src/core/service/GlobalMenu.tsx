@@ -839,27 +839,27 @@ export function GlobalMenu() {
                 <GitCompareArrows />
                 {t("actions.generate.generateNodeMermaidByText")}
               </Item>
-              <Item
-                onClick={() => {
-                  LogicNodePanel.open();
-                }}
-              >
-                <Workflow />
-                打开逻辑节点面板
-              </Item>
-              <Item
-                onClick={async () => {
-                  const result = await Dialog.confirm("详见官网文档：“自动计算引擎”部分", "即将打开网页，是否继续");
-                  if (result) {
-                    shellOpen("https://graphif.dev/docs/app/features/feature/compute-engine");
-                  }
-                }}
-              >
-                <BookOpen />
-                逻辑节点详细文档
-              </Item>
             </SubContent>
           </Sub>
+          <Item
+            onClick={() => {
+              LogicNodePanel.open();
+            }}
+          >
+            <Workflow />
+            打开逻辑节点面板
+          </Item>
+          <Item
+            onClick={async () => {
+              const result = await Dialog.confirm("详见官网文档：自动计算引擎 部分 即将打开网页，是否继续");
+              if (result) {
+                shellOpen("https://graphif.dev/docs/app/features/feature/compute-engine");
+              }
+            }}
+          >
+            <BookOpen />
+            逻辑节点详细文档
+          </Item>
           {/* 清空舞台最不常用，放在最后一个 */}
           <Item
             className="*:text-destructive! text-destructive!"
