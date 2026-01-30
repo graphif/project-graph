@@ -1,6 +1,7 @@
 mod fonts;
 mod smooth_value;
 mod stage;
+mod themes;
 mod utils;
 
 use lucide_icons::Icon;
@@ -8,6 +9,7 @@ use lucide_icons::Icon;
 use crate::{
     fonts::{ic, setup_custom_fonts},
     stage::Stage,
+    themes::visuals_dark,
 };
 
 fn main() {
@@ -31,8 +33,9 @@ struct MyApp {
 }
 
 impl MyApp {
-    pub fn new(ctx: &eframe::CreationContext<'_>) -> Self {
-        setup_custom_fonts(&ctx.egui_ctx);
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        cc.egui_ctx.set_visuals(visuals_dark());
+        setup_custom_fonts(&cc.egui_ctx);
         Self {
             stage: Stage::new(),
         }
