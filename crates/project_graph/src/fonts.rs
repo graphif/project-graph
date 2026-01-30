@@ -32,10 +32,11 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
     }
 
     // Lucide Icons 字体
-    fonts.font_data.insert(
-        "lucide_icons".to_owned(),
-        egui::FontData::from_static(lucide_icons::LUCIDE_FONT_BYTES).into(),
-    );
+    let mut lucide_data = egui::FontData::from_static(lucide_icons::LUCIDE_FONT_BYTES);
+    lucide_data.tweak.y_offset_factor = 0.05;
+    fonts
+        .font_data
+        .insert("lucide_icons".to_owned(), lucide_data.into());
 
     fonts
         .families
