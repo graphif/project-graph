@@ -1,0 +1,25 @@
+[workspace]
+members = [
+    "crates/*",
+]
+resolver = "2"
+
+[workspace.dependencies]
+# 统一数据结构
+mint = "0.5.9"
+
+# 日志
+log = "0.4.29"
+env_logger = "0.11.8"
+
+# UI
+egui = { version = "0.33.3", features = ["mint"] }
+eframe = { version = "0.33.3", features = ["wgpu", "persistence"] }
+lucide-icons = "0.563.0"
+
+# 数学库
+glam = { version = "0.31.0", features = ["mint"] }
+rand = "0.9.2"
+
+# 操作系统相关
+font-kit = "0.14.3"

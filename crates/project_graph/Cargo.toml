@@ -1,0 +1,15 @@
+[package]
+name = "project_graph"
+version = "3.0.0"
+edition = "2024"
+
+[dependencies]
+mint = { workspace = true }
+egui = { workspace = true }
+eframe = { workspace = true }
+glam = { workspace = true }
+font-kit = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
+lucide-icons = { workspace = true }
+rand = { workspace = true }
