@@ -1373,6 +1373,9 @@ keyBinds:
   toggleFullscreen:
     title: Toggle Fullscreen
     description: Toggle the application window between fullscreen and windowed mode.
+  setWindowToMiniSize:
+    title: Set Window to Mini Size
+    description: Set the window size to the mini window width and height configured in settings.
   
 effects:
   RectangleLittleNoteEffect:

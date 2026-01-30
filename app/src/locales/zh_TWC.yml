@@ -1613,5 +1613,8 @@ keyBinds:
   toggleFullscreen:
     title: 切換全屏
     description: 在全屏和窗口模式之間切換應用窗口。
+  setWindowToMiniSize:
+    title: 設置窗口為迷你大小
+    description: 將窗口大小設置為設置中配置的迷你窗口寬度和高度。
 sounds:
   soundEnabled: 音效開關

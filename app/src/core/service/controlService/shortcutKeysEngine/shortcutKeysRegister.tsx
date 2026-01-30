@@ -14,6 +14,7 @@ import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { activeProjectAtom, isWindowMaxsizedAtom, projectsAtom, store } from "@/state";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { LogicalSize } from "@tauri-apps/api/dpi";
 // import ColorWindow from "@/sub/ColorWindow";
 import FindWindow from "@/sub/FindWindow";
 // import KeyboardRecentFilesWindow from "@/sub/KeyboardRecentFilesWindow";
@@ -78,6 +79,27 @@ export const allKeyBinds: KeyBindItem[] = [
       // 切换全屏状态
       const isFullscreen = await window.isFullscreen();
       await window.setFullscreen(!isFullscreen);
+    },
+    isUI: true,
+  },
+  {
+    id: "setWindowToMiniSize",
+    defaultKey: "A-S-m",
+    onPress: async () => {
+      const window = getCurrentWindow();
+      // 如果当前是最大化状态，先取消最大化
+      if (await window.isMaximized()) {
+        await window.unmaximize();
+        store.set(isWindowMaxsizedAtom, false);
+      }
+      // 如果当前是全屏状态，先退出全屏
+      if (await window.isFullscreen()) {
+        await window.setFullscreen(false);
+      }
+      // 设置窗口大小为设置中的迷你窗口大小
+      const width = Settings.windowCollapsingWidth;
+      const height = Settings.windowCollapsingHeight;
+      await window.setSize(new LogicalSize(width, height));
     },
     isUI: true,
   },

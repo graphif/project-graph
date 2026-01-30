@@ -505,6 +505,7 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "switchStealthMode",
       "closeAllSubWindows",
       "toggleFullscreen",
+      "setWindowToMiniSize",
     ],
   },
   {
