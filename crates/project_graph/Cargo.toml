@@ -13,3 +13,6 @@ log = { workspace = true }
 env_logger = { workspace = true }
 lucide-icons = { workspace = true }
 rand = { workspace = true }
+egui_extras = { workspace = true }
+image = { workspace = true }
+

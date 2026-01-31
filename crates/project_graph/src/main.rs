@@ -30,14 +30,19 @@ fn main() {
 
 struct MyApp {
     stage: Stage,
+    show_settings: bool,
+    show_about: bool,
 }
 
 impl MyApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         cc.egui_ctx.set_visuals(visuals_dark());
         setup_custom_fonts(&cc.egui_ctx);
+        egui_extras::install_image_loaders(&cc.egui_ctx);
         Self {
             stage: Stage::new(),
+            show_settings: false,
+            show_about: false,
         }
     }
 }
@@ -63,15 +68,28 @@ impl eframe::App for MyApp {
             ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
                 ui.horizontal_centered(|ui| {
                     ui.add_space(8.0);
-                    ui.label("🦀");
+                    ui.label("icon");
 
                     // 菜单栏
                     egui::MenuBar::new().ui(ui, |ui| {
-                        ui.menu_button("文件", |ui| {
-                            if ui.button("退出").clicked() {
+                        ui.menu_button(format!("{} 文件", ic(Icon::File)), |ui| {
+                            ui.button(format!("{} 新建", ic(Icon::FilePlus)));
+                            ui.button(format!("{} 打开", ic(Icon::FolderOpen)));
+                            ui.button(format!("{} 保存", ic(Icon::Save)));
+                            ui.separator();
+                            if ui.button(format!("{} 退出", ic(Icon::LogOut))).clicked() {
                                 ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
                             }
                         });
+                        ui.menu_button(format!("{} 设置", ic(Icon::Settings)), |ui| {
+                            if ui.button(format!("{} 设置", ic(Icon::Settings))).clicked() {
+                                self.show_settings = true;
+                            }
+                            ui.separator();
+                            if ui.button(format!("{} 关于", ic(Icon::Info))).clicked() {
+                                self.show_about = true;
+                            }
+                        })
                     });
 
                     // 右侧控制按钮
@@ -108,5 +126,38 @@ impl eframe::App for MyApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             self.stage.ui(ui);
         });
+
+        egui::Window::new("设置")
+            .open(&mut self.show_settings)
+            .show(ctx, |ui| {
+                ui.label("hello world");
+            });
+
+        egui::Window::new("关于")
+            .open(&mut self.show_about)
+            .show(ctx, |ui| {
+                ui.columns(2, |columns| {
+                    columns[0].add(egui::Image::new(egui::include_image!(
+                        "../../../assets/icon.png"
+                    )));
+                    // columns[1].add_space(12.0);
+                    // columns[1].heading("Project Graph");
+                    // columns[1].label(format!("版本 {}", env!("CARGO_PKG_VERSION")));
+                    // columns[1].label("图形化思维桌面工具和知识管理系统，支持节点连接、图形渲染和自动布局等功能，基于 Rust 构建。它旨在提供一个高效、直观的方式来组织和管理个人知识。");
+                    egui::Frame::new()
+                        .inner_margin(egui::Margin {
+                            top: 12,
+                            right: 12,
+                            bottom: 12,
+                            left: 0,
+                        })
+                        .show(&mut columns[1], |ui| {
+                            ui.heading("Project Graph");
+                            ui.label(format!("v{}", env!("CARGO_PKG_VERSION")));
+                            ui.separator();
+                            ui.label("图形化思维桌面工具和知识管理系统，支持节点连接、图形渲染和自动布局等功能，基于Rust构建。它旨在提供一个高效、直观的方式来组织和管理个人知识。");
+                        });
+                });
+            });
     }
 }
