@@ -44,6 +44,7 @@ import { GenerateFromFolder } from "@/core/service/dataGenerateService/generateF
 import { StageExport } from "@/core/service/dataGenerateService/stageExportEngine/stageExportEngine";
 import { StageExportPng } from "@/core/service/dataGenerateService/stageExportEngine/StageExportPng";
 import { StageExportSvg } from "@/core/service/dataGenerateService/stageExportEngine/StageExportSvg";
+import { StageImport } from "@/core/service/dataGenerateService/stageImportEngine/stageImportEngine";
 import { AIEngine } from "@/core/service/dataManageService/aiEngine/AIEngine";
 import { ComplexityDetector } from "@/core/service/dataManageService/ComplexityDetector";
 import { ContentSearch } from "@/core/service/dataManageService/contentSearchEngine/contentSearchEngine";
@@ -156,7 +157,8 @@ export function loadAllServicesBeforeInit(project: Project): void {
   project.loadService(BackgroundRenderer);
   project.loadService(SearchContentHighlightRenderer);
 
-  // 导出服务
+  // 导入导出服务
+  project.loadService(StageImport);
   project.loadService(StageExport);
   project.loadService(StageExportPng);
   project.loadService(StageExportSvg);

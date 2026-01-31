@@ -43,6 +43,7 @@ import type { GenerateFromFolder } from "@/core/service/dataGenerateService/gene
 import type { StageExport } from "@/core/service/dataGenerateService/stageExportEngine/stageExportEngine";
 import type { StageExportPng } from "@/core/service/dataGenerateService/stageExportEngine/StageExportPng";
 import type { StageExportSvg } from "@/core/service/dataGenerateService/stageExportEngine/StageExportSvg";
+import type { StageImport } from "@/core/service/dataGenerateService/stageImportEngine/stageImportEngine";
 import type { AIEngine } from "@/core/service/dataManageService/aiEngine/AIEngine";
 import type { ComplexityDetector } from "@/core/service/dataManageService/ComplexityDetector";
 import type { ContentSearch } from "@/core/service/dataManageService/contentSearchEngine/contentSearchEngine";
@@ -604,6 +605,7 @@ declare module "./Project" {
     stageExport: StageExport;
     stageExportPng: StageExportPng;
     stageExportSvg: StageExportSvg;
+    stageImport: StageImport;
     generateFromFolder: GenerateFromFolder;
     keyBindsRegistrar: KeyBindsRegistrar;
     sectionMethods: SectionMethods;
