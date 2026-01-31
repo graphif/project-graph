@@ -9,7 +9,7 @@ use lucide_icons::Icon;
 use crate::{
     fonts::{ic, setup_custom_fonts},
     stage::Stage,
-    themes::visuals_dark,
+    themes::apply_custom_theme,
 };
 
 fn main() {
@@ -36,7 +36,7 @@ struct MyApp {
 
 impl MyApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        cc.egui_ctx.set_visuals(visuals_dark());
+        apply_custom_theme(&cc.egui_ctx);
         setup_custom_fonts(&cc.egui_ctx);
         egui_extras::install_image_loaders(&cc.egui_ctx);
         Self {

@@ -1,9 +1,11 @@
 use egui::{
-    Color32, CornerRadius, Stroke, Visuals,
+    Color32, Context, CornerRadius, Margin, Stroke, Vec2, Visuals,
     style::{WidgetVisuals, Widgets},
 };
 
-pub fn visuals_dark() -> Visuals {
+pub fn apply_custom_theme(ctx: &Context) {
+    let mut style = (*ctx.style()).clone();
+
     let mut visuals = Visuals::dark();
 
     let bg_color = Color32::from_rgb(0, 0, 0);
@@ -12,17 +14,15 @@ pub fn visuals_dark() -> Visuals {
     let fg_color = Color32::from_rgb(252, 252, 252);
     let secondary_bg = Color32::from_rgb(46, 46, 51);
     let muted_fg = Color32::from_rgb(159, 160, 178);
+    let border_color = Color32::from_rgb(50, 50, 50);
 
     visuals.panel_fill = bg_color;
     visuals.window_fill = card_color;
-
-    let border_color = Color32::from_rgb(50, 50, 50);
     visuals.window_stroke = Stroke::new(1.0, border_color);
-
     visuals.override_text_color = Some(fg_color);
-
     visuals.extreme_bg_color = Color32::from_rgba_premultiplied(255, 255, 255, 38);
 
+    // 圆角处理
     let radius = CornerRadius::same(6);
     visuals.window_corner_radius = CornerRadius::same(16);
 
@@ -44,12 +44,12 @@ pub fn visuals_dark() -> Visuals {
             expansion: 0.0,
         },
         hovered: WidgetVisuals {
-            bg_fill: Color32::from_rgb(58, 58, 66), // 悬浮时微亮
+            bg_fill: Color32::from_rgb(58, 58, 66),
             weak_bg_fill: Color32::from_rgb(58, 58, 66),
             bg_stroke: Stroke::new(1.0, Color32::from_gray(120)),
             fg_stroke: Stroke::new(1.0, Color32::WHITE),
             corner_radius: radius,
-            expansion: 0.0,
+            expansion: 1.0,
         },
         active: WidgetVisuals {
             bg_fill: primary_color,
@@ -69,9 +69,9 @@ pub fn visuals_dark() -> Visuals {
         },
     };
 
-    // 选中状态
     visuals.selection.bg_fill = primary_color.linear_multiply(0.3);
     visuals.selection.stroke = Stroke::new(1.5, primary_color);
 
-    visuals
+    style.visuals = visuals;
+    ctx.set_style(style);
 }
