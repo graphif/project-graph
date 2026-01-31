@@ -42,6 +42,20 @@ export class ControllerCameraClass extends ControllerClass {
       return;
     }
     const key = event.key.toLowerCase();
+
+    // 视野缩放：起飞（放大）
+    if (key === "[" || key === "【") {
+      this.project.camera.isStartZoomIn = true;
+      this.project.camera.addScaleFollowMouseLocationTime(1);
+      return;
+    }
+    // 视野缩放：降落（缩小）
+    if (key === "]" || key === "】") {
+      this.project.camera.isStartZoomOut = true;
+      this.project.camera.addScaleFollowMouseLocationTime(1);
+      return;
+    }
+
     if (ControllerCameraClass.keyMap[key] && Settings.allowMoveCameraByWSAD) {
       if (this.project.controller.pressingKeySet.has("control") || this.project.controller.pressingKeySet.has("meta")) {
         // ctrl按下时，可能在按 ctrl+s 保存，防止出现冲突
@@ -85,6 +99,19 @@ export class ControllerCameraClass extends ControllerClass {
       }, 500);
     }
     // ------
+
+    // 停止视野缩放：起飞
+    if (key === "[" || key === "【") {
+      this.project.camera.isStartZoomIn = false;
+      this.project.camera.addScaleFollowMouseLocationTime(5);
+      return;
+    }
+    // 停止视野缩放：降落
+    if (key === "]" || key === "】") {
+      this.project.camera.isStartZoomOut = false;
+      this.project.camera.addScaleFollowMouseLocationTime(5);
+      return;
+    }
 
     if (ControllerCameraClass.keyMap[key] && Settings.allowMoveCameraByWSAD) {
       if (this.isPressingCtrlOrMeta) {

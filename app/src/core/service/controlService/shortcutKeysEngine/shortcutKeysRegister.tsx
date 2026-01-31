@@ -178,34 +178,6 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "C-A-r",
     onPress: (project) => project!.camera.resetScale(),
   },
-  {
-    id: "CameraScaleZoomIn",
-    defaultKey: "[",
-    onPress: (project) => {
-      // if (!project!.keyboardOnlyEngine.isOpenning()) return;
-      // project!.camera.zoomInByKeyboardPress();
-      project!.camera.isStartZoomIn = true;
-      project!.camera.addScaleFollowMouseLocationTime(1);
-    },
-    onRelease: (project) => {
-      project!.camera.isStartZoomIn = false;
-      project!.camera.addScaleFollowMouseLocationTime(5);
-    },
-  },
-  {
-    id: "CameraScaleZoomOut",
-    defaultKey: "]",
-    onPress: (project) => {
-      // if (!project!.keyboardOnlyEngine.isOpenning()) return;
-      // project!.camera.zoomOutByKeyboardPress();
-      project!.camera.isStartZoomOut = true;
-      project!.camera.addScaleFollowMouseLocationTime(1);
-    },
-    onRelease: (project) => {
-      project!.camera.isStartZoomOut = false;
-      project!.camera.addScaleFollowMouseLocationTime(5);
-    },
-  },
 
   /*------- 相机分页移动（Win） -------*/
   // 注意：实际运行时会根据 isMac 注册其一，这里两份都列出方便查阅
