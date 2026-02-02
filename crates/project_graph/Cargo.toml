@@ -15,4 +15,5 @@ lucide-icons = { workspace = true }
 rand = { workspace = true }
 egui_extras = { workspace = true }
 image = { workspace = true }
-
+serde = "1.0.228"
+serde_json = "1.0.149"

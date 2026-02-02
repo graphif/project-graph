@@ -1,10 +1,14 @@
 mod fonts;
+mod settings;
+mod settings_window;
 mod smooth_value;
 mod stage;
 mod themes;
 mod utils;
 
 use lucide_icons::Icon;
+use settings::Settings;
+use settings_window::SettingsWindow;
 
 use crate::{
     fonts::{ic, setup_custom_fonts},
@@ -21,9 +25,12 @@ fn main() {
         ..Default::default()
     };
     eframe::run_native(
-        "My Egui App",
+        "project_graph",
         options,
-        Box::new(|ctx| Ok(Box::new(MyApp::new(ctx)))),
+        Box::new(|ctx| {
+            Settings::load(ctx.storage);
+            Ok(Box::new(MyApp::new(ctx)))
+        }),
     )
     .expect("Failed to start eframe");
 }
@@ -32,6 +39,7 @@ struct MyApp {
     stage: Stage,
     show_settings: bool,
     show_about: bool,
+    settings_window: SettingsWindow,
 }
 
 impl MyApp {
@@ -43,11 +51,16 @@ impl MyApp {
             stage: Stage::new(),
             show_settings: false,
             show_about: false,
+            settings_window: SettingsWindow::new(),
         }
     }
 }
 
 impl eframe::App for MyApp {
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        Settings::save(storage);
+    }
+
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         ctx.request_repaint();
 
@@ -55,27 +68,23 @@ impl eframe::App for MyApp {
             let panel_height = 32.0;
             let (rect, response) = ui.allocate_exact_size(
                 egui::vec2(ui.available_width(), panel_height),
-                egui::Sense::click_and_drag(), // 允许此区域捕获拖动
+                egui::Sense::click_and_drag(),
             );
 
-            // 1. 处理窗口拖动逻辑
-            // 如果用户点击并拖拽了标题栏背景（且不是在点按钮），则移动窗口
             if response.drag_started_by(egui::PointerButton::Primary) {
                 ui.ctx().send_viewport_cmd(egui::ViewportCommand::StartDrag);
             }
 
-            // 2. 在该矩形区域内绘制 UI 组件
             ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
                 ui.horizontal_centered(|ui| {
                     ui.add_space(8.0);
-                    ui.label("icon");
+                    ui.label(ic(Icon::Box));
 
-                    // 菜单栏
                     egui::MenuBar::new().ui(ui, |ui| {
                         ui.menu_button(format!("{} 文件", ic(Icon::File)), |ui| {
-                            ui.button(format!("{} 新建", ic(Icon::FilePlus)));
-                            ui.button(format!("{} 打开", ic(Icon::FolderOpen)));
-                            ui.button(format!("{} 保存", ic(Icon::Save)));
+                            let _ = ui.button(format!("{} 新建", ic(Icon::FilePlus)));
+                            let _ = ui.button(format!("{} 打开", ic(Icon::FolderOpen)));
+                            let _ = ui.button(format!("{} 保存", ic(Icon::Save)));
                             ui.separator();
                             if ui.button(format!("{} 退出", ic(Icon::LogOut))).clicked() {
                                 ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
@@ -84,20 +93,19 @@ impl eframe::App for MyApp {
                         ui.menu_button(format!("{} 设置", ic(Icon::Settings)), |ui| {
                             if ui.button(format!("{} 设置", ic(Icon::Settings))).clicked() {
                                 self.show_settings = true;
+                                ui.close();
                             }
                             ui.separator();
                             if ui.button(format!("{} 关于", ic(Icon::Info))).clicked() {
                                 self.show_about = true;
+                                ui.close();
                             }
                         })
                     });
 
-                    // 右侧控制按钮
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         ui.add_space(8.0);
-
-                        let close_res = ui.button("❌");
-                        if close_res.clicked() {
+                        if ui.button("❌").clicked() {
                             ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
                         }
                         if ui.button("🔳").clicked() {
@@ -115,9 +123,9 @@ impl eframe::App for MyApp {
         });
 
         egui::SidePanel::left("left_panel")
-            .resizable(true) // 允许拖动改变宽度
+            .resizable(true)
             .default_width(200.0)
-            .width_range(100.0..=400.0) // 限制宽度范围
+            .width_range(100.0..=400.0)
             .show(ctx, |ui| {
                 ui.heading("侧边栏");
                 ui.separator();
@@ -127,11 +135,8 @@ impl eframe::App for MyApp {
             self.stage.ui(ui);
         });
 
-        egui::Window::new("设置")
-            .open(&mut self.show_settings)
-            .show(ctx, |ui| {
-                ui.label("hello world");
-            });
+        // --- 设置窗口 ---
+        self.settings_window.ui(ctx, &mut self.show_settings);
 
         egui::Window::new("关于")
             .open(&mut self.show_about)
@@ -140,10 +145,6 @@ impl eframe::App for MyApp {
                     columns[0].add(egui::Image::new(egui::include_image!(
                         "../../../assets/icon.png"
                     )));
-                    // columns[1].add_space(12.0);
-                    // columns[1].heading("Project Graph");
-                    // columns[1].label(format!("版本 {}", env!("CARGO_PKG_VERSION")));
-                    // columns[1].label("图形化思维桌面工具和知识管理系统，支持节点连接、图形渲染和自动布局等功能，基于 Rust 构建。它旨在提供一个高效、直观的方式来组织和管理个人知识。");
                     egui::Frame::new()
                         .inner_margin(egui::Margin {
                             top: 12,

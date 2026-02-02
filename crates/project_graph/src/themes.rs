@@ -1,5 +1,5 @@
 use egui::{
-    Color32, Context, CornerRadius, Margin, Stroke, Vec2, Visuals,
+    Color32, Context, CornerRadius, Stroke, Visuals,
     style::{WidgetVisuals, Widgets},
 };
 
