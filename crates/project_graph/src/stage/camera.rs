@@ -1,4 +1,4 @@
-use glam::Vec2;
+use egui::{Pos2, Vec2};
 
 use crate::smooth_value::SmoothValue;
 
@@ -22,17 +22,17 @@ impl Camera {
         self.zoom.tick(dt);
     }
 
-    pub fn position(&self) -> Vec2 {
-        self.position.get()
+    pub fn position(&self) -> Pos2 {
+        self.position.get().to_pos2()
     }
-    pub fn position_target(&self) -> Vec2 {
-        self.position.target()
+    pub fn position_target(&self) -> Pos2 {
+        self.position.target().to_pos2()
     }
-    pub fn move_to(&mut self, target: Vec2) {
-        self.position.set(target);
+    pub fn move_to(&mut self, target: Pos2) {
+        self.position.set(target.to_vec2());
     }
-    pub fn move_to_immediate(&mut self, target: Vec2) {
-        self.position.snap(target);
+    pub fn move_to_immediate(&mut self, target: Pos2) {
+        self.position.snap(target.to_vec2());
     }
     pub fn pan_by(&mut self, delta: Vec2) {
         let new_target = self.position.target() + delta;
@@ -64,11 +64,11 @@ impl Camera {
         self.zoom.snap(new_target_zoom);
     }
 
-    pub fn screen_to_world(&self, screen_pos: Vec2, screen_center: Vec2) -> Vec2 {
+    pub fn screen_to_world(&self, screen_pos: Pos2, screen_center: Pos2) -> Pos2 {
         let offset = screen_pos - screen_center;
         self.position() + offset / self.zoom()
     }
-    pub fn world_to_screen(&self, world_pos: Vec2, screen_center: Vec2) -> Vec2 {
+    pub fn world_to_screen(&self, world_pos: Pos2, screen_center: Pos2) -> Pos2 {
         let offset = (world_pos - self.position()) * self.zoom();
         screen_center + offset
     }

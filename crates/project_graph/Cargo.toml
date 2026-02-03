@@ -4,10 +4,8 @@ version = "3.0.0"
 edition = "2024"
 
 [dependencies]
-mint = { workspace = true }
 egui = { workspace = true }
 eframe = { workspace = true }
-glam = { workspace = true }
 font-kit = { workspace = true }
 log = { workspace = true }
 env_logger = { workspace = true }
@@ -15,5 +13,6 @@ lucide-icons = { workspace = true }
 rand = { workspace = true }
 egui_extras = { workspace = true }
 image = { workspace = true }
-serde = "1.0.228"
-serde_json = "1.0.149"
+serde = { workspace = true }
+serde_json = { workspace = true }
+nanoid = { workspace = true }

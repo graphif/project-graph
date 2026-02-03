@@ -3,8 +3,8 @@ mod settings;
 mod settings_window;
 mod smooth_value;
 mod stage;
+mod structs;
 mod themes;
-mod utils;
 
 use lucide_icons::Icon;
 use settings::Settings;

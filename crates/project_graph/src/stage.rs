@@ -2,18 +2,17 @@ mod camera;
 
 use camera::Camera;
 use eframe::egui::{self};
+use egui::{Pos2, Vec2};
 use rand::Rng;
-
-use crate::utils::{egui2glam, glam2egui};
 
 enum BenchmarkContent {
     Text(String),
     Circle(f32),
-    Rect(glam::Vec2),
+    Rect(Vec2),
 }
 
 struct BenchmarkItem {
-    pos: glam::Vec2,
+    pos: Pos2,
     color: egui::Color32,
     content: BenchmarkContent,
 }
@@ -30,7 +29,7 @@ impl Stage {
         let mut rng = rand::rng();
         let mut items = Vec::with_capacity(5000);
         for _ in 0..5000 {
-            let pos = glam::Vec2::new(
+            let pos = Pos2::new(
                 rng.random_range(-5000.0..5000.0),
                 rng.random_range(-5000.0..5000.0),
             );
@@ -40,7 +39,7 @@ impl Stage {
             let content = match rng.random_range(0..10) {
                 0..=7 => BenchmarkContent::Text(format!("Node {}", rng.random_range(1000..9999))),
                 8 => BenchmarkContent::Circle(rng.random_range(10.0..50.0)),
-                _ => BenchmarkContent::Rect(glam::Vec2::new(
+                _ => BenchmarkContent::Rect(Vec2::new(
                     rng.random_range(20.0..100.0),
                     rng.random_range(20.0..100.0),
                 )),
@@ -71,12 +70,12 @@ impl Stage {
 
         ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
             let painter = ui.painter();
-            let screen_center = egui2glam(rect.center().to_vec2());
+            let screen_center = rect.center();
             let mut visible_count = 0;
 
             for item in &self.items {
                 let screen_pos = self.camera.world_to_screen(item.pos, screen_center);
-                let v = glam2egui(screen_pos);
+                let v = screen_pos;
                 let screen_pos_egui = egui::pos2(v.x, v.y);
 
                 // 简单的视锥剔除 (Frustum Culling)
@@ -103,7 +102,7 @@ impl Stage {
                     BenchmarkContent::Rect(size) => {
                         let scaled_size = *size * self.camera.zoom();
                         painter.rect_filled(
-                            egui::Rect::from_center_size(screen_pos_egui, glam2egui(scaled_size)),
+                            egui::Rect::from_center_size(screen_pos_egui, scaled_size),
                             2.0,
                             item.color,
                         );
@@ -127,7 +126,7 @@ impl Stage {
             if let Some(mouse_pos) = ui.input(|i| i.pointer.hover_pos()) {
                 let old_zoom = self.camera.zoom();
                 let new_zoom = old_zoom * zoom_factor;
-                let offset = egui2glam(mouse_pos - rect.center());
+                let offset = mouse_pos - rect.center();
                 let delta = offset * (1.0 / old_zoom - 1.0 / new_zoom);
                 self.camera.pan_by_immediate(delta);
             }
@@ -138,7 +137,7 @@ impl Stage {
         // 中键拖拽平移
         if response.dragged_by(egui::PointerButton::Middle) {
             let drag_delta = ui.input(|i| i.pointer.delta()) / self.camera.zoom();
-            self.camera.pan_by_immediate(egui2glam(-drag_delta));
+            self.camera.pan_by_immediate(-drag_delta);
         }
     }
 }
