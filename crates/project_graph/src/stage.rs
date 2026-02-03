@@ -44,24 +44,21 @@ impl Stage {
         if scroll_delta.y != 0.0 {
             let zoom_factor = (1.0 + scroll_delta.y * 0.01).clamp(0.9, 1.1);
 
-            // 在鼠标位置缩放：保持鼠标下的世界坐标不变
-            let pointer_offset = ui
-                .input(|i| i.pointer.hover_pos())
-                .map(|p| egui2glam(p - rect.center()))
-                .unwrap_or_default();
+            if let Some(mouse_pos) = ui.input(|i| i.pointer.hover_pos()) {
+                let old_zoom = self.camera.zoom();
+                let new_zoom = old_zoom * zoom_factor;
+                let offset = egui2glam(mouse_pos - rect.center());
+                let delta = offset * (1.0 / old_zoom - 1.0 / new_zoom);
+                self.camera.pan_by_immediate(delta);
+            }
 
-            let old_zoom = self.camera.zoom_target();
-            let target_pos = self.camera.position_target()
-                + (pointer_offset / old_zoom) * (1.0 - 1.0 / zoom_factor);
-
-            self.camera.zoom_by(zoom_factor);
-            self.camera.move_to(target_pos);
+            self.camera.zoom_by_immediate(zoom_factor);
         }
 
         // 中键拖拽平移
         if response.dragged_by(egui::PointerButton::Middle) {
             let drag_delta = ui.input(|i| i.pointer.delta()) / self.camera.zoom();
-            self.camera.pan_by(egui2glam(-drag_delta));
+            self.camera.pan_by_immediate(egui2glam(-drag_delta));
         }
     }
 }
