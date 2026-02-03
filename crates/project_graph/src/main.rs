@@ -62,8 +62,6 @@ impl eframe::App for MyApp {
     }
 
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        ctx.request_repaint();
-
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             let panel_height = 32.0;
             let (rect, response) = ui.allocate_exact_size(
