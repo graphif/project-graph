@@ -34,7 +34,7 @@ export class Canvas {
       // 在窗口层面拦截浏览器默认快捷键，避免触发系统/浏览器查找/搜索等行为
       const key = event.key;
       if (
-        (event.ctrlKey && (key === "f" || key === "F" || key === "g" || key === "G")) ||
+        (event.ctrlKey && (key === "f" || key === "F" || key === "g" || key === "G" || key === "r" || key === "R")) ||
         key === "F3" ||
         key === "F5" ||
         key === "F7"
