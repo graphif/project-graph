@@ -3,53 +3,33 @@ mod camera;
 use camera::Camera;
 use eframe::egui::{self};
 use egui::{Pos2, Vec2};
+use nanoid::nanoid;
 use rand::Rng;
 
-enum BenchmarkContent {
-    Text(String),
-    Circle(f32),
-    Rect(Vec2),
-}
-
-struct BenchmarkItem {
-    pos: Pos2,
-    color: egui::Color32,
-    content: BenchmarkContent,
-}
+use crate::structs::{StageObject, TextNode};
 
 /// egui和画布之间的桥梁
 /// 负责坐标系转换、事件处理等
 pub struct Stage {
     camera: Camera,
-    items: Vec<BenchmarkItem>,
+    items: Vec<Box<dyn StageObject>>,
 }
 
 impl Stage {
     pub fn new() -> Self {
         let mut rng = rand::rng();
-        let mut items = Vec::with_capacity(5000);
-        for _ in 0..5000 {
+        let mut items = Vec::<Box<dyn StageObject>>::new();
+        for _ in 0..2000 {
             let pos = Pos2::new(
-                rng.random_range(-5000.0..5000.0),
-                rng.random_range(-5000.0..5000.0),
+                rng.random_range(-500.0..500.0),
+                rng.random_range(-500.0..500.0),
             );
 
-            let color = egui::Color32::from_rgb(rng.random(), rng.random(), rng.random());
-
-            let content = match rng.random_range(0..10) {
-                0..=7 => BenchmarkContent::Text(format!("Node {}", rng.random_range(1000..9999))),
-                8 => BenchmarkContent::Circle(rng.random_range(10.0..50.0)),
-                _ => BenchmarkContent::Rect(Vec2::new(
-                    rng.random_range(20.0..100.0),
-                    rng.random_range(20.0..100.0),
-                )),
-            };
-
-            items.push(BenchmarkItem {
-                pos,
-                color,
-                content,
-            });
+            items.push(Box::new(TextNode {
+                id: nanoid!(),
+                position: pos,
+                content: "Hello, World!".to_string(),
+            }))
         }
 
         Stage {
@@ -69,45 +49,35 @@ impl Stage {
         );
 
         ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
-            let painter = ui.painter();
+            let painter = ui.painter().clone();
             let screen_center = rect.center();
             let mut visible_count = 0;
 
             for item in &self.items {
-                let screen_pos = self.camera.world_to_screen(item.pos, screen_center);
-                let v = screen_pos;
-                let screen_pos_egui = egui::pos2(v.x, v.y);
+                let screen_pos = self.camera.world_to_screen(
+                    item.as_any().downcast_ref::<TextNode>().unwrap().position,
+                    screen_center,
+                );
 
                 // 简单的视锥剔除 (Frustum Culling)
                 // 扩大一点范围以免边缘物体突然消失
-                if !ui.clip_rect().expand(100.0).contains(screen_pos_egui) {
-                    continue;
-                }
+                // if !ui.clip_rect().expand(100.0).contains(screen_pos_egui) {
+                //     continue;
+                // }
 
                 visible_count += 1;
 
-                match &item.content {
-                    BenchmarkContent::Text(text) => {
-                        painter.text(
-                            screen_pos_egui,
-                            egui::Align2::CENTER_CENTER,
-                            text,
-                            egui::FontId::proportional(14.0 * self.camera.zoom()),
-                            item.color,
-                        );
-                    }
-                    BenchmarkContent::Circle(r) => {
-                        painter.circle_filled(screen_pos_egui, r * self.camera.zoom(), item.color);
-                    }
-                    BenchmarkContent::Rect(size) => {
-                        let scaled_size = *size * self.camera.zoom();
-                        painter.rect_filled(
-                            egui::Rect::from_center_size(screen_pos_egui, scaled_size),
-                            2.0,
-                            item.color,
-                        );
-                    }
-                }
+                ui.push_id(item.id(), |ui| {
+                    ui.with_visual_transform(
+                        egui::emath::TSTransform {
+                            translation: screen_pos.to_vec2(),
+                            scaling: self.camera.zoom(),
+                        },
+                        |ui| {
+                            item.render(ui);
+                        },
+                    );
+                });
             }
 
             painter.text(

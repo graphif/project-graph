@@ -16,3 +16,5 @@ image = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 nanoid = { workspace = true }
+typetag = { workspace = true }
+dyn-clone = { workspace = true }

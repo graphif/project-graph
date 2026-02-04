@@ -5,24 +5,27 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-# 日志
-log = "0.4.29"
-env_logger = "0.11.8"
 
-# UI
+# GUI 框架与 UI 渲染
 egui = { version = "0.33.3", features = ["mint"] }
 eframe = { version = "0.33.3", features = ["wgpu", "persistence"] }
 egui_extras = { version = "0.33.3", features = ["all_loaders"] }
 lucide-icons = "0.563.0"
 
-# 序列化
+# 序列化与多态支持
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
+typetag = "0.2.21"
+dyn-clone = "1.0.20"
 
-# 数学库
+# 资源处理 (图片与字体)
+image = { version = "0.25.9", features = ["jpeg", "png"] }
+font-kit = "0.14.3"
+
+# 实用工具与随机数
 rand = "0.9.2"
 nanoid = "0.4.0"
 
-# 操作系统相关
-font-kit = "0.14.3"
-image = { version = "0.25.9", features = ["jpeg", "png"] }
+# 日志与调试
+log = "0.4.29"
+env_logger = "0.11.8"
