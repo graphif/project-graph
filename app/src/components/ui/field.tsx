@@ -149,6 +149,7 @@ export function Field({
   title = "",
   description = "",
   children = <></>,
+  extra = <></>,
   color = "default",
   icon = <></>,
   className = "",
@@ -158,6 +159,7 @@ export function Field({
   title?: string;
   description?: string;
   children?: React.ReactNode;
+  extra?: React.ReactNode;
   color?: "default" | "celebrate" | "danger" | "warning" | "thinking" | "imaging";
   icon?: React.ReactNode;
   className?: string;
@@ -166,29 +168,28 @@ export function Field({
 }) {
   return (
     <div
-      className={cn(
-        "group/field flex w-full items-center justify-between gap-2 rounded-xl p-4",
-        fieldColors[color],
-        className,
-      )}
+      className={cn("group/field flex w-full flex-col items-start gap-2 rounded-xl p-4", fieldColors[color], className)}
       style={style}
       onClick={onClick}
     >
-      <div className="flex items-center gap-2">
-        <span>{icon}</span>
-        <div className="flex flex-col">
-          <span>{title}</span>
-          <span className="text-panel-details-text text-xs font-light opacity-60">
-            {description.split("\n").map((dd, ii) => (
-              <p key={ii} className="text-xs">
-                {dd}
-              </p>
-            ))}
-          </span>
+      <div className="flex w-full items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span>{icon}</span>
+          <div className="flex flex-col">
+            <span>{title}</span>
+            <span className="text-panel-details-text text-xs font-light opacity-60">
+              {description.split("\n").map((dd, ii) => (
+                <p key={ii} className="text-xs">
+                  {dd}
+                </p>
+              ))}
+            </span>
+          </div>
         </div>
+        <div className="flex-1"></div>
+        {children}
       </div>
-      <div className="flex-1"></div>
-      {children}
+      {extra}
     </div>
   );
 }

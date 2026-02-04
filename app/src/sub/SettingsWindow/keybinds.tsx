@@ -1,8 +1,16 @@
-import { Dialog } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import KeyBind from "@/components/ui/key-bind";
 import { Switch } from "@/components/ui/switch";
+import { AlertCircle } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -54,6 +62,9 @@ export default function KeyBindsPage() {
   const [currentGroup, setCurrentGroup] = useState<string>("search");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchResult, setSearchResult] = useState<string[]>([]);
+  const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
+  const [currentConflicts, setCurrentConflicts] = useState<KeyBindData[]>([]);
+  const [currentConflictKey, setCurrentConflictKey] = useState("");
   const fuse = useRef<
     Fuse<{
       key: string;
@@ -135,6 +146,18 @@ export default function KeyBindsPage() {
       .map((item) => item.id);
   };
 
+  // 检测快捷键冲突
+  const detectKeyConflicts = (targetKey: string, targetId: string) => {
+    return data.filter((item) => item.key === targetKey && item.id !== targetId && item.isEnabled);
+  };
+
+  // 处理冲突提示点击
+  const handleConflictClick = (conflicts: KeyBindData[], key: string) => {
+    setCurrentConflicts(conflicts);
+    setCurrentConflictKey(key);
+    setConflictDialogOpen(true);
+  };
+
   const allGroups = [
     ...shortcutKeysGroups.map((group) => ({
       title: group.title,
@@ -155,6 +178,7 @@ export default function KeyBindsPage() {
     keys.map((id) => {
       const keyBindData = data.find((item) => item.id === id);
       const keyBind = allKeyBinds.find((kb) => kb.id === id);
+      const conflicts = keyBindData ? detectKeyConflicts(keyBindData.key, id) : [];
       return (
         <Field
           key={id}
@@ -162,6 +186,20 @@ export default function KeyBindsPage() {
           title={t(`${id}.title`, { defaultValue: id })}
           description={t(`${id}.description`, { defaultValue: "" })}
           className="border-accent border-b"
+          extra={
+            conflicts.length > 0 ? (
+              <div className="w-full">
+                <div
+                  className="bg-primary/10 text-primary hover:bg-primary/20 flex cursor-pointer items-center rounded px-3 py-1.5 text-xs"
+                  onClick={() => handleConflictClick(conflicts, keyBindData?.key || "")}
+                >
+                  <AlertCircle className="mr-1 h-3 w-3" />与 {conflicts.length} 个快捷键重复
+                </div>
+              </div>
+            ) : (
+              <></>
+            )
+          }
         >
           <div className="flex items-center gap-2">
             <RotateCw
@@ -437,6 +475,37 @@ export default function KeyBindsPage() {
           </div>
         )}
       </div>
+      {/* 重复详情对话框 */}
+      <Dialog open={conflictDialogOpen} onOpenChange={setConflictDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>快捷键重复详情</DialogTitle>
+            <DialogDescription>
+              以下快捷键与 {currentConflictKey} 重复：
+              <div className="mt-2 text-sm">注意：重复的快捷键会一起执行所有相关功能</div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto">
+            {currentConflicts.map((conflict) => {
+              const conflictGroup = shortcutKeysGroups.find((group) => group.keys.includes(conflict.id));
+              return (
+                <div key={conflict.id} className="border-border border-b p-2 last:border-0">
+                  <div className="font-medium">{t(`${conflict.id}.title`, { defaultValue: conflict.id })}</div>
+                  <div className="text-muted-foreground text-sm">
+                    键位: {conflict.key}
+                    {conflictGroup && ` | 分组: ${t2(`${conflictGroup.title}.title`)}`}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <DialogClose asChild>
+            <button className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 rounded px-4 py-2">
+              关闭
+            </button>
+          </DialogClose>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
