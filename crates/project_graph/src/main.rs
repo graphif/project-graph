@@ -144,7 +144,7 @@ impl eframe::App for MyApp {
             .show(ctx, |ui| {
                 ui.columns(2, |columns| {
                     columns[0].add(egui::Image::new(egui::include_image!(
-                        "../../../assets/icon.png"
+                        "../assets/icon.png"
                     )));
                     egui::Frame::new()
                         .inner_margin(egui::Margin {
