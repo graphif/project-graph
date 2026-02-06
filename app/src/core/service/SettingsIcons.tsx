@@ -100,6 +100,7 @@ export const settingsIcons = {
   enableSpaceKeyMouseLeftDrag: Space,
   cameraFollowsSelectedNodeOnArrowKeys: Crosshair,
   cameraKeyboardMoveReverse: Keyboard,
+  cameraKeyboardScaleReverse: Keyboard,
   moveAmplitude: Move,
   moveFriction: Move,
   scaleExponent: ScanEye,

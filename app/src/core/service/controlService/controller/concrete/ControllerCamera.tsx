@@ -43,15 +43,26 @@ export class ControllerCameraClass extends ControllerClass {
     }
     const key = event.key.toLowerCase();
 
-    // 视野缩放：起飞（放大）
+    // 视野缩放：根据设置决定起飞和降落的方向
     if (key === "[" || key === "【") {
-      this.project.camera.isStartZoomIn = true;
+      if (Settings.cameraKeyboardScaleReverse) {
+        // 反转模式：[=起飞（缩小）
+        this.project.camera.isStartZoomOut = true;
+      } else {
+        // 正常模式：[=降落（放大）
+        this.project.camera.isStartZoomIn = true;
+      }
       this.project.camera.addScaleFollowMouseLocationTime(1);
       return;
     }
-    // 视野缩放：降落（缩小）
     if (key === "]" || key === "】") {
-      this.project.camera.isStartZoomOut = true;
+      if (Settings.cameraKeyboardScaleReverse) {
+        // 反转模式：]=降落（放大）
+        this.project.camera.isStartZoomIn = true;
+      } else {
+        // 正常模式：]=起飞（缩小）
+        this.project.camera.isStartZoomOut = true;
+      }
       this.project.camera.addScaleFollowMouseLocationTime(1);
       return;
     }
@@ -100,15 +111,27 @@ export class ControllerCameraClass extends ControllerClass {
     }
     // ------
 
-    // 停止视野缩放：起飞
+    // 停止视野缩放：根据设置决定起飞和降落的方向
     if (key === "[" || key === "【") {
-      this.project.camera.isStartZoomIn = false;
+      if (Settings.cameraKeyboardScaleReverse) {
+        // 反转模式：[=起飞（缩小）
+        this.project.camera.isStartZoomOut = false;
+      } else {
+        // 正常模式：[=降落（放大）
+        this.project.camera.isStartZoomIn = false;
+      }
       this.project.camera.addScaleFollowMouseLocationTime(5);
       return;
     }
-    // 停止视野缩放：降落
+    // 停止视野缩放：起飞
     if (key === "]" || key === "】") {
-      this.project.camera.isStartZoomOut = false;
+      if (Settings.cameraKeyboardScaleReverse) {
+        // 反转模式：]=降落（放大）
+        this.project.camera.isStartZoomIn = false;
+      } else {
+        // 正常模式：]=起飞（缩小）
+        this.project.camera.isStartZoomOut = false;
+      }
       this.project.camera.addScaleFollowMouseLocationTime(5);
       return;
     }

@@ -507,6 +507,11 @@ settings:
       开启后，W S A D按键的移动视角方向会相反
       原本的移动逻辑是移动悬浮在画面上的摄像机，但如果看成是移动整个舞台，这样就反了
       于是就有了这个选项
+  cameraKeyboardScaleReverse:
+    title: 视角缩放键盘反向
+    description: |
+      开启后，[=起飞（缩小），]=降落（放大）
+      关闭后，[=降落（放大），]=起飞（缩小）
   cameraResetViewPaddingRate:
     title: 根据选择节点重置视野时，边缘留白系数
     description: |

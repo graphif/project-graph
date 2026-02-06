@@ -14,6 +14,7 @@ import {
   Settings as SettingsIcon,
   TableProperties,
   AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -36,6 +37,7 @@ export default function WelcomePage() {
   const [lastClickFileURIPath, setLastClickFileURIPath] = useState("");
   const [isAmdCpu, setIsAmdCpu] = useState(false);
   const [currentSlogan, setCurrentSlogan] = useState("");
+  const [isHoveringSlogan, setIsHoveringSlogan] = useState(false);
 
   // 中文 slogan 列表（展示一些有趣特性或技巧）
   const slogans = [
@@ -84,9 +86,14 @@ export default function WelcomePage() {
     })();
 
     // 随机选择 slogan
+    randomizeSlogan();
+  }, []);
+
+  // 随机选择一条slogan
+  const randomizeSlogan = () => {
     const randomIndex = Math.floor(Math.random() * slogans.length);
     setCurrentSlogan(slogans[randomIndex]);
-  }, []);
+  };
 
   async function refresh() {
     setIsLoading(true);
@@ -111,7 +118,25 @@ export default function WelcomePage() {
               {appVersion}
             </a>
           </div>
-          <div className="hidden text-xs opacity-50 sm:block">{currentSlogan}</div>
+          <div
+            className="relative hidden text-xs opacity-50 sm:block"
+            onMouseEnter={() => setIsHoveringSlogan(true)}
+            onMouseLeave={() => setIsHoveringSlogan(false)}
+          >
+            <span>{currentSlogan}</span>
+            {isHoveringSlogan && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  randomizeSlogan();
+                }}
+                className="hover:bg-muted absolute right-0 top-0 ml-2 inline-flex cursor-pointer items-center justify-center rounded p-1 transition-all active:scale-90"
+                title="换一条小技巧"
+              >
+                <RefreshCw size={14} />
+              </button>
+            )}
+          </div>
           {isAmdCpu && (
             <div className="flex items-center gap-2 rounded-lg border p-3 text-sm text-yellow-600/75">
               <AlertTriangle />

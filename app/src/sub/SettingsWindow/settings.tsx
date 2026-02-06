@@ -267,6 +267,7 @@ const categories = {
       "cameraResetMaxScale",
       "scaleCameraByMouseLocation",
       "cameraKeyboardScaleRate",
+      "cameraKeyboardScaleReverse",
     ],
     objectSelect: [
       "rectangleSelectWhenRight",

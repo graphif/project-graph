@@ -107,6 +107,7 @@ export const settingsSchema = z.object({
   cameraFollowsSelectedNodeOnArrowKeys: z.boolean().default(false),
   arrowKeySelectOnlyInViewport: z.boolean().default(false),
   cameraKeyboardMoveReverse: z.boolean().default(false),
+  cameraKeyboardScaleReverse: z.boolean().default(false),
   moveAmplitude: z.number().min(0).max(10).default(2),
   moveFriction: z.number().min(0).max(1).default(0.1),
   scaleExponent: z.number().min(0).max(1).default(0.11),
