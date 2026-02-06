@@ -1,34 +1,52 @@
-use font_kit::family_name::FamilyName;
-use font_kit::handle::Handle;
-use font_kit::properties::Properties;
-use font_kit::source::SystemSource;
-
 pub fn setup_custom_fonts(ctx: &egui::Context) {
     let mut fonts = egui::FontDefinitions::default();
 
     // 默认字体
-    let source = SystemSource::new();
-    if let Ok(handle) = source.select_best_match(
-        &[FamilyName::SansSerif, FamilyName::Title("system-ui".into())],
-        &Properties::new(),
-    ) {
-        let font_data = match handle {
-            Handle::Path { path, .. } => std::fs::read(path).ok(),
-            Handle::Memory { bytes, .. } => Some(bytes.to_vec()),
-        };
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        use font_kit::family_name::FamilyName;
+        use font_kit::handle::Handle;
+        use font_kit::properties::Properties;
+        use font_kit::source::SystemSource;
 
-        if let Some(data) = font_data {
-            fonts.font_data.insert(
-                "system_ui".to_owned(),
-                egui::FontData::from_owned(data).into(),
-            );
-            // 插入到首位：最高优先级
-            fonts
-                .families
-                .get_mut(&egui::FontFamily::Proportional)
-                .unwrap()
-                .insert(0, "system_ui".to_owned());
+        let source = SystemSource::new();
+        if let Ok(handle) = source.select_best_match(
+            &[FamilyName::SansSerif, FamilyName::Title("system-ui".into())],
+            &Properties::new(),
+        ) {
+            let font_data = match handle {
+                Handle::Path { path, .. } => std::fs::read(path).ok(),
+                Handle::Memory { bytes, .. } => Some(bytes.to_vec()),
+            };
+
+            if let Some(data) = font_data {
+                fonts.font_data.insert(
+                    "system_ui".to_owned(),
+                    egui::FontData::from_owned(data).into(),
+                );
+                // 插入到首位：最高优先级
+                fonts
+                    .families
+                    .get_mut(&egui::FontFamily::Proportional)
+                    .unwrap()
+                    .insert(0, "system_ui".to_owned());
+            }
         }
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        // Web 平台使用内置字体
+        let mut system_ui_data =
+            egui::FontData::from_static(include_bytes!("../assets/fonts/MiSans.ttf"));
+        system_ui_data.tweak.y_offset_factor = 0.05;
+        fonts
+            .font_data
+            .insert("system_ui".to_owned(), system_ui_data.into());
+        fonts
+            .families
+            .get_mut(&egui::FontFamily::Proportional)
+            .unwrap()
+            .insert(0, "system_ui".to_owned());
     }
 
     // Lucide Icons 字体

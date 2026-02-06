@@ -19,7 +19,7 @@ impl Stage {
     pub fn new() -> Self {
         let mut rng = rand::rng();
         let mut items = Vec::<Box<dyn StageObject>>::new();
-        for _ in 0..2000 {
+        for _ in 0..5 {
             let pos = Pos2::new(
                 rng.random_range(-500.0..500.0),
                 rng.random_range(-500.0..500.0),

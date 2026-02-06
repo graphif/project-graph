@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link data-trunk rel="rust" />
+    <title>Project Graph</title>
+  </head>
+  <body>
+    <div id="loading">
+      <span class="spinner"></span>
+      <span>Loading...</span>
+    </div>
+
+    <canvas id="c"></canvas>
+
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: #000;
+        color: #fff;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+      }
+      #loading {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 2rem;
+      }
+      canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      .spinner {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        max-width: 6rem;
+        margin-top: 3rem;
+        margin-bottom: 3rem;
+      }
+      .spinner:before,
+      .spinner:after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        animation: pulsOut 2.5s ease-in-out infinite;
+        filter: drop-shadow(0 0 1rem rgba(255, 255, 255, 0.75));
+      }
+      .spinner:before {
+        width: 100%;
+        padding-bottom: 100%;
+        box-shadow: inset 0 0 0 1rem #fff;
+        animation-name: pulsIn;
+      }
+      .spinner:after {
+        width: calc(100% - 2rem);
+        padding-bottom: calc(100% - 2rem);
+        box-shadow: 0 0 0 0 #fff;
+      }
+
+      @keyframes pulsIn {
+        0%,
+        50%,
+        100% {
+          box-shadow: inset 0 0 0 0 #fff;
+          opacity: 0;
+        }
+        25% {
+          box-shadow: inset 0 0 0 1rem #fff;
+          opacity: 1;
+        }
+      }
+
+      @keyframes pulsOut {
+        0%,
+        50%,
+        100% {
+          box-shadow: 0 0 0 0 #fff;
+          opacity: 0;
+        }
+        75% {
+          box-shadow: 0 0 0 1rem #fff;
+          opacity: 1;
+        }
+      }
+    </style>
+  </body>
+</html>

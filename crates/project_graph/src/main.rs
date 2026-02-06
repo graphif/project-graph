@@ -16,6 +16,7 @@ use crate::{
     themes::apply_custom_theme,
 };
 
+#[cfg(not(target_arch = "wasm32"))]
 fn main() {
     env_logger::init();
     log::info!("Project Graph v{}", env!("CARGO_PKG_VERSION"));
@@ -34,6 +35,46 @@ fn main() {
         }),
     )
     .expect("Failed to start eframe");
+}
+
+#[cfg(target_arch = "wasm32")]
+fn main() {
+    // Web 端启动逻辑
+    use eframe::wasm_bindgen::JsCast;
+
+    // 设置日志，方便在浏览器控制台查看
+    eframe::WebLogger::init(log::LevelFilter::Debug).ok();
+
+    let web_options = eframe::WebOptions::default();
+
+    wasm_bindgen_futures::spawn_local(async {
+        // 获取浏览器窗口和文档对象
+        let document = web_sys::window()
+            .expect("No window")
+            .document()
+            .expect("No document");
+
+        let loader = document
+            .get_element_by_id("loading")
+            .expect("Failed to find loading element");
+        loader.remove();
+
+        // 找到 Canvas 元素
+        let canvas = document
+            .get_element_by_id("c")
+            .expect("Failed to find canvas")
+            .dyn_into::<web_sys::HtmlCanvasElement>()
+            .expect("Element is not a Canvas");
+
+        eframe::WebRunner::new()
+            .start(
+                canvas, // 现在这里传入的是 HtmlCanvasElement 对象
+                web_options,
+                Box::new(|cc| Ok(Box::new(MyApp::new(cc)))),
+            )
+            .await
+            .expect("failed to start eframe");
+    });
 }
 
 struct MyApp {
@@ -86,10 +127,6 @@ impl eframe::App for MyApp {
                             let _ = ui.button(format!("{} 新建", ic(Icon::FilePlus)));
                             let _ = ui.button(format!("{} 打开", ic(Icon::FolderOpen)));
                             let _ = ui.button(format!("{} 保存", ic(Icon::Save)));
-                            ui.separator();
-                            if ui.button(format!("{} 退出", ic(Icon::LogOut))).clicked() {
-                                ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
-                            }
                         });
                         ui.menu_button(format!("{} 设置", ic(Icon::Settings)), |ui| {
                             if ui.button(format!("{} 设置", ic(Icon::Settings))).clicked() {
@@ -104,6 +141,7 @@ impl eframe::App for MyApp {
                         })
                     });
 
+                    #[cfg(not(target_arch = "wasm32"))]
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         ui.add_space(8.0);
                         if ui.button("❌").clicked() {

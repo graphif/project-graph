@@ -29,3 +29,14 @@ nanoid = "0.4.0"
 # 日志与调试
 log = "0.4.29"
 env_logger = "0.11.8"
+
+# WebAssembly 支持
+wasm-bindgen = "0.2.108"
+wasm-bindgen-futures = "0.4.58"
+web-sys = { version = "0.3.85", features = ["Window", "Document", "HtmlCanvasElement", "console", "Element"] }
+# 针对旧版本 (0.2.x) 的依赖库
+getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
+# 针对新版本 (0.3.x) 的依赖库
+# 注意：0.3 版本取消了 "js" feature，改为通过编译器 flag 开启，
+# 但为了保险，我们先在声明里加上 wasm_js（如果将来版本有变动）
+getrandom = { version = "0.3", features = ["wasm_js"] }
