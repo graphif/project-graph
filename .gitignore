@@ -1,2 +1,6 @@
 /target
 dist/
+
+# Wrangler 会创建 node_modules/.mf/cf.json 文件
+node_modules/
+/.wrangler
