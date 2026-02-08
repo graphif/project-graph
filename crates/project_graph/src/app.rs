@@ -15,6 +15,11 @@ pub struct MyApp {
     show_settings: bool,
     show_about: bool,
     settings_window: SettingsWindow,
+
+    test_input: String,
+
+    #[cfg(android)]
+    last_ime_active: bool,
 }
 
 impl MyApp {
@@ -23,11 +28,20 @@ impl MyApp {
         apply_custom_theme(&cc.egui_ctx);
         setup_custom_fonts(&cc.egui_ctx);
         egui_extras::install_image_loaders(&cc.egui_ctx);
+
+        #[cfg(android)]
+        cc.egui_ctx.set_pixels_per_point(1.5);
+
         Self {
             stage: Stage::new(),
             show_settings: false,
             show_about: true,
             settings_window: SettingsWindow::new(),
+
+            test_input: String::new(),
+
+            #[cfg(android)]
+            last_ime_active: false,
         }
     }
 }
@@ -118,6 +132,9 @@ impl eframe::App for MyApp {
                 ui.label("这是 Project Graph 3.0 的雏形，基于 Rust 和 egui 构建，性能和内存占用将会得到显著提升");
                 ui.label("目前处于早期开发阶段，功能还非常基础，但未来会逐步完善");
                 ui.separator();
+                ui.label("测试输入框");
+                ui.text_edit_multiline(&mut self.test_input);
+                ui.separator();
                 ui.columns(2, |columns| {
                     columns[0].add(egui::Image::new(egui::include_image!(
                         "../assets/icon.png"
@@ -137,5 +154,18 @@ impl eframe::App for MyApp {
                         });
                 });
             });
+
+        egui::Window::new("debug").show(ctx, |ui| {
+            ctx.settings_ui(ui);
+        });
+
+        #[cfg(android)]
+        {
+            let current_ime_active = ctx.output(|o| o.ime.is_some());
+            if current_ime_active != self.last_ime_active {
+                crate::native::set_soft_input_visible(current_ime_active);
+                self.last_ime_active = current_ime_active;
+            }
+        }
     }
 }

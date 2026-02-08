@@ -37,6 +37,7 @@ serde_json.workspace = true
 nanoid.workspace = true
 typetag.workspace = true
 dyn-clone.workspace = true
+once_cell.workspace = true
 
 [target.'cfg(not(any(target_os = "android", target_arch = "wasm32")))'.dependencies]
 font-kit.workspace = true
@@ -52,3 +53,5 @@ web-sys.workspace = true
 [target.'cfg(target_os = "android")'.dependencies]
 android-activity.workspace = true
 android_logger.workspace = true
+jni.workspace = true
+ndk-context.workspace = true

@@ -4,6 +4,7 @@
 
 pub mod app;
 pub mod fonts;
+pub mod native;
 pub mod settings;
 pub mod settings_window;
 pub mod smooth_value;
