@@ -22,6 +22,7 @@ pub fn apply_custom_theme(ctx: &Context) {
     visuals.window_stroke = Stroke::new(1.0, border_color);
     visuals.override_text_color = Some(fg_color);
     visuals.extreme_bg_color = Color32::from_rgba_premultiplied(255, 255, 255, 38);
+    visuals.text_edit_bg_color = Some(secondary_bg);
 
     // 圆角处理
     let radius = CornerRadius::same(6);
