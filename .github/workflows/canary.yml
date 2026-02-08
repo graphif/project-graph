@@ -1,8 +1,9 @@
-name: Nightly
+name: Canary
 
 on:
-  schedule:
-    - cron: "0 0 * * *"
+  push:
+    branches:
+      - rust
   workflow_dispatch:
 
 jobs:
@@ -25,10 +26,17 @@ jobs:
         with:
           prefix-key: "wasm"
 
-      - name: Install Trunk
+      - name: Set version
         run: |
-          wget -qO- https://github.com/trunk-rs/trunk/releases/latest/download/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xzf-
-          sudo mv trunk /usr/local/bin/
+          SHA=$(git rev-parse --short HEAD)
+          VERSION="0.0.0-canary.$SHA"
+          echo "ver: $VERSION"
+          sed -i "s/^version = \"0.0.0-dev\"/version = \"$VERSION\"/" Cargo.toml
+
+      - name: Install Trunk
+        uses: jetli/trunk-action@v0.5.1
+        with:
+          version: "latest"
 
       - name: Build with Trunk
         run: |
@@ -47,3 +55,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
