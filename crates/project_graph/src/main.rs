@@ -1,3 +1,4 @@
+/// 桌面平台入口点
 #[cfg(desktop)]
 fn main() {
     env_logger::init();
@@ -16,6 +17,7 @@ fn main() {
     .expect("Failed to start eframe");
 }
 
+/// WebAssembly 平台入口点
 #[cfg(wasm)]
 fn main() {
     use eframe::wasm_bindgen::JsCast;

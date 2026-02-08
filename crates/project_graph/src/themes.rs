@@ -3,6 +3,7 @@ use egui::{
     style::{WidgetVisuals, Widgets},
 };
 
+/// 将主题应用到指定的 egui 上下文上
 pub fn apply_custom_theme(ctx: &Context) {
     let mut style = (*ctx.style()).clone();
 

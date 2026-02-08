@@ -1,3 +1,5 @@
+//! egui 应用主入口
+
 use lucide_icons::Icon;
 
 use crate::{
@@ -36,6 +38,7 @@ impl eframe::App for MyApp {
     }
 
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // 因为是手动处理绘图逻辑的，所以需要持续请求重绘
         ctx.request_repaint();
 
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {

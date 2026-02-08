@@ -1,7 +1,8 @@
+/// 为指定的 egui 上下文配置字体
 pub fn setup_custom_fonts(ctx: &egui::Context) {
     let mut fonts = egui::FontDefinitions::default();
 
-    // 默认字体
+    // 在桌面平台上尝试加载系统字体
     #[cfg(desktop)]
     {
         use font_kit::family_name::FamilyName;
@@ -33,6 +34,7 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
             }
         }
     }
+    // 在不支持使用 font-kit 的平台上，使用内置的 MiSans 字体作为替代
     #[cfg(any(wasm, android))]
     {
         // Web 平台使用内置字体
@@ -66,6 +68,15 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
 }
 
 /// 获取 Lucide 图标的 Unicode 字符串
+///
+/// # Examples
+///
+/// ```
+/// # use lucide_icons::Icon;
+/// # use project_graph::fonts::ic;
+/// let settings_icon = ic(Icon::Settings);
+/// assert_eq!(settings_icon, "\u{e154}");
+/// ```
 pub fn ic(icon: lucide_icons::Icon) -> String {
     char::from(icon).to_string()
 }

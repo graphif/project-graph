@@ -1,2 +1,3 @@
 [build]
+# Cloudflare Workers Static Assets 单个文件大小限制为 25MiB，需要压缩一下
 minify = "on_release"

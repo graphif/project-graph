@@ -2,13 +2,13 @@ mod camera;
 
 use camera::Camera;
 use eframe::egui::{self};
-use egui::{Pos2, Vec2};
+use egui::Pos2;
 use nanoid::nanoid;
 use rand::Rng;
 
 use crate::structs::{StageObject, TextNode};
 
-/// egui和画布之间的桥梁
+/// egui 和画布之间的桥梁
 /// 负责坐标系转换、事件处理等
 pub struct Stage {
     camera: Camera,
