@@ -2,7 +2,7 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
     let mut fonts = egui::FontDefinitions::default();
 
     // 默认字体
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(pc)]
     {
         use font_kit::family_name::FamilyName;
         use font_kit::handle::Handle;
@@ -33,7 +33,7 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
             }
         }
     }
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(any(wasm, android))]
     {
         // Web 平台使用内置字体
         let mut system_ui_data =

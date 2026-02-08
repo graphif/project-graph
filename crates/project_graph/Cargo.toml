@@ -3,6 +3,27 @@ name = "project_graph"
 version.workspace = true
 edition.workspace = true
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "project_graph_app"
+path = "src/main.rs"
+
+[package.metadata.android]
+package = "dev.graphif.prg"
+label = "Project Graph"
+
+[package.metadata.android.sdk]
+min_sdk_version = 24
+target_sdk_version = 36
+
+[package.metadata.android.application]
+theme = "@android:style/Theme.Black.NoTitleBar.Fullscreen"
+
+[build-dependencies]
+cfg_aliases.workspace = true
+
 [dependencies]
 egui.workspace = true
 eframe.workspace = true
@@ -17,7 +38,7 @@ nanoid.workspace = true
 typetag.workspace = true
 dyn-clone.workspace = true
 
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+[target.'cfg(not(any(target_os = "android", target_arch = "wasm32")))'.dependencies]
 font-kit.workspace = true
 env_logger.workspace = true
 
@@ -27,3 +48,7 @@ getrandom_02.workspace = true
 wasm-bindgen.workspace = true
 wasm-bindgen-futures.workspace = true
 web-sys.workspace = true
+
+[target.'cfg(target_os = "android")'.dependencies]
+android-activity.workspace = true
+android_logger.workspace = true
