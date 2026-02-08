@@ -92,7 +92,7 @@ impl MyApp {
         Self {
             stage: Stage::new(),
             show_settings: false,
-            show_about: false,
+            show_about: true,
             settings_window: SettingsWindow::new(),
         }
     }
@@ -180,6 +180,9 @@ impl eframe::App for MyApp {
         egui::Window::new("关于")
             .open(&mut self.show_about)
             .show(ctx, |ui| {
+                ui.label("这是 Project Graph 3.0 的雏形，基于 Rust 和 egui 构建，性能和内存占用将会得到显著提升");
+                ui.label("目前处于早期开发阶段，功能还非常基础，但未来会逐步完善");
+                ui.separator();
                 ui.columns(2, |columns| {
                     columns[0].add(egui::Image::new(egui::include_image!(
                         "../assets/icon.png"
