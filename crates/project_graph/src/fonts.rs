@@ -2,7 +2,7 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
     let mut fonts = egui::FontDefinitions::default();
 
     // 默认字体
-    #[cfg(pc)]
+    #[cfg(desktop)]
     {
         use font_kit::family_name::FamilyName;
         use font_kit::handle::Handle;

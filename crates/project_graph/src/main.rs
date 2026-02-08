@@ -1,4 +1,4 @@
-#[cfg(pc)]
+#[cfg(desktop)]
 fn main() {
     env_logger::init();
     log::info!("Project Graph v{}", env!("CARGO_PKG_VERSION"));

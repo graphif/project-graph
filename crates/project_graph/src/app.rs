@@ -73,7 +73,7 @@ impl eframe::App for MyApp {
                         })
                     });
 
-                    #[cfg(pc)]
+                    #[cfg(desktop)]
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         ui.add_space(8.0);
                         if ui.button("❌").clicked() {
