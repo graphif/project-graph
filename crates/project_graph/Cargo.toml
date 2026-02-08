@@ -1,29 +1,29 @@
 [package]
 name = "project_graph"
-version = "3.0.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
-egui = { workspace = true }
-eframe = { workspace = true }
-log = { workspace = true }
-lucide-icons = { workspace = true }
-rand = { workspace = true }
-egui_extras = { workspace = true }
-image = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-nanoid = { workspace = true }
-typetag = { workspace = true }
-dyn-clone = { workspace = true }
+egui.workspace = true
+eframe.workspace = true
+log.workspace = true
+lucide-icons.workspace = true
+rand.workspace = true
+egui_extras.workspace = true
+image.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+nanoid.workspace = true
+typetag.workspace = true
+dyn-clone.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-font-kit = { workspace = true }
-env_logger = { workspace = true }
+font-kit.workspace = true
+env_logger.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-getrandom = { workspace = true }      # 这会处理 0.3.x
-getrandom_02 = { workspace = true }   # 这会处理 0.2.x
-wasm-bindgen = { workspace = true }
-wasm-bindgen-futures = { workspace = true }
-web-sys = { workspace = true }
+getrandom.workspace = true
+getrandom_02.workspace = true
+wasm-bindgen.workspace = true
+wasm-bindgen-futures.workspace = true
+web-sys.workspace = true

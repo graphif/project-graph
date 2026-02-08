@@ -4,6 +4,10 @@ members = [
 ]
 resolver = "2"
 
+[workspace.package]
+version = "0.0.0-dev"
+edition = "2024"
+
 [workspace.dependencies]
 
 # GUI 框架与 UI 渲染
