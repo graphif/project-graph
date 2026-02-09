@@ -1,6 +1,6 @@
 /// 为指定的 egui 上下文配置字体
 pub fn setup_custom_fonts(ctx: &egui::Context) {
-    let mut fonts = egui::FontDefinitions::default();
+    let mut fonts = egui::FontDefinitions::empty();
 
     // 在桌面平台上尝试加载系统字体
     #[cfg(desktop)]
