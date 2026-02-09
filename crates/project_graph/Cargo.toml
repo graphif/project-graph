@@ -4,10 +4,13 @@ version.workspace = true
 edition.workspace = true
 
 [lib]
+# libproject_graph.so
+name = "project_graph"
 crate-type = ["cdylib", "rlib"]
 
 [[bin]]
-name = "project_graph_app"
+# project-graph.exe
+name = "project-graph"
 path = "src/main.rs"
 
 [package.metadata.android]
