@@ -404,9 +404,20 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
         <Input
           placeholder="请输入要筛选的文件"
           onChange={onInputChange}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              SubWindow.close(winId);
+            }
+            if (e.key === "Enter" && recentFilesFiltered.length === 1) {
+              checkoutFile(recentFilesFiltered[0]);
+            }
+          }}
           value={searchString}
           autoFocus
-          className="min-w-32 max-w-96 flex-1"
+          // 搜索结果只有一条的时候，在页面下方文字中提示一下用户说按下回车键直接能够打开这个文件
+          className={cn("min-w-32 max-w-96 flex-1", {
+            "border-green-500 bg-green-500/10": recentFilesFiltered.length === 1,
+          })}
         />
 
         <button
@@ -502,6 +513,9 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
       <div className="flex w-full flex-col items-baseline justify-center px-4 text-xs">
         <p>{currentShowPath}</p>
         <p>{currentShowTime}</p>
+        {recentFilesFiltered.length === 1 && (
+          <p className="animate-pulse font-bold text-green-500">按下回车键直接能够打开这个文件</p>
+        )}
       </div>
 
       {/* 加载中提示 */}
