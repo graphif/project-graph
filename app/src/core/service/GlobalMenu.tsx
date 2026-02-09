@@ -354,6 +354,26 @@ export function GlobalMenu() {
               <Item
                 disabled={!activeProject}
                 onClick={async () => {
+                  const path = await open({
+                    title: "打开文件夹",
+                    directory: true,
+                    multiple: false,
+                    filters: [],
+                  });
+                  if (!path) {
+                    return;
+                  }
+                  if (typeof path === "string") {
+                    activeProject!.generateFromFolder.generateTreeFromFolder(path);
+                  }
+                }}
+              >
+                <FolderTree />
+                {t("file.importTreeFromFolder")}
+              </Item>
+              <Item
+                disabled={!activeProject}
+                onClick={async () => {
                   await generateKeyboardLayout(activeProject!);
                   toast.success("键盘布局图已生成");
                 }}

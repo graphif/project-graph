@@ -61,9 +61,53 @@ export class GenerateFromFolder {
     const rootEntity = dfs(folderStructure);
     this.project.stageManager.clearSelectAll();
     rootEntity.isSelected = true;
-    setTimeout(() => {
-      this.project.layoutManager.layoutBySelected(this.project.layoutManager.layoutToTightSquare, true);
-    });
+  }
+
+  async generateTreeFromFolder(folderPath: string): Promise<void> {
+    const folderStructure = await readFolderStructure(folderPath);
+    // 当前的放置点位
+    const currentLocation = this.project.camera.location.clone();
+
+    let yIndex = 0;
+
+    const dfs = (fEntry: FolderEntry, depth: number, parentNode: TextNode | null) => {
+      // 无论是文件还是文件夹，都创建一个TextNode
+      const position = currentLocation.add(new Vector(depth * 150, yIndex * 50)); // x间距150，y间距50
+      yIndex++;
+
+      const node = new TextNode(this.project, {
+        text: fEntry.name,
+        details: DetailsManager.markdownToDetails(fEntry.path),
+        collisionBox: new CollisionBox([new Rectangle(position, Vector.getZero())]),
+        color: this.getColorByPath(fEntry.path),
+      });
+      // 如果是文件夹，且没有颜色（getColorByPath返回透明），可以给个默认颜色区分？
+      // 暂时保持一致，文件夹透明，文件有颜色
+
+      this.project.stageManager.add(node);
+      // 自动调整大小
+      node.forceAdjustSizeByText();
+
+      if (parentNode) {
+        // 创建连线
+        const edge = new LineEdge(this.project, {
+          associationList: [parentNode, node],
+          sourceRectangleRate: new Vector(0.99, 0.5), // 父节点右侧
+          targetRectangleRate: new Vector(0.01, 0.5), // 子节点左侧
+        });
+        this.project.stageManager.add(edge);
+      }
+
+      if (fEntry.children) {
+        for (const child of fEntry.children) {
+          dfs(child, depth + 1, node);
+        }
+      }
+      return node;
+    };
+
+    dfs(folderStructure, 0, null);
+    this.project.historyManager.recordStep();
   }
 
   private getColorByPath(path: string): Color {
