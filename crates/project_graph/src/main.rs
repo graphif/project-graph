@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 /// 桌面平台入口点
 #[cfg(desktop)]
 fn main() {
