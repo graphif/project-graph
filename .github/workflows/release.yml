@@ -48,6 +48,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libx11-dev libxcursor-dev libxinerama-dev libxi-dev libgl1-mesa-dev libfontconfig1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libwayland-dev libxkbcommon-dev
 
+      - name: Set version
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          sed -i "s/^version = \"0.0.0-dev\"/version = \"$VERSION\"/" Cargo.toml
+
       - name: Build Release
         run: cargo build --release
 
