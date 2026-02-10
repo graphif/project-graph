@@ -19,11 +19,10 @@ jobs:
       - name: Create Release
         run: |
           if [[ "${{ github.event.inputs.version }}" == *-* ]]; then
-            prerelease=true
+            gh release create v${{ github.event.inputs.version }} --title "v${{ github.event.inputs.version }}" --target "${{ github.sha }}" --prerelease || true
           else
-            prerelease=false
+            gh release create v${{ github.event.inputs.version }} --title "v${{ github.event.inputs.version }}" --target "${{ github.sha }}" || true
           fi
-          gh release create v${{ github.event.inputs.version }} --title "v${{ github.event.inputs.version }}" --target "${{ github.sha }}" --prerelease "$prerelease" || true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
