@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create Release
+        run: gh release create v${{ github.event.inputs.version }} --title "v${{ github.event.inputs.version }}" 
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+          - os: ubuntu-latest
+          - os: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: "release"
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libx11-dev libxcursor-dev libxinerama-dev libxi-dev libgl1-mesa-dev libfontconfig1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libwayland-dev libxkbcommon-dev
+
+      - name: Build Release
+        run: cargo build --release
+
+      - name: Upload Artifacts
+        shell: bash
+        run: |
+          target=$(rustc -vV | grep host | cut -d ' ' -f 2)
+          mkdir -p artifacts
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cp ./target/release/project-graph.exe ./artifacts/project-graph_${target}.exe
+          else
+            cp ./target/release/project-graph ./artifacts/project-graph_${target}
+          fi
+          gh release upload v${{ github.event.inputs.version }} ./artifacts/* --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
