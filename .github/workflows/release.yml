@@ -17,7 +17,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create Release
-        run: gh release create v${{ github.event.inputs.version }} --title "v${{ github.event.inputs.version }}" || true
+        run: |
+          if [[ "${{ github.event.inputs.version }}" == *-* ]]; then
+            prerelease=true
+          else
+            prerelease=false
+          fi
+          gh release create v${{ github.event.inputs.version }} --title "v${{ github.event.inputs.version }}" --target "${{ github.sha }}" --prerelease "$prerelease" || true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -52,6 +58,14 @@ jobs:
           sudo apt-get install -y libx11-dev libxcursor-dev libxinerama-dev libxi-dev libgl1-mesa-dev libfontconfig1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libwayland-dev libxkbcommon-dev
 
       - name: Set version
+        if: matrix.os != 'macos-latest'
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          sed -i "s/^version = \"0.0.0-dev\"/version = \"$VERSION\"/" Cargo.toml
+
+      - name: Set version (BSD)
+        if: matrix.os == 'macos-latest'
         shell: bash
         run: |
           VERSION="${{ github.event.inputs.version }}"
