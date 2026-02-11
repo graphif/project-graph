@@ -6,12 +6,23 @@ import { Rectangle } from "@graphif/shapes";
 import { Transition } from "@headlessui/react";
 import { X } from "lucide-react";
 
+/**
+ * 这个组件中管理了所有的 子窗口
+ * @returns
+ */
 export default function RenderSubWindows() {
   const subWindows = SubWindow.use();
 
+  const onClickInner = (win: SubWindow.Window) => {
+    if (win.closeWhenClickInside) {
+      SubWindow.close(win.id);
+    }
+  };
+
   return (
     <div className="pointer-events-none fixed left-0 top-0 z-40 h-full w-full">
-      {subWindows.map((win) => (
+      {subWindows.map((win: SubWindow.Window) => (
+        // transition 组件可以让关闭流程更平滑
         <Transition key={win.id} appear={true} show={!win.closing}>
           <SimpleCard
             data-pg-window-id={win.id}
@@ -26,11 +37,7 @@ export default function RenderSubWindows() {
               "pointer-events-auto absolute flex flex-col overflow-hidden outline-0 transition",
               "data-closed:scale-90 data-closed:opacity-0",
             )}
-            onClick={() => {
-              if (win.closeWhenClickInside) {
-                SubWindow.close(win.id);
-              }
-            }}
+            onClick={() => onClickInner(win)}
             onMouseDown={(e) => {
               SubWindow.focus(win.id);
               // 如果按到的元素的父元素都没有data-pg-drag-region属性，就不移动窗口
@@ -108,7 +115,7 @@ export default function RenderSubWindows() {
             </div>
             {/* 添加一个可调整大小的边缘，这里以右下角为例 */}
             <div
-              className="bg-sub-window-resize-bg absolute bottom-0 right-0 h-4 w-4 cursor-se-resize"
+              className="bg-sub-window-resize-bg hover:bg-foreground/50 absolute bottom-0 right-0 h-4 w-4 cursor-se-resize"
               onMouseDown={(e) => {
                 const start = new Vector(e.clientX, e.clientY);
                 const onMouseUp = () => {
@@ -146,7 +153,7 @@ export default function RenderSubWindows() {
             />
             {/* 左下角 */}
             <div
-              className="bg-sub-window-resize-bg absolute bottom-0 left-0 h-4 w-4 cursor-sw-resize"
+              className="bg-sub-window-resize-bg hover:bg-foreground/50 absolute bottom-0 left-0 h-4 w-4 cursor-sw-resize"
               onMouseDown={(e) => {
                 const start = new Vector(e.clientX, e.clientY);
                 const onMouseUp = () => {

@@ -396,10 +396,11 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       1,
     );
 
-    this.project.textRenderer.renderTextFromCenter(
+    this.project.textRenderer.renderMultiLineTextFromCenter(
       edge.text,
       this.project.renderer.transformWorld2View(curve.bezier.getPointByT(0.5)),
       Renderer.FONT_SIZE * this.project.camera.currentScale,
+      Infinity,
       edge.color.equals(Color.Transparent) ? this.project.stageStyleManager.currentStyle.StageObjectBorder : edge.color,
     );
   }
