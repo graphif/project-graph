@@ -70,6 +70,7 @@ export const settingsSchema = z.object({
   mouseRightDragBackground: z.union([z.literal("cut"), z.literal("moveCamera")]).default("cut"),
   enableSpaceKeyMouseLeftDrag: z.boolean().default(true),
   enableDragAutoAlign: z.boolean().default(true),
+  reverseTreeMoveMode: z.boolean().default(false),
   mouseWheelMode: z
     .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none")])
     .default("zoom"),

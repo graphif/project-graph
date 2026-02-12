@@ -20,7 +20,7 @@ export namespace QuickSettingsManager {
   };
 
   /**
-   * 默认的快捷设置项列表（8个布尔类型的设置项）
+   * 默认的快捷设置项列表（9个布尔类型的设置项）
    */
   const DEFAULT_QUICK_SETTINGS: QuickSettingItem[] = [
     { settingKey: "isStealthModeEnabled" },
@@ -29,6 +29,7 @@ export namespace QuickSettingsManager {
     { settingKey: "alwaysShowDetails" },
     { settingKey: "showDebug" },
     { settingKey: "enableDragAutoAlign" },
+    { settingKey: "reverseTreeMoveMode" },
     { settingKey: "allowMoveCameraByWSAD" },
     { settingKey: "textIntegerLocationAndSizeRender" },
   ];

@@ -519,7 +519,11 @@ settings:
   enableDragAutoAlign:
     title: Enable Automatic Alignment When Dragging Nodes
     description: |
-      When enabled, nodes will automatically align with other nodes in the x-axis and y-axis directions when you drag and release them.
+      When enabled, nodes will automatically align with other nodes in x-axis and y-axis directions when you drag and release them.
+  reverseTreeMoveMode:
+    title: Reverse Tree Move Mode
+    description: |
+      When enabled, default movement is tree movement (with successor nodes), holding Ctrl key moves single object. When disabled, it's the opposite.
   enableDragAlignToGrid:
     title: Snap to Grid When Dragging Entities
     description: |

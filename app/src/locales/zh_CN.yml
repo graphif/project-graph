@@ -664,6 +664,10 @@ settings:
     title: 鼠标拖动自动吸附对齐节点
     description: |
       开启后，拖动节点并松开时会与其他节点在x轴、y轴方向对齐
+  reverseTreeMoveMode:
+    title: 反转树形移动模式
+    description: |
+      开启后，默认移动为树形移动（连带后继节点），按住Ctrl键移动为单一物体移动。关闭时相反。
   enableDragAlignToGrid:
     title: 拖动实体时，吸附到网格
     description: |

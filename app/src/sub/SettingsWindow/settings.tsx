@@ -249,6 +249,7 @@ const categories = {
       "mouseLeftMode",
       "enableSpaceKeyMouseLeftDrag",
       "enableDragAutoAlign",
+      "reverseTreeMoveMode",
       "mouseWheelMode",
       "mouseWheelWithShiftMode",
       "mouseWheelWithCtrlMode",

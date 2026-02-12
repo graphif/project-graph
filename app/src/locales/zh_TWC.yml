@@ -700,6 +700,9 @@ settings:
   enableDragAutoAlign:
     title: 滑鼠拖曳自動吸附對齊節點
     description: 開啟後，拖曳節點並放開時會與其他節點在x軸、y軸方向對齊
+  reverseTreeMoveMode:
+    title: 反轉樹形移動模式
+    description: 開啟後，預設移動為樹形移動（連帶後續節點），按住Ctrl鍵移動為單一物體移動。關閉時相反。
   enableDragAlignToGrid:
     title: 拖曳實體時，貼齊網格
     description: 建議在顯示中開啟橫向和縱向格線，並關閉自動貼齊對齊

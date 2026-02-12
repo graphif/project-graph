@@ -117,15 +117,24 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
       // 移动节点
       this.isMovingEntity = true;
       // 暂不监听alt键。因为windows下切换窗口时，alt键释放监听不到
-      if (
-        isMac
-          ? this.project.controller.pressingKeySet.has("meta")
-          : this.project.controller.pressingKeySet.has("control")
-      ) {
-        // 和子节点一起移动
-        this.project.entityMoveManager.moveConnectableEntitiesWithChildren(diffLocation);
+      const isControlPressed = isMac
+        ? this.project.controller.pressingKeySet.has("meta")
+        : this.project.controller.pressingKeySet.has("control");
+
+      if (Settings.reverseTreeMoveMode) {
+        // 反转模式：默认树形移动，按住Ctrl键单一移动
+        if (isControlPressed) {
+          this.project.entityMoveManager.moveSelectedEntities(diffLocation);
+        } else {
+          this.project.entityMoveManager.moveConnectableEntitiesWithChildren(diffLocation);
+        }
       } else {
-        this.project.entityMoveManager.moveSelectedEntities(diffLocation);
+        // 正常模式：默认单一移动，按住Ctrl键树形移动
+        if (isControlPressed) {
+          this.project.entityMoveManager.moveConnectableEntitiesWithChildren(diffLocation);
+        } else {
+          this.project.entityMoveManager.moveSelectedEntities(diffLocation);
+        }
       }
 
       // 预瞄反馈

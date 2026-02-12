@@ -84,6 +84,7 @@ export const settingsIcons = {
   mouseRightDragBackground: MousePointerClick,
   mouseLeftMode: MousePointerClick,
   enableDragAutoAlign: AlignStartVertical,
+  reverseTreeMoveMode: Move,
   mouseWheelMode: Mouse,
   mouseWheelWithShiftMode: Mouse,
   mouseWheelWithCtrlMode: Mouse,
