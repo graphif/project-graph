@@ -40,7 +40,6 @@ impl Stage {
 
     pub fn ui(&mut self, ui: &mut egui::Ui) {
         let dt = ui.input(|i| i.stable_dt);
-        self.camera.tick(dt);
 
         let available_size = ui.available_size();
         let (rect, response) = ui.allocate_exact_size(
@@ -98,16 +97,16 @@ impl Stage {
                 let new_zoom = old_zoom * zoom_factor;
                 let offset = mouse_pos - rect.center();
                 let delta = offset * (1.0 / old_zoom - 1.0 / new_zoom);
-                self.camera.pan_by_immediate(delta);
+                self.camera.pan_by(delta);
             }
 
-            self.camera.zoom_by_immediate(zoom_factor);
+            self.camera.zoom_by(zoom_factor);
         }
 
         // 中键拖拽平移
         if response.dragged_by(egui::PointerButton::Middle) {
             let drag_delta = ui.input(|i| i.pointer.delta()) / self.camera.zoom();
-            self.camera.pan_by_immediate(-drag_delta);
+            self.camera.pan_by(-drag_delta);
         }
     }
 }

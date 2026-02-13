@@ -7,7 +7,6 @@ pub mod fonts;
 pub mod native;
 pub mod settings;
 pub mod settings_window;
-pub mod smooth_value;
 pub mod stage;
 pub mod structs;
 pub mod themes;

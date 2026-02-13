@@ -1,67 +1,38 @@
 use egui::{Pos2, Vec2};
 
-use crate::smooth_value::SmoothValue;
-
 pub struct Camera {
     /// 视野中心位置
-    position: SmoothValue<Vec2>,
+    position: Pos2,
     /// 缩放
-    zoom: SmoothValue<f32>,
+    zoom: f32,
 }
 
 impl Camera {
     pub fn new() -> Self {
         Self {
-            position: SmoothValue::new(Vec2::ZERO),
-            zoom: SmoothValue::new(1.0),
+            position: Pos2::ZERO,
+            zoom: 1.0,
         }
     }
 
-    pub fn tick(&mut self, dt: f32) {
-        self.position.tick(dt);
-        self.zoom.tick(dt);
-    }
-
     pub fn position(&self) -> Pos2 {
-        self.position.get().to_pos2()
-    }
-    pub fn position_target(&self) -> Pos2 {
-        self.position.target().to_pos2()
+        self.position
     }
     pub fn move_to(&mut self, target: Pos2) {
-        self.position.set(target.to_vec2());
-    }
-    pub fn move_to_immediate(&mut self, target: Pos2) {
-        self.position.snap(target.to_vec2());
+        self.position = target;
     }
     pub fn pan_by(&mut self, delta: Vec2) {
-        let new_target = self.position.target() + delta;
-        self.position.set(new_target);
-    }
-    pub fn pan_by_immediate(&mut self, delta: Vec2) {
-        let new_target = self.position.get() + delta;
-        self.position.snap(new_target);
+        self.position += delta / self.zoom;
     }
 
     pub fn zoom(&self) -> f32 {
-        self.zoom.get()
-    }
-    pub fn zoom_target(&self) -> f32 {
-        self.zoom.target()
+        self.zoom
     }
     pub fn zoom_to(&mut self, target_zoom: f32) {
-        self.zoom.set(target_zoom);
-    }
-    pub fn zoom_to_immediate(&mut self, target_zoom: f32) {
-        self.zoom.snap(target_zoom);
+        self.zoom = target_zoom;
     }
     pub fn zoom_by(&mut self, factor: f32) {
-        let new_target_zoom = self.zoom.target() * factor;
-        self.zoom.set(new_target_zoom);
-    }
-    pub fn zoom_by_immediate(&mut self, factor: f32) {
-        let new_target_zoom = self.zoom.get() * factor;
-        self.zoom.snap(new_target_zoom);
+        self.zoom *= factor;
     }
 
     pub fn screen_to_world(&self, screen_pos: Pos2, screen_center: Pos2) -> Pos2 {
