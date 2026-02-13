@@ -163,7 +163,7 @@ impl eframe::App for MyApp {
         {
             let current_ime_active = ctx.output(|o| o.ime.is_some());
             if current_ime_active != self.last_ime_active {
-                crate::native::set_soft_input_visible(current_ime_active);
+                crate::utils::jni::set_soft_input_visible(current_ime_active);
                 self.last_ime_active = current_ime_active;
             }
         }

@@ -4,12 +4,12 @@
 
 pub mod app;
 pub mod fonts;
-pub mod native;
 pub mod settings;
 pub mod settings_window;
 pub mod stage;
 pub mod structs;
 pub mod themes;
+pub mod utils;
 
 /// Android 平台入口点
 /// 将会编译为 libproject_graph.so，作为一个 Native Activity
