@@ -1,6 +1,9 @@
 use egui::Margin;
 
-use crate::stage::{Stage, structs::Entity};
+use crate::stage::{
+    Stage,
+    structs::{Entity, EntityTrait},
+};
 
 pub struct Terminal {
     input: String,
@@ -78,7 +81,9 @@ impl Terminal {
                             match knus::parse::<Vec<Entity>>("terminal_input.kdl", &self.input) {
                                 Ok(doc) => {
                                     for entity in doc {
-                                        stage.context.add(entity.into());
+                                        stage.context.add(entity.clone());
+                                        self.history
+                                            .push(HistoryItem::Out(entity.id().to_string()));
                                     }
                                 }
                                 Err(e) => {

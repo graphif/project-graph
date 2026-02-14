@@ -11,7 +11,7 @@ pub trait EntityTrait {
     fn render(&self, rc: &mut RenderContext);
 }
 
-#[derive(knus::Decode, Debug)]
+#[derive(knus::Decode, Debug, Clone)]
 pub struct Text {
     #[knus(argument, default = nanoid!())]
     id: String,
@@ -68,7 +68,7 @@ impl EntityTrait for Text {
     }
 }
 
-#[derive(knus::Decode)]
+#[derive(knus::Decode, Clone)]
 #[enum_dispatch(EntityTrait)]
 pub enum Entity {
     Text(Text),
