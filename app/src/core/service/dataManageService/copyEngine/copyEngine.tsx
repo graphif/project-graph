@@ -1,4 +1,5 @@
 import { Project, service } from "@/core/Project";
+import { isMac } from "@/utils/platform";
 import { ConnectableAssociation } from "@/core/stage/stageObject/abstract/Association";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
@@ -247,20 +248,50 @@ export class CopyEngine {
   }
 
   async readSystemClipboardAndPaste() {
-    try {
-      const text = await readText();
-      this.copyEngineText.copyEnginePastePlainText(text);
-    } catch (err) {
-      console.warn("文本剪贴板是空的", err);
+    if (isMac) {
+      // macOS 专用：优先使用 Web API 读取文本剪贴板（主线程安全），
+      // 避免 Tauri clipboard plugin 在 tokio worker 线程读取 NSPasteboard 时
+      // 与 WKWebView 主线程的并发访问导致 SIGSEGV 崩溃。
+      // 参见: https://github.com/tauri-apps/plugins-workspace/issues/3205
       try {
-        await this.copyEngineImage.processClipboardImage();
-      } catch (err) {
-        console.error("粘贴图片时发生错误:", err);
-        console.error("错误详情:", {
-          name: err instanceof Error ? err.name : "Unknown",
-          message: err instanceof Error ? err.message : String(err),
-          stack: err instanceof Error ? err.stack : "No stack",
+        const text = await navigator.clipboard.readText();
+        if (text && text.length > 0) {
+          this.copyEngineText.copyEnginePastePlainText(text);
+        } else {
+          // 文本为空则尝试图片
+          await this.copyEngineImage.processClipboardImage();
+        }
+        setTimeout(() => {
+          // 粘贴完成后清除按键状态，防止 Web API 弹出的 paste 按钮导致卡键
+          this.project.controller.pressingKeySet.clear();
         });
+      } catch (err) {
+        // Web API 失败（权限拒绝等），清除按键状态后 fallback 到图片粘贴
+        this.project.controller.pressingKeySet.clear();
+        console.warn("macOS Web API readText 失败，尝试粘贴图片", err);
+        try {
+          await this.copyEngineImage.processClipboardImage();
+        } catch (err) {
+          console.error("粘贴图片时发生错误:", err);
+        }
+      }
+    } else {
+      // Linux / Windows：直接使用 Tauri 插件，没有 NSPasteboard 线程安全问题
+      try {
+        const text = await readText();
+        this.copyEngineText.copyEnginePastePlainText(text);
+      } catch (err) {
+        console.warn("文本剪贴板是空的", err);
+        try {
+          await this.copyEngineImage.processClipboardImage();
+        } catch (err) {
+          console.error("粘贴图片时发生错误:", err);
+          console.error("错误详情:", {
+            name: err instanceof Error ? err.name : "Unknown",
+            message: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : "No stack",
+          });
+        }
       }
     }
   }
