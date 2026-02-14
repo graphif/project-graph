@@ -6,7 +6,10 @@ use crate::{
     fonts::{ic, setup_custom_fonts},
     settings::Settings,
     settings_window::SettingsWindow,
-    stage::Stage,
+    stage::{
+        Stage,
+        structs::{Entity, Text},
+    },
     themes::apply_custom_theme,
 };
 
@@ -16,7 +19,7 @@ pub struct MyApp {
     show_about: bool,
     settings_window: SettingsWindow,
 
-    test_input: String,
+    terminal_input: String,
 
     #[cfg(android)]
     last_ime_active: bool,
@@ -38,7 +41,7 @@ impl MyApp {
             show_about: true,
             settings_window: SettingsWindow::new(),
 
-            test_input: String::new(),
+            terminal_input: String::new(),
 
             #[cfg(android)]
             last_ime_active: false,
@@ -126,6 +129,20 @@ impl eframe::App for MyApp {
             .show(ctx, |ui| {
                 ui.heading("Terminal");
                 ui.separator();
+                ui.text_edit_multiline(&mut self.terminal_input);
+                if ui.button("execute").clicked() {
+                    match knus::parse::<Vec<Text>>("terminal_input.kdl", &self.terminal_input) {
+                        Ok(doc) => {
+                            for entity in doc {
+                                self.stage.context.add(entity.into());
+                            }
+                        }
+                        Err(e) => {
+                            log::error!("{:?}", miette::Report::new(e));
+                        }
+                    }
+                    self.terminal_input.clear();
+                }
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
@@ -140,9 +157,6 @@ impl eframe::App for MyApp {
             .show(ctx, |ui| {
                 ui.label("这是 Project Graph 3.0 的雏形，基于 Rust 和 egui 构建，性能和内存占用将会得到显著提升");
                 ui.label("目前处于早期开发阶段，功能还非常基础，但未来会逐步完善");
-                ui.separator();
-                ui.label("测试输入框");
-                ui.text_edit_multiline(&mut self.test_input);
                 ui.separator();
                 ui.columns(2, |columns| {
                     columns[0].add(egui::Image::new(egui::include_image!(

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use egui::Pos2;
 use nanoid::nanoid;
 
-use crate::stage::structs::{Entity, Text};
+use crate::stage::structs::{Entity, EntityTrait, Text};
 
 pub struct StageContext {
     entities: HashMap<String, Entity>,
@@ -37,5 +37,9 @@ impl StageContext {
 
     pub fn entities(&self) -> &HashMap<String, Entity> {
         &self.entities
+    }
+
+    pub fn add(&mut self, entity: Entity) {
+        self.entities.insert(entity.id().to_string(), entity);
     }
 }

@@ -13,15 +13,15 @@ use crate::stage::render_context::RenderContext;
 /// egui 和画布之间的桥梁
 /// 负责坐标系转换、事件处理等
 pub struct Stage {
-    camera: Camera,
-    context: StageContext,
+    pub camera: Camera,
+    pub context: StageContext,
 }
 
 impl Stage {
     pub fn new() -> Self {
         Stage {
             camera: Camera::new(),
-            context: StageContext::random(),
+            context: StageContext::new(),
         }
     }
 
