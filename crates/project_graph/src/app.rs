@@ -6,10 +6,8 @@ use crate::{
     fonts::{ic, setup_custom_fonts},
     settings::Settings,
     settings_window::SettingsWindow,
-    stage::{
-        Stage,
-        structs::{Entity, Text},
-    },
+    stage::Stage,
+    terminal::Terminal,
     themes::apply_custom_theme,
 };
 
@@ -18,8 +16,7 @@ pub struct MyApp {
     show_settings: bool,
     show_about: bool,
     settings_window: SettingsWindow,
-
-    terminal_input: String,
+    terminal: Terminal,
 
     #[cfg(android)]
     last_ime_active: bool,
@@ -40,8 +37,7 @@ impl MyApp {
             show_settings: false,
             show_about: true,
             settings_window: SettingsWindow::new(),
-
-            terminal_input: String::new(),
+            terminal: Terminal::new(),
 
             #[cfg(android)]
             last_ime_active: false,
@@ -127,22 +123,7 @@ impl eframe::App for MyApp {
             .default_height(200.0)
             .height_range(150.0..=500.0)
             .show(ctx, |ui| {
-                ui.heading("Terminal");
-                ui.separator();
-                ui.text_edit_multiline(&mut self.terminal_input);
-                if ui.button("execute").clicked() {
-                    match knus::parse::<Vec<Text>>("terminal_input.kdl", &self.terminal_input) {
-                        Ok(doc) => {
-                            for entity in doc {
-                                self.stage.context.add(entity.into());
-                            }
-                        }
-                        Err(e) => {
-                            log::error!("{:?}", miette::Report::new(e));
-                        }
-                    }
-                    self.terminal_input.clear();
-                }
+                self.terminal.ui(ui, &mut self.stage);
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
