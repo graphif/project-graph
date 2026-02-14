@@ -3,7 +3,7 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
     let mut fonts = egui::FontDefinitions::empty();
 
     // 在桌面平台上尝试加载系统字体
-    #[cfg(desktop)]
+    #[cfg(linux)]
     {
         use font_kit::family_name::FamilyName;
         use font_kit::handle::Handle;
@@ -11,28 +11,39 @@ pub fn setup_custom_fonts(ctx: &egui::Context) {
         use font_kit::source::SystemSource;
 
         let source = SystemSource::new();
-        if let Ok(handle) = source.select_best_match(
-            &[FamilyName::SansSerif, FamilyName::Title("system-ui".into())],
-            &Properties::new(),
-        ) {
-            let font_data = match handle {
-                Handle::Path { path, .. } => std::fs::read(path).ok(),
-                Handle::Memory { bytes, .. } => Some(bytes.to_vec()),
+
+        let mut load_system_font =
+            |family_names: &[FamilyName], egui_family: egui::FontFamily, key: &str| {
+                if let Ok(handle) = source.select_best_match(family_names, &Properties::new()) {
+                    let font_data = match handle {
+                        Handle::Path { path, .. } => std::fs::read(path).ok(),
+                        Handle::Memory { bytes, .. } => Some(bytes.to_vec()),
+                    };
+
+                    if let Some(data) = font_data {
+                        fonts
+                            .font_data
+                            .insert(key.to_owned(), egui::FontData::from_owned(data).into());
+                        // 将字体插入到对应家族的最前端（最高优先级）
+                        fonts
+                            .families
+                            .get_mut(&egui_family)
+                            .unwrap()
+                            .insert(0, key.to_owned());
+                    }
+                }
             };
 
-            if let Some(data) = font_data {
-                fonts.font_data.insert(
-                    "system_ui".to_owned(),
-                    egui::FontData::from_owned(data).into(),
-                );
-                // 插入到首位：最高优先级
-                fonts
-                    .families
-                    .get_mut(&egui::FontFamily::Proportional)
-                    .unwrap()
-                    .insert(0, "system_ui".to_owned());
-            }
-        }
+        load_system_font(
+            &[FamilyName::Title("system-ui".into()), FamilyName::SansSerif],
+            egui::FontFamily::Proportional,
+            "system_ui",
+        );
+        load_system_font(
+            &[FamilyName::Monospace],
+            egui::FontFamily::Monospace,
+            "system_mono",
+        );
     }
     // 在不支持使用 font-kit 的平台上，使用内置的 MiSans 字体作为替代
     #[cfg(any(wasm, android))]

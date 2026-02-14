@@ -14,11 +14,11 @@ pub trait EntityTrait {
 #[derive(knus::Decode, Debug)]
 pub struct Text {
     #[knus(argument, default = nanoid!())]
-    pub id: String,
+    id: String,
     #[knus(child, default = KdlPos2 { x: 0.0, y: 0.0 })]
-    pub pos: KdlPos2,
+    pos: KdlPos2,
     #[knus(child, unwrap(argument), default = String::new())]
-    pub val: String,
+    val: String,
 
     text_width: std::sync::OnceLock<f32>,
 }
