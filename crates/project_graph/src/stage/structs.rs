@@ -68,6 +68,7 @@ impl EntityTrait for Text {
     }
 }
 
+#[derive(knus::Decode)]
 #[enum_dispatch(EntityTrait)]
 pub enum Entity {
     Text(Text),

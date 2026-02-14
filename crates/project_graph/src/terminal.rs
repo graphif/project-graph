@@ -1,4 +1,7 @@
-use crate::stage::{Stage, structs::Text};
+use crate::stage::{
+    Stage,
+    structs::{Entity, Text},
+};
 
 pub struct Terminal {
     input: String,
@@ -16,7 +19,7 @@ impl Terminal {
         ui.separator();
         ui.text_edit_multiline(&mut self.input);
         if ui.button("execute").clicked() {
-            match knus::parse::<Vec<Text>>("terminal_input.kdl", &self.input) {
+            match knus::parse::<Vec<Entity>>("terminal_input.kdl", &self.input) {
                 Ok(doc) => {
                     for entity in doc {
                         stage.context.add(entity.into());
