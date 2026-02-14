@@ -44,6 +44,8 @@ dyn-clone.workspace = true
 once_cell.workspace = true
 enum_dispatch.workspace = true
 lru.workspace = true
+knus.workspace = true
+miette.workspace = true
 
 [target.'cfg(not(any(target_os = "android", target_arch = "wasm32")))'.dependencies]
 font-kit.workspace = true

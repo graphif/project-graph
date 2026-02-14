@@ -1,7 +1,7 @@
-mod camera;
-mod context;
-mod render_context;
-mod structs;
+pub mod camera;
+pub mod context;
+pub mod render_context;
+pub mod structs;
 
 use camera::Camera;
 use context::StageContext;
@@ -46,7 +46,7 @@ impl Stage {
                     .world_to_screen(entity.position(), screen_center);
 
                 entity.render(&mut RenderContext {
-                    painter: painter.clone(),
+                    painter: &painter,
                     position: screen_pos,
                     scale: self.camera.zoom(),
                 });

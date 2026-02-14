@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use egui::Pos2;
 use nanoid::nanoid;
 
-use crate::stage::structs::{Entity, TextNode};
+use crate::stage::structs::{Entity, Text};
 
 pub struct StageContext {
     entities: HashMap<String, Entity>,
@@ -21,14 +21,14 @@ impl StageContext {
             let id = nanoid!();
             entities.insert(
                 id.clone(),
-                TextNode {
+                Text::new(
                     id,
-                    content: format!("节点 {}", i),
-                    position: Pos2::new(
+                    Pos2::new(
                         rand::random::<f32>() * 2000.0 - 1000.0,
                         rand::random::<f32>() * 2000.0 - 1000.0,
                     ),
-                }
+                    format!("节点 {}", i),
+                )
                 .into(),
             );
         }

@@ -1,7 +1,8 @@
-use egui::{Color32, Pos2, Rect, pos2};
+use egui::{Color32, FontId, Pos2, Rect, pos2};
 use enum_dispatch::enum_dispatch;
+use nanoid::nanoid;
 
-use crate::{stage::render_context::RenderContext, utils::text::get_text_width};
+use crate::{stage::render_context::RenderContext, utils::kdl::KdlPos2};
 
 #[enum_dispatch]
 pub trait EntityTrait {
@@ -10,36 +11,54 @@ pub trait EntityTrait {
     fn render(&self, rc: &mut RenderContext);
 }
 
-pub struct TextNode {
+#[derive(knus::Decode, Debug)]
+pub struct Text {
+    #[knus(argument, default = nanoid!())]
     pub id: String,
+    #[knus(child, default = KdlPos2 { x: 0.0, y: 0.0 })]
+    pub pos: KdlPos2,
+    #[knus(child, unwrap(argument), default = String::new())]
+    pub val: String,
     pub position: Pos2,
     pub content: String,
 }
-impl EntityTrait for TextNode {
+impl EntityTrait for Text {
     fn id(&self) -> &str {
         &self.id
     }
     fn position(&self) -> Pos2 {
-        self.position
+        self.pos.into()
     }
     fn render(&self, rc: &mut RenderContext) {
         let padding = 8.0;
+
+        let text_width = *self.text_width.get_or_init(|| {
+            // 这里调用你的 get_text_width 或者直接计算
+            rc.painter
+                .layout_no_wrap(
+                    self.val.clone(),
+                    FontId::proportional(14.0),
+                    Color32::TRANSPARENT,
+                )
+                .size()
+                .x
+        });
 
         rc.rect(
             Rect {
                 min: Pos2::ZERO,
                 max: Pos2 {
-                    x: get_text_width(&self.content, 14.0, &rc.painter) + padding * 2.0,
+                    x: text_width + padding * 2.0,
                     y: 14.0 + padding * 2.0,
                 },
             },
             Color32::WHITE,
         );
-        rc.text(pos2(padding, padding), &self.content);
+        rc.text(pos2(padding, padding), &self.val);
     }
 }
 
 #[enum_dispatch(EntityTrait)]
 pub enum Entity {
-    TextNode(TextNode),
+    Text(Text),
 }
