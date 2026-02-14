@@ -119,6 +119,15 @@ impl eframe::App for MyApp {
                 ui.separator();
             });
 
+        egui::TopBottomPanel::bottom("bottom_panel")
+            .resizable(true)
+            .default_height(200.0)
+            .height_range(150.0..=500.0)
+            .show(ctx, |ui| {
+                ui.heading("Terminal");
+                ui.separator();
+            });
+
         egui::CentralPanel::default().show(ctx, |ui| {
             self.stage.ui(ui);
         });
