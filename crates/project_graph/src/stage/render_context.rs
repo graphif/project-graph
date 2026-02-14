@@ -1,12 +1,12 @@
 use egui::{Painter, Pos2, Stroke, vec2};
 
-pub struct RenderContext {
-    pub painter: Painter,
+pub struct RenderContext<'a> {
+    pub painter: &'a Painter,
     pub position: Pos2,
     pub scale: f32,
 }
 
-impl RenderContext {
+impl<'a> RenderContext<'a> {
     pub fn local_to_screen(&self, local_pos: Pos2) -> Pos2 {
         Pos2 {
             x: self.position.x + local_pos.x * self.scale,
