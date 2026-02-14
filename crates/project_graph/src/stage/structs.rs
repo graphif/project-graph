@@ -19,8 +19,18 @@ pub struct Text {
     pub pos: KdlPos2,
     #[knus(child, unwrap(argument), default = String::new())]
     pub val: String,
-    pub position: Pos2,
-    pub content: String,
+
+    text_width: std::sync::OnceLock<f32>,
+}
+impl Text {
+    pub fn new(id: String, pos: Pos2, val: String) -> Self {
+        Text {
+            id,
+            pos: pos.into(),
+            val,
+            text_width: std::sync::OnceLock::new(),
+        }
+    }
 }
 impl EntityTrait for Text {
     fn id(&self) -> &str {
