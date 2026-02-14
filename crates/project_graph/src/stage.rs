@@ -26,8 +26,6 @@ impl Stage {
     }
 
     pub fn ui(&mut self, ui: &mut egui::Ui) {
-        let dt = ui.input(|i| i.stable_dt);
-
         let available_size = ui.available_size();
         let (rect, response) = ui.allocate_exact_size(
             egui::vec2(available_size.x, available_size.y),

@@ -50,11 +50,11 @@ impl eframe::App for MyApp {
         Settings::save(storage);
     }
 
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         // 因为是手动处理绘图逻辑的，所以需要持续请求重绘
-        ctx.request_repaint();
+        ui.ctx().request_repaint();
 
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+        egui::Panel::top("top_panel").show_inside(ui, |ui| {
             let panel_height = 32.0;
             let (rect, response) = ui.allocate_exact_size(
                 egui::vec2(ui.available_width(), panel_height),
@@ -109,33 +109,33 @@ impl eframe::App for MyApp {
             });
         });
 
-        egui::SidePanel::left("left_panel")
+        egui::Panel::left("left_panel")
             .resizable(true)
-            .default_width(200.0)
-            .width_range(100.0..=400.0)
-            .show(ctx, |ui| {
+            .default_size(200.0)
+            .size_range(100.0..=400.0)
+            .show_inside(ui, |ui| {
                 ui.heading("侧边栏");
                 ui.separator();
             });
 
-        egui::TopBottomPanel::bottom("bottom_panel")
+        egui::Panel::bottom("bottom_panel")
             .resizable(true)
-            .default_height(200.0)
-            .height_range(150.0..=500.0)
-            .show(ctx, |ui| {
+            .default_size(200.0)
+            .size_range(150.0..=500.0)
+            .show_inside(ui, |ui| {
                 self.terminal.ui(ui, &mut self.stage);
             });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show_inside(ui, |ui| {
             self.stage.ui(ui);
         });
 
         // --- 设置窗口 ---
-        self.settings_window.ui(ctx, &mut self.show_settings);
+        self.settings_window.ui(ui.ctx(), &mut self.show_settings);
 
         egui::Window::new("关于")
             .open(&mut self.show_about)
-            .show(ctx, |ui| {
+            .show(ui.ctx(), |ui| {
                 ui.label("这是 Project Graph 3.0 的雏形，基于 Rust 和 egui 构建，性能和内存占用将会得到显著提升");
                 ui.label("目前处于早期开发阶段，功能还非常基础，但未来会逐步完善");
                 ui.separator();
@@ -159,8 +159,8 @@ impl eframe::App for MyApp {
                 });
             });
 
-        egui::Window::new("debug").show(ctx, |ui| {
-            ctx.settings_ui(ui);
+        egui::Window::new("debug").show(ui.ctx(), |ui_| {
+            ui.ctx().settings_ui(ui_);
         });
 
         #[cfg(android)]

@@ -11,9 +11,14 @@ edition = "2024"
 cfg_aliases = "0.1.0"
 
 # GUI 框架与 UI 渲染
-egui = { version = "0.33.3", features = ["mint"] }
-eframe = { version = "0.33.3", features = ["wgpu", "persistence"] }
-egui_extras = { version = "0.33.3", features = ["all_loaders"] }
+egui = { git = "https://github.com/emilk/egui", features = ["mint"] }
+eframe = { git = "https://github.com/emilk/egui", features = [
+    "wgpu",
+    "persistence",
+] }
+egui_extras = { git = "https://github.com/emilk/egui", features = [
+    "all_loaders",
+] }
 lucide-icons = "0.563.0"
 
 # 序列化与多态支持

@@ -5,7 +5,7 @@ use egui::{
 
 /// 将主题应用到指定的 egui 上下文上
 pub fn apply_custom_theme(ctx: &Context) {
-    let mut style = (*ctx.style()).clone();
+    let mut style = (*ctx.global_style()).clone();
 
     let mut visuals = Visuals::dark();
 
@@ -75,5 +75,5 @@ pub fn apply_custom_theme(ctx: &Context) {
     visuals.selection.stroke = Stroke::new(1.5, primary_color);
 
     style.visuals = visuals;
-    ctx.set_style(style);
+    ctx.set_global_style(style);
 }
