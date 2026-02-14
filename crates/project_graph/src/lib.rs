@@ -7,7 +7,6 @@ pub mod fonts;
 pub mod settings;
 pub mod settings_window;
 pub mod stage;
-pub mod structs;
 pub mod themes;
 pub mod utils;
 

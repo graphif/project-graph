@@ -42,6 +42,8 @@ nanoid.workspace = true
 typetag.workspace = true
 dyn-clone.workspace = true
 once_cell.workspace = true
+enum_dispatch.workspace = true
+lru.workspace = true
 
 [target.'cfg(not(any(target_os = "android", target_arch = "wasm32")))'.dependencies]
 font-kit.workspace = true

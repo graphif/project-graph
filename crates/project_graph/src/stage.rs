@@ -1,40 +1,27 @@
 mod camera;
+mod context;
+mod render_context;
+mod structs;
 
 use camera::Camera;
+use context::StageContext;
 use eframe::egui::{self};
-use egui::Pos2;
-use nanoid::nanoid;
-use rand::Rng;
+use structs::EntityTrait;
 
-use crate::structs::{StageObject, TextNode};
+use crate::stage::render_context::RenderContext;
 
 /// egui 和画布之间的桥梁
 /// 负责坐标系转换、事件处理等
 pub struct Stage {
     camera: Camera,
-    items: Vec<Box<dyn StageObject>>,
+    context: StageContext,
 }
 
 impl Stage {
     pub fn new() -> Self {
-        let mut rng = rand::rng();
-        let mut items = Vec::<Box<dyn StageObject>>::new();
-        for _ in 0..5 {
-            let pos = Pos2::new(
-                rng.random_range(-500.0..500.0),
-                rng.random_range(-500.0..500.0),
-            );
-
-            items.push(Box::new(TextNode {
-                id: nanoid!(),
-                position: pos,
-                content: "Hello, World!".to_string(),
-            }))
-        }
-
         Stage {
             camera: Camera::new(),
-            items,
+            context: StageContext::random(),
         }
     }
 
@@ -52,30 +39,16 @@ impl Stage {
             let screen_center = rect.center();
             let mut visible_count = 0;
 
-            for item in &self.items {
-                let screen_pos = self.camera.world_to_screen(
-                    item.as_any().downcast_ref::<TextNode>().unwrap().position,
-                    screen_center,
-                );
-
-                // 简单的视锥剔除 (Frustum Culling)
-                // 扩大一点范围以免边缘物体突然消失
-                // if !ui.clip_rect().expand(100.0).contains(screen_pos_egui) {
-                //     continue;
-                // }
-
+            for entity in self.context.entities().values() {
                 visible_count += 1;
+                let screen_pos = self
+                    .camera
+                    .world_to_screen(entity.position(), screen_center);
 
-                ui.push_id(item.id(), |ui| {
-                    ui.with_visual_transform(
-                        egui::emath::TSTransform {
-                            translation: screen_pos.to_vec2(),
-                            scaling: self.camera.zoom(),
-                        },
-                        |ui| {
-                            item.render(ui);
-                        },
-                    );
+                entity.render(&mut RenderContext {
+                    painter: painter.clone(),
+                    position: screen_pos,
+                    scale: self.camera.zoom(),
                 });
             }
 
@@ -90,22 +63,20 @@ impl Stage {
 
         let scroll_delta = ui.input(|i| i.smooth_scroll_delta);
         if scroll_delta.y != 0.0 {
-            let zoom_factor = (1.0 + scroll_delta.y * 0.01).clamp(0.9, 1.1);
-
             if let Some(mouse_pos) = ui.input(|i| i.pointer.hover_pos()) {
+                let zoom_factor = (1.0 + scroll_delta.y * 0.01).clamp(0.9, 1.1);
                 let old_zoom = self.camera.zoom();
-                let new_zoom = old_zoom * zoom_factor;
+                self.camera.zoom_by(zoom_factor);
+
                 let offset = mouse_pos - rect.center();
-                let delta = offset * (1.0 / old_zoom - 1.0 / new_zoom);
+                let delta = offset * (self.camera.zoom() / old_zoom - 1.0);
                 self.camera.pan_by(delta);
             }
-
-            self.camera.zoom_by(zoom_factor);
         }
 
         // 中键拖拽平移
         if response.dragged_by(egui::PointerButton::Middle) {
-            let drag_delta = ui.input(|i| i.pointer.delta()) / self.camera.zoom();
+            let drag_delta = ui.input(|i| i.pointer.delta());
             self.camera.pan_by(-drag_delta);
         }
     }
