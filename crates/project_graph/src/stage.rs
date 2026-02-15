@@ -27,10 +27,7 @@ impl Stage {
 
     pub fn ui(&mut self, ui: &mut egui::Ui) {
         let available_size = ui.available_size();
-        let (rect, response) = ui.allocate_exact_size(
-            egui::vec2(available_size.x, available_size.y),
-            egui::Sense::all(),
-        );
+        let (rect, response) = ui.allocate_exact_size(available_size, egui::Sense::all());
 
         ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
             let painter = ui.painter().clone();
