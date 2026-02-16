@@ -54,7 +54,7 @@
     "windows": {
       "nsis": {
         "displayLanguageSelector": true,
-        "languages": ["SimpChinese", "TradChinese", "English"],
+        "languages": ["SimpChinese", "TradChinese", "English", "Indonesian"],
         "sidebarImage": "nsis/left.bmp",
         "headerImage": "nsis/project-graph-install.bmp",
         "installerHooks": "nsis/installer.nsh"

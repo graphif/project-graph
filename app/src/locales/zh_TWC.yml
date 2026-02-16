@@ -234,6 +234,7 @@ settings:
       zh_CN: 簡體中文
       zh_TW: 繁體中文
       zh_TWC: 接地氣繁體中文
+      id: 印度尼西亞語
   showTipsOnUI:
     title: 在 UI 中顯示提示訊息
     description: '開啟後，螢幕上會有一行提示文字。

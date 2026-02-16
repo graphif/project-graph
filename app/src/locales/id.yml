@@ -1,0 +1,1660 @@
+welcome:
+  slogan: Perangkat Lunak Pemetaan Kerangka Berpikir Berbasis Teori Graf
+  slogans:
+    - Perangkat Lunak Pemetaan Kerangka Berpikir Berbasis Teori Graf
+    - Ekspresikan desain Anda di kanvas tak terbatas
+    - Biarkan pikiran mengalir bebas antar node dan garis
+    - Bangun jaringan pengetahuan Anda dengan pemikiran teori graf
+    - Dari kekacauan ke tatanan, dari node ke sistem
+    - Visualisasi berpikir, manajemen topologi
+    - Kanvas tak terbatas, kemungkinan tak terbatas
+    - Hubungkan titik-titik ide, gambar peta makro
+    - Bukan hanya peta pikiran, tapi kerangka berpikir
+    - Alat visualisasi berpikir yang didorong oleh teori graf
+  newDraft: Konsep Baru
+  openFile: Buka File
+  openRecentFiles: Buka Terbaru
+  newUserGuide: Panduan Fitur
+  settings: Pengaturan
+  about: Tentang
+  website: Situs Web
+  title: Project Graph
+  language: Bahasa
+  next: Selanjutnya
+  github: GitHub
+  bilibili: Bilibili
+  qq: Grup QQ
+  subtitle: Perangkat Lunak Peta Pikiran Kanvas Tak Terbatas Berbasis Teori Graf
+
+globalMenu:
+  file:
+    title: File
+    new: Konsep Sementara Baru
+    open: Buka
+    recentFiles: File Terbaru
+    clear: Bersihkan
+    save: Simpan
+    saveAs: Simpan Sebagai
+    impor: Impor
+    importFromFolder: Hasilkan Diagram Bersarang dari Folder
+    importTreeFromFolder: Hasilkan Diagram Pohon dari Folder
+    generateKeyboardLayout: Hasilkan Layout Keyboard dari Konfigurasi Pintasan Saat Ini
+    export: Ekspor
+    exportAsSVG: Ekspor sebagai SVG
+    exportAll: Ekspor Semua Konten
+    plainTextType:
+      exportAllNodeGraph: Ekspor Seluruh Struktur Jaringan
+      exportSelectedNodeGraph: Ekspor Struktur Jaringan yang Dipilih
+      exportSelectedNodeTree: Ekspor Struktur Pohon yang Dipilih (Indentasi Teks Murni)
+      exportSelectedNodeTreeMarkdown: Ekspor Struktur Pohon yang Dipilih (Format Markdown)
+      exportSelectedNodeGraphMermaid: Ekspor Struktur Jaringan Bersarang yang Dipilih (Format Mermaid)
+    exportSelected: Ekspor Konten yang Dipilih
+    plainText: Teks Murni
+    exportSuccess: Ekspor Berhasil
+    attachments: Manajer Lampiran
+    tags: Manajer Tag
+  view:
+    title: Tampilan
+    resetViewAll: Atur Ulang Tampilan Berdasarkan Semua Konten
+    resetViewSelected: Atur Ulang Tampilan Berdasarkan Konten yang Dipilih
+    resetViewScale: Atur Ulang Skala Tampilan ke Ukuran Standar
+    moveViewToOrigin: Pindahkan Tampilan ke Titik Asal Koordinat
+  actions:
+    title: Tindakan
+    search: Cari
+    refresh: Segarkan
+    undo: Batalkan
+    redo: Ulangi
+    releaseKeys: Lepaskan Tombol
+    confirmClearStage: Konfirmasi Bersihkan Panggung?
+    irreversible: Tindakan ini tidak dapat dibatalkan!
+    clearStage: Bersihkan Panggung
+    cancel: Batal
+    confirm: Konfirmasi
+    generating: Menghasilkan
+    success: Berhasil
+    failed: Gagal
+    generate:
+      generatedIn: Waktu Pembuatan
+      title: Hasilkan
+      generateNodeTreeByText: Hasilkan Struktur Pohon dari Teks Murni
+      generateNodeTreeByTextDescription: Silakan masukkan teks struktur pohon, setiap baris mewakili satu node, indentasi menunjukkan level hierarki
+      generateNodeTreeByTextPlaceholder: Masukkan teks struktur pohon...
+      generateNodeTreeByMarkdown: Hasilkan Struktur Pohon dari Teks Markdown
+      generateNodeTreeByMarkdownDescription: Silakan masukkan string format markdown dengan judul level berbeda
+      generateNodeTreeByMarkdownPlaceholder: Masukkan teks format markdown...
+      indention: Jumlah Karakter Indentasi
+      generateNodeGraphByText: Hasilkan Struktur Jaringan dari Teks Murni
+      generateNodeGraphByTextDescription: Silakan masukkan teks struktur jaringan, setiap baris mewakili satu relasi, format setiap baris adalah `XXX --> XXX`
+      generateNodeGraphByTextPlaceholder: |
+        Zhang San -suka-> Li Si
+        Li Si -benci-> Wang Wu
+        Wang Wu -kagum-> Zhang San
+        A --> B
+        B --> C
+        C --> D
+      generateNodeMermaidByText: Hasilkan Struktur Bersarang dari Teks Mermaid
+      generateNodeMermaidByTextDescription: Mendukung teks mermaid format graph TD, dapat mengenali Section secara otomatis dan membuat struktur bersarang
+      generateNodeMermaidByTextPlaceholder: |
+        graph TD;
+          A[Section A] --> B[Section B];
+          A --> C[Node Biasa];
+          B --> D[Node Lain];
+        ;
+  settings:
+    title: Pengaturan
+    appearance: Personalisasi
+  ai:
+    title: AI
+    openAIPanel: Buka Panel AI
+  window:
+    title: Tampilan
+    fullscreen: Layar Penuh
+    classroomMode: Mode Fokus
+    classroomModeHint: Tombol menu kiri atas hanya transparan, tidak hilang
+  about:
+    title: Tentang
+    guide: Panduan Fitur
+  unstable:
+    title: Versi Beta
+    notRelease: Versi ini bukan versi resmi
+    mayHaveBugs: Mungkin mengandung Bug dan fitur yang belum sempurna
+    reportBug: "Laporkan Bug: Komentar di Issue #487"
+    test: Fitur Tes
+
+contextMenu:
+  createTextNode: Buat Node Teks
+  createConnectPoint: Buat Titik Massa
+  packToSection: Kemas sebagai Kotak
+  createMTUEdgeLine: Buat Garis Tak Berarah
+  createMTUEdgeConvex: Buat Convex Hull
+  convertToSection: Konversi ke Kotak
+  toggleSectionCollapse: Alihkan Status Lipat
+  changeColor: Ubah Warna
+  resetColor: Atur Ulang
+  switchMTUEdgeArrow: Alihkan Bentuk Panah
+  mtuEdgeArrowOuter: Panah Keluar
+  mtuEdgeArrowInner: Panah Masuk
+  mtuEdgeArrowNone: Matikan Tampilan Panah
+  switchMTUEdgeRenderType: Alihkan Jenis Render
+  convertToDirectedEdge: Konversi ke Garis Berarah
+
+settings:
+  title: Pengaturan
+  categories:
+    ai:
+      title: AI
+      api: API
+    automation:
+      title: Otomatisasi
+      autoNamer: Penamaan Otomatis
+      autoSave: Penyimpanan Otomatis
+      autoBackup: Pencadangan Otomatis
+      autoImport: Impor Otomatis
+    control:
+      title: Kontrol
+      mouse: Mouse
+      touchpad: Touchpad
+      cameraMove: Gerakan Tampilan
+      cameraZoom: Zoom Tampilan
+      objectSelect: Pemilihan Objek
+      textNode: Node Teks
+      edge: Garis
+      generateNode: Pertumbuhan Node via Keyboard
+      gamepad: Gamepad
+    visual:
+      title: Visual
+      basic: Dasar
+      background: Latar Belakang
+      node: Gaya Node
+      edge: Gaya Garis
+      section: Gaya "Kotak"
+      entityDetails: Detail Entitas
+      debug: Debug
+      miniWindow: Jendela Mini
+      experimental: Fitur Eksperimental
+    performance:
+      title: Performa
+      memory: Memori
+      cpu: CPU
+      render: Render
+      experimental: Fitur dalam Pengembangan
+  language:
+    title: Bahasa
+    options:
+      en: English
+      zh_CN: 简体中文
+      zh_TW: 繁體中文
+      zh_TWC: 繁體中文 (Kasar)
+      id: Bahasa Indonesia
+  showTipsOnUI:
+    title: Tampilkan Tips di UI
+    description: |
+      Saat diaktifkan, akan ada baris teks petunjuk di layar.
+      Jika Anda sudah familiar dengan perangkat lunak ini, disarankan untuk menonaktifkan ini untuk mengurangi penggunaan layar
+      Untuk tips lebih detail, disarankan melihat "Panduan Fitur" di menu atau dokumentasi situs web.
+  isClassroomMode:
+    title: Mode Fokus
+    description: |
+      Untuk skenario pengajaran, pelatihan, dll.
+      Saat diaktifkan, tombol atas jendela akan transparan, akan pulih saat mouse diarahkan, dapat mengubah pintasan keyboard untuk masuk/keluar mode fokus
+  showQuickSettingsToolbar:
+    title: Tampilkan Bilah Pengaturan Cepat
+    description: |
+      Mengontrol apakah menampilkan bilah operasi cepat di sisi kanan antarmuka (bilah pengaturan cepat).
+      Bilah pengaturan cepat memungkinkan Anda mengalihkan status pengaturan umum dengan cepat.
+  autoAdjustLineEndpointsByMouseTrack:
+    title: Sesuaikan Posisi Ujung Garis Otomatis Berdasarkan Jejak Mouse
+    description: |
+      Saat diaktifkan, posisi ujung garis pada entitas akan disesuaikan secara otomatis berdasarkan jejak gerakan mouse saat menyeret garis
+      Saat dimatikan, ujung garis akan selalu berada di tengah entitas
+  enableRightClickConnect:
+    title: Aktifkan Fungsi Koneksi Klik Kanan
+    description: |
+      Saat diaktifkan, klik kanan entitas lain saat entitas dipilih akan membuat garis secara otomatis, dan menu konteks hanya muncul di area kosong
+      Saat dimatikan, menu dapat dibuka langsung di entitas dengan klik kanan, tidak akan membuat garis otomatis
+  lineStyle:
+    title: Gaya Garis
+    options:
+      straight: Garis Lurus
+      bezier: Kurva Bezier
+      vertical: Garis Patah Vertikal
+  isRenderCenterPointer:
+    title: Tampilkan Penanda Silang Pusat
+    description: |
+      Saat diaktifkan, penanda silang akan ditampilkan di tengah layar, digunakan untuk menunjukkan posisi pembuatan node via pintasan keyboard
+  showGrid:
+    title: Tampilkan Grid
+  showBackgroundHorizontalLines:
+    title: Tampilkan Garis Horizontal Latar
+    description: |
+      Garis horizontal dan vertikal dapat dibuka bersamaan untuk efek grid
+  showBackgroundVerticalLines:
+    title: Tampilkan Garis Vertikal Latar
+  showBackgroundDots:
+    title: Tampilkan Titik Latar
+    description: |
+      Titik-titik latar ini adalah perpotongan garis horizontal dan vertikal, menciptakan efek papan berlubang
+  showBackgroundCartesian:
+    title: Tampilkan Sistem Koordinat Kartesius Latar
+    description: |
+      Saat diaktifkan, akan menampilkan sumbu x, sumbu y dan angka skala
+      Dapat digunakan untuk mengamati posisi koordinat absolut beberapa node
+      Juga dapat dengan intuitif mengetahui kelipatan zoom tampilan saat ini
+  windowBackgroundAlpha:
+    title: Transparansi Latar Jendela
+    description: |
+      *Mengubah dari 1 ke nilai kurang dari 1 memerlukan pembukaan ulang file untuk efek
+  windowBackgroundOpacityAfterOpenClickThrough:
+    title: Transparansi Latar Jendela Setelah Aktifkan Klik Tembus
+    description: |
+      Mengatur transparansi latar jendela setelah fungsi klik tembus diaktifkan
+  windowBackgroundOpacityAfterCloseClickThrough:
+    title: Transparansi Latar Jendela Setelah Nonaktifkan Klik Tembus
+    description: |
+      Mengatur transparansi latar jendela setelah fungsi klik tembus dinonaktifkan
+  showDebug:
+    title: Tampilkan Informasi Debug
+    description: |
+      Biasanya digunakan oleh pengembang
+      Saat diaktifkan, informasi debug akan ditampilkan di sudut kiri atas layar.
+      Disarankan mengaktifkan ini saat melaporkan bug dengan screenshot.
+  enableTagTextNodesBigDisplay:
+    title: Tampilan Besar Node Teks Tag
+    description: |
+      Saat diaktifkan, saat kamera diperkecil ke tampilan global yang luas,
+      tag akan ditampilkan lebih besar untuk memudahkan identifikasi distribusi layout seluruh file
+  showTextNodeBorder:
+    title: Tampilkan Batas Node Teks
+    description: |
+      Mengontrol apakah menampilkan batas node teks
+  sectionBitTitleRenderType:
+    title: Jenis Render Judul Besar Ringkasan Kotak
+    options:
+      none: Tidak Render (Hemat Performa)
+      top: Teks Kecil Atas
+      cover: Tutupi Kotak dengan Transparan (Efek Terbaik)
+  sectionBigTitleThresholdRatio:
+    title: Ambang Tampilan Judul Besar Ringkasan Kotak
+    description: |
+      Saat sisi terpanjang kotak lebih kecil dari rasio ini terhadap sisi terpanjang rentang tampilan, tampilkan judul besar ringkasan
+  sectionBigTitleCameraScaleThreshold:
+    title: Ambang Zoom Kamera Judul Besar Ringkasan Kotak
+    description: |
+      Saat rasio zoom kamera lebih besar dari ambang ini, jangan tampilkan judul besar ringkasan
+      Rasio zoom kamera perlu dibuka di mode debug untuk ditampilkan
+  sectionBigTitleOpacity:
+    title: Opasitas Judul Besar Ringkasan Kotak
+    description: |
+      Mengontrol opasitas tutupan judul besar transparan, rentang nilai 0-1
+  sectionBackgroundFillMode:
+    title: Mode Pengisian Warna Latar Kotak
+    description: |
+      Mengontrol cara pengisian warna latar kotak section
+      Isi Penuh: Isi seluruh latar kotak (cara default, dengan transparansi dan penentuan urutan mask)
+      Hanya Bilah Judul: Isi hanya bagian bilah judul di atas
+    options:
+      full: Isi Penuh
+      titleOnly: Hanya Bilah Judul
+  alwaysShowDetails:
+    title: Selalu Tampilkan Detail Node
+    description: |
+      Saat diaktifkan, detail node akan ditampilkan tanpa perlu mengarahkan mouse ke node.
+  nodeDetailsPanel:
+    title: Panel Detail Node
+    options:
+      small: Panel Kecil
+      vditor: Editor Markdown vditor
+  useNativeTitleBar:
+    title: Gunakan Bilah Judul Asli (Perlu Restart Aplikasi)
+    description: |
+      Saat diaktifkan, bilah judul asli akan muncul di atas jendela, bukan bilah judul simulasi.
+  protectingPrivacy:
+    title: Perlindungan Privasi
+    description: |
+      Digunakan saat screenshot untuk melaporkan masalah, setelah diaktifkan akan mengganti teks sesuai mode yang dipilih untuk melindungi privasi.
+      Hanya penggantian di level tampilan, tidak mempengaruhi data asli
+      Matikan kembali setelah selesai melaporkan untuk memulihkan
+  protectingPrivacyMode:
+    title: Mode Perlindungan Privasi
+    description: |
+      Pilih cara penggantian teks saat perlindungan privasi
+    options:
+      secretWord: Ganti Seragam (Hanzi→㊙, Huruf→a/A, Angka→6)
+      caesar: Pergeseran Caesar (Semua karakter digeser satu posisi)
+  entityDetailsFontSize:
+    title: Ukuran Font Detail Entitas
+    description: |
+      Mengatur ukuran teks informasi detail entitas yang dirender di panggung, dalam piksel
+  entityDetailsLinesLimit:
+    title: Batas Baris Detail Entitas
+    description: |
+      Membatasi jumlah baris maksimum informasi detail entitas yang dirender di panggung, bagian yang melebihi batas akan dihilangkan
+  entityDetailsWidthLimit:
+    title: Batas Lebar Detail Entitas
+    description: |
+      Membatasi lebar maksimum informasi detail entitas yang dirender di panggung (dalam piksel px, dapat mereferensi sumbu koordinat grid latar), bagian yang melebihi batas akan dipecah baris
+  windowCollapsingWidth:
+    title: Lebar Jendela Mini
+    description: |
+      Lebar jendela saat beralih ke jendela mini, dalam piksel
+  windowCollapsingHeight:
+    title: Tinggi Jendela Mini
+    description: |
+      Tinggi jendela saat beralih ke jendela mini, dalam piksel
+  limitCameraInCycleSpace:
+    title: Aktifkan Batasan Gerakan Kamera dalam Ruang Siklik
+    description: |
+      Saat diaktifkan, kamera hanya dapat bergerak dalam area persegi panjang
+      Dapat mencegah kamera tersesat saat bergerak terlalu jauh
+      Area persegi panjang ini akan membentuk ruang siklik, mirip dengan peta dalam game ular tanpa batas
+      Ke atas teratas akan kembali ke bawah, ke kiri terkiri akan kembali ke kanan
+      Perhatian: Fitur ini masih dalam tahap eksperimen
+  cameraCycleSpaceSizeX:
+    title: Lebar Ruang Siklik
+    description: |
+      Lebar ruang siklik, dalam piksel
+  cameraCycleSpaceSizeY:
+    title: Tinggi Ruang Siklik
+    description: |
+      Tinggi ruang siklik, dalam piksel
+  renderEffect:
+    title: Efek Render
+    description: Apakah merender efek, jika lag dapat dimatikan
+  compatibilityMode:
+    title: Mode Kompatibilitas
+    description: |
+      Saat diaktifkan, perangkat lunak akan menggunakan cara render lain
+  historySize:
+    title: Ukuran Riwayat
+    description: |
+      Nilai ini menentukan berapa kali maksimum Anda dapat membatalkan dengan ctrl+z
+      Jika memori komputer Anda sangat sedikit, dapat mengurangi nilai ini
+  compressPastedImages:
+    title: Kompres Gambar yang Ditempel ke Panggung
+    description: |
+      Saat diaktifkan, gambar yang ditempel ke panggung akan dikompres untuk menghemat tekanan memori saat memuat file dan tekanan disk
+  maxPastedImageSize:
+    title: Batas Ukuran Gambar yang Ditempel (piksel)
+    description: |
+      Gambar yang panjang atau lebarnya melebihi ukuran ini, nilai maksimum panjang atau lebarnya akan dibatasi ke ukuran ini
+      Sambil mempertahankan rasio aspek, hanya berlaku saat "Kompres Gambar yang Ditempel" diaktifkan
+  isPauseRenderWhenManipulateOvertime:
+    title: Jeda Render Saat Tidak Beroperasi Panggung Selama Waktu Tertentu
+    description: |
+      Saat diaktifkan, jika tidak ada operasi panggung selama beberapa detik, render panggung akan dijeda untuk menghemat sumber daya CPU/GPU.
+  renderOverTimeWhenNoManipulateTime:
+    title: Waktu Berhenti Render Saat Tidak Beroperasi (detik)
+    description: |
+      Setelah tidak ada operasi panggung selama waktu tertentu, render panggung akan dihentikan untuk menghemat sumber daya CPU/GPU.
+      Hanya berlaku setelah opsi "Jeda Render Saat Tidak Beroperasi" diaktifkan.
+  ignoreTextNodeTextRenderLessThanFontSize:
+    title: Tidak Render Teks dan Detail Node Teks Saat Ukuran Font Render Kurang dari Nilai Tertentu
+    description: |
+      Saat diaktifkan, saat ukuran font render node teks kurang dari nilai tertentu (yaitu saat mengamati status makro)
+      Tidak merender teks dan detail di dalam node teks, ini dapat meningkatkan performa render, tetapi menyebabkan konten teks node tidak dapat ditampilkan
+  isEnableEntityCollision:
+    title: Deteksi Tabrakan Entitas
+    description: |
+      Saat diaktifkan, entitas akan bertabrakan dan menekan satu sama lain, dapat mempengaruhi performa.
+      Disarankan menonaktifkan ini, saat ini penekanan tabrakan entitas belum sempurna, dapat menyebabkan stack overflow
+  autoRefreshStageByMouseAction:
+    title: Segarkan Panggung Otomatis Saat Operasi Mouse
+    description: |
+      Saat diaktifkan, operasi mouse (seret untuk menggerakkan tampilan) akan menyegarkan panggung secara otomatis
+      Mencegah situasi setelah membuka file, gambar belum termuat dengan sukses dan perlu penyegaran manual
+  autoNamerTemplate:
+    title: Template Penamaan Otomatis Saat Membuat Node
+    description: |
+      Masukkan `{{i}}` mewakili nama node akan diganti dengan nomor, saat membuat dengan klik ganda dapat menambah angka secara otomatis.
+      Contoh `n{{i}}` akan diganti menjadi `n1`, `n2`, `n3`...
+      Masukkan `{{date}}` akan diganti dengan tanggal saat ini, saat membuat dengan klik ganda dapat memperbarui tanggal secara otomatis.
+      Masukkan `{{time}}` akan diganti dengan waktu saat ini, saat membuat dengan klik ganda dapat memperbarui waktu secara otomatis.
+      Dapat dikombinasikan, contoh `{{i}}-{{date}}-{{time}}`
+  autoNamerSectionTemplate:
+    title: Template Penamaan Otomatis Saat Membuat Kotak
+    description: |
+      Masukkan `{{i}}` mewakili nama node akan diganti dengan nomor, saat membuat dengan klik ganda dapat menambah angka secara otomatis.
+      Contoh `n{{i}}` akan diganti menjadi `n1`, `n2`, `n3`...
+      Masukkan `{{date}}` akan diganti dengan tanggal saat ini, saat membuat dengan klik ganda dapat memperbarui tanggal secara otomatis.
+      Masukkan `{{time}}` akan diganti dengan waktu saat ini, saat membuat dengan klik ganda dapat memperbarui waktu secara otomatis.
+      Dapat dikombinasikan, contoh `{{i}}-{{date}}-{{time}}`
+  autoSaveWhenClose:
+    title: Simpan File Proyek Otomatis Saat Klik Tombol Tutup Jendela
+    description: |
+      Saat menutup perangkat lunak, jika ada file proyek yang belum disimpan, akan muncul kotak dialog konfirmasi untuk menyimpan.
+      Saat opsi ini diaktifkan, file proyek akan disimpan secara otomatis saat menutup perangkat lunak.
+      Jadi, disarankan mengaktifkan opsi ini.
+  autoSave:
+    title: Aktifkan Penyimpanan Otomatis
+    description: |
+      Simpan file saat ini secara otomatis
+      Fitur ini saat ini hanya berlaku untuk file dengan path yang ada, tidak berlaku untuk file konsep!
+  autoSaveInterval:
+    title: Interval Penyimpanan Otomatis (detik)
+    description: |
+      Perhatian: Saat ini waktu hanya dihitung saat jendela perangkat lunak aktif, tidak dihitung saat perangkat lunak diminimalkan.
+  clearHistoryWhenManualSave:
+    title: Bersihkan Riwayat Otomatis Saat Simpan Manual dengan Pintasan
+    description: |
+      Saat menyimpan file dengan pintasan Ctrl+S, riwayat operasi akan dibersihkan secara otomatis.
+      Mengaktifkan opsi ini dapat mengurangi penggunaan memori dan menjaga antarmuka tetap rapi.
+  historyManagerMode:
+    title: Mode Manajer Riwayat
+    description: |
+      Pilih cara pengelolaan riwayat:
+      memoryEfficient - Mode Efisien Memori, menggunakan penyimpanan inkremental, hemat memori tetapi mungkin sedikit lambat saat membatalkan/mengulang
+      timeEfficient - Mode Efisien Waktu, menggunakan penyimpanan snapshot lengkap, respons operasi cepat tetapi mungkin menggunakan lebih banyak memori
+    options:
+      memoryEfficient: Mode Efisien Memori
+      timeEfficient: Mode Efisien Waktu
+  autoBackup:
+    title: Aktifkan Pencadangan Otomatis
+    description: |
+      Cadangkan file saat ini ke folder cadangan secara otomatis
+      Jika konsep, akan disimpan di path yang ditentukan
+  autoBackupInterval:
+    title: Interval Pencadangan Otomatis (detik)
+    description: |
+      Pencadangan yang terlalu sering dapat menghasilkan banyak file cadangan
+      sehingga menggunakan ruang disk
+  autoBackupLimitCount:
+    title: Jumlah Maksimum Cadangan Otomatis
+    description: |
+      Jumlah maksimum cadangan otomatis, jika melebihi jumlah ini file cadangan lama akan dihapus
+  autoBackupCustomPath:
+    title: Path Pencadangan Otomatis Kustom
+    description: |
+      Mengatur path penyimpanan file cadangan otomatis, jika kosong akan menggunakan path default
+  scaleExponent:
+    title: Kecepatan Zoom Tampilan
+    description: |
+      "Kelipatan Zoom Saat Ini" akan terus mendekati "Kelipatan Zoom Target" dengan tingkat tertentu secara tak terhingga
+      Saat cukup dekat (kurang dari 0,0001), zoom akan berhenti secara otomatis
+      Nilai 1 berarti zoom akan selesai seketika, tanpa efek transisi di tengah
+      Nilai 0 berarti zoom tidak akan pernah selesai, dapat mensimulasikan efek kunci
+      Perhatian: Jika Anda merasa lag saat zoom, atur ke 1
+  cameraKeyboardScaleRate:
+    title: Laju Zoom Tampilan via Keyboard
+    description: |
+      Kelipatan zoom tampilan setiap kali melakukan zoom via keyboard
+      Nilai 0,2 berarti setiap zoom in menjadi 1,2 kali lipat, zoom out menjadi 0,8 kali lipat
+      Nilai 0 berarti melarang zoom via keyboard
+  scaleCameraByMouseLocation:
+    title: Zoom Tampilan Berdasarkan Posisi Mouse
+    description: |
+      Saat diaktifkan, titik pusat zoom tampilan adalah posisi mouse
+      Saat dimatikan, titik pusat zoom tampilan adalah pusat tampilan saat ini
+  allowMoveCameraByWSAD:
+    title: Izinkan Gerakan Tampilan dengan Tombol W S A D
+    description: |
+      Saat diaktifkan, dapat menggunakan tombol W S A D untuk menggerakkan tampilan atas bawah kiri kanan
+      Saat dimatikan, hanya dapat menggunakan mouse untuk menggerakkan tampilan, tidak akan menyebabkan bug scroll tak terbatas
+  allowGlobalHotKeys:
+    title: Izinkan Penggunaan Hotkey Global
+    description: |
+      Saat diaktifkan, dapat menggunakan hotkey global untuk memicu beberapa operasi
+  cameraFollowsSelectedNodeOnArrowKeys:
+    title: Tampilan Mengikuti Saat Beralih Node yang Dipilih dengan Tombol Arah
+    description: |
+      Saat diaktifkan, saat menggunakan keyboard untuk menggerakkan kotak pemilihan node, tampilan mengikuti pergerakan
+  arrowKeySelectOnlyInViewport:
+    title: Batasi Peralihan Pilihan dengan Tombol Arah dalam Tampilan
+    description: |
+      Saat diaktifkan, saat beralih pilihan node dengan tombol arah (atas bawah kiri kanan), hanya akan memilih objek yang terlihat dalam tampilan saat ini.
+      Saat dimatikan, dapat memilih objek di luar tampilan (kamera akan mengikuti secara otomatis).
+  cameraKeyboardMoveReverse:
+    title: Balikkan Arah Gerakan Tampilan via Keyboard
+    description: |
+      Saat diaktifkan, arah gerakan tombol W S A D akan terbalik
+      Logika gerakan asli adalah menggerakkan kamera yang melayang di atas layar, tetapi jika dilihat sebagai menggerakkan seluruh panggung, maka ini terbalik
+      Maka ada opsi ini
+  cameraKeyboardScaleReverse:
+    title: Balikkan Arah Zoom Tampilan via Keyboard
+    description: |
+      Saat diaktifkan, [=lepas landas (perkecil), ]=turun (perbesar)
+      Saat dimatikan, [=turun (perbesar), ]=lepas landas (perkecil)
+  cameraResetViewPaddingRate:
+    title: Koefisien Ruang Tepi Saat Atur Ulang Tampilan Berdasarkan Node yang Dipilih
+    description: |
+      Setelah memilih sekelompok node atau satu node, dan menekan pintasan atau tombol untuk mengatur ulang tampilan
+      Tampilan akan menyesuaikan ukuran dan posisi, memastikan semua konten yang dipilih muncul di tengah layar dan sepenuhnya tercakup
+      Karena alasan ukuran zoom tampilan, mungkin ada ruang tepi saat ini
+      Nilai 1 berarti tidak ada ruang tepi sama sekali. (Pengamatan sangat diperbesar)
+      Nilai 2 berarti konten ruang tepi tepat satu kali lipat dari konten itu sendiri
+  cameraResetMaxScale:
+    title: Nilai Zoom Maksimum Setelah Kamera Atur Ulang Tampilan
+    description: |
+      Saat memilih node dengan area sangat kecil, kamera tidak akan sepenuhnya mencakup area node tersebut, jika tidak akan terlalu besar.
+      Melainkan akan diperbesar ke nilai maksimum, nilai maksimum ini dapat disesuaikan melalui opsi ini
+      Disarankan mengaktifkan mode debug untuk mengamati currentScale saat menyesuaikan nilai ini
+  allowAddCycleEdge:
+    title: Izinkan Penambahan Loop pada Node
+    description: |
+      Saat diaktifkan, dapat menambahkan loop pada node, yaitu node terhubung dengan dirinya sendiri, digunakan untuk menggambar mesin status
+      Default mati, karena jarang digunakan, mudah memicu secara tidak sengaja
+  enableDragEdgeRotateStructure:
+    title: Izinkan Rotasi Struktur dengan Menyeret Garis
+    description: |
+      Saat diaktifkan, dapat memutar struktur node dengan menyeret garis yang dipilih
+      Ini memungkinkan Anda menyesuaikan arah node yang terhubung dengan mudah
+  enableCtrlWheelRotateStructure:
+    title: Izinkan Rotasi Struktur dengan Ctrl+Scroll Mouse
+    description: |
+      Saat diaktifkan, dapat menahan tombol Ctrl (Command di Mac) dan menggulir roda mouse untuk memutar struktur node
+      Ini memungkinkan Anda menyesuaikan arah node yang terhubung dengan presisi
+  autoLayoutWhenTreeGenerate:
+    title: Perbarui Layout Otomatis Saat Node Tumbuh
+    description: |
+      Saat diaktifkan, layout akan diperbarui secara otomatis saat node tumbuh
+      Pertumbuhan node di sini merujuk pada pertumbuhan node dengan tombol tab dan \
+  enableBackslashGenerateNodeInInput:
+    title: Buat Node Selevel dengan Backslash dalam Mode Input
+    description: |
+      Saat diaktifkan, dalam mode edit node teks, menekan tombol backslash (\) juga dapat membuat node selevel
+      Saat dimatikan, hanya dapat membuat node selevel dengan tombol backslash dalam mode non-edit
+  moveAmplitude:
+    title: Percepatan Gerakan Tampilan
+    description: |
+      Pengaturan ini digunakan untuk skenario menggunakan tombol W S A D untuk menggerakkan tampilan atas bawah kiri kanan
+      Kamera dapat dilihat sebagai pesawat melayang yang dapat menyembur ke empat arah
+      Nilai percepatan ini mewakili kekuatan dorong semburan, perlu dikombinasikan dengan pengaturan gesekan di bawah untuk menyesuaikan kecepatan
+  moveFriction:
+    title: Koefisien Gesekan Gerakan Tampilan
+    description: |
+      Pengaturan ini digunakan untuk skenario menggunakan tombol W S A D untuk menggerakkan tampilan atas bawah kiri kanan
+      Semakin besar koefisien gesekan, semakin kecil jarak geser, semakin kecil koefisien gesekan, semakin jauh jarak geser
+      Nilai ini=0 berarti sangat halus
+  gamepadDeadzone:
+    title: Zona Mati Gamepad
+    description: |
+      Pengaturan ini digunakan untuk skenario kontrol tampilan dengan gamepad
+      Nilai input gamepad antara 0-1, semakin kecil nilai ini, semakin sensitif input gamepad
+      Semakin besar zona mati, semakin condong input gamepad ke 0 atau 1, tidak akan menghasilkan perubahan terlalu besar
+      Semakin kecil zona mati, semakin condong input gamepad ke nilai tengah, akan menghasilkan perubahan besar
+  mouseRightDragBackground:
+    title: Operasi Seret Latar dengan Klik Kanan
+    options:
+      cut: Potong dan Hapus Objek
+      moveCamera: Gerakkan Tampilan
+  enableSpaceKeyMouseLeftDrag:
+    title: Aktifkan Spasi+Klik Kiri Seret untuk Menggerakkan
+    description: Tahan tombol spasi dan gunakan klik kiri mouse untuk menyeret dan menggerakkan tampilan
+  mouseLeftMode:
+    title: Alihkan Mode Klik Kiri
+    options:
+      selectAndMove: Pilih dan Gerakkan
+      draw: Gambar
+      connectAndCut: Hubungkan dan Potong
+  doubleClickMiddleMouseButton:
+    title: Klik Ganda Tombol Tengah Mouse
+    description: |
+      Operasi yang dijalankan saat tombol gulir ditekan cepat dua kali. Default adalah mengatur ulang tampilan.
+      Menonaktifkan opsi ini dapat mencegah pemicu tidak sengaja.
+    options:
+      adjustCamera: Sesuaikan Tampilan
+      none: Tidak Ada Operasi
+  textNodeContentLineBreak:
+    title: Skema Pemisah Baris Node Teks
+    options:
+      enter: Enter
+      ctrlEnter: ctrl + Enter
+      altEnter: alt + Enter
+      shiftEnter: shift + Enter
+    description: |
+      Perhatikan agar tidak sama dengan tombol keluar mode edit node teks, ini akan menyebabkan konflik
+      sehingga tidak dapat memisah baris
+  textNodeStartEditMode:
+    title: Masuk Mode Edit Node Teks
+    options:
+      enter: Enter
+      ctrlEnter: ctrl + Enter
+      altEnter: alt + Enter
+      shiftEnter: shift + Enter
+      space: Tombol Spasi
+    description: |
+      Sebenarnya menekan tombol F2 juga dapat masuk mode edit, di sini dapat menambah satu lagi
+  textNodeExitEditMode:
+    title: Keluar Mode Edit Node Teks
+    options:
+      enter: Enter
+      ctrlEnter: ctrl + Enter
+      altEnter: alt + Enter
+      shiftEnter: shift + Enter
+    description: |
+      Sebenarnya menekan tombol Esc juga dapat keluar, di sini dapat menambah satu lagi
+  textNodeSelectAllWhenStartEditByMouseClick:
+    title: Pilih Semua Otomatis Saat Mulai Edit dengan Klik Ganda
+    description: |
+      Saat diaktifkan, saat mulai edit node teks, akan memilih semua konten teks
+      Jika Anda biasanya mengedit konten untuk langsung mengubah seluruh konten, disarankan mengaktifkan ini
+      Jika lebih mungkin untuk menambah konten, disarankan menonaktifkan ini
+  textNodeSelectAllWhenStartEditByKeyboard:
+    title: Pilih Semua Otomatis Saat Mulai Edit dengan Keyboard
+    description: |
+      Saat diaktifkan, saat Anda menekan tombol mode edit node teks, akan memilih semua konten teks
+  textNodeBackspaceDeleteWhenEmpty:
+    title: Hapus Seluruh Node dengan Backspace Saat Kosong dalam Mode Edit
+    description: |
+      Saat diaktifkan, saat mengedit node teks dan konten kosong, menekan tombol Backspace akan menghapus seluruh node secara otomatis
+  textNodeBigContentThresholdWhenPaste:
+    title: Ambang Konten Besar Node Teks Saat Tempel
+    description: |
+      Saat menempel teks langsung di panggung, jika panjang teks melebihi nilai ini, akan menggunakan mode pemisah baris manual
+  textNodePasteSizeAdjustMode:
+    title: Mode Penyesuaian Ukuran Tempel Node Teks
+    description: |
+      Mengontrol cara penyesuaian ukuran saat menempel node teks
+    options:
+      auto: Selalu Sesuaikan Otomatis
+      manual: Selalu Sesuaikan Manual
+      autoByLength: Sesuaikan Otomatis Berdasarkan Panjang
+  textNodeAutoFormatTreeWhenExitEdit:
+    title: Format Struktur Pohon Otomatis Saat Keluar Mode Edit
+    description: |
+      Saat node teks keluar mode edit, otomatis melakukan layout format pada struktur pohon tempatnya berada
+  treeGenerateCameraBehavior:
+    title: Opsi Perilaku Kamera Setelah Node Pohon Tumbuh
+    description: |
+      Mengatur perilaku kamera setelah membuat node baru menggunakan fungsi pertumbuhan kedalaman pohon atau lebar pohon
+    options:
+      none: Kamera Tidak Bergerak
+      moveToNewNode: Kamera Bergerak ke Node Baru
+      resetToTree: Atur Ulang Tampilan, membuat tampilan mencakup persegi panjang bounding struktur pohon saat ini
+  enableDragAutoAlign:
+    title: Penjajaran Otomatis Saat Menyeret Node dengan Mouse
+    description: |
+      Saat diaktifkan, saat menyeret node dan melepaskannya akan menyejajarkan dengan node lain di sumbu x, sumbu y
+  reverseTreeMoveMode:
+    title: Balikkan Mode Gerakan Pohon
+    description: |
+      Saat diaktifkan, gerakan default adalah gerakan pohon (termasuk node penerus), tahan tombol Ctrl untuk gerakan objek tunggal. Saat mati sebaliknya.
+  enableDragAlignToGrid:
+    title: Tempel ke Grid Saat Menyeret Entitas
+    description: |
+      Disarankan mengaktifkan garis grid horizontal dan vertikal dalam tampilan, dan menonaktifkan penjajaran otomatis
+  enableWindowsTouchPad:
+    title: Izinkan Operasi Gerakan Dua Jari Touchpad
+    description: |
+      Dalam sistem Windows, gerakan dua jari atas bawah akan dikenali sebagai event roda.
+      Gerakan dua jari kiri kanan akan dikenali sebagai event gulir roda horizontal mouse.
+      Jika Anda menggunakan laptop dan mouse eksternal, disarankan menonaktifkan opsi ini.
+  macTrackpadAndMouseWheelDifference:
+    title: Logika Pembedaan Touchpad dan Roda Mouse MacBook
+    description:
+      Beberapa mouse roda MacBook adalah bilangan bulat, touchpad adalah desimal, beberapa sebaliknya
+      Anda perlu memilih logika pembedaan berdasarkan kondisi aktual
+      Cara pembedaan dapat masuk "Antarmuka Tes" dengan mengklik logo perangkat lunak di antarmuka tentang 7 kali, lalu menggulir roda dan touchpad untuk melihat umpan balik data
+    options:
+      trackpadIntAndWheelFloat: Touchpad bilangan bulat, gulir mouse desimal
+      tarckpadFloatAndWheelInt: Touchpad desimal, gulir mouse bilangan bulat
+  macTrackpadScaleSensitivity:
+    title: Sensitivitas Zoom Dua Jari Touchpad MacBook
+    description:
+      Semakin besar nilai, semakin cepat kecepatan zoom
+  macEnableControlToCut:
+    title: Aktifkan Potong dengan Tombol Control di Mac
+    description:
+      Tahan tombol control, gerakkan mouse di panggung, lepaskan tombol control, selesaikan satu kali potong
+  macMouseWheelIsSmoothed:
+    title: Apakah Roda Mouse MacBook Halus
+    description:
+      Beberapa roda mouse MacBook halus, beberapa bergulir satu kali memicu satu kali
+      Mungkin tergantung pada apakah Anda menginstal perangkat lunak modifikasi mouse seperti Mos
+  mouseSideWheelMode:
+    title: Mode Roda Samping Mouse
+    description: |
+      Roda samping adalah roda di ibu jari
+    options:
+      zoom: Zoom
+      move: Gerakkan Vertikal
+      moveX: Gerakkan Horizontal
+      none: Tidak Ada Operasi
+      cameraMoveToMouse: Gerakkan Tampilan ke Posisi Mouse
+      adjustWindowOpacity: Sesuaikan Opasitas Jendela
+      adjustPenStrokeWidth: Sesuaikan Ketebalan Kuas
+  mouseWheelMode:
+    title: Mode Roda Mouse
+    options:
+      zoom: Zoom
+      move: Gerakkan Vertikal
+      moveX: Gerakkan Horizontal
+      none: Tidak Ada Operasi
+  mouseWheelWithShiftMode:
+    title: Mode Roda Mouse dengan Shift
+    options:
+      zoom: Zoom
+      move: Gerakkan Vertikal
+      moveX: Gerakkan Horizontal
+      none: Tidak Ada Operasi
+  mouseWheelWithCtrlMode:
+    title: Mode Roda Mouse dengan Ctrl
+    description: |
+      Tips: Ctrl di sini adalah Control
+    options:
+      zoom: Zoom
+      move: Gerakkan Vertikal
+      moveX: Gerakkan Horizontal
+      none: Tidak Ada Operasi
+  mouseWheelWithAltMode:
+    title: Mode Roda Mouse dengan Alt
+    description: |
+      Fitur ini ditambahkan pada 10 April 2025
+      Saat ini ditemukan masih ada masalah: di sistem Windows perlu klik layar sekali lagi setelah menggulir roda untuk mengoperasikan panggung
+      Tips: Alt di sini adalah Option
+    options:
+      zoom: Zoom
+      move: Gerakkan Vertikal
+      moveX: Gerakkan Horizontal
+      none: Tidak Ada Operasi
+  rectangleSelectWhenLeft:
+    title: Strategi Seleksi Kotak ke Kiri
+    description: |
+      Pilih strategi seleksi kotak mouse ke kiri, termasuk seleksi tutup penuh dan seleksi tabrakan
+      Seleksi tutup penuh berarti kotak seleksi persegi panjang harus sepenuhnya menutupi persegi panjang bounding entitas
+      Seleksi tabrakan berarti kotak seleksi persegi panjang hanya perlu menyentuh sedikit persegi panjang bounding entitas untuk dapat dipilih
+    options:
+      intersect: Seleksi Tabrakan
+      contain: Seleksi Tutup Penuh
+  rectangleSelectWhenRight:
+    title: Strategi Seleksi Kotak ke Kanan
+    description: |
+      Pilih strategi seleksi kotak mouse ke kanan
+    options:
+      intersect: Seleksi Tabrakan
+      contain: Seleksi Tutup Penuh
+  # Suara
+  cuttingLineStartSoundFile:
+    title: File Suara Mulai Potong Garis
+    description: |
+      Path file suara yang diputar saat tombol kanan ditekan untuk memulai potong garis
+  connectLineStartSoundFile:
+    title: File Suara Mulai Hubungkan Garis
+    description: |
+      Path file suara yang diputar saat tombol kanan ditekan untuk memulai hubungkan garis
+  connectFindTargetSoundFile:
+    title: File Suara Garis Menempel ke Target
+    description: |
+      Path file suara yang diputar saat garis menempel ke target
+  cuttingLineReleaseSoundFile:
+    title: File Suara Lepas Potong Garis
+    description: |
+      Saat melepaskan adalah saat melihat efek pedang cahaya
+  alignAndAttachSoundFile:
+    title: File Suara Penjajaran
+    description: |
+      Path file suara yang diputar saat menyeret mouse, menyejajarkan node dan
+  uiButtonEnterSoundFile:
+    title: Suara Mouse Masuk Area Tombol
+    description: |
+      Suara saat mouse masuk area tombol
+  uiButtonClickSoundFile:
+    title: File Suara Klik Tombol
+    description: |
+      Path file suara yang diputar saat tombol diklik
+  uiSwitchButtonOnSoundFile:
+    title: Suara Buka Tombol Alihkan
+    description: |
+      Path file suara yang diputar saat tombol alihkan dibuka
+  uiSwitchButtonOffSoundFile:
+    title: Suara Tutup Tombol Alihkan
+    description: |
+      Path file suara yang diputar saat tombol alihkan ditutup
+  agreeTerms:
+    title: Setujui Perjanjian Pengguna
+    description: |
+      Silakan baca dan setujui perjanjian pengguna dengan cermat
+  allowTelemetry:
+    title: Ikut Serta dalam Program Peningkatan Pengalaman Pengguna
+    description: |
+      Jika Anda mengaktifkan ini, kami akan mengumpulkan data penggunaan Anda untuk membantu kami meningkatkan perangkat lunak
+      Data yang dikirim hanya digunakan untuk statistik, tidak akan berisi informasi pribadi Anda
+      Data Anda akan disimpan di server cloud Hong Kong Tiongkok, tidak akan dikirim ke luar negeri
+  aiApiBaseUrl:
+    title: Alamat API AI
+    description: |
+      Saat ini hanya mendukung API format OpenAI
+  aiApiKey:
+    title: Kunci API AI
+    description: |
+      Kunci akan disimpan sebagai teks biasa secara lokal
+  aiModel:
+    title: Model AI
+  cacheTextAsBitmap:
+    title: Aktifkan Render Teks sebagai Bitmap
+    description: |
+      Saat diaktifkan, cache bitmap node teks akan dipertahankan untuk meningkatkan kecepatan render
+      tetapi mungkin menyebabkan kabur
+  textCacheSize:
+    title: Batas Cache Teks
+    description: |
+      Secara default, teks yang sering dirender akan di-cache untuk meningkatkan kecepatan render
+      Jika nilai terlalu besar dapat menyebabkan penggunaan memori tinggi dan lag atau crash
+      Nilai 0 berarti nonaktifkan cache, setiap render akan merender ulang teks
+      *Berlaku saat membuka ulang file
+  textScalingBehavior:
+    title: Cara Render Teks saat Zoom Kamera
+    options:
+      temp: Render ulang teks setiap frame, tidak menggunakan cache
+      nearestCache: Gunakan cache dengan ukuran teks terdekat, zoom lalu render
+      cacheEveryTick: Render ulang teks setiap frame, dan cache
+  textIntegerLocationAndSizeRender:
+    title: Render Posisi dan Ukuran Bilangan Bulat Teks
+    description: |
+      Saat diaktifkan, semua ukuran dan posisi teks adalah bilangan bulat untuk menghemat performa render.
+      tetapi akan muncul fenomena goyangan teks. Disarankan menggunakan bersama dengan pengaturan kecepatan zoom tampilan ke 1.
+      Jika pengalaman penggunaan komputer Anda sangat lag, terutama saat zoom dan gerakan, dapat mengaktifkan opsi ini.
+  antialiasing:
+    title: Anti-aliasing
+    description: |
+      *Berlaku saat membuka ulang file
+    options:
+      disabled: Mati
+      low: Rendah
+      medium: Sedang
+      high: Tinggi
+  isStealthModeEnabled:
+    title: Mode Siluman
+    description: Saat diaktifkan, mask muncul di tengah mouse (bentuk spesifik dapat diubah di pengaturan), dapat digunakan untuk latihan menghafal dan skenario tutupi lainnya.
+  stealthModeScopeRadius:
+    title: Radius Cakupan Mode Siluman
+    description: |
+      Radius teropong
+  stealthModeReverseMask:
+    title: Balikkan Mask
+    description: |
+      Saat diaktifkan, area tengah teropong akan di-mask, hanya menampilkan area sekitarnya
+  stealthModeMaskShape:
+    title: Bentuk Mask Mode Siluman
+    description: |
+      Pilih bentuk area tampilan dalam mode siluman
+    options:
+      circle: Lingkaran
+      square: Persegi
+      topLeft: Kuadran Kiri Atas
+      smartContext: Konteks Cerdas (Kotak atau Entitas)
+  soundPitchVariationRange:
+    title: Rentang Variasi Nada Suara
+    description: "Mengontrol tingkat variasi nada suara saat diputar. Rentang: 0-1200 sen (1200 sen=1 oktaf, 100 sen=1 nada setengah). Semakin besar nilai, semakin jelas perubahan nada, semakin mirip permainan yang menyenangkan."
+  autoImportTxtFileWhenOpenPrg:
+    title: Impor File TXT dengan Nama Sama Otomatis Saat Buka File PRG
+    description: Saat diaktifkan, saat membuka file PRG akan mengimpor konten file TXT dengan nama sama di folder yang sama secara otomatis, dan menambahkannya ke sudut kiri bawah panggung sebagai node teks.
+
+effects:
+  CircleChangeRadiusEffect:
+    title: Efek Perubahan Radius Lingkaran
+    description: |
+      Riak pembesaran setelah titik massa dipilih
+  CircleFlameEffect:
+    title: Kilatan Gradien Radial Lingkaran
+    description: |
+      Ada dalam berbagai detail efek, seperti garis pra-potong lurus dengan persegi panjang entitas, kilatan tengah saat memotong garis, dll.
+  EntityAlignEffect:
+    title: Efek Penjajaran Entitas
+    description: |
+      Garis putus-putus sorot yang dihasilkan saat menyeret mouse untuk penjajaran menempel
+  EntityCreateDashEffect:
+    title: Efek Konsentrasi Debu Pembuatan Entitas
+    description: |
+      Saat entitas dibuat, debu muncul di sekitar entitas
+      Karena tidak cukup estetis, sudah ditinggalkan, tidak akan muncul
+  EntityCreateFlashEffect:
+    title: Efek Bercahaya Batas Entitas
+    description: |
+      Muncul dalam situasi seperti putar pohon entitas dengan ctrl+roda, zoom gambar, buat node, dll.
+      Jika performa render buruk, disarankan menonaktifkan ini
+  EntityCreateLineEffect:
+    title: Efek Radiasi Garis Sirkuit dari Entitas
+    description: |
+      Sudah ditinggalkan, tidak akan muncul
+  EntityDashTipEffect:
+    title: Goyangan Debu Petunjuk Entitas
+    description: |
+      Muncul saat entitas masuk atau keluar edit, goyangan debu di sekitar entitas
+  EntityJumpMoveEffect:
+    title: Efek Gerakan Lompat Entitas
+    description: |
+      Saat entitas bergerak lompat, bayangan busur lompatan simbolis muncul di entitas
+      Digunakan untuk menunjukkan gerakan melintasi level sumbu z palsu
+  EntityShakeEffect:
+    title: Efek Goyangan Entitas
+    description: |
+      Efek goyangan seperti Logo "TickTock", digunakan untuk peringatan muncul entitas
+  EntityShrinkEffect:
+    title: Efek Menciut Entitas
+    description: |
+      Saat menghapus entitas dengan tombol Delete, efek menciut menghilang muncul
+  ExplodeDashEffect:
+    title: Efek Ledakan Debu
+    description: |
+      Saat menghapus entitas dengan potong, ledakan debu muncul
+  LineCuttingEffect:
+    title: Cahaya Pedang Saat Potong
+    description: |
+      Saat memotong, cahaya pedang seperti Fruit Ninja muncul
+  LineEffect:
+    title: Efek Memudar Garis Lurus
+    description: |
+      Digunakan saat menyeret untuk memutar subpohon, bayangan sapuan garis
+  NodeMoveShadowEffect:
+    title: Efek Partikel Gesekan Tanah Saat Node Bergerak
+    description: |
+      Gerakan yang disebabkan oleh layout juga mungkin muncul partikel kilatan
+  PenStrokeDeletedEffect:
+    title: Efek Hilang Saat Coretan Dihapus
+    description: |
+      Saat coretan dihapus, efek menghilang muncul
+  PointDashEffect:
+    title: Efek Partikel Gaya Gravitasi yang Meletus di Titik
+    description: |
+      Karena gaya gravitasi mempengaruhi performa, efek ini sudah ditutup, tidak akan muncul
+  RectangleLittleNoteEffect:
+    title: Efek Kilatan Petunjuk Persegi Panjang
+    description: |
+      Saat node logika dijalankan, node logika akan berkilatan efek ini
+  RectangleNoteEffect:
+    title: Efek Petunjuk Keberadaan Persegi Panjang
+    description: |
+      Sorotan rentang persegi panjang, efek sorotan saat mencari node atau menentukan posisi
+      Jika ditutup tidak akan melihat efek sorotan persegi panjang
+  RectanglePushInEffect:
+    title: Efek Empat Titik Sudut Persegi Panjang ke Persegi Panjang Lain
+    description: |
+      Digunakan untuk menunjukkan gerakan melintasi level kotak entitas, beralih pilihan dengan tombol arah
+      Saat ini pengembang karena malas, efek ini merujuk empat efek garis potong.
+      Jika efek garis potong ditutup, maka efek ini tidak akan terlihat
+  RectangleRenderEffect:
+    title: Efek Petunjuk Posisi Persegi Panjang
+    description: |
+      Digunakan untuk menampilkan posisi target yang akan ditempel entitas saat menyeret penjajaran
+  RectangleSplitTwoPartEffect:
+    title: Efek Persegi Panjang Terpotong Dua
+    description: |
+      Hanya ada dalam efek potong (mungkin juga empat bagian)
+  TechLineEffect:
+    title: (Efek Dasar) Efek Garis Patah
+    description: |
+      Efek ini adalah komponen efek lain, jika ditutup efek lain mungkin terpengaruh
+  TextRaiseEffectLocated:
+    title: Efek Naik Melayang Node Teks Posisi Tetap
+    description: |
+      Efek melayang naik node teks, digunakan untuk menunjukkan informasi penting
+  ViewFlashEffect:
+    title: Efek Kilatan Tampilan
+    description: |
+      Efek kilat putih/hitam layar penuh
+      Penderita epilepsi fotosensitif harap tutup opsi ini
+  ViewOutlineFlashEffect:
+    title: Efek Kilatan Kontur Tampilan
+    description: |
+      Efek kilatan kontur tampilan
+  ZapLineEffect:
+    title: (Efek Dasar) Efek Garis Petir
+    description: |
+      Efek ini adalah komponen efek lain, jika ditutup efek lain mungkin terpengaruh
+  MouseTipFeedbackEffect:
+    title: Efek Umpan Balik Petunjuk Interaksi Mouse
+    description: |
+      Saat mouse melakukan operasi seperti zoom tampilan, petunjuk efek muncul di samping mouse, seperti lingkaran membesar atau mengecil
+  RectangleSlideEffect:
+    title: Efek Ekor Geser Persegi Panjang
+    description: |
+      Digunakan untuk menggerakkan entitas secara vertikal dengan keyboard
+
+keyBindsGroup:
+  otherKeys:
+    title: Pintasan Tidak Terkategori
+    description: |
+      Pintasan yang tidak terkategori,
+      Jika menemukan item pintasan tidak valid tanpa terjemahan di sini, mungkin karena sisa yang belum dibersihkan saat upgrade versi
+      Dapat membersihkan item yang sesuai di file keybinds.json secara manual
+  basic:
+    title: Pintasan Dasar
+    description: |
+      Pintasan dasar, untuk fungsi yang sering digunakan
+  camera:
+    title: Kontrol Kamera
+    description: |
+      Untuk mengontrol gerakan kamera, zoom
+  app:
+    title: Kontrol Aplikasi
+    description: |
+      Untuk mengontrol beberapa fungsi aplikasi
+  ui:
+    title: Kontrol UI
+    description: |
+      Untuk mengontrol beberapa fungsi UI
+  draw:
+    title: Coretan
+    description: |
+      Fungsi terkait coretan
+  select:
+    title: Beralih Pilihan
+    description: |
+      Menggunakan keyboard untuk beralih entitas yang dipilih
+  moveEntity:
+    title: Gerakkan Entitas
+    description: |
+      Untuk beberapa fungsi menggerakkan entitas
+  generateTextNodeInTree:
+    title: Tumbuhkan Node
+    description: |
+      Tumbuhkan node via keyboard (kebiasaan pengguna Xmind)
+  generateTextNodeRoundedSelectedNode:
+    title: Hasilkan Node di Sekitar Node yang Dipilih
+    description: |
+      Setelah ditekan, hasilkan node di sekitar node yang dipilih
+  aboutTextNode:
+    title: Tentang Node Teks
+    description: |
+      Semua pintasan terkait node teks, pemisahan, penggabungan, pembuatan, dll.
+  section:
+    title: Kotak Section
+    description: |
+      Fungsi terkait kotak Section
+  leftMouseModeCheckout:
+    title: Alihkan Mode Klik Kiri
+    description: |
+      Tentang peralihan mode klik kiri
+  edge:
+    title: Terkait Garis
+    description: |
+      Beberapa fungsi tentang garis
+  expandSelect:
+    title: Perluas Pilihan
+    description: |
+      Pintasan terkait perluasan pilihan node
+  themes:
+    title: Alihkan Tema
+    description: |
+      Pintasan terkait peralihan tema
+  align:
+    title: Terkait Penjajaran
+    description: |
+      Beberapa fungsi tentang penjajaran entitas
+  image:
+    title: Terkait Gambar
+    description: |
+      Beberapa fungsi tentang gambar
+  node:
+    title: Terkait Node
+    description: |
+      Beberapa fungsi tentang node, seperti grafting, pencabutan, dll.
+
+controlSettingsGroup:
+  mouse:
+    title: Pengaturan Mouse
+  touchpad:
+    title: Pengaturan Touchpad
+  textNode:
+    title: Pengaturan Node Teks
+  gamepad:
+    title: Pengaturan Gamepad
+
+visualSettingsGroup:
+  basic:
+    title: Pengaturan Dasar
+  background:
+    title: Pengaturan Latar Belakang
+
+keyBinds:
+  title: Pengikatan Pintasan
+  none: Tidak Ada Pintasan
+  test:
+    title: Tes
+    description: |
+      Hanya untuk menguji fungsi pengikatan pintasan kustom
+  reload:
+    title: Muat Ulang Aplikasi
+    description: |
+      Muat ulang aplikasi, muat ulang file proyek saat ini
+      Sama dengan menyegarkan halaman web browser
+      Fungsi ini berbahaya! Akan menyebabkan kehilangan kemajuan yang belum disimpan!
+  saveFile:
+    title: Simpan File
+    description: |
+      Simpan file proyek saat ini, jika file saat ini adalah konsep maka simpan sebagai
+  newDraft:
+    title: Konsep Baru
+    description: |
+      Buat file konsep baru, dan beralih ke file tersebut
+      Jika file saat ini belum disimpan tidak dapat beralih
+  newFileAtCurrentProjectDir:
+    title: Buat File Baru di Direktori Proyek Saat Ini
+    description: |
+      Buat file proyek baru di direktori proyek saat ini, dan beralih ke file tersebut (untuk pembuatan file cepat)
+      Jika file saat ini adalah status konsep tidak dapat membuat
+  openFile:
+    title: Buka File
+    description: |
+      Pilih file json/prg yang pernah disimpan dan buka
+  undo:
+    title: Batalkan
+    description: Batalkan operasi sebelumnya
+  redo:
+    title: Ulangi Pembatalan
+    description: Ulangi operasi pembatalan sebelumnya
+  resetView:
+    title: Atur Ulang Tampilan
+    description: |
+      Jika tidak memilih apa pun, atur ulang tampilan berdasarkan semua konten;
+      Jika ada konten yang dipilih, atur ulang tampilan berdasarkan konten yang dipilih
+  restoreCameraState:
+    title: Pulihkan Status Tampilan
+    description: |
+      Setelah ditekan, pulihkan ke posisi kamera dan ukuran zoom saat menekan tombol F sebelumnya
+  resetCameraScale:
+    title: Atur Ulang Zoom
+    description: Atur ulang zoom tampilan ke ukuran standar
+  folderSection:
+    title: Lipat atau Buka Kotak Section
+    description: Setelah ditekan, kotak Section yang dipilih akan beralih status lipat atau buka
+  reverseEdges:
+    title: Balikkan Arah Garis
+    description: |
+      Setelah ditekan, arah garis yang dipilih akan menjadi arah berlawanan
+      Contoh, semula A -> B, setelah ditekan menjadi B -> A
+      Makna fungsi ini adalah membuat situasi satu node menunjuk ke banyak node dengan cepat
+      Karena garis saat ini hanya dapat melakukan banyak-ke-satu sekaligus.
+  reverseSelectedNodeEdge:
+    title: Balikkan Semua Garis Node yang Dipilih
+    description: |
+      Setelah ditekan, dalam semua node yang dipilih dengan seleksi kotak
+      Setiap garis setiap node akan dibalikkan arahnya
+      Sehingga mewujudkan satu-ke-banyak yang lebih cepat
+  createUndirectedEdgeFromEntities:
+    title: Buat Garis Tak Berarah antar Entitas yang Dipilih
+    description: |
+      Setelah ditekan, akan dibuat garis tak berarah antara dua atau lebih entitas yang dipilih
+  packEntityToSection:
+    title: Kemas Entitas yang Dipilih ke dalam Kotak Section
+    description: |
+      Setelah ditekan, entitas yang dipilih akan otomatis dibungkus ke kotak Section baru
+  unpackEntityFromSection:
+    title: Buka Kemas Kotak Section, Konversi ke Node Teks
+    description: |
+      Setelah ditekan, entitas dalam kotak Section yang dipilih akan dibuka kemas, dirinya sendiri dikonversi menjadi node teks
+      Entitas di dalamnya akan jatuh di luar
+  textNodeToSection:
+    title: Konversi Node Teks yang Dipilih ke Kotak Section
+    description: |
+      Setelah ditekan, node teks yang dipilih akan dikonversi ke kotak Section
+      Dapat digunakan untuk pembuatan cepat kotak section
+  deleteSelectedStageObjects:
+    title: Hapus Objek Panggung yang Dipilih
+    description: |
+      Setelah ditekan, objek panggung yang dipilih akan dihapus
+      Objek panggung termasuk entitas (node, Section, dll. yang ada secara independen) dan relasi (garis antar node)
+      Default adalah tombol delete, Anda dapat mengubahnya ke tombol backspace
+  editEntityDetails:
+    title: Edit Detail Entitas yang Dipilih
+    description: |
+      Setelah ditekan, detail entitas yang dipilih akan dibuka untuk diedit
+      Hanya berlaku saat jumlah objek yang dipilih adalah 1
+  openColorPanel:
+    title: Pintasan Buka Panel Warna
+    description: |
+      Setelah ditekan, buka panel warna, dapat digunakan untuk beralih warna node dengan cepat
+  switchDebugShow:
+    title: Alihkan Tampilan Informasi Debug
+    description: |
+      Setelah ditekan, alihkan tampilan informasi debug
+      Informasi debug ditampilkan di sudut kiri atas layar, biasanya digunakan oleh pengembang
+      Saat diaktifkan, informasi debug akan ditampilkan di sudut kiri atas layar.
+      Disarankan mengaktifkan ini saat melaporkan bug dengan screenshot.
+  generateNodeTreeWithDeepMode:
+    title: Tumbuhkan Node Anak
+    description: |
+      Setelah ditekan, tumbuhkan node secara instan dan letakkan di kanan node yang dipilih saat ini
+      Jika arah tumbuh diatur pada node, maka akan tumbuh ke arah yang ditentukan (jika tidak diatur default ke kanan)
+      Sambil otomatis melayout struktur seluruh pohon node, memastikannya adalah struktur pohon ke kanan
+      Sebelum menggunakan fungsi ini pastikan telah memilih satu node, dan struktur tempat node tersebut berada adalah struktur pohon
+  generateNodeTreeWithBroadMode:
+    title: Tumbuhkan Node Selevel
+    description: |
+      Setelah ditekan, tumbuhkan node selevel secara instan dan letakkan di bawah node yang dipilih saat ini
+      Sambil otomatis melayout struktur seluruh pohon node, memastikannya adalah struktur pohon ke bawah
+      Sebelum menggunakan fungsi ini pastikan telah memilih satu node, dan node tersebut memiliki node induk
+  generateNodeGraph:
+    title: Tumbuhkan Node Bebas
+    description: |
+      Setelah ditekan, muncul posisi tumbuh virtual
+      Saat ini, tekan tombol "I J K L" untuk menyesuaikan posisi tumbuh secara bebas
+      Tekan tombol ini lagi, keluar dari mode tumbuh bebas
+      Sebelum menggunakan fungsi ini pastikan telah memilih satu node
+  createConnectPointWhenDragConnecting:
+    title: Saat Menyeret Garis, Tekan Tombol Ini untuk Buat Titik Massa Transit
+    description: |
+      Saat menyeret garis, tekan tombol ini untuk buat titik massa transit
+  treeGraphAdjust:
+    title: Sesuaikan Layout Pohon Struktur Node Saat Ini
+    description: |
+      Terutama digunakan saat menutup penyesuaian layout pohon yang dipicu oleh pertumbuhan node keyboard
+      Dapat memicu penyesuaian layout secara manual melalui pintasan ini
+  treeGraphAdjustSelectedAsRoot:
+    title: Format Struktur Pohon dengan Node yang Dipilih sebagai Akar
+    description: |
+      Format struktur pohon dengan node yang dipilih saat ini sebagai node akar
+      Tidak akan mencari akar seluruh pohon, hanya memformat subpohon dengan node yang dipilih sebagai akar
+  dagGraphAdjust:
+    title: Sesuaikan Layout DAG Node yang Dipilih Saat Ini
+    description: |
+      Lakukan penyesuaian layout otomatis pada struktur graf asiklik berarah (DAG) yang dipilih
+      Hanya tersedia saat node yang dipilih membentuk struktur DAG
+  gravityLayout:
+    title: Tahan Layout Gaya Gravitasi
+    description: |
+      Setelah memilih sekelompok node yang terhubung garis, tahan tombol ini untuk melakukan layout gaya gravitasi.
+      Perhatian jika ingin menyesuaikan kustom, hanya dapat diatur ke tombol non-modifier tunggal, jika tidak mungkin ada bug yang tidak diketahui.
+  setNodeTreeDirectionLeft:
+    title: Atur Arah Tumbuh Pohon Node Saat Ini ke Kiri
+    description: |
+      Perlu memilih node lalu tekan pintasan ini
+      Setelah diatur, saat menekan Tab pada node ini, akan tumbuh ke kiri
+  setNodeTreeDirectionRight:
+    title: Atur Arah Tumbuh Pohon Node Saat Ini ke Kanan
+    description: |
+      Perlu memilih node lalu tekan pintasan ini
+      Setelah diatur, saat menekan Tab pada node ini, akan tumbuh ke kanan
+  setNodeTreeDirectionUp:
+    title: Atur Arah Tumbuh Pohon Node Saat Ini ke Atas
+    description: |
+      Perlu memilih node lalu tekan pintasan ini
+      Setelah diatur, saat menekan Tab pada node ini, akan tumbuh ke atas
+  setNodeTreeDirectionDown:
+    title: Atur Arah Tumbuh Pohon Node Saat Ini ke Bawah
+    description: |
+      Perlu memilih node lalu tekan pintasan ini
+      Setelah diatur, saat menekan Tab pada node ini, akan tumbuh ke bawah
+
+  masterBrakeCheckout:
+    title: "Rem Tangan: Aktifkan/Nonaktifkan Gerakan Kamera via Tombol"
+    description: |
+      Setelah ditekan akan beralih apakah mengizinkan tombol "W S A D" mengontrol gerakan kamera
+      Dapat digunakan untuk melarang gerakan kamera sementara, mencegah pergerakan tampilan saat memasukkan tombol rahasia atau pintasan yang mengandung WSAD
+  masterBrakeControl:
+    title: "Rem Kaki: Hentikan Melayang Kamera"
+    description: |
+      Setelah ditekan, hentikan melayang kamera, dan atur kecepatan ke 0
+  selectAll:
+    title: Pilih Semua
+    description: Setelah ditekan, semua node dan garis akan dipilih
+  createTextNodeFromCameraLocation:
+    title: Buat Node Teks di Posisi Pusat Tampilan
+    description: |
+      Setelah ditekan, buat node teks di posisi pusat tampilan saat ini
+      Sama dengan fungsi buat node dengan klik ganda mouse
+  createTextNodeFromMouseLocation:
+    title: Buat Node Teks di Posisi Mouse
+    description: |
+      Setelah ditekan, buat node teks di posisi mouse mengambang
+      Sama dengan fungsi buat node dengan klik mouse
+  createTextNodeFromSelectedTop:
+    title: Buat Node Teks Tepat di Atas Node yang Dipilih Saat Ini
+    description: |
+      Setelah ditekan, buat node teks tepat di atas node yang dipilih saat ini
+  createTextNodeFromSelectedDown:
+    title: Buat Node Teks Tepat di Bawah Node yang Dipilih Saat Ini
+    description: |
+      Setelah ditekan, buat node teks tepat di bawah node yang dipilih saat ini
+  createTextNodeFromSelectedLeft:
+    title: Buat Node Teks di Kiri Node yang Dipilih Saat Ini
+    description: |
+      Setelah ditekan, buat node teks di kiri node yang dipilih saat ini
+  createTextNodeFromSelectedRight:
+    title: Buat Node Teks di Kanan Node yang Dipilih Saat Ini
+    description: |
+      Setelah ditekan, buat node teks di kanan node yang dipilih saat ini
+  selectUp:
+    title: Pilih Node Atas
+    description: Setelah ditekan, pilih node atas
+  selectDown:
+    title: Pilih Node Bawah
+    description: Setelah ditekan, pilih node bawah
+  selectLeft:
+    title: Pilih Node Kiri
+    description: Setelah ditekan, pilih node kiri
+  selectRight:
+    title: Pilih Node Kanan
+    description: Setelah ditekan, pilih node kanan
+  selectAdditionalUp:
+    title: Tambah Pilih Node Atas
+    description: Setelah ditekan, tambah pilih node atas
+  selectAdditionalDown:
+    title: Tambah Pilih Node Bawah
+    description: Setelah ditekan, tambah pilih node bawah
+  selectAdditionalLeft:
+    title: Tambah Pilih Node Kiri
+    description: Setelah ditekan, tambah pilih node kiri
+  selectAdditionalRight:
+    title: Tambah Pilih Node Kanan
+    description: Setelah ditekan, tambah pilih node kanan
+  moveUpSelectedEntities:
+    title: Gerakkan Semua Entitas yang Dipilih ke Atas
+    description: |
+      Setelah ditekan, semua entitas yang dipilih akan bergerak ke atas satu jarak tetap
+  moveDownSelectedEntities:
+    title: Gerakkan Semua Entitas yang Dipilih ke Bawah
+    description: |
+      Setelah ditekan, semua entitas yang dipilih akan bergerak ke bawah satu jarak tetap
+  moveLeftSelectedEntities:
+    title: Gerakkan Semua Entitas yang Dipilih ke Kiri
+    description: |
+      Setelah ditekan, semua entitas yang dipilih akan bergerak ke kiri satu jarak tetap
+  moveRightSelectedEntities:
+    title: Gerakkan Semua Entitas yang Dipilih ke Kanan
+    description: |
+      Setelah ditekan, semua entitas yang Dipilih akan bergerak ke kanan satu jarak tetap
+  jumpMoveUpSelectedEntities:
+    title: Lompat Gerakkan Semua Entitas yang Dipilih ke Atas
+    description: |
+      Setelah ditekan, semua entitas yang dipilih akan melompat ke atas satu jarak tetap, dapat melompat masuk atau keluar kotak Section
+  jumpMoveDownSelectedEntities:
+    title: Lompat Gerakkan Semua Entitas yang Dipilih ke Bawah
+    description: |
+      Setelah ditekan, semua entitas yang dipilih akan melompat ke bawah satu jarak tetap, dapat melompat masuk atau keluar kotak Section
+  jumpMoveLeftSelectedEntities:
+    title: Lompat Gerakkan Semua Entitas yang Dipilih ke Kiri
+    description: |
+      Setelah ditekan, semua entitas yang dipilih akan melompat ke kiri satu jarak tetap, dapat melompat masuk atau keluar kotak Section
+  jumpMoveRightSelectedEntities:
+    title: Lompat Gerakkan Semua Entitas yang Dipilih ke Kanan
+    description: |
+      Setelah ditekan, semua entitas yang dipilih akan melompat ke kanan satu jarak tetap, dapat melompat masuk atau keluar kotak Section
+  CameraScaleZoomIn:
+    title: Perbesar Tampilan
+    description: Setelah ditekan, perbesar tampilan
+  CameraScaleZoomOut:
+    title: Perkecil Tampilan
+    description: Setelah ditekan, perkecil tampilan
+  CameraPageMoveUp:
+    title: Gerakkan Tampilan ke Atas seperti Halaman
+  CameraPageMoveDown:
+    title: Gerakkan Tampilan ke Bawah seperti Halaman
+  CameraPageMoveLeft:
+    title: Gerakkan Tampilan ke Kiri seperti Halaman
+  CameraPageMoveRight:
+    title: Gerakkan Tampilan ke Kanan seperti Halaman
+  exitSoftware:
+    title: Keluar Perangkat Lunak
+    description: Setelah ditekan, keluar perangkat lunak
+  checkoutProtectPrivacy:
+    title: Masuk atau Keluar Mode Perlindungan Privasi
+    description: |
+      Setelah ditekan, semua teks di panggung akan dienkripsi, tidak dapat dilihat orang lain
+      Setelah ditekan, semua teks di panggung akan didekripsi, orang lain dapat melihat
+      Dapat digunakan saat screenshot untuk melaporkan masalah, tiba-tiba ada orang melihat layar Anda dan konten Anda adalah masalah perasaan (?) saat digunakan
+  openTextNodeByContentExternal:
+    title: Buka Konten Node yang Dipilih dalam Browser Web atau File Lokal
+    description: |
+      Setelah ditekan, semua node teks yang dipilih di panggung akan dibuka dengan cara default atau browser.
+      Contoh konten node adalah "D:/Desktop/a.txt", setelah memilih node ini dan menekan pintasan, dapat membuka file ini dengan cara default sistem
+      Jika konten node adalah alamat web "https://project-graph.top", akan membuka konten web dengan browser default sistem
+  checkoutClassroomMode:
+    title: Masuk atau Keluar Mode Fokus
+    description: |
+      Setelah ditekan, masuk mode fokus, semua UI akan disembunyikan, tombol atas akan diolah transparan
+      Tekan lagi untuk pulih
+  checkoutWindowOpacityMode:
+    title: Alihkan Mode Transparansi Jendela
+    description: |
+      Setelah ditekan, jendela masuk mode transparan penuh, tekan lagi akan masuk mode tidak transparan penuh
+      Perhatian perlu mengatur dengan gaya warna panggung. Contoh: mode hitam teks putih, mode putih makalah teks hitam.
+      Jika konten di bawah jendela adalah latar belakang putih, disarankan beralih panggung ke mode putih makalah.
+  windowOpacityAlphaIncrease:
+    title: Tingkatkan Opasitas Jendela
+    description: |
+      Setelah ditekan, nilai opasitas jendela (alpha) bertambah 0,2, berubah ke arah tidak transparan, nilai maksimum 1
+      Ketika tidak dapat ditambah lagi, akan ada petunjuk kilatan tepi jendela
+  windowOpacityAlphaDecrease:
+    title: Kurangi Opasitas Jendela
+    description: |
+      Setelah ditekan, nilai opasitas jendela (alpha) berkurang 0,2, berubah ke arah transparan, nilai minimum 0
+      Jika keyboard Anda tidak memiliki tombol minus murni numpad, dapat diubah ke tombol minus dan garis bawah di kanan angka 0 baris horizontal
+  searchText:
+    title: Cari Teks
+    description: |
+      Setelah ditekan, buka kotak pencarian, dapat memasukkan konten pencarian
+      Kotak pencarian mendukung pencocokan parsial, contoh memasukkan "a" dapat mencari "apple" dll.
+  clickAppMenuSettingsButton:
+    title: Buka Halaman Pengaturan
+    description: |
+      Tekan tombol ini dapat menggantikan klik tombol antarmuka pengaturan di menu bilah dengan mouse
+  clickTagPanelButton:
+    title: Buka/Tutup Panel Tag
+    description: |
+      Tekan tombol ini dapat menggantikan klik tombol buka tutup panel tag di halaman dengan mouse
+  clickAppMenuRecentFileButton:
+    title: Buka Daftar File Terbaru
+    description: |
+      Tekan tombol ini dapat menggantikan klik tombol daftar file terbaru di menu bilah dengan mouse
+  clickStartFilePanelButton:
+    title: Buka/Tutup Daftar File Mulai
+    description: |
+      Tekan tombol ini dapat menggantikan klik tombol buka tutup daftar file mulai di menu bilah dengan mouse
+  copy:
+    title: Salin
+    description: Setelah ditekan, salin konten yang dipilih
+  paste:
+    title: Tempel
+    description: Setelah ditekan, tempel konten clipboard
+  pasteWithOriginLocation:
+    title: Tempel dengan Posisi Asli
+    description: Setelah ditekan, konten yang ditempel akan tumpang tindih dengan posisi asli
+  selectEntityByPenStroke:
+    title: Perluas Pilihan Coretan dan Entitas
+    description: |
+      Setelah memilih satu coretan atau entitas, tekan tombol ini, akan memperluas pilihan entitas di sekitar entitas tersebut
+      Jika yang dipilih saat ini adalah coretan, maka perluas pilihan entitas yang disentuh coretan
+      Jika yang dipilih saat ini adalah entitas, maka perluas pilihan semua coretan yang disentuh
+      Dapat memperluas secara bergantian berkali-kali dengan menekan berulang kali
+  expandSelectEntity:
+    title: Perluas Pilihan Node
+    description: |
+      Setelah ditekan, status pilihan entitas akan dipindahkan ke node anak
+  expandSelectEntityReversed:
+    title: Perluas Pilihan Node Terbalik
+    description: |
+      Setelah ditekan, status pilihan entitas akan dipindahkan ke node induk
+  expandSelectEntityKeepLastSelected:
+    title: Perluas Pilihan Node (Pertahankan Status Pilihan Node Saat Ini)
+    description: |
+      Setelah ditekan, status pilihan entitas akan dipindahkan ke node anak, sambil mempertahankan status pilihan node saat ini
+  expandSelectEntityReversedKeepLastSelected:
+    title: Perluas Pilihan Node Terbalik (Pertahankan Status Pilihan Node Saat Ini)
+    description: |
+      Setelah ditekan, status pilihan entitas akan dipindahkan ke node induk, sambil mempertahankan status pilihan node saat ini
+  checkoutLeftMouseToSelectAndMove:
+    title: Atur Klik Kiri ke Mode "Pilih/Gerakkan"
+    description: |
+      Yaitu klik kiri mouse beralih ke mode normal
+  checkoutLeftMouseToDrawing:
+    title: Atur Klik Kiri ke Mode "Coretan"
+    description: |
+      Yaitu klik kiri mouse beralih ke mode coretan, ada tombol yang sesuai di bilah alat
+  checkoutLeftMouseToConnectAndCutting:
+    title: Atur Klik Kiri ke Mode "Hubungkan/Potong"
+    description: |
+      Yaitu klik kiri mouse beralih ke mode hubungkan/potong, ada tombol yang sesuai di bilah alat
+  checkoutLeftMouseToConnectAndCuttingOnlyPressed:
+    title: Atur Klik Kiri ke Mode "Hubungkan/Potong" (Hanya Saat Ditekan)
+    description: |
+      Saat dilepaskan beralih kembali ke mode mouse default
+  penStrokeWidthIncrease:
+    title: Tebalkan Coretan
+    description: Setelah ditekan, coretan menjadi tebal
+  penStrokeWidthDecrease:
+    title: Tipiskan Coretan
+    description: Setelah ditekan, coretan menjadi tipis
+  screenFlashEffect:
+    title: Efek Kilatan Layar Hitam
+    description: Mirip dengan hello world di tombol rahasia, tes efek layar hitam muncul untuk membuktikan sistem tombol rahasia berjalan normal
+  alignNodesToInteger:
+    title: Jajarkan Posisi Koordinat Semua Node yang Dapat Dihubungkan ke Bilangan Bulat
+    description: Dapat mengurangi volume file json secara signifikan
+  toggleCheckmarkOnTextNodes:
+    title: Beri Tanda Centang ✅ pada Semua Node Teks yang Dipilih, dan Tandai Hijau
+    description: Hanya berlaku untuk node teks, tekan lagi setelah memilih dapat membatalkan tanda centang
+  toggleCheckErrorOnTextNodes:
+    title: Beri Tanda Silang ❌ pada Semua Node Teks yang Dipilih, dan Tandai Merah
+    description: Hanya berlaku untuk node teks, tekan lagi setelah memilih dapat membatalkan tanda silang
+  switchToDarkTheme:
+    title: Beralih ke Tema Gelap
+    description: Setelah beralih perlu menggesek pedang di panggung untuk efek
+  switchToLightTheme:
+    title: Beralih ke Tema Terang
+    description: Setelah beralih perlu menggesek pedang di panggung untuk efek
+  switchToParkTheme:
+    title: Beralih ke Tema Taman
+    description: Setelah beralih perlu menggesek pedang di panggung untuk efek
+  switchToMacaronTheme:
+    title: Beralih ke Tema Makaron
+    description: Setelah beralih perlu menggesek pedang di panggung untuk efek
+  switchToMorandiTheme:
+    title: Beralih ke Tema Morandi
+    description: Setelah beralih perlu menggesek pedang di panggung untuk efek
+  increasePenAlpha:
+    title: Tingkatkan Nilai Kanal Opasitas Kuas
+    description: ""
+  decreasePenAlpha:
+    title: Kurangi Nilai Kanal Opasitas Kuas
+    description: ""
+  alignTop:
+    title: Rata Atas
+    description: Panah atas numpad
+  alignBottom:
+    title: Rata Bawah
+    description: Panah bawah numpad
+  alignLeft:
+    title: Rata Kiri
+    description: Panah kiri numpad
+  alignRight:
+    title: Rata Kanan
+    description: Panah kanan numpad
+  alignHorizontalSpaceBetween:
+    title: Rata Spasi Sama Horizontal
+    description: Kiri kanan kiri kanan numpad, goyangkan sedikit untuk jarak sama
+  alignVerticalSpaceBetween:
+    title: Rata Spasi Sama Vertikal
+    description: Atas bawah atas bawah numpad, goyangkan sedikit untuk jarak sama
+  alignCenterHorizontal:
+    title: Rata Tengah Horizontal
+    description: "Numpad: tengah dulu, kemudian kiri kanan"
+  alignCenterVertical:
+    title: Rata Tengah Vertikal
+    description: "Numpad: tengah dulu, kemudian atas bawah"
+  alignLeftToRightNoSpace:
+    title: Tumpuk Rapat ke Kanan dalam Satu Baris
+    description: Numpad horizontal dari kiri ke kanan menyusun satu string
+  alignTopToBottomNoSpace:
+    title: Tumpuk Rapat ke Bawah dalam Satu Kolom
+    description: Numpad vertikal dari atas ke bawah menyusun satu string
+  layoutToSquare:
+    title: Susunan Persegi Longgar
+  layoutToTightSquare:
+    title: Tumpuk Rapat
+  layoutToTightSquareDeep:
+    title: Tumpuk Rapat Rekursif
+  adjustSelectedTextNodeWidthMin:
+    title: Seragamkan Lebar ke Nilai Minimum
+    description: Hanya berlaku untuk node teks, seragamkan lebar semua node yang dipilih ke nilai minimum
+  adjustSelectedTextNodeWidthMax:
+    title: Seragamkan Lebar ke Nilai Maksimum
+    description: Hanya berlaku untuk node teks, seragamkan lebar semua node yang dipilih ke nilai maksimum
+  adjustSelectedTextNodeWidthAverage:
+    title: Seragamkan Lebar ke Nilai Rata-rata
+    description: Hanya berlaku untuk node teks, seragamkan lebar semua node yang dipilih ke nilai rata-rata
+  connectAllSelectedEntities:
+    title: Hubungkan Semua Entitas yang Dipilih Secara Penuh
+    description: Untuk skenario pengajaran khusus atau pengajaran teori graf, "--" di awal menunjukkan terkait garis
+  connectLeftToRight:
+    title: Hubungkan Semua Entitas yang Dipilih Berdasarkan Posisi dari Kiri ke Kanan
+    description: ""
+  connectTopToBottom:
+    title: Hubungkan Semua Entitas yang Dipilih Berdasarkan Posisi dari Atas ke Bawah
+    description: ""
+  selectAllEdges:
+    title: Pilih Semua Garis
+    description: Hanya pilih semua garis dalam tampilan
+  colorSelectedRed:
+    title: Warnai Semua Objek yang Dipilih menjadi Merah Murni
+    description: "Spesifiknya: (239, 68, 68), hanya untuk penandaan cepat"
+  increaseBrightness:
+    title: Tingkatkan Kecerahan Warna Entitas yang Dipilih
+    description: Tidak dapat digunakan pada entitas yang tidak berwarna atau transparan, b adalah brightness, tombol titik juga adalah tombol >, dapat dilihat sebagai bergerak ke kanan, nilai bertambah
+  decreaseBrightness:
+    title: Kurangi Kecerahan Warna Entitas yang Dipilih
+    description: Tidak dapat digunakan pada entitas yang tidak berwarna atau transparan, b adalah brightness, tombol koma juga adalah tombol <, dapat dilihat sebagai bergerak ke kiri, nilai berkurang
+  gradientColor:
+    title: Gradasi Warna Entitas yang Dipilih
+    description: Rencana selanjutnya adalah mengubah cincin warna, saat ini belum sempurna
+  changeColorHueUp:
+    title: Tingkatkan Rona Warna Entitas yang Dipilih
+    description: Tidak dapat digunakan pada entitas yang tidak berwarna atau transparan
+  changeColorHueDown:
+    title: Kurangi Rona Warna Entitas yang Dipilih
+    description: Tidak dapat digunakan pada entitas yang tidak berwarna atau transparan
+  changeColorHueMajorUp:
+    title: Tingkatkan Rona Warna Entitas yang Dipilih Secara Signifikan
+    description: Tidak dapat digunakan pada entitas yang tidak berwarna atau transparan
+  changeColorHueMajorDown:
+    title: Kurangi Rona Warna Entitas yang Dipilih Secara Signifikan
+    description: Tidak dapat digunakan pada entitas yang tidak berwarna atau transparan
+  graftNodeToTree:
+    title: Grafting Node ke Pohon
+    description: |
+      Graft node yang dipilih ke garis yang ditabrak, mempertahankan arah garis asli
+  removeNodeFromTree:
+    title: Cabut Node dari Pohon
+    description: |
+      Cabut node yang dipilih dari pohon, dan sambungkan kembali node sebelum dan sesudahnya
+
+  toggleTextNodeSizeMode:
+    title: Alihkan Mode Penyesuaian Ukuran Node Teks yang Dipilih
+    description: "Hanya berlaku untuk node teks, mode auto: input teks tidak dapat memisah baris otomatis, mode manual: lebar adalah lebar kotak, lebihan lebar memisah baris otomatis"
+  decreaseFontSize:
+    title: Kurangi Ukuran Font Node Teks yang Dipilih
+    description: "Hanya berlaku untuk node teks, tekan Ctrl+- untuk mengurangi ukuran font node teks yang dipilih"
+  increaseFontSize:
+    title: Tingkatkan Ukuran Font Node Teks yang Dipilih
+    description: Hanya berlaku untuk node teks, tekan Ctrl+= untuk meningkatkan ukuran font node teks yang dipilih
+  splitTextNodes:
+    title: Pecah Node Teks yang Dipilih menjadi Potongan Kecil
+    description: Hanya berlaku untuk node teks, berdasarkan tanda baca, spasi, pemisah baris, dll. untuk memecah menjadi potongan kecil
+  mergeTextNodes:
+    title: Gabungkan Beberapa Node Teks yang Dipilih menjadi Satu Node Teks, warna juga akan mengambil rata-rata
+    description: Hanya berlaku untuk node teks, urutan sesuai susunan atas ke bawah, posisi node mengacu pada koordinat titik sudut kiri atas persegi panjang node
+  swapTextAndDetails:
+    title: Tukar Ringkas dan Detail
+    description: Tukar informasi detail dan konten aktual semua node teks yang dipilih, tekan e 5 kali berturut-turut, terutama digunakan untuk konten teks yang ditempel langsung ingin ditulis ke informasi detail
+  reverseImageColors:
+    title: Balikkan Warna Gambar
+    description: Balikkan warna gambar yang dipilih (ubah latar belakang putih menjadi hitam, atau sebaliknya)
+  treeReverseY:
+    title: Balikkan Struktur Pohon Secara Vertikal
+    description: Pilih node akar struktur pohon, balikkan secara vertikal
+  treeReverseX:
+    title: Balikkan Struktur Pohon Secara Horizontal
+    description: Pilih node akar struktur pohon, balikkan secara horizontal
+  textNodeTreeToSection:
+    title: Konversi Pohon Node Teks ke Struktur Bersarang Kotak
+    description: Konversi struktur pohon node teks yang dipilih ke struktur bersarang kotak
+
+  switchActiveProject:
+    title: Alihkan Proyek Saat Ini
+    description: Setelah ditekan, beralih ke proyek berikutnya
+  switchActiveProjectReversed:
+    title: Alihkan Proyek Saat Ini (Urutan Terbalik)
+    description: Setelah ditekan, beralih ke proyek sebelumnya
+  closeAllSubWindows:
+    title: Tutup Semua Jendela Anak
+    description: Tutup semua jendela anak yang terbuka saat ini (seperti pengaturan, AI, panel warna, dll.), dan kembalikan fokus ke kanvas utama.
+  toggleFullscreen:
+    title: Alihkan Layar Penuh
+    description: Beralih antara mode layar penuh dan mode jendela aplikasi.
+  setWindowToMiniSize:
+    title: Atur Jendela ke Ukuran Mini
+    description: Atur ukuran jendela ke lebar dan tinggi jendela mini yang dikonfigurasi dalam pengaturan.
+
+sounds:
+  soundEnabled: Sakelar Suara

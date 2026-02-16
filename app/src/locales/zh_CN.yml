@@ -186,6 +186,7 @@ settings:
       zh_CN: 简体中文
       zh_TW: 繁體中文
       zh_TWC: 接地气繁体中文
+      id: 印度尼西亚语
   showTipsOnUI:
     title: 在 UI 中显示提示信息
     description: |

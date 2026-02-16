@@ -86,6 +86,7 @@ async function loadLanguageFiles() {
       zh_CN: await import("./locales/zh_CN.yml").then((m) => m.default),
       zh_TW: await import("./locales/zh_TW.yml").then((m) => m.default),
       zh_TWC: await import("./locales/zh_TWC.yml").then((m) => m.default),
+      id: await import("./locales/id.yml").then((m) => m.default),
     },
   });
 }
