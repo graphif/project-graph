@@ -8,6 +8,7 @@ import react from "@vitejs/plugin-react-oxc";
 import path from "node:path";
 import { createLogger, defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
+import { i18nAutoTW } from "./vite-plugins/i18n-auto-tw";
 
 export const viteLogger = createLogger("info", { prefix: "[project-graph]" });
 
@@ -25,6 +26,8 @@ export default defineConfig({
     // 解析yaml文件，作为js对象导入
     // import config from "./config.yaml"
     ViteYaml(),
+    // zh_CN 自动转 zh_TW
+    i18nAutoTW(),
     // react插件
     react(),
     // 分析组件性能
