@@ -11,6 +11,7 @@ edition = "2024"
 cfg_aliases = "0.1.0"
 
 # GUI 框架与 UI 渲染
+winit = { git = "https://github.com/rust-windowing/winit", branch = "master" }
 egui = { git = "https://github.com/emilk/egui", features = ["mint"] }
 eframe = { git = "https://github.com/emilk/egui", features = [
     "wgpu",

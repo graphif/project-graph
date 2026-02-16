@@ -21,7 +21,7 @@ impl Stage {
     pub fn new() -> Self {
         Stage {
             camera: Camera::new(),
-            context: StageContext::new(),
+            context: StageContext::random(),
         }
     }
 
@@ -35,7 +35,13 @@ impl Stage {
             let mut visible_count = 0;
 
             for entity in self.context.entities().values() {
+                // 剔除
+                if !rect.contains(entity.position()) {
+                    continue;
+                }
+
                 visible_count += 1;
+
                 let screen_pos = self
                     .camera
                     .world_to_screen(entity.position(), screen_center);
@@ -62,18 +68,26 @@ impl Stage {
             );
         });
 
-        let scroll_delta = ui.input(|i| i.smooth_scroll_delta);
-        if scroll_delta.y != 0.0 {
-            if let Some(mouse_pos) = ui.input(|i| i.pointer.hover_pos()) {
-                let zoom_factor = (1.0 + scroll_delta.y * 0.01).clamp(0.9, 1.1);
-                let old_zoom = self.camera.zoom();
-                self.camera.zoom_by(zoom_factor);
+        ui.input(|i| {
+            let zoom = i.zoom_delta();
+            log::debug!("Zoom delta: {}", zoom);
+            if zoom != 1.0 {
+                if let Some(mouse_pos) = i.pointer.hover_pos() {
+                    let old_zoom = self.camera.zoom();
+                    self.camera.zoom_by(zoom);
 
-                let offset = mouse_pos - rect.center();
-                let delta = offset * (self.camera.zoom() / old_zoom - 1.0);
-                self.camera.pan_by(delta);
+                    // 修正缩放中心
+                    let offset = mouse_pos - rect.center();
+                    let delta = offset * (self.camera.zoom() / old_zoom - 1.0);
+                    self.camera.pan_by(delta);
+                }
             }
-        }
+
+            let scroll_delta = -i.smooth_scroll_delta;
+            if scroll_delta != egui::Vec2::ZERO && zoom == 1.0 {
+                self.camera.pan_by(scroll_delta);
+            }
+        });
 
         // 中键拖拽平移
         if response.dragged_by(egui::PointerButton::Middle) {
