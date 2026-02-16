@@ -8,7 +8,7 @@ use crate::{stage::render_context::RenderContext, utils::kdl::KdlPos2};
 pub trait EntityTrait {
     fn id(&self) -> &str;
     fn position(&self) -> Pos2;
-    fn render(&self, rc: &mut RenderContext);
+    fn ui(&self, ui: &mut egui::Ui, rc: &mut RenderContext);
 }
 
 #[derive(knus::Decode, Debug, Clone)]
@@ -39,12 +39,12 @@ impl EntityTrait for Text {
     fn position(&self) -> Pos2 {
         self.pos.into()
     }
-    fn render(&self, rc: &mut RenderContext) {
+    fn ui(&self, ui: &mut egui::Ui, rc: &mut RenderContext) {
         let padding = 8.0;
 
         let text_width = *self.text_width.get_or_init(|| {
             // 这里调用你的 get_text_width 或者直接计算
-            rc.painter
+            ui.painter()
                 .layout_no_wrap(
                     self.val.clone(),
                     FontId::proportional(14.0),
@@ -54,17 +54,10 @@ impl EntityTrait for Text {
                 .x
         });
 
-        rc.rect(
-            Rect {
-                min: Pos2::ZERO,
-                max: Pos2 {
-                    x: text_width + padding * 2.0,
-                    y: 14.0 + padding * 2.0,
-                },
-            },
-            Color32::WHITE,
+        ui.add(
+            egui::Label::new(egui::RichText::new(&self.val).size(14.0 * rc.zoom))
+                .wrap_mode(egui::TextWrapMode::Extend),
         );
-        rc.text(pos2(padding, padding), &self.val);
     }
 }
 

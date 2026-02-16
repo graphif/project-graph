@@ -40,11 +40,17 @@ impl Stage {
                     .camera
                     .world_to_screen(entity.position(), screen_center);
 
-                entity.render(&mut RenderContext {
-                    painter: &painter,
-                    position: screen_pos,
-                    scale: self.camera.zoom(),
-                });
+                egui::Area::new(ui.make_persistent_id(entity.id()))
+                    .order(egui::Order::Foreground)
+                    .fixed_pos(screen_pos)
+                    .show(ui.ctx(), |ui| {
+                        entity.ui(
+                            ui,
+                            &mut RenderContext {
+                                zoom: self.camera.zoom(),
+                            },
+                        );
+                    });
             }
 
             painter.text(
