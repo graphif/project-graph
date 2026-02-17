@@ -2,7 +2,7 @@ use egui::Margin;
 
 use crate::stage::{
     Stage,
-    structs::{Entity, EntityTrait},
+    elements::{Element, ElementTrait},
 };
 
 pub struct Terminal {
@@ -78,12 +78,12 @@ impl Terminal {
                         if !modifiers.shift && !modifiers.ctrl && !modifiers.alt {
                             self.history
                                 .push(HistoryItem::In(self.input.clone().trim().to_string()));
-                            match knus::parse::<Vec<Entity>>("terminal_input.kdl", &self.input) {
+                            match knus::parse::<Vec<Element>>("terminal_input.kdl", &self.input) {
                                 Ok(doc) => {
-                                    for entity in doc {
-                                        stage.context.add(entity.clone());
+                                    for element in doc {
+                                        stage.context.add(element.clone());
                                         self.history
-                                            .push(HistoryItem::Out(entity.id().to_string()));
+                                            .push(HistoryItem::Out(element.id().to_string()));
                                     }
                                 }
                                 Err(e) => {

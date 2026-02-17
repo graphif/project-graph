@@ -3,43 +3,46 @@ use std::collections::HashMap;
 use egui::Pos2;
 use nanoid::nanoid;
 
-use crate::stage::structs::{Entity, EntityTrait, Text};
+use crate::stage::elements::{
+    Element, ElementTrait,
+    entities::{Entity, text::Text},
+};
 
 pub struct StageContext {
-    entities: HashMap<String, Entity>,
+    elements: HashMap<String, Element>,
 }
 
 impl StageContext {
     pub fn new() -> Self {
         StageContext {
-            entities: HashMap::new(),
+            elements: HashMap::new(),
         }
     }
     pub fn random() -> Self {
-        let mut entities: HashMap<String, Entity> = HashMap::new();
+        let mut elements: HashMap<String, Element> = HashMap::new();
         for i in 0..1000 {
             let id = nanoid!();
-            entities.insert(
+            elements.insert(
                 id.clone(),
-                Text::new(
+                Entity::from(Text::new(
                     id,
                     Pos2::new(
                         rand::random::<f32>() * 2000.0 - 1000.0,
                         rand::random::<f32>() * 2000.0 - 1000.0,
                     ),
                     format!("节点 {}", i),
-                )
+                ))
                 .into(),
             );
         }
-        StageContext { entities }
+        StageContext { elements }
     }
 
-    pub fn entities(&self) -> &HashMap<String, Entity> {
-        &self.entities
+    pub fn elements(&self) -> &HashMap<String, Element> {
+        &self.elements
     }
 
-    pub fn add(&mut self, entity: Entity) {
-        self.entities.insert(entity.id().to_string(), entity);
+    pub fn add(&mut self, element: Element) {
+        self.elements.insert(element.id().to_string(), element);
     }
 }

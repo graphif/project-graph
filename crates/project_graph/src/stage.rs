@@ -1,14 +1,15 @@
 pub mod camera;
 pub mod context;
+pub mod elements;
 pub mod render_context;
-pub mod structs;
 
 use camera::Camera;
 use context::StageContext;
-use eframe::egui::{self};
-use structs::EntityTrait;
 
-use crate::stage::render_context::RenderContext;
+use crate::stage::{
+    elements::{Element, ElementTrait, entities::EntityTrait},
+    render_context::RenderContext,
+};
 
 /// egui 和画布之间的桥梁
 /// 负责坐标系转换、事件处理等
@@ -34,7 +35,10 @@ impl Stage {
             let screen_center = rect.center();
             let mut visible_count = 0;
 
-            for entity in self.context.entities().values() {
+            for element in self.context.elements().values() {
+                let entity = match element {
+                    Element::Entity(e) => e,
+                };
                 // 剔除
                 if !rect.contains(entity.position()) {
                     continue;
@@ -52,7 +56,7 @@ impl Stage {
                     .show(ui.ctx(), |ui| {
                         entity.ui(
                             ui,
-                            &mut RenderContext {
+                            &RenderContext {
                                 zoom: self.camera.zoom(),
                             },
                         );
