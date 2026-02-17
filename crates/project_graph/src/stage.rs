@@ -70,7 +70,6 @@ impl Stage {
 
         ui.input(|i| {
             let zoom = i.zoom_delta();
-            log::debug!("Zoom delta: {}", zoom);
             if zoom != 1.0 {
                 if let Some(mouse_pos) = i.pointer.hover_pos() {
                     let old_zoom = self.camera.zoom();
