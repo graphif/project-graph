@@ -61,7 +61,7 @@ impl Stage {
                     };
 
                 egui::Area::new(ui.make_persistent_id(entity.id()))
-                    .order(egui::Order::Foreground)
+                    .order(egui::Order::Background)
                     .fixed_pos(screen_pos)
                     .show(ui.ctx(), |ui| {
                         let response = egui::Frame::new()
