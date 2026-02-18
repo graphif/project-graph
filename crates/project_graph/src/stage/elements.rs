@@ -13,7 +13,7 @@ pub trait ElementTrait {
     /// 原则上应该是一个 nanoid
     fn id(&self) -> &str;
     /// 渲染函数
-    fn ui(&self, ui: &mut egui::Ui, rc: &RenderContext);
+    fn ui(&self, ui: &mut egui::Ui, rc: &mut RenderContext);
 }
 
 #[enum_dispatch(ElementTrait)]

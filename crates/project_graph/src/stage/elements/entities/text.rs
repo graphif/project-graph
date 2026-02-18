@@ -31,9 +31,13 @@ impl ElementTrait for Text {
     fn id(&self) -> &str {
         &self.id
     }
-    fn ui(&self, ui: &mut egui::Ui, rc: &RenderContext) {
+    fn ui(&self, ui: &mut egui::Ui, rc: &mut RenderContext) {
         let response = egui::Frame::new()
-            .fill(egui::Color32::from_rgba_unmultiplied(255, 255, 255, 25))
+            .fill(if rc.selected {
+                egui::Color32::from_rgba_unmultiplied(150, 150, 255, 75)
+            } else {
+                egui::Color32::from_rgba_unmultiplied(255, 255, 255, 25)
+            })
             .corner_radius(16.0 * rc.zoom)
             .inner_margin(egui::Margin::symmetric(12, 10) * rc.zoom)
             .show(ui, |ui| {
@@ -42,7 +46,8 @@ impl ElementTrait for Text {
                         .wrap_mode(egui::TextWrapMode::Extend),
                 );
             })
-            .response;
+            .response
+            .interact(egui::Sense::click());
     }
 }
 impl EntityTrait for Text {

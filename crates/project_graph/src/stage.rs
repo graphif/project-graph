@@ -5,6 +5,7 @@ pub mod render_context;
 
 use camera::Camera;
 use context::StageContext;
+use egui::{Vec2, vec2};
 
 use crate::stage::{
     elements::{Element, ElementTrait, entities::EntityTrait},
@@ -16,6 +17,7 @@ use crate::stage::{
 pub struct Stage {
     pub camera: Camera,
     pub context: StageContext,
+    pub selection: Vec<String>,
 }
 
 impl Stage {
@@ -23,6 +25,7 @@ impl Stage {
         Stage {
             camera: Camera::new(),
             context: StageContext::random(),
+            selection: Vec::new(),
         }
     }
 
@@ -46,20 +49,49 @@ impl Stage {
 
                 visible_count += 1;
 
+                let selected = self.selection.contains(&entity.id().to_string());
+
                 let screen_pos = self
                     .camera
-                    .world_to_screen(entity.position(), screen_center);
+                    .world_to_screen(entity.position(), screen_center)
+                    - if selected {
+                        vec2(4.0, 4.0) * self.camera.zoom()
+                    } else {
+                        Vec2::ZERO
+                    };
 
                 egui::Area::new(ui.make_persistent_id(entity.id()))
                     .order(egui::Order::Foreground)
                     .fixed_pos(screen_pos)
                     .show(ui.ctx(), |ui| {
-                        entity.ui(
-                            ui,
-                            &RenderContext {
-                                zoom: self.camera.zoom(),
-                            },
-                        );
+                        let response = egui::Frame::new()
+                            .inner_margin(4.0 * self.camera.zoom())
+                            .corner_radius(24.0 * self.camera.zoom())
+                            .stroke(if selected {
+                                egui::Stroke::new(
+                                    4.0 * self.camera.zoom(),
+                                    egui::Color32::LIGHT_BLUE,
+                                )
+                            } else {
+                                egui::Stroke::NONE
+                            })
+                            .show(ui, |ui| {
+                                entity.ui(
+                                    ui,
+                                    &mut RenderContext {
+                                        zoom: self.camera.zoom(),
+                                        selected: selected,
+                                    },
+                                );
+                            })
+                            .response
+                            .interact(egui::Sense::click());
+
+                        if response.clicked() {
+                            log::info!("Entity {} clicked", entity.id());
+                            self.selection.clear();
+                            self.selection.push(entity.id().to_string());
+                        }
                     });
             }
 
