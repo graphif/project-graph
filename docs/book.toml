@@ -1,0 +1,11 @@
+[book]
+title = "Project Graph"
+description = "无限画布上的思维操作系统。融合笔记、思维导图与系统分析， 用图论拓扑重构你的知识网络。"
+authors = ["zty012"]
+language = "zh-Hans"
+
+[rust]
+edition = "2024"
+
+[output.html]
+additional-css = ["./style.css"]
