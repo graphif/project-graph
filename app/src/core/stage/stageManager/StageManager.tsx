@@ -621,8 +621,8 @@ export class StageManager {
     }
   }
 
-  generateNodeByMarkdown(text: string, location = this.project.camera.location) {
-    this.project.nodeAdder.addNodeByMarkdown(text, location);
+  generateNodeByMarkdown(text: string, location = this.project.camera.location, autoLayout = true) {
+    this.project.nodeAdder.addNodeByMarkdown(text, location, autoLayout);
     this.project.historyManager.recordStep();
   }
 

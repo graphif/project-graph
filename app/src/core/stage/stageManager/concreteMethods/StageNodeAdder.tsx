@@ -208,8 +208,14 @@ export class NodeAdder {
     this.project.stageImport.addNodeMermaidByText(text, diffLocation);
   }
 
-  public addNodeByMarkdown(markdownText: string, diffLocation: Vector = Vector.getZero()) {
-    this.project.stageImport.addNodeByMarkdown(markdownText, diffLocation);
+  /**
+   * 根据 Markdown 文本生成节点树结构
+   * @param markdownText Markdown 格式文本
+   * @param diffLocation 偏移位置
+   * @param autoLayout 是否自动应用树形布局（默认为 true）
+   */
+  public addNodeByMarkdown(markdownText: string, diffLocation: Vector = Vector.getZero(), autoLayout = true) {
+    this.project.stageImport.addNodeByMarkdown(markdownText, diffLocation, autoLayout);
   }
 
   /***

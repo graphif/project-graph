@@ -23,8 +23,9 @@ export class MarkdownImporter extends BaseImporter {
    * 导入 Markdown 文本并生成节点树
    * @param markdownText Markdown 格式文本
    * @param diffLocation 偏移位置
+   * @param autoLayout 是否自动应用树形布局（默认为 true，自动整理为向右的树状结构）
    */
-  public import(markdownText: string, diffLocation: Vector = Vector.getZero()): void {
+  public import(markdownText: string, diffLocation: Vector = Vector.getZero(), autoLayout = true): void {
     const markdownJson = parseMarkdownToJSON(markdownText);
 
     const monoStack = new MonoStack<TextNode>();
@@ -75,6 +76,11 @@ export class MarkdownImporter extends BaseImporter {
     // 遍历所有根节点
     for (const markdownNode of markdownJson) {
       dfsMarkdownNode(markdownNode, 0);
+    }
+
+    // 自动应用树形布局（如果启用）
+    if (autoLayout) {
+      this.project.autoAlign.autoLayoutSelectedFastTreeMode(rootNode);
     }
 
     // 记录历史
