@@ -228,6 +228,10 @@ export class Section extends ConnectableEntity {
     }
     // 让内部元素也移动
     for (const child of this.children) {
+      // 跳过已被选中的子元素，避免重复移动（解决速度叠加bug）
+      if (child.isSelected) {
+        continue;
+      }
       child.move(delta);
     }
 

@@ -90,6 +90,11 @@ export class SectionInOutManager {
     // 获取section的父级section
     const fatherSections = this.project.sectionMethods.getFatherSections(section);
 
+    // 先从父 section 的 children 中移除旧的 section 引用（直接操作数组，避免触发 sectionDropChild 的连锁反应）
+    for (const fatherSection of fatherSections) {
+      fatherSection.children = fatherSection.children.filter((child) => child.uuid !== section.uuid);
+    }
+
     // 创建新的TextNode，保持UUID不变
     const textNode = new TextNode(this.project, {
       uuid: section.uuid, // 保持UUID不变
