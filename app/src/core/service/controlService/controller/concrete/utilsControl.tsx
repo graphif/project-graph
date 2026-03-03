@@ -45,6 +45,8 @@ export class ControllerUtils {
    */
   editTextNode(clickedNode: TextNode, selectAll = true) {
     this.project.controller.isCameraLocked = true;
+    // 停止摄像机漂移
+    this.project.camera.stopImmediately();
     const rectWorld = clickedNode.collisionBox.getRectangle();
     const rectView = this.project.renderer.transformWorld2View(rectWorld);
     const fontColor = (
@@ -133,6 +135,8 @@ export class ControllerUtils {
 
   editEdgeText(clickedLineEdge: Edge, selectAll = true) {
     this.project.controller.isCameraLocked = true;
+    // 停止摄像机漂移
+    this.project.camera.stopImmediately();
 
     // clickedLineEdge.isEditing = true;
     const textAreaLocation = this.project.renderer
@@ -170,6 +174,8 @@ export class ControllerUtils {
   }
   editMultiTargetEdgeText(clickedEdge: MultiTargetUndirectedEdge, selectAll = true) {
     this.project.controller.isCameraLocked = true;
+    // 停止摄像机漂移
+    this.project.camera.stopImmediately();
 
     // clickedLineEdge.isEditing = true;
     const textAreaLocation = this.project.renderer
@@ -208,6 +214,8 @@ export class ControllerUtils {
 
   editUrlNodeTitle(clickedUrlNode: UrlNode) {
     this.project.controller.isCameraLocked = true;
+    // 停止摄像机漂移
+    this.project.camera.stopImmediately();
     // 编辑节点
     clickedUrlNode.isEditingTitle = true;
     this.project.inputElement
@@ -242,6 +250,8 @@ export class ControllerUtils {
       return;
     }
     this.project.controller.isCameraLocked = true;
+    // 停止摄像机漂移
+    this.project.camera.stopImmediately();
     // 编辑节点
     section.isEditingTitle = true;
     this.project.inputElement

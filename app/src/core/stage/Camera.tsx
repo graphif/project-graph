@@ -283,6 +283,18 @@ export class Camera {
   }
 
   /**
+   * 突然停止摄像机所有运动
+   * 清除移动动力、速度、缩放操作
+   */
+  stopImmediately() {
+    this.accelerateCommander = Vector.getZero();
+    this.speed = Vector.getZero();
+    this.isStartZoomIn = false;
+    this.isStartZoomOut = false;
+    this.shockMoveDiffLocationsQueue.clear();
+  }
+
+  /**
    * 单纯缩放镜头
    * 让currentScale不断逼近targetScale
    * @returns 缩放前后变化的比值
