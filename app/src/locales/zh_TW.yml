@@ -1311,6 +1311,16 @@ keyBinds:
   selectAll:
     title: 全選
     description: 按下後，所有節點和連線都會被選中
+  selectAtCrosshair:
+    title: 選擇十字準心對準的節點
+    description: |
+      按下 Q 鍵，選擇屏幕中心十字準心指向的節點
+      如果該位置有節點，則選中它（取消其他選擇）
+  addSelectAtCrosshair:
+    title: 添加選擇十字準心對準的節點
+    description: |
+      按下 Shift+Q 鍵，將屏幕中心十字準心指向的節點添加到當前選擇中
+      如果該節點已被選中，則取消選中
   createTextNodeFromCameraLocation:
     title: 在視野中心位置創建文本節點
     description: |

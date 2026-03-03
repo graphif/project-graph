@@ -1450,6 +1450,37 @@ export const allKeyBinds: KeyBindItem[] = [
       ConnectNodeSmartTools.removeNodeFromTree(project!);
     },
   },
+  {
+    id: "selectAtCrosshair",
+    defaultKey: "q",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      const worldLocation = project!.camera.location.clone();
+      const entity = project!.stageManager.findEntityByLocation(worldLocation);
+      if (entity) {
+        if (!project!.sectionMethods.isObjectBeLockedBySection(entity)) {
+          // 单一选择：先取消所有选中
+          project!.stageManager.clearSelectAll();
+          entity.isSelected = true;
+        }
+      }
+    },
+  },
+  {
+    id: "addSelectAtCrosshair",
+    defaultKey: "S-q",
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      const worldLocation = project!.camera.location.clone();
+      const entity = project!.stageManager.findEntityByLocation(worldLocation);
+      if (entity) {
+        if (!project!.sectionMethods.isObjectBeLockedBySection(entity)) {
+          // 添加选择：切换选中状态
+          entity.isSelected = !entity.isSelected;
+        }
+      }
+    },
+  },
 ];
 
 /**

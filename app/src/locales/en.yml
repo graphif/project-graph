@@ -1212,6 +1212,16 @@ keyBinds:
   selectAll:
     title: Select All
     description: Select all nodes and connections when pressed
+  selectAtCrosshair:
+    title: Select node at crosshair
+    description: |
+      Press Q to select the node pointed by the screen center crosshair
+      If there is a node at that location, select it (deselect others)
+  addSelectAtCrosshair:
+    title: Add selection at crosshair
+    description: |
+      Press Shift+Q to add the node pointed by the screen center crosshair to current selection
+      If the node is already selected, deselect it
   createTextNodeFromCameraLocation:
     title: Create Text Node at Camera Center
     description: |

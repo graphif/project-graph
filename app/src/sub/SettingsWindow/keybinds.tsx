@@ -595,6 +595,8 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "selectAdditionalDown",
       "selectAdditionalLeft",
       "selectAdditionalRight",
+      "selectAtCrosshair",
+      "addSelectAtCrosshair",
     ],
   },
   {
