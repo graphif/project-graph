@@ -169,6 +169,11 @@ export class ControllerNodeConnectionClass extends ControllerClass {
       return;
     }
 
+    // 检查点击的实体是否是背景图片
+    if (clickedConnectableEntity instanceof ImageNode && (clickedConnectableEntity as ImageNode).isBackground) {
+      return;
+    }
+
     // 记录起始点在图片或引用块上的精确位置
     if (
       clickedConnectableEntity instanceof ImageNode ||
@@ -269,6 +274,10 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     // 连接线
     let isFindConnectToNode = false;
     for (const entity of this.project.stageManager.getConnectableEntity()) {
+      // 检查实体是否是背景图片
+      if (entity instanceof ImageNode && (entity as ImageNode).isBackground) {
+        continue;
+      }
       if (entity.collisionBox.isContainsPoint(worldLocation)) {
         // 找到了连接的节点，吸附上去
         this.connectToEntity = entity;
@@ -305,6 +314,13 @@ export class ControllerNodeConnectionClass extends ControllerClass {
   private mouseUp(event: MouseEvent) {
     const releaseWorldLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
     const releaseTargetEntity = this.project.stageManager.findConnectableEntityByLocation(releaseWorldLocation);
+
+    // 检查释放的实体是否是背景图片
+    if (releaseTargetEntity instanceof ImageNode && (releaseTargetEntity as ImageNode).isBackground) {
+      this.clear();
+      this.project.controller.setCursorNameHook(CursorNameEnum.Default);
+      return;
+    }
 
     // 记录结束点在图片或引用块上的精确位置
     this._endImageLocation = null;
@@ -460,6 +476,11 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     // 右键点击位置和抬起位置重叠，说明是右键单击事件，没有发生拖拽现象
     const releaseTargetEntity = this.project.stageManager.findConnectableEntityByLocation(releaseWorldLocation);
     if (!releaseTargetEntity) {
+      return;
+    }
+
+    // 检查目标实体是否是背景图片
+    if (releaseTargetEntity instanceof ImageNode && (releaseTargetEntity as ImageNode).isBackground) {
       return;
     }
     const selectedEntities = this.project.stageManager.getConnectableEntity().filter((entity) => entity.isSelected);

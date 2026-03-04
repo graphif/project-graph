@@ -2,6 +2,7 @@ import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
+import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
@@ -141,6 +142,10 @@ export class RectangleSelect {
         if (entity.isHiddenBySectionCollapse) {
           continue;
         }
+        // 检查实体是否是背景图片
+        if (entity instanceof ImageNode && (entity as ImageNode).isBackground) {
+          continue;
+        }
         if (this.isSelectWithEntity(entity)) {
           if (this.project.controller.lastSelectedEntityUUID.has(entity.uuid)) {
             entity.isSelected = false;
@@ -170,6 +175,11 @@ export class RectangleSelect {
           //   continue;
           // }
           if (otherEntities.isHiddenBySectionCollapse) {
+            continue;
+          }
+
+          // 检查实体是否是背景图片
+          if (otherEntities instanceof ImageNode && (otherEntities as ImageNode).isBackground) {
             continue;
           }
 

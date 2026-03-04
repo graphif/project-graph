@@ -13,13 +13,12 @@ import {
 
 import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project, ProjectState } from "@/core/Project";
-import { KeyBindsUI } from "./controlService/shortcutKeysEngine/KeyBindsUI";
 import { activeProjectAtom, isClassroomModeAtom, isDevAtom, projectsAtom, store } from "@/state";
 import AIWindow from "@/sub/AIWindow";
 import AttachmentsWindow from "@/sub/AttachmentsWindow";
 import LogicNodePanel from "@/sub/AutoComputeWindow";
+import BackgroundManagerWindow from "@/sub/BackgroundManagerWindow";
 import ExportPngWindow from "@/sub/ExportPngWindow";
-import NewExportPngWindow from "@/sub/NewExportPngWindow";
 import FindWindow from "@/sub/FindWindow";
 import GenerateNodeTree, {
   GenerateNodeGraph,
@@ -27,18 +26,20 @@ import GenerateNodeTree, {
   GenerateNodeTreeByMarkdown,
 } from "@/sub/GenerateNodeWindow";
 import LoginWindow from "@/sub/LoginWindow";
+import NewExportPngWindow from "@/sub/NewExportPngWindow";
 import NodeDetailsWindow from "@/sub/NodeDetailsWindow";
 import OnboardingWindow from "@/sub/OnboardingWindow";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
+import ReferencesWindow from "@/sub/ReferencesWindow";
 import SettingsWindow from "@/sub/SettingsWindow";
 import TagWindow from "@/sub/TagWindow";
-import ReferencesWindow from "@/sub/ReferencesWindow";
 import TestWindow from "@/sub/TestWindow";
 import UserWindow from "@/sub/UserWindow";
 import { getDeviceId } from "@/utils/otherApi";
 import { PathString } from "@/utils/pathString";
 import { Color, Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
+import { Rectangle } from "@graphif/shapes";
 import { Decoder } from "@msgpack/msgpack";
 import { getVersion } from "@tauri-apps/api/app";
 import { appCacheDir, dataDir, join, tempDir } from "@tauri-apps/api/path";
@@ -62,9 +63,12 @@ import {
   CircleMinus,
   CirclePlus,
   Columns4,
+  Dices,
   Dumbbell,
   ExternalLink,
   File,
+  FileBadge,
+  FileBox,
   FileClock,
   FileCode,
   FileDigit,
@@ -73,6 +77,7 @@ import {
   FileInput,
   FileOutput,
   FilePlus,
+  FileSpreadsheet,
   FolderClock,
   FolderCog,
   FolderOpen,
@@ -84,11 +89,13 @@ import {
   Images,
   Keyboard,
   LayoutGrid,
+  Link,
   MapPin,
   MessageCircleWarning,
   MousePointer2,
   Move3d,
   Network,
+  OctagonX,
   Palette,
   Paperclip,
   PictureInPicture2,
@@ -101,9 +108,9 @@ import {
   Scaling,
   Search,
   SettingsIcon,
+  Sparkles,
   SquareDashedMousePointer,
   SquareSquare,
-  Sparkles,
   Tag,
   TestTube2,
   TextQuote,
@@ -113,12 +120,6 @@ import {
   VenetianMask,
   View,
   Workflow,
-  Link,
-  OctagonX,
-  Dices,
-  FileBadge,
-  FileSpreadsheet,
-  FileBox,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -126,19 +127,19 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import { ProjectUpgrader } from "../stage/ProjectUpgrader";
+import { Entity } from "../stage/stageObject/abstract/StageEntity";
 import { LineEdge } from "../stage/stageObject/association/LineEdge";
+import { CollisionBox } from "../stage/stageObject/collisionBox/collisionBox";
 import { TextNode } from "../stage/stageObject/entity/TextNode";
 import { AssetsRepository } from "./AssetsRepository";
+import { KeyBindsUI } from "./controlService/shortcutKeysEngine/KeyBindsUI";
 import { RecentFileManager } from "./dataFileService/RecentFileManager";
+import { generateKeyboardLayout } from "./dataGenerateService/generateFromFolderEngine/GenerateFromFolderEngine";
 import { DragFileIntoStageEngine } from "./dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { FeatureFlags } from "./FeatureFlags";
 import { Settings } from "./Settings";
 import { SubWindow } from "./SubWindow";
 import { Telemetry } from "./Telemetry";
-import { Entity } from "../stage/stageObject/abstract/StageEntity";
-import { Rectangle } from "@graphif/shapes";
-import { CollisionBox } from "../stage/stageObject/collisionBox/collisionBox";
-import { generateKeyboardLayout } from "./dataGenerateService/generateFromFolderEngine/GenerateFromFolderEngine";
 
 const Content = MenubarContent;
 const Item = MenubarItem;
@@ -614,6 +615,17 @@ export function GlobalMenu() {
           >
             <Link />
             引用管理器
+          </Item>
+
+          {/* 背景管理器 */}
+          <Item
+            disabled={!activeProject}
+            onClick={() => {
+              BackgroundManagerWindow.open();
+            }}
+          >
+            <Images />
+            背景管理器
           </Item>
         </Content>
       </Menu>

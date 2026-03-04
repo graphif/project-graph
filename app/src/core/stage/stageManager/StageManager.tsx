@@ -72,7 +72,16 @@ export class StageManager {
     return this.project.stage.filter((node) => node instanceof TextNode);
   }
   getConnectableEntity(): ConnectableEntity[] {
-    return this.project.stage.filter((node) => node instanceof ConnectableEntity);
+    return this.project.stage.filter((node) => {
+      if (node instanceof ConnectableEntity) {
+        // 排除背景图片
+        if (node instanceof ImageNode && (node as ImageNode).isBackground) {
+          return false;
+        }
+        return true;
+      }
+      return false;
+    }) as ConnectableEntity[];
   }
   isEntityExists(uuid: string): boolean {
     return this.project.stage.filter((node) => node.uuid === uuid).length > 0;
@@ -306,7 +315,7 @@ export class StageManager {
 
   findImageNodeByLocation(location: Vector): ImageNode | null {
     for (const node of this.getImageNodes()) {
-      if (node.collisionBox.isContainsPoint(location)) {
+      if (!node.isBackground && node.collisionBox.isContainsPoint(location)) {
         return node;
       }
     }
@@ -342,6 +351,9 @@ export class StageManager {
       if (entity.isHiddenBySectionCollapse) {
         continue;
       }
+      if (entity instanceof ImageNode && entity.isBackground) {
+        continue;
+      }
       if (entity.collisionBox.isContainsPoint(location)) {
         return entity;
       }
@@ -374,7 +386,9 @@ export class StageManager {
    * @returns
    */
   getSelectedEntities(): Entity[] {
-    return this.project.stage.filter((so) => so.isSelected && so instanceof Entity) as Entity[];
+    return this.project.stage.filter(
+      (so) => so.isSelected && so instanceof Entity && !(so instanceof ImageNode && (so as ImageNode).isBackground),
+    ) as Entity[];
   }
   getSelectedAssociations(): Association[] {
     return this.project.stage.filter((so) => so.isSelected && so instanceof Association) as Association[];
@@ -409,6 +423,9 @@ export class StageManager {
   isEntityOnLocation(location: Vector): boolean {
     for (const entity of this.getEntities()) {
       if (entity.isHiddenBySectionCollapse) {
+        continue;
+      }
+      if (entity instanceof ImageNode && entity.isBackground) {
         continue;
       }
       if (entity.collisionBox.isContainsPoint(location)) {
@@ -450,9 +467,12 @@ export class StageManager {
   deleteSelectedStageObjects() {
     const selectedEntities = this.getEntities().filter((node) => node.isSelected);
 
-    // 检查选中的实体是否在锁定的 section 内，或者实体本身是否是锁定的 section
+    // 检查选中的实体是否在锁定的 section 内，或者实体本身是否是锁定的 section，或者是背景图片
     const filteredEntities = selectedEntities.filter((entity) => {
-      return !this.project.sectionMethods.isObjectBeLockedBySection(entity);
+      return (
+        !this.project.sectionMethods.isObjectBeLockedBySection(entity) &&
+        !(entity instanceof ImageNode && entity.isBackground)
+      );
     });
 
     for (const entity of filteredEntities) {

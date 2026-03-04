@@ -34,6 +34,11 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
   @serializable
   scale: number;
   /**
+   * 是否为背景图片
+   */
+  @serializable
+  isBackground: boolean = false;
+  /**
    * 节点是否被选中
    */
   _isSelected: boolean = false;
@@ -60,6 +65,7 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
       details = [],
       attachmentId = "",
       scale = 1,
+      isBackground = false,
     },
     public unknown = false,
   ) {
@@ -69,6 +75,7 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
     this.details = details;
     this.attachmentId = attachmentId;
     this.scale = scale;
+    this.isBackground = isBackground;
 
     const blob = project.attachments.get(attachmentId);
     if (!blob) {

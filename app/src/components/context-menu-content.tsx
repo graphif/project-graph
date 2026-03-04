@@ -8,14 +8,28 @@ import {
 } from "@/components/ui/context-menu";
 import { Dialog } from "@/components/ui/dialog";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
+import { ColorSmartTools } from "@/core/service/dataManageService/colorSmartTools";
+import { ConnectNodeSmartTools } from "@/core/service/dataManageService/connectNodeSmartTools";
+import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
+import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
+import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { activeProjectAtom, contextMenuTooltipWordsAtom } from "@/state";
+import ColorPaletteWindow from "@/sub/ColorPaletteWindow";
+import ColorWindow from "@/sub/ColorWindow";
+import { Direction } from "@/types/directions";
+import { parseEmacsKey } from "@/utils/emacs";
+import { openBrowserOrFile } from "@/utils/externalOpen";
+import { exportImagesToProjectDirectory } from "@/utils/imageExport";
 import { Color, Vector } from "@graphif/data-structures";
+import { Image as TauriImage } from "@tauri-apps/api/image";
+import { writeImage } from "@tauri-apps/plugin-clipboard-manager";
 import { useAtom } from "jotai";
 import {
   AlignCenterHorizontal,
@@ -29,81 +43,68 @@ import {
   AlignVerticalJustifyStart,
   AlignVerticalSpaceBetween,
   ArrowDownUp,
+  ArrowLeftFromLine,
   ArrowLeftRight,
   ArrowRightFromLine,
   ArrowUpRight,
   ArrowUpToLine,
   Asterisk,
   Box,
+  Check,
+  ChevronDown,
   ChevronsRightLeft,
+  ChevronUp,
   Clipboard,
   Code,
   Copy,
+  CornerUpRight,
   Dot,
+  Ellipsis,
+  Equal,
   ExternalLink,
-  Lock,
-  ListEnd,
+  GitPullRequestCreateArrow,
   Grip,
+  Images,
   LayoutDashboard,
+  LayoutPanelTop,
+  ListEnd,
+  Lock,
   Maximize2,
   Minimize2,
+  MoveDown,
   MoveHorizontal,
+  MoveRight,
+  MoveUp,
   MoveUpRight,
   Network,
   Package,
+  PaintBucket,
   Palette,
+  Rabbit,
   RefreshCcw,
+  RefreshCcwDot,
+  Repeat2,
+  Save,
   Slash,
   Spline,
+  SquareDashedBottomCode,
   SquareDot,
   SquareRoundCorner,
+  SquareSplitHorizontal,
   SquareSquare,
+  SquaresUnite,
+  Sun,
+  SunDim,
   TextSelect,
   Trash,
   Undo,
-  SquaresUnite,
-  SquareSplitHorizontal,
-  Repeat2,
-  ArrowLeftFromLine,
-  Check,
-  GitPullRequestCreateArrow,
-  LayoutPanelTop,
-  Rabbit,
-  MoveDown,
-  MoveRight,
-  PaintBucket,
-  ChevronUp,
-  MoveUp,
-  ChevronDown,
-  Sun,
-  SunDim,
-  Ellipsis,
-  SquareDashedBottomCode,
-  RefreshCcwDot,
-  CornerUpRight,
   Workflow,
-  Equal,
-  Save,
 } from "lucide-react";
-import { Image as TauriImage } from "@tauri-apps/api/image";
-import { writeImage } from "@tauri-apps/plugin-clipboard-manager";
+import { ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import tailwindColors from "tailwindcss/colors";
 import KeyTooltip from "./key-tooltip";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { Direction } from "@/types/directions";
-import { openBrowserOrFile } from "@/utils/externalOpen";
-import { ReactNode, useEffect, useState } from "react";
-import { ColorManager } from "@/core/service/feedbackService/ColorManager";
-import ColorWindow from "@/sub/ColorWindow";
-import ColorPaletteWindow from "@/sub/ColorPaletteWindow";
-import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
-import { parseEmacsKey } from "@/utils/emacs";
-import { ConnectNodeSmartTools } from "@/core/service/dataManageService/connectNodeSmartTools";
-import { ColorSmartTools } from "@/core/service/dataManageService/colorSmartTools";
-import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
-import { exportImagesToProjectDirectory } from "@/utils/imageExport";
 
 const Content = ContextMenuContent;
 const Item = ContextMenuItem;
@@ -1114,6 +1115,68 @@ export default function MyContextMenuContent() {
           >
             <ArrowLeftRight />
             对调图片红蓝通道
+          </Item>
+          <Item
+            onClick={() => {
+              // 获取所有选中的 ImageNode
+              const selectedImageNodes = p.stageManager
+                .getSelectedEntities()
+                .filter((it) => it instanceof ImageNode) as ImageNode[];
+
+              if (selectedImageNodes.length === 0) {
+                toast.error("请选中图片节点");
+                return;
+              }
+
+              // 将选中的图片转化为背景图片
+              for (const imageNode of selectedImageNodes) {
+                imageNode.isBackground = true;
+              }
+
+              // 记录历史步骤
+              p.historyManager.recordStep();
+
+              // 显示提示信息
+              if (selectedImageNodes.length === 1) {
+                toast.success("已将图片转化为背景图片");
+              } else {
+                toast.success(`已将 ${selectedImageNodes.length} 张图片转化为背景图片`);
+              }
+            }}
+          >
+            <Images />
+            转化为背景图片
+          </Item>
+          <Item
+            onClick={() => {
+              // 获取所有选中的 ImageNode
+              const selectedImageNodes = p.stageManager
+                .getSelectedEntities()
+                .filter((it) => it instanceof ImageNode) as ImageNode[];
+
+              if (selectedImageNodes.length === 0) {
+                toast.error("请选中图片节点");
+                return;
+              }
+
+              // 取消背景化
+              for (const imageNode of selectedImageNodes) {
+                imageNode.isBackground = false;
+              }
+
+              // 记录历史步骤
+              p.historyManager.recordStep();
+
+              // 显示提示信息
+              if (selectedImageNodes.length === 1) {
+                toast.success("已取消图片的背景化");
+              } else {
+                toast.success(`已取消 ${selectedImageNodes.length} 张图片的背景化`);
+              }
+            }}
+          >
+            <SquareSquare />
+            取消背景化
           </Item>
           <Item
             onClick={async () => {

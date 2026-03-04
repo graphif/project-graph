@@ -12,6 +12,7 @@ import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 // import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
+import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
@@ -277,6 +278,10 @@ export class ControllerCuttingClass extends ControllerClass {
       // }
       if (entity.isHiddenBySectionCollapse) {
         continue; // 隐藏的节点不参与碰撞检测
+      }
+      // 检查实体是否是背景图片
+      if (entity instanceof ImageNode && entity.isBackground) {
+        continue; // 背景图片不参与碰撞检测
       }
 
       // 检查实体是否在锁定的 section 内或本身是锁定的 section
