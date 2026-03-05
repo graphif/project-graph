@@ -27,7 +27,6 @@ export class Renderer {
   w = 0;
   h = 0;
   // let canvasRect: Rectangle;
-  renderedNodes: number = 0;
   renderedEdges: number = 0;
 
   /**
@@ -547,7 +546,7 @@ export class Renderer {
     }
   }
   private renderEntities(viewRectangle: Rectangle) {
-    this.renderedNodes = this.project.entityRenderer.renderAllEntities(viewRectangle);
+    this.project.entityRenderer.renderAllEntities(viewRectangle);
   }
 
   private renderEdges(viewRectangle: Rectangle) {
@@ -632,8 +631,8 @@ export class Renderer {
       `speed: ${this.project.camera.speed.x}, ${this.project.camera.speed.y}`,
       `window: ${this.w}x${this.h}`,
       `effect count: ${this.project.effects.effectsCount}`,
-      `node count: ${this.renderedNodes} , ${this.project.stageManager.getTextNodes().length}`,
-      `edge count: ${this.renderedEdges} , ${this.project.stageManager.getLineEdges().length}`,
+      `node count: ${this.project.stageManager.getTextNodes().length}`,
+      `edge count: ${this.project.stageManager.getLineEdges().length}`,
       `section count: ${this.project.stageManager.getSections().length}`,
       `pressingKeys: ${this.project.controller.pressingKeysString()}`,
       `鼠标按下情况: ${this.project.controller.isMouseDown}`,

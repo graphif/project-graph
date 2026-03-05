@@ -82,26 +82,39 @@ export class EntityRenderer {
   }
 
   /**
+   * 检查实体是否应该被跳过渲染
+   */
+  private shouldSkipEntity(entity: Entity, viewRectangle: Rectangle): boolean {
+    return (
+      entity instanceof Section ||
+      entity instanceof PenStroke ||
+      this.project.renderer.isOverView(viewRectangle, entity)
+    );
+  }
+
+  private isBackgroundImageNode(entity: Entity): boolean {
+    return entity instanceof ImageNode && entity.isBackground;
+  }
+
+  /**
    * 统一渲染所有实体
-   * 返回实际渲染的实体数量
    */
   renderAllEntities(viewRectangle: Rectangle) {
-    let renderedNodes = 0;
+    const entities = this.project.stageManager.getEntities();
 
-    // 2 遍历所有非section实体 / 非涂鸦实体
-    for (const entity of this.project.stageManager.getEntities()) {
-      if (entity instanceof Section) {
-        continue;
+    // 先渲染所有背景图片
+    entities.forEach((entity) => {
+      if (this.isBackgroundImageNode(entity) && !this.project.renderer.isOverView(viewRectangle, entity)) {
+        this.renderEntity(entity);
       }
-      if (entity instanceof PenStroke) {
-        continue;
-      }
-      // 视线之外不画
-      if (this.project.renderer.isOverView(viewRectangle, entity)) {
+    });
+
+    // 再渲染所有非背景图片的实体
+    for (const entity of entities) {
+      if (this.isBackgroundImageNode(entity) || this.shouldSkipEntity(entity, viewRectangle)) {
         continue;
       }
       this.renderEntity(entity);
-      renderedNodes++;
     }
     // 3 遍历所有section实体，画顶部大文字
     for (const section of this.project.stageManager.getSections()) {
@@ -123,7 +136,6 @@ export class EntityRenderer {
       }
       this.renderEntity(penStroke);
     }
-    return renderedNodes;
   }
 
   /**
