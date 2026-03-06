@@ -31,6 +31,7 @@ import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFi
 import { cn } from "./utils/cn";
 import { isMac, isWindows } from "./utils/platform";
 import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
+import { checkAndFixShortcutStorage } from "./core/service/controlService/shortcutKeysEngine/ShortcutKeyFixer";
 import { ProjectTabs } from "./ProjectTabs";
 import { DropWindowCover } from "./DropWindowCover";
 import ToolbarContent from "./components/toolbar-content";
@@ -58,6 +59,10 @@ export default function App() {
   // const { t } = useTranslation("app");
 
   useEffect(() => {
+    // 先修复老用户的快捷键缓存问题（F11快捷键）
+    (async () => {
+      await checkAndFixShortcutStorage();
+    })();
     // 注册UI级别快捷键
     KeyBindsUI.registerAllUIKeyBinds();
     KeyBindsUI.uiStartListen();
