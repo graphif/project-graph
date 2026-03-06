@@ -11,6 +11,8 @@ import { Color, colorInvert, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import React from "react";
 import ReactDOMServer from "react-dom/server";
+import { writeFile } from "@tauri-apps/plugin-fs";
+import mime from "mime";
 
 export interface SvgExportConfig {
   imageMode: "absolutePath" | "relativePath" | "base64";
@@ -28,6 +30,11 @@ export class StageExportSvg {
   private svgConfig: SvgExportConfig = {
     imageMode: "relativePath",
   };
+
+  private exportContext: {
+    outputDir: string;
+    imageMap: Map<string, string>; // attachmentId -> relative file path
+  } | null = null;
 
   setConfig(config: SvgExportConfig) {
     this.svgConfig = config;
@@ -107,16 +114,56 @@ export class StageExportSvg {
   /**
    *
    * @param node
-   * @param absolutePath 是否使用绝对路径
+   * @param svgConfigObject 配置对象
    * @returns
    */
   dumpImageNode(node: ImageNode, svgConfigObject: SvgExportConfig) {
     if (node.isHiddenBySectionCollapse) {
       return <></>;
     }
-    let imagePath = node.path;
-    if (svgConfigObject.imageMode === "absolutePath") {
-      imagePath = new Path(this.project.uri).parent.join(node.path).toString();
+    let href = "";
+    const attachmentId = node.attachmentId;
+    if (attachmentId) {
+      // 检查是否有导出上下文
+      if (this.exportContext && this.exportContext.imageMap.has(attachmentId)) {
+        // 使用导出的图片相对路径
+        href = this.exportContext.imageMap.get(attachmentId)!;
+      } else {
+        const blob = this.project.attachments.get(attachmentId);
+        if (blob) {
+          if (svgConfigObject.imageMode === "base64") {
+            // 转换为base64数据URI
+            // 暂时返回空，后续实现
+            href = "";
+          } else {
+            // 相对路径或绝对路径模式，但没有导出上下文，无法生成有效路径
+            // 返回透明矩形占位符
+            return (
+              <>
+                {SvgUtils.rectangle(
+                  node.rectangle,
+                  Color.Transparent,
+                  this.project.stageStyleManager.currentStyle.StageObjectBorder,
+                  2,
+                )}
+              </>
+            );
+          }
+        }
+      }
+    }
+    // 如果href为空，则返回一个透明矩形占位符
+    if (!href) {
+      return (
+        <>
+          {SvgUtils.rectangle(
+            node.rectangle,
+            Color.Transparent,
+            this.project.stageStyleManager.currentStyle.StageObjectBorder,
+            2,
+          )}
+        </>
+      );
     }
 
     return (
@@ -128,7 +175,7 @@ export class StageExportSvg {
           2,
         )}
         <image
-          href={imagePath}
+          href={href}
           x={node.rectangle.leftTop.x}
           y={node.rectangle.leftTop.y}
           width={node.rectangle.size.x}
@@ -275,5 +322,98 @@ export class StageExportSvg {
    */
   dumpSelectedToSVGString(): string {
     return ReactDOMServer.renderToStaticMarkup(this.dumpSelected());
+  }
+
+  /**
+   * 将整个舞台导出为SVG文件，并导出所有图片附件
+   * @param filePath SVG文件保存路径
+   */
+  async exportStageToSVGFile(filePath: string): Promise<void> {
+    const outputDir = new Path(filePath).parent.toString();
+    const imageNodes = this.project.stageManager.getImageNodes();
+    const imageMap = new Map<string, string>();
+
+    // 导出所有图片附件
+    for (const imageNode of imageNodes) {
+      const attachmentId = imageNode.attachmentId;
+      if (!attachmentId || imageMap.has(attachmentId)) continue;
+
+      const blob = this.project.attachments.get(attachmentId);
+      if (!blob) continue;
+
+      // 生成文件名
+      const extension = mime.getExtension(blob.type) || "bin";
+      const fileName = `${attachmentId}.${extension}`;
+      const relativePath = fileName;
+      const outputPath = new Path(outputDir).join(fileName).toString();
+
+      // 写入文件
+      const arrayBuffer = await blob.arrayBuffer();
+      await writeFile(outputPath, new Uint8Array(arrayBuffer));
+
+      imageMap.set(attachmentId, relativePath);
+    }
+
+    // 设置导出上下文
+    this.exportContext = {
+      outputDir,
+      imageMap,
+    };
+
+    try {
+      // 生成SVG字符串并保存
+      const svgString = this.dumpStageToSVGString();
+      await writeFile(filePath, new TextEncoder().encode(svgString));
+    } finally {
+      // 清除导出上下文
+      this.exportContext = null;
+    }
+  }
+
+  /**
+   * 将选中的节点导出为SVG文件，并导出相关图片附件
+   * @param filePath SVG文件保存路径
+   */
+  async exportSelectedToSVGFile(filePath: string): Promise<void> {
+    const outputDir = new Path(filePath).parent.toString();
+    const selectedEntities = this.project.stageManager.getSelectedEntities();
+    const imageNodes = selectedEntities.filter((entity): entity is ImageNode => entity instanceof ImageNode);
+    const imageMap = new Map<string, string>();
+
+    // 导出所有图片附件
+    for (const imageNode of imageNodes) {
+      const attachmentId = imageNode.attachmentId;
+      if (!attachmentId || imageMap.has(attachmentId)) continue;
+
+      const blob = this.project.attachments.get(attachmentId);
+      if (!blob) continue;
+
+      // 生成文件名
+      const extension = mime.getExtension(blob.type) || "bin";
+      const fileName = `${attachmentId}.${extension}`;
+      const relativePath = fileName;
+      const outputPath = new Path(outputDir).join(fileName).toString();
+
+      // 写入文件
+      const arrayBuffer = await blob.arrayBuffer();
+      await writeFile(outputPath, new Uint8Array(arrayBuffer));
+
+      imageMap.set(attachmentId, relativePath);
+    }
+
+    // 设置导出上下文
+    this.exportContext = {
+      outputDir,
+      imageMap,
+    };
+
+    try {
+      // 生成SVG字符串并保存
+      const svgString = this.dumpSelectedToSVGString();
+      await writeFile(filePath, new TextEncoder().encode(svgString));
+    } finally {
+      // 清除导出上下文
+      this.exportContext = null;
+    }
   }
 }

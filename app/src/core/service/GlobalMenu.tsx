@@ -45,7 +45,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { appCacheDir, dataDir, join, tempDir } from "@tauri-apps/api/path";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { exists, readFile, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { exists, readFile, writeFile } from "@tauri-apps/plugin-fs";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import { useAtom } from "jotai";
 import {
@@ -450,13 +450,12 @@ export function GlobalMenu() {
                 <SubContent>
                   <Item
                     onClick={async () => {
-                      const svg = activeProject!.stageExportSvg.dumpStageToSVGString();
                       const path = await save({
                         title: t("file.exportAsSVG"),
                         filters: [{ name: "Scalable Vector Graphics", extensions: ["svg"] }],
                       });
                       if (!path) return;
-                      await writeTextFile(path, svg);
+                      await activeProject!.stageExportSvg.exportStageToSVGFile(path);
                     }}
                   >
                     <FileDigit />
@@ -464,13 +463,12 @@ export function GlobalMenu() {
                   </Item>
                   <Item
                     onClick={async () => {
-                      const svg = activeProject!.stageExportSvg.dumpSelectedToSVGString();
                       const path = await save({
                         title: t("file.exportAsSVG"),
                         filters: [{ name: "Scalable Vector Graphics", extensions: ["svg"] }],
                       });
                       if (!path) return;
-                      await writeTextFile(path, svg);
+                      await activeProject!.stageExportSvg.exportSelectedToSVGFile(path);
                     }}
                   >
                     <MousePointer2 />
