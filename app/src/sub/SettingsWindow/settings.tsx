@@ -205,9 +205,6 @@ const categories = {
       "windowBackgroundAlpha",
       "windowBackgroundOpacityAfterOpenClickThrough",
       "windowBackgroundOpacityAfterCloseClickThrough",
-      "themeMode",
-      "lightTheme",
-      "darkTheme",
     ],
     background: [
       "isRenderCenterPointer",

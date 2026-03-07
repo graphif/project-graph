@@ -1,5 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +31,9 @@ export default function ThemesTab() {
   const [currentTab, setCurrentTab] = useState("preview");
   const [themes, setThemes] = useState<Themes.Theme[]>([]);
   const [currentTheme] = Settings.use("theme");
+  const [themeMode] = Settings.use("themeMode");
+  const [lightTheme] = Settings.use("lightTheme");
+  const [darkTheme] = Settings.use("darkTheme");
 
   useEffect(() => {
     Themes.getThemeById(selectedThemeId).then(setSelectedTheme);
@@ -125,6 +130,71 @@ export default function ThemesTab() {
             <Delete />
             删除
           </Button>
+        </div>
+        <div className="flex flex-col gap-4 rounded-lg border p-4">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">主题模式</label>
+            <div className="flex items-center gap-2">
+              <span className="text-sm">白天</span>
+              <Switch
+                checked={themeMode === "dark"}
+                onCheckedChange={(checked) => {
+                  Settings.themeMode = checked ? "dark" : "light";
+                }}
+              />
+              <span className="text-sm">黑夜</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">浅色主题</label>
+              <Select
+                value={lightTheme}
+                onValueChange={(value) => {
+                  Settings.lightTheme = value;
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="选择浅色主题" />
+                </SelectTrigger>
+                <SelectContent>
+                  {themes
+                    .filter((theme) => theme.metadata.type === "light")
+                    .map((theme) => (
+                      <SelectItem key={theme.metadata.id} value={theme.metadata.id}>
+                        {theme.metadata.name[i18n.language]}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">深色主题</label>
+              <Select
+                value={darkTheme}
+                onValueChange={(value) => {
+                  Settings.darkTheme = value;
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="选择深色主题" />
+                </SelectTrigger>
+                <SelectContent>
+                  {themes
+                    .filter((theme) => theme.metadata.type === "dark")
+                    .map((theme) => (
+                      <SelectItem key={theme.metadata.id} value={theme.metadata.id}>
+                        {theme.metadata.name[i18n.language]}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="text-muted-foreground text-xs">
+            当前主题模式为 {themeMode === "light" ? "白天" : "黑夜"}，使用{" "}
+            {themeMode === "light" ? lightTheme : darkTheme} 主题
+          </div>
         </div>
         <Tabs value={currentTab} onValueChange={setCurrentTab as any}>
           <TabsList>
