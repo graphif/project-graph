@@ -28,6 +28,7 @@ export default function AIWindow() {
   const [requesting, setRequesting] = useState(false);
   const [totalInputTokens, setTotalInputTokens] = useState(0);
   const [totalOutputTokens, setTotalOutputTokens] = useState(0);
+  const [executingToolIds, setExecutingToolIds] = useState<Set<string>>(new Set());
   const messagesElRef = useRef<HTMLDivElement>(null);
   const [showTokenCount] = Settings.use("aiShowTokenCount");
 
@@ -130,8 +131,15 @@ export default function AIWindow() {
       if (streamingMsg.tool_calls && streamingMsg.tool_calls.length > 0) {
         const toolMsgs: OpenAI.ChatCompletionToolMessageParam[] = [];
         for (const toolCall of streamingMsg.tool_calls) {
+          // 添加工具ID到执行中集合
+          setExecutingToolIds((prev) => new Set([...prev, toolCall.id!]));
           const tool = AITools.handlers.get(toolCall.function.name);
           if (!tool) {
+            setExecutingToolIds((prev) => {
+              const newSet = new Set(prev);
+              newSet.delete(toolCall.id!);
+              return newSet;
+            });
             return;
           }
           let observation = "";
@@ -146,6 +154,13 @@ export default function AIWindow() {
             }
           } catch (e) {
             observation = `工具调用失败：${(e as Error).message}`;
+          } finally {
+            // 无论成功还是失败，都从执行中集合移除
+            setExecutingToolIds((prev) => {
+              const newSet = new Set(prev);
+              newSet.delete(toolCall.id!);
+              return newSet;
+            });
           }
           const msg = {
             role: "tool" as const,
@@ -176,6 +191,14 @@ export default function AIWindow() {
     addMessage({ role: "user", content: inputValue });
     setInputValue("");
     run();
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleUserSend();
+    }
+    // shift+enter 允许默认行为（换行）
   }
 
   return project ? (
@@ -215,15 +238,17 @@ export default function AIWindow() {
               {msg.tool_calls &&
                 msg.tool_calls.map((toolCall) => (
                   <Collapsible className="group/collapsible" key={toolCall.id}>
-                    <CollapsibleTrigger className="flex items-center gap-2">
+                    <CollapsibleTrigger
+                      className={`flex cursor-pointer items-center gap-2 ${executingToolIds.has(toolCall.id!) ? "animate-blink" : ""}`}
+                    >
                       <Wrench />
                       <span>{toolCall.function.name}</span>
                       <ChevronRight className="transition-transform group-data-[state=open]/collapsible:rotate-90" />
                     </CollapsibleTrigger>
                     <CollapsibleContent className="animate-none! mt-2 rounded-lg border px-3 py-2 opacity-50">
-                      <span className="text-sm">
+                      <div className="overflow-visible whitespace-pre-wrap break-words text-sm">
                         <Markdown source={`\`\`\`json\n${toolCall.function.arguments}\n\`\`\``} />
-                      </span>
+                      </div>
                     </CollapsibleContent>
                   </Collapsible>
                 ))}
@@ -254,7 +279,12 @@ export default function AIWindow() {
           </Button>
         )}
       </div>
-      <Textarea placeholder="What can I say?" onChange={(e) => setInputValue(e.target.value)} value={inputValue} />
+      <Textarea
+        placeholder="What can I say?"
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        value={inputValue}
+      />
     </div>
   ) : (
     <div className="flex flex-col gap-2 p-8">

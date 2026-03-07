@@ -70,6 +70,8 @@ export class TreeImporter extends BaseImporter {
         this.project.stageManager.add(newEdge);
       }
     }
+    // 运行树形布局格式化
+    this.project.autoLayoutFastTree.autoLayoutFastTreeMode(rootNode);
   }
 
   /**
