@@ -29,7 +29,7 @@ export namespace AITools {
     handlers.set(name, fn);
   }
 
-  addTool("get_all_nodes", "获取所有节点以及uuid", z.object({}), (project) => serialize(project.stage));
+  addTool("get_all_nodes", "获取舞台上所有节点以及uuid", z.object({}), (project) => serialize(project.stage));
   addTool("delete_node", "根据uuid删除节点", z.object({ uuid: z.string() }), (project, { uuid }) => {
     project.stageManager.delete(project.stageManager.get(uuid)!);
     project.historyManager.recordStep();
