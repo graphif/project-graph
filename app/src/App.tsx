@@ -36,6 +36,7 @@ import { ProjectTabs } from "./ProjectTabs";
 import { DropWindowCover } from "./DropWindowCover";
 import ToolbarContent from "./components/toolbar-content";
 import RightToolbar from "./components/right-toolbar";
+import ThemeModeSwitch from "@/components/theme-mode-switch";
 
 export default function App() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -86,6 +87,24 @@ export default function App() {
     // 监听主题样式切换
     Settings.watch("theme", (value) => {
       Themes.applyThemeById(value);
+    });
+
+    // 监听主题模式切换
+    Settings.watch("themeMode", (value) => {
+      const targetTheme = value === "light" ? Settings.lightTheme : Settings.darkTheme;
+      if (Settings.theme !== targetTheme) {
+        Settings.theme = targetTheme;
+      }
+    });
+    Settings.watch("lightTheme", (value) => {
+      if (Settings.themeMode === "light" && Settings.theme !== value) {
+        Settings.theme = value;
+      }
+    });
+    Settings.watch("darkTheme", (value) => {
+      if (Settings.themeMode === "dark" && Settings.theme !== value) {
+        Settings.theme = value;
+      }
     });
 
     // 监听快捷设置工具栏显示设置
@@ -354,7 +373,7 @@ export default function App() {
         {/* 菜单 | 标签页 | ...移动窗口区域... | 窗口控制按钮 */}
         <div
           className={cn(
-            "z-10 flex h-4 transition-all hover:opacity-100 sm:h-9 sm:gap-2",
+            "z-10 flex h-4 items-center transition-all hover:opacity-100 sm:h-9 sm:gap-2",
             isClassroomMode && "opacity-0",
             ignoreMouseEvents && "pointer-events-none",
           )}
@@ -369,6 +388,7 @@ export default function App() {
             className="hover:bg-primary/25 h-full flex-1 cursor-grab transition-colors hover:*:opacity-100 active:cursor-grabbing sm:rounded-sm sm:hover:border"
             data-tauri-drag-region
           />
+          <ThemeModeSwitch />
           {!isMac && <WindowButtons />}
         </div>
 

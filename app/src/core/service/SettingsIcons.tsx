@@ -69,6 +69,9 @@ import {
   WholeWord,
   File,
   Pentagon,
+  Sun,
+  Moon,
+  SunMoon,
 } from "lucide-react";
 
 export const settingsIcons = {
@@ -185,5 +188,8 @@ export const settingsIcons = {
   treeGenerateCameraBehavior: Fullscreen,
   autoImportTxtFileWhenOpenPrg: File,
   stealthModeMaskShape: Pentagon,
+  themeMode: SunMoon,
+  lightTheme: Sun,
+  darkTheme: Moon,
   arrowKeySelectOnlyInViewport: ScanEye,
 };

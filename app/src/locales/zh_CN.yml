@@ -187,6 +187,15 @@ settings:
       zh_TW: 繁體中文
       zh_TWC: 接地气繁体中文
       id: 印度尼西亚语
+  themeMode:
+    title: 主题模式
+    options:
+      light: 白天模式
+      dark: 黑夜模式
+  lightTheme:
+    title: 白天主题
+  darkTheme:
+    title: 黑夜主题
   showTipsOnUI:
     title: 在 UI 中显示提示信息
     description: |

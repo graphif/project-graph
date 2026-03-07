@@ -135,6 +135,15 @@ settings:
       zh_TW: Traditional Chinese
       zh_TWC: 接地气繁体中文
       id: Indonesian
+  themeMode:
+    title: Theme Mode
+    options:
+      light: Day
+      dark: Night
+  lightTheme:
+    title: Day Theme
+  darkTheme:
+    title: Night Theme
   showTipsOnUI:
     title: Show Tips on UI
     description: |
