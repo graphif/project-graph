@@ -66,13 +66,14 @@ export class StageImport {
    * 支持 Markdown 标题层级（#, ##, ###）
    * @param markdownText Markdown 格式文本
    * @param diffLocation 偏移位置
+   * @param autoLayout 是否自动应用树形布局（默认为 true）
    * @example
    * # 标题1
    * ## 子标题1.1
    * ## 子标题1.2
    * # 标题2
    */
-  public addNodeByMarkdown(markdownText: string, diffLocation: Vector = Vector.getZero()) {
-    return this.markdownImporter.import(markdownText, diffLocation);
+  public addNodeByMarkdown(markdownText: string, diffLocation: Vector = Vector.getZero(), autoLayout = true) {
+    return this.markdownImporter.import(markdownText, diffLocation, autoLayout);
   }
 }
