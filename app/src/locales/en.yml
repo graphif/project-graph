@@ -797,6 +797,20 @@ settings:
       the software\nThe data sent is only for statistics and will not include your
       personal privacy information\nYour data will be stored on cloud servers in Hong
       Kong, China, and will not be sent abroad\n"
+  aiApiBaseUrl:
+    title: AI API Base URL
+    description: |
+      Currently only supports OpenAI format API
+  aiApiKey:
+    title: AI API Key
+    description: |
+      The key will be stored in plain text locally
+  aiModel:
+    title: AI Model
+  aiShowTokenCount:
+    title: Show AI token count
+    description: |
+      When enabled, shows the token count for AI operations
   soundPitchVariationRange:
     title: Sound Pitch Variation
     description: Controls how much the pitch of sound effects varies randomly. Range for 0-1200 cents (1200 cents = 1 octave, 100 cents = 1 semitone). Higher values create more noticeable variations.

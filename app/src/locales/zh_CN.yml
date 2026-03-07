@@ -857,6 +857,10 @@ settings:
       密钥将会明文存储在本地
   aiModel:
     title: AI 模型
+  aiShowTokenCount:
+    title: 显示 AI 消耗的token数
+    description: |
+      启用后，在 AI 操作时显示消耗的token数
   cacheTextAsBitmap:
     title: 开启位图式渲染文本
     description: |

@@ -873,6 +873,10 @@ settings:
       '
   aiModel:
     title: AI 模型
+  aiShowTokenCount:
+    title: 顯示 AI 消耗的token數
+    description: |
+      啟用後，在 AI 操作時顯示消耗的token數
   cacheTextAsBitmap:
     title: 開啟點陣式渲染文字
     description: '開啟後，文字節點的點陣圖快取將會被保留，以提升渲染速度

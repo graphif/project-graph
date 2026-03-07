@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import Markdown from "@/components/ui/markdown";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +13,7 @@ import { useAtom } from "jotai";
 import { Bot, BrainCircuit, ChevronRight, FolderOpen, Loader2, Send, SettingsIcon, User, Wrench } from "lucide-react";
 import OpenAI from "openai";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 
 export default function AIWindow() {
   const [project] = useAtom(activeProjectAtom);
@@ -29,6 +31,10 @@ export default function AIWindow() {
   const messagesElRef = useRef<HTMLDivElement>(null);
   const [showTokenCount] = Settings.use("aiShowTokenCount");
 
+  /**
+   * 添加一条消息到消息列表中
+   * @param message
+   */
   function addMessage(message: OpenAI.ChatCompletionMessageParam & { tokens?: number }) {
     setMessages((prev) => [...prev, message]);
   }
@@ -51,7 +57,17 @@ export default function AIWindow() {
     scrollToBottom();
     setRequesting(true);
     try {
-      const stream = await project.aiEngine.chat(msgs);
+      // 清理消息：移除空的 tool_calls 数组
+      const cleanedMsgs = msgs.map((msg) => {
+        if (msg.role === "assistant" && Array.isArray(msg.tool_calls) && msg.tool_calls.length === 0) {
+          // 创建新对象，删除 tool_calls 字段
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { tool_calls, ...rest } = msg;
+          return rest;
+        }
+        return msg;
+      });
+      const stream = await project.aiEngine.chat(cleanedMsgs);
       addMessage({
         role: "assistant",
         content: "Requesting...",
@@ -59,7 +75,6 @@ export default function AIWindow() {
       const streamingMsg: OpenAI.ChatCompletionAssistantMessageParam = {
         role: "assistant",
         content: "",
-        tool_calls: [],
       };
       let lastChunk: OpenAI.ChatCompletionChunk | null = null;
       for await (const chunk of stream) {
@@ -67,33 +82,37 @@ export default function AIWindow() {
         streamingMsg.content! += delta.content ?? "";
         const toolCalls = delta.tool_calls || [];
 
+        // 如果有工具调用，确保 tool_calls 数组已初始化
+        if (toolCalls.length > 0 && streamingMsg.tool_calls === undefined) {
+          streamingMsg.tool_calls = [];
+        }
+
         for (const toolCall of toolCalls) {
-          if (typeof streamingMsg.tool_calls !== "undefined") {
-            const index =
-              toolCall.index !== undefined
-                ? toolCall.index
-                : toolCall.type
-                  ? streamingMsg.tool_calls.length
-                  : streamingMsg.tool_calls.length - 1;
+          // 此时 tool_calls 数组一定存在
+          const index =
+            toolCall.index !== undefined
+              ? toolCall.index
+              : toolCall.type
+                ? streamingMsg.tool_calls!.length
+                : streamingMsg.tool_calls!.length - 1;
 
-            // 确保索引有效
-            if (index >= streamingMsg.tool_calls.length) {
-              streamingMsg.tool_calls[index] = {
-                id: toolCall.id || crypto.randomUUID(),
-                type: "function",
-                function: {
-                  name: "",
-                  arguments: "",
-                },
-              };
-            }
-
-            // 更新工具调用信息
-            if (toolCall.id) streamingMsg.tool_calls[index].id = toolCall.id;
-            if (toolCall.function?.name) streamingMsg.tool_calls[index].function.name += toolCall.function.name;
-            if (toolCall.function?.arguments)
-              streamingMsg.tool_calls[index].function.arguments += toolCall.function.arguments;
+          // 确保索引有效
+          if (index >= streamingMsg.tool_calls!.length) {
+            streamingMsg.tool_calls![index] = {
+              id: toolCall.id || crypto.randomUUID(),
+              type: "function",
+              function: {
+                name: "",
+                arguments: "",
+              },
+            };
           }
+
+          // 更新工具调用信息
+          if (toolCall.id) streamingMsg.tool_calls![index].id = toolCall.id;
+          if (toolCall.function?.name) streamingMsg.tool_calls![index].function.name += toolCall.function.name;
+          if (toolCall.function?.arguments)
+            streamingMsg.tool_calls![index].function.arguments += toolCall.function.arguments;
         }
 
         setLastMessage(streamingMsg);
@@ -140,6 +159,11 @@ export default function AIWindow() {
         run([...msgs, streamingMsg, ...toolMsgs]);
       }
     } catch (e) {
+      setRequesting(false);
+      if (e instanceof Error) {
+        console.error(e);
+      }
+      toast.error(String(e));
       addMessage({
         role: "assistant",
         content: String(e),
@@ -147,9 +171,17 @@ export default function AIWindow() {
     }
   }
 
+  function handleUserSend() {
+    if (!inputValue.trim()) return;
+    addMessage({ role: "user", content: inputValue });
+    setInputValue("");
+    run();
+  }
+
   return project ? (
     <div className="flex h-full flex-col p-2">
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto" ref={messagesElRef}>
+      {/* 消息列表 */}
+      <div className="flex flex-1 select-text flex-col gap-2 overflow-y-auto" ref={messagesElRef}>
         {messages.map((msg, i) =>
           msg.role === "user" ? (
             <div key={i} className="flex justify-end">
@@ -201,6 +233,7 @@ export default function AIWindow() {
           ),
         )}
       </div>
+      {/* 输入框 */}
       <div className="mb-2 flex gap-2">
         <SettingsIcon className="cursor-pointer" onClick={() => SettingsWindow.open("settings")} />
         {showTokenCount && (
@@ -216,15 +249,9 @@ export default function AIWindow() {
         {requesting ? (
           <Loader2 className="animate-spin" />
         ) : (
-          <Send
-            className="cursor-pointer"
-            onClick={() => {
-              if (!inputValue.trim()) return;
-              addMessage({ role: "user", content: inputValue });
-              setInputValue("");
-              run();
-            }}
-          />
+          <Button className="cursor-pointer" onClick={handleUserSend}>
+            <Send />
+          </Button>
         )}
       </div>
       <Textarea placeholder="What can I say?" onChange={(e) => setInputValue(e.target.value)} value={inputValue} />

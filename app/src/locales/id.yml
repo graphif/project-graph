@@ -848,6 +848,10 @@ settings:
       Kunci akan disimpan sebagai teks biasa secara lokal
   aiModel:
     title: Model AI
+  aiShowTokenCount:
+    title: Tampilkan Jumlah Token AI
+    description: |
+      Saat diaktifkan, tampilkan jumlah token untuk operasi AI
   cacheTextAsBitmap:
     title: Aktifkan Render Teks sebagai Bitmap
     description: |
