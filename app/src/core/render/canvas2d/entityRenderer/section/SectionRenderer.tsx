@@ -112,37 +112,6 @@ export class SectionRenderer {
   }
 
   /**
-   * 渲染锁定状态的虚线框效果
-   * @param section
-   */
-  private renderLockedEffect(section: Section) {
-    const viewRect = new Rectangle(
-      this.project.renderer.transformWorld2View(section.rectangle.location),
-      section.rectangle.size.multiply(this.project.camera.currentScale),
-    );
-
-    const shadowColor = this.project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(0.6);
-    const lineWidth = 2 * this.project.camera.currentScale;
-    const gap = 8 * this.project.camera.currentScale; // 虚线框和本体外边框的空隙
-
-    // 创建虚线框矩形，比本体大一些
-    const dashedRect = new Rectangle(
-      viewRect.location.subtract(Vector.same(gap)),
-      viewRect.size.add(Vector.same(gap * 2)),
-    );
-
-    // 使用虚线绘制边框
-    this.project.shapeRenderer.renderDashedRect(
-      dashedRect,
-      Color.Transparent,
-      shadowColor,
-      lineWidth,
-      Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
-      8 * this.project.camera.currentScale, // 虚线的间隔
-    );
-  }
-
-  /**
    * 渲染覆盖了的大标题
    * @param section
    * @returns
@@ -268,11 +237,6 @@ export class SectionRenderer {
     } else {
       // 非折叠状态
       this.renderNoCollapse(section);
-    }
-
-    // 锁定状态的特殊渲染
-    if (section.locked) {
-      this.renderLockedEffect(section);
     }
 
     if (!section.isSelected && this.project.references.sections[section.text]) {

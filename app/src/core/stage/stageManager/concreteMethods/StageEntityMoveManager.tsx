@@ -4,7 +4,6 @@ import { RectanglePushInEffect } from "@/core/service/feedbackService/effectEngi
 import { SoundService } from "@/core/service/feedbackService/SoundService";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { Section } from "@/core/stage/stageObject/entity/Section";
 import { Vector } from "@graphif/data-structures";
 
 /**
@@ -18,12 +17,30 @@ export class EntityMoveManager {
   constructor(private readonly project: Project) {}
 
   /**
+   * 检查实体是否可以移动（考虑锁定状态）
+   * @param entity 要检查的实体
+   * @returns 如果实体可以移动返回 true，否则返回 false
+   */
+  private canMoveEntity(entity: Entity): boolean {
+    // 检查实体是否有锁定的祖先section（递归检查）
+    const ancestorSections = this.project.sectionMethods.getFatherSectionsList(entity);
+    if (ancestorSections.some((section) => section.locked)) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * 让某一个实体移动一小段距离
    * @param entity
    * @param delta
    * @param isAutoAdjustSection 移动的时候是否触发section框的弹性调整
    */
   moveEntityUtils(entity: Entity, delta: Vector, isAutoAdjustSection: boolean = true) {
+    // 检查实体是否可以被移动（锁定状态检查）
+    if (!this.canMoveEntity(entity)) {
+      return;
+    }
     // 让自己移动
     entity.move(delta);
 
@@ -54,20 +71,9 @@ export class EntityMoveManager {
    * @param delta
    */
   jumpMoveEntityUtils(entity: Entity, delta: Vector) {
-    // 检查实体是否在锁定的 section 内
-    if (entity instanceof Section) {
-      // 对于section实体：如果本身被锁定，允许移动；如果未被锁定但有锁定的祖先section，阻止移动
-      if (!entity.locked) {
-        const ancestorSections = this.project.sectionMethods.getFatherSectionsList(entity);
-        if (ancestorSections.some((section) => section.locked)) {
-          return;
-        }
-      }
-    } else {
-      // 对于其他实体：如果有锁定的祖先section，阻止移动
-      if (this.project.sectionMethods.isObjectBeLockedBySection(entity)) {
-        return;
-      }
+    // 检查实体是否可以被移动（锁定状态检查）
+    if (!this.canMoveEntity(entity)) {
+      return;
     }
 
     const beforeMoveRect = entity.collisionBox.getRectangle().clone();
@@ -111,6 +117,10 @@ export class EntityMoveManager {
    * @param location
    */
   moveEntityToUtils(entity: Entity, location: Vector) {
+    // 检查实体是否可以被移动（锁定状态检查）
+    if (!this.canMoveEntity(entity)) {
+      return;
+    }
     entity.moveTo(location);
     const nodeUUID = entity.uuid;
     for (const section of this.project.stageManager.getSections()) {
