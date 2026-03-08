@@ -116,6 +116,21 @@ export namespace AITools {
     },
   );
   addTool(
+    "expand_node_tree_from_node",
+    "从指定节点开始进行树形扩展，传入一个uuid和缩进文本，在该节点下生成树状子节点",
+    z.object({
+      uuid: z.string().describe("根节点的UUID"),
+      text: z.string().describe("包含缩进结构的文本，每一层缩进2个空格，例如：'child1\\n  grandchild\\nchild2'"),
+    }),
+    (project, { uuid, text }) => {
+      const result = project.stageImport.addNodeTreeByTextFromNode(uuid, text, 2);
+      if (result.success && result.nodeCount && result.nodeCount > 0) {
+        project.historyManager.recordStep();
+      }
+      return result;
+    },
+  );
+  addTool(
     "search_text_nodes_by_regex",
     "根据正则表达式搜索文本节点",
     z.object({
@@ -359,10 +374,193 @@ export namespace AITools {
       return { selectedCount };
     },
   );
+  addTool("get_selected_nodes", "获取用户当前所有选中的节点的详细信息", z.object({}), (project) => {
+    const results: Array<{
+      uuid: string;
+      type: string;
+      text?: string;
+      position: { x: number; y: number };
+      size: { width: number; height: number };
+    }> = [];
+
+    for (const entity of project.stageManager.getSelectedEntities()) {
+      const rect = entity.collisionBox.getRectangle();
+      const info = {
+        uuid: entity.uuid,
+        type: entity.constructor.name,
+        position: { x: rect.location.x, y: rect.location.y },
+        size: { width: rect.size.x, height: rect.size.y },
+      };
+      if (entity instanceof TextNode) {
+        (info as any).text = entity.text;
+      }
+      results.push(info);
+    }
+
+    for (const assoc of project.stageManager.getSelectedAssociations()) {
+      const rect = assoc.collisionBox.getRectangle();
+      const info = {
+        uuid: assoc.uuid,
+        type: assoc.constructor.name,
+        position: { x: rect.location.x, y: rect.location.y },
+        size: { width: rect.size.x, height: rect.size.y },
+      };
+      if (assoc instanceof Edge) {
+        (info as any).sourceUuid = assoc.source.uuid;
+        (info as any).targetUuid = assoc.target.uuid;
+        (info as any).text = assoc.text;
+      }
+      results.push(info);
+    }
+
+    return { nodes: results };
+  });
+
+  addTool("get_nodes_in_viewport", "获取当前视野范围中被完全覆盖住的节点", z.object({}), (project) => {
+    const viewRect = project.renderer.getCoverWorldRectangle();
+    const results: Array<{
+      uuid: string;
+      type: string;
+      text?: string;
+      position: { x: number; y: number };
+      size: { width: number; height: number };
+    }> = [];
+
+    for (const entity of project.stageManager.getEntities()) {
+      const rect = entity.collisionBox.getRectangle();
+      if (rect.isAbsoluteIn(viewRect)) {
+        const info = {
+          uuid: entity.uuid,
+          type: entity.constructor.name,
+          position: { x: rect.location.x, y: rect.location.y },
+          size: { width: rect.size.x, height: rect.size.y },
+        };
+        if (entity instanceof TextNode) {
+          (info as any).text = entity.text;
+        }
+        results.push(info);
+      }
+    }
+
+    return { nodes: results };
+  });
   addTool("get_selected_uuids", "获取用户当前所有选中的物体的uuid们", z.object({}), (project) => {
     const selectedEntities = project.stageManager.getSelectedEntities();
     const selectedAssociations = project.stageManager.getSelectedAssociations();
     const uuids = [...selectedEntities.map((e) => e.uuid), ...selectedAssociations.map((a) => a.uuid)];
     return { uuids };
   });
+
+  addTool(
+    "breadth_expand_node",
+    "广度扩展一个节点，传入一个uuid和一个字符串数组，自动根据字符串数组给这个节点添加一层子节点",
+    z.object({
+      uuid: z.string().describe("源节点的UUID"),
+      texts: z.array(z.string()).describe("要添加的子节点文本数组"),
+    }),
+    (project, { uuid, texts }) => {
+      const sourceNode = project.stageManager.getConnectableEntityByUUID(uuid);
+      if (!sourceNode) {
+        return { success: false, error: "源节点不存在或不是可连接对象" };
+      }
+
+      const sourceRect = sourceNode.collisionBox.getRectangle();
+      const startX = sourceRect.location.x + sourceRect.size.x + 100; // 右侧100像素
+      const startY = sourceRect.location.y;
+      const verticalSpacing = 60;
+
+      const results: Array<{ text: string; uuid: string; success: boolean; error?: string }> = [];
+
+      for (let i = 0; i < texts.length; i++) {
+        const text = texts[i];
+        try {
+          const node = new TextNode(project, {
+            text,
+            color: new Color(0, 0, 0, 0), // 透明
+            collisionBox: new CollisionBox([
+              new Rectangle(new Vector(startX, startY + i * verticalSpacing), new Vector(100, 50)),
+            ]),
+            sizeAdjust: "auto" as "auto" | "manual",
+          });
+          project.stageManager.add(node);
+
+          // 创建连线
+          project.nodeConnector.connectConnectableEntity(sourceNode, node, "");
+
+          results.push({ text, uuid: node.uuid, success: true });
+        } catch (error) {
+          results.push({
+            text,
+            uuid: "",
+            success: false,
+            error: error instanceof Error ? error.message : "创建节点失败",
+          });
+        }
+      }
+
+      if (results.some((r) => r.success)) {
+        project.historyManager.recordStep();
+      }
+
+      return { results };
+    },
+  );
+
+  addTool(
+    "depth_expand_node",
+    "深度扩展一个节点，传入一个uuid作为根节点，根据字符串数组在这个节点上扩展出一个链式结构",
+    z.object({
+      uuid: z.string().describe("根节点的UUID"),
+      texts: z.array(z.string()).describe("要添加的链式节点文本数组"),
+    }),
+    (project, { uuid, texts }) => {
+      const rootNode = project.stageManager.getConnectableEntityByUUID(uuid);
+      if (!rootNode) {
+        return { success: false, error: "根节点不存在或不是可连接对象" };
+      }
+
+      const results: Array<{ text: string; uuid: string; success: boolean; error?: string }> = [];
+      let currentNode = rootNode;
+      const horizontalSpacing = 150;
+
+      for (let i = 0; i < texts.length; i++) {
+        const text = texts[i];
+        try {
+          const currentRect = currentNode.collisionBox.getRectangle();
+          const node = new TextNode(project, {
+            text,
+            color: new Color(0, 0, 0, 0), // 透明
+            collisionBox: new CollisionBox([
+              new Rectangle(
+                new Vector(currentRect.location.x + horizontalSpacing, currentRect.location.y),
+                new Vector(100, 50),
+              ),
+            ]),
+            sizeAdjust: "auto" as "auto" | "manual",
+          });
+          project.stageManager.add(node);
+
+          // 创建连线：从前一个节点连接到新节点
+          project.nodeConnector.connectConnectableEntity(currentNode, node, "");
+
+          results.push({ text, uuid: node.uuid, success: true });
+          currentNode = node; // 更新当前节点为新建的节点，继续链式扩展
+        } catch (error) {
+          results.push({
+            text,
+            uuid: "",
+            success: false,
+            error: error instanceof Error ? error.message : "创建节点失败",
+          });
+          break; // 链式结构中一旦失败就停止
+        }
+      }
+
+      if (results.some((r) => r.success)) {
+        project.historyManager.recordStep();
+      }
+
+      return { results };
+    },
+  );
 }

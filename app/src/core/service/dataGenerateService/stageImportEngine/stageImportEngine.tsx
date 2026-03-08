@@ -47,6 +47,21 @@ export class StageImport {
   }
 
   /**
+   * 从指定节点开始根据文本生成树形结构
+   * @param uuid 根节点的UUID
+   * @param text 树形结构的格式文本
+   * @param indention 缩进大小（空格数或Tab数）
+   * @returns 导入结果对象
+   */
+  public addNodeTreeByTextFromNode(
+    uuid: string,
+    text: string,
+    indention: number,
+  ): { success: boolean; error?: string; nodeCount?: number } {
+    return this.treeImporter.importFromNode(uuid, text, indention);
+  }
+
+  /**
    * 根据 mermaid 文本生成框嵌套网状结构
    * 支持 graph TD 格式的 mermaid 文本
    * @param text Mermaid 格式文本

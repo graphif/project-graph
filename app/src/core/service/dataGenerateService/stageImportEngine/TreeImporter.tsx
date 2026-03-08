@@ -75,6 +75,84 @@ export class TreeImporter extends BaseImporter {
   }
 
   /**
+   * 从指定节点开始导入树形结构文本并生成节点
+   * @param uuid 根节点的UUID
+   * @param text 树形结构的格式文本
+   * @param indention 缩进大小（空格数或Tab数）
+   * @returns 导入结果对象
+   */
+  public importFromNode(
+    uuid: string,
+    text: string,
+    indention: number,
+  ): { success: boolean; error?: string; nodeCount?: number } {
+    // 获取指定节点作为根节点
+    const rootNode = this.project.stageManager.getConnectableEntityByUUID(uuid);
+    if (!rootNode) {
+      return { success: false, error: "节点不存在" };
+    }
+    if (!(rootNode instanceof TextNode)) {
+      return { success: false, error: "节点不是TextNode类型" };
+    }
+
+    // 将本文转换成字符串数组，按换行符分割
+    const lines = text.split("\n");
+
+    // 准备好栈，使用现有节点作为根节点
+    const nodeStack = new MonoStack<TextNode>();
+    nodeStack.push(rootNode, -1);
+
+    let nodeCount = 0;
+
+    // 遍历每一行
+    for (let yIndex = 0; yIndex < lines.length; yIndex++) {
+      const line = lines[yIndex];
+      // 跳过空行
+      if (line.trim() === "") {
+        continue;
+      }
+      // 解析缩进格式
+      const indent = this.getIndentLevel(line, indention);
+      // 解析文本内容
+      const textContent = line.trim();
+
+      const node = new TextNode(this.project, {
+        text: textContent.replaceAll("\\t", "\t").replaceAll("\\n", "\n"),
+        collisionBox: new CollisionBox([
+          new Rectangle(
+            rootNode.collisionBox.getRectangle().location.add(new Vector(indent * 50, (yIndex + 1) * 100)),
+            Vector.same(100),
+          ),
+        ]),
+      });
+      this.project.stageManager.add(node);
+      nodeCount++;
+
+      // 检查栈
+      // 保持一个严格单调栈
+      if (nodeStack.peek()) {
+        nodeStack.push(node, indent);
+        const fatherNode = nodeStack.unsafeGet(nodeStack.length - 2);
+        // 创建从父节点右侧到子节点左侧的连线
+        const newEdge = new LineEdge(this.project, {
+          associationList: [fatherNode, node],
+          targetRectangleRate: new Vector(0.01, 0.5), // 目标节点左侧边缘
+          sourceRectangleRate: new Vector(0.99, 0.5), // 源节点右侧边缘
+        });
+        this.project.stageManager.add(newEdge);
+      }
+    }
+
+    if (nodeCount > 0) {
+      // 运行树形布局格式化
+      this.project.autoLayoutFastTree.autoLayoutFastTreeMode(rootNode);
+      return { success: true, nodeCount };
+    } else {
+      return { success: true, nodeCount: 0 }; // 文本为空或只有空行
+    }
+  }
+
+  /**
    * 计算缩进层级
    * @param line 文本行
    * @param indention 缩进大小
