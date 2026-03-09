@@ -1415,7 +1415,7 @@ export const allKeyBinds: KeyBindItem[] = [
       if (selectedTextNodes.length === 0) return;
       project!.historyManager.recordStep();
       for (const node of selectedTextNodes) {
-        node.decreaseFontSize();
+        node.decreaseFontSize(TextNodeSmartTools.getAnchorRateForTextNode(project!, node));
       }
     },
   },
@@ -1430,7 +1430,7 @@ export const allKeyBinds: KeyBindItem[] = [
       if (selectedTextNodes.length === 0) return;
       project!.historyManager.recordStep();
       for (const node of selectedTextNodes) {
-        node.increaseFontSize();
+        node.increaseFontSize(TextNodeSmartTools.getAnchorRateForTextNode(project!, node));
       }
     },
   },

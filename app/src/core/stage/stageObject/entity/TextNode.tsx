@@ -164,24 +164,46 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
 
   /**
    * 放大字体
+   * @param anchorRate 可选。缩放时保持固定的锚点（矩形内比例，如 (0.5,0.5) 为中心）。不传则保持左上角不变。
    */
-  public increaseFontSize(): void {
+  public increaseFontSize(anchorRate?: Vector): void {
     this.fontScaleLevel++;
     this.updateFontSizeCache();
     if (this.sizeAdjust === "auto") {
+      const oldRect = this.rectangle.clone();
       this.adjustSizeByText();
+      if (anchorRate) {
+        this._adjustLocationToKeepAnchor(oldRect, anchorRate);
+      }
     }
   }
 
   /**
    * 缩小字体
+   * @param anchorRate 可选。缩放时保持固定的锚点（矩形内比例）。不传则保持左上角不变。
    */
-  public decreaseFontSize(): void {
+  public decreaseFontSize(anchorRate?: Vector): void {
     this.fontScaleLevel--;
     this.updateFontSizeCache();
     if (this.sizeAdjust === "auto") {
+      const oldRect = this.rectangle.clone();
       this.adjustSizeByText();
+      if (anchorRate) {
+        this._adjustLocationToKeepAnchor(oldRect, anchorRate);
+      }
     }
+  }
+
+  /**
+   * 在尺寸已变更后，根据旧矩形和锚点比例调整 location，使锚点在世界坐标中保持不变
+   */
+  private _adjustLocationToKeepAnchor(oldRect: Rectangle, anchorRate: Vector): void {
+    const newSize = this.rectangle.size;
+    const locationDelta = new Vector(
+      (oldRect.size.x - newSize.x) * anchorRate.x,
+      (oldRect.size.y - newSize.y) * anchorRate.y,
+    );
+    this.moveTo(oldRect.location.clone().add(locationDelta));
   }
 
   /**
