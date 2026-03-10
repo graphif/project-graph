@@ -146,9 +146,16 @@ export default function KeyBindsPage() {
       .map((item) => item.id);
   };
 
-  // 检测快捷键冲突
+  // 判断两个快捷键是否重叠（完全相同，或一方是另一方的序列前缀，如 "q" 与 "q e"）
+  const isKeyOverlap = (key1: string, key2: string) => {
+    if (key1 === key2) return true;
+    // 序列快捷键：一方是另一方的前缀则重叠（先按 q 再按 e 与 单按 q 会冲突）
+    return key2.startsWith(key1 + " ") || key1.startsWith(key2 + " ");
+  };
+
+  // 检测快捷键冲突（含完全一致 + 序列前缀重叠）
   const detectKeyConflicts = (targetKey: string, targetId: string) => {
-    return data.filter((item) => item.key === targetKey && item.id !== targetId && item.isEnabled);
+    return data.filter((item) => item.id !== targetId && item.isEnabled && isKeyOverlap(item.key, targetKey));
   };
 
   // 处理冲突提示点击
@@ -193,7 +200,7 @@ export default function KeyBindsPage() {
                   className="bg-primary/10 text-primary hover:bg-primary/20 flex cursor-pointer items-center rounded px-3 py-1.5 text-xs"
                   onClick={() => handleConflictClick(conflicts, keyBindData?.key || "")}
                 >
-                  <AlertCircle className="mr-1 h-3 w-3" />与 {conflicts.length} 个快捷键重复
+                  <AlertCircle className="mr-1 h-3 w-3" />与 {conflicts.length} 个快捷键重叠
                 </div>
               </div>
             ) : (
@@ -475,14 +482,14 @@ export default function KeyBindsPage() {
           </div>
         )}
       </div>
-      {/* 重复详情对话框 */}
+      {/* 重叠详情对话框 */}
       <Dialog open={conflictDialogOpen} onOpenChange={setConflictDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>快捷键重复详情</DialogTitle>
+            <DialogTitle>快捷键重叠详情</DialogTitle>
             <DialogDescription>
-              以下快捷键与 {currentConflictKey} 重复：
-              <div className="mt-2 text-sm">注意：重复的快捷键会一起执行所有相关功能</div>
+              以下快捷键与 {currentConflictKey} 重叠：
+              <div className="mt-2 text-sm">注意：重叠的快捷键会一起执行所有相关功能</div>
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-96 overflow-y-auto">
