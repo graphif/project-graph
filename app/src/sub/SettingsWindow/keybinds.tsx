@@ -489,7 +489,9 @@ export default function KeyBindsPage() {
             <DialogTitle>快捷键重叠详情</DialogTitle>
             <DialogDescription>
               以下快捷键与 {currentConflictKey} 重叠：
-              <div className="mt-2 text-sm">注意：重叠的快捷键会一起执行所有相关功能</div>
+              <div className="mt-2 text-sm">
+                注意：完全相等的快捷键会一起执行所有相关功能、前缀重叠的快捷键会执行较短的那个快捷键
+              </div>
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-96 overflow-y-auto">
