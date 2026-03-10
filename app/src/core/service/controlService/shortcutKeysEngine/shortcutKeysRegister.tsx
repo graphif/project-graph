@@ -1452,7 +1452,7 @@ export const allKeyBinds: KeyBindItem[] = [
   },
   {
     id: "selectAtCrosshair",
-    defaultKey: "q",
+    defaultKey: "q q",
     onPress: (project) => {
       if (!project!.keyboardOnlyEngine.isOpenning()) return;
       const worldLocation = project!.camera.location.clone();
