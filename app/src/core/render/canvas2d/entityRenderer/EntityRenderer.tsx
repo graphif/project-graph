@@ -220,6 +220,16 @@ export class EntityRenderer {
   }
 
   private renderImageNode(imageNode: ImageNode) {
+    // 隐私模式下隐藏图片内容，只渲染边框
+    if (Settings.protectingPrivacy) {
+      // 渲染图片节点的边框（使用StageObjectBorder颜色）
+      this.project.collisionBoxRenderer.render(
+        imageNode.collisionBox,
+        this.project.stageStyleManager.currentStyle.StageObjectBorder,
+      );
+      return;
+    }
+
     // 先渲染图片内容
     if (imageNode.state === "loading") {
       this.project.textRenderer.renderTextFromCenter(
