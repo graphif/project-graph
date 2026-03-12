@@ -472,19 +472,19 @@ function WindowButtons() {
       {isMac ? (
         <span className="flex *:flex *:size-3 sm:px-2 sm:*:m-1">
           <div
-            className="hidden cursor-pointer items-center justify-center rounded-full bg-red-400 text-transparent hover:scale-110 hover:text-red-800"
+            className="hidden cursor-pointer items-center justify-center rounded-full bg-red-400 text-red-800 hover:scale-110"
             onClick={() => getCurrentWindow().close()}
           >
             <X strokeWidth={3} size={10} />
           </div>
           <div
-            className="hidden cursor-pointer items-center justify-center rounded-full bg-yellow-400 text-transparent hover:scale-110 hover:text-yellow-800 sm:block"
+            className="hidden cursor-pointer items-center justify-center rounded-full bg-yellow-400 text-yellow-800 hover:scale-110 sm:block"
             onClick={() => getCurrentWindow().minimize()}
           >
             <Minus strokeWidth={3} size={10} />
           </div>
           <div
-            className="hidden cursor-pointer items-center justify-center rounded-full bg-green-400 text-transparent hover:scale-110 hover:text-green-800 sm:block"
+            className="hidden cursor-pointer items-center justify-center rounded-full bg-green-400 text-green-800 hover:scale-110 sm:block"
             onClick={() => {
               getCurrentWindow()
                 .isFullscreen()
