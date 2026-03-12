@@ -79,6 +79,10 @@ export class TextNodeRenderer {
           2 * this.project.camera.currentScale,
         );
       }
+      // 渲染键盘树形模式方向提示（仅在键盘操作模式下且非编辑状态时显示）
+      if (this.project.keyboardOnlyEngine.isOpenning() && !node.isEditing) {
+        this.renderKeyboardTreeHint(node);
+      }
     }
     if (node.isAiGenerating) {
       const borderColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected.clone();
@@ -126,9 +130,49 @@ export class TextNodeRenderer {
   }
 
   /**
-   * 画节点文字层信息
-   * @param node
+   * 渲染键盘树形模式下的方向提示：
+   * - 当前预测生长方向：显示 "tab→/←/↑/↓"（绿色高亮）
+   * - 其余三个方向：显示对应的方向切换快捷键（"W W"/"S S"/"A A"/"D D"），颜色较淡
    */
+  private renderKeyboardTreeHint(node: TextNode): void {
+    const direction = this.project.keyboardOnlyTreeEngine.getNodePreDirection(node);
+    const rect = node.collisionBox.getRectangle();
+    const GAP = 30;
+
+    const tabColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected.clone();
+    tabColor.a = 0.8;
+    const hintColor = this.project.stageStyleManager.currentStyle.StageObjectBorder.clone();
+    hintColor.a = 0.45;
+
+    const allDirections: Array<{
+      dir: "right" | "left" | "up" | "down";
+      pos: Vector;
+      key: string;
+      arrow: string;
+    }> = [
+      { dir: "right", pos: rect.rightCenter.add(new Vector(GAP, 0)), key: "D D", arrow: "→" },
+      { dir: "left", pos: rect.leftCenter.add(new Vector(-GAP, 0)), key: "A A", arrow: "←" },
+      { dir: "up", pos: rect.topCenter.add(new Vector(0, -GAP)), key: "W W", arrow: "↑" },
+      { dir: "down", pos: rect.bottomCenter.add(new Vector(0, GAP)), key: "S S", arrow: "↓" },
+    ];
+
+    for (const { dir, pos, key, arrow } of allDirections) {
+      const viewPos = this.project.renderer.transformWorld2View(pos);
+      if (dir === direction) {
+        // 当前预测方向：显示 tab + 箭头，绿色
+        this.project.textRenderer.renderTextFromCenter(
+          `tab${arrow}`,
+          viewPos,
+          18 * this.project.camera.currentScale,
+          tabColor,
+        );
+      } else {
+        // 其他方向：显示快捷键，半透明淡色
+        this.project.textRenderer.renderTextFromCenter(key, viewPos, 13 * this.project.camera.currentScale, hintColor);
+      }
+    }
+  }
+
   /**
    * 为逻辑节点在内部边缘绘制「」标记
    */

@@ -26,7 +26,7 @@ export class KeyboardOnlyTreeEngine {
    * @param node
    * @returns
    */
-  private getNodePreDirection(node: ConnectableEntity): "right" | "left" | "down" | "up" {
+  public getNodePreDirection(node: ConnectableEntity): "right" | "left" | "down" | "up" {
     if (this.preDirectionCacheMap.has(node.uuid)) {
       const direction = this.preDirectionCacheMap.get(node.uuid)!;
       return direction;
