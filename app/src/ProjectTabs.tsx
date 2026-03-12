@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Project, ProjectState } from "./core/Project";
 import { cn } from "@udecode/cn";
 import { Button } from "./components/ui/button";
@@ -6,6 +6,8 @@ import { CircleAlert, CloudUpload, X } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./components/ui/tooltip";
 import { SoundService } from "./core/service/feedbackService/SoundService";
 import { toast } from "sonner";
+import { Settings } from "./core/service/Settings";
+import { replaceTextWhenProtect } from "./utils/font";
 
 // 将 ProjectTabs 移出 App 组件，作为独立组件
 export const ProjectTabs = memo(function ProjectTabs({
@@ -25,6 +27,12 @@ export const ProjectTabs = memo(function ProjectTabs({
 }) {
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef(0);
+  const [protectingPrivacy, setProtectingPrivacy] = useState(Settings.protectingPrivacy);
+
+  useEffect(() => {
+    const unwatch = Settings.watch("protectingPrivacy", setProtectingPrivacy);
+    return unwatch;
+  }, []);
 
   // 保存滚动位置
   const saveScrollPosition = useCallback(() => {
@@ -102,11 +110,15 @@ export const ProjectTabs = memo(function ProjectTabs({
           }}
         >
           <span className="text-xs">
-            {project.uri.scheme === "draft"
-              ? `临时草稿 (${project.uri.path})`
-              : project.uri.scheme === "file"
-                ? project.uri.path.split("/").pop()
-                : project.uri.toString()}
+            {(() => {
+              const name =
+                project.uri.scheme === "draft"
+                  ? `临时草稿 (${project.uri.path})`
+                  : project.uri.scheme === "file"
+                    ? project.uri.path.split("/").pop()
+                    : project.uri.toString();
+              return protectingPrivacy ? replaceTextWhenProtect(name ?? "") : name;
+            })()}
           </span>
           <div
             className="flex size-4 cursor-pointer items-center justify-center hover:opacity-100"
