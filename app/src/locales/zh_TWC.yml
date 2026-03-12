@@ -207,6 +207,7 @@ settings:
       cameraZoom: 視野縮放
       objectSelect: 選
       textNode: 文字節點
+      section: 框
       edge: 連線
       generateNode: 透過鍵盤生長節點
       gamepad: 遊戲手把
@@ -440,6 +441,10 @@ settings:
     description: '開啟後，實體之間會進行碰撞擠壓移動，可能會影響效能。
 
       建議關閉此項，目前實體碰撞擠壓還不完善，可能導致堆疊溢位'
+  isEnableSectionCollision:
+    title: 启用框碰撞
+    description: |
+      开启后，框与框之间会自动进行碰撞排斥（推开重叠的同级框），避免框重叠。
   autoRefreshStageByMouseAction:
     title: 滑鼠操作時自動刷新舞台
     description: '開啟後，滑鼠操作(拖曳移動視野)會自動重新整理舞台

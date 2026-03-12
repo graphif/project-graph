@@ -159,6 +159,7 @@ settings:
       cameraZoom: 视野缩放
       objectSelect: 物体选择
       textNode: 文本节点
+      section: 框
       edge: 连线
       generateNode: 通过键盘生长节点
       gamepad: 游戏手柄
@@ -407,6 +408,10 @@ settings:
     description: |
       开启后，实体之间会进行碰撞挤压移动，可能会影响性能。
       建议关闭此项，目前实体碰撞挤压还不完善，可能导致爆栈
+  isEnableSectionCollision:
+    title: 启用框碰撞
+    description: |
+      开启后，框与框之间会自动进行碰撞排斥（推开重叠的同级框），避免框重叠。
   autoRefreshStageByMouseAction:
     title: 鼠标操作时自动刷新舞台
     description: |

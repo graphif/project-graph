@@ -68,6 +68,7 @@ import { StageObjectColorManager } from "@/core/stage/stageManager/concreteMetho
 import { StageObjectSelectCounter } from "@/core/stage/stageManager/concreteMethods/StageObjectSelectCounter";
 import { SectionInOutManager } from "@/core/stage/stageManager/concreteMethods/StageSectionInOutManager";
 import { SectionPackManager } from "@/core/stage/stageManager/concreteMethods/StageSectionPackManager";
+import { SectionCollisionSolver } from "@/core/stage/stageManager/concreteMethods/SectionCollisionSolver";
 import { TagManager } from "@/core/stage/stageManager/concreteMethods/StageTagManager";
 import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import { StageManager } from "@/core/stage/stageManager/StageManager";
@@ -127,6 +128,7 @@ export function loadAllServicesBeforeInit(project: Project): void {
   project.loadService(StageObjectSelectCounter);
   project.loadService(SectionInOutManager);
   project.loadService(SectionPackManager);
+  project.loadService(SectionCollisionSolver);
   project.loadService(TagManager);
   project.loadService(ReferenceManager);
   project.loadService(KeyboardOnlyEngine);

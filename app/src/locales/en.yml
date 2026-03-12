@@ -303,6 +303,10 @@ settings:
     description: |
       When enabled, entities will collide and squeeze each other, which may affect performance.
       It is recommended to disable this option, as entity collision and squeezing are not yet perfect and may cause stack overflow.
+  isEnableSectionCollision:
+    title: Enable Section Collision
+    description: |
+      When enabled, sibling sections will automatically push each other apart to avoid overlapping.
   autoNamerTemplate:
     title: Auto-Naming Template for Node Creation
     description: |

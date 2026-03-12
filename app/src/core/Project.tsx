@@ -67,6 +67,7 @@ import type { StageObjectColorManager } from "@/core/stage/stageManager/concrete
 import type { StageObjectSelectCounter } from "@/core/stage/stageManager/concreteMethods/StageObjectSelectCounter";
 import type { SectionInOutManager } from "@/core/stage/stageManager/concreteMethods/StageSectionInOutManager";
 import type { SectionPackManager } from "@/core/stage/stageManager/concreteMethods/StageSectionPackManager";
+import type { SectionCollisionSolver } from "@/core/stage/stageManager/concreteMethods/SectionCollisionSolver";
 import type { TagManager } from "@/core/stage/stageManager/concreteMethods/StageTagManager";
 import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import type { StageManager } from "@/core/stage/stageManager/StageManager";
@@ -574,6 +575,7 @@ declare module "./Project" {
     stageObjectSelectCounter: StageObjectSelectCounter;
     sectionInOutManager: SectionInOutManager;
     sectionPackManager: SectionPackManager;
+    sectionCollisionSolver: SectionCollisionSolver;
     tagManager: TagManager;
     keyboardOnlyEngine: KeyboardOnlyEngine;
     keyboardOnlyGraphEngine: KeyboardOnlyGraphEngine;

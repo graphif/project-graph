@@ -57,12 +57,15 @@ export abstract class Entity extends StageObject {
   }
 
   /**
-   * 由于自身位置的移动，递归的更新所有父级Section的位置和大小
+   * 由于自身位置的移动，递归的更新所有父级Section的位置和大小。
+   * 每次父框 adjustLocationAndSize 后，调用碰撞求解器推开与其重叠的同级分支。
    */
   protected updateFatherSectionByMove() {
     const fatherSections = this.project.sectionMethods.getFatherSections(this);
     for (const section of fatherSections) {
       section.adjustLocationAndSize();
+      // 父框增大后，检测并推移与其重叠的同级 Section 分支
+      this.project.sectionCollisionSolver.solveOverlaps(section);
       section.updateFatherSectionByMove();
     }
   }

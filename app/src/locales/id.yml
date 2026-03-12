@@ -159,6 +159,7 @@ settings:
       cameraZoom: Zoom Tampilan
       objectSelect: Pemilihan Objek
       textNode: Node Teks
+      section: Bagian
       edge: Garis
       generateNode: Pertumbuhan Node via Keyboard
       gamepad: Gamepad
@@ -398,6 +399,10 @@ settings:
     description: |
       Saat diaktifkan, entitas akan bertabrakan dan menekan satu sama lain, dapat mempengaruhi performa.
       Disarankan menonaktifkan ini, saat ini penekanan tabrakan entitas belum sempurna, dapat menyebabkan stack overflow
+  isEnableSectionCollision:
+    title: Aktifkan Tabrakan Bagian
+    description: |
+      Saat diaktifkan, bagian-bagian yang berdampingan akan saling mendorong untuk menghindari tumpang tindih.
   autoRefreshStageByMouseAction:
     title: Segarkan Panggung Otomatis Saat Operasi Mouse
     description: |

@@ -286,6 +286,7 @@ const categories = {
       "textNodeBigContentThresholdWhenPaste",
       "textNodePasteSizeAdjustMode",
     ],
+    section: ["isEnableSectionCollision"],
     edge: [
       "allowAddCycleEdge",
       "autoAdjustLineEndpointsByMouseTrack",
@@ -341,6 +342,7 @@ const categoryIcons = {
     cameraZoom: ZoomIn,
     objectSelect: SquareDashedMousePointer,
     textNode: TextSelect,
+    section: Box,
     edge: ArrowUpRight,
     generateNode: Network,
     gamepad: Gamepad,
