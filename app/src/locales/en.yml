@@ -782,6 +782,11 @@ settings:
   showTextNodeBorder:
     title: Show Text Node Border
     description: "Controls whether to show the text node border or not.\n"
+  showTreeDirectionHint:
+    title: Show Tree Growth Direction Hints
+    description: |
+      When a text node is selected, display keyboard hints (tab/W W/S S/A A/D D) around the node indicating tree growth directions.
+      When disabled, these hint labels will not be rendered.
   autoLayoutWhenTreeGenerate:
     title: Automatically update layout when growing nodes
     description: "After it is turned on, the layout will be automatically updated

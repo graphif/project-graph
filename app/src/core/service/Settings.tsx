@@ -19,6 +19,7 @@ export const settingsSchema = z.object({
   showBackgroundCartesian: z.boolean().default(true),
   enableTagTextNodesBigDisplay: z.boolean().default(true),
   showTextNodeBorder: z.boolean().default(true),
+  showTreeDirectionHint: z.boolean().default(true),
   lineStyle: z.union([z.literal("straight"), z.literal("bezier"), z.literal("vertical")]).default("straight"),
   sectionBitTitleRenderType: z.union([z.literal("none"), z.literal("top"), z.literal("cover")]).default("cover"),
   nodeDetailsPanel: z.union([z.literal("small"), z.literal("vditor")]).default("vditor"),

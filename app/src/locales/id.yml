@@ -269,6 +269,11 @@ settings:
     title: Tampilkan Batas Node Teks
     description: |
       Mengontrol apakah menampilkan batas node teks
+  showTreeDirectionHint:
+    title: Tampilkan Petunjuk Arah Pertumbuhan Pohon
+    description: |
+      Saat node teks dipilih, tampilkan petunjuk keyboard (tab/W W/S S/A A/D D) di sekitar node yang menunjukkan arah pertumbuhan pohon.
+      Saat dinonaktifkan, label petunjuk ini tidak akan dirender.
   sectionBitTitleRenderType:
     title: Jenis Render Judul Besar Ringkasan Kotak
     options:

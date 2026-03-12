@@ -80,7 +80,7 @@ export class TextNodeRenderer {
         );
       }
       // 渲染键盘树形模式方向提示（仅在键盘操作模式下且非编辑状态时显示）
-      if (this.project.keyboardOnlyEngine.isOpenning() && !node.isEditing) {
+      if (this.project.keyboardOnlyEngine.isOpenning() && !node.isEditing && Settings.showTreeDirectionHint) {
         this.renderKeyboardTreeHint(node);
       }
     }
@@ -170,6 +170,30 @@ export class TextNodeRenderer {
         // 其他方向：显示快捷键，半透明淡色
         this.project.textRenderer.renderTextFromCenter(key, viewPos, 13 * this.project.camera.currentScale, hintColor);
       }
+    }
+
+    // 反斜杠（\）广度生长：在父节点方向确定的新兄弟节点预测位置画一个虚框
+    // onBroadGenerateNode 创建的是父节点的新子节点（当前选中节点的兄弟）
+    // 父节点方向 left/right → 新兄弟在当前节点下方
+    // 父节点方向 up/down   → 新兄弟在当前节点右侧
+    const parents = this.project.graphMethods.nodeParentArray(node);
+    if (parents.length === 1) {
+      const parentNode = parents[0];
+      const parentDirection = this.project.keyboardOnlyTreeEngine.getNodePreDirection(parentNode);
+      const SIBLING_GAP = 10;
+      let previewLocation: Vector;
+      if (parentDirection === "right" || parentDirection === "left") {
+        previewLocation = rect.leftBottom.add(new Vector(0, SIBLING_GAP));
+      } else {
+        previewLocation = rect.rightTop.add(new Vector(SIBLING_GAP, 0));
+      }
+      const previewCenter = previewLocation.add(new Vector(rect.width / 2, rect.height / 2));
+      this.project.textRenderer.renderTextFromCenter(
+        "backslash \\",
+        this.project.renderer.transformWorld2View(previewCenter),
+        10 * this.project.camera.currentScale,
+        hintColor,
+      );
     }
   }
 

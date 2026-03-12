@@ -278,6 +278,11 @@ settings:
     title: 顯示文本節點邊框
     description: |
       控制是否顯示文本節點的邊框
+  showTreeDirectionHint:
+    title: 顯示樹形生長方向提示
+    description: |
+      選中文本節點時，在節點四周顯示 tab/W W/S S/A A/D D 等鍵盤樹形生長方向提示。
+      關閉後不再渲染這些提示文字。
   sectionBitTitleRenderType:
     title: 框的縮略大標題渲染類型
     options:
