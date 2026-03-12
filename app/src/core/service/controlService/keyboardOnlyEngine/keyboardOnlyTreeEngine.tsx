@@ -1,6 +1,7 @@
 import { Project, service } from "@/core/Project";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
+import { toast } from "sonner";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Direction } from "@/types/directions";
@@ -227,6 +228,14 @@ export class KeyboardOnlyTreeEngine {
         rootNodeParent.isSelected = false;
         newNode.isSelected = true;
         rootNode.isSelected = false;
+      } else {
+        if (Settings.autoLayoutWhenTreeGenerate) {
+          toast.warning("当前结构不符合树形结构，无法触发自动布局");
+        }
+      }
+    } else {
+      if (Settings.autoLayoutWhenTreeGenerate) {
+        toast.warning("当前结构不符合树形结构，无法触发自动布局");
       }
     }
 
@@ -357,6 +366,14 @@ export class KeyboardOnlyTreeEngine {
         rootNodeParent.isSelected = false;
         newNode.isSelected = true;
         currentSelectNode.isSelected = false;
+      } else {
+        if (Settings.autoLayoutWhenTreeGenerate) {
+          toast.warning("当前结构不符合树形结构，无法触发自动布局");
+        }
+      }
+    } else {
+      if (Settings.autoLayoutWhenTreeGenerate) {
+        toast.warning("当前结构不符合树形结构，无法触发自动布局");
       }
     }
     this.project.effects.addEffects(this.project.edgeRenderer.getConnectedEffects(parent, newNode));
