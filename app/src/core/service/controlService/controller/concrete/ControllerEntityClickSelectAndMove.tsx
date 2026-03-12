@@ -41,16 +41,41 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
     // 检查点击的物体是否在锁定的 section 内
     if (clickedStageObject && clickedStageObject instanceof Entity) {
       if (clickedStageObject instanceof Section) {
-        // 对于section实体：如果本身被锁定，允许选中（为了移动）；如果未被锁定但有锁定的祖先section，阻止选中
-        if (!clickedStageObject.locked) {
-          const ancestorSections = this.project.sectionMethods.getFatherSectionsList(clickedStageObject);
-          if (ancestorSections.some((section) => section.locked)) {
-            return;
-          }
+        // 不管section本身是否锁定，只要有锁定的祖先section，就重定向到最外层锁定祖先（支持任意深度嵌套）
+        const ancestorSections = this.project.sectionMethods.getFatherSectionsList(clickedStageObject);
+        const lockedAncestors = ancestorSections.filter((s) => s.locked);
+        const outermostLockedAncestor = lockedAncestors.find(
+          (candidate) =>
+            !lockedAncestors.some(
+              (other) => other !== candidate && this.project.sectionMethods.isEntityInSection(candidate, other),
+            ),
+        );
+        if (outermostLockedAncestor) {
+          this.project.stageManager.getStageObjects().forEach((obj) => {
+            obj.isSelected = false;
+          });
+          outermostLockedAncestor.isSelected = true;
+          this.isMovingEntity = true;
+          return;
         }
       } else {
-        // 对于其他实体：如果有锁定的祖先section，阻止选中
+        // 对于其他实体：如果有锁定的祖先section，转而选中并拖动最外层锁定section
         if (this.project.sectionMethods.isObjectBeLockedBySection(clickedStageObject)) {
+          const ancestorSections = this.project.sectionMethods.getFatherSectionsList(clickedStageObject);
+          const lockedAncestors = ancestorSections.filter((s) => s.locked);
+          const outermostLockedSection = lockedAncestors.find(
+            (candidate) =>
+              !lockedAncestors.some(
+                (other) => other !== candidate && this.project.sectionMethods.isEntityInSection(candidate, other),
+              ),
+          );
+          if (outermostLockedSection) {
+            this.project.stageManager.getStageObjects().forEach((obj) => {
+              obj.isSelected = false;
+            });
+            outermostLockedSection.isSelected = true;
+            this.isMovingEntity = true;
+          }
           return;
         }
       }
