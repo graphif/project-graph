@@ -272,6 +272,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     newRectangle.size = newSize;
 
     this.collisionBox.shapes[0] = newRectangle;
+    this.updateFatherSectionByMove();
   }
 
   resizeWidthTo(width: number) {
