@@ -563,4 +563,138 @@ export namespace AITools {
       return { results };
     },
   );
+
+  addTool(
+    "sort_selected_nodes_by_y",
+    "对选中的所有文本节点按照从上到下的顺序重新排列位置（y轴方向）。AI调用前需先用get_selected_nodes获取当前选中节点信息，按y坐标从小到大排列得到current_order，再根据用户期望得到desired_order。",
+    z.object({
+      current_order: z.array(z.string()).describe("当前选中文本节点的文本内容数组，按y坐标从上到下（从小到大）排列"),
+      desired_order: z
+        .array(z.string())
+        .describe("期望排列的文本内容顺序数组，从上到下，必须与current_order包含完全相同的元素"),
+    }),
+    (project, { current_order, desired_order }) => {
+      // 获取所有选中的TextNode
+      const selectedTextNodes = project.stageManager
+        .getSelectedEntities()
+        .filter((e): e is TextNode => e instanceof TextNode);
+
+      // 检查重复名称
+      const textCounts = new Map<string, number>();
+      for (const node of selectedTextNodes) {
+        textCounts.set(node.text, (textCounts.get(node.text) ?? 0) + 1);
+      }
+      const duplicates = [...textCounts.entries()].filter(([, count]) => count > 1).map(([text]) => text);
+      if (duplicates.length > 0) {
+        return {
+          success: false,
+          error: `排序功能不能有重复名称的文本节点，重复的内容：${duplicates.join(", ")}`,
+        };
+      }
+
+      // 校验 current_order 与 desired_order 元素一致
+      const currentSet = new Set(current_order);
+      const desiredSet = new Set(desired_order);
+      if (current_order.length !== desired_order.length || [...currentSet].some((t) => !desiredSet.has(t))) {
+        return { success: false, error: "current_order 与 desired_order 包含的元素不一致" };
+      }
+
+      // 构建 text -> node 映射
+      const textToNode = new Map<string, TextNode>();
+      for (const node of selectedTextNodes) {
+        textToNode.set(node.text, node);
+      }
+
+      // 校验 current_order 是否覆盖了所有选中节点
+      for (const text of current_order) {
+        if (!textToNode.has(text)) {
+          return { success: false, error: `current_order 中的 "${text}" 在选中节点中未找到` };
+        }
+      }
+
+      // 以 current_order 第一个节点（最顶部）的 y 坐标作为起始 y
+      const startNode = textToNode.get(current_order[0])!;
+      let currentY = startNode.collisionBox.getRectangle().location.y;
+
+      // 按 desired_order 顺序从上到下重新排列，保持原 x 坐标
+      for (const text of desired_order) {
+        const node = textToNode.get(text)!;
+        const rect = node.collisionBox.getRectangle();
+        node.collisionBox.updateShapeList([new Rectangle(new Vector(rect.location.x, currentY), rect.size)]);
+        node.forceAdjustSizeByText();
+        // 下一个节点从当前节点底部开始
+        currentY += node.collisionBox.getRectangle().size.y;
+      }
+
+      project.historyManager.recordStep();
+      return { success: true, movedCount: desired_order.length };
+    },
+  );
+
+  addTool(
+    "sort_selected_nodes_by_x",
+    "对选中的所有文本节点按照从左到右的顺序重新排列位置（x轴方向）。AI调用前需先用get_selected_nodes获取当前选中节点信息，按x坐标从小到大排列得到current_order，再根据用户期望得到desired_order。",
+    z.object({
+      current_order: z.array(z.string()).describe("当前选中文本节点的文本内容数组，按x坐标从左到右（从小到大）排列"),
+      desired_order: z
+        .array(z.string())
+        .describe("期望排列的文本内容顺序数组，从左到右，必须与current_order包含完全相同的元素"),
+    }),
+    (project, { current_order, desired_order }) => {
+      // 获取所有选中的TextNode
+      const selectedTextNodes = project.stageManager
+        .getSelectedEntities()
+        .filter((e): e is TextNode => e instanceof TextNode);
+
+      // 检查重复名称
+      const textCounts = new Map<string, number>();
+      for (const node of selectedTextNodes) {
+        textCounts.set(node.text, (textCounts.get(node.text) ?? 0) + 1);
+      }
+      const duplicates = [...textCounts.entries()].filter(([, count]) => count > 1).map(([text]) => text);
+      if (duplicates.length > 0) {
+        return {
+          success: false,
+          error: `排序功能不能有重复名称的文本节点，重复的内容：${duplicates.join(", ")}`,
+        };
+      }
+
+      // 校验 current_order 与 desired_order 元素一致
+      const currentSet = new Set(current_order);
+      const desiredSet = new Set(desired_order);
+      if (current_order.length !== desired_order.length || [...currentSet].some((t) => !desiredSet.has(t))) {
+        return { success: false, error: "current_order 与 desired_order 包含的元素不一致" };
+      }
+
+      // 构建 text -> node 映射
+      const textToNode = new Map<string, TextNode>();
+      for (const node of selectedTextNodes) {
+        textToNode.set(node.text, node);
+      }
+
+      // 校验 current_order 是否覆盖了所有选中节点
+      for (const text of current_order) {
+        if (!textToNode.has(text)) {
+          return { success: false, error: `current_order 中的 "${text}" 在选中节点中未找到` };
+        }
+      }
+
+      // 以 current_order 第一个节点（最左侧）的 x 坐标作为起始 x
+      const startNode = textToNode.get(current_order[0])!;
+      let currentX = startNode.collisionBox.getRectangle().location.x;
+
+      // 按 desired_order 顺序从左到右重新排列，保持原 y 坐标
+      for (const text of desired_order) {
+        const node = textToNode.get(text)!;
+        const rect = node.collisionBox.getRectangle();
+        node.collisionBox.updateShapeList([new Rectangle(new Vector(currentX, rect.location.y), rect.size)]);
+        node.forceAdjustSizeByText();
+        // 下一个节点从当前节点右侧开始
+        currentX += node.collisionBox.getRectangle().size.x;
+      }
+
+      project.historyManager.recordStep();
+      return { success: true, movedCount: desired_order.length };
+    },
+  );
 }
