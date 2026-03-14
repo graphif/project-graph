@@ -14,6 +14,7 @@ import {
 import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project, ProjectState } from "@/core/Project";
 import { activeProjectAtom, isClassroomModeAtom, isDevAtom, projectsAtom, store } from "@/state";
+import AIToolsWindow from "@/sub/AIToolsWindow";
 import AIWindow from "@/sub/AIWindow";
 import AttachmentsWindow from "@/sub/AttachmentsWindow";
 import LogicNodePanel from "@/sub/AutoComputeWindow";
@@ -120,6 +121,7 @@ import {
   VenetianMask,
   View,
   Workflow,
+  Wrench,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -1039,6 +1041,10 @@ export function GlobalMenu() {
           <Item onClick={() => AIWindow.open()}>
             <ExternalLink />
             {t("ai.openAIPanel")}
+          </Item>
+          <Item onClick={() => AIToolsWindow.open()}>
+            <Wrench />
+            查看AI所有工具
           </Item>
         </Content>
       </Menu>
