@@ -1,5 +1,5 @@
 <div align="center">
-
+# 该库将进行架构重构
 <img src="app/src/assets/logo-animated.svg" height="150" alt="banner">
 <h1>Project Graph</h1>
 
