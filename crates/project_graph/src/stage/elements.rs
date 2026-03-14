@@ -14,6 +14,8 @@ pub trait ElementTrait {
     fn id(&self) -> &str;
     /// 渲染函数
     fn ui(&self, ui: &mut egui::Ui, rc: &mut RenderContext);
+    /// 获取包围盒（世界坐标）
+    fn world_rect(&self) -> egui::Rect;
 }
 
 #[enum_dispatch(ElementTrait)]
