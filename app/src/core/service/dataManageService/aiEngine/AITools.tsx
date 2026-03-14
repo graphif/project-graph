@@ -36,6 +36,53 @@ export namespace AITools {
     project.historyManager.recordStep();
   });
   addTool(
+    "delete_nodes_by_uuids",
+    "批量删除指定uuid数组对应的节点",
+    z.object({
+      uuids: z.array(z.string()).describe("要删除的节点UUID数组"),
+    }),
+    (project, { uuids }) => {
+      let deletedCount = 0;
+      for (const uuid of uuids) {
+        const obj = project.stageManager.get(uuid);
+        if (obj) {
+          project.stageManager.delete(obj);
+          deletedCount++;
+        }
+      }
+      if (deletedCount > 0) {
+        project.historyManager.recordStep();
+      }
+      return { deletedCount };
+    },
+  );
+  addTool("delete_selected_nodes", "删除当前所有选中的节点", z.object({}), (project) => {
+    const selected = project.stageManager.getSelectedEntities();
+    const count = selected.length;
+    for (const entity of [...selected]) {
+      project.stageManager.delete(entity);
+    }
+    if (count > 0) {
+      project.historyManager.recordStep();
+    }
+    return { deletedCount: count };
+  });
+  addTool("delete_all_nodes", "删除舞台上所有的节点和连线（清空舞台）", z.object({}), (project) => {
+    const entities = [...project.stageManager.getEntities()];
+    const associations = [...project.stageManager.getAssociations()];
+    for (const assoc of associations) {
+      project.stageManager.delete(assoc);
+    }
+    for (const entity of entities) {
+      project.stageManager.delete(entity);
+    }
+    const total = entities.length + associations.length;
+    if (total > 0) {
+      project.historyManager.recordStep();
+    }
+    return { deletedEntities: entities.length, deletedAssociations: associations.length };
+  });
+  addTool(
     "edit_text_node",
     "根据uuid编辑TextNode",
     z.object({
