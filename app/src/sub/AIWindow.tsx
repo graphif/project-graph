@@ -79,6 +79,11 @@ export default function AIWindow() {
       };
       let lastChunk: OpenAI.ChatCompletionChunk | null = null;
       for await (const chunk of stream) {
+        // 当 stream_options.include_usage=true 时，最后一个 chunk 的 choices 为空数组，仅携带 usage
+        if (!chunk.choices || chunk.choices.length === 0) {
+          lastChunk = chunk;
+          continue;
+        }
         const delta = chunk.choices[0].delta;
         streamingMsg.content! += delta.content ?? "";
         const toolCalls = delta.tool_calls || [];
