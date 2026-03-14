@@ -1,6 +1,7 @@
 import { Project, service } from "@/core/Project";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { Settings } from "@/core/service/Settings";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Section } from "../../stageObject/entity/Section";
@@ -170,19 +171,27 @@ export class LayoutManager {
   layoutBySelected(layoutFunction: (entities: Entity[]) => void, isDeep: boolean) {
     const entities = Array.from(this.project.stageManager.getEntities()).filter((node) => node.isSelected);
     if (isDeep) {
-      // 递归
-      const dfs = (entityList: Entity[]) => {
-        // 检查每一个实体
-        for (const entity of entityList) {
-          // 如果当前这个实体是 Section，就进入到Section内部
-          if (entity instanceof Section) {
-            const childEntity = entity.children;
-            dfs(childEntity);
+      // 递归紧密堆积时，临时禁用 Section 碰撞，防止堆积过程中产生碰撞推挤影响最终效果
+      const prevSectionCollision = Settings.isEnableSectionCollision;
+      Settings.isEnableSectionCollision = false;
+      try {
+        // 递归
+        const dfs = (entityList: Entity[]) => {
+          // 检查每一个实体
+          for (const entity of entityList) {
+            // 如果当前这个实体是 Section，就进入到Section内部
+            if (entity instanceof Section) {
+              const childEntity = entity.children;
+              dfs(childEntity);
+            }
           }
-        }
-        layoutFunction(entityList);
-      };
-      dfs(entities);
+          layoutFunction(entityList);
+        };
+        dfs(entities);
+      } finally {
+        // 恢复用户原有的 Section 碰撞设置
+        Settings.isEnableSectionCollision = prevSectionCollision;
+      }
     } else {
       layoutFunction(entities);
     }
