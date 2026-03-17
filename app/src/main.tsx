@@ -1,7 +1,7 @@
 import "driver.js/dist/driver.css";
 import { createRoot } from "react-dom/client";
 import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
-import { Canvas } from "./ui.components/Canvas";
+import { Canvas } from "@/ui.components/Canvas";
 
 const el = document.getElementById("root")!;
 

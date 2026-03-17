@@ -3,6 +3,10 @@ import { APP } from "@/APP";
 import { useRef, useEffect } from "react";
 import { Canvas as CanvasObj } from "@/core.compontents/Canvas";
 
+/**
+ * 创建cnavas组件，设置基础属性，添加事件转发。
+ * @returns 返回canvas的html元素
+ */
 export function Canvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const app = APP.getInstance();
@@ -28,6 +32,8 @@ export function Canvas() {
       if (canvasInstance) {
         const ctx = canvas.getContext("2d");
         if (ctx) {
+          canvasInstance.width = width;
+          canvasInstance.height = height;
           canvasInstance.renderOnce(ctx);
         }
       }
@@ -66,8 +72,6 @@ export function Canvas() {
       ref={canvasRef}
       style={{
         display: "block",
-        width: "100%",
-        height: "100vh",
         backgroundColor: "#1a1a1a",
       }}
     />
