@@ -1,8 +1,8 @@
 <div align="center">
-  
-# 该库将进行架构重构
-  
-<img src="src/assets/logo-animated.svg" height="150" alt="banner">
+
+# 该分支对软件整体进行架构重构
+
+<img src="app/src/assets/logo-animated.svg" height="150" alt="banner">
 <h1>Project Graph</h1>
 
 </div>
