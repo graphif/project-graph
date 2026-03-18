@@ -228,11 +228,11 @@ export class Project extends EventEmitter<{
    * @param currentVersion 当前文件版本
    * @param latestVersion 最新版本
    */
-  private async checkAndConfirmUpgrade(currentVersion: string, latestVersion: string): Promise<void> {
+  private async checkAndConfirmUpgrade(currentVersion: string, latestVersion: string): Promise<boolean> {
     const needsUpgrade = this.compareVersion(currentVersion, latestVersion) < 0;
 
     if (!needsUpgrade) {
-      return;
+      return true;
     }
 
     // 显示确认对话框
@@ -246,12 +246,13 @@ export class Project extends EventEmitter<{
     );
 
     if (response === "cancel") {
-      // 用户取消升级，抛出错误以便调用者知道操作被取消
-      throw new Error("用户取消了文件升级，文件未打开");
+      // 用户取消升级，返回 false 表示取消
+      return false;
     }
 
     // 添加延迟，确保用户看到提示并给系统时间处理
     await new Promise((resolve) => setTimeout(resolve, 500));
+    return true;
   }
 
   /**
@@ -324,7 +325,8 @@ export class Project extends EventEmitter<{
       // 检查并确认升级
       const currentVersion = metadata?.version || "2.0.0";
       const latestVersion = ProjectUpgrader.NLatestVersion;
-      await this.checkAndConfirmUpgrade(currentVersion, latestVersion);
+      const confirmed = await this.checkAndConfirmUpgrade(currentVersion, latestVersion);
+      if (!confirmed) return; // 用户取消升级，不打开文件，跳过 this.state = ProjectState.Saved
 
       // 升级数据
       const [upgradedStageObjects, upgradedMetadata] = ProjectUpgrader.upgradeNAnyToNLatest(

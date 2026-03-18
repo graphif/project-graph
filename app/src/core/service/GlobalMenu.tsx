@@ -1635,113 +1635,127 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
   loadAllServicesBeforeInit(project);
   const loadServiceTime = performance.now() - t;
 
-  await toast
-    .promise(
-      async () => {
-        await project.init();
-        loadAllServicesAfterInit(project);
-      },
-      {
-        loading: "正在打开文件...",
-        success: async () => {
-          if (upgraded) {
-            project.stage = deserialize(upgraded.data, project);
-            project.attachments = upgraded.attachments;
-            // 更新引用关系，包括双向线的偏移状态
-            project.stageManager.updateReferences();
+  try {
+    await toast
+      .promise(
+        async () => {
+          await project.init();
+          if (project.state !== ProjectState.Saved) {
+            // 用户取消了升级对话框，不打开文件
+            throw new Error("USER_CANCELLED");
           }
-          const readFileTime = performance.now() - t;
-          store.set(projectsAtom, [...store.get(projectsAtom), project]);
-          store.set(activeProjectAtom, project);
-          setTimeout(() => {
-            project.camera.reset();
-          }, 100);
-          await RecentFileManager.addRecentFileByUri(uri);
-          Telemetry.event("打开文件", {
-            loadServiceTime,
-            readFileTime,
-            source,
-          });
+          loadAllServicesAfterInit(project);
+        },
+        {
+          loading: "正在打开文件...",
+          success: async () => {
+            if (upgraded) {
+              project.stage = deserialize(upgraded.data, project);
+              project.attachments = upgraded.attachments;
+              // 更新引用关系，包括双向线的偏移状态
+              project.stageManager.updateReferences();
+            }
+            const readFileTime = performance.now() - t;
+            store.set(projectsAtom, [...store.get(projectsAtom), project]);
+            store.set(activeProjectAtom, project);
+            setTimeout(() => {
+              project.camera.reset();
+            }, 100);
+            await RecentFileManager.addRecentFileByUri(uri);
+            Telemetry.event("打开文件", {
+              loadServiceTime,
+              readFileTime,
+              source,
+            });
 
-          // 处理同名TXT文件内容（仅在用户直接打开文件且设置项开启时执行，生成双链时跳过）
-          if (
-            Settings.autoImportTxtFileWhenOpenPrg &&
-            source !== "ReferenceBlockNode跳转打开-prg文件" &&
-            source !== "ReferencesWindow跳转打开-prg文件"
-          ) {
-            setTimeout(async () => {
-              try {
-                // 构建TXT文件路径
-                const prgPath = uri.fsPath;
-                const txtPath = prgPath.replace(/\.prg$/, ".txt");
+            // 处理同名TXT文件内容（仅在用户直接打开文件且设置项开启时执行，生成双链时跳过）
+            if (
+              Settings.autoImportTxtFileWhenOpenPrg &&
+              source !== "ReferenceBlockNode跳转打开-prg文件" &&
+              source !== "ReferencesWindow跳转打开-prg文件"
+            ) {
+              setTimeout(async () => {
+                try {
+                  // 构建TXT文件路径
+                  const prgPath = uri.fsPath;
+                  const txtPath = prgPath.replace(/\.prg$/, ".txt");
 
-                // 检查TXT文件是否存在
-                if (await exists(txtPath)) {
-                  // 读取TXT文件内容
-                  const txtContent = await readFile(txtPath);
-                  const lines = new TextDecoder()
-                    .decode(txtContent)
-                    .split("\n")
-                    .filter((line) => line.trim() !== "");
+                  // 检查TXT文件是否存在
+                  if (await exists(txtPath)) {
+                    // 读取TXT文件内容
+                    const txtContent = await readFile(txtPath);
+                    const lines = new TextDecoder()
+                      .decode(txtContent)
+                      .split("\n")
+                      .filter((line) => line.trim() !== "");
 
-                  if (lines.length > 0) {
-                    // 获取舞台上所有实体
-                    const entities = project.stageManager.getEntities();
+                    if (lines.length > 0) {
+                      // 获取舞台上所有实体
+                      const entities = project.stageManager.getEntities();
 
-                    // 计算外接矩形
-                    let startY = 0;
-                    if (entities.length > 0) {
-                      const boundingRect = Rectangle.getBoundingRectangle(
-                        entities.map((entity) => entity.collisionBox.getRectangle()),
-                      );
-                      startY = boundingRect.bottom;
-                    }
+                      // 计算外接矩形
+                      let startY = 0;
+                      if (entities.length > 0) {
+                        const boundingRect = Rectangle.getBoundingRectangle(
+                          entities.map((entity) => entity.collisionBox.getRectangle()),
+                        );
+                        startY = boundingRect.bottom;
+                      }
 
-                    // 创建并添加文本节点
-                    for (let i = 0; i < lines.length; i++) {
-                      const line = lines[i];
-                      const textNode = new TextNode(project, {
-                        text: line,
-                        collisionBox: new CollisionBox([
-                          new Rectangle(new Vector(0, startY + i * 100), new Vector(300, 100)),
-                        ]),
-                        sizeAdjust: "auto",
+                      // 创建并添加文本节点
+                      for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i];
+                        const textNode = new TextNode(project, {
+                          text: line,
+                          collisionBox: new CollisionBox([
+                            new Rectangle(new Vector(0, startY + i * 100), new Vector(300, 100)),
+                          ]),
+                          sizeAdjust: "auto",
+                        });
+                        project.stageManager.add(textNode);
+                      }
+
+                      // 清空TXT文件内容，避免下次打开时重复吸入
+                      await writeFile(txtPath, new TextEncoder().encode(""));
+
+                      // 显示Toast提示
+                      toast.success(`已从同名TXT文件导入 ${lines.length} 条内容到舞台左下角`);
+
+                      // 发送遥测
+                      Telemetry.event("txt_content_imported", {
+                        line_count: lines.length,
                       });
-                      project.stageManager.add(textNode);
+
+                      // 设置项目状态为未保存
+                      project.state = ProjectState.Unsaved;
                     }
-
-                    // 清空TXT文件内容，避免下次打开时重复吸入
-                    await writeFile(txtPath, new TextEncoder().encode(""));
-
-                    // 显示Toast提示
-                    toast.success(`已从同名TXT文件导入 ${lines.length} 条内容到舞台左下角`);
-
-                    // 发送遥测
-                    Telemetry.event("txt_content_imported", {
-                      line_count: lines.length,
-                    });
-
-                    // 设置项目状态为未保存
-                    project.state = ProjectState.Unsaved;
                   }
+                } catch (e) {
+                  console.warn("处理TXT文件时发生错误:", e);
                 }
-              } catch (e) {
-                console.warn("处理TXT文件时发生错误:", e);
-              }
-            }, 200);
-          }
+              }, 200);
+            }
 
-          return `耗时 ${readFileTime}ms，共 ${project.stage.length} 个舞台对象，${project.attachments.size} 个附件`;
+            return `耗时 ${readFileTime}ms，共 ${project.stage.length} 个舞台对象，${project.attachments.size} 个附件`;
+          },
+          error: (e) => {
+            if (e instanceof Error && e.message === "USER_CANCELLED") {
+              return "已取消打开文件";
+            }
+            Telemetry.event("打开文件失败", {
+              error: String(e),
+            });
+            return `读取时发生错误，已发送错误报告，可在群内联系开发者\n${String(e)}`;
+          },
         },
-        error: (e) => {
-          Telemetry.event("打开文件失败", {
-            error: String(e),
-          });
-          return `读取时发生错误，已发送错误报告，可在群内联系开发者\n${String(e)}`;
-        },
-      },
-    )
-    .unwrap();
+      )
+      .unwrap();
+  } catch (e) {
+    if (e instanceof Error && e.message === "USER_CANCELLED") {
+      return undefined; // 用户取消，静默处理
+    }
+    throw e;
+  }
   return project;
 }
 
