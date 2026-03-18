@@ -4,7 +4,10 @@ pub mod entities;
 
 use enum_dispatch::enum_dispatch;
 
-use crate::stage::{elements::entities::Entity, render_context::RenderContext};
+use crate::stage::{
+    elements::{connections::Connection, entities::Entity},
+    render_context::RenderContext,
+};
 
 /// 元素，以前称做舞台对象
 /// 所有可以被渲染的东西都应该实现这个 trait
@@ -22,4 +25,5 @@ pub trait ElementTrait {
 #[derive(knus::Decode, Debug, Clone)]
 pub enum Element {
     Entity(Entity),
+    Connection(Connection),
 }

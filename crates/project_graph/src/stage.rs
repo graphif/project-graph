@@ -56,6 +56,8 @@ impl Stage {
                     zoom: self.camera.zoom(),
                     selected,
                     clicked: false,
+                    painter: painter.clone(),
+                    screen_center,
                 };
 
                 let element_size = element.world_rect().size() * self.camera.zoom();
