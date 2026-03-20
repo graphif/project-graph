@@ -84,7 +84,6 @@ import mime from "mime";
 import { toast } from "sonner";
 import { getOriginalNameOf } from "virtual:original-class-name";
 import { URI } from "vscode-uri";
-import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
 import { Telemetry } from "./service/Telemetry";
 import { ProjectUpgrader } from "./stage/ProjectUpgrader";
 import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageReferenceManager";
@@ -595,7 +594,6 @@ declare module "./Project" {
     sectionMethods: SectionMethods;
     graphMethods: GraphMethods;
     stageStyleManager: StageStyleManager;
-    autoSaveBackup: AutoSaveBackupService;
     referenceManager: ReferenceManager;
   }
 }
