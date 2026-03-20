@@ -7,8 +7,6 @@ import { SubWindow } from "@/core/service/SubWindow";
 import { activeProjectAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { open, save } from "@tauri-apps/plugin-dialog";
-import { readFile, writeFile } from "@tauri-apps/plugin-fs";
 import { useAtom } from "jotai";
 import { BrushCleaning, FileOutput, Plus, RefreshCcw, Trash } from "lucide-react";
 import mime from "mime";

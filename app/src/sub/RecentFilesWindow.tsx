@@ -1,33 +1,31 @@
+import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
+import { DragFileIntoStageEngine } from "@/core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
+import { SoundService } from "@/core/service/feedbackService/SoundService";
+import { onOpenFile } from "@/core/service/GlobalMenu";
 import { SubWindow } from "@/core/service/SubWindow";
+import { activeProjectAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { PathString } from "@/utils/pathString";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
+import { useAtom } from "jotai";
 import {
   DoorClosed,
   DoorOpen,
+  Eye,
+  EyeOff,
+  HardDriveDownload,
   Import,
+  Link,
   LoaderPinwheel,
   Trash2,
   X,
-  Link,
-  HardDriveDownload,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import React, { ChangeEventHandler, useEffect } from "react";
-import { Dialog } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { onOpenFile } from "@/core/service/GlobalMenu";
-import { open } from "@tauri-apps/plugin-dialog";
-import { invoke } from "@tauri-apps/api/core";
 import { URI } from "vscode-uri";
-import { SoundService } from "@/core/service/feedbackService/SoundService";
-import { useAtom } from "jotai";
-import { activeProjectAtom } from "@/state";
-import { DragFileIntoStageEngine } from "@/core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 
 /**
  * 文件名隐私保护加密函数（强制使用凯撒移位）

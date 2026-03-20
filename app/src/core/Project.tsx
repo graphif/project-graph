@@ -1,8 +1,7 @@
 import { Dialog } from "@/components/ui/dialog";
-import { FileSystemProvider, Service } from "@/core/interfaces/Service";
+import { Service } from "@/core/interfaces/Service";
 import type { CurveRenderer } from "@/core/render/canvas2d/basicRenderer/curveRenderer";
 import type { ImageRenderer } from "@/core/render/canvas2d/basicRenderer/ImageRenderer";
-import type { ReferenceBlockRenderer } from "@/core/render/canvas2d/entityRenderer/ReferenceBlockRenderer";
 import type { ShapeRenderer } from "@/core/render/canvas2d/basicRenderer/shapeRenderer";
 import type { SvgRenderer } from "@/core/render/canvas2d/basicRenderer/svgRenderer";
 import type { TextRenderer } from "@/core/render/canvas2d/basicRenderer/textRenderer";
@@ -15,6 +14,7 @@ import type { EdgeRenderer } from "@/core/render/canvas2d/entityRenderer/edge/Ed
 import type { EntityDetailsButtonRenderer } from "@/core/render/canvas2d/entityRenderer/EntityDetailsButtonRenderer";
 import type { EntityRenderer } from "@/core/render/canvas2d/entityRenderer/EntityRenderer";
 import type { MultiTargetUndirectedEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/multiTargetUndirectedEdge/MultiTargetUndirectedEdgeRenderer";
+import type { ReferenceBlockRenderer } from "@/core/render/canvas2d/entityRenderer/ReferenceBlockRenderer";
 import type { SectionRenderer } from "@/core/render/canvas2d/entityRenderer/section/SectionRenderer";
 import type { SvgNodeRenderer } from "@/core/render/canvas2d/entityRenderer/svgNode/SvgNodeRenderer";
 import type { TextNodeRenderer } from "@/core/render/canvas2d/entityRenderer/textNode/TextNodeRenderer";
@@ -55,6 +55,7 @@ import type { Canvas } from "@/core/stage/Canvas";
 import { GraphMethods } from "@/core/stage/stageManager/basicMethods/GraphMethods";
 import { SectionMethods } from "@/core/stage/stageManager/basicMethods/SectionMethods";
 import type { LayoutManager } from "@/core/stage/stageManager/concreteMethods/LayoutManager";
+import type { SectionCollisionSolver } from "@/core/stage/stageManager/concreteMethods/SectionCollisionSolver";
 import type { AutoAlign } from "@/core/stage/stageManager/concreteMethods/StageAutoAlignManager";
 import type { DeleteManager } from "@/core/stage/stageManager/concreteMethods/StageDeleteManager";
 import type { EntityMoveManager } from "@/core/stage/stageManager/concreteMethods/StageEntityMoveManager";
@@ -67,12 +68,12 @@ import type { StageObjectColorManager } from "@/core/stage/stageManager/concrete
 import type { StageObjectSelectCounter } from "@/core/stage/stageManager/concreteMethods/StageObjectSelectCounter";
 import type { SectionInOutManager } from "@/core/stage/stageManager/concreteMethods/StageSectionInOutManager";
 import type { SectionPackManager } from "@/core/stage/stageManager/concreteMethods/StageSectionPackManager";
-import type { SectionCollisionSolver } from "@/core/stage/stageManager/concreteMethods/SectionCollisionSolver";
 import type { TagManager } from "@/core/stage/stageManager/concreteMethods/StageTagManager";
 import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import type { StageManager } from "@/core/stage/stageManager/StageManager";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { nextProjectIdAtom, projectsAtom, store } from "@/state";
+import { ProjectMetadata, createDefaultMetadata, isValidMetadata } from "@/types/metadata";
 import { Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Decoder, Encoder } from "@msgpack/msgpack";
@@ -83,11 +84,10 @@ import mime from "mime";
 import { toast } from "sonner";
 import { getOriginalNameOf } from "virtual:original-class-name";
 import { URI } from "vscode-uri";
-import { Telemetry } from "./service/Telemetry";
 import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
-import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageReferenceManager";
+import { Telemetry } from "./service/Telemetry";
 import { ProjectUpgrader } from "./stage/ProjectUpgrader";
-import { ProjectMetadata, createDefaultMetadata, isValidMetadata } from "@/types/metadata";
+import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageReferenceManager";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -127,12 +127,6 @@ export class Project extends EventEmitter<{
 
   private readonly services = new Map<string, Service>();
   private readonly tickableServices: Service[] = [];
-  /**
-   * 工程文件的URI
-   * key: 服务ID
-   * value: 服务实例
-   */
-  private readonly fileSystemProviders = new Map<string, FileSystemProvider>();
   private rafHandle = -1;
   private _uri: URI;
   private _state: ProjectState = ProjectState.Unsaved;
@@ -489,18 +483,6 @@ export class Project extends EventEmitter<{
     const tempEncoder = new Encoder();
     const encodedStage = tempEncoder.encode(serializedStage);
     return md5(encodedStage);
-  }
-
-  /**
-   * 注册一个文件管理器
-   * @param scheme 目前有 "file" | "draft"， 以后可能有其他的协议
-   */
-  registerFileSystemProvider(scheme: string, provider: { new (...args: any[]): FileSystemProvider }) {
-    this.fileSystemProviders.set(scheme, new provider(this));
-  }
-
-  get fs(): FileSystemProvider {
-    return this.fileSystemProviders.get(this.uri.scheme)!;
   }
 
   addAttachment(data: Blob) {

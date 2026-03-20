@@ -1,32 +1,28 @@
+import { AssetsRepository } from "@/core/service/AssetsRepository";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { onNewDraft, onOpenFile } from "@/core/service/GlobalMenu";
+import RecentFilesWindow from "@/sub/RecentFilesWindow";
+import { cn } from "@/utils/cn";
 import { Path } from "@/utils/path";
-import { getVersion } from "@tauri-apps/api/app";
-import { open as shellOpen } from "@tauri-apps/plugin-shell";
-import { writeFile } from "@tauri-apps/plugin-fs";
+import { isMac } from "@/utils/platform";
 import {
+  AlertTriangle,
   Earth,
   FilePlus,
   FolderOpen,
   Info,
   LoaderCircle,
   Map as MapIcon,
+  RefreshCw,
   Settings as SettingsIcon,
   TableProperties,
-  AlertTriangle,
-  RefreshCw,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import SettingsWindow from "../sub/SettingsWindow";
 import { toast } from "sonner";
-import { cn } from "@/utils/cn";
-import { AssetsRepository } from "@/core/service/AssetsRepository";
-import { join, tempDir } from "@tauri-apps/api/path";
-import { URI } from "vscode-uri";
-import RecentFilesWindow from "@/sub/RecentFilesWindow";
-import { isMac } from "@/utils/platform";
 import { cpuInfo } from "tauri-plugin-system-info-api";
+import { URI } from "vscode-uri";
+import SettingsWindow from "../sub/SettingsWindow";
 
 export default function WelcomePage() {
   const [recentFiles, setRecentFiles] = useState<RecentFileManager.RecentFile[]>([]);

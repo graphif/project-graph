@@ -1,12 +1,11 @@
-import { Serialized } from "@/types/node";
 import { ProjectMetadata } from "@/types/metadata";
+import { Serialized } from "@/types/node";
 import { Path } from "@/utils/path";
-import { readFile } from "@tauri-apps/plugin-fs";
+import { Vector } from "@graphif/data-structures";
+import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import { URI } from "vscode-uri";
 import { PenStrokeSegment } from "./stageObject/entity/PenStroke";
-import { Vector } from "@graphif/data-structures";
-import { toast } from "sonner";
 import { DetailsManager } from "./stageObject/tools/entityDetailsManager";
 
 export namespace ProjectUpgrader {

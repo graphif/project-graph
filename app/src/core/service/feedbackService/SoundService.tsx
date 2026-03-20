@@ -1,4 +1,3 @@
-import { readFile } from "@tauri-apps/plugin-fs";
 import { Settings } from "../Settings";
 
 /**

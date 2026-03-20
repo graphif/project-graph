@@ -1,7 +1,5 @@
 import { camelCaseToDashCase } from "@/utils/font";
 import { parseYamlWithFrontmatter } from "@/utils/yaml";
-import { appLocalDataDir, join } from "@tauri-apps/api/path";
-import { mkdir, readDir, readTextFile, remove, writeTextFile } from "@tauri-apps/plugin-fs";
 import YAML from "yaml";
 
 export namespace Themes {

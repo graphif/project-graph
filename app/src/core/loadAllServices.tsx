@@ -1,5 +1,3 @@
-import { FileSystemProviderDraft } from "@/core/fileSystemProvider/FileSystemProviderDraft";
-import { FileSystemProviderFile } from "@/core/fileSystemProvider/FileSystemProviderFile";
 import { Project } from "@/core/Project";
 import { CurveRenderer } from "@/core/render/canvas2d/basicRenderer/curveRenderer";
 import { ImageRenderer } from "@/core/render/canvas2d/basicRenderer/ImageRenderer";
@@ -15,11 +13,11 @@ import { EdgeRenderer } from "@/core/render/canvas2d/entityRenderer/edge/EdgeRen
 import { EntityDetailsButtonRenderer } from "@/core/render/canvas2d/entityRenderer/EntityDetailsButtonRenderer";
 import { EntityRenderer } from "@/core/render/canvas2d/entityRenderer/EntityRenderer";
 import { MultiTargetUndirectedEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/multiTargetUndirectedEdge/MultiTargetUndirectedEdgeRenderer";
+import { ReferenceBlockRenderer } from "@/core/render/canvas2d/entityRenderer/ReferenceBlockRenderer";
 import { SectionRenderer } from "@/core/render/canvas2d/entityRenderer/section/SectionRenderer";
 import { SvgNodeRenderer } from "@/core/render/canvas2d/entityRenderer/svgNode/SvgNodeRenderer";
 import { TextNodeRenderer } from "@/core/render/canvas2d/entityRenderer/textNode/TextNodeRenderer";
 import { UrlNodeRenderer } from "@/core/render/canvas2d/entityRenderer/urlNode/urlNodeRenderer";
-import { ReferenceBlockRenderer } from "@/core/render/canvas2d/entityRenderer/ReferenceBlockRenderer";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { BackgroundRenderer } from "@/core/render/canvas2d/utilsRenderer/backgroundRenderer";
 import { RenderUtils } from "@/core/render/canvas2d/utilsRenderer/RenderUtils";
@@ -56,6 +54,7 @@ import { Canvas } from "@/core/stage/Canvas";
 import { GraphMethods } from "@/core/stage/stageManager/basicMethods/GraphMethods";
 import { SectionMethods } from "@/core/stage/stageManager/basicMethods/SectionMethods";
 import { LayoutManager } from "@/core/stage/stageManager/concreteMethods/LayoutManager";
+import { SectionCollisionSolver } from "@/core/stage/stageManager/concreteMethods/SectionCollisionSolver";
 import { AutoAlign } from "@/core/stage/stageManager/concreteMethods/StageAutoAlignManager";
 import { DeleteManager } from "@/core/stage/stageManager/concreteMethods/StageDeleteManager";
 import { EntityMoveManager } from "@/core/stage/stageManager/concreteMethods/StageEntityMoveManager";
@@ -68,11 +67,9 @@ import { StageObjectColorManager } from "@/core/stage/stageManager/concreteMetho
 import { StageObjectSelectCounter } from "@/core/stage/stageManager/concreteMethods/StageObjectSelectCounter";
 import { SectionInOutManager } from "@/core/stage/stageManager/concreteMethods/StageSectionInOutManager";
 import { SectionPackManager } from "@/core/stage/stageManager/concreteMethods/StageSectionPackManager";
-import { SectionCollisionSolver } from "@/core/stage/stageManager/concreteMethods/SectionCollisionSolver";
 import { TagManager } from "@/core/stage/stageManager/concreteMethods/StageTagManager";
 import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import { StageManager } from "@/core/stage/stageManager/StageManager";
-import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
 import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageReferenceManager";
 
 /**
@@ -80,8 +77,6 @@ import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageRefe
  * @param project
  */
 export function loadAllServicesBeforeInit(project: Project): void {
-  project.registerFileSystemProvider("file", FileSystemProviderFile);
-  project.registerFileSystemProvider("draft", FileSystemProviderDraft);
   project.loadService(Canvas);
   project.loadService(InputElement);
   project.loadService(StageStyleManager);
@@ -168,9 +163,6 @@ export function loadAllServicesBeforeInit(project: Project): void {
 
   // 快捷键交互
   project.loadService(KeyBindsRegistrar);
-
-  // 自动保存与备份
-  project.loadService(AutoSaveBackupService);
 }
 
 export function loadAllServicesAfterInit(project: Project): void {

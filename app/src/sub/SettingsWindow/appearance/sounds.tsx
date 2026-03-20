@@ -1,5 +1,4 @@
 import { SettingField } from "@/components/ui/field";
-import FileChooser from "@/components/ui/file-chooser";
 import { Popover } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { AssetsRepository } from "@/core/service/AssetsRepository";
@@ -223,14 +222,14 @@ export default function SoundEffectsPage() {
           <div key={settingKey} className="bg-muted flex items-center justify-between rounded-lg p-4">
             <div className="flex w-full flex-col">
               <span>{name}</span>
-              <FileChooser
+              {/* <FileChooser
                 kind="file"
                 value={filePath || ""}
                 onChange={(value) => {
                   // @ts-expect-error settingKey is keyof Settings
                   Settings[settingKey] = value;
                 }}
-              />
+              /> */}
             </div>
             <div className="flex items-center gap-2">
               <button

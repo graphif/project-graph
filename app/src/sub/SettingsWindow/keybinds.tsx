@@ -9,8 +9,6 @@ import {
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import KeyBind from "@/components/ui/key-bind";
-import { Switch } from "@/components/ui/switch";
-import { AlertCircle } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -20,10 +18,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Switch } from "@/components/ui/switch";
 import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { allKeyBinds, getKeyBindTypeById } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import Fuse from "fuse.js";
+import { AlertCircle } from "lucide-react";
 
+import { transEmacsKeyWinToMac } from "@/utils/emacs";
+import { isMac } from "@/utils/platform";
 import {
   AppWindow,
   Brush,
@@ -47,9 +49,6 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { createStore } from "@/utils/store";
-import { isMac } from "@/utils/platform";
-import { transEmacsKeyWinToMac } from "@/utils/emacs";
 
 interface KeyBindData {
   id: string;

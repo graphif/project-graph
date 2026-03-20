@@ -1,9 +1,7 @@
 import { Project, service } from "@/core/Project";
 import { matchEmacsKeyPress, transEmacsKeyWinToMac } from "@/utils/emacs";
 import { isMac } from "@/utils/platform";
-import { createStore } from "@/utils/store";
 import { Queue } from "@graphif/data-structures";
-import { Store } from "@tauri-apps/plugin-store";
 import { isKeyBindHasRelease } from "./shortcutKeysRegister";
 
 /**

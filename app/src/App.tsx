@@ -15,7 +15,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { DropWindowCover } from "./DropWindowCover";
 import { ProjectTabs } from "./ProjectTabs";
-import RightToolbar from "./components/right-toolbar";
 import ToolbarContent from "./components/toolbar-content";
 import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { cn } from "./utils/cn";
@@ -32,7 +31,6 @@ export default function App() {
   const [dropMouseLocation] = useState<"top" | "middle" | "bottom" | "notInWindowZone">("notInWindowZone");
   const [ignoreMouseEvents, setIgnoreMouseEvents] = useState(false);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
-  const [showQuickSettingsToolbar, setShowQuickSettingsToolbar] = useState(Settings.showQuickSettingsToolbar);
   const [windowBackgroundAlpha, setWindowBackgroundAlpha] = useState(Settings.windowBackgroundAlpha);
 
   const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
@@ -288,7 +286,6 @@ export default function App() {
         {activeProject && <ToolbarContent />}
 
         {/* 右侧工具栏 */}
-        {activeProject && showQuickSettingsToolbar && <RightToolbar />}
         {dropMouseLocation !== "notInWindowZone" && <DropWindowCover dropMouseLocation={dropMouseLocation} />}
       </div>
     </>

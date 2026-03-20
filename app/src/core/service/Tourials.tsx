@@ -1,6 +1,3 @@
-import { createStore } from "@/utils/store";
-import { Store } from "@tauri-apps/plugin-store";
-
 /**
  * 教程记录
  */

@@ -8,8 +8,6 @@ import { SubWindow } from "@/core/service/SubWindow";
 import { activeProjectAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { save } from "@tauri-apps/plugin-dialog";
-import { writeFile } from "@tauri-apps/plugin-fs";
 import { useAtom } from "jotai";
 import { FileWarning, Info } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";

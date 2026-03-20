@@ -4,13 +4,12 @@ import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { PathString } from "@/utils/pathString";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { readFile } from "@tauri-apps/plugin-fs";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import { onOpenFile } from "../../GlobalMenu";
-import { PathString } from "@/utils/pathString";
 
 /**
  * 处理文件拖拽到舞台的引擎

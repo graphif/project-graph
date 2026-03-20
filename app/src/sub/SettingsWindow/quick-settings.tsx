@@ -1,11 +1,9 @@
-import { settingsSchema } from "@/core/service/Settings";
-import { QuickSettingsManager } from "@/core/service/QuickSettingsManager";
-import { settingsIcons } from "@/core/service/SettingsIcons";
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
-import { Fragment } from "react";
+import { settingsSchema } from "@/core/service/Settings";
+import { settingsIcons } from "@/core/service/SettingsIcons";
 import { GripVertical, Plus, Trash2 } from "lucide-react";
+import { Fragment, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 /**
  * 快捷设置项管理页面

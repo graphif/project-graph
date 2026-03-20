@@ -9,10 +9,9 @@ import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Path } from "@/utils/path";
 import { Color, colorInvert, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
+import mime from "mime";
 import React from "react";
 import ReactDOMServer from "react-dom/server";
-import { writeFile } from "@tauri-apps/plugin-fs";
-import mime from "mime";
 
 export interface SvgExportConfig {
   imageMode: "absolutePath" | "relativePath" | "base64";

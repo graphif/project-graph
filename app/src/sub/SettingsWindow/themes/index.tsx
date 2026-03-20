@@ -1,7 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import {
   Sidebar,
   SidebarContent,
@@ -12,12 +11,11 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings } from "@/core/service/Settings";
 import { Themes } from "@/core/service/Themes";
 import { parseYamlWithFrontmatter } from "@/utils/yaml";
-import { open } from "@tauri-apps/plugin-dialog";
-import { readTextFile } from "@tauri-apps/plugin-fs";
 import _ from "lodash";
 import { Check, Copy, Delete, FileInput, Info, Moon, Palette, Sun } from "lucide-react";
 import { useEffect, useState } from "react";

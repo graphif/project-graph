@@ -1,6 +1,3 @@
-import { createStore } from "@/utils/store";
-import { exists } from "@tauri-apps/plugin-fs";
-import { Store } from "@tauri-apps/plugin-store";
 import { URI } from "vscode-uri";
 
 /**

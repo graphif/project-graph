@@ -1,10 +1,9 @@
+import { Project } from "@/core/Project";
+import { activeProjectAtom, store } from "@/state";
 import { matchEmacsKeyPress, transEmacsKeyWinToMac } from "@/utils/emacs";
 import { isMac } from "@/utils/platform";
-import { createStore } from "@/utils/store";
 import { Queue } from "@graphif/data-structures";
 import { allKeyBinds } from "./shortcutKeysRegister";
-import { activeProjectAtom, store } from "@/state";
-import { Project } from "@/core/Project";
 
 /**
  * UI级别的快捷键管理
