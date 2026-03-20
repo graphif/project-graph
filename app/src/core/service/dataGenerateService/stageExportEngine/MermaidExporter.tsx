@@ -42,42 +42,16 @@ export class MermaidExporter {
     const validLinks = allLinks.filter((link) => nodeSet.has(link.source.uuid) && nodeSet.has(link.target.uuid));
 
     // 生成节点 ID 映射（uuid -> mermaid ID）
+    // 使用顺序编号 id0/id1/... 作为节点 ID，避免文本中特殊字符（~、-、()等）引起的 Mermaid 词法错误
     const nodeIdMap = new Map<string, string>();
-    const nodeIdCounter = new Map<string, number>();
 
-    // 生成有效的 Mermaid 节点 ID
     const getNodeId = (node: TextNode | Section): string => {
       if (nodeIdMap.has(node.uuid)) {
         return nodeIdMap.get(node.uuid)!;
       }
-
-      // 基于文本生成 ID，Mermaid 支持中文字符作为节点 ID
-      let baseId = node.text.trim();
-
-      // 如果文本为空，使用 uuid 的前8位
-      if (!baseId) {
-        baseId = "node_" + node.uuid.substring(0, 8);
-      } else {
-        // 如果以数字开头，在前面加下划线
-        if (/^[0-9]/.test(baseId)) {
-          baseId = "_" + baseId;
-        }
-        // Mermaid 支持 Unicode 字符（包括中文），所以不需要过滤中文字符
-        // 只需要确保不以数字开头即可
-      }
-
-      // 处理重复的 ID
-      let finalId = baseId;
-      if (nodeIdCounter.has(baseId)) {
-        const count = nodeIdCounter.get(baseId)! + 1;
-        nodeIdCounter.set(baseId, count);
-        finalId = baseId + "_" + count;
-      } else {
-        nodeIdCounter.set(baseId, 0);
-      }
-
-      nodeIdMap.set(node.uuid, finalId);
-      return finalId;
+      const id = `id${nodeIdMap.size}`;
+      nodeIdMap.set(node.uuid, id);
+      return id;
     };
 
     // 转义 Mermaid 文本中的特殊字符
@@ -180,15 +154,10 @@ export class MermaidExporter {
     const generateNodes = (nodes: (TextNode | Section)[], indent: string = ""): void => {
       for (const node of nodes) {
         if (node instanceof Section) {
-          // 生成子图
+          // 生成子图（始终使用 id["label"] 格式，避免特殊字符问题）
           const sectionId = getNodeId(node);
           const sectionTitle = escapeMermaidText(node.text || "Section");
-          // 如果 ID 和显示文本相同，就不使用别名
-          if (sectionId === sectionTitle) {
-            result += `${indent}subgraph ${sectionId}\n`;
-          } else {
-            result += `${indent}subgraph ${sectionId}["${sectionTitle}"]\n`;
-          }
+          result += `${indent}subgraph ${sectionId}["${sectionTitle}"]\n`;
 
           // 生成子图内的节点
           const innerNodes = sectionToNodesMap.get(node) || [];
@@ -196,16 +165,11 @@ export class MermaidExporter {
 
           result += `${indent}end\n`;
         } else {
-          // 生成普通节点
+          // 生成普通节点（有文本时使用 id["label"] 格式，空文本时只输出 id）
           const nodeId = getNodeId(node);
           const nodeText = escapeMermaidText(node.text || "");
           if (nodeText) {
-            // 如果 ID 和显示文本相同，就不使用别名
-            if (nodeId === nodeText) {
-              result += `${indent}${nodeId}\n`;
-            } else {
-              result += `${indent}${nodeId}["${nodeText}"]\n`;
-            }
+            result += `${indent}${nodeId}["${nodeText}"]\n`;
           } else {
             result += `${indent}${nodeId}\n`;
           }
@@ -216,16 +180,46 @@ export class MermaidExporter {
     // 生成所有节点（包括不在 Section 中的节点和 Section 本身）
     generateNodes(nodesWithoutSection);
 
+    // 根据 lineType 返回对应的 Mermaid 箭头语法
+    const getArrow = (lineType: string): string => {
+      if (lineType === "dashed") return "-.->";
+      if (lineType === "double") return "==>";
+      return "-->";
+    };
+
+    // 根据 lineType 返回带文本的 Mermaid 箭头语法
+    const getArrowWithText = (lineType: string, text: string): string => {
+      if (lineType === "dashed") return `-. "${text}" .->`;
+      if (lineType === "double") return `== "${text}" ==>`;
+      return `-- "${text}" -->`;
+    };
+
     // 生成连线
     for (const link of validLinks) {
       const sourceId = getNodeId(link.source as TextNode | Section);
       const targetId = getNodeId(link.target as TextNode | Section);
+      const lineType = link.lineType || "solid";
 
       if (link.text && link.text.trim()) {
         const linkText = escapeMermaidText(link.text.trim());
-        result += `${sourceId} -- "${linkText}" --> ${targetId}\n`;
+        result += `${sourceId} ${getArrowWithText(lineType, linkText)} ${targetId}\n`;
       } else {
-        result += `${sourceId} --> ${targetId}\n`;
+        result += `${sourceId} ${getArrow(lineType)} ${targetId}\n`;
+      }
+    }
+
+    // 生成连线颜色样式（仅对设置了非透明颜色的连线输出 linkStyle 语句）
+    validLinks.forEach((link, index) => {
+      if (link.color.a > 0) {
+        result += `linkStyle ${index} stroke:${link.color.toHexStringWithoutAlpha()},stroke-opacity:${link.color.a}\n`;
+      }
+    });
+
+    // 生成节点颜色样式（仅对设置了非透明颜色的节点输出 style 语句）
+    for (const node of allNodes) {
+      if (node.color.a > 0) {
+        const nodeId = getNodeId(node);
+        result += `style ${nodeId} fill:${node.color.toHexStringWithoutAlpha()},fill-opacity:${node.color.a}\n`;
       }
     }
 
