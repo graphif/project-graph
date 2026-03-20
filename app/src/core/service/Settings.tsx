@@ -1,7 +1,7 @@
-import { LazyStore } from "@tauri-apps/plugin-store";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
+import { db } from "@/db";
 
 export const settingsSchema = z.object({
   language: z
@@ -209,29 +209,41 @@ export type Settings = z.infer<typeof settingsSchema>;
 
 const listeners: Partial<Record<string, ((value: any) => void)[]>> = {};
 
-const store = new LazyStore("settings.json");
-await store.init();
+const settingsTable = db.table("settings");
 
-// store加载完成后，推送所有listeners初始值
-// for (const key in listeners) {
-//   if (Object.prototype.hasOwnProperty.call(listeners, key)) {
-//     // 取store中的值，如果没有则用默认值
-//     let value = await store.get(key);
-//     if (value === undefined) {
-//       value = settingsSchema._def.shape()[key as keyof Settings]._def.defaultValue();
-//     }
-//     listeners[key]?.forEach((cb) => cb(value));
-//   }
-// }
 let savedSettings = settingsSchema.parse({});
 try {
-  console.log(Object.fromEntries(await store.entries()));
-  savedSettings = settingsSchema.parse(Object.fromEntries(await store.entries()));
-} catch (e) {
-  if (e instanceof z.ZodError) {
-    console.error(e);
-    toast.error(`设置文件格式错误\n${JSON.stringify(e.issues)}`);
+  const allEntries = await settingsTable.toArray();
+  const settingsObj = Object.fromEntries(allEntries.map((item) => [item.key, item.value]));
+  const result = settingsSchema.safeParse(settingsObj);
+  if (result.success) {
+    savedSettings = result.data;
+  } else {
+    // 验证失败，说明数据库中的值不符合schema
+    // 将出问题的字段重置为默认值
+    console.error("Settings validation failed:", result.error);
+    const defaultSettings = settingsSchema.parse({});
+    const validData: any = { ...defaultSettings };
+
+    for (const issue of result.error.issues) {
+      const key = issue.path[0] as string;
+      if (key) {
+        // 删除数据库中错误的值，以便下次使用默认值
+        await settingsTable.delete(key);
+        toast.warning(`设置项 ${key} 格式错误，可能是应用更新导致的，已重置为默认值`);
+      }
+    }
+    // 重新合并有效数据
+    for (const [key, value] of Object.entries(settingsObj)) {
+      if (!result.error.issues.some((i) => i.path[0] === key)) {
+        validData[key] = value;
+      }
+    }
+    savedSettings = validData;
   }
+} catch (e) {
+  console.error("Failed to load settings from DB:", e);
+  toast.error("加载设置失败，已使用默认设置");
 }
 
 export const Settings = new Proxy<
@@ -253,7 +265,7 @@ export const Settings = new Proxy<
       if (!(key in target)) {
         throw new Error(`没有这个设置项: ${key}`);
       }
-      store.set(key, value);
+      settingsTable.put({ key, value });
       listeners[key]?.forEach((cb) => cb(value));
       return Reflect.set(target, key, value, receiver);
     },
@@ -287,7 +299,7 @@ export const Settings = new Proxy<
               value,
               (newValue: Settings[T]) => {
                 console.log(newValue);
-                store.set(key, newValue);
+                settingsTable.put({ key, value: newValue });
                 listeners[key]?.forEach((cb) => cb(newValue));
               },
             ];

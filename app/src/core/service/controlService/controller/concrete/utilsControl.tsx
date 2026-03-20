@@ -1,34 +1,33 @@
 import { Project, service } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
+import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { LogicNodeNameToRenderNameMap } from "@/core/service/dataGenerateService/autoComputeEngine/logicNodeNameEnum";
 import { CrossFileContentQuery } from "@/core/service/dataGenerateService/crossFileContentQuery";
-import Fuse from "fuse.js";
+import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
 import { EntityCreateFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityCreateFlashEffect";
+import { Settings } from "@/core/service/Settings";
 import { SubWindow } from "@/core/service/SubWindow";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
+import { ReferenceManager } from "@/core/stage/stageManager/concreteMethods/StageReferenceManager";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
+import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
+import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
-import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import AutoCompleteWindow from "@/sub/AutoCompleteWindow";
 import NodeDetailsWindow from "@/sub/NodeDetailsWindow";
 import { Direction } from "@/types/directions";
-import { isDesktop } from "@/utils/platform";
-import { Color, colorInvert, Vector } from "@graphif/data-structures";
-import { toast } from "sonner";
-import { PathString } from "@/utils/pathString";
 import { DateChecker } from "@/utils/dateChecker";
-import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
-import { ReferenceManager } from "@/core/stage/stageManager/concreteMethods/StageReferenceManager";
+import { PathString } from "@/utils/pathString";
+import { Color, colorInvert, Vector } from "@graphif/data-structures";
+import Fuse from "fuse.js";
 import _ from "lodash";
-import { Settings } from "@/core/service/Settings";
+import { toast } from "sonner";
 
 /**
  * 这里是专门存放代码相同的地方
@@ -333,9 +332,7 @@ export class ControllerUtils {
     }
     // 整特效
     this.project.effects.addEffect(EntityCreateFlashEffect.fromCreateEntity(createNode));
-    if (isDesktop) {
-      this.editTextNode(createNode);
-    }
+    this.editTextNode(createNode);
   }
 
   /**

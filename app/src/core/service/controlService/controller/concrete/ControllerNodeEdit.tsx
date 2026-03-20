@@ -1,12 +1,11 @@
 import { Project } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
+import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
-import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
-import { open } from "@tauri-apps/plugin-shell";
 import { MouseLocation } from "../../MouseLocation";
 /**
  * 包含编辑节点文字，编辑详细信息等功能的控制器

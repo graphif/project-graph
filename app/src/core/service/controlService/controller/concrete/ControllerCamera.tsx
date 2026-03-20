@@ -9,7 +9,7 @@ import { ControllerCameraMac } from "@/core/service/controlService/controller/co
 import { MouseTipFeedbackEffect } from "@/core/service/feedbackService/effectEngine/concrete/MouseTipFeedbackEffect";
 import { CursorNameEnum } from "@/types/cursors";
 import { openBrowserOrFileByEntity } from "@/utils/externalOpen";
-import { isIpad, isMac } from "@/utils/platform";
+import { isMac } from "@/utils/platform";
 import { LimitLengthQueue, Vector } from "@graphif/data-structures";
 
 /**
@@ -612,7 +612,7 @@ export class ControllerCameraClass extends ControllerClass {
    * @returns
    */
   private isMouseWheel(event: WheelEvent): boolean {
-    if (isIpad || isMac) {
+    if (isMac) {
       return this.mac.isMouseWheel(event);
     }
 

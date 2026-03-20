@@ -1,7 +1,6 @@
 import { service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { AITools } from "@/core/service/dataManageService/aiEngine/AITools";
-import { fetch } from "@tauri-apps/plugin-http";
 import OpenAI from "openai";
 
 @service("aiEngine")
@@ -9,7 +8,6 @@ export class AIEngine {
   private openai = new OpenAI({
     apiKey: "",
     dangerouslyAllowBrowser: true,
-    fetch,
   });
 
   // constructor(private readonly project: Project) {}

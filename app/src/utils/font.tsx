@@ -1,6 +1,5 @@
-import { isMac } from "@/utils/platform";
-import { MaxSizeCache, Vector } from "@graphif/data-structures";
 import { Settings } from "@/core/service/Settings";
+import { MaxSizeCache, Vector } from "@graphif/data-structures";
 
 const _canvas = document.createElement("canvas");
 const _context = _canvas.getContext("2d");
@@ -8,11 +7,7 @@ const _context = _canvas.getContext("2d");
 const _cache = new MaxSizeCache<string, number>(10000);
 
 /** canvas中使用的字体 */
-export let FONT = "-apple-system, BlinkMacSystemFont, MiSans, system-ui, sans-serif";
-if (isMac) {
-  // 只有 PingFang TC 在mac中，中英文混合文字 宽度才能计算正确，离谱
-  FONT = "PingFang SC, PingFang TC, -apple-system";
-}
+export const FONT = "-apple-system, BlinkMacSystemFont, MiSans, system-ui, sans-serif";
 
 // eslint-disable-next-line prefer-const
 let useCache = true;

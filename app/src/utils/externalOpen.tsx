@@ -1,11 +1,10 @@
 import { Project } from "@/core/Project";
+import { onOpenFile } from "@/core/service/GlobalMenu";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { open } from "@tauri-apps/plugin-shell";
 import { toast } from "sonner";
-import { PathString } from "./pathString";
 import { URI } from "vscode-uri";
-import { onOpenFile } from "@/core/service/GlobalMenu";
+import { PathString } from "./pathString";
 
 export async function openBrowserOrFile(project: Project) {
   for (const node of project.stageManager.getSelectedEntities()) {
@@ -103,14 +102,5 @@ function myOpen(url: string, project: Project) {
       return;
     }
   }
-  open(url)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    .then((_) => {
-      console.log("打开成功");
-    })
-    .catch((e) => {
-      // 依然会导致程序崩溃，具体原因未知
-      // 2025年2月17日，好像不会再崩溃了，只是可能会弹窗说找不到文件
-      console.error(e);
-    });
+  window.open(url, "_blank");
 }

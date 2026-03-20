@@ -1,10 +1,9 @@
-import { isTauri } from "@tauri-apps/api/core";
-import { sep } from "@tauri-apps/api/path";
 import { URI } from "vscode-uri";
+import { PathString } from "./pathString";
 
 export class Path {
   private readonly path: string;
-  static sep = isTauri() ? sep() : "/";
+  static sep = PathString.getSep();
 
   constructor(path: string);
   constructor(uri: URI);

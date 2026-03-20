@@ -34,18 +34,6 @@ export default defineConfig({
     // reactScan(),
   ],
 
-  // 不清屏，方便看rust报错
-  clearScreen: false,
-  // tauri需要固定的端口
-  server: {
-    port: 1420,
-    // 端口冲突时直接报错，不尝试下一个可用端口
-    strictPort: true,
-    watch: {
-      ignored: ["**/src-tauri/**"],
-    },
-  },
-
   // 2024年10月3日发现 pnpm build 会报错，
   // Top-level await is not available in the configured target environment
   // 添加下面的配置解决了

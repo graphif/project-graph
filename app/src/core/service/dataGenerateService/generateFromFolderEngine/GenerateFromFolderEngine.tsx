@@ -1,20 +1,19 @@
-import { Color, Vector } from "@graphif/data-structures";
 import { Project, service } from "@/core/Project";
-import { invoke } from "@tauri-apps/api/core";
+import { allKeyBinds } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
+import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
+import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { Rectangle } from "@graphif/shapes";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { parseSingleEmacsKey } from "@/utils/emacs";
-import { allKeyBinds } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
+import { Color, Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 // 快捷键分组定义（从SettingsWindow/keybinds.tsx复制）
 
 import { Renderer } from "@/core/render/canvas2d/renderer";
+import { shortcutKeysGroups } from "@/sub/SettingsWindow/keybinds";
 import { getMultiLineTextSize } from "@/utils/font";
 import i18next from "i18next";
-import { shortcutKeysGroups } from "@/sub/SettingsWindow/keybinds";
 
 @service("generateFromFolder")
 export class GenerateFromFolder {

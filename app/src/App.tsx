@@ -1,6 +1,6 @@
 import MyContextMenuContent from "@/components/context-menu-content";
 import RenderSubWindows from "@/components/render-sub-windows";
-import { Button } from "@/components/ui/button";
+import ThemeModeSwitch from "@/components/theme-mode-switch";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Dialog } from "@/components/ui/dialog";
 import Welcome from "@/components/welcome-page";
@@ -9,34 +9,16 @@ import { GlobalMenu } from "@/core/service/GlobalMenu";
 import { Settings } from "@/core/service/Settings";
 import { Telemetry } from "@/core/service/Telemetry";
 import { Themes } from "@/core/service/Themes";
-import { globalShortcutManager } from "@/core/service/controlService/shortcutKeysEngine/GlobalShortcutManager";
-import {
-  activeProjectAtom,
-  isClassroomModeAtom,
-  isClickThroughEnabledAtom,
-  isWindowAlwaysOnTopAtom,
-  isWindowMaxsizedAtom,
-  projectsAtom,
-} from "@/state";
-import { getVersion } from "@tauri-apps/api/app";
-import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
-import { arch, platform, version } from "@tauri-apps/plugin-os";
-import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
+import { activeProjectAtom, isClassroomModeAtom, isWindowMaxsizedAtom, projectsAtom } from "@/state";
 import { useAtom } from "jotai";
-import { ChevronsLeftRight, Copy, Minus, Pin, PinOff, Square, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { cpuInfo } from "tauri-plugin-system-info-api";
-import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
-import { cn } from "./utils/cn";
-import { isMac, isWindows } from "./utils/platform";
-import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
-import { checkAndFixShortcutStorage } from "./core/service/controlService/shortcutKeysEngine/ShortcutKeyFixer";
-import { ProjectTabs } from "./ProjectTabs";
 import { DropWindowCover } from "./DropWindowCover";
-import ToolbarContent from "./components/toolbar-content";
+import { ProjectTabs } from "./ProjectTabs";
 import RightToolbar from "./components/right-toolbar";
-import ThemeModeSwitch from "@/components/theme-mode-switch";
+import ToolbarContent from "./components/toolbar-content";
+import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
+import { cn } from "./utils/cn";
 
 export default function App() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -47,9 +29,7 @@ export default function App() {
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   // const [isWide, setIsWide] = useState(false);
   const [telemetryEventSent, setTelemetryEventSent] = useState(false);
-  const [dropMouseLocation, setDropMouseLocation] = useState<"top" | "middle" | "bottom" | "notInWindowZone">(
-    "notInWindowZone",
-  );
+  const [dropMouseLocation] = useState<"top" | "middle" | "bottom" | "notInWindowZone">("notInWindowZone");
   const [ignoreMouseEvents, setIgnoreMouseEvents] = useState(false);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
   const [showQuickSettingsToolbar, setShowQuickSettingsToolbar] = useState(Settings.showQuickSettingsToolbar);
@@ -60,10 +40,6 @@ export default function App() {
   // const { t } = useTranslation("app");
 
   useEffect(() => {
-    // 先修复老用户的快捷键缓存问题（F11快捷键）
-    (async () => {
-      await checkAndFixShortcutStorage();
-    })();
     // 注册UI级别快捷键
     KeyBindsUI.registerAllUIKeyBinds();
     KeyBindsUI.uiStartListen();
@@ -117,72 +93,32 @@ export default function App() {
       setWindowBackgroundAlpha(value);
     });
 
-    // 恢复窗口位置大小
-    restoreStateCurrent(StateFlags.SIZE | StateFlags.POSITION | StateFlags.MAXIMIZED);
-
-    // setIsWide(window.innerWidth / window.innerHeight > 1.8);
-
-    const unlisten1 = getCurrentWindow().onResized(() => {
-      if (!isOnResizedDisabled.current) {
-        isMaximizedWorkaround();
-      }
-      // setIsWide(window.innerWidth / window.innerHeight > 1.8);
-    });
-
     if (!telemetryEventSent) {
       setTelemetryEventSent(true);
       (async () => {
-        const cpu = await cpuInfo();
-        await Telemetry.event("启动应用", {
-          version: await getVersion(),
-          os: platform(),
-          arch: arch(),
-          osVersion: version(),
-          cpu: cpu.cpus[0].brand,
-          cpuCount: cpu.cpu_count,
-        });
+        // const cpu = await cpuInfo();
+        // await Telemetry.event("启动应用", {
+        //   version: await getVersion(),
+        //   os: platform(),
+        //   arch: arch(),
+        //   osVersion: version(),
+        //   cpu: cpu.cpus[0].brand,
+        //   cpuCount: cpu.cpu_count,
+        // });
       })();
     }
 
-    // 加载完成了，显示窗口
-    getCurrentWindow().show();
-    // 关闭splash
-    getAllWindows().then((windows) => {
-      const splash = windows.find((w) => w.label === "splash");
-      if (splash) {
-        splash.close();
-      }
-    });
-
-    // 初始化全局快捷键管理
-    globalShortcutManager.init();
-
     return () => {
-      unlisten1?.then((f) => f());
       KeyBindsUI.uiStopListen();
       // 清理全局快捷键资源
       unwatchShowQuickSettingsToolbar();
       unwatchWindowBackgroundAlpha();
-      globalShortcutManager.dispose();
     };
   }, []);
 
   useEffect(() => {
     setIsClassroomMode(Settings.isClassroomMode);
   }, [Settings.isClassroomMode]);
-
-  // https://github.com/tauri-apps/tauri/issues/5812
-  const isOnResizedDisabled = useRef(false);
-  function isMaximizedWorkaround() {
-    isOnResizedDisabled.current = true;
-    getCurrentWindow()
-      .isMaximized()
-      .then((isMaximized) => {
-        isOnResizedDisabled.current = false;
-        // your stuff
-        _setMaximized(isMaximized);
-      });
-  }
 
   useEffect(() => {
     if (!canvasWrapperRef.current) return;
@@ -196,35 +132,6 @@ export default function App() {
     activeProject.canvas.element.addEventListener("pointerup", () => {
       setIgnoreMouseEvents(false);
     });
-    const unlisten2 = getCurrentWindow().onDragDropEvent(async (event) => {
-      const size = await getCurrentWindow().outerSize();
-      if (event.payload.type === "over") {
-        if (event.payload.position.y <= size.height / 3) {
-          setDropMouseLocation("top");
-        } else if (event.payload.position.y <= (size.height / 3) * 2) {
-          setDropMouseLocation("middle");
-        } else {
-          setDropMouseLocation("bottom");
-        }
-      } else if (event.payload.type === "leave") {
-        setDropMouseLocation("notInWindowZone");
-      } else if (event.payload.type === "drop") {
-        setDropMouseLocation("notInWindowZone");
-        // 之所以最下面才是绝对路径，是因为mac里位置计算有问题，最下面的hover选不到。
-        // 相对路径比绝对路径可能更实用，所以先把相对路径放在上面以临时解决使用需求。
-        // 以后再研究为什么拿到的位置有错误
-        if (event.payload.position.y <= size.height / 3) {
-          DragFileIntoStageEngine.handleDrop(activeProject, event.payload.paths);
-        } else if (event.payload.position.y <= (size.height / 3) * 2) {
-          DragFileIntoStageEngine.handleDropFileRelativePath(activeProject, event.payload.paths);
-        } else {
-          DragFileIntoStageEngine.handleDropFileAbsolutePath(activeProject, event.payload.paths);
-        }
-      }
-    });
-    return () => {
-      unlisten2?.then((f) => f());
-    };
   }, [activeProject]);
 
   /**
@@ -238,55 +145,6 @@ export default function App() {
   // }, []);
 
   useEffect(() => {
-    let unlisten1: () => void;
-    /**
-     * 关闭窗口时的事件监听
-     */
-    getCurrentWindow()
-      .onCloseRequested(async (e) => {
-        e.preventDefault();
-
-        // 检查是否有未保存的项目
-        const unsavedProjects = projects.filter(
-          (project) => project.state === ProjectState.Unsaved || project.state === ProjectState.Stashed,
-        );
-
-        if (unsavedProjects.length > 0) {
-          // 弹出警告对话框
-          const response = await Dialog.buttons(
-            "检测到未保存文件",
-            `当前有 ${unsavedProjects.length} 个未保存的文件。直接关闭可能有文件被清空的风险，建议先手动保存文件。`,
-            [
-              { id: "cancel", label: "取消", variant: "ghost" },
-              { id: "continue", label: "继续关闭", variant: "destructive" },
-            ],
-          );
-
-          if (response === "cancel") {
-            // 用户选择取消关闭，返回
-            return;
-          }
-          // 用户选择继续关闭，执行原有关闭流程
-        }
-
-        try {
-          for (const project of projects) {
-            console.log("尝试关闭", project);
-            await closeProject(project);
-          }
-        } catch {
-          Telemetry.event("关闭应用提示是否保存文件选择了取消");
-          return;
-        }
-        Telemetry.event("关闭应用");
-        // 保存窗口位置
-        await saveWindowState(StateFlags.SIZE | StateFlags.POSITION | StateFlags.MAXIMIZED);
-        await getCurrentWindow().destroy();
-      })
-      .then((it) => {
-        unlisten1 = it;
-      });
-
     for (const project of projects) {
       project.on("state-change", () => {
         // 强制重新渲染一次
@@ -305,7 +163,6 @@ export default function App() {
     }
 
     return () => {
-      unlisten1?.();
       for (const project of projects) {
         project.removeAllListeners("state-change");
         project.removeAllListeners("contextmenu");
@@ -382,14 +239,12 @@ export default function App() {
             className="hover:bg-primary/25 h-full min-w-6 cursor-grab transition-colors active:cursor-grabbing sm:hidden"
             data-tauri-drag-region
           />
-          {isMac && <WindowButtons />}
           <GlobalMenu />
           <div
             className="hover:bg-primary/25 h-full flex-1 cursor-grab transition-colors hover:*:opacity-100 active:cursor-grabbing sm:rounded-sm sm:hover:border"
             data-tauri-drag-region
           />
           <ThemeModeSwitch />
-          {!isMac && <WindowButtons />}
         </div>
 
         <ProjectTabs
@@ -434,133 +289,8 @@ export default function App() {
 
         {/* 右侧工具栏 */}
         {activeProject && showQuickSettingsToolbar && <RightToolbar />}
-
-        {/* 右上角关闭的触发角 */}
-        {isWindows && (
-          <div
-            className="absolute right-0 top-0 z-50 h-1 w-1 cursor-pointer rounded-bl-xl bg-red-600 transition-all hover:h-10 hover:w-10 hover:bg-yellow-500"
-            onClick={() => getCurrentWindow().close()}
-          ></div>
-        )}
         {dropMouseLocation !== "notInWindowZone" && <DropWindowCover dropMouseLocation={dropMouseLocation} />}
       </div>
     </>
   );
-}
-
-/**
- * 窗口右上角的最小化，最大化，关闭等按钮
- */
-function WindowButtons() {
-  const [maximized] = useAtom(isWindowMaxsizedAtom);
-  const [isClickThroughEnabled] = useAtom(isClickThroughEnabledAtom);
-  const [isWindowAlwaysOnTop, setIsWindowAlwaysOnTop] = useAtom(isWindowAlwaysOnTopAtom);
-  const checkoutWindowsAlwaysTop = async () => {
-    const tauriWindow = getCurrentWindow();
-    if (isWindowAlwaysOnTop) {
-      setIsWindowAlwaysOnTop(false);
-      await tauriWindow.setAlwaysOnTop(false);
-    } else {
-      setIsWindowAlwaysOnTop(true);
-      await tauriWindow.setAlwaysOnTop(true);
-    }
-  };
-
-  return (
-    <div className="bg-background shadow-xs flex h-full items-center sm:rounded-md sm:border">
-      {isClickThroughEnabled && <span className="text-destructive!">Alt + 2关闭窗口穿透点击</span>}
-      {isMac ? (
-        <span className="flex *:flex *:size-3 sm:px-2 sm:*:m-1">
-          <div
-            className="hidden cursor-pointer items-center justify-center rounded-full bg-red-400 text-red-800 hover:scale-110"
-            onClick={() => getCurrentWindow().close()}
-          >
-            <X strokeWidth={3} size={10} />
-          </div>
-          <div
-            className="hidden cursor-pointer items-center justify-center rounded-full bg-yellow-400 text-yellow-800 hover:scale-110 sm:block"
-            onClick={() => getCurrentWindow().minimize()}
-          >
-            <Minus strokeWidth={3} size={10} />
-          </div>
-          <div
-            className="hidden cursor-pointer items-center justify-center rounded-full bg-green-400 text-green-800 hover:scale-110 sm:block"
-            onClick={() => {
-              getCurrentWindow()
-                .isFullscreen()
-                .then((res) => getCurrentWindow().setFullscreen(!res));
-            }}
-          >
-            <ChevronsLeftRight strokeWidth={3} size={10} className="rotate-45" />
-          </div>
-          <div
-            className="cursor-pointer items-center justify-center rounded-full bg-blue-400 text-blue-800 hover:scale-110"
-            onClick={async (e) => {
-              e.stopPropagation();
-              checkoutWindowsAlwaysTop();
-            }}
-          >
-            {isWindowAlwaysOnTop ? <Pin size={10} /> : <PinOff size={10} />}
-          </div>
-        </span>
-      ) : (
-        <span className="flex h-full flex-row sm:gap-1">
-          {/* 钉住 */}
-          <Button
-            className="size-4 sm:size-9"
-            variant="ghost"
-            size="icon"
-            onClick={async (e) => {
-              e.stopPropagation();
-              checkoutWindowsAlwaysTop();
-            }}
-          >
-            {isWindowAlwaysOnTop ? <Pin strokeWidth={3} /> : <PinOff strokeWidth={3} className="opacity-50" />}
-          </Button>
-          {/* 最小化 */}
-          <Button
-            className="size-4 sm:size-9"
-            variant="ghost"
-            size="icon"
-            onClick={() => getCurrentWindow().minimize()}
-          >
-            <Minus strokeWidth={3} />
-          </Button>
-          {/* 最大化/还原 */}
-          {maximized ? (
-            <Button
-              className="size-4 text-xs sm:size-9"
-              variant="ghost"
-              size="icon"
-              onClick={() => getCurrentWindow().unmaximize()}
-            >
-              <Copy className="size-3" strokeWidth={3} />
-            </Button>
-          ) : (
-            <Button
-              className="size-4 text-xs sm:size-9"
-              variant="ghost"
-              size="icon"
-              onClick={() => getCurrentWindow().maximize()}
-            >
-              <Square className="size-3" strokeWidth={4} />
-            </Button>
-          )}
-          {/* 关闭 */}
-          <Button
-            className="size-4 text-xs sm:size-9"
-            variant="ghost"
-            size="icon"
-            onClick={() => getCurrentWindow().close()}
-          >
-            <X strokeWidth={3} />
-          </Button>
-        </span>
-      )}
-    </div>
-  );
-}
-
-export function Catch() {
-  return <></>;
 }

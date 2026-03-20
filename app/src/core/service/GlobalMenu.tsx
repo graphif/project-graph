@@ -13,7 +13,7 @@ import {
 
 import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project, ProjectState } from "@/core/Project";
-import { activeProjectAtom, isClassroomModeAtom, isDevAtom, projectsAtom, store } from "@/state";
+import { activeProjectAtom, isClassroomModeAtom, projectsAtom, store } from "@/state";
 import AIToolsWindow from "@/sub/AIToolsWindow";
 import AIWindow from "@/sub/AIWindow";
 import AttachmentsWindow from "@/sub/AttachmentsWindow";
@@ -26,28 +26,16 @@ import GenerateNodeTree, {
   GenerateNodeMermaid,
   GenerateNodeTreeByMarkdown,
 } from "@/sub/GenerateNodeWindow";
-import LoginWindow from "@/sub/LoginWindow";
 import NewExportPngWindow from "@/sub/NewExportPngWindow";
-import NodeDetailsWindow from "@/sub/NodeDetailsWindow";
-import OnboardingWindow from "@/sub/OnboardingWindow";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
 import ReferencesWindow from "@/sub/ReferencesWindow";
 import SettingsWindow from "@/sub/SettingsWindow";
 import TagWindow from "@/sub/TagWindow";
-import TestWindow from "@/sub/TestWindow";
-import UserWindow from "@/sub/UserWindow";
-import { getDeviceId } from "@/utils/otherApi";
 import { PathString } from "@/utils/pathString";
 import { Color, Vector } from "@graphif/data-structures";
-import { deserialize, serialize } from "@graphif/serializer";
+import { deserialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import { Decoder } from "@msgpack/msgpack";
-import { getVersion } from "@tauri-apps/api/app";
-import { appCacheDir, dataDir, join, tempDir } from "@tauri-apps/api/path";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { open, save } from "@tauri-apps/plugin-dialog";
-import { exists, readFile, writeFile } from "@tauri-apps/plugin-fs";
-import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import { useAtom } from "jotai";
 import {
   Airplay,
@@ -58,7 +46,6 @@ import {
   BookOpenText,
   Bot,
   Bug,
-  BugPlay,
   CircleAlert,
   CircleDot,
   CircleMinus,
@@ -113,7 +100,6 @@ import {
   SquareDashedMousePointer,
   SquareSquare,
   Tag,
-  TestTube2,
   TextQuote,
   Tv,
   Undo,
@@ -130,7 +116,6 @@ import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import { ProjectUpgrader } from "../stage/ProjectUpgrader";
 import { Entity } from "../stage/stageObject/abstract/StageEntity";
-import { LineEdge } from "../stage/stageObject/association/LineEdge";
 import { CollisionBox } from "../stage/stageObject/collisionBox/collisionBox";
 import { TextNode } from "../stage/stageObject/entity/TextNode";
 import { AssetsRepository } from "./AssetsRepository";
@@ -138,7 +123,6 @@ import { KeyBindsUI } from "./controlService/shortcutKeysEngine/KeyBindsUI";
 import { RecentFileManager } from "./dataFileService/RecentFileManager";
 import { generateKeyboardLayout } from "./dataGenerateService/generateFromFolderEngine/GenerateFromFolderEngine";
 import { DragFileIntoStageEngine } from "./dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
-import { FeatureFlags } from "./FeatureFlags";
 import { Settings } from "./Settings";
 import { SubWindow } from "./SubWindow";
 import { Telemetry } from "./Telemetry";
@@ -157,9 +141,6 @@ export function GlobalMenu() {
   const [activeProject] = useAtom(activeProjectAtom);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
   const [recentFiles, setRecentFiles] = useState<RecentFileManager.RecentFile[]>([]);
-  const [version, setVersion] = useState<string>("");
-  const [isUnstableVersion, setIsUnstableVersion] = useState(false);
-  const [isDev, setIsDev] = useAtom(isDevAtom);
   const subWindows = SubWindow.use();
   const { t } = useTranslation("globalMenu");
 
@@ -170,16 +151,6 @@ export function GlobalMenu() {
   async function refresh() {
     await RecentFileManager.sortTimeRecentFiles();
     setRecentFiles(await RecentFileManager.getRecentFiles());
-    const ver = await getVersion();
-    setVersion(ver);
-    setIsUnstableVersion(
-      ver.includes("alpha") ||
-        ver.includes("beta") ||
-        ver.includes("rc") ||
-        ver.includes("dev") ||
-        ver.includes("nightly"),
-    );
-    setIsDev(ver.includes("dev"));
   }
 
   return (
@@ -1405,141 +1376,6 @@ export function GlobalMenu() {
           </Item>
         </Content>
       </Menu>
-
-      {isUnstableVersion && (
-        <Menu>
-          <Trigger className={isDev ? "text-green-500" : "*:text-destructive! text-destructive!"}>
-            {/* 增加辨识度，让开发者更容易分辨dev和nightly版本 */}
-            {isDev ? <BugPlay /> : <MessageCircleWarning />}
-            <span className="hidden sm:inline">{isDev ? "本地开发模式" : t("unstable.title")}</span>
-          </Trigger>
-          <Content>
-            <Item variant="destructive">v{version}</Item>
-            <Item variant="destructive">{t("unstable.notRelease")}</Item>
-            <Item variant="destructive">{t("unstable.mayHaveBugs")}</Item>
-            {/*<Separator />
-            <Item onClick={() => shellOpen("https://github.com/graphif/project-graph/issues/487")}>
-              <Bug />
-              {t("unstable.reportBug")}
-            </Item>*/}
-            <Separator />
-            <Sub>
-              <SubTrigger>
-                <TestTube2 />
-                {t("unstable.test")}
-              </SubTrigger>
-              <SubContent>
-                <Item variant="destructive">仅供开发使用</Item>
-                <Item
-                  onClick={() => {
-                    TestWindow.open();
-                  }}
-                >
-                  测试窗口
-                </Item>
-                <Item
-                  onClick={() => {
-                    const tn1 = new TextNode(activeProject!, { text: "tn1" });
-                    const tn2 = new TextNode(activeProject!, { text: "tn2" });
-                    const le = LineEdge.fromTwoEntity(activeProject!, tn1, tn2);
-                    console.log(serialize([tn1, tn2, le]));
-                  }}
-                >
-                  serialize
-                </Item>
-                <Item
-                  onClick={() => {
-                    activeProject!.renderer.tick = function () {
-                      throw new Error("test");
-                    };
-                  }}
-                >
-                  trigger bug
-                </Item>
-                <Item
-                  onClick={() => {
-                    activeProject!.stageManager
-                      .getSelectedEntities()
-                      .filter((it) => it instanceof TextNode)
-                      .forEach((it) => {
-                        it.text = "hello world";
-                      });
-                  }}
-                >
-                  edit text node
-                </Item>
-                <Item
-                  onClick={() => {
-                    window.location.reload();
-                  }}
-                >
-                  reload
-                </Item>
-                <Item
-                  onClick={async () => {
-                    toast(await getDeviceId());
-                  }}
-                >
-                  get device
-                </Item>
-                <Sub>
-                  <SubTrigger>feature flags</SubTrigger>
-                  <SubContent>
-                    <Item disabled>telemetry = {FeatureFlags.TELEMETRY ? "true" : "false"}</Item>
-                    <Item disabled>ai = {FeatureFlags.AI ? "true" : "false"}</Item>
-                    <Item disabled>user = {FeatureFlags.USER ? "true" : "false"}</Item>
-                  </SubContent>
-                </Sub>
-                <Item onClick={() => NodeDetailsWindow.open()}>plate</Item>
-                <Item
-                  onClick={() => {
-                    console.log(activeProject!.stage);
-                  }}
-                >
-                  在控制台输出舞台内容
-                </Item>
-                <Item
-                  onClick={() => {
-                    const selectedEntity = activeProject!.stageManager.getSelectedEntities();
-                    for (const entity of selectedEntity) {
-                      console.log(entity.details);
-                    }
-                  }}
-                >
-                  输出选中节点的详细信息
-                </Item>
-                <Item
-                  onClick={() => {
-                    const selectedEntity = activeProject!.stageManager.getSelectedEntities();
-                    for (const entity of selectedEntity) {
-                      console.log(entity.detailsManager.getBeSearchingText());
-                    }
-                  }}
-                >
-                  输出选中节点的详细信息转换成Markdown
-                </Item>
-                <Item onClick={() => LoginWindow.open()}>login</Item>
-                <Item onClick={() => UserWindow.open()}>user</Item>
-                <Item onClick={() => OnboardingWindow.open()}>onboarding</Item>
-                <Item
-                  onClick={() => {
-                    // 在原点100范围内随机创建100个节点
-                    for (let i = 0; i < 100; i++) {
-                      const x = Math.random() * 200 - 100;
-                      const y = Math.random() * 200 - 100;
-                      const node = new TextNode(activeProject!, { text: `节点${i + 1}` });
-                      node.moveTo(new Vector(x, y));
-                      activeProject!.stage.push(node);
-                    }
-                  }}
-                >
-                  创建100个节点
-                </Item>
-              </SubContent>
-            </Sub>
-          </Content>
-        </Menu>
-      )}
     </Menubar>
   );
 }

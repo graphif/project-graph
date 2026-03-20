@@ -13,9 +13,7 @@ import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { activeProjectAtom, isWindowMaxsizedAtom, projectsAtom, store } from "@/state";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { LogicalSize } from "@tauri-apps/api/dpi";
+import { activeProjectAtom, projectsAtom, store } from "@/state";
 // import ColorWindow from "@/sub/ColorWindow";
 import FindWindow from "@/sub/FindWindow";
 // import KeyboardRecentFilesWindow from "@/sub/KeyboardRecentFilesWindow";
@@ -65,42 +63,6 @@ export const allKeyBinds: KeyBindItem[] = [
     onPress: () => {
       if (!SubWindow.hasOpenWindows()) return;
       SubWindow.closeAll();
-    },
-    isUI: true,
-  },
-  {
-    id: "toggleFullscreen",
-    defaultKey: "C-F11",
-    onPress: async () => {
-      const window = getCurrentWindow();
-      // 如果当前已经是最大化的状态，设置为非最大化
-      if (await window.isMaximized()) {
-        store.set(isWindowMaxsizedAtom, false);
-      }
-      // 切换全屏状态
-      const isFullscreen = await window.isFullscreen();
-      await window.setFullscreen(!isFullscreen);
-    },
-    isUI: true,
-  },
-  {
-    id: "setWindowToMiniSize",
-    defaultKey: "A-S-m",
-    onPress: async () => {
-      const window = getCurrentWindow();
-      // 如果当前是最大化状态，先取消最大化
-      if (await window.isMaximized()) {
-        await window.unmaximize();
-        store.set(isWindowMaxsizedAtom, false);
-      }
-      // 如果当前是全屏状态，先退出全屏
-      if (await window.isFullscreen()) {
-        await window.setFullscreen(false);
-      }
-      // 设置窗口大小为设置中的迷你窗口大小
-      const width = Settings.windowCollapsingWidth;
-      const height = Settings.windowCollapsingHeight;
-      await window.setSize(new LogicalSize(width, height));
     },
     isUI: true,
   },

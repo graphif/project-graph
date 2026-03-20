@@ -4,15 +4,14 @@
   "description": "An open-source project that aims to provide a next-generation node diagram tool for visual thinking.",
   "type": "module",
   "scripts": {
-    "dev": "nx run-many -t dev tauri:dev",
-    "build": "nx run-many -t build tauri:build",
-    "build:ci": "nx run-many --skipNxCache -t build tauri:build",
+    "dev": "nx run-many -t dev",
+    "build": "nx run-many -t build",
+    "build:ci": "nx run-many --skipNxCache -t build",
     "prepare": "husky",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
     "test": "vitest",
-    "tauri": "pnpm --filter @graphif/project-graph tauri",
     "prepublish": "pnpm run build"
   },
   "devDependencies": {

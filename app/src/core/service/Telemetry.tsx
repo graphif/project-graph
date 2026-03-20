@@ -1,6 +1,5 @@
 import { FeatureFlags } from "@/core/service/FeatureFlags";
-import { getDeviceId } from "@/utils/otherApi";
-import { fetch } from "@tauri-apps/plugin-http";
+import { load } from "@fingerprintjs/fingerprintjs";
 import { Settings } from "./Settings";
 
 export namespace Telemetry {
@@ -17,7 +16,7 @@ export namespace Telemetry {
     if (!FeatureFlags.TELEMETRY) return;
     if (!Settings.telemetry) return;
     if (!deviceId) {
-      deviceId = await getDeviceId();
+      deviceId = (await (await load()).get()).visitorId;
     }
     try {
       await fetch(import.meta.env.LR_API_BASE_URL + "/api/telemetry", {

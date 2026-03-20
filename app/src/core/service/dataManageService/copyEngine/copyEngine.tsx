@@ -1,5 +1,4 @@
 import { Project, service } from "@/core/Project";
-import { isMac } from "@/utils/platform";
 import { ConnectableAssociation } from "@/core/stage/stageObject/abstract/Association";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
@@ -13,8 +12,6 @@ import { Serialized } from "@/types/node";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
-import { Image as TauriImage } from "@tauri-apps/api/image";
-import { readText, writeImage, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { toast } from "sonner";
 import { v4 } from "uuid";
 import { RectangleNoteEffect } from "../../feedbackService/effectEngine/concrete/RectangleNoteEffect";
@@ -75,7 +72,7 @@ export class CopyEngine {
       const imageNode = selectedEntities[0] as ImageNode;
       const blob = this.project.attachments.get(imageNode.attachmentId);
       if (blob) {
-        blob.arrayBuffer().then(TauriImage.fromBytes).then(writeImage);
+        navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
         toast.success("已将选中的图片复制到系统剪贴板");
       }
     } else {
@@ -83,7 +80,7 @@ export class CopyEngine {
       const textNodes = selectedEntities.filter((it) => it instanceof TextNode) as TextNode[];
       if (textNodes.length > 0) {
         const text = textNodes.map((it) => it.text).join("\n\n");
-        writeText(text);
+        navigator.clipboard.writeText(text);
         toast.success("已将选中的文本复制到系统剪贴板");
       }
     }
@@ -248,51 +245,22 @@ export class CopyEngine {
   }
 
   async readSystemClipboardAndPaste() {
-    if (isMac) {
-      // macOS 专用：优先使用 Web API 读取文本剪贴板（主线程安全），
-      // 避免 Tauri clipboard plugin 在 tokio worker 线程读取 NSPasteboard 时
-      // 与 WKWebView 主线程的并发访问导致 SIGSEGV 崩溃。
-      // 参见: https://github.com/tauri-apps/plugins-workspace/issues/3205
-      try {
-        const text = await navigator.clipboard.readText();
-        if (text && text.length > 0) {
-          this.copyEngineText.copyEnginePastePlainText(text);
-        } else {
-          // 文本为空则尝试图片
-          await this.copyEngineImage.processClipboardImage();
-        }
-        setTimeout(() => {
-          // 粘贴完成后清除按键状态，防止 Web API 弹出的 paste 按钮导致卡键
-          this.project.controller.pressingKeySet.clear();
-        });
-      } catch (err) {
-        // Web API 失败（权限拒绝等），清除按键状态后 fallback 到图片粘贴
-        this.project.controller.pressingKeySet.clear();
-        console.warn("macOS Web API readText 失败，尝试粘贴图片", err);
-        try {
-          await this.copyEngineImage.processClipboardImage();
-        } catch (err) {
-          console.error("粘贴图片时发生错误:", err);
-        }
-      }
-    } else {
-      // Linux / Windows：直接使用 Tauri 插件，没有 NSPasteboard 线程安全问题
-      try {
-        const text = await readText();
+    const clipboardItems = await navigator.clipboard.read();
+    let hasPasted = false;
+    for (const item of clipboardItems) {
+      if (item.types.includes("text/plain")) {
+        const text = await item.getType("text/plain").then((blob) => blob.text());
         this.copyEngineText.copyEnginePastePlainText(text);
-      } catch (err) {
-        console.warn("文本剪贴板是空的", err);
-        try {
-          await this.copyEngineImage.processClipboardImage();
-        } catch (err) {
-          console.error("粘贴图片时发生错误:", err);
-          console.error("错误详情:", {
-            name: err instanceof Error ? err.name : "Unknown",
-            message: err instanceof Error ? err.message : String(err),
-            stack: err instanceof Error ? err.stack : "No stack",
-          });
-        }
+        hasPasted = true;
+      } else if (item.types.some((type) => type.startsWith("image/"))) {
+        const imageType = item.types.find((type) => type.startsWith("image/"))!;
+        const blob = await item.getType(imageType);
+        await this.copyEngineImage.copyEnginePasteImage(blob);
+        hasPasted = true;
       }
+    }
+    if (!hasPasted) {
+      toast.error("剪贴板中没有可用的文本或图片数据");
     }
   }
 }

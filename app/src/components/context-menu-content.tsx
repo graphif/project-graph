@@ -28,8 +28,6 @@ import { parseEmacsKey } from "@/utils/emacs";
 import { openBrowserOrFile } from "@/utils/externalOpen";
 import { exportImagesToProjectDirectory } from "@/utils/imageExport";
 import { Color, Vector } from "@graphif/data-structures";
-import { Image as TauriImage } from "@tauri-apps/api/image";
-import { writeImage } from "@tauri-apps/plugin-clipboard-manager";
 import { useAtom } from "jotai";
 import {
   AlignCenterHorizontal,
@@ -1063,23 +1061,12 @@ export default function MyContextMenuContent() {
               // 复制第一张图片到剪贴板（如果有多张图片，只复制第一张）
               const imageNode = selectedImageNodes[0];
               const blob = p.attachments.get(imageNode.attachmentId);
-              if (blob) {
-                try {
-                  const arrayBuffer = await blob.arrayBuffer();
-                  const tauriImage = await TauriImage.fromBytes(new Uint8Array(arrayBuffer));
-                  await writeImage(tauriImage);
-                  if (selectedImageNodes.length === 1) {
-                    toast.success("已将选中的图片复制到系统剪贴板");
-                  } else {
-                    toast.success(`已将第1张图片复制到系统剪贴板（共${selectedImageNodes.length}张）`);
-                  }
-                } catch (error) {
-                  console.error("复制图片到剪贴板失败:", error);
-                  toast.error("复制图片到剪贴板失败");
-                }
-              } else {
-                toast.error("无法获取图片数据");
-              }
+              if (!blob) return;
+              navigator.clipboard.write([
+                new ClipboardItem({
+                  [blob.type]: blob,
+                }),
+              ]);
             }}
           >
             <Clipboard />

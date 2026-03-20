@@ -1,9 +1,8 @@
+import { db } from "@/db";
 import { Color } from "@graphif/data-structures";
-import { Store } from "@tauri-apps/plugin-store";
-import { createStore } from "@/utils/store";
 
 export namespace ColorManager {
-  let store: Store;
+  const settingsTable = db.table("user_colors");
 
   export type ColorData = {
     r: number;
@@ -12,13 +11,9 @@ export namespace ColorManager {
     a: number;
   };
 
-  export async function init() {
-    store = await createStore("colors.json");
-    store.save();
-  }
-
   export async function getUserEntityFillColors(): Promise<Color[]> {
-    const data = ((await store.get("entityFillColors")) as ColorData[]) || [];
+    const entry = await settingsTable.get("entityFillColors");
+    const data = (entry?.value as ColorData[]) || [];
     const result: Color[] = [];
     for (const colorData of data) {
       const color = new Color(colorData.r, colorData.g, colorData.b, colorData.a);
@@ -54,8 +49,7 @@ export namespace ColorManager {
       }
     }
     colorData.push(color);
-    await store.set("entityFillColors", colorToColorData(colorData));
-    store.save();
+    await settingsTable.put({ key: "entityFillColors", value: colorToColorData(colorData) });
     return true;
   }
 
@@ -78,8 +72,7 @@ export namespace ColorManager {
 
     if (index >= 0) {
       colors.splice(index, 1);
-      store.set("entityFillColors", colorToColorData(colors));
-      store.save();
+      await settingsTable.put({ key: "entityFillColors", value: colorToColorData(colors) });
       return true;
     }
     return false;
@@ -90,8 +83,7 @@ export namespace ColorManager {
   export async function organizeUserEntityFillColors() {
     const colors = await getUserEntityFillColors();
     const sortedColors = sortColorsByHue(colors);
-    await store.set("entityFillColors", colorToColorData(sortedColors));
-    store.save();
+    await settingsTable.put({ key: "entityFillColors", value: colorToColorData(sortedColors) });
   }
 
   /**

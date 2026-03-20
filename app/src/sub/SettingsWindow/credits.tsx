@@ -1,13 +1,11 @@
 import { Popover } from "@/components/ui/popover";
-import { cn } from "@/utils/cn";
-import { open } from "@tauri-apps/plugin-shell";
-import { AlertCircle, Calendar, ExternalLink, Heart, Loader, Server, User } from "lucide-react";
 import { Telemetry } from "@/core/service/Telemetry";
-import "./assets/font.css";
 import { isDevAtom } from "@/state";
+import { cn } from "@/utils/cn";
 import { useAtom } from "jotai";
+import { AlertCircle, Calendar, ExternalLink, Heart, Loader, Server, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { fetch } from "@tauri-apps/plugin-http";
+import "./assets/font.css";
 
 interface DonationData {
   user: string;

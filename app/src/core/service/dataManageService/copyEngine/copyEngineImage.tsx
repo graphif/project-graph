@@ -1,12 +1,11 @@
 import { Project } from "@/core/Project";
-import { isWindows } from "@/utils/platform";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { isWindows } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { readImage } from "@tauri-apps/plugin-clipboard-manager";
-import { MouseLocation } from "../../controlService/MouseLocation";
 import { toast } from "sonner";
+import { MouseLocation } from "../../controlService/MouseLocation";
 import { Telemetry } from "../../Telemetry";
 
 /**

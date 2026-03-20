@@ -9,7 +9,6 @@ import { SubWindow } from "@/core/service/SubWindow";
 import { cn } from "@/utils/cn";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { toast } from "sonner";
 
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
@@ -318,7 +317,7 @@ Dialog.copy = (title = "导出成功", description = "", value = ""): Promise<vo
                 <Button
                   variant="outline"
                   onClick={async () => {
-                    await writeText(value);
+                    await navigator.clipboard.writeText(value);
                     toast.success("已复制到剪贴板");
                   }}
                 >

@@ -10,6 +10,7 @@ import { ControllerEntityClickSelectAndMoveClass } from "@/core/service/controlS
 import { ControllerEntityCreateClass } from "@/core/service/controlService/controller/concrete/ControllerEntityCreate";
 import { ControllerLayerMovingClass } from "@/core/service/controlService/controller/concrete/ControllerEntityLayerMoving";
 import { ControllerEntityResizeClass } from "@/core/service/controlService/controller/concrete/ControllerEntityResize";
+import { ControllerImageScaleClass } from "@/core/service/controlService/controller/concrete/ControllerImageScale";
 import { ControllerNodeConnectionClass } from "@/core/service/controlService/controller/concrete/ControllerNodeConnection";
 import { ControllerNodeEditClass } from "@/core/service/controlService/controller/concrete/ControllerNodeEdit";
 import { ControllerPenStrokeControlClass } from "@/core/service/controlService/controller/concrete/ControllerPenStrokeControl";
@@ -17,7 +18,6 @@ import { ControllerPenStrokeDrawingClass } from "@/core/service/controlService/c
 import { ControllerRectangleSelectClass } from "@/core/service/controlService/controller/concrete/ControllerRectangleSelect";
 import { ControllerSectionEditClass } from "@/core/service/controlService/controller/concrete/ControllerSectionEdit";
 import { CursorNameEnum } from "@/types/cursors";
-import { isMac } from "@/utils/platform";
 import { Settings } from "../../Settings";
 
 /**
@@ -226,10 +226,6 @@ export class Controller {
     const key = event.key.toLowerCase();
     if (this.pressingKeySet.has(key)) {
       this.pressingKeySet.delete(key);
-    }
-    if (event.key === " " && isMac) {
-      // 停止框选
-      this.project.rectangleSelect.shutDown();
     }
     this.resetCountdownTimer();
   }

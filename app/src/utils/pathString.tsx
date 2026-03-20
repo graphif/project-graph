@@ -1,4 +1,4 @@
-import { family } from "@/utils/platform";
+import { isWindows } from "@/utils/platform";
 
 export namespace PathString {
   /**
@@ -6,8 +6,7 @@ export namespace PathString {
    * @returns
    */
   export function getSep(): string {
-    const fam = family();
-    if (fam === "windows") {
+    if (isWindows) {
       return "\\";
     } else {
       return "/";
@@ -20,10 +19,7 @@ export namespace PathString {
    * @returns
    */
   export function absolute2file(path: string): string {
-    const fam = family();
-    // const fam = "windows"; // vitest 测试时打开此行注释
-
-    if (fam === "windows") {
+    if (isWindows) {
       path = path.replace(/\\/g, "/");
     }
     const file = path.split("/").pop();
@@ -45,10 +41,7 @@ export namespace PathString {
    * @returns
    */
   export function dirPath(path: string): string {
-    const fam = family();
-    // const fam = "windows"; // vitest 测试时打开此行注释
-
-    if (fam === "windows") {
+    if (isWindows) {
       path = path.replace(/\\/g, "/"); // 将反斜杠替换为正斜杠
     }
 
@@ -62,7 +55,7 @@ export namespace PathString {
       directory = directory.slice(0, -1); // 如果目录路径以斜杠结尾，去掉最后的斜杠
     }
 
-    if (fam === "windows") {
+    if (isWindows) {
       // 再换回反斜杠
       return directory.replace(/\//g, "\\");
     }
