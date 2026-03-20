@@ -27,7 +27,11 @@ export namespace DragFileIntoStageEngine {
       for (const filePath of pathList) {
         const extName = filePath.split(".").pop()?.toLowerCase();
         if (extName === "png") {
-          handleDropPng(project, filePath);
+          handleDropImage(project, filePath, "image/png");
+        } else if (extName === "jpg" || extName === "jpeg") {
+          handleDropImage(project, filePath, "image/jpeg");
+        } else if (extName === "webp") {
+          handleDropImage(project, filePath, "image/webp");
         } else if (extName === "txt") {
           handleDropTxt(project, filePath);
         } else if (extName === "svg") {
@@ -84,14 +88,52 @@ export namespace DragFileIntoStageEngine {
     }
   }
 
-  export async function handleDropPng(project: Project, filePath: string) {
-    // 使用Tauri的文件系统API读取文件内容
+  /**
+   * 将任意图片格式（jpg/jpeg/webp/png）转换为 PNG Blob
+   * 利用浏览器 Canvas API 完成转换
+   */
+  async function convertToPngBlob(fileData: Uint8Array, sourceMime: string): Promise<Blob> {
+    const sourceBlob = new Blob([fileData], { type: sourceMime });
+    const url = URL.createObjectURL(sourceBlob);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          URL.revokeObjectURL(url);
+          reject(new Error("无法获取 Canvas 2D 上下文"));
+          return;
+        }
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((pngBlob) => {
+          if (pngBlob) resolve(pngBlob);
+          else reject(new Error("Canvas toBlob 失败"));
+        }, "image/png");
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("图片加载失败"));
+      };
+      img.src = url;
+    });
+  }
+
+  /**
+   * 处理图片文件拖拽到舞台（支持 png/jpg/jpeg/webp，统一转换为 PNG 存储）
+   */
+  export async function handleDropImage(project: Project, filePath: string, sourceMime: string) {
     const fileData = await readFile(filePath);
 
-    // 创建Blob对象
-    const blob = new Blob([new Uint8Array(fileData)], { type: "image/png" });
+    // 非 PNG 格式先转换为 PNG
+    const blob =
+      sourceMime === "image/png"
+        ? new Blob([new Uint8Array(fileData)], { type: "image/png" })
+        : await convertToPngBlob(new Uint8Array(fileData), sourceMime);
 
-    // 添加到项目的attachments中
     const attachmentId = project.addAttachment(blob);
 
     const addLocation = project.camera.location.clone();
@@ -99,13 +141,17 @@ export namespace DragFileIntoStageEngine {
     addLocation.x += Random.randomInt(0, -500);
     addLocation.y += Random.randomInt(0, 500);
 
-    // 创建ImageNode并添加到舞台
     const imageNode = new ImageNode(project, {
       attachmentId,
       collisionBox: new CollisionBox([new Rectangle(addLocation, new Vector(300, 150))]),
     });
 
     project.stageManager.add(imageNode);
+  }
+
+  /** @deprecated 请使用 handleDropImage */
+  export async function handleDropPng(project: Project, filePath: string) {
+    return handleDropImage(project, filePath, "image/png");
   }
 
   export async function handleDropTxt(project: Project, filePath: string) {

@@ -21,7 +21,9 @@ export const DropWindowCover = ({
         )}
       >
         <p>拖拽到这里：追加到舞台</p>
-        <span className="text-sm">如果是png图片文件，则追加到舞台，如果是prg工程文件，则打开标签页</span>
+        <span className="text-sm">
+          如果是图片文件（png/jpg/jpeg/webp），则追加到舞台，如果是prg工程文件，则打开标签页
+        </span>
       </div>
       <div
         className={cn(

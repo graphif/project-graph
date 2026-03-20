@@ -391,19 +391,26 @@ export function GlobalMenu() {
                     title: "打开文件",
                     directory: false,
                     multiple: true,
-                    filters: [{ name: "*", extensions: ["png"] }],
+                    filters: [{ name: "图片文件", extensions: ["png", "jpg", "jpeg", "webp"] }],
                   });
                   console.log(pathList);
                   if (!pathList) {
                     return;
                   }
                   for (const path of pathList) {
-                    DragFileIntoStageEngine.handleDropPng(activeProject!, path);
+                    const ext = path.split(".").pop()?.toLowerCase() ?? "png";
+                    const mimeMap: Record<string, string> = {
+                      png: "image/png",
+                      jpg: "image/jpeg",
+                      jpeg: "image/jpeg",
+                      webp: "image/webp",
+                    };
+                    DragFileIntoStageEngine.handleDropImage(activeProject!, path, mimeMap[ext] ?? "image/png");
                   }
                 }}
               >
                 <Images />
-                导入PNG图片
+                导入图片（PNG/JPG/WEBP）
               </Item>
               <Item
                 disabled={!activeProject}
