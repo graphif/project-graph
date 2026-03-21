@@ -4,7 +4,7 @@ import ThemeModeSwitch from "@/components/theme-mode-switch";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Dialog } from "@/components/ui/dialog";
 import Welcome from "@/components/welcome-page";
-import { Project, ProjectState } from "@/core/Project";
+import { Project } from "@/core/Project";
 import { GlobalMenu } from "@/core/service/GlobalMenu";
 import { Settings } from "@/core/service/Settings";
 import { Telemetry } from "@/core/service/Telemetry";
@@ -16,7 +16,6 @@ import { toast } from "sonner";
 import { DropWindowCover } from "./DropWindowCover";
 import { ProjectTabs } from "./ProjectTabs";
 import ToolbarContent from "./components/toolbar-content";
-import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { cn } from "./utils/cn";
 
 export default function App() {
@@ -38,10 +37,6 @@ export default function App() {
   // const { t } = useTranslation("app");
 
   useEffect(() => {
-    // 注册UI级别快捷键
-    KeyBindsUI.registerAllUIKeyBinds();
-    KeyBindsUI.uiStartListen();
-
     // 修复鼠标拖出窗口后触发上下文菜单的问题
     window.addEventListener("contextmenu", (event) => {
       if (
@@ -81,11 +76,6 @@ export default function App() {
       }
     });
 
-    // 监听快捷设置工具栏显示设置
-    const unwatchShowQuickSettingsToolbar = Settings.watch("showQuickSettingsToolbar", (value) => {
-      setShowQuickSettingsToolbar(value);
-    });
-
     // 监听窗口背景不透明度
     const unwatchWindowBackgroundAlpha = Settings.watch("windowBackgroundAlpha", (value) => {
       setWindowBackgroundAlpha(value);
@@ -107,9 +97,6 @@ export default function App() {
     }
 
     return () => {
-      KeyBindsUI.uiStopListen();
-      // 清理全局快捷键资源
-      unwatchShowQuickSettingsToolbar();
       unwatchWindowBackgroundAlpha();
     };
   }, []);
@@ -123,7 +110,7 @@ export default function App() {
     if (!activeProject) return;
     activeProject.canvas.mount(canvasWrapperRef.current);
     activeProject.loop();
-    projects.filter((p) => p.uri.toString() !== activeProject.uri.toString()).forEach((p) => p.pause());
+    projects.filter((p) => p.prid !== activeProject.prid).forEach((p) => p.pause());
     activeProject.canvas.element.addEventListener("pointerdown", () => {
       setIgnoreMouseEvents(true);
     });
@@ -144,10 +131,6 @@ export default function App() {
 
   useEffect(() => {
     for (const project of projects) {
-      project.on("state-change", () => {
-        // 强制重新渲染一次
-        setProjects([...projects]);
-      });
       project.on("contextmenu", ({ x, y }) => {
         contextMenuTriggerRef.current?.dispatchEvent(
           new MouseEvent("contextmenu", {

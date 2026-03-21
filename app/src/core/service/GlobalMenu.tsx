@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/menubar";
 
 import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
-import { Project, ProjectState } from "@/core/Project";
+import { Project } from "@/core/Project";
 import { activeProjectAtom, isClassroomModeAtom, projectsAtom, store } from "@/state";
 import AIToolsWindow from "@/sub/AIToolsWindow";
 import AIWindow from "@/sub/AIWindow";
@@ -119,8 +119,6 @@ import { Entity } from "../stage/stageObject/abstract/StageEntity";
 import { CollisionBox } from "../stage/stageObject/collisionBox/collisionBox";
 import { TextNode } from "../stage/stageObject/entity/TextNode";
 import { AssetsRepository } from "./AssetsRepository";
-import { KeyBindsUI } from "./controlService/shortcutKeysEngine/KeyBindsUI";
-import { RecentFileManager } from "./dataFileService/RecentFileManager";
 import { generateKeyboardLayout } from "./dataGenerateService/generateFromFolderEngine/GenerateFromFolderEngine";
 import { DragFileIntoStageEngine } from "./dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { Settings } from "./Settings";
@@ -1381,9 +1379,8 @@ export function GlobalMenu() {
 }
 
 export async function onNewDraft() {
-  const project = Project.newDraft();
+  const project = new Project();
   loadAllServicesBeforeInit(project);
-  await project.init();
   loadAllServicesAfterInit(project);
   store.set(projectsAtom, [...store.get(projectsAtom), project]);
   store.set(activeProjectAtom, project);

@@ -41,7 +41,7 @@ export class Canvas {
       ) {
         event.preventDefault();
       }
-      if (project.isRunning) {
+      if (project.running) {
         element.dispatchEvent(
           new KeyboardEvent("keydown", {
             key: event.key,
@@ -58,7 +58,7 @@ export class Canvas {
         this.project.controller.pressingKeySet.clear();
         return;
       }
-      if (project.isRunning) {
+      if (project.running) {
         element.dispatchEvent(
           new KeyboardEvent("keyup", {
             key: event.key,

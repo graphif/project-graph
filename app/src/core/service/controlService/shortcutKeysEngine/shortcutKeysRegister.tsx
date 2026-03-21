@@ -1,5 +1,5 @@
 import { Dialog } from "@/components/ui/dialog";
-import { Project, ProjectState, service } from "@/core/Project";
+import { Project, service } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { RectangleSlideEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleSlideEffect";
 import { ViewFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewFlashEffect";
@@ -26,7 +26,6 @@ import { openBrowserOrFile } from "@/utils/externalOpen";
 import { isMac } from "@/utils/platform";
 import { Color, Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
-import { RecentFileManager } from "../../dataFileService/RecentFileManager";
 import { ColorSmartTools } from "../../dataManageService/colorSmartTools";
 import { ConnectNodeSmartTools } from "../../dataManageService/connectNodeSmartTools";
 import { TextNodeSmartTools } from "../../dataManageService/textNodeSmartTools";

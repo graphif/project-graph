@@ -1,6 +1,6 @@
 import { Project } from "@/core/Project";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { GenerateScreenshot } from "@/core/service/dataGenerateService/generateScreenshot";
+import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 import { onOpenFile } from "@/core/service/GlobalMenu";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { ResizeAble } from "@/core/stage/stageObject/abstract/StageObjectInterface";
@@ -10,7 +10,6 @@ import { Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import { Section } from "./Section";
-import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 
 /**
  * 引用块节点

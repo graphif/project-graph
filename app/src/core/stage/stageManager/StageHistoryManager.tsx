@@ -1,4 +1,4 @@
-import { Project, ProjectState, service } from "@/core/Project";
+import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { deserialize, serialize } from "@graphif/serializer";
 import { cn } from "@udecode/cn";
@@ -55,8 +55,6 @@ class HistoryManagerTimeEfficient extends HistoryManagerAbs {
       this.history.shift();
       this.currentIndex--;
     }
-
-    this.project.state = ProjectState.Unsaved;
   }
 
   /**
@@ -181,7 +179,6 @@ class HistoryManagerTimeEfficient extends HistoryManagerAbs {
     this.history = [];
     this.currentIndex = -1;
     this.initialStage = serialize(this.project.stage);
-    this.project.state = ProjectState.Saved;
     if (Settings.showDebug) {
       toast("历史记录已清空");
     }
@@ -274,7 +271,6 @@ class HistorymanagerMemoryEfficient extends HistoryManagerAbs {
     if (this.currentIndex >= this.deltas.length) {
       this.currentIndex = this.deltas.length - 1;
     }
-    this.project.state = ProjectState.Unsaved;
   }
 
   /**
@@ -369,7 +365,6 @@ class HistorymanagerMemoryEfficient extends HistoryManagerAbs {
     this.deltas = [];
     this.currentIndex = -1;
     this.initialStage = serialize(this.project.stage);
-    this.project.state = ProjectState.Saved;
     if (Settings.showDebug) {
       toast("历史记录已清空");
     }
@@ -408,7 +403,7 @@ export class HistoryManager extends HistoryManagerAbs {
    * 记录一步骤
    */
   public recordStep(): void {
-    this.currentManager.recordStep();
+    // this.currentManager.recordStep();
   }
 
   /**

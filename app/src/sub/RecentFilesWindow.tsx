@@ -1,6 +1,5 @@
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { DragFileIntoStageEngine } from "@/core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { SoundService } from "@/core/service/feedbackService/SoundService";
 import { onOpenFile } from "@/core/service/GlobalMenu";

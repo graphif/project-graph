@@ -19,7 +19,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
-import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { allKeyBinds, getKeyBindTypeById } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import Fuse from "fuse.js";
 import { AlertCircle } from "lucide-react";

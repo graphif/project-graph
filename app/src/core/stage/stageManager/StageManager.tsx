@@ -57,22 +57,20 @@ export class StageManager {
   constructor(private readonly project: Project) {}
 
   /**
-   * TODO: 这个get方法在2.0从O(1)变成O(N)了，可能是引起卡顿的原因，后面待排查
-   * @param uuid
-   * @returns
+   * O
    */
   get(uuid: string) {
-    return this.project.stage.find((node) => node.uuid === uuid);
+    return this.project.stage.get(uuid) ?? null;
   }
 
   isEmpty(): boolean {
-    return this.project.stage.length === 0;
+    return this.project.stage.size === 0;
   }
   getTextNodes(): TextNode[] {
-    return this.project.stage.filter((node) => node instanceof TextNode);
+    return Array.from(this.project.stage.values()).filter((node): node is TextNode => node instanceof TextNode);
   }
   getConnectableEntity(): ConnectableEntity[] {
-    return this.project.stage.filter((node) => {
+    return Array.from(this.project.stage.values()).filter((node): node is ConnectableEntity => {
       if (node instanceof ConnectableEntity) {
         // 排除背景图片
         if (node instanceof ImageNode && (node as ImageNode).isBackground) {
@@ -84,32 +82,32 @@ export class StageManager {
     }) as ConnectableEntity[];
   }
   isEntityExists(uuid: string): boolean {
-    return this.project.stage.filter((node) => node.uuid === uuid).length > 0;
+    return this.project.stage.has(uuid) && this.project.stage.get(uuid) instanceof Entity;
   }
   getSections(): Section[] {
-    return this.project.stage.filter((node) => node instanceof Section);
+    return Array.from(this.project.stage.values()).filter((node): node is Section => node instanceof Section);
   }
   getImageNodes(): ImageNode[] {
-    return this.project.stage.filter((node) => node instanceof ImageNode);
+    return Array.from(this.project.stage.values()).filter((node): node is ImageNode => node instanceof ImageNode);
   }
   getConnectPoints(): ConnectPoint[] {
-    return this.project.stage.filter((node) => node instanceof ConnectPoint);
+    return Array.from(this.project.stage.values()).filter((node): node is ConnectPoint => node instanceof ConnectPoint);
   }
   getUrlNodes(): UrlNode[] {
-    return this.project.stage.filter((node) => node instanceof UrlNode);
+    return Array.from(this.project.stage.values()).filter((node): node is UrlNode => node instanceof UrlNode);
   }
   // getPortalNodes(): PortalNode[] {
-  //   return this.project.stage.filter((node) => node instanceof PortalNode);
+  //   return Array.from(this.project.stage.values()).filter((node): node is PortalNode => node instanceof PortalNode);
   // }
   getPenStrokes(): PenStroke[] {
-    return this.project.stage.filter((node) => node instanceof PenStroke);
+    return Array.from(this.project.stage.values()).filter((node): node is PenStroke => node instanceof PenStroke);
   }
   getSvgNodes(): SvgNode[] {
-    return this.project.stage.filter((node) => node instanceof SvgNode);
+    return Array.from(this.project.stage.values()).filter((node): node is SvgNode => node instanceof SvgNode);
   }
 
   getStageObjects(): StageObject[] {
-    return this.project.stage;
+    return Array.from(this.project.stage.values());
   }
 
   /**
@@ -117,33 +115,39 @@ export class StageManager {
    * @returns
    */
   getEntities(): Entity[] {
-    return this.project.stage.filter((node) => node instanceof Entity);
+    return Array.from(this.project.stage.values()).filter((node): node is Entity => node instanceof Entity);
   }
   getEntitiesByUUIDs(uuids: string[]): Entity[] {
-    return this.project.stage.filter((node) => uuids.includes(node.uuid) && node instanceof Entity) as Entity[];
+    return Array.from(this.project.stage.values()).filter(
+      (node): node is Entity => uuids.includes(node.uuid) && node instanceof Entity,
+    );
   }
   isNoEntity(): boolean {
-    return this.project.stage.filter((node) => node instanceof Entity).length === 0;
+    return (
+      Array.from(this.project.stage.values()).filter((node): node is Entity => node instanceof Entity).length === 0
+    );
   }
   delete(stageObject: StageObject) {
-    this.project.stage.splice(this.project.stage.indexOf(stageObject), 1);
+    this.project.stage.delete(stageObject.uuid);
   }
 
   getAssociations(): Association[] {
-    return this.project.stage.filter((node) => node instanceof Association);
+    return Array.from(this.project.stage.values()).filter((node): node is Association => node instanceof Association);
   }
   getEdges(): Edge[] {
-    return this.project.stage.filter((node) => node instanceof Edge);
+    return Array.from(this.project.stage.values()).filter((node): node is Edge => node instanceof Edge);
   }
   getLineEdges(): LineEdge[] {
-    return this.project.stage.filter((node) => node instanceof LineEdge);
+    return Array.from(this.project.stage.values()).filter((node): node is LineEdge => node instanceof LineEdge);
   }
   getCrEdges(): CubicCatmullRomSplineEdge[] {
-    return this.project.stage.filter((node) => node instanceof CubicCatmullRomSplineEdge);
+    return Array.from(this.project.stage.values()).filter(
+      (node): node is CubicCatmullRomSplineEdge => node instanceof CubicCatmullRomSplineEdge,
+    );
   }
 
   add(stageObject: StageObject) {
-    this.project.stage.push(stageObject);
+    this.project.stage.set(stageObject.uuid, stageObject);
   }
 
   /**
@@ -177,11 +181,9 @@ export class StageManager {
       const newChildList = [];
 
       for (const child of section.children) {
-        if (this.project.stage.find((node) => node.uuid === child.uuid)) {
-          const childObject = this.project.stage.find(
-            (node) => node.uuid === child.uuid && node instanceof Entity,
-          ) as Entity;
-          if (childObject) {
+        if (this.project.stage.has(child.uuid)) {
+          const childObject = this.project.stage.get(child.uuid);
+          if (childObject instanceof Entity) {
             newChildList.push(childObject);
           }
         }
@@ -221,7 +223,7 @@ export class StageManager {
     return null;
   }
   isSectionByUUID(uuid: string): boolean {
-    return this.project.stage.find((node) => node.uuid === uuid) instanceof Section;
+    return this.project.stage.get(uuid) instanceof Section;
   }
   getSectionByUUID(uuid: string): Section | null {
     const entity = this.get(uuid);
@@ -235,11 +237,11 @@ export class StageManager {
    * 计算所有节点的中心点
    */
   getCenter(): Vector {
-    if (this.project.stage.length === 0) {
+    if (this.project.stage.size === 0) {
       return Vector.getZero();
     }
     const allNodesRectangle = Rectangle.getBoundingRectangle(
-      this.project.stage.map((node) => node.collisionBox.getRectangle()),
+      Array.from(this.project.stage.values()).map((node) => node.collisionBox.getRectangle()),
     );
     return allNodesRectangle.center;
   }
@@ -248,7 +250,7 @@ export class StageManager {
    * 计算所有节点的大小
    */
   getSize(): Vector {
-    if (this.project.stage.length === 0) {
+    if (this.project.stage.size === 0) {
       return new Vector(this.project.renderer.w, this.project.renderer.h);
     }
     const size = this.getBoundingRectangle().size;
@@ -386,12 +388,15 @@ export class StageManager {
    * @returns
    */
   getSelectedEntities(): Entity[] {
-    return this.project.stage.filter(
-      (so) => so.isSelected && so instanceof Entity && !(so instanceof ImageNode && (so as ImageNode).isBackground),
-    ) as Entity[];
+    return Array.from(this.project.stage.values()).filter(
+      (so): so is Entity =>
+        so.isSelected && so instanceof Entity && !(so instanceof ImageNode && (so as ImageNode).isBackground),
+    );
   }
   getSelectedAssociations(): Association[] {
-    return this.project.stage.filter((so) => so.isSelected && so instanceof Association) as Association[];
+    return Array.from(this.project.stage.values()).filter(
+      (so): so is Association => so.isSelected && so instanceof Association,
+    );
   }
   getSelectedStageObjects(): StageObject[] {
     const result: StageObject[] = [];
@@ -863,13 +868,13 @@ export class StageManager {
    * ctrl + A 全选
    */
   selectAll() {
-    const allEntity = this.project.stage;
+    const allEntity = this.project.stage.values();
     for (const entity of allEntity) {
       entity.isSelected = true;
     }
   }
   clearSelectAll() {
-    for (const entity of this.project.stage) {
+    for (const entity of this.project.stage.values()) {
       entity.isSelected = false;
     }
   }

@@ -15,6 +15,9 @@ catalogs:
     react-dom:
       specifier: ^19.1.0
       version: 19.1.0
+    tsdown:
+      specifier: ^0.12.9
+      version: 0.12.9
     typescript:
       specifier: 5.9.2
       version: 5.9.2
@@ -381,6 +384,9 @@ importers:
       motion:
         specifier: ^12.23.22
         version: 12.23.22(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      nanoid:
+        specifier: ^5.1.7
+        version: 5.1.7
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -7598,9 +7604,9 @@ packages:
     engines: { node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1 }
     hasBin: true
 
-  nanoid@5.1.5:
+  nanoid@5.1.7:
     resolution:
-      { integrity: sha512-Ir/+ZpE9fDsNH0hQ3C68uyThDXzYcim2EqcZ8zn8Chtt1iylPT9xXJB0kPCnqzgcEGikO9RxSrh63MsmVCU7Fw== }
+      { integrity: sha512-ua3NDgISf6jdwezAheMOk4mbE1LXjm1DfMUDMuJf4AqxLFK3ccGpgWizwa5YV7Yz9EpXwEaWoRXSb/BnV0t5dQ== }
     engines: { node: ^18 || >=20 }
     hasBin: true
 
@@ -11777,7 +11783,7 @@ snapshots:
       jotai-optics: 0.4.0(jotai@2.8.4(@types/react@19.1.8)(react@19.1.0))(optics-ts@2.4.1)
       jotai-x: 2.3.3(@types/react@19.1.8)(jotai@2.8.4(@types/react@19.1.8)(react@19.1.0))(react@19.1.0)
       lodash: 4.17.21
-      nanoid: 5.1.5
+      nanoid: 5.1.7
       optics-ts: 2.4.1
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
@@ -16643,7 +16649,7 @@ snapshots:
 
   nanoid@3.3.11: {}
 
-  nanoid@5.1.5: {}
+  nanoid@5.1.7: {}
 
   native-promise-only@0.8.1: {}
 

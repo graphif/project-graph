@@ -1,12 +1,11 @@
 import { loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project } from "@/core/Project";
-import { PathString } from "@/utils/pathString";
-import { RecentFileManager } from "../dataFileService/RecentFileManager";
 import { Section } from "@/core/stage/stageObject/entity/Section";
+import { PathString } from "@/utils/pathString";
 import { sleep } from "@/utils/sleep";
+import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";
-import { Vector } from "@graphif/data-structures";
 
 /**
  * 从一个文件中生成截图

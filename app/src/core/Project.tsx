@@ -1,4 +1,3 @@
-import { Dialog } from "@/components/ui/dialog";
 import { Service } from "@/core/interfaces/Service";
 import type { CurveRenderer } from "@/core/render/canvas2d/basicRenderer/curveRenderer";
 import type { ImageRenderer } from "@/core/render/canvas2d/basicRenderer/ImageRenderer";
@@ -34,7 +33,6 @@ import type { KeyboardOnlyGraphEngine } from "@/core/service/controlService/keyb
 import type { KeyboardOnlyTreeEngine } from "@/core/service/controlService/keyboardOnlyEngine/keyboardOnlyTreeEngine";
 import type { SelectChangeEngine } from "@/core/service/controlService/keyboardOnlyEngine/selectChangeEngine";
 import type { RectangleSelect } from "@/core/service/controlService/rectangleSelectEngine/rectangleSelectEngine";
-import type { KeyBinds } from "@/core/service/controlService/shortcutKeysEngine/KeyBinds";
 import type { KeyBindsRegistrar } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import type { MouseInteraction } from "@/core/service/controlService/stageMouseInteractionCore/stageMouseInteractionCore";
 import type { AutoComputeUtils } from "@/core/service/dataGenerateService/autoComputeEngine/AutoComputeUtils";
@@ -71,102 +69,44 @@ import type { SectionPackManager } from "@/core/stage/stageManager/concreteMetho
 import type { TagManager } from "@/core/stage/stageManager/concreteMethods/StageTagManager";
 import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import type { StageManager } from "@/core/stage/stageManager/StageManager";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import { nextProjectIdAtom, projectsAtom, store } from "@/state";
-import { ProjectMetadata, createDefaultMetadata, isValidMetadata } from "@/types/metadata";
 import { Vector } from "@graphif/data-structures";
-import { deserialize, serialize } from "@graphif/serializer";
-import { Decoder, Encoder } from "@msgpack/msgpack";
-import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, ZipWriter } from "@zip.js/zip.js";
+import Dexie from "dexie";
 import { EventEmitter } from "events";
-import md5 from "md5";
-import mime from "mime";
+import { nanoid } from "nanoid";
 import { toast } from "sonner";
 import { getOriginalNameOf } from "virtual:original-class-name";
-import { URI } from "vscode-uri";
 import { Telemetry } from "./service/Telemetry";
-import { ProjectUpgrader } from "./stage/ProjectUpgrader";
 import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageReferenceManager";
-
-if (import.meta.hot) {
-  import.meta.hot.accept();
-}
-
-export enum ProjectState {
-  /**
-   * “已保存”
-   * 已写入到原始文件中
-   * 已上传到云端
-   */
-  Saved,
-  /**
-   * "已暂存"
-   * 未写入到原始文件中，但是已经暂存到数据目录
-   * 未上传到云端，但是已经暂存到本地
-   */
-  Stashed,
-  /**
-   * “未保存”
-   * 未写入到原始文件中，也未暂存到数据目录（真·未保存）
-   * 未上传到云端，也未暂存到本地
-   */
-  Unsaved,
-}
+import { StageObject } from "./stage/stageObject/abstract/StageObject";
 
 /**
  * “工程”
- * 一个标签页对应一个工程，一个工程只能对应一个URI
- * 一个工程可以加载不同的服务，类似vscode的扩展（Extensions）机制
  */
 export class Project extends EventEmitter<{
-  "state-change": [state: ProjectState];
   contextmenu: [location: Vector];
 }> {
-  static readonly latestVersion = 18;
+  public readonly db: Dexie & {
+    meta: Dexie.Table<{ key: string; value: any }, string>;
+    stage: Dexie.Table<{ soid: string; type: string; tags: string[] }, string>;
+    attachments: Dexie.Table<{ atid: string; data: Blob }, string>;
+  };
+  public readonly stage = new Map<string, StageObject>();
 
   private readonly services = new Map<string, Service>();
   private readonly tickableServices: Service[] = [];
   private rafHandle = -1;
-  private _uri: URI;
-  private _state: ProjectState = ProjectState.Unsaved;
-  private _isSaving = false;
-  public stage: StageObject[] = [];
-  public tags: string[] = [];
-  /**
-   * string：UUID
-   * value: Blob
-   */
-  public attachments = new Map<string, Blob>();
-  /**
-   * 创建Encoder对象比直接用encode()快
-   * @see https://github.com/msgpack/msgpack-javascript#reusing-encoder-and-decoder-instances
-   */
-  private encoder = new Encoder();
-  private decoder = new Decoder();
 
   /**
    * 创建一个项目
-   * @param uri 工程文件的URI
-   * 之所以从“路径”改为了“URI”，是因为要为后面的云同步功能做铺垫。
-   * 普通的“路径”无法表示云盘中的文件，而URI可以。
-   * 同时，草稿文件也从硬编码的“Project Graph”特殊文件路径改为了协议为draft、内容为UUID的URI。
-   * @see https://code.visualstudio.com/api/references/vscode-api#workspace.workspaceFile
    */
-  constructor(uri: URI) {
+  constructor(public readonly prid: string = nanoid()) {
     super();
-    this._uri = uri;
-  }
-  /**
-   * 创建一个草稿工程
-   * URI为draft:UUID
-   */
-  static newDraft(): Project {
-    // const num = store.get(projectsAtom).filter((p) => p.isDraft).length + 1;
-    if (store.get(projectsAtom).length === 0) store.set(nextProjectIdAtom, 1);
-    const num = store.get(nextProjectIdAtom);
-    const uri = URI.parse("draft:" + num);
-    store.set(nextProjectIdAtom, num + 1);
-    return new Project(uri);
+    this.db = new Dexie(`pg-project-${prid}`) as typeof this.db;
+    this.db.version(1).stores({
+      meta: "key",
+      stage: "soid, *tags",
+      attachments: "atid",
+    });
   }
 
   /**
@@ -174,7 +114,7 @@ export class Project extends EventEmitter<{
    */
   loadService(service: { id?: string; new (...args: any[]): any }) {
     if (!service.id) {
-      service.id = crypto.randomUUID();
+      service.id = nanoid();
       console.warn("[Project] 服务 %o 未指定 ID，自动生成：%s", service, service.id);
     }
     const inst = new service(this);
@@ -194,152 +134,6 @@ export class Project extends EventEmitter<{
       this.services.delete(serviceId);
       this.tickableServices.splice(this.tickableServices.indexOf(service), 1);
     }
-  }
-
-  /**
-   * 比较两个版本号字符串（格式：x.y.z）
-   * @param version1 版本1
-   * @param version2 版本2
-   * @returns 如果 version1 < version2 返回 -1，如果 version1 > version2 返回 1，如果相等返回 0
-   */
-  private compareVersion(version1: string, version2: string): number {
-    const v1Parts = version1.split(".").map(Number);
-    const v2Parts = version2.split(".").map(Number);
-    const maxLength = Math.max(v1Parts.length, v2Parts.length);
-
-    for (let i = 0; i < maxLength; i++) {
-      const v1Part = v1Parts[i] || 0;
-      const v2Part = v2Parts[i] || 0;
-      if (v1Part < v2Part) return -1;
-      if (v1Part > v2Part) return 1;
-    }
-    return 0;
-  }
-
-  /**
-   * 检查是否需要升级，如果需要则显示确认对话框
-   * @param currentVersion 当前文件版本
-   * @param latestVersion 最新版本
-   */
-  private async checkAndConfirmUpgrade(currentVersion: string, latestVersion: string): Promise<void> {
-    const needsUpgrade = this.compareVersion(currentVersion, latestVersion) < 0;
-
-    if (!needsUpgrade) {
-      return;
-    }
-
-    // 显示确认对话框
-    const response = await Dialog.buttons(
-      "检测到旧版本项目文件",
-      `当前文件版本为 ${currentVersion}，需要升级到 ${latestVersion} (是prg文件版本,非软件版本)。\n\n升级过程不可逆且可能存在风险，特别是对于大型文件，建议提前备份。是否继续升级？`,
-      [
-        { id: "cancel", label: "取消", variant: "ghost" },
-        { id: "upgrade", label: "确认升级" },
-      ],
-    );
-
-    if (response === "cancel") {
-      // 用户取消升级，抛出错误以便调用者知道操作被取消
-      throw new Error("用户取消了文件升级，文件未打开");
-    }
-
-    // 添加延迟，确保用户看到提示并给系统时间处理
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-
-  /**
-   * 解析项目文件（ZIP格式），提取所有数据
-   * @returns 解析后的数据对象
-   */
-  private async parseProjectFile(): Promise<{
-    serializedStageObjects: any[];
-    tags: string[];
-    references: { sections: Record<string, string[]>; files: string[] };
-    metadata: ProjectMetadata;
-  }> {
-    const fileContent = await this.fs.read(this.uri);
-    const reader = new ZipReader(new Uint8ArrayReader(fileContent));
-    const entries = await reader.getEntries();
-
-    let serializedStageObjects: any[] = [];
-    let tags: string[] = [];
-    let references: { sections: Record<string, string[]>; files: string[] } = { sections: {}, files: [] };
-    let metadata: ProjectMetadata = createDefaultMetadata("2.0.0");
-
-    for (const entry of entries) {
-      if (entry.filename === "stage.msgpack") {
-        const stageRawData = await entry.getData!(new Uint8ArrayWriter());
-        serializedStageObjects = this.decoder.decode(stageRawData) as any[];
-      } else if (entry.filename === "tags.msgpack") {
-        const tagsRawData = await entry.getData!(new Uint8ArrayWriter());
-        tags = this.decoder.decode(tagsRawData) as string[];
-      } else if (entry.filename === "reference.msgpack") {
-        const referenceRawData = await entry.getData!(new Uint8ArrayWriter());
-        references = this.decoder.decode(referenceRawData) as { sections: Record<string, string[]>; files: string[] };
-      } else if (entry.filename === "metadata.msgpack") {
-        const metadataRawData = await entry.getData!(new Uint8ArrayWriter());
-        const decodedMetadata = this.decoder.decode(metadataRawData) as any;
-        // 验证并规范化 metadata
-        if (isValidMetadata(decodedMetadata)) {
-          metadata = decodedMetadata;
-        } else {
-          // 如果格式不正确，使用默认值
-          metadata = createDefaultMetadata("2.0.0");
-        }
-      } else if (entry.filename.startsWith("attachments/")) {
-        const match = entry.filename.trim().match(/^attachments\/([a-zA-Z0-9-]+)\.([a-zA-Z0-9]+)$/);
-        if (!match) {
-          console.warn("[Project] 附件文件名不符合规范: %s", entry.filename);
-          continue;
-        }
-        const uuid = match[1];
-        const ext = match[2];
-        const type = mime.getType(ext) || "application/octet-stream";
-        const attachment = await entry.getData!(new BlobWriter(type));
-        this.attachments.set(uuid, attachment);
-      }
-    }
-
-    return { serializedStageObjects, tags, references, metadata };
-  }
-
-  /**
-   * 服务加载完成后再调用
-   */
-  async init() {
-    if (!(await this.fs.exists(this.uri))) {
-      return;
-    }
-    try {
-      // 解析项目文件
-      const { serializedStageObjects, tags, references, metadata } = await this.parseProjectFile();
-
-      // 检查并确认升级
-      const currentVersion = metadata?.version || "2.0.0";
-      const latestVersion = ProjectUpgrader.NLatestVersion;
-      await this.checkAndConfirmUpgrade(currentVersion, latestVersion);
-
-      // 升级数据
-      const [upgradedStageObjects, upgradedMetadata] = ProjectUpgrader.upgradeNAnyToNLatest(
-        serializedStageObjects,
-        metadata,
-      );
-
-      // 应用升级后的数据
-      this.stage = deserialize(upgradedStageObjects, this);
-      this.tags = tags;
-      this.references = references;
-      this.metadata = upgradedMetadata;
-
-      // 更新引用关系，包括双向线的偏移状态
-      // 注意：这里需要在服务加载后才能调用，所以需要检查服务是否已加载
-      if (this.getService("stageManager")) {
-        this.stageManager.updateReferences();
-      }
-    } catch (e) {
-      console.warn(e);
-    }
-    this.state = ProjectState.Saved;
   }
 
   loop() {
@@ -362,23 +156,15 @@ export class Project extends EventEmitter<{
       } catch (e) {
         console.error("[%s] %o", service, e);
         this.tickableServices.splice(this.tickableServices.indexOf(service), 1);
-        Dialog.buttons(`${getOriginalNameOf(service.constructor)} 发生未知错误`, String(e), [
-          { id: "cancel", label: "取消", variant: "ghost" },
-          { id: "save", label: "保存文件" },
-        ]).then((result) => {
-          if (result === "save") {
-            this.save();
-          }
-        });
         if (e !== null && typeof e === "object" && "message" in e && e.message === "test") {
           continue;
         }
         toast.promise(
           Telemetry.event("服务tick方法报错", { service: getOriginalNameOf(service.constructor), error: String(e) }),
           {
-            loading: "正在上报错误",
-            success: "错误信息已发送给开发者",
-            error: "上报失败",
+            loading: `服务 ${getOriginalNameOf(service.constructor)} 出现错误，正在上报错误信息`,
+            success: "错误信息已发送给开发者，文件已自动保存，您现在可以关闭这个标签页了",
+            error: "上报失败，文件已自动保存，您现在可以关闭这个标签页了",
           },
         );
       }
@@ -408,109 +194,13 @@ export class Project extends EventEmitter<{
     return this.services.get(serviceId) as this[T];
   }
 
-  get isDraft() {
-    return this.uri.scheme === "draft";
-  }
-  get uri() {
-    return this._uri;
-  }
-  set uri(uri: URI) {
-    this._uri = uri;
-    this.state = ProjectState.Unsaved;
-  }
-
-  /**
-   * 将文件暂存到数据目录中（通常为~/.local/share）
-   * ~/.local/share/liren.project-graph/stash/<normalizedUri>
-   * @see https://code.visualstudio.com/blogs/2016/11/30/hot-exit-in-insiders
-   *
-   * 频繁用msgpack序列化不会卡吗？
-   * 虽然JSON.stringify()在V8上面速度和msgpack差不多
-   * 但是要考虑跨平台，目前linux和macos用的都是webkit，目前还没有JavaScriptCore相关的benchmark
-   * 而且考虑到以后会把图片也放进文件里面，JSON肯定不合适了
-   * @see https://github.com/msgpack/msgpack-javascript#benchmark
-   */
-  async stash() {
-    // TODO: stash
-    // const stashFilePath = await join(await appLocalDataDir(), "stash", Base64.encode(this.uri.toString()));
-    // const encoded = this.encoder.encodeSharedRef(this.data);
-    // await writeFile(stashFilePath, encoded);
-  }
-  async save() {
-    try {
-      this.isSaving = true;
-      await this.fs.write(this.uri, await this.getFileContent());
-      this.state = ProjectState.Saved;
-    } finally {
-      this.isSaving = false;
-    }
-  }
-
-  // 反向引用数据
-  public references: { sections: Record<string, string[]>; files: string[] } = { sections: {}, files: [] };
-  public metadata: ProjectMetadata = createDefaultMetadata(ProjectUpgrader.NLatestVersion);
-
-  // 更新引用信息的方法已经在changeTextNodeToReferenceBlock中直接实现，这里暂时不需要单独的方法
-
-  // 备份也要用到这个
-  async getFileContent() {
-    const serializedStage = serialize(this.stage);
-    const encodedStage = this.encoder.encode(serializedStage);
-    const uwriter = new Uint8ArrayWriter();
-
-    const writer = new ZipWriter(uwriter); // zip writer用于把zip文件写入uint8array writer
-    writer.add("stage.msgpack", new Uint8ArrayReader(encodedStage));
-    writer.add("tags.msgpack", new Uint8ArrayReader(this.encoder.encode(this.tags)));
-    writer.add("reference.msgpack", new Uint8ArrayReader(this.encoder.encode(this.references)));
-    writer.add("metadata.msgpack", new Uint8ArrayReader(this.encoder.encode(this.metadata)));
-    // 添加附件
-    for (const [uuid, attachment] of this.attachments.entries()) {
-      writer.add(`attachments/${uuid}.${mime.getExtension(attachment.type)}`, new BlobReader(attachment));
-    }
-    await writer.close();
-
-    const fileContent = await uwriter.getData();
-    return fileContent;
-  }
-
-  /**
-   * 备份用：生成项目内容的哈希值，用于检测内容是否发生变化
-   */
-  get stageHash() {
-    const serializedStage = serialize(this.stage);
-    // 创建临时Encoder来编码数据
-    const tempEncoder = new Encoder();
-    const encodedStage = tempEncoder.encode(serializedStage);
-    return md5(encodedStage);
-  }
-
   addAttachment(data: Blob) {
-    const uuid = crypto.randomUUID();
-    this.attachments.set(uuid, data);
-    return uuid;
+    const atid = nanoid();
+    this.db.table("attachments").add({ atid, data });
+    return atid;
   }
 
-  set state(state: ProjectState) {
-    if (state === this._state) return;
-    this._state = state;
-    this.emit("state-change", state);
-  }
-
-  get state(): ProjectState {
-    return this._state;
-  }
-
-  set isSaving(isSaving: boolean) {
-    if (isSaving === this._isSaving) return;
-    this._isSaving = isSaving;
-    this.emit("state-change", this._state);
-  }
-
-  get isSaving(): boolean {
-    return this._isSaving;
-  }
-
-  get isRunning(): boolean {
+  get running(): boolean {
     return this.rafHandle !== -1;
   }
 }
@@ -525,7 +215,6 @@ declare module "./Project" {
   interface Project {
     canvas: Canvas;
     inputElement: InputElement;
-    keyBinds: KeyBinds;
     controllerUtils: ControllerUtils;
     autoComputeUtils: AutoComputeUtils;
     renderUtils: RenderUtils;

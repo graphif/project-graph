@@ -194,7 +194,6 @@ export function matchEmacsKeyPress(key: string, events: (KeyboardEvent | MouseEv
 
 /**
  * 将事件转换为emacs格式的快捷键
- * @param event KeyboardEvent | MouseEvent | WheelEvent
  * @returns "C-s", "C-<MWU>" 等格式
  */
 export function formatEmacsKey(event: KeyboardEvent | MouseEvent | WheelEvent): string {

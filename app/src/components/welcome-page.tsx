@@ -1,5 +1,4 @@
 import { AssetsRepository } from "@/core/service/AssetsRepository";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { onNewDraft, onOpenFile } from "@/core/service/GlobalMenu";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
 import { cn } from "@/utils/cn";
@@ -25,7 +24,7 @@ import { URI } from "vscode-uri";
 import SettingsWindow from "../sub/SettingsWindow";
 
 export default function WelcomePage() {
-  const [recentFiles, setRecentFiles] = useState<RecentFileManager.RecentFile[]>([]);
+  const [recentFiles, setRecentFiles] = useState<any[]>([]);
   const { t } = useTranslation("welcome");
   const [appVersion, setAppVersion] = useState("unknown");
   const [isDownloadingGuideFile, setIsDownloadingGuideFile] = useState(false);

@@ -1,4 +1,3 @@
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { onOpenFile } from "@/core/service/GlobalMenu";
 import { SubWindow } from "@/core/service/SubWindow";
 import { Vector } from "@graphif/data-structures";

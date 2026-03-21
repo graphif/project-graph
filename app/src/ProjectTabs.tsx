@@ -1,11 +1,9 @@
-import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { Project, ProjectState } from "./core/Project";
 import { cn } from "@udecode/cn";
+import { X } from "lucide-react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "./components/ui/button";
-import { CircleAlert, CloudUpload, X } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./components/ui/tooltip";
+import { Project } from "./core/Project";
 import { SoundService } from "./core/service/feedbackService/SoundService";
-import { toast } from "sonner";
 import { Settings } from "./core/service/Settings";
 import { replaceTextWhenProtect } from "./utils/font";
 
@@ -87,11 +85,10 @@ export const ProjectTabs = memo(function ProjectTabs({
     >
       {projects.map((project) => (
         <Button
-          key={project.uri.toString()}
+          key={project.prid}
           className={cn(
             "hover:bg-primary/20 outline-inset h-full cursor-pointer rounded-none px-2 hover:opacity-100 sm:rounded-sm",
-            activeProject?.uri.toString() === project.uri.toString() ? "bg-primary/70" : "bg-accent opacity-70",
-            project.isSaving && "animate-pulse",
+            activeProject?.prid === project.prid ? "bg-primary/70" : "bg-accent opacity-70",
           )}
           onMouseDown={(e) => {
             if (e.button === 0) {
@@ -110,61 +107,16 @@ export const ProjectTabs = memo(function ProjectTabs({
           }}
         >
           <span className="text-xs">
-            {(() => {
-              const name =
-                project.uri.scheme === "draft"
-                  ? `临时草稿 (${project.uri.path})`
-                  : project.uri.scheme === "file"
-                    ? project.uri.path.split("/").pop()
-                    : project.uri.toString();
-              return protectingPrivacy ? replaceTextWhenProtect(name ?? "") : name;
-            })()}
+            {protectingPrivacy ? replaceTextWhenProtect(project.prid ?? "") : project.prid}
           </span>
           <div
             className="flex size-4 cursor-pointer items-center justify-center hover:opacity-100"
             onClick={(e) => {
-              if (project.isSaving) {
-                // 如果正在保存中，显示提示
-                toast.warning("正在保存中，请勿擅自做多余的操作");
-                SoundService.play.cuttingLineRelease();
-              } else if (project.state === ProjectState.Unsaved) {
-                // 如果是未保存状态，根据项目类型执行不同操作
-                if (project.uri.scheme === "draft") {
-                  // 草稿文件，弹出对话框
-                  handleTabClose(project, e);
-                  SoundService.play.cuttingLineRelease();
-                } else {
-                  // 已有的文件，直接保存
-                  project.save();
-                  SoundService.play.cuttingLineRelease();
-                }
-              } else {
-                // 其他状态，执行关闭操作
-                handleTabClose(project, e);
-                SoundService.play.cuttingLineRelease();
-              }
+              handleTabClose(project, e);
+              SoundService.play.cuttingLineRelease();
             }}
           >
-            {project.isSaving ? (
-              <span className="grid size-3.5 animate-spin grid-cols-2">
-                <span className="border-1 border-accent-foreground w-full animate-pulse rounded-full p-0.5"></span>
-                <span className="border-1 border-accent-foreground w-full rounded-full p-0.5"></span>
-                <span className="border-1 border-accent-foreground w-full rounded-full p-0.5"></span>
-                <span className="border-1 border-accent-foreground w-full animate-pulse rounded-full p-0.5"></span>
-              </span>
-            ) : project.state === ProjectState.Saved ? (
-              <X className="scale-75 opacity-75" />
-            ) : project.state === ProjectState.Stashed ? (
-              <CloudUpload />
-            ) : (
-              <Tooltip>
-                {/* 醒目提醒用户，崩溃了丢了文件别怪开发者提醒不到位 */}
-                <TooltipTrigger>
-                  <CircleAlert className="*:text-destructive! text-destructive!" />
-                </TooltipTrigger>
-                <TooltipContent>未保存！</TooltipContent>
-              </Tooltip>
-            )}
+            <X className="scale-75 opacity-75" />
           </div>
         </Button>
       ))}

@@ -1,8 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
+import "@/core/service/controlService/shortcutKeysEngine/Shortcuts";
 import { Settings } from "@/core/service/Settings";
-import { Tutorials } from "@/core/service/Tourials";
 import { EdgeCollisionBoxGetter } from "@/core/stage/stageObject/association/EdgeCollisionBoxGetter";
 import { store } from "@/state";
 import "driver.js/dist/driver.css";
@@ -19,7 +18,6 @@ const el = document.getElementById("root")!;
 // 在这里看着清爽一些，像一个列表清单一样。也方便调整顺序
 
 (async () => {
-  await Promise.all([RecentFileManager.init(), Tutorials.init()]);
   // 这些东西依赖上面的东西，所以单独一个Promise.all
   await Promise.all([loadLanguageFiles(), loadSyncModules()]);
   await renderApp();

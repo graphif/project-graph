@@ -1,6 +1,5 @@
 import { Project, service } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { LogicNodeNameToRenderNameMap } from "@/core/service/dataGenerateService/autoComputeEngine/logicNodeNameEnum";
 import { CrossFileContentQuery } from "@/core/service/dataGenerateService/crossFileContentQuery";
 import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";

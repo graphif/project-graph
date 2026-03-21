@@ -1,14 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { SubWindow } from "@/core/service/SubWindow";
 import { activeProjectAtom } from "@/state";
+import { PathString } from "@/utils/pathString";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { RefreshCcw } from "lucide-react";
 import { useAtom } from "jotai";
-import { useState, useEffect } from "react";
-import { PathString } from "@/utils/pathString";
+import { RefreshCcw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { URI } from "vscode-uri";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 
 export default function ReferencesWindow(props: { currentProjectFileName: string }) {
   const currentProjectFileName = props.currentProjectFileName;

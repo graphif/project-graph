@@ -527,23 +527,23 @@ export class Renderer {
 
   /** 画所有被标签了的节点的特殊装饰物和缩小视野时的直观显示 */
   private renderTags() {
-    for (const tagString of this.project.tags) {
-      const tagObject = this.project.stageManager.get(tagString); // 这不成了ON方了？
-      if (!tagObject) {
-        continue;
-      }
-      const rect = tagObject.collisionBox.getRectangle();
-      this.project.shapeRenderer.renderPolygonAndFill(
-        [
-          this.transformWorld2View(rect.leftTop.add(new Vector(0, 8))),
-          this.transformWorld2View(rect.leftCenter.add(new Vector(-15, 0))),
-          this.transformWorld2View(rect.leftBottom.add(new Vector(0, -8))),
-        ],
-        new Color(255, 0, 0, 0.5),
-        this.project.stageStyleManager.currentStyle.StageObjectBorder,
-        2 * this.project.camera.currentScale,
-      );
-    }
+    // for (const tagString of this.project.tags) {
+    //   const tagObject = this.project.stageManager.get(tagString); // 这不成了ON方了？
+    //   if (!tagObject) {
+    //     continue;
+    //   }
+    //   const rect = tagObject.collisionBox.getRectangle();
+    //   this.project.shapeRenderer.renderPolygonAndFill(
+    //     [
+    //       this.transformWorld2View(rect.leftTop.add(new Vector(0, 8))),
+    //       this.transformWorld2View(rect.leftCenter.add(new Vector(-15, 0))),
+    //       this.transformWorld2View(rect.leftBottom.add(new Vector(0, -8))),
+    //     ],
+    //     new Color(255, 0, 0, 0.5),
+    //     this.project.stageStyleManager.currentStyle.StageObjectBorder,
+    //     2 * this.project.camera.currentScale,
+    //   );
+    // }
   }
   private renderEntities(viewRectangle: Rectangle) {
     this.project.entityRenderer.renderAllEntities(viewRectangle);

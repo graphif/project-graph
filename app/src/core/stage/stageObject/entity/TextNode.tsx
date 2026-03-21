@@ -162,6 +162,20 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     this.updateFontSizeCache();
   }
 
+  public adjustFontScaleLevel(delta: number, anchorRate?: Vector) {
+    this.fontScaleLevel += delta;
+    this.updateFontSizeCache();
+    if (this.sizeAdjust === "auto") {
+      const oldRect = this.rectangle.clone();
+      this.adjustSizeByText();
+      if (anchorRate) {
+        this._adjustLocationToKeepAnchor(oldRect, anchorRate);
+      }
+    } else if (this.sizeAdjust === "manual") {
+      this.adjustHeightByText();
+    }
+  }
+
   /**
    * 放大字体
    * @param anchorRate 可选。缩放时保持固定的锚点（矩形内比例，如 (0.5,0.5) 为中心）。不传则保持左上角不变。
