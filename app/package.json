@@ -116,6 +116,7 @@
     "openai": "^5.8.2",
     "pdf-lib": "^1.17.1",
     "platejs": "^49.2.12",
+    "radix-ui": "^1.4.3",
     "react": "catalog:",
     "react-day-picker": "^9.9.0",
     "react-dom": "catalog:",

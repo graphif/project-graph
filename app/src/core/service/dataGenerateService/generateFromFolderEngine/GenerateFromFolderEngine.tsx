@@ -1,5 +1,4 @@
 import { Project, service } from "@/core/Project";
-import { allKeyBinds } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Section } from "@/core/stage/stageObject/entity/Section";
@@ -11,7 +10,6 @@ import { Rectangle } from "@graphif/shapes";
 // 快捷键分组定义（从SettingsWindow/keybinds.tsx复制）
 
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { shortcutKeysGroups } from "@/sub/SettingsWindow/keybinds";
 import { getMultiLineTextSize } from "@/utils/font";
 import i18next from "i18next";
 

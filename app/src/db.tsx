@@ -5,19 +5,20 @@ export const db = new Dexie("pg-main") as Dexie & {
   settings: Dexie.Table<{ key: string; value: any }, string>;
   shortcuts: Dexie.Table<
     {
+      id?: number;
       key: string[];
       action: ShortcutAction;
       commands: [command: string, args: any[]][];
       conditions: ShortcutCondition[];
     },
-    string
+    number
   >;
   user_colors: Dexie.Table<{ key: string; value: string }, string>;
   onboardings: Dexie.Table<{ id: string; completed: boolean }, string>;
 };
 db.version(1).stores({
   settings: "key",
-  shortcuts: "key",
+  shortcuts: "++id",
   user_colors: "key, value",
   onboardings: "id",
 });

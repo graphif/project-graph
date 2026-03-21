@@ -6,7 +6,7 @@ import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { activeProjectAtom, projectsAtom, store } from "@/state";
-import { Direction, directionToString, directionToVector, reverseDirection } from "@/types/directions";
+import { Direction, directionToVector, reverseDirection } from "@/types/directions";
 import { openBrowserOrFile } from "@/utils/externalOpen";
 import { Color, Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
@@ -358,7 +358,7 @@ export namespace Commands {
     const entities = project!.stageManager
       .getSelectedEntities()
       .filter((entity) => entity instanceof ConnectableEntity);
-    project?.keyboardOnlyTreeEngine.changePreDirection(entities, directionToString(direction));
+    project?.keyboardOnlyTreeEngine.changePreDirection(entities, direction);
   });
   register("alignNodesToInteger", (project) => {
     const entities = project!.stageManager.getConnectableEntity();

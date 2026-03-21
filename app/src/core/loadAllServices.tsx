@@ -33,7 +33,6 @@ import { KeyboardOnlyGraphEngine } from "@/core/service/controlService/keyboardO
 import { KeyboardOnlyTreeEngine } from "@/core/service/controlService/keyboardOnlyEngine/keyboardOnlyTreeEngine";
 import { SelectChangeEngine } from "@/core/service/controlService/keyboardOnlyEngine/selectChangeEngine";
 import { RectangleSelect } from "@/core/service/controlService/rectangleSelectEngine/rectangleSelectEngine";
-import { KeyBindsRegistrar } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import { MouseInteraction } from "@/core/service/controlService/stageMouseInteractionCore/stageMouseInteractionCore";
 import { AutoComputeUtils } from "@/core/service/dataGenerateService/autoComputeEngine/AutoComputeUtils";
 import { AutoCompute } from "@/core/service/dataGenerateService/autoComputeEngine/mainTick";
@@ -158,9 +157,6 @@ export function loadAllServicesBeforeInit(project: Project): void {
   project.loadService(StageExportPng);
   project.loadService(StageExportSvg);
   project.loadService(GenerateFromFolder);
-
-  // 快捷键交互
-  project.loadService(KeyBindsRegistrar);
 }
 
 export function loadAllServicesAfterInit(project: Project): void {

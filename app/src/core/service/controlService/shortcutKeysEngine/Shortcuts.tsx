@@ -4,14 +4,15 @@ import { Direction } from "@/types/directions";
 import { Commands } from "./Commands";
 
 export enum ShortcutAction {
-  RunCommands,
+  RunCommands = "RunCommands",
   // TODO: 可以加个快捷轮盘？
 }
 export enum ShortcutCondition {
-  ActiveProject,
+  ActiveProject = "ActiveProject",
 }
 
 export namespace Shortcuts {
+  let isListenerAdded = false;
   let keyStack: string[] = [];
 
   async function checkMatch() {
@@ -21,7 +22,7 @@ export namespace Shortcuts {
       if (shortcut.key.length > keyStack.length) continue;
       let match = true;
       for (let i = 0; i < shortcut.key.length; i++) {
-        if (!keyStack.includes(shortcut.key[i])) {
+        if (!keyStack[keyStack.length - shortcut.key.length + i].endsWith(shortcut.key[i])) {
           match = false;
           break;
         }
@@ -42,28 +43,38 @@ export namespace Shortcuts {
     }
   }
 
-  window.addEventListener("keydown", (e) => {
-    if (
-      [
-        "ControlLeft",
-        "ControlRight",
-        "AltLeft",
-        "AltRight",
-        "ShiftLeft",
-        "ShiftRight",
-        "MetaLeft",
-        "MetaRight",
-      ].includes(e.code)
-    )
-      return;
-    e.preventDefault();
-    if (e.ctrlKey) keyStack.push("+c");
-    if (e.altKey) keyStack.push("+a");
-    if (e.shiftKey) keyStack.push("+s");
-    if (e.metaKey) keyStack.push("+m");
-    keyStack.push(e.code);
-    checkMatch();
-  });
+  if (!isListenerAdded) {
+    isListenerAdded = true;
+    window.addEventListener("keydown", (e) => {
+      // 检测是否在输入框中，如果是则不触发快捷键
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (
+        [
+          "ControlLeft",
+          "ControlRight",
+          "AltLeft",
+          "AltRight",
+          "ShiftLeft",
+          "ShiftRight",
+          "MetaLeft",
+          "MetaRight",
+        ].includes(e.code)
+      )
+        return;
+      e.preventDefault();
+      if (e.ctrlKey) keyStack.push("+c");
+      if (e.altKey) keyStack.push("+a");
+      if (e.shiftKey) keyStack.push("+s");
+      if (e.metaKey) keyStack.push("+m");
+      keyStack.push(e.code);
+      console.log("Current key stack:", keyStack);
+      checkMatch();
+      // 最多20项
+      if (keyStack.length > 20) {
+        keyStack.shift();
+      }
+    });
+  }
 
   db.shortcuts.count().then((count) => {
     if (count) return;
@@ -83,7 +94,7 @@ export namespace Shortcuts {
       {
         key: ["Escape"],
         action: ShortcutAction.RunCommands,
-        commands: [["closeAllSubWindows", []]],
+        commands: [["closeAllWindows", []]],
         conditions: [],
       },
       {

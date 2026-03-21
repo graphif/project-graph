@@ -4,23 +4,10 @@ import { Vector } from "@graphif/data-structures";
  * 经常会有方向键控制的场景，比如上下左右移动，这时可以用这个枚举来表示方向。
  */
 export enum Direction {
-  Up,
-  Down,
-  Left,
-  Right,
-}
-
-export function directionToString(direction: Direction) {
-  switch (direction) {
-    case Direction.Up:
-      return "up";
-    case Direction.Down:
-      return "down";
-    case Direction.Left:
-      return "left";
-    case Direction.Right:
-      return "right";
-  }
+  Up = "up",
+  Down = "down",
+  Left = "left",
+  Right = "right",
 }
 
 export function reverseDirection(direction: Direction) {
