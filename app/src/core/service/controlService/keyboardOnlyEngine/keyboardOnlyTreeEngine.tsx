@@ -220,7 +220,7 @@ export class KeyboardOnlyTreeEngine {
     const rootNodeParents = this.project.graphMethods.getRoots(rootNode);
     if (rootNodeParents.length === 1) {
       const rootNodeParent = rootNodeParents[0];
-      if (this.project.graphMethods.isTree(rootNodeParent)) {
+      if (this.project.graphMethods.isTree(rootNodeParent, true)) {
         if (Settings.autoLayoutWhenTreeGenerate) {
           this.project.autoAlign.autoLayoutSelectedFastTreeMode(rootNodeParent);
         }
@@ -358,7 +358,7 @@ export class KeyboardOnlyTreeEngine {
     const rootNodeParents = this.project.graphMethods.getRoots(parent);
     if (rootNodeParents.length === 1) {
       const rootNodeParent = rootNodeParents[0];
-      if (this.project.graphMethods.isTree(rootNodeParent)) {
+      if (this.project.graphMethods.isTree(rootNodeParent, true)) {
         if (Settings.autoLayoutWhenTreeGenerate) {
           this.project.autoAlign.autoLayoutSelectedFastTreeMode(rootNodeParent);
         }
@@ -414,12 +414,13 @@ export class KeyboardOnlyTreeEngine {
    * @param entity
    */
   adjustTreeNode(entity: ConnectableEntity, withEffect = true) {
-    const rootNodeParents = this.project.graphMethods.getRoots(entity);
+    // 跳过虚线边查找根节点，虚线边不参与树形结构
+    const rootNodeParents = this.project.graphMethods.getRoots(entity, true);
     const rootNode = rootNodeParents[0];
     this.project.autoAlign.autoLayoutSelectedFastTreeMode(rootNode);
     SoundService.play.treeAdjustSoundFile();
 
-    // 添加闪烁特效：树形结构的外接矩形和根节点
+    // 添加闪烁特效：树形结构的外接矩形和根节点（跳过虚线边）
     const allNodes = this.project.graphMethods.getSuccessorSet(rootNode, true);
     const treeBoundingRect = Rectangle.getBoundingRectangle(
       allNodes.map((node) => node.collisionBox.getRectangle()),

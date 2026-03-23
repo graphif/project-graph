@@ -175,9 +175,10 @@ export class EntityMoveManager {
    * 树形移动传入的可连接实体
    * @param node
    * @param delta
+   * @param skipDashed 是否跳过虚线边（树形格式化时传 true，避免带动虚线连接的节点）
    */
-  moveWithChildren(node: ConnectableEntity, delta: Vector) {
-    const successorSet = this.project.graphMethods.getSuccessorSet(node);
+  moveWithChildren(node: ConnectableEntity, delta: Vector, skipDashed = false) {
+    const successorSet = this.project.graphMethods.getSuccessorSet(node, true, skipDashed);
     for (const successor of successorSet) {
       this.moveEntityUtils(successor, delta);
     }

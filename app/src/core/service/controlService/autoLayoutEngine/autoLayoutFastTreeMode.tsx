@@ -15,21 +15,23 @@ export class AutoLayoutFastTree {
   /**
    * 获取当前树的外接矩形，注意不要有环，有环就废了
    * @param node
+   * @param skipDashed 是否跳过虚线边（树形格式化时传 true）
    * @returns
    */
-  private getTreeBoundingRectangle(node: ConnectableEntity): Rectangle {
-    const childList = this.project.graphMethods.nodeChildrenArray(node);
-    const childRectangle = childList.map((child) => this.getTreeBoundingRectangle(child));
+  private getTreeBoundingRectangle(node: ConnectableEntity, skipDashed = false): Rectangle {
+    const childList = this.project.graphMethods.nodeChildrenArray(node, skipDashed);
+    const childRectangle = childList.map((child) => this.getTreeBoundingRectangle(child, skipDashed));
     return Rectangle.getBoundingRectangle(childRectangle.concat([node.collisionBox.getRectangle()]));
   }
   /**
    * 将一个子树 看成一个外接矩形，移动这个外接矩形左上角到某一个位置
    * @param treeRoot
    * @param targetLocation
+   * @param skipDashed 是否跳过虚线边
    */
-  private moveTreeRectTo(treeRoot: ConnectableEntity, targetLocation: Vector) {
-    const treeRect = this.getTreeBoundingRectangle(treeRoot);
-    this.project.entityMoveManager.moveWithChildren(treeRoot, targetLocation.subtract(treeRect.leftTop));
+  private moveTreeRectTo(treeRoot: ConnectableEntity, targetLocation: Vector, skipDashed = false) {
+    const treeRect = this.getTreeBoundingRectangle(treeRoot, skipDashed);
+    this.project.entityMoveManager.moveWithChildren(treeRoot, targetLocation.subtract(treeRect.leftTop), skipDashed);
   }
 
   /**
@@ -62,14 +64,20 @@ export class AutoLayoutFastTree {
    * @param trees 要排列的子树数组
    * @param direction 要排列的是哪一侧的子树群
    * @param gap 子树之间的间距
+   * @param skipDashed 是否跳过虚线边
    * @returns
    */
-  private alignTrees(trees: ConnectableEntity[], direction: "top" | "bottom" | "left" | "right", gap = 10) {
+  private alignTrees(
+    trees: ConnectableEntity[],
+    direction: "top" | "bottom" | "left" | "right",
+    gap = 10,
+    skipDashed = false,
+  ) {
     if (trees.length === 0 || trees.length === 1) {
       return;
     }
     const firstTree = trees[0];
-    const firstTreeRect = this.getTreeBoundingRectangle(firstTree);
+    const firstTreeRect = this.getTreeBoundingRectangle(firstTree, skipDashed);
 
     // 根据方向设置初始位置
     let currentPosition: Vector;
@@ -94,18 +102,18 @@ export class AutoLayoutFastTree {
       const tree = trees[i];
 
       // 根据方向更新下一个位置
-      const treeRect = this.getTreeBoundingRectangle(tree);
+      const treeRect = this.getTreeBoundingRectangle(tree, skipDashed);
       if (direction === "right") {
-        this.moveTreeRectTo(tree, currentPosition);
+        this.moveTreeRectTo(tree, currentPosition, skipDashed);
         currentPosition.y += treeRect.height + gap;
       } else if (direction === "bottom") {
-        this.moveTreeRectTo(tree, currentPosition);
+        this.moveTreeRectTo(tree, currentPosition, skipDashed);
         currentPosition.x += treeRect.width + gap;
       } else if (direction === "left") {
-        this.moveTreeRectTo(tree, currentPosition.subtract(new Vector(treeRect.width, 0)));
+        this.moveTreeRectTo(tree, currentPosition.subtract(new Vector(treeRect.width, 0)), skipDashed);
         currentPosition.y += treeRect.height + gap;
       } else if (direction === "top") {
-        this.moveTreeRectTo(tree, currentPosition.subtract(new Vector(0, treeRect.height)));
+        this.moveTreeRectTo(tree, currentPosition.subtract(new Vector(0, treeRect.height)), skipDashed);
         currentPosition.x += treeRect.width + gap;
       }
     }
@@ -117,12 +125,14 @@ export class AutoLayoutFastTree {
    * @param childList 需要调整位置的子节点列表
    * @param gap 根节点与子节点之间的间距
    * @param position 子节点相对于根节点的位置：rightCenter(右侧中心)、leftCenter(左侧中心)、bottomCenter(下方中心)、topCenter(上方中心)
+   * @param skipDashed 是否跳过虚线边
    */
   private adjustChildrenTreesByRootNodeLocation(
     rootNode: ConnectableEntity,
     childList: ConnectableEntity[],
     gap = 100,
     position: "rightCenter" | "leftCenter" | "bottomCenter" | "topCenter" = "rightCenter",
+    skipDashed = false,
   ) {
     if (childList.length === 0) {
       return;
@@ -167,7 +177,7 @@ export class AutoLayoutFastTree {
 
     // 移动所有子节点及其子树
     for (const child of childList) {
-      this.project.entityMoveManager.moveWithChildren(child, offset);
+      this.project.entityMoveManager.moveWithChildren(child, offset, skipDashed);
     }
   }
 
@@ -175,6 +185,7 @@ export class AutoLayoutFastTree {
    * 检测并解决不同方向子树群之间的重叠问题
    * @param rootNode 根节点
    * @param directionGroups 不同方向的子树群
+   * @param skipDashed 是否跳过虚线边
    */
   private resolveSubtreeOverlaps(
     rootNode: ConnectableEntity,
@@ -184,6 +195,7 @@ export class AutoLayoutFastTree {
       bottom?: ConnectableEntity[];
       top?: ConnectableEntity[];
     },
+    skipDashed = false,
   ) {
     // 创建方向对进行检查
     const directionPairs = [
@@ -205,12 +217,16 @@ export class AutoLayoutFastTree {
       }
 
       // 获取子树群的外接矩形
-      const rect1 = Rectangle.getBoundingRectangle(group1.map((child) => this.getTreeBoundingRectangle(child)));
-      const rect2 = Rectangle.getBoundingRectangle(group2.map((child) => this.getTreeBoundingRectangle(child)));
+      const rect1 = Rectangle.getBoundingRectangle(
+        group1.map((child) => this.getTreeBoundingRectangle(child, skipDashed)),
+      );
+      const rect2 = Rectangle.getBoundingRectangle(
+        group2.map((child) => this.getTreeBoundingRectangle(child, skipDashed)),
+      );
 
       let pushCount = 0;
       // 检查是否重叠或连线相交
-      while (this.hasOverlapOrLineIntersection(rootNode, group1, group2, dir1, dir2)) {
+      while (this.hasOverlapOrLineIntersection(rootNode, group1, group2, dir1, dir2, skipDashed)) {
         pushCount++;
         if (pushCount > 1000) {
           break; // 防止无限循环
@@ -255,16 +271,20 @@ export class AutoLayoutFastTree {
 
         // 移动弱势方向的所有子树
         for (const child of weakerGroup) {
-          this.project.entityMoveManager.moveWithChildren(child, moveVector);
+          this.project.entityMoveManager.moveWithChildren(child, moveVector, skipDashed);
         }
 
         // 更新外接矩形以继续检查
         if (weakerDir === dir1) {
-          const newRect1 = Rectangle.getBoundingRectangle(group1.map((child) => this.getTreeBoundingRectangle(child)));
+          const newRect1 = Rectangle.getBoundingRectangle(
+            group1.map((child) => this.getTreeBoundingRectangle(child, skipDashed)),
+          );
           rect1.location = newRect1.location.clone();
           rect1.size = newRect1.size.clone();
         } else {
-          const newRect2 = Rectangle.getBoundingRectangle(group2.map((child) => this.getTreeBoundingRectangle(child)));
+          const newRect2 = Rectangle.getBoundingRectangle(
+            group2.map((child) => this.getTreeBoundingRectangle(child, skipDashed)),
+          );
           rect2.location = newRect2.location.clone();
           rect2.size = newRect2.size.clone();
         }
@@ -277,6 +297,7 @@ export class AutoLayoutFastTree {
    * @param rootNode 根节点
    * @param group1 第一个子树群
    * @param group2 第二个子树群
+   * @param skipDashed 是否跳过虚线边
    */
   private hasOverlapOrLineIntersection(
     rootNode: ConnectableEntity,
@@ -284,10 +305,15 @@ export class AutoLayoutFastTree {
     group2: ConnectableEntity[],
     dir1: "left" | "right" | "top" | "bottom",
     dir2: "left" | "right" | "top" | "bottom",
+    skipDashed = false,
   ): boolean {
     // 检查矩形重叠
-    const rect1 = Rectangle.getBoundingRectangle(group1.map((child) => this.getTreeBoundingRectangle(child)));
-    const rect2 = Rectangle.getBoundingRectangle(group2.map((child) => this.getTreeBoundingRectangle(child)));
+    const rect1 = Rectangle.getBoundingRectangle(
+      group1.map((child) => this.getTreeBoundingRectangle(child, skipDashed)),
+    );
+    const rect2 = Rectangle.getBoundingRectangle(
+      group2.map((child) => this.getTreeBoundingRectangle(child, skipDashed)),
+    );
 
     if (rect1.isCollideWith(rect2)) {
       return true;
@@ -512,7 +538,10 @@ export class AutoLayoutFastTree {
     const rootLeftTopLocation = rootNode.collisionBox.getRectangle().leftTop.clone();
 
     const dfs = (node: ConnectableEntity) => {
-      const outEdges = this.project.graphMethods.getOutgoingEdges(node);
+      // 获取出边时跳过虚线边，虚线边不参与树形格式化布局
+      const outEdges = this.project.graphMethods
+        .getOutgoingEdges(node)
+        .filter((edge) => !("lineType" in edge && (edge as { lineType: string }).lineType === "dashed"));
       const outRightEdges = outEdges.filter((edge) => edge.isLeftToRight());
       const outLeftEdges = outEdges.filter((edge) => edge.isRightToLeft());
       const outTopEdges = outEdges.filter((edge) => edge.isBottomToTop());
@@ -547,29 +576,33 @@ export class AutoLayoutFastTree {
         dfs(child); // 递归口
       }
       // 排列这些子节点，然后调整子树位置到根节点旁边
-      this.alignTrees(rightChildList, "right", 20);
-      this.adjustChildrenTreesByRootNodeLocation(node, rightChildList, 150, "rightCenter");
+      this.alignTrees(rightChildList, "right", 20, true);
+      this.adjustChildrenTreesByRootNodeLocation(node, rightChildList, 150, "rightCenter", true);
 
-      this.alignTrees(topChildList, "top", 20);
+      this.alignTrees(topChildList, "top", 20, true);
       // 如果是向上生长且只有一个子节点（唯一子节点），使用较短距离，否则使用150像素
       const topGap = topChildList.length === 1 ? 50 : 150;
-      this.adjustChildrenTreesByRootNodeLocation(node, topChildList, topGap, "topCenter");
+      this.adjustChildrenTreesByRootNodeLocation(node, topChildList, topGap, "topCenter", true);
 
-      this.alignTrees(bottomChildList, "bottom", 20);
+      this.alignTrees(bottomChildList, "bottom", 20, true);
       // 如果是向下生长且只有一个子节点（唯一子节点），使用较短距离，否则使用150像素
       const bottomGap = bottomChildList.length === 1 ? 50 : 150;
-      this.adjustChildrenTreesByRootNodeLocation(node, bottomChildList, bottomGap, "bottomCenter");
+      this.adjustChildrenTreesByRootNodeLocation(node, bottomChildList, bottomGap, "bottomCenter", true);
 
-      this.alignTrees(leftChildList, "left", 20);
-      this.adjustChildrenTreesByRootNodeLocation(node, leftChildList, 150, "leftCenter");
+      this.alignTrees(leftChildList, "left", 20, true);
+      this.adjustChildrenTreesByRootNodeLocation(node, leftChildList, 150, "leftCenter", true);
 
       // 检测并解决不同方向子树群之间的重叠问题
-      this.resolveSubtreeOverlaps(node, {
-        right: rightChildList.length > 0 ? rightChildList : undefined,
-        left: leftChildList.length > 0 ? leftChildList : undefined,
-        bottom: bottomChildList.length > 0 ? bottomChildList : undefined,
-        top: topChildList.length > 0 ? topChildList : undefined,
-      });
+      this.resolveSubtreeOverlaps(
+        node,
+        {
+          right: rightChildList.length > 0 ? rightChildList : undefined,
+          left: leftChildList.length > 0 ? leftChildList : undefined,
+          bottom: bottomChildList.length > 0 ? bottomChildList : undefined,
+          top: topChildList.length > 0 ? topChildList : undefined,
+        },
+        true,
+      );
     };
 
     dfs(rootNode);
@@ -577,10 +610,11 @@ export class AutoLayoutFastTree {
     // ------- 恢复根节点的位置
     // 矩形左上角是矩形的标志位
     const delta = rootLeftTopLocation.subtract(rootNode.collisionBox.getRectangle().leftTop);
-    // 选中根节点
-    this.project.stageManager.clearSelectAll();
-    rootNode.isSelected = true;
-    this.project.entityMoveManager.moveEntitiesWithChildren(delta);
+    // 只移动树形结构中的节点（跳过虚线边），避免虚线连接的节点随每次布局累积偏移
+    const treeNodes = this.project.graphMethods.getSuccessorSet(rootNode, true, true);
+    for (const node of treeNodes) {
+      this.project.entityMoveManager.moveEntityUtils(node, delta);
+    }
     // ------- 恢复完毕
   }
 

@@ -267,8 +267,8 @@ export class AutoAlign {
    * @param selectedRootEntity
    */
   autoLayoutSelectedFastTreeMode(selectedRootEntity: ConnectableEntity) {
-    // 检测树形结构
-    if (!this.project.graphMethods.isTree(selectedRootEntity)) {
+    // 检测树形结构（跳过虚线边，虚线边不参与树形结构判断）
+    if (!this.project.graphMethods.isTree(selectedRootEntity, true)) {
       // 不是树形结构，不做任何处理
       toast.error("选择的节点必须是树形结构，不能有菱形、环、等复杂结构");
       return;

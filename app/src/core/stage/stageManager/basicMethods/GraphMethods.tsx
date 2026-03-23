@@ -7,13 +7,13 @@ import { MultiTargetUndirectedEdge } from "../../stageObject/association/MutiTar
 export class GraphMethods {
   constructor(protected readonly project: Project) {}
 
-  isTree(node: ConnectableEntity): boolean {
+  isTree(node: ConnectableEntity, skipDashed = false): boolean {
     const dfs = (node: ConnectableEntity, visited: ConnectableEntity[]): boolean => {
       if (visited.includes(node)) {
         return false;
       }
       visited.push(node);
-      for (const child of this.nodeChildrenArray(node)) {
+      for (const child of this.nodeChildrenArray(node, skipDashed)) {
         if (!dfs(child, visited)) {
           return false;
         }
@@ -25,9 +25,10 @@ export class GraphMethods {
   }
 
   /** 获取节点连接的子节点数组，未排除自环 */
-  nodeChildrenArray(node: ConnectableEntity): ConnectableEntity[] {
+  nodeChildrenArray(node: ConnectableEntity, skipDashed = false): ConnectableEntity[] {
     const res: ConnectableEntity[] = [];
     for (const edge of this.project.stageManager.getLineEdges()) {
+      if (skipDashed && edge.lineType === "dashed") continue;
       if (edge.source.uuid === node.uuid) {
         res.push(edge.target);
       }
@@ -39,9 +40,10 @@ export class GraphMethods {
    * 获取一个节点的所有父亲节点，排除自环
    * 性能有待优化！！
    */
-  nodeParentArray(node: ConnectableEntity): ConnectableEntity[] {
+  nodeParentArray(node: ConnectableEntity, skipDashed = false): ConnectableEntity[] {
     const res: ConnectableEntity[] = [];
     for (const edge of this.project.stageManager.getLineEdges()) {
+      if (skipDashed && edge.lineType === "dashed") continue;
       if (edge.target.uuid === node.uuid && edge.target.uuid !== edge.source.uuid) {
         res.push(edge.source);
       }
@@ -59,11 +61,12 @@ export class GraphMethods {
 
   /**
    * 获取反向边集
-   * @param edges
+   * @param skipDashed 是否跳过虚线边
    */
-  private getReversedEdgeDict(): Record<string, string> {
+  private getReversedEdgeDict(skipDashed = false): Record<string, string> {
     const res: Record<string, string> = {};
     for (const edge of this.project.stageManager.getLineEdges()) {
+      if (skipDashed && edge.lineType === "dashed") continue;
       res[edge.target.uuid] = edge.source.uuid;
     }
     return res;
@@ -89,9 +92,10 @@ export class GraphMethods {
   /**
    * 获取自己的祖宗节点
    * @param node 节点
+   * @param skipDashed 是否跳过虚线边（用于树形格式化时）
    */
-  getRoots(node: ConnectableEntity): ConnectableEntity[] {
-    const reverseEdges = this.getReversedEdgeDict();
+  getRoots(node: ConnectableEntity, skipDashed = false): ConnectableEntity[] {
+    const reverseEdges = this.getReversedEdgeDict(skipDashed);
     let rootUUID = node.uuid;
     const visited: Set<string> = new Set(); // 用于记录已经访问过的节点，避免重复访问
     while (reverseEdges[rootUUID] && !visited.has(rootUUID)) {
@@ -125,8 +129,10 @@ export class GraphMethods {
    * 通过一个节点获取一个 可达节点集合/后继节点集合 Successor Set
    * 包括它自己
    * @param node
+   * @param isHaveSelf 是否包含节点自身
+   * @param skipDashed 是否跳过虚线边（用于树形格式化时，避免虚线连接的节点被包含）
    */
-  getSuccessorSet(node: ConnectableEntity, isHaveSelf: boolean = true): ConnectableEntity[] {
+  getSuccessorSet(node: ConnectableEntity, isHaveSelf: boolean = true, skipDashed = false): ConnectableEntity[] {
     let result: ConnectableEntity[] = []; // 存储可达节点的结果集
     const visited: Set<string> = new Set(); // 用于记录已经访问过的节点，避免重复访问
 
@@ -139,7 +145,7 @@ export class GraphMethods {
       result.push(currentNode); // 将当前节点加入结果集
 
       // 遍历当前节点的所有子节点
-      const children = this.nodeChildrenArray(currentNode);
+      const children = this.nodeChildrenArray(currentNode, skipDashed);
       for (const child of children) {
         dfs(child); // 对每个子节点递归调用 DFS
       }
