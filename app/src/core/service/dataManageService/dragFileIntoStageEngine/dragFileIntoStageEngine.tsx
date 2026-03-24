@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import { onOpenFile } from "../../GlobalMenu";
 import { PathString } from "@/utils/pathString";
+import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
 
 /**
  * 处理文件拖拽到舞台的引擎
@@ -55,9 +56,22 @@ export namespace DragFileIntoStageEngine {
    */
   export async function handleDropFileAbsolutePath(project: Project, pathList: string[]) {
     for (const filePath of pathList) {
+      let processedItem = filePath.trim();
+      if (
+        (processedItem.startsWith('"') && processedItem.endsWith('"')) ||
+        (processedItem.startsWith("'") && processedItem.endsWith("'"))
+      ) {
+        if (processedItem.length >= 2) {
+          processedItem = processedItem.slice(1, -1).trim();
+        }
+      }
+
+      const { emoji, name } = PathString.getEmojiAndNameByPath(processedItem);
+
       const textNode = new TextNode(project, {
-        text: filePath,
-        collisionBox: new CollisionBox([new Rectangle(project.camera.location.clone(), new Vector(300, 150))]),
+        text: `${emoji}${name}`,
+        details: DetailsManager.markdownToDetails(processedItem),
+        collisionBox: new CollisionBox([new Rectangle(project.camera.location.clone(), Vector.getZero())]),
       });
 
       project.stageManager.add(textNode);
@@ -79,9 +93,26 @@ export namespace DragFileIntoStageEngine {
 
     for (const filePath of pathList) {
       const relativePath = PathString.getRelativePath(currentProjectPath, filePath);
+
+      let processedItem = filePath.trim();
+      if (
+        (processedItem.startsWith('"') && processedItem.endsWith('"')) ||
+        (processedItem.startsWith("'") && processedItem.endsWith("'"))
+      ) {
+        if (processedItem.length >= 2) {
+          processedItem = processedItem.slice(1, -1).trim();
+        }
+      }
+
+      const { emoji, name } = PathString.getEmojiAndNameByPath(processedItem);
+
+      // 如果生成的相对路径为空或没有意义，降级处理
+      const displayText = relativePath ? `${emoji}${relativePath}` : `${emoji}${name}`;
+
       const textNode = new TextNode(project, {
-        text: relativePath,
-        collisionBox: new CollisionBox([new Rectangle(project.camera.location.clone(), new Vector(300, 150))]),
+        text: displayText,
+        details: DetailsManager.markdownToDetails(processedItem),
+        collisionBox: new CollisionBox([new Rectangle(project.camera.location.clone(), Vector.getZero())]),
       });
 
       project.stageManager.add(textNode);

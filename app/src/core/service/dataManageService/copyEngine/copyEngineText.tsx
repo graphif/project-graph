@@ -68,6 +68,31 @@ export class CopyEngineText {
         entity.move(
           new Vector(-entity.collisionBox.getRectangle().width / 2, -entity.collisionBox.getRectangle().height / 2),
         );
+      } else if (PathString.isAbsolutePath(item)) {
+        // 处理 Windows 11 下复制文件路径可能带有的双引号
+        let processedItem = item.trim();
+        if (
+          (processedItem.startsWith('"') && processedItem.endsWith('"')) ||
+          (processedItem.startsWith("'") && processedItem.endsWith("'"))
+        ) {
+          if (processedItem.length >= 2) {
+            processedItem = processedItem.slice(1, -1).trim();
+          }
+        }
+
+        // 是绝对文件路径类型
+        const { emoji, name } = PathString.getEmojiAndNameByPath(processedItem);
+        const collisionBox = new CollisionBox([
+          new Rectangle(this.project.renderer.transformView2World(MouseLocation.vector()), Vector.getZero()),
+        ]);
+        entity = new TextNode(this.project, {
+          text: `${emoji}${name}`,
+          details: DetailsManager.markdownToDetails(processedItem),
+          collisionBox,
+        });
+        entity.move(
+          new Vector(-entity.collisionBox.getRectangle().width / 2, -entity.collisionBox.getRectangle().height / 2),
+        );
       } else {
         if (item === "") {
           toast.warning("粘贴板中没有内容，若想快速复制多个文本节点，请交替按ctrl c、ctrl v");

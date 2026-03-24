@@ -347,4 +347,191 @@ export namespace PathString {
     fileName = getShortedFileName(fileName, 20);
     return fileName;
   }
+
+  /**
+   * 判断一个字符串是否是绝对文件路径格式
+   * 兼容 Windows (例如: D:/a/b/c 或 D:\a\b\c) 和 Unix/Mac (例如: /a/b/c)
+   */
+  export function isAbsolutePath(path: string): boolean {
+    if (typeof path !== "string") return false;
+    let p = path.trim();
+    // 处理可能带有的双引号或单引号
+    if ((p.startsWith('"') && p.endsWith('"')) || (p.startsWith("'") && p.endsWith("'"))) {
+      if (p.length >= 2) {
+        p = p.slice(1, -1).trim();
+      }
+    }
+    // 排除含有换行符的情况
+    if (p.includes("\n") || p.includes("\r")) return false;
+
+    // Windows 绝对路径匹配
+    if (/^[a-zA-Z]:[\\/]/.test(p)) {
+      // 简单验证不包含非法字符
+      return !/[<>:"|?*]/.test(p.substring(3));
+    }
+    // Unix/Mac 绝对路径匹配
+    if (p.startsWith("/")) {
+      return !/[<>:"|?*]/.test(p);
+    }
+    return false;
+  }
+
+  /**
+   * 根据文件路径获取对应的 emoji 和文件名
+   */
+  export function getEmojiAndNameByPath(path: string): { emoji: string; name: string } {
+    let p = path.trim();
+    // 处理可能带有的双引号或单引号
+    if ((p.startsWith('"') && p.endsWith('"')) || (p.startsWith("'") && p.endsWith("'"))) {
+      if (p.length >= 2) {
+        p = p.slice(1, -1).trim();
+      }
+    }
+    const normalized = p.replace(/\\/g, "/");
+    const withoutTrailingSlash = normalized.endsWith("/") ? normalized.slice(0, -1) : normalized;
+
+    // 对于根目录情况（如 "D:/" 或 "/"）
+    const name = withoutTrailingSlash.split("/").pop() || withoutTrailingSlash;
+
+    // 如果原路径以斜杠结尾，或者是根目录，直接认为是文件夹
+    if (p.endsWith("/") || p.endsWith("\\") || name === p || /^[a-zA-Z]:$/.test(name)) {
+      return { emoji: "📁", name };
+    }
+
+    const parts = name.split(".");
+    // 判断是否有后缀名 (不以.开头且有多个部分，或者以.开头且部分大于2)
+    const hasExtension = parts.length > 1 && (!name.startsWith(".") || parts.length > 2);
+
+    if (hasExtension) {
+      const ext = parts[parts.length - 1].toLowerCase();
+      let emoji = "📃"; // 默认文件
+      switch (ext) {
+        // 办公
+        case "doc":
+        case "docx":
+        case "pages":
+          emoji = "📄";
+          break;
+        case "xls":
+        case "xlsx":
+        case "csv":
+        case "numbers":
+          emoji = "📊";
+          break;
+        case "ppt":
+        case "pptx":
+        case "key":
+          emoji = "📈";
+          break;
+        case "pdf":
+          emoji = "📕";
+          break;
+        case "txt":
+        case "md":
+        case "rtf":
+          emoji = "📝";
+          break;
+        // 图片
+        case "jpg":
+        case "jpeg":
+        case "png":
+        case "gif":
+        case "webp":
+        case "bmp":
+        case "tiff":
+        case "svg":
+        case "ico":
+          emoji = "🖼️";
+          break;
+        // 视频
+        case "mp4":
+        case "mov":
+        case "avi":
+        case "mkv":
+        case "wmv":
+        case "flv":
+        case "webm":
+          emoji = "🎬";
+          break;
+        // 音频
+        case "mp3":
+        case "wav":
+        case "ogg":
+        case "flac":
+        case "aac":
+        case "m4a":
+          emoji = "🎵";
+          break;
+        // 设计
+        case "psd":
+        case "ai":
+        case "xd":
+        case "fig":
+        case "sketch":
+        case "blend":
+        case "c4d":
+        case "prproj":
+        case "aep":
+          emoji = "🎨";
+          break;
+        // 开发
+        case "js":
+        case "ts":
+        case "jsx":
+        case "tsx":
+        case "json":
+        case "html":
+        case "css":
+        case "scss":
+        case "less":
+        case "vue":
+        case "py":
+        case "java":
+        case "c":
+        case "cpp":
+        case "cs":
+        case "go":
+        case "rs":
+        case "php":
+        case "rb":
+        case "swift":
+        case "sql":
+        case "sh":
+        case "bat":
+        case "xml":
+        case "yaml":
+        case "yml":
+        case "ini":
+        case "toml":
+        case "env":
+        case "dockerfile":
+          emoji = "💻";
+          break;
+        // 压缩包
+        case "zip":
+        case "rar":
+        case "7z":
+        case "tar":
+        case "gz":
+          emoji = "📦";
+          break;
+        // 可执行文件
+        case "exe":
+        case "app":
+        case "dmg":
+        case "apk":
+        case "msi":
+        case "deb":
+        case "rpm":
+          emoji = "🚀";
+          break;
+        default:
+          emoji = "📃";
+      }
+      return { emoji, name };
+    } else {
+      // 没有后缀名，认为是文件夹
+      return { emoji: "📁", name };
+    }
+  }
 }
