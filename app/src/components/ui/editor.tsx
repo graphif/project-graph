@@ -76,7 +76,8 @@ const editorVariants = cva(
         fullWidth: "size-full px-4 pt-4 pb-72 text-base lg:px-24",
         // 详细信息面板⬇️
         // 不能有 lg:px-xxx
-        nodeDetails: "size-full px-2 pt-4 text-base",
+        nodeDetails:
+          "size-full px-2 pt-4 text-base caret-current [&_*]:cursor-text [&_*]:select-text selection:bg-primary/35 selection:text-foreground",
         none: "",
         select: "px-3 py-2 text-base data-readonly:w-fit",
       },
