@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSDesktopFolderUsageDescription</key>
+  <string>访问桌面文件夹以打开和保存 .prg 项目文件~</string>
+  <key>NSDocumentsFolderUsageDescription</key>
+  <string>访问文稿文件夹以打开和保存 .prg 项目文件~</string>
+  <key>NSDownloadsFolderUsageDescription</key>
+  <string>访问下载文件夹以打开和保存 .prg 项目文件~</string>
+</dict>
+</plist>
