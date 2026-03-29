@@ -72,6 +72,7 @@ import {
   Sun,
   Moon,
   SunMoon,
+  SquareMousePointer,
 } from "lucide-react";
 
 export const settingsIcons = {
@@ -93,6 +94,7 @@ export const settingsIcons = {
   mouseWheelWithCtrlMode: Mouse,
   mouseWheelWithAltMode: Mouse,
   doubleClickMiddleMouseButton: Mouse,
+  doubleClickMiddleMouseButtonOnEntity: SquareMousePointer,
   mouseSideWheelMode: Grab,
   macMouseWheelIsSmoothed: Mouse,
   enableWindowsTouchPad: Hand,

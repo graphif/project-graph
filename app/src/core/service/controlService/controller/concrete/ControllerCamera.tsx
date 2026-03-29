@@ -415,9 +415,6 @@ export class ControllerCameraClass extends ControllerClass {
    * @param event - 鼠标事件
    */
   public mouseDoubleClick: (event: MouseEvent) => void = (event: MouseEvent) => {
-    if (Settings.doubleClickMiddleMouseButton === "none") {
-      return;
-    }
     if (event.button === 1 && !this.project.controller.isCameraLocked) {
       if (event.ctrlKey) {
         return;
@@ -427,10 +424,15 @@ export class ControllerCameraClass extends ControllerClass {
       const pressLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
       const clickedEntity = this.project.stageManager.findEntityByLocation(pressLocation);
       if (clickedEntity !== null) {
-        // 双击实体可以直接跳转
-        openBrowserOrFileByEntity(clickedEntity, this.project);
+        // 实体上双击中键：打开 URL / 文件（独立开关）
+        if (Settings.doubleClickMiddleMouseButtonOnEntity === "openUrl") {
+          openBrowserOrFileByEntity(clickedEntity, this.project);
+        }
       } else {
-        this.project.camera.resetBySelected();
+        // 空白处双击中键：重置视野（原设置项控制）
+        if (Settings.doubleClickMiddleMouseButton !== "none") {
+          this.project.camera.resetBySelected();
+        }
       }
     }
   };

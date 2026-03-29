@@ -597,12 +597,21 @@ settings:
       draw: Gambar
       connectAndCut: Hubungkan dan Potong
   doubleClickMiddleMouseButton:
-    title: Klik Ganda Tombol Tengah Mouse
+    title: Klik Ganda Tombol Tengah Mouse di Area Kosong
     description: |
-      Operasi yang dijalankan saat tombol gulir ditekan cepat dua kali. Default adalah mengatur ulang tampilan.
+      Operasi yang dijalankan saat tombol gulir ditekan cepat dua kali di area kosong panggung. Default adalah mengatur ulang tampilan.
       Menonaktifkan opsi ini dapat mencegah pemicu tidak sengaja.
     options:
       adjustCamera: Sesuaikan Tampilan
+      none: Tidak Ada Operasi
+  doubleClickMiddleMouseButtonOnEntity:
+    title: Klik Ganda Tengah pada Entitas
+    description: |
+      Operasi yang dijalankan saat mengklik ganda tombol tengah mouse pada entitas (node teks, dll.).
+      Logika buka URL/File: untuk node teks, gunakan baris pertama detail jika ada, jika tidak gunakan teks node; untuk entitas lain, gunakan baris pertama detail.
+      URL dibuka di browser; path file (jalur relatif didukung) dibuka dengan aplikasi default sistem; file .prg dibuka di dalam aplikasi.
+    options:
+      openUrl: Buka Konten URL/File
       none: Tidak Ada Operasi
   textNodeContentLineBreak:
     title: Skema Pemisah Baris Node Teks

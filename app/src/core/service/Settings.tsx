@@ -88,6 +88,7 @@ export const settingsSchema = z.object({
     .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none")])
     .default("none"),
   doubleClickMiddleMouseButton: z.union([z.literal("adjustCamera"), z.literal("none")]).default("adjustCamera"),
+  doubleClickMiddleMouseButtonOnEntity: z.union([z.literal("openUrl"), z.literal("none")]).default("openUrl"),
   mouseSideWheelMode: z
     .union([
       z.literal("zoom"),

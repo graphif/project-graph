@@ -456,12 +456,21 @@ settings:
       draw: draw
       connectAndCut: connect and cut
   doubleClickMiddleMouseButton:
-    title: Double-Click Middle Mouse Button
+    title: Double-Click Middle Mouse Button on Empty Space
     description: |
-      The action performed when the scroll wheel is quickly pressed twice. By default, it resets the viewport.
+      The action performed when the scroll wheel is quickly pressed twice on empty stage area. By default, it resets the viewport.
       Disabling this option can prevent accidental triggers.
     options:
       adjustCamera: Adjust Viewport
+      none: No Operation
+  doubleClickMiddleMouseButtonOnEntity:
+    title: Double-Click Middle Mouse on Entity
+    description: |
+      The action performed when double-clicking the middle mouse button on an entity (text node, etc.).
+      Open URL/File logic: for text nodes, uses the first line of details if available, otherwise the node text; for other entities, uses the first line of details.
+      A URL is opened in the browser; a file path (relative paths supported) is opened with the system default app; .prg files are opened within the app.
+    options:
+      openUrl: Open Content URL/File
       none: No Operation
   textNodeContentLineBreak:
     title: Text Node Line Break Scheme

@@ -606,12 +606,21 @@ settings:
       draw: 画图
       connectAndCut: 连线与劈砍
   doubleClickMiddleMouseButton:
-    title: 双击中键鼠标
+    title: 空白处双击中键鼠标
     description: |
-      将滚轮键快速按下两次时执行的操作。默认是重置视野。
+      在舞台空白处将滚轮键快速按下两次时执行的操作。默认是重置视野。
       关闭此选项，可以防止误触发。
     options:
       adjustCamera: 调整视野
+      none: 无操作
+  doubleClickMiddleMouseButtonOnEntity:
+    title: 实体上双击中键鼠标
+    description: |
+      在实体（文本节点等）上双击中键时执行的操作。
+      打开内容URL/文件的逻辑：文本节点优先取详细信息第一行，其次取节点文本；其他实体取详细信息第一行。
+      内容为网址则用浏览器打开，为文件路径（支持相对路径）则用系统默认程序打开，.prg文件则在软件内打开。
+    options:
+      openUrl: 打开内容URL/文件
       none: 无操作
   textNodeContentLineBreak:
     title: 文本节点换行方案

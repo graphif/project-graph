@@ -648,13 +648,19 @@ settings:
       draw: 畫圖
       connectAndCut: 連線與劈砍
   doubleClickMiddleMouseButton:
-    title: 雙擊滑鼠中鍵
-    description: '將滾輪鍵快速按下兩次時執行的操作。預設是重設視野。
+    title: 空白處雙擊滑鼠中鍵
+    description: '在舞台空白處將滾輪鍵快速按下兩次時執行的操作。預設是重設視野。
 
       關閉此選項，可以防止誤觸發。'
     options:
       adjustCamera: 調整視野
       none: 无操作
+  doubleClickMiddleMouseButtonOnEntity:
+    title: 實體上雙擊滑鼠中鍵
+    description: 在實體（文字節點等）上雙擊滑鼠中鍵時執行的操作。打開內容URL/檔案邏輯：文字節點優先取詳細資訊第一行，其次取節點文字；其他實體取詳細資訊第一行。內容為網址則用瀏覽器開啟，為檔案路徑（支援相對路徑）則用系統預設程式開啟，.prg檔案則在軟體內開啟。
+    options:
+      openUrl: 開啟內容URL/檔案
+      none: 無操作
   textNodeContentLineBreak:
     title: 文字節點換行方案
     options:

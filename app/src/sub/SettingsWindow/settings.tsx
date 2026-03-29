@@ -255,6 +255,7 @@ const categories = {
       "mouseWheelWithCtrlMode",
       "mouseWheelWithAltMode",
       "doubleClickMiddleMouseButton",
+      "doubleClickMiddleMouseButtonOnEntity",
       "mouseSideWheelMode",
       "macMouseWheelIsSmoothed",
       "macEnableControlToCut",
