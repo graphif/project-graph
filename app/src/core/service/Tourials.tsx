@@ -12,6 +12,10 @@ export namespace Tutorials {
     store = await createStore("tourials.json");
   }
 
+  export async function isFinished(tourial: string): Promise<boolean> {
+    return (await store?.get<boolean>(tourial)) ?? false;
+  }
+
   export async function finish(tourial: string) {
     await store?.set(tourial, true);
     await store?.save();

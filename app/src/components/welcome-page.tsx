@@ -1,4 +1,5 @@
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
+import { Tutorials } from "@/core/service/Tourials";
 import { onNewDraft, onOpenFile } from "@/core/service/GlobalMenu";
 import { Path } from "@/utils/path";
 import { getVersion } from "@tauri-apps/api/app";
@@ -15,6 +16,7 @@ import {
   TableProperties,
   AlertTriangle,
   RefreshCw,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -36,6 +38,7 @@ export default function WelcomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [lastClickFileURIPath, setLastClickFileURIPath] = useState("");
   const [isAmdCpu, setIsAmdCpu] = useState(false);
+  const [isAmdWarningDismissed, setIsAmdWarningDismissed] = useState(true);
   const [currentSlogan, setCurrentSlogan] = useState("");
   const [isHoveringSlogan, setIsHoveringSlogan] = useState(false);
 
@@ -76,12 +79,16 @@ export default function WelcomePage() {
     refresh();
     (async () => {
       setAppVersion(await getVersion());
-      try {
-        const cpu = await cpuInfo();
-        const cpuBrand = cpu.cpus[0].brand;
-        setIsAmdCpu(cpuBrand.includes("AMD"));
-      } catch (e) {
-        console.error("检测CPU信息失败:", e);
+      const dismissed = await Tutorials.isFinished("amdCpuWarning");
+      setIsAmdWarningDismissed(dismissed);
+      if (!dismissed) {
+        try {
+          const cpu = await cpuInfo();
+          const cpuBrand = cpu.cpus[0].brand;
+          setIsAmdCpu(cpuBrand.includes("AMD"));
+        } catch (e) {
+          console.error("检测CPU信息失败:", e);
+        }
       }
     })();
 
@@ -137,10 +144,20 @@ export default function WelcomePage() {
               </button>
             )}
           </div>
-          {isAmdCpu && (
+          {isAmdCpu && !isAmdWarningDismissed && (
             <div className="flex items-center gap-2 rounded-lg border p-3 text-sm text-yellow-600/75">
-              <AlertTriangle />
-              <span>您的设备（AMD CPU）可能在大屏(4k)下使用时存在渲染卡顿问题</span>
+              <AlertTriangle className="shrink-0" />
+              <span className="flex-1">您的设备（AMD CPU）可能在大屏(4k)下使用时存在渲染卡顿问题</span>
+              <button
+                onClick={async () => {
+                  setIsAmdWarningDismissed(true);
+                  await Tutorials.finish("amdCpuWarning");
+                }}
+                className="hover:bg-muted shrink-0 cursor-pointer rounded p-1 transition-all active:scale-90"
+                title="不再提醒"
+              >
+                <X size={14} />
+              </button>
             </div>
           )}
         </div>
