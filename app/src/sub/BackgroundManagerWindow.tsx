@@ -11,6 +11,8 @@ import { toast } from "sonner";
 export default function BackgroundManagerWindow() {
   const [project] = useAtom(activeProjectAtom);
   const [backgroundImages, setBackgroundImages] = useState<ImageNode[]>([]);
+  const [urls, setUrls] = useState(new Map<string, string>());
+  const [brokenUuids, setBrokenUuids] = useState(new Set<string>());
 
   useEffect(() => {
     if (project) {
@@ -19,6 +21,30 @@ export default function BackgroundManagerWindow() {
       setBackgroundImages(images);
     }
   }, [project]);
+
+  useEffect(() => {
+    if (!project) return;
+    const newUrls = new Map<string, string>();
+    for (const imageNode of backgroundImages) {
+      const blob = project.attachments.get(imageNode.attachmentId);
+      if (!blob) continue;
+      newUrls.set(imageNode.uuid, URL.createObjectURL(blob));
+    }
+    setUrls(newUrls);
+    setBrokenUuids((prev) => {
+      if (prev.size === 0) return prev;
+      const next = new Set<string>();
+      for (const uuid of prev) {
+        if (backgroundImages.some((it) => it.uuid === uuid)) next.add(uuid);
+      }
+      return next;
+    });
+    return () => {
+      newUrls.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+    };
+  }, [project, backgroundImages]);
 
   const handleRemoveBackground = (imageNode: ImageNode) => {
     if (project) {
@@ -42,12 +68,26 @@ export default function BackgroundManagerWindow() {
             {backgroundImages.map((imageNode) => (
               <div key={imageNode.uuid} className="flex items-center justify-between rounded-lg border p-3">
                 <div className="flex items-center space-x-3">
-                  <div className="bg-muted flex h-16 w-16 items-center justify-center rounded">
-                    <span className="text-muted-foreground text-sm">图片</span>
+                  <div className="bg-muted relative flex h-16 w-16 items-center justify-center overflow-hidden rounded">
+                    {urls.get(imageNode.uuid) && !brokenUuids.has(imageNode.uuid) ? (
+                      <img
+                        src={urls.get(imageNode.uuid)}
+                        alt={imageNode.uuid}
+                        className="h-full w-full object-cover"
+                        onError={() => {
+                          setBrokenUuids((prev) => new Set(prev).add(imageNode.uuid));
+                        }}
+                      />
+                    ) : (
+                      <span className="text-muted-foreground text-xs">
+                        {imageNode.state === "notFound" ? "找不到" : "无预览"}
+                      </span>
+                    )}
                   </div>
                   <div>
                     <p className="font-medium">图片节点</p>
                     <p className="text-muted-foreground text-xs">{imageNode.uuid.substring(0, 8)}...</p>
+                    <p className="text-muted-foreground text-xs">{imageNode.attachmentId.substring(0, 8)}...</p>
                   </div>
                 </div>
                 <Button variant="destructive" size="sm" onClick={() => handleRemoveBackground(imageNode)}>
