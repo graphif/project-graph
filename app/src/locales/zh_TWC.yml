@@ -605,6 +605,11 @@ settings:
     description: '開啟後，生長節點時自動更新佈局
 
       此處的生長節點指tab和\鍵生長節點'
+  treeGenerateInheritParentColor:
+    title: 生長節點時繼承父節點顏色
+    description: '開啟後，透過 Tab 或 \ 生長出來的新節點會繼承父節點顏色
+
+      關閉後，新節點不再自動繼承父節點顏色'
   enableBackslashGenerateNodeInInput:
     title: 在輸入狀態下也能透過反斜線建立同級節點
     description: '開啟後，在文字節點編輯狀態下，按下反斜線鍵（\）也可以建立同級節點

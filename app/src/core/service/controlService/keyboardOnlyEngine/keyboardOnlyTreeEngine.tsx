@@ -212,7 +212,7 @@ export class KeyboardOnlyTreeEngine {
     }
 
     // 继承父节点颜色
-    if (rootNode instanceof TextNode) {
+    if (Settings.treeGenerateInheritParentColor && rootNode instanceof TextNode) {
       newNode.color = rootNode.color.clone();
     }
 
@@ -351,7 +351,7 @@ export class KeyboardOnlyTreeEngine {
     }
 
     // 继承父节点颜色
-    if (parent instanceof TextNode) {
+    if (Settings.treeGenerateInheritParentColor && parent instanceof TextNode) {
       newNode.color = parent.color.clone();
     }
     // 重新排列树形节点

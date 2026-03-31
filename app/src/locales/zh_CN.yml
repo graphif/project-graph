@@ -567,6 +567,11 @@ settings:
     description: |
       开启后，生长节点时自动更新布局
       此处的生长节点指tab和\键生长节点
+  treeGenerateInheritParentColor:
+    title: 生长节点时继承父节点颜色
+    description: |
+      开启后，通过 Tab 或 \ 生长出来的新节点会继承父节点颜色
+      关闭后，新节点不再自动继承父节点颜色
   enableBackslashGenerateNodeInInput:
     title: 在输入状态下也能通过反斜杠创建同级节点
     description: |
@@ -1735,4 +1740,3 @@ keyBinds:
 
 sounds:
   soundEnabled: 音效开关
-

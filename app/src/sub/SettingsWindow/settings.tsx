@@ -296,6 +296,7 @@ const categories = {
     ],
     generateNode: [
       "autoLayoutWhenTreeGenerate",
+      "treeGenerateInheritParentColor",
       "enableBackslashGenerateNodeInInput",
       "textNodeAutoFormatTreeWhenExitEdit",
       "treeGenerateCameraBehavior",

@@ -148,6 +148,7 @@ export const settingsSchema = z.object({
     .default("autoByLength"),
   allowAddCycleEdge: z.boolean().default(false),
   autoLayoutWhenTreeGenerate: z.boolean().default(true),
+  treeGenerateInheritParentColor: z.boolean().default(false),
   textNodeAutoFormatTreeWhenExitEdit: z.boolean().default(false),
   treeGenerateCameraBehavior: z
     .union([z.literal("none"), z.literal("moveToNewNode"), z.literal("resetToTree")])

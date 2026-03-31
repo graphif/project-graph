@@ -801,6 +801,11 @@ settings:
     description: "After it is turned on, the layout will be automatically updated
       when growing nodes\nThe growing nodes here refer to the tab and \\ key growing
       nodes\n"
+  treeGenerateInheritParentColor:
+    title: Inherit parent color when growing nodes
+    description: |
+      When enabled, new nodes created via Tab or \ will inherit the parent node color
+      When disabled, new nodes will not inherit the parent node color
   enableBackslashGenerateNodeInInput:
     title: Enable backslash to create sibling nodes while in input mode
     description: |
@@ -1635,4 +1640,3 @@ visualSettingsGroup:
 
 sounds:
   soundEnabled: Sound Effect Switch
-

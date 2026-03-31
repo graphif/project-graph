@@ -558,6 +558,11 @@ settings:
     description: |
       Saat diaktifkan, layout akan diperbarui secara otomatis saat node tumbuh
       Pertumbuhan node di sini merujuk pada pertumbuhan node dengan tombol tab dan \
+  treeGenerateInheritParentColor:
+    title: Warna Node Baru Ikuti Warna Induk
+    description: |
+      Saat diaktifkan, node baru yang dibuat melalui Tab atau \ akan mewarisi warna dari node induk
+      Saat dimatikan, node baru tidak akan mewarisi warna dari node induk
   enableBackslashGenerateNodeInInput:
     title: Buat Node Selevel dengan Backslash dalam Mode Input
     description: |
