@@ -408,6 +408,17 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
             if (e.key === "Escape") {
               SubWindow.close(winId);
             }
+            if (e.key === "Enter") {
+              const native = e.nativeEvent as unknown as { isComposing?: boolean; keyCode?: number };
+              const isComposing =
+                native?.isComposing === true ||
+                (native?.keyCode ?? 0) === 229 ||
+                (e as unknown as { isComposing?: boolean }).isComposing === true;
+              if (isComposing) {
+                e.stopPropagation();
+                return;
+              }
+            }
             if (e.key === "Enter" && recentFilesFiltered.length === 1) {
               checkoutFile(recentFilesFiltered[0]);
             }
