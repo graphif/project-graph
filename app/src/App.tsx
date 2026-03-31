@@ -27,7 +27,6 @@ import { ChevronsLeftRight, Copy, Minus, Pin, PinOff, Square, X } from "lucide-r
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { cpuInfo } from "tauri-plugin-system-info-api";
-import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { cn } from "./utils/cn";
 import { isMac, isWindows } from "./utils/platform";
 import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
@@ -47,9 +46,6 @@ export default function App() {
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   // const [isWide, setIsWide] = useState(false);
   const [telemetryEventSent, setTelemetryEventSent] = useState(false);
-  const [dropMouseLocation, setDropMouseLocation] = useState<"top" | "middle" | "bottom" | "notInWindowZone">(
-    "notInWindowZone",
-  );
   const [ignoreMouseEvents, setIgnoreMouseEvents] = useState(false);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
   const [showQuickSettingsToolbar, setShowQuickSettingsToolbar] = useState(Settings.showQuickSettingsToolbar);
@@ -190,40 +186,17 @@ export default function App() {
     activeProject.canvas.mount(canvasWrapperRef.current);
     activeProject.loop();
     projects.filter((p) => p.uri.toString() !== activeProject.uri.toString()).forEach((p) => p.pause());
-    activeProject.canvas.element.addEventListener("pointerdown", () => {
+    const onPointerDown = () => {
       setIgnoreMouseEvents(true);
-    });
-    activeProject.canvas.element.addEventListener("pointerup", () => {
+    };
+    const onPointerUp = () => {
       setIgnoreMouseEvents(false);
-    });
-    const unlisten2 = getCurrentWindow().onDragDropEvent(async (event) => {
-      // Mac 上 event.payload.position 为逻辑像素，而 outerSize() 返回物理像素，
-      // 需用 scaleFactor 换算；Windows 上两者单位一致，不需要换算。
-      const size = await getCurrentWindow().outerSize();
-      const logicalHeight = isMac ? size.height / (await getCurrentWindow().scaleFactor()) : size.height;
-      if (event.payload.type === "over") {
-        if (event.payload.position.y <= logicalHeight / 3) {
-          setDropMouseLocation("top");
-        } else if (event.payload.position.y <= (logicalHeight / 3) * 2) {
-          setDropMouseLocation("middle");
-        } else {
-          setDropMouseLocation("bottom");
-        }
-      } else if (event.payload.type === "leave") {
-        setDropMouseLocation("notInWindowZone");
-      } else if (event.payload.type === "drop") {
-        setDropMouseLocation("notInWindowZone");
-        if (event.payload.position.y <= logicalHeight / 3) {
-          DragFileIntoStageEngine.handleDrop(activeProject, event.payload.paths);
-        } else if (event.payload.position.y <= (logicalHeight / 3) * 2) {
-          DragFileIntoStageEngine.handleDropFileRelativePath(activeProject, event.payload.paths);
-        } else {
-          DragFileIntoStageEngine.handleDropFileAbsolutePath(activeProject, event.payload.paths);
-        }
-      }
-    });
+    };
+    activeProject.canvas.element.addEventListener("pointerdown", onPointerDown);
+    activeProject.canvas.element.addEventListener("pointerup", onPointerUp);
     return () => {
-      unlisten2?.then((f) => f());
+      activeProject.canvas.element.removeEventListener("pointerdown", onPointerDown);
+      activeProject.canvas.element.removeEventListener("pointerup", onPointerUp);
     };
   }, [activeProject]);
 
@@ -442,9 +415,7 @@ export default function App() {
             onClick={() => getCurrentWindow().close()}
           ></div>
         )}
-        {dropMouseLocation !== "notInWindowZone" && (
-          <DropWindowCover dropMouseLocation={dropMouseLocation} isDraft={activeProject?.isDraft ?? false} />
-        )}
+        {activeProject ? <DropWindowCover project={activeProject} /> : null}
       </div>
     </>
   );
