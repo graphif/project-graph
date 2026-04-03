@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
   <key>NSDesktopFolderUsageDescription</key>
-  <string>访问桌面文件夹以打开和保存 .prg 项目文件~</string>
+  <string>访问桌面文件夹以打开和保存 .prg 项目文件, 若需要经常打开此文件夹，建议将此文件移动到非受保护的文件夹中，例如 “~/自定义文件夹名称/...” 相见官网 - 常见问题 - Mac</string>
   <key>NSDocumentsFolderUsageDescription</key>
-  <string>访问文稿文件夹以打开和保存 .prg 项目文件~</string>
+  <string>访问文稿文件夹以打开和保存 .prg 项目文件, 若需要经常打开此文件夹，建议将此文件移动到非受保护的文件夹中，例如 “~/自定义文件夹名称/...” 相见官网 - 常见问题 - Mac</string>
   <key>NSDownloadsFolderUsageDescription</key>
-  <string>访问下载文件夹以打开和保存 .prg 项目文件~</string>
+  <string>访问下载文件夹以打开和保存 .prg 项目文件, 若需要经常打开此文件夹，建议将此文件移动到非受保护的文件夹中，例如 “~/自定义文件夹名称/...” 相见官网 - 常见问题 - Mac</string>
 </dict>
 </plist>
