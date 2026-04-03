@@ -44,18 +44,61 @@ export class VerticalPolyEdgeRenderer extends EdgeRendererClass {
     ];
   }
 
-  getConnectedEffects(startNode: ConnectableEntity, toNode: ConnectableEntity): Effect[] {
+  getConnectedEffects(
+    startNode: ConnectableEntity,
+    toNode: ConnectableEntity,
+    sourceRectangleRate?: Vector,
+    targetRectangleRate?: Vector,
+  ): Effect[] {
+    const sourceRate = sourceRectangleRate ?? Vector.same(0.5);
+    const targetRate = targetRectangleRate ?? Vector.same(0.5);
+
+    const isOldDefaultRate = (r: Vector): boolean => {
+      return (
+        (r.x === 0.5 && r.y === 0.5) ||
+        (r.x === 0.01 && r.y === 0.5) ||
+        (r.x === 0.99 && r.y === 0.5) ||
+        (r.x === 0.5 && r.y === 0.01) ||
+        (r.x === 0.5 && r.y === 0.99)
+      );
+    };
+
+    const sourceRect = startNode.collisionBox.getRectangle();
+    const targetRect = toNode.collisionBox.getRectangle();
+    const sourceInner = sourceRect.getInnerLocationByRateVector(sourceRate);
+    const targetInner = targetRect.getInnerLocationByRateVector(targetRate);
+    const line = new Line(sourceInner, targetInner);
+
+    let start: Vector;
+    if (startNode instanceof ConnectPoint) {
+      start = startNode.geometryCenter;
+    } else if (
+      (startNode instanceof ImageNode || startNode.constructor.name === "ReferenceBlockNode") &&
+      !isOldDefaultRate(sourceRate)
+    ) {
+      start = sourceInner;
+    } else {
+      start = sourceRect.getLineIntersectionPoint(line);
+    }
+
+    let end: Vector;
+    if (toNode instanceof ConnectPoint) {
+      end = toNode.geometryCenter;
+    } else if (
+      (toNode instanceof ImageNode || toNode.constructor.name === "ReferenceBlockNode") &&
+      !isOldDefaultRate(targetRate)
+    ) {
+      end = targetInner;
+    } else {
+      end = targetRect.getLineIntersectionPoint(line);
+    }
+
     return [
-      new CircleFlameEffect(
-        new ProgressNumber(0, 15),
-        startNode.collisionBox.getRectangle().center,
-        80,
-        new Color(83, 175, 29, 1),
-      ),
+      new CircleFlameEffect(new ProgressNumber(0, 15), start, 80, new Color(83, 175, 29, 1)),
       new LineCuttingEffect(
         new ProgressNumber(0, 30),
-        startNode.collisionBox.getRectangle().center,
-        toNode.collisionBox.getRectangle().center,
+        start,
+        end,
         new Color(78, 201, 176, 1),
         new Color(83, 175, 29, 1),
         20,

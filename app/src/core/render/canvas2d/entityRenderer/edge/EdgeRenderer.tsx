@@ -225,8 +225,13 @@ export class EdgeRenderer {
   getCuttingEffects(edge: Edge) {
     return this.currentRenderer.getCuttingEffects(edge);
   }
-  getConnectedEffects(startNode: ConnectableEntity, toNode: ConnectableEntity) {
-    return this.currentRenderer.getConnectedEffects(startNode, toNode);
+  getConnectedEffects(
+    startNode: ConnectableEntity,
+    toNode: ConnectableEntity,
+    sourceRectangleRate?: Vector,
+    targetRectangleRate?: Vector,
+  ) {
+    return this.currentRenderer.getConnectedEffects(startNode, toNode, sourceRectangleRate, targetRectangleRate);
   }
 
   /**

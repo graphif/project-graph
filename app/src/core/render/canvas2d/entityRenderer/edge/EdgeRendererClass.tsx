@@ -85,5 +85,10 @@ export abstract class EdgeRendererClass {
   /**
    * 获取这个线在连接成功时的特效
    */
-  abstract getConnectedEffects(startNode: ConnectableEntity, toNode: ConnectableEntity): Effect[];
+  abstract getConnectedEffects(
+    startNode: ConnectableEntity,
+    toNode: ConnectableEntity,
+    sourceRectangleRate?: Vector,
+    targetRectangleRate?: Vector,
+  ): Effect[];
 }

@@ -650,8 +650,10 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     );
 
     // 添加连接特效
+    const sourceRectRateVector = new Vector(sourceRectRate[0], sourceRectRate[1]);
+    const targetRectRateVector = new Vector(targetRectRate[0], targetRectRate[1]);
     for (const entity of this.connectFromEntities) {
-      this.addConnectEffect(entity, connectToEntity);
+      this.addConnectEffect(entity, connectToEntity, sourceRectRateVector, targetRectRateVector);
     }
 
     // 如果端点位置被调整，添加高亮特效
@@ -716,8 +718,13 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     return this.connectFromEntities.length > 0 && this._isUsing;
   }
 
-  private addConnectEffect(from: ConnectableEntity, to: ConnectableEntity) {
-    for (const effect of this.project.edgeRenderer.getConnectedEffects(from, to)) {
+  private addConnectEffect(
+    from: ConnectableEntity,
+    to: ConnectableEntity,
+    sourceRectRate?: Vector,
+    targetRectRate?: Vector,
+  ) {
+    for (const effect of this.project.edgeRenderer.getConnectedEffects(from, to, sourceRectRate, targetRectRate)) {
       this.project.effects.addEffect(effect);
     }
   }
