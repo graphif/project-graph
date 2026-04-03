@@ -59,14 +59,23 @@ export abstract class EdgeRendererClass {
    * @param startNode
    * @param mouseLocation 世界坐标系
    */
-  public abstract renderVirtualEdge(startNode: ConnectableEntity, mouseLocation: Vector): void;
+  public abstract renderVirtualEdge(
+    startNode: ConnectableEntity,
+    mouseLocation: Vector,
+    sourceRectangleRate?: Vector,
+  ): void;
 
   /**
    * 绘制鼠标连线移动到目标节点上吸附住 时候虚拟连线效果
    * @param startNode
    * @param endNode
    */
-  public abstract renderVirtualConfirmedEdge(startNode: ConnectableEntity, endNode: ConnectableEntity): void;
+  public abstract renderVirtualConfirmedEdge(
+    startNode: ConnectableEntity,
+    endNode: ConnectableEntity,
+    sourceRectangleRate?: Vector,
+    targetRectangleRate?: Vector,
+  ): void;
   /**
    * 获取这个线在切断时的特效
    * 外层将在切断时根据此函数来获取特效并自动加入到渲染器中

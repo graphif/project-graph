@@ -154,6 +154,10 @@ export class ControllerNodeConnectionClass extends ControllerClass {
   private _startImageLocation: Map<string, Vector> = new Map();
   // 记录拖拽结束点在图片上的精确位置
   private _endImageLocation: Vector | null = null;
+  private _hoverImageLocation: Vector | null = null;
+
+  private _previewSourceDirection: Direction | null = null;
+  private _previewTargetDirection: Direction | null = null;
 
   private onMouseDown(event: MouseEvent) {
     const pressWorldLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
@@ -240,6 +244,7 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     SoundService.play.connectLineStart();
     this._isUsing = true;
     this.project.controller.setCursorNameHook(CursorNameEnum.Crosshair);
+    this.updatePreviewDirections();
   }
 
   /**
@@ -282,6 +287,13 @@ export class ControllerNodeConnectionClass extends ControllerClass {
         // 找到了连接的节点，吸附上去
         this.connectToEntity = entity;
         isFindConnectToNode = true;
+        this._hoverImageLocation = null;
+        if (entity instanceof ImageNode || entity.constructor.name === "ReferenceBlockNode") {
+          const rect = entity.collisionBox.getRectangle();
+          const relativeX = (worldLocation.x - rect.location.x) / rect.size.x;
+          const relativeY = (worldLocation.y - rect.location.y) / rect.size.y;
+          this._hoverImageLocation = new Vector(relativeX, relativeY);
+        }
         if (!this.isMouseHoverOnTarget) {
           SoundService.play.connectFindTarget();
         }
@@ -292,7 +304,9 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     if (!isFindConnectToNode) {
       this.connectToEntity = null;
       this.isMouseHoverOnTarget = false;
+      this._hoverImageLocation = null;
     }
+    this.updatePreviewDirections();
     // 由于连接线要被渲染器绘制，所以需要更新总控制里的lastMoveLocation
     this.project.controller.lastMoveLocation = worldLocation.clone();
   }
@@ -500,6 +514,63 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     this._isUsing = false;
     this._startImageLocation.clear();
     this._endImageLocation = null;
+    this._hoverImageLocation = null;
+    this._previewSourceDirection = null;
+    this._previewTargetDirection = null;
+  }
+
+  private updatePreviewDirections() {
+    if (Settings.autoAdjustLineEndpointsByMouseTrack) {
+      [this._previewSourceDirection, this._previewTargetDirection] = this.getConnectDirectionByMouseTrack();
+    } else {
+      this._previewSourceDirection = null;
+      this._previewTargetDirection = null;
+    }
+  }
+
+  private directionToRate(direction: Direction | null): Vector {
+    switch (direction) {
+      case Direction.Left:
+        return new Vector(0.01, 0.5);
+      case Direction.Right:
+        return new Vector(0.99, 0.5);
+      case Direction.Up:
+        return new Vector(0.5, 0.01);
+      case Direction.Down:
+        return new Vector(0.5, 0.99);
+      default:
+        return Vector.same(0.5);
+    }
+  }
+
+  public getPreviewSourceRectangleRate(): Vector {
+    const isSingleImageOrReferenceSource =
+      this.connectFromEntities.length === 1 &&
+      (this.connectFromEntities[0] instanceof ImageNode ||
+        this.connectFromEntities[0].constructor.name === "ReferenceBlockNode");
+
+    if (isSingleImageOrReferenceSource) {
+      const fromEntity = this.connectFromEntities[0];
+      const startPos = this._startImageLocation.get(fromEntity.uuid);
+      if (startPos) {
+        return startPos.clone();
+      }
+    }
+
+    return this.directionToRate(this._previewSourceDirection);
+  }
+
+  public getPreviewTargetRectangleRate(): Vector {
+    if (!this.connectToEntity) {
+      return Vector.same(0.5);
+    }
+    if (
+      (this.connectToEntity instanceof ImageNode || this.connectToEntity.constructor.name === "ReferenceBlockNode") &&
+      this._hoverImageLocation
+    ) {
+      return this._hoverImageLocation.clone();
+    }
+    return this.directionToRate(this._previewTargetDirection);
   }
 
   private dragMultiConnect(

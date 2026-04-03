@@ -287,23 +287,19 @@ export class Renderer {
   /** 手动连接线 */
   private renderConnectingLine() {
     if (this.project.controller.nodeConnection.isUsing) {
-      // 如果鼠标位置没有和任何节点相交
-      let connectTargetNode = null;
       const mouseLocation = this.transformView2World(MouseLocation.vector());
-      for (const node of this.project.stageManager.getConnectableEntity()) {
-        if (node.collisionBox.isContainsPoint(mouseLocation)) {
-          connectTargetNode = node;
-          break;
-        }
-      }
+      const connectTargetNode = this.project.controller.nodeConnection.connectToEntity;
+      const sourceRectRate = this.project.controller.nodeConnection.getPreviewSourceRectangleRate();
+
       if (connectTargetNode === null) {
         for (const node of this.project.controller.nodeConnection.connectFromEntities) {
-          this.project.edgeRenderer.renderVirtualEdge(node, mouseLocation);
+          this.project.edgeRenderer.renderVirtualEdge(node, mouseLocation, sourceRectRate);
         }
       } else {
         // 画一条像吸住了的线
+        const targetRectRate = this.project.controller.nodeConnection.getPreviewTargetRectangleRate();
         for (const node of this.project.controller.nodeConnection.connectFromEntities) {
-          this.project.edgeRenderer.renderVirtualConfirmedEdge(node, connectTargetNode);
+          this.project.edgeRenderer.renderVirtualConfirmedEdge(node, connectTargetNode, sourceRectRate, targetRectRate);
         }
       }
       if (Settings.showDebug) {

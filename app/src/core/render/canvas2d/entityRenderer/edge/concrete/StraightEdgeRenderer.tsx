@@ -8,6 +8,7 @@ import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
+import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { SvgUtils } from "@/core/render/svg/SvgUtils";
 import { Renderer } from "@/core/render/canvas2d/renderer";
@@ -280,23 +281,111 @@ export class StraightEdgeRenderer extends EdgeRendererClass {
     );
   }
 
-  public renderVirtualEdge(startNode: ConnectableEntity, mouseLocation: Vector): void {
+  public renderVirtualEdge(startNode: ConnectableEntity, mouseLocation: Vector, sourceRectangleRate?: Vector): void {
+    const rate = sourceRectangleRate ?? Vector.same(0.5);
+    const startRect = startNode.collisionBox.getRectangle();
+
+    const isOldDefaultRate = (r: Vector): boolean => {
+      return (
+        (r.x === 0.5 && r.y === 0.5) ||
+        (r.x === 0.01 && r.y === 0.5) ||
+        (r.x === 0.99 && r.y === 0.5) ||
+        (r.x === 0.5 && r.y === 0.01) ||
+        (r.x === 0.5 && r.y === 0.99)
+      );
+    };
+
+    const startInner = startRect.getInnerLocationByRateVector(rate);
+    let start: Vector;
+    if (startNode instanceof ConnectPoint) {
+      start = startNode.geometryCenter;
+    } else if (
+      (startNode instanceof ImageNode || startNode.constructor.name === "ReferenceBlockNode") &&
+      !isOldDefaultRate(rate)
+    ) {
+      start = startInner;
+    } else {
+      start = startRect.getLineIntersectionPoint(new Line(startInner, mouseLocation));
+    }
+
+    const end = mouseLocation;
+    const color = this.project.stageStyleManager.currentStyle.StageObjectBorder;
     this.project.curveRenderer.renderGradientLine(
-      this.project.renderer.transformWorld2View(startNode.collisionBox.getRectangle().getCenter()),
-      this.project.renderer.transformWorld2View(mouseLocation),
-      this.project.stageStyleManager.currentStyle.StageObjectBorder.toTransparent(),
-      this.project.stageStyleManager.currentStyle.StageObjectBorder,
+      this.project.renderer.transformWorld2View(start),
+      this.project.renderer.transformWorld2View(end),
+      color.toTransparent(),
+      color,
       2,
     );
+
+    const direction = end.subtract(start);
+    if (direction.magnitude() > 0) {
+      this.project.edgeRenderer.renderArrowHead(end, direction.normalize(), 15, color);
+    }
   }
 
-  public renderVirtualConfirmedEdge(startNode: ConnectableEntity, endNode: ConnectableEntity): void {
+  public renderVirtualConfirmedEdge(
+    startNode: ConnectableEntity,
+    endNode: ConnectableEntity,
+    sourceRectangleRate?: Vector,
+    targetRectangleRate?: Vector,
+  ): void {
+    const sourceRate = sourceRectangleRate ?? Vector.same(0.5);
+    const targetRate = targetRectangleRate ?? Vector.same(0.5);
+    const startRect = startNode.collisionBox.getRectangle();
+    const endRect = endNode.collisionBox.getRectangle();
+
+    const isOldDefaultRate = (r: Vector): boolean => {
+      return (
+        (r.x === 0.5 && r.y === 0.5) ||
+        (r.x === 0.01 && r.y === 0.5) ||
+        (r.x === 0.99 && r.y === 0.5) ||
+        (r.x === 0.5 && r.y === 0.01) ||
+        (r.x === 0.5 && r.y === 0.99)
+      );
+    };
+
+    const startInner = startRect.getInnerLocationByRateVector(sourceRate);
+    const endInner = endRect.getInnerLocationByRateVector(targetRate);
+    const line = new Line(startInner, endInner);
+
+    let start: Vector;
+    if (startNode instanceof ConnectPoint) {
+      start = startNode.geometryCenter;
+    } else if (
+      (startNode instanceof ImageNode || startNode.constructor.name === "ReferenceBlockNode") &&
+      !isOldDefaultRate(sourceRate)
+    ) {
+      start = startInner;
+    } else {
+      start = startRect.getLineIntersectionPoint(line);
+    }
+
+    let end: Vector;
+    if (endNode instanceof ConnectPoint) {
+      end = endNode.geometryCenter;
+    } else if (
+      (endNode instanceof ImageNode || endNode.constructor.name === "ReferenceBlockNode") &&
+      !isOldDefaultRate(targetRate)
+    ) {
+      end = endInner;
+    } else {
+      end = endRect.getLineIntersectionPoint(line);
+    }
+
+    const colorStart = this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.5);
+    const colorEnd = this.project.stageStyleManager.currentStyle.effects.successShadow.toSolid();
     this.project.curveRenderer.renderGradientLine(
-      this.project.renderer.transformWorld2View(startNode.collisionBox.getRectangle().getCenter()),
-      this.project.renderer.transformWorld2View(endNode.collisionBox.getRectangle().getCenter()),
-      this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.5),
-      this.project.stageStyleManager.currentStyle.effects.successShadow.toSolid(),
+      this.project.renderer.transformWorld2View(start),
+      this.project.renderer.transformWorld2View(end),
+      colorStart,
+      colorEnd,
       2,
     );
+
+    const direction = end.subtract(start);
+    if (direction.magnitude() > 0) {
+      this.project.edgeRenderer.renderArrowHead(end, direction.normalize(), 15, colorEnd);
+    }
   }
 }

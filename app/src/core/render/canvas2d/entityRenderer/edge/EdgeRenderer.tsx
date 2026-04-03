@@ -210,11 +210,16 @@ export class EdgeRenderer {
     }
   }
 
-  renderVirtualEdge(startNode: ConnectableEntity, mouseLocation: Vector) {
-    this.currentRenderer.renderVirtualEdge(startNode, mouseLocation);
+  renderVirtualEdge(startNode: ConnectableEntity, mouseLocation: Vector, sourceRectangleRate?: Vector) {
+    this.currentRenderer.renderVirtualEdge(startNode, mouseLocation, sourceRectangleRate);
   }
-  renderVirtualConfirmedEdge(startNode: ConnectableEntity, endNode: ConnectableEntity) {
-    this.currentRenderer.renderVirtualConfirmedEdge(startNode, endNode);
+  renderVirtualConfirmedEdge(
+    startNode: ConnectableEntity,
+    endNode: ConnectableEntity,
+    sourceRectangleRate?: Vector,
+    targetRectangleRate?: Vector,
+  ) {
+    this.currentRenderer.renderVirtualConfirmedEdge(startNode, endNode, sourceRectangleRate, targetRectangleRate);
   }
 
   getCuttingEffects(edge: Edge) {

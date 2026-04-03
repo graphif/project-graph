@@ -251,9 +251,28 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
   public getShiftingStageSvg(): React.ReactNode {
     return <></>;
   }
-  public renderVirtualEdge(startNode: ConnectableEntity, mouseLocation: Vector): void {
+  public renderVirtualEdge(startNode: ConnectableEntity, mouseLocation: Vector, sourceRectangleRate?: Vector): void {
     const rect = startNode.collisionBox.getRectangle();
-    const start = rect.getLineIntersectionPoint(new Line(rect.center, mouseLocation));
+    const rate = sourceRectangleRate ?? Vector.same(0.5);
+
+    const isOldDefaultRate = (r: Vector): boolean => {
+      return (
+        (r.x === 0.5 && r.y === 0.5) ||
+        (r.x === 0.01 && r.y === 0.5) ||
+        (r.x === 0.99 && r.y === 0.5) ||
+        (r.x === 0.5 && r.y === 0.01) ||
+        (r.x === 0.5 && r.y === 0.99)
+      );
+    };
+
+    const startInner = rect.getInnerLocationByRateVector(rate);
+    const isStartExactPosition =
+      (startNode instanceof ImageNode || startNode.constructor.name === "ReferenceBlockNode") &&
+      !isOldDefaultRate(rate);
+
+    const start = isStartExactPosition
+      ? startInner
+      : rect.getLineIntersectionPoint(new Line(startInner, mouseLocation));
     const end = mouseLocation;
     const direction = end.subtract(start);
     const endDirection = new Vector(
@@ -262,32 +281,54 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
     )
       .normalize()
       .multiply(-1);
+    const startDirection = isStartExactPosition ? direction.normalize() : rect.getNormalVectorAt(start);
     this.renderArrowCurve(
-      new SymmetryCurve(
-        start,
-        rect.getNormalVectorAt(start),
-        end,
-        endDirection,
-        Math.abs(end.subtract(start).magnitude()) / 2,
-      ),
+      new SymmetryCurve(start, startDirection, end, endDirection, Math.abs(end.subtract(start).magnitude()) / 2),
       this.project.stageStyleManager.currentStyle.StageObjectBorder,
     );
   }
 
-  public renderVirtualConfirmedEdge(startNode: ConnectableEntity, endNode: ConnectableEntity): void {
+  public renderVirtualConfirmedEdge(
+    startNode: ConnectableEntity,
+    endNode: ConnectableEntity,
+    sourceRectangleRate?: Vector,
+    targetRectangleRate?: Vector,
+  ): void {
     const startRect = startNode.collisionBox.getRectangle();
     const endRect = endNode.collisionBox.getRectangle();
-    const line = new Line(startRect.center, endRect.center);
-    const start = startRect.getLineIntersectionPoint(line);
-    const end = endRect.getLineIntersectionPoint(line);
+    const sourceRate = sourceRectangleRate ?? Vector.same(0.5);
+    const targetRate = targetRectangleRate ?? Vector.same(0.5);
+
+    const isOldDefaultRate = (r: Vector): boolean => {
+      return (
+        (r.x === 0.5 && r.y === 0.5) ||
+        (r.x === 0.01 && r.y === 0.5) ||
+        (r.x === 0.99 && r.y === 0.5) ||
+        (r.x === 0.5 && r.y === 0.01) ||
+        (r.x === 0.5 && r.y === 0.99)
+      );
+    };
+
+    const startInner = startRect.getInnerLocationByRateVector(sourceRate);
+    const endInner = endRect.getInnerLocationByRateVector(targetRate);
+    const line = new Line(startInner, endInner);
+
+    const isStartExactPosition =
+      (startNode instanceof ImageNode || startNode.constructor.name === "ReferenceBlockNode") &&
+      !isOldDefaultRate(sourceRate);
+    const isEndExactPosition =
+      (endNode instanceof ImageNode || endNode.constructor.name === "ReferenceBlockNode") &&
+      !isOldDefaultRate(targetRate);
+
+    const start = isStartExactPosition ? startInner : startRect.getLineIntersectionPoint(line);
+    const end = isEndExactPosition ? endInner : endRect.getLineIntersectionPoint(line);
+
+    const lineDirection = end.subtract(start).normalize();
+    const startDirection = isStartExactPosition ? lineDirection : startRect.getNormalVectorAt(start);
+    const endDirection = isEndExactPosition ? lineDirection.multiply(-1) : endRect.getNormalVectorAt(end);
+
     this.renderArrowCurve(
-      new SymmetryCurve(
-        start,
-        startRect.getNormalVectorAt(start),
-        end,
-        endRect.getNormalVectorAt(end),
-        Math.abs(end.subtract(start).magnitude()) / 2,
-      ),
+      new SymmetryCurve(start, startDirection, end, endDirection, Math.abs(end.subtract(start).magnitude()) / 2),
       this.project.stageStyleManager.currentStyle.StageObjectBorder,
     );
   }
