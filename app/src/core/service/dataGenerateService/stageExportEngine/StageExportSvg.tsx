@@ -6,6 +6,7 @@ import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { Path } from "@/utils/path";
 import { Color, colorInvert, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -110,6 +111,50 @@ export class StageExportSvg {
 
   dumpEdge(edge: LineEdge): React.ReactNode {
     return this.project.edgeRenderer.getEdgeSvg(edge);
+  }
+
+  dumpUrlNode(node: UrlNode) {
+    if (node.isHiddenBySectionCollapse) {
+      return <></>;
+    }
+    const textColor =
+      node.color.a === 1
+        ? colorInvert(node.color)
+        : colorInvert(this.project.stageStyleManager.currentStyle.Background);
+    const displayUrl = node.url.length > 35 ? node.url.slice(0, 35) + "..." : node.url;
+
+    return (
+      <>
+        {/* 节点主体矩形 */}
+        {SvgUtils.rectangle(
+          node.rectangle,
+          node.color,
+          this.project.stageStyleManager.currentStyle.StageObjectBorder,
+          2,
+        )}
+        {/* 标题 */}
+        {SvgUtils.textFromLeftTop(
+          node.title,
+          node.rectangle.leftTop.add(new Vector(0, Renderer.NODE_PADDING / 2)),
+          Renderer.FONT_SIZE,
+          textColor,
+        )}
+        {/* 分界线 */}
+        {SvgUtils.dashedLine(
+          node.rectangle.location.add(new Vector(0, UrlNode.titleHeight)),
+          node.rectangle.location.add(new Vector(node.rectangle.size.x, UrlNode.titleHeight)),
+          textColor,
+          1,
+        )}
+        {/* URL */}
+        {SvgUtils.textFromLeftTop(
+          displayUrl,
+          node.rectangle.location.add(new Vector(0, UrlNode.titleHeight + Renderer.NODE_PADDING / 2)),
+          Renderer.FONT_SIZE * 0.5,
+          textColor,
+        )}
+      </>
+    );
   }
   /**
    *
@@ -260,6 +305,8 @@ export class StageExportSvg {
             return this.dumpSection(entity);
           } else if (entity instanceof ImageNode) {
             return this.dumpImageNode(entity, this.svgConfig);
+          } else if (entity instanceof UrlNode) {
+            return this.dumpUrlNode(entity);
           }
         })}
 
@@ -304,6 +351,7 @@ export class StageExportSvg {
         {this.project.stageManager.getLineEdges().map((edge) => this.dumpEdge(edge))}
         {this.project.stageManager.getSections().map((section) => this.dumpSection(section))}
         {this.project.stageManager.getImageNodes().map((imageNode) => this.dumpImageNode(imageNode, this.svgConfig))}
+        {this.project.stageManager.getUrlNodes().map((urlNode) => this.dumpUrlNode(urlNode))}
       </svg>
     );
   }

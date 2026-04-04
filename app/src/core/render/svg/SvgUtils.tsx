@@ -95,4 +95,25 @@ export namespace SvgUtils {
       />
     );
   }
+
+  export function dashedLine(
+    start: Vector,
+    end: Vector,
+    strokeColor: Color,
+    strokeWidth: number,
+    dashArray: string = "4,4",
+  ): React.ReactNode {
+    return (
+      <line
+        key={v4()}
+        x1={start.x.toFixed(1)}
+        y1={start.y.toFixed(1)}
+        x2={end.x.toFixed(1)}
+        y2={end.y.toFixed(1)}
+        stroke={strokeColor.toString()}
+        strokeWidth={strokeWidth}
+        strokeDasharray={dashArray}
+      />
+    );
+  }
 }
