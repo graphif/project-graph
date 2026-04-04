@@ -222,12 +222,15 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
 
   public renderCycleState(edge: LineEdge): void {
     // 自环
+    const edgeColor = edge.color.equals(Color.Transparent)
+      ? this.project.stageStyleManager.currentStyle.StageObjectBorder
+      : edge.color;
     this.project.shapeRenderer.renderArc(
       this.project.renderer.transformWorld2View(edge.target.collisionBox.getRectangle().location),
       (edge.target.collisionBox.getRectangle().size.y / 2) * this.project.camera.currentScale,
       Math.PI / 2,
       0,
-      edge.color.equals(Color.Transparent) ? this.project.stageStyleManager.currentStyle.StageObjectBorder : edge.color,
+      edgeColor,
       2 * this.project.camera.currentScale,
     );
     // 画箭头
@@ -235,15 +238,28 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       const size = 15;
       const direction = new Vector(1, 0).rotateDegrees(15);
       const endPoint = edge.target.collisionBox.getRectangle().leftCenter;
-      this.project.edgeRenderer.renderArrowHead(
-        endPoint,
-        direction,
-        size,
-        edge.color.equals(Color.Transparent)
-          ? this.project.stageStyleManager.currentStyle.StageObjectBorder
-          : edge.color,
-      );
+      this.project.edgeRenderer.renderArrowHead(endPoint, direction, size, edgeColor);
     }
+    // 画文字
+    if (edge.text.trim() === "") {
+      return;
+    }
+    // 画文本底色
+    this.project.shapeRenderer.renderRect(
+      this.project.renderer.transformWorld2View(edge.textRectangle),
+      this.project.stageStyleManager.currentStyle.Background.toNewAlpha(Settings.windowBackgroundAlpha),
+      Color.Transparent,
+      1,
+    );
+    this.project.textRenderer.renderMultiLineTextFromCenter(
+      edge.text,
+      this.project.renderer.transformWorld2View(
+        edge.target.collisionBox.getRectangle().location.add(new Vector(0, -50)),
+      ),
+      Renderer.FONT_SIZE * this.project.camera.currentScale,
+      Infinity,
+      edgeColor,
+    );
   }
   public getNormalStageSvg(edge: LineEdge): React.ReactNode {
     let lineBody: React.ReactNode = <></>;

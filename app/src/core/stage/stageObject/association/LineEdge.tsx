@@ -80,6 +80,11 @@ export class LineEdge extends Edge {
   get textRectangle(): Rectangle {
     // HACK: 这里会造成频繁渲染，频繁计算文字宽度进而可能出现性能问题
     const textSize = getMultiLineTextSize(this.text, Renderer.FONT_SIZE, 1.2);
+    // 自环连线的文字位置在节点左上角上方
+    if (this.source.uuid === this.target.uuid) {
+      const textLocation = this.source.collisionBox.getRectangle().location.add(new Vector(0, -50));
+      return new Rectangle(textLocation.subtract(textSize.divide(2)), textSize);
+    }
     if (this.isShifting) {
       return new Rectangle(this.shiftingMidPoint.subtract(textSize.divide(2)), textSize);
     } else {
