@@ -19,17 +19,20 @@ export class AIEngine {
     this.openai.apiKey = Settings.aiApiKey;
   }
 
-  async chat(messages: OpenAI.ChatCompletionMessageParam[]) {
+  async chat(messages: OpenAI.ChatCompletionMessageParam[], abortSignal?: AbortSignal) {
     await this.updateConfig();
-    const stream = await this.openai.chat.completions.create({
-      messages,
-      model: Settings.aiModel,
-      stream: true,
-      stream_options: {
-        include_usage: true,
+    const stream = await this.openai.chat.completions.create(
+      {
+        messages,
+        model: Settings.aiModel,
+        stream: true,
+        stream_options: {
+          include_usage: true,
+        },
+        tools: AITools.tools,
       },
-      tools: AITools.tools,
-    });
+      { signal: abortSignal },
+    );
     return stream;
   }
 

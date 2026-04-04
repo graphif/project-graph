@@ -10,7 +10,7 @@ import SettingsWindow from "@/sub/SettingsWindow";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useAtom } from "jotai";
-import { Bot, BrainCircuit, ChevronRight, FolderOpen, Loader2, Send, SettingsIcon, User, Wrench } from "lucide-react";
+import { Bot, BrainCircuit, ChevronRight, FolderOpen, Send, SettingsIcon, Square, User, Wrench } from "lucide-react";
 import OpenAI from "openai";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -30,6 +30,7 @@ export default function AIWindow() {
   const [totalOutputTokens, setTotalOutputTokens] = useState(0);
   const [executingToolIds, setExecutingToolIds] = useState<Set<string>>(new Set());
   const messagesElRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [showTokenCount] = Settings.use("aiShowTokenCount");
 
   /**
@@ -56,6 +57,8 @@ export default function AIWindow() {
   async function run(msgs: OpenAI.ChatCompletionMessageParam[] = [...messages, { role: "user", content: inputValue }]) {
     if (!project) return;
     scrollToBottom();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
     setRequesting(true);
     try {
       // 清理消息：移除空的 tool_calls 数组
@@ -68,7 +71,7 @@ export default function AIWindow() {
         }
         return msg;
       });
-      const stream = await project.aiEngine.chat(cleanedMsgs);
+      const stream = await project.aiEngine.chat(cleanedMsgs, abortController.signal);
       addMessage({
         role: "assistant",
         content: "Requesting...",
@@ -126,6 +129,7 @@ export default function AIWindow() {
         lastChunk = chunk;
       }
       setRequesting(false);
+      abortControllerRef.current = null;
       if (!lastChunk) return;
       if (!lastChunk.usage) return;
       setTotalInputTokens((v) => v + lastChunk.usage!.prompt_tokens);
@@ -180,6 +184,8 @@ export default function AIWindow() {
       }
     } catch (e) {
       setRequesting(false);
+      abortControllerRef.current = null;
+      if ((e as Error).name === "AbortError") return;
       if (e instanceof Error) {
         console.error(e);
       }
@@ -196,6 +202,10 @@ export default function AIWindow() {
     addMessage({ role: "user", content: inputValue });
     setInputValue("");
     run();
+  }
+
+  function handleStop() {
+    abortControllerRef.current?.abort();
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -277,7 +287,9 @@ export default function AIWindow() {
         )}
         <div className="flex-1"></div>
         {requesting ? (
-          <Loader2 className="animate-spin" />
+          <Button className="cursor-pointer" onClick={handleStop}>
+            <Square />
+          </Button>
         ) : (
           <Button className="cursor-pointer" onClick={handleUserSend}>
             <Send />
