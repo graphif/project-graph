@@ -217,7 +217,7 @@ export class KeyboardOnlyTreeEngine {
     }
 
     // 重新排列树形节点
-    const rootNodeParents = this.project.graphMethods.getRoots(rootNode);
+    const rootNodeParents = this.project.graphMethods.getRoots(rootNode, true);
     if (rootNodeParents.length === 1) {
       const rootNodeParent = rootNodeParents[0];
       if (this.project.graphMethods.isTree(rootNodeParent, true)) {
@@ -355,7 +355,7 @@ export class KeyboardOnlyTreeEngine {
       newNode.color = parent.color.clone();
     }
     // 重新排列树形节点
-    const rootNodeParents = this.project.graphMethods.getRoots(parent);
+    const rootNodeParents = this.project.graphMethods.getRoots(parent, true);
     if (rootNodeParents.length === 1) {
       const rootNodeParent = rootNodeParents[0];
       if (this.project.graphMethods.isTree(rootNodeParent, true)) {

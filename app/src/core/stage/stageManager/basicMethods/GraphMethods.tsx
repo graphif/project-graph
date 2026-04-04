@@ -78,7 +78,7 @@ export class GraphMethods {
    * @returns
    */
   isCurrentNodeInTreeStructAndNotRoot(node: ConnectableEntity): boolean {
-    const roots = this.getRoots(node);
+    const roots = this.getRoots(node, true);
     if (roots.length !== 1) {
       return false;
     }
@@ -86,7 +86,7 @@ export class GraphMethods {
     if (rootNode.uuid === node.uuid) {
       return false;
     }
-    return this.isTree(rootNode);
+    return this.isTree(rootNode, true);
   }
 
   /**
