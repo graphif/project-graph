@@ -1,5 +1,6 @@
 import { Project, service } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
+import { Settings } from "@/core/service/Settings";
 import { SvgUtils } from "@/core/render/svg/SvgUtils";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
@@ -53,8 +54,11 @@ export class StageExportSvg {
     // 获取节点的实际字体大小（考虑 fontScaleLevel）
     const fontSize = node.getFontSize();
 
+    // 获取详细信息数据属性
+    const detailsData = this.getEntityDetailsDataAttribute(node);
+
     return (
-      <>
+      <g data-details={detailsData}>
         {SvgUtils.rectangle(
           node.rectangle,
           node.color,
@@ -76,7 +80,8 @@ export class StageExportSvg {
           limitWidth,
           1.5,
         )}
-      </>
+        {this.dumpEntityDetails(node)}
+      </g>
     );
   }
 
@@ -89,8 +94,12 @@ export class StageExportSvg {
     if (section.isHiddenBySectionCollapse) {
       return <></>;
     }
+
+    // 获取详细信息数据属性
+    const detailsData = this.getEntityDetailsDataAttribute(section);
+
     return (
-      <>
+      <g data-details={detailsData}>
         {SvgUtils.rectangle(
           section.rectangle,
           Color.Transparent,
@@ -103,7 +112,8 @@ export class StageExportSvg {
           Renderer.FONT_SIZE,
           this.project.stageStyleManager.currentStyle.StageObjectBorder,
         )}
-      </>
+        {this.dumpEntityDetails(section)}
+      </g>
     );
   }
 
@@ -123,6 +133,54 @@ export class StageExportSvg {
     return this.project.edgeRenderer.getEdgeSvg(edge);
   }
 
+  /**
+   * 渲染实体的详细信息
+   * @param entity 实体
+   * @returns 详细信息SVG元素
+   */
+  private dumpEntityDetails(entity: Entity): React.ReactNode {
+    if (!entity.details || entity.detailsManager.isEmpty()) {
+      return null;
+    }
+
+    const detailsText = entity.detailsManager.getRenderStageString();
+    if (!detailsText || detailsText.trim().length === 0) {
+      return null;
+    }
+
+    const rect = entity.collisionBox.getRectangle();
+    const textColor = this.project.stageStyleManager.currentStyle.NodeDetailsText;
+
+    // 计算宽度限制：取配置值和实体宽度的较大值
+    const limitWidth = Math.max(Settings.entityDetailsWidthLimit, rect.size.x);
+
+    return SvgUtils.entityDetailsText(
+      detailsText,
+      rect.leftBottom, // 从实体左下角开始渲染
+      Settings.entityDetailsFontSize,
+      textColor,
+      limitWidth,
+      1.2,
+      Settings.entityDetailsLinesLimit,
+    );
+  }
+
+  /**
+   * 获取实体的 data-details 属性值
+   * @param entity 实体
+   * @returns 详细信息文本，如果为空则返回 undefined
+   */
+  private getEntityDetailsDataAttribute(entity: Entity): string | undefined {
+    if (!entity.details || entity.detailsManager.isEmpty()) {
+      return undefined;
+    }
+    const detailsText = entity.detailsManager.getBeSearchingText();
+    if (!detailsText || detailsText.trim().length === 0) {
+      return undefined;
+    }
+    return detailsText;
+  }
+
   dumpUrlNode(node: UrlNode) {
     if (node.isHiddenBySectionCollapse) {
       return <></>;
@@ -133,8 +191,11 @@ export class StageExportSvg {
         : colorInvert(this.project.stageStyleManager.currentStyle.Background);
     const displayUrl = node.url.length > 35 ? node.url.slice(0, 35) + "..." : node.url;
 
+    // 获取详细信息数据属性
+    const detailsData = this.getEntityDetailsDataAttribute(node);
+
     return (
-      <>
+      <g data-details={detailsData}>
         {/* 节点主体矩形 */}
         {SvgUtils.rectangle(
           node.rectangle,
@@ -163,7 +224,8 @@ export class StageExportSvg {
           Renderer.FONT_SIZE * 0.5,
           textColor,
         )}
-      </>
+        {this.dumpEntityDetails(node)}
+      </g>
     );
   }
   /**
@@ -194,14 +256,15 @@ export class StageExportSvg {
             // 相对路径或绝对路径模式，但没有导出上下文，无法生成有效路径
             // 返回透明矩形占位符
             return (
-              <>
+              <g data-details={this.getEntityDetailsDataAttribute(node)}>
                 {SvgUtils.rectangle(
                   node.rectangle,
                   Color.Transparent,
                   this.project.stageStyleManager.currentStyle.StageObjectBorder,
                   2,
                 )}
-              </>
+                {this.dumpEntityDetails(node)}
+              </g>
             );
           }
         }
@@ -210,19 +273,23 @@ export class StageExportSvg {
     // 如果href为空，则返回一个透明矩形占位符
     if (!href) {
       return (
-        <>
+        <g data-details={this.getEntityDetailsDataAttribute(node)}>
           {SvgUtils.rectangle(
             node.rectangle,
             Color.Transparent,
             this.project.stageStyleManager.currentStyle.StageObjectBorder,
             2,
           )}
-        </>
+          {this.dumpEntityDetails(node)}
+        </g>
       );
     }
 
+    // 获取详细信息数据属性
+    const detailsData = this.getEntityDetailsDataAttribute(node);
+
     return (
-      <>
+      <g data-details={detailsData}>
         {SvgUtils.rectangle(
           node.rectangle,
           Color.Transparent,
@@ -236,7 +303,8 @@ export class StageExportSvg {
           width={node.rectangle.size.x}
           height={node.rectangle.size.y}
         />
-      </>
+        {this.dumpEntityDetails(node)}
+      </g>
     );
   }
 

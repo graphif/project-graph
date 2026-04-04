@@ -145,4 +145,57 @@ export namespace SvgUtils {
       />
     );
   }
+
+  /**
+   * 渲染实体详细信息文本（位于实体下方）
+   * @param text 文本内容
+   * @param location 实体左下角位置（世界坐标）
+   * @param fontSize 字体大小
+   * @param color 文本颜色
+   * @param limitWidth 宽度限制
+   * @param lineHeight 行高倍数
+   * @param limitLines 最大行数限制
+   */
+  export function entityDetailsText(
+    text: string,
+    location: Vector,
+    fontSize: number,
+    color: Color,
+    limitWidth: number = 200,
+    lineHeight: number = 1.2,
+    limitLines: number = 4,
+  ): React.ReactNode {
+    if (!text || text.trim().length === 0) {
+      return null;
+    }
+
+    // 将文本分割成行
+    const lines = limitWidth === Infinity ? text.split("\n") : textToTextArray(text, fontSize, limitWidth);
+
+    // 限制行数
+    let displayLines = lines;
+    if (limitLines < lines.length) {
+      displayLines = lines.slice(0, limitLines);
+      displayLines[limitLines - 1] += "...";
+    }
+
+    const result: React.ReactNode[] = [];
+    for (let i = 0; i < displayLines.length; i++) {
+      const line = displayLines[i];
+      result.push(
+        <text
+          key={v4()}
+          x={location.x.toFixed(1)}
+          y={(location.y + fontSize + i * fontSize * lineHeight).toFixed(1)}
+          fill={color.toString()}
+          fontSize={fontSize}
+          textAnchor="start"
+          fontFamily={FONT}
+        >
+          {line}
+        </text>,
+      );
+    }
+    return <>{result}</>;
+  }
 }
