@@ -302,6 +302,10 @@ export class Renderer {
           this.project.edgeRenderer.renderVirtualConfirmedEdge(node, connectTargetNode, sourceRectRate, targetRectRate);
         }
       }
+
+      // 如果悬停在图片上，绘制十字定位标记
+      this.renderCrosshairOnHoverImage();
+
       if (Settings.showDebug) {
         // 调试模式下显示右键连线轨迹
         const points = this.project.controller.nodeConnection
@@ -318,6 +322,48 @@ export class Renderer {
         }
       }
     }
+  }
+
+  /**
+   * 在悬停的图片上绘制十字定位标记
+   * 十字线的长和宽刚好是图片的长和宽，交叉点对准鼠标指针中心
+   */
+  private renderCrosshairOnHoverImage() {
+    const hoverImageNode = this.project.controller.nodeConnection.getHoverImageNode();
+    const hoverImageLocation = this.project.controller.nodeConnection.getHoverImageLocation();
+
+    if (!hoverImageNode || !hoverImageLocation) {
+      return;
+    }
+
+    const rect = hoverImageNode.collisionBox.getRectangle();
+    const viewRect = new Rectangle(
+      this.transformWorld2View(rect.location),
+      rect.size.multiply(this.project.camera.currentScale),
+    );
+
+    // 计算鼠标在图片上的精确位置（view坐标）
+    const mouseViewLocation = MouseLocation.vector();
+
+    // 十字线颜色
+    const crosshairColor = this.project.stageStyleManager.currentStyle.effects.successShadow;
+    const lineWidth = 1.5 * this.project.camera.currentScale;
+
+    // 绘制水平线（贯穿整个图片宽度）
+    this.project.curveRenderer.renderSolidLine(
+      new Vector(viewRect.left, mouseViewLocation.y),
+      new Vector(viewRect.right, mouseViewLocation.y),
+      crosshairColor,
+      lineWidth,
+    );
+
+    // 绘制垂直线（贯穿整个图片高度）
+    this.project.curveRenderer.renderSolidLine(
+      new Vector(mouseViewLocation.x, viewRect.top),
+      new Vector(mouseViewLocation.x, viewRect.bottom),
+      crosshairColor,
+      lineWidth,
+    );
   }
 
   /**

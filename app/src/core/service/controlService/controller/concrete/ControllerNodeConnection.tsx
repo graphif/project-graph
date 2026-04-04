@@ -159,6 +159,23 @@ export class ControllerNodeConnectionClass extends ControllerClass {
   private _previewSourceDirection: Direction | null = null;
   private _previewTargetDirection: Direction | null = null;
 
+  /**
+   * 获取当前悬停的图片节点（用于绘制十字定位标记）
+   */
+  public getHoverImageNode(): ImageNode | null {
+    if (this.connectToEntity instanceof ImageNode) {
+      return this.connectToEntity;
+    }
+    return null;
+  }
+
+  /**
+   * 获取当前悬停图片上的精确位置（相对坐标 0-1）
+   */
+  public getHoverImageLocation(): Vector | null {
+    return this._hoverImageLocation;
+  }
+
   private onMouseDown(event: MouseEvent) {
     const pressWorldLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
 
