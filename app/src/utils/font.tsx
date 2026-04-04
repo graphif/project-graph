@@ -117,3 +117,46 @@ export function replaceTextWhenProtect(text: string) {
 export function camelCaseToDashCase(text: string) {
   return text.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
 }
+
+/**
+ * 将文本按宽度限制分割成多行数组
+ * 遇到宽度限制或换行符时进行换行
+ * @param text 原始文本
+ * @param fontSize 字体大小
+ * @param limitWidth 宽度限制
+ * @returns 分割后的行数组
+ */
+export function textToTextArray(text: string, fontSize: number, limitWidth: number): string[] {
+  if (!_context) {
+    return text.split("\n");
+  }
+
+  let currentLine = "";
+  const lines: string[] = [];
+
+  // 设置字体以进行测量
+  _context.font = `${fontSize}px normal ${FONT}`;
+
+  for (const char of text) {
+    // 新来字符的宽度
+    const measureSize = _context.measureText(currentLine + char);
+    // 先判断是否溢出或者是换行符
+    if (measureSize.width > limitWidth || char === "\n") {
+      // 溢出了，将这一整行保存
+      lines.push(currentLine);
+      if (char !== "\n") {
+        currentLine = char;
+      } else {
+        currentLine = "";
+      }
+    } else {
+      // 未溢出，继续添加字符
+      currentLine += char;
+    }
+  }
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  return lines;
+}

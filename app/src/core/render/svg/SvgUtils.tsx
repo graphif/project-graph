@@ -1,7 +1,7 @@
 import { Color, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Rectangle } from "@graphif/shapes";
 import { v4 } from "uuid";
-import { FONT, getTextSize } from "@/utils/font";
+import { FONT, getTextSize, textToTextArray } from "@/utils/font";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 
 /**
@@ -71,6 +71,35 @@ export namespace SvgUtils {
   ) {
     const textSizeHeight = getTextSize(text, fontSize).y;
     const lines = text.split("\n");
+    const result: React.ReactNode[] = [];
+    for (let y = 0; y < lines.length; y++) {
+      const line = lines[y];
+      result.push(textFromLeftTop(line, location.add(new Vector(0, y * textSizeHeight * lineHeight)), fontSize, color));
+    }
+    return <>{result.map((item) => item)}</>;
+  }
+
+  /**
+   * 渲染支持自动换行的多行文本
+   * @param text 文本内容
+   * @param location 左上角位置
+   * @param fontSize 字体大小
+   * @param color 颜色
+   * @param limitWidth 宽度限制（manual模式下使用）
+   * @param lineHeight 行高倍数
+   */
+  export function multiLineTextFromLeftTopWithWrap(
+    text: string,
+    location: Vector,
+    fontSize: number,
+    color: Color,
+    limitWidth: number = Infinity,
+    lineHeight: number = 1.5,
+  ) {
+    // 如果没有宽度限制，使用原来的简单分割逻辑
+    const lines = limitWidth === Infinity ? text.split("\n") : textToTextArray(text, fontSize, limitWidth);
+
+    const textSizeHeight = getTextSize(text, fontSize).y;
     const result: React.ReactNode[] = [];
     for (let y = 0; y < lines.length; y++) {
       const line = lines[y];

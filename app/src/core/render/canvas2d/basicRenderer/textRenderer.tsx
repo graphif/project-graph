@@ -1,6 +1,6 @@
 import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
-import { FONT, getTextSize, replaceTextWhenProtect } from "@/utils/font";
+import { FONT, getTextSize, replaceTextWhenProtect, textToTextArray as splitTextToLines } from "@/utils/font";
 import { Color, LruCache, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import md5 from "md5";
@@ -353,45 +353,11 @@ export class TextRenderer {
   /**
    * 渲染多行文本的辅助函数
    * 将一段字符串分割成多行数组，遇到宽度限制和换行符进行换行。
+   * 复用 font.tsx 中的公共函数
    * @param text
    */
   private textToTextArray(text: string, fontSize: number, limitWidth: number): string[] {
-    let currentLine = "";
-    // 先渲染一下空字符串，否则长度大小可能不匹配，造成蜜汁bug
-    this.renderText("", Vector.getZero(), fontSize, Color.White);
-    const lines: string[] = [];
-
-    // 保存当前的字体设置
-    const originalFont = this.project.canvas.ctx.font;
-    // 确保使用与实际渲染相同的字体大小
-    this.project.canvas.ctx.font = `${fontSize}px normal ${FONT}`;
-
-    for (const char of text) {
-      // 新来字符的宽度
-      const measureSize = this.project.canvas.ctx.measureText(currentLine + char);
-      // 先判断是否溢出
-      if (measureSize.width > limitWidth || char === "\n") {
-        // 溢出了，将这一整行渲染出来
-        lines.push(currentLine);
-        if (char !== "\n") {
-          currentLine = char;
-        } else {
-          currentLine = "";
-        }
-      } else {
-        // 未溢出，继续添加字符
-        // 当前行更新
-        currentLine += char;
-      }
-    }
-    if (currentLine) {
-      lines.push(currentLine);
-    }
-
-    // 恢复原始字体设置
-    this.project.canvas.ctx.font = originalFont;
-
-    return lines;
+    return splitTextToLines(text, fontSize, limitWidth);
   }
 
   /**
