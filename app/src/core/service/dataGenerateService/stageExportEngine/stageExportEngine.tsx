@@ -61,7 +61,7 @@ export class StageExport {
    * （TD）表示自上而下，LR表示自左而右
    * 使用 subgraph ... end 来定义子图。
    */
-  public getMermaidTextByEntites(entities: Entity[]): string {
+  public getMermaidTextByEntities(entities: Entity[]): string {
     return this.mermaidExporter.export(entities);
   }
 }

@@ -319,7 +319,7 @@ Dialog.copy = (title = "导出成功", description = "", value = ""): Promise<vo
                   variant="outline"
                   onClick={async () => {
                     await writeText(value);
-                    toast.success("已复制到剪贴板");
+                    toast.success("已复制到剪贴板 ~");
                   }}
                 >
                   复制

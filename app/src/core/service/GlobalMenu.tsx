@@ -583,7 +583,7 @@ export function GlobalMenu() {
                   <Item
                     onClick={() => {
                       const selectedEntities = activeProject!.stageManager.getSelectedEntities();
-                      const result = activeProject!.stageExport.getMermaidTextByEntites(selectedEntities);
+                      const result = activeProject!.stageExport.getMermaidTextByEntities(selectedEntities);
                       Dialog.copy(t("file.exportSuccess"), "", result);
                     }}
                   >

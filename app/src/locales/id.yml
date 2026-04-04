@@ -1136,6 +1136,10 @@ keyBindsGroup:
     title: Terkait Node
     description: |
       Beberapa fungsi tentang node, seperti grafting, pencabutan, dll.
+  export:
+    title: Operasi Ekspor
+    description: |
+      Ekspor konten yang dipilih ke berbagai format, seperti teks murni, Markdown, Mermaid, dll.
 
 controlSettingsGroup:
   mouse:
@@ -1717,6 +1721,26 @@ keyBinds:
   setWindowToMiniSize:
     title: Atur Jendela ke Ukuran Mini
     description: Atur ukuran jendela ke lebar dan tinggi jendela mini yang dikonfigurasi dalam pengaturan.
+  exportSelectedTreeStructureToPlainText:
+    title: Ekspor Struktur Pohon yang Dipilih ke Teks Murni
+    description: |
+      Ekspor struktur pohon yang dipilih ke format teks murni dengan indentasi dan salin ke clipboard
+      Perlu memilih satu node teks sebagai akar pohon terlebih dahulu
+  exportSelectedTreeStructureToMarkdown:
+    title: Ekspor Struktur Pohon yang Dipilih ke Markdown
+    description: |
+      Ekspor struktur pohon yang dipilih ke format Markdown dan salin ke clipboard
+      Perlu memilih satu node teks sebagai akar pohon terlebih dahulu
+  exportSelectedNetStructureToPlainText:
+    title: Ekspor Struktur Jaringan yang Dipilih ke Teks Murni
+    description: |
+      Ekspor struktur jaringan yang dipilih ke format teks murni dan salin ke clipboard
+      Mengekspor entitas yang dipilih dan hubungan di antara mereka
+  exportSelectedNetStructureToMermaid:
+    title: Ekspor Struktur Jaringan yang Dipilih ke Mermaid
+    description: |
+      Ekspor struktur jaringan yang dipilih ke format diagram Mermaid dan salin ke clipboard
+      Dapat ditempel di editor yang mendukung Mermaid
 
 sounds:
   soundEnabled: Sakelar Suara

@@ -16,6 +16,7 @@ import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { activeProjectAtom, isWindowMaxsizedAtom, projectsAtom, store } from "@/state";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { LogicalSize } from "@tauri-apps/api/dpi";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 // import ColorWindow from "@/sub/ColorWindow";
 import FindWindow from "@/sub/FindWindow";
 // import KeyboardRecentFilesWindow from "@/sub/KeyboardRecentFilesWindow";
@@ -734,7 +735,64 @@ export const allKeyBinds: KeyBindItem[] = [
     },
     isUI: true,
   },
-
+  /*------- 导出操作 ------- */
+  {
+    id: "exportSelectedTreeStructureToPlainText",
+    defaultKey: "S-e t p",
+    onPress: () => {
+      const activeProject = store.get(activeProjectAtom);
+      const textNode = getOneSelectedTextNodeWhenExportingPlainText(activeProject);
+      if (textNode) {
+        const result = activeProject!.stageExport.getTabStringByTextNode(textNode);
+        writeText(result);
+        toast.success(`已将选中的树形结构纯文本格式复制到粘贴板`);
+      }
+    },
+  },
+  {
+    id: "exportSelectedTreeStructureToMarkdown",
+    defaultKey: "S-e t m",
+    onPress: () => {
+      const activeProject = store.get(activeProjectAtom);
+      const textNode = getOneSelectedTextNodeWhenExportingPlainText(activeProject);
+      if (textNode) {
+        const result = activeProject!.stageExport.getMarkdownStringByTextNode(textNode);
+        writeText(result);
+        toast.success("已将选中的树形结构markdown格式复制到粘贴板");
+      }
+    },
+  },
+  {
+    id: "exportSelectedNetStructureToPlainText",
+    defaultKey: "S-e n p",
+    onPress: () => {
+      const activeProject = store.get(activeProjectAtom);
+      if (!activeProject) {
+        toast.warning("请先打开工程文件");
+        return;
+      }
+      const entities = activeProject.stageManager.getEntities();
+      const selectedEntities = entities.filter((entity) => entity.isSelected);
+      const result = activeProject.stageExport.getPlainTextByEntities(selectedEntities);
+      writeText(result);
+      toast.success("已将选中的网状结构纯文本格式复制到粘贴板");
+    },
+  },
+  {
+    id: "exportSelectedNetStructureToMermaid",
+    defaultKey: "S-e n m",
+    onPress: () => {
+      const activeProject = store.get(activeProjectAtom);
+      if (!activeProject) {
+        toast.warning("请先打开工程文件");
+        return;
+      }
+      const selectedEntities = activeProject.stageManager.getSelectedEntities();
+      const result = activeProject.stageExport.getMermaidTextByEntities(selectedEntities);
+      writeText(result);
+      toast.success("已将选中的网状结构mermaid格式复制到粘贴板");
+    },
+  },
   /*------- 文件操作 -------*/
   {
     id: "saveFile",
@@ -1520,4 +1578,38 @@ export function isKeyBindHasRelease(id: string) {
     }
   }
   return false;
+}
+
+/**
+ * 获取唯一选中的文本节点，用于导出纯文本时。
+ * 如果不符合情况就提前弹窗错误，并返回null
+ * @param activeProject
+ * @returns
+ */
+function getOneSelectedTextNodeWhenExportingPlainText(activeProject: Project | undefined): TextNode | null {
+  if (!activeProject) {
+    toast.warning("请先打开工程文件");
+    return null;
+  }
+  const entities = activeProject.stageManager.getEntities();
+  const selectedEntities = entities.filter((entity) => entity.isSelected);
+  if (selectedEntities.length === 0) {
+    toast.warning("没有选中节点");
+    return null;
+  } else if (selectedEntities.length === 1) {
+    const result = selectedEntities[0];
+    if (!(result instanceof TextNode)) {
+      toast.warning("必须选中文本节点，而不是其他类型的节点");
+      return null;
+    }
+    const validationResult = activeProject.graphMethods.validateTreeStructure(result, true);
+    if (!validationResult.isValid) {
+      toast.warning("树结构验证失败，无法导出");
+      return null;
+    }
+    return result;
+  } else {
+    toast.warning(`只能选择一个节点，你选中了${selectedEntities.length}个节点`);
+    return null;
+  }
 }

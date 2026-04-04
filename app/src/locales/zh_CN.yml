@@ -1146,6 +1146,10 @@ keyBindsGroup:
     title: 节点相关
     description: |
       关于节点的一些功能，如嫁接、摘除等
+  export:
+    title: 导出操作
+    description: |
+      导出选中内容为各种格式，如纯文本、Markdown、Mermaid等
 
 controlSettingsGroup:
   mouse:
@@ -1737,6 +1741,26 @@ keyBinds:
   setWindowToMiniSize:
     title: 设置窗口为迷你大小
     description: 将窗口大小设置为设置中配置的迷你窗口宽度和高度。
+  exportSelectedTreeStructureToPlainText:
+    title: 导出选中树形结构为纯文本
+    description: |
+      将选中的树形结构导出为纯文本缩进格式并复制到剪贴板
+      需要先选中一个文本节点作为树的根节点
+  exportSelectedTreeStructureToMarkdown:
+    title: 导出选中树形结构为Markdown
+    description: |
+      将选中的树形结构导出为Markdown格式并复制到剪贴板
+      需要先选中一个文本节点作为树的根节点
+  exportSelectedNetStructureToPlainText:
+    title: 导出选中网状结构为纯文本
+    description: |
+      将选中的网状结构导出为纯文本格式并复制到剪贴板
+      导出选中实体及其之间的关系
+  exportSelectedNetStructureToMermaid:
+    title: 导出选中网状结构为Mermaid
+    description: |
+      将选中的网状结构导出为Mermaid图表格式并复制到剪贴板
+      可用于在支持Mermaid的编辑器中粘贴显示
 
 sounds:
   soundEnabled: 音效开关

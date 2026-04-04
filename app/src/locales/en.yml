@@ -1472,6 +1472,26 @@ keyBinds:
   setWindowToMiniSize:
     title: Set Window to Mini Size
     description: Set the window size to the mini window width and height configured in settings.
+  exportSelectedTreeStructureToPlainText:
+    title: Export Selected Tree Structure to Plain Text
+    description: |
+      Export the selected tree structure as plain text indentation format and copy to clipboard
+      Need to select a text node as the root of the tree first
+  exportSelectedTreeStructureToMarkdown:
+    title: Export Selected Tree Structure to Markdown
+    description: |
+      Export the selected tree structure as Markdown format and copy to clipboard
+      Need to select a text node as the root of the tree first
+  exportSelectedNetStructureToPlainText:
+    title: Export Selected Net Structure to Plain Text
+    description: |
+      Export the selected net structure as plain text format and copy to clipboard
+      Exports selected entities and their relationships
+  exportSelectedNetStructureToMermaid:
+    title: Export Selected Net Structure to Mermaid
+    description: |
+      Export the selected net structure as Mermaid diagram format and copy to clipboard
+      Can be pasted in editors that support Mermaid
   
 effects:
   RectangleLittleNoteEffect:
@@ -1623,6 +1643,11 @@ keyBindsGroup:
     title: Node Related
     description: |
       Node related functions, such as grafting and removing nodes
+  export:
+    title: Export Operations
+    description: |
+      Export selected content to various formats, such as plain text, Markdown, Mermaid, etc.
+
 controlSettingsGroup:
   mouse:
     title: Mouse Settings

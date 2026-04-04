@@ -44,6 +44,7 @@ import {
   SquareDashed,
   SquareMenu,
   SunMoon,
+  FileOutput,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -737,4 +738,14 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
     ],
   },
   { title: "image", icon: <Image />, keys: ["reverseImageColors"] },
+  {
+    title: "export",
+    icon: <FileOutput />,
+    keys: [
+      "exportSelectedTreeStructureToPlainText",
+      "exportSelectedTreeStructureToMarkdown",
+      "exportSelectedNetStructureToPlainText",
+      "exportSelectedNetStructureToMermaid",
+    ],
+  },
 ];

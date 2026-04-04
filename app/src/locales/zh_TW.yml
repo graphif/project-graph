@@ -1146,6 +1146,10 @@ keyBindsGroup:
     title: 節點相關
     description: |
       關於節點的一些功能，如嫁接、摘除等
+  export:
+    title: 導出操作
+    description: |
+      導出選中內容為各種格式，如純文本、Markdown、Mermaid等
 
 controlSettingsGroup:
   mouse:
@@ -1737,6 +1741,26 @@ keyBinds:
   setWindowToMiniSize:
     title: 設置窗口為迷你大小
     description: 將窗口大小設置為設置中配置的迷你窗口寬度和高度。
+  exportSelectedTreeStructureToPlainText:
+    title: 導出選中樹形結構為純文本
+    description: |
+      將選中的樹形結構導出為純文本縮進格式並複製到剪貼板
+      需要先選中一個文本節點作為樹的根節點
+  exportSelectedTreeStructureToMarkdown:
+    title: 導出選中樹形結構為Markdown
+    description: |
+      將選中的樹形結構導出為Markdown格式並複製到剪貼板
+      需要先選中一個文本節點作為樹的根節點
+  exportSelectedNetStructureToPlainText:
+    title: 導出選中網狀結構為純文本
+    description: |
+      將選中的網狀結構導出為純文本格式並複製到剪貼板
+      導出選中實體及其之間的關係
+  exportSelectedNetStructureToMermaid:
+    title: 導出選中網狀結構為Mermaid
+    description: |
+      將選中的網狀結構導出為Mermaid圖表格式並複製到剪貼板
+      可用於在支持Mermaid的編輯器中粘貼顯示
 
 sounds:
   soundEnabled: 音效開關
