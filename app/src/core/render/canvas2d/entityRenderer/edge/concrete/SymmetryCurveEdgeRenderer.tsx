@@ -3,7 +3,7 @@ import { LineCuttingEffect } from "@/core/service/feedbackService/effectEngine/c
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
-import { Line, SymmetryCurve } from "@graphif/shapes";
+import { CubicBezierCurve, Line, SymmetryCurve } from "@graphif/shapes";
 // import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { Project, service } from "@/core/Project";
 import { EdgeRendererClass } from "@/core/render/canvas2d/entityRenderer/edge/EdgeRendererClass";
@@ -267,33 +267,125 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
     const edgeColor = edge.color.equals(Color.Transparent)
       ? this.project.stageStyleManager.currentStyle.StageObjectBorder
       : edge.color;
+
+    const start = edge.bodyLine.start;
+    const end = edge.bodyLine.end;
+
+    // 计算连线方向
+    const lineDirection = end.subtract(start).normalize();
+
+    let startDirection: Vector;
+    let endDirection: Vector;
+
+    if (edge.source instanceof ConnectPoint) {
+      startDirection = Vector.getZero();
+    } else {
+      const sourceRect = edge.source.collisionBox.getRectangle();
+      const isSourceExactPosition =
+        (edge.source instanceof ImageNode || edge.source.constructor.name === "ReferenceBlockNode") &&
+        start.x !== sourceRect.left &&
+        start.x !== sourceRect.right &&
+        start.y !== sourceRect.top &&
+        start.y !== sourceRect.bottom;
+
+      if (isSourceExactPosition) {
+        startDirection = lineDirection;
+      } else {
+        startDirection = sourceRect.getNormalVectorAt(start);
+      }
+    }
+
+    if (edge.target instanceof ConnectPoint) {
+      endDirection = Vector.getZero();
+    } else {
+      const targetRect = edge.target.collisionBox.getRectangle();
+      const isTargetExactPosition =
+        (edge.target instanceof ImageNode || edge.target.constructor.name === "ReferenceBlockNode") &&
+        end.x !== targetRect.left &&
+        end.x !== targetRect.right &&
+        end.y !== targetRect.top &&
+        end.y !== targetRect.bottom;
+
+      if (isTargetExactPosition) {
+        endDirection = lineDirection.multiply(-1);
+      } else {
+        endDirection = targetRect.getNormalVectorAt(end);
+      }
+    }
+
+    const curve = new SymmetryCurve(
+      start,
+      startDirection,
+      end,
+      endDirection,
+      Math.max(50, Math.abs(Math.min(Math.abs(start.x - end.x), Math.abs(start.y - end.y))) / 2),
+    );
+
+    const bezier = curve.bezier;
+
+    // 箭头大小
+    const arrowSize = 15;
+    // curve.endDirection 是从节点指向曲线的方向（外侧方向）
+    const curveEndDirection = curve.endDirection.normalize();
+    // 原始交点（节点边缘）
+    const curveEnd = end.clone();
+    // 箭头尖端位置（稍微向外偏移，与渲染时一致）
+    const arrowTip = curveEnd.add(curveEndDirection.multiply(2));
+    // 曲线终点应该在箭头尾部
+    // 箭头尾部距离箭头尖端是 arrowSize/2，方向是外侧方向
+    const adjustedEnd = arrowTip.add(curveEndDirection.multiply(arrowSize / 2));
+
     if (edge.text.trim() === "") {
       // 没有文字的边
-      lineBody = SvgUtils.line(edge.bodyLine.start, edge.bodyLine.end, edgeColor, 2);
+      // 使用调整后的终点创建贝塞尔曲线
+      const adjustedBezier = new CubicBezierCurve(bezier.start, bezier.ctrlPt1, bezier.ctrlPt2, adjustedEnd);
+      lineBody = SvgUtils.bezierCurve(adjustedBezier, edgeColor, 2);
     } else {
       // 有文字的边
-      const midPoint = edge.bodyLine.midPoint();
-      const startHalf = new Line(edge.bodyLine.start, midPoint);
-      const endHalf = new Line(midPoint, edge.bodyLine.end);
+      const midPoint = bezier.getPointByT(0.5);
       const edgeTextRectangle = edge.textRectangle;
 
       textNode = SvgUtils.textFromCenter(edge.text, midPoint, Renderer.FONT_SIZE, edgeColor);
+
+      // 计算文字矩形与贝塞尔曲线的交点
+      const startToMid = new Line(start, midPoint);
+      const adjustedEndToMid = new Line(adjustedEnd, midPoint);
+      const startIntersection = edgeTextRectangle.getLineIntersectionPoint(startToMid);
+      const endIntersection = edgeTextRectangle.getLineIntersectionPoint(adjustedEndToMid);
+
+      // 创建两段贝塞尔曲线
+      const startCurve = new CubicBezierCurve(
+        start,
+        bezier.ctrlPt1,
+        new Vector(
+          bezier.ctrlPt1.x + (bezier.ctrlPt2.x - bezier.ctrlPt1.x) * 0.5,
+          bezier.ctrlPt1.y + (bezier.ctrlPt2.y - bezier.ctrlPt1.y) * 0.5,
+        ),
+        startIntersection,
+      );
+      const endCurve = new CubicBezierCurve(
+        endIntersection,
+        new Vector(
+          bezier.ctrlPt1.x + (bezier.ctrlPt2.x - bezier.ctrlPt1.x) * 0.5,
+          bezier.ctrlPt1.y + (bezier.ctrlPt2.y - bezier.ctrlPt1.y) * 0.5,
+        ),
+        bezier.ctrlPt2,
+        adjustedEnd,
+      );
+
       lineBody = (
         <>
-          {SvgUtils.line(edge.bodyLine.start, edgeTextRectangle.getLineIntersectionPoint(startHalf), edgeColor, 2)}
-          {SvgUtils.line(edge.bodyLine.end, edgeTextRectangle.getLineIntersectionPoint(endHalf), edgeColor, 2)}
+          {SvgUtils.bezierCurve(startCurve, edgeColor, 2)}
+          {SvgUtils.bezierCurve(endCurve, edgeColor, 2)}
         </>
       );
     }
-    // 加箭头
+
+    // 加箭头（箭头尖端在 arrowTip，方向指向节点）
     const arrowHead = this.project.edgeRenderer.generateArrowHeadSvg(
-      edge.bodyLine.end.clone(),
-      edge.target.collisionBox
-        .getRectangle()
-        .getCenter()
-        .subtract(edge.source.collisionBox.getRectangle().getCenter())
-        .normalize(),
-      15,
+      arrowTip,
+      curveEndDirection.multiply(-1),
+      arrowSize,
       edgeColor,
     );
     return (

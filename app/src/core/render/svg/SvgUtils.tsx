@@ -1,5 +1,5 @@
 import { Color, Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
+import { CubicBezierCurve, Rectangle } from "@graphif/shapes";
 import { v4 } from "uuid";
 import { FONT, getTextSize } from "@/utils/font";
 import { Renderer } from "@/core/render/canvas2d/renderer";
@@ -20,6 +20,12 @@ export namespace SvgUtils {
         strokeWidth={strokeWidth}
       />
     );
+  }
+
+  export function bezierCurve(curve: CubicBezierCurve, strokeColor: Color, strokeWidth: number): React.ReactNode {
+    const { start, ctrlPt1, ctrlPt2, end } = curve;
+    const d = `M ${start.x.toFixed(1)},${start.y.toFixed(1)} C ${ctrlPt1.x.toFixed(1)},${ctrlPt1.y.toFixed(1)} ${ctrlPt2.x.toFixed(1)},${ctrlPt2.y.toFixed(1)} ${end.x.toFixed(1)},${end.y.toFixed(1)}`;
+    return <path key={v4()} d={d} stroke={strokeColor.toString()} strokeWidth={strokeWidth} fill="none" />;
   }
 
   export function textFromCenter(text: string, location: Vector, fontSize: number, color: Color) {
