@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Direction } from "@/types/directions";
+import { showTreeValidationErrors } from "@/utils/treeValidation";
 import { ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { v4 } from "uuid";
@@ -220,7 +221,8 @@ export class KeyboardOnlyTreeEngine {
     const rootNodeParents = this.project.graphMethods.getRoots(rootNode, true);
     if (rootNodeParents.length === 1) {
       const rootNodeParent = rootNodeParents[0];
-      if (this.project.graphMethods.isTree(rootNodeParent, true)) {
+      const validationResult = this.project.graphMethods.validateTreeStructure(rootNodeParent, true);
+      if (validationResult.isValid) {
         if (Settings.autoLayoutWhenTreeGenerate) {
           this.project.autoAlign.autoLayoutSelectedFastTreeMode(rootNodeParent);
         }
@@ -230,12 +232,12 @@ export class KeyboardOnlyTreeEngine {
         rootNode.isSelected = false;
       } else {
         if (Settings.autoLayoutWhenTreeGenerate) {
-          toast.warning("当前结构不符合树形结构，无法触发自动布局");
+          showTreeValidationErrors(validationResult, "warning");
         }
       }
     } else {
       if (Settings.autoLayoutWhenTreeGenerate) {
-        toast.warning("当前结构不符合树形结构，无法触发自动布局");
+        toast.warning("当前结构不符合树形结构：无法确定唯一的根节点");
       }
     }
 
@@ -358,7 +360,8 @@ export class KeyboardOnlyTreeEngine {
     const rootNodeParents = this.project.graphMethods.getRoots(parent, true);
     if (rootNodeParents.length === 1) {
       const rootNodeParent = rootNodeParents[0];
-      if (this.project.graphMethods.isTree(rootNodeParent, true)) {
+      const validationResult = this.project.graphMethods.validateTreeStructure(rootNodeParent, true);
+      if (validationResult.isValid) {
         if (Settings.autoLayoutWhenTreeGenerate) {
           this.project.autoAlign.autoLayoutSelectedFastTreeMode(rootNodeParent);
         }
@@ -368,12 +371,12 @@ export class KeyboardOnlyTreeEngine {
         currentSelectNode.isSelected = false;
       } else {
         if (Settings.autoLayoutWhenTreeGenerate) {
-          toast.warning("当前结构不符合树形结构，无法触发自动布局");
+          showTreeValidationErrors(validationResult, "warning");
         }
       }
     } else {
       if (Settings.autoLayoutWhenTreeGenerate) {
-        toast.warning("当前结构不符合树形结构，无法触发自动布局");
+        toast.warning("当前结构不符合树形结构：无法确定唯一的根节点");
       }
     }
     this.project.effects.addEffects(this.project.edgeRenderer.getConnectedEffects(parent, newNode));

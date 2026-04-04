@@ -13,6 +13,7 @@ import {
 
 import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project, ProjectState } from "@/core/Project";
+import { showTreeValidationErrors } from "@/utils/treeValidation";
 import { activeProjectAtom, isClassroomModeAtom, isDevAtom, projectsAtom, store } from "@/state";
 import AIToolsWindow from "@/sub/AIToolsWindow";
 import AIWindow from "@/sub/AIWindow";
@@ -1863,8 +1864,9 @@ function getOneSelectedTextNodeWhenExportingPlainText(activeProject: Project | u
       toast.warning("必须选中文本节点，而不是其他类型的节点");
       return null;
     }
-    if (!activeProject.graphMethods.isTree(result)) {
-      toast.warning("不符合树形结构");
+    const validationResult = activeProject.graphMethods.validateTreeStructure(result, true);
+    if (!validationResult.isValid) {
+      showTreeValidationErrors(validationResult, "warning");
       return null;
     }
     return result;

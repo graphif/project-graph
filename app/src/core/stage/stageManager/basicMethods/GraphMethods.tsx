@@ -2,6 +2,30 @@ import { Project, service } from "@/core/Project";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { MultiTargetUndirectedEdge } from "../../stageObject/association/MutiTargetUndirectedEdge";
+import { TextNode } from "../../stageObject/entity/TextNode";
+
+/**
+ * 树形结构检测结果
+ */
+export interface TreeValidationResult {
+  isValid: boolean;
+  issues: TreeIssue[];
+}
+
+/**
+ * 树形结构问题类型
+ */
+export type TreeIssueType = "selfLoop" | "cycle" | "diamond" | "overlappingEdges";
+
+/**
+ * 树形结构问题
+ */
+export interface TreeIssue {
+  type: TreeIssueType;
+  message: string;
+  nodes?: ConnectableEntity[];
+  edges?: Edge[];
+}
 
 @service("graphMethods")
 export class GraphMethods {
@@ -22,6 +46,169 @@ export class GraphMethods {
     };
 
     return dfs(node, []);
+  }
+
+  /**
+   * 获取节点的显示文本（最多5个字符，溢出用省略号）
+   */
+  private getNodeDisplayName(node: ConnectableEntity): string {
+    if (node instanceof TextNode) {
+      const text = node.text || "未命名";
+      return text.length > 5 ? text.slice(0, 5) + "..." : text;
+    }
+    return "节点";
+  }
+
+  /**
+   * 详细检测树形结构问题
+   * @param rootNode 根节点
+   * @param skipDashed 是否跳过虚线边
+   * @returns 检测结果，包含所有发现的问题
+   */
+  validateTreeStructure(rootNode: ConnectableEntity, skipDashed = false): TreeValidationResult {
+    const issues: TreeIssue[] = [];
+    const visited = new Set<string>();
+    const recursionStack = new Set<string>();
+
+    // 获取所有相关节点
+    const allNodes = this.getSuccessorSet(rootNode, true, skipDashed);
+    const nodeSet = new Set(allNodes.map((n) => n.uuid));
+
+    // 辅助函数：检查边是否为虚线
+    const isDashedEdge = (edge: Edge): boolean => {
+      return "lineType" in edge && (edge as { lineType: string }).lineType === "dashed";
+    };
+
+    // 1. 检测自环
+    for (const node of allNodes) {
+      const selfLoopEdges = this.project.stageManager.getLineEdges().filter((edge) => {
+        if (skipDashed && isDashedEdge(edge)) return false;
+        return edge.source.uuid === node.uuid && edge.target.uuid === node.uuid;
+      });
+      if (selfLoopEdges.length > 0) {
+        issues.push({
+          type: "selfLoop",
+          message: `节点 "${this.getNodeDisplayName(node)}" 存在自环`,
+          nodes: [node],
+          edges: selfLoopEdges,
+        });
+      }
+    }
+
+    // 2. 检测边重叠（两个节点之间存在多条边）
+    for (const node of allNodes) {
+      const outgoingEdges = this.getOutgoingEdges(node).filter((edge) => {
+        if (skipDashed && isDashedEdge(edge)) return false;
+        return nodeSet.has(edge.target.uuid);
+      });
+
+      // 按目标节点分组
+      const edgesByTarget = new Map<string, Edge[]>();
+      for (const edge of outgoingEdges) {
+        const targetId = edge.target.uuid;
+        if (!edgesByTarget.has(targetId)) {
+          edgesByTarget.set(targetId, []);
+        }
+        edgesByTarget.get(targetId)!.push(edge);
+      }
+
+      // 检查是否有多个边指向同一个目标
+      for (const [targetId, edges] of edgesByTarget) {
+        if (edges.length > 1) {
+          const targetNode = this.project.stageManager.getConnectableEntityByUUID(targetId);
+          if (targetNode) {
+            issues.push({
+              type: "overlappingEdges",
+              message: `节点 "${this.getNodeDisplayName(node)}" 和 "${this.getNodeDisplayName(targetNode)}" 之间存在 ${edges.length} 条重叠的边`,
+              nodes: [node, targetNode],
+              edges: edges,
+            });
+          }
+        }
+      }
+    }
+
+    // 3. 检测环路和菱形结构
+    const dfs = (node: ConnectableEntity, currentPath: string[]): boolean => {
+      const nodeId = node.uuid;
+
+      if (recursionStack.has(nodeId)) {
+        // 发现环路
+        const cycleStart = currentPath.indexOf(nodeId);
+        const cycleNodes = currentPath
+          .slice(cycleStart)
+          .map((id) => this.project.stageManager.getConnectableEntityByUUID(id))
+          .filter((n): n is ConnectableEntity => n !== undefined);
+
+        // 添加节点本身到环路
+        cycleNodes.push(node);
+
+        const nodeNames = cycleNodes.map((n) => `"${this.getNodeDisplayName(n)}"`).join(" → ");
+        issues.push({
+          type: "cycle",
+          message: `存在环路: ${nodeNames}`,
+          nodes: cycleNodes,
+        });
+        return false;
+      }
+
+      if (visited.has(nodeId)) {
+        // 节点已访问过，检查是否是菱形结构（多个父节点）
+        const parents = this.nodeParentArray(node, skipDashed).filter((p) => nodeSet.has(p.uuid));
+        if (parents.length > 1) {
+          // 检查是否已经报告过这个菱形
+          const existingDiamond = issues.find((i) => i.type === "diamond" && i.nodes?.some((n) => n.uuid === nodeId));
+
+          if (!existingDiamond) {
+            const parentNames = parents.map((p) => `"${this.getNodeDisplayName(p)}"`).join(", ");
+            issues.push({
+              type: "diamond",
+              message: `节点 "${this.getNodeDisplayName(node)}" 有多个父节点: ${parentNames}，形成菱形结构`,
+              nodes: [node, ...parents],
+            });
+          }
+        }
+        return true;
+      }
+
+      visited.add(nodeId);
+      recursionStack.add(nodeId);
+
+      const children = this.nodeChildrenArray(node, skipDashed).filter((child) => nodeSet.has(child.uuid));
+      for (const child of children) {
+        dfs(child, [...currentPath, nodeId]);
+      }
+
+      recursionStack.delete(nodeId);
+      return true;
+    };
+
+    dfs(rootNode, []);
+
+    // 4. 再次检测菱形结构：检查所有节点的入度
+    for (const node of allNodes) {
+      if (node.uuid === rootNode.uuid) continue;
+
+      const parents = this.nodeParentArray(node, skipDashed).filter((p) => nodeSet.has(p.uuid));
+      if (parents.length > 1) {
+        // 检查是否已经报告过
+        const alreadyReported = issues.some((i) => i.type === "diamond" && i.nodes?.some((n) => n.uuid === node.uuid));
+
+        if (!alreadyReported) {
+          const parentNames = parents.map((p) => `"${this.getNodeDisplayName(p)}"`).join(", ");
+          issues.push({
+            type: "diamond",
+            message: `节点 "${this.getNodeDisplayName(node)}" 有多个父节点: ${parentNames}，形成菱形结构`,
+            nodes: [node, ...parents],
+          });
+        }
+      }
+    }
+
+    return {
+      isValid: issues.length === 0,
+      issues,
+    };
   }
 
   /** 获取节点连接的子节点数组，未排除自环 */
