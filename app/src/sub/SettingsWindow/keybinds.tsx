@@ -697,6 +697,8 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "createUndirectedEdgeFromEntities",
       "selectAllEdges",
       "createConnectPointWhenDragConnecting",
+      "setSelectedEdgesToDashed",
+      "setSelectedEdgesToSolid",
     ],
   },
   {

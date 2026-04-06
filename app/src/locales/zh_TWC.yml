@@ -1196,6 +1196,12 @@ keyBinds:
       此功能的意義在於快速建立一個節點連向多個節點的情況
 
       因為目前的連線只能一次性做到多連一。'
+  setSelectedEdgesToDashed:
+    title: 將選中的邊切換為虛線
+    description: 將當前選中的連線的線型設置為虛線
+  setSelectedEdgesToSolid:
+    title: 將選中的邊切換為實線
+    description: 將當前選中的連線的線型設置為實線
   reverseSelectedNodeEdge:
     title: 反轉選取的節點的所有連線的方向
     description: '按下後，所有框選選中的節點中

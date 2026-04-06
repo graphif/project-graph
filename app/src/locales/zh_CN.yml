@@ -1659,6 +1659,12 @@ keyBinds:
   selectAllEdges:
     title: 选中所有连线
     description: 仅选择所有视野内的连线
+  setSelectedEdgesToDashed:
+    title: 将选中的边切换为虚线
+    description: 将当前选中的连线的线型设置为虚线
+  setSelectedEdgesToSolid:
+    title: 将选中的边切换为实线
+    description: 将当前选中的连线的线型设置为实线
   colorSelectedRed:
     title: 将所有选中物体染色为纯红色
     description: 具体为：(239, 68, 68)，仅作快速标注用

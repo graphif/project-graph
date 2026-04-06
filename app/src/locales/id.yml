@@ -1219,6 +1219,12 @@ keyBinds:
       Contoh, semula A -> B, setelah ditekan menjadi B -> A
       Makna fungsi ini adalah membuat situasi satu node menunjuk ke banyak node dengan cepat
       Karena garis saat ini hanya dapat melakukan banyak-ke-satu sekaligus.
+  setSelectedEdgesToDashed:
+    title: Ubah Garis yang Dipilih Menjadi Putus-Putus
+    description: Mengatur tipe garis yang dipilih menjadi putus-putus
+  setSelectedEdgesToSolid:
+    title: Ubah Garis yang Dipilih Menjadi Solid
+    description: Mengatur tipe garis yang dipilih menjadi solid
   reverseSelectedNodeEdge:
     title: Balikkan Semua Garis Node yang Dipilih
     description: |

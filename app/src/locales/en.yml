@@ -1193,6 +1193,12 @@ keyBinds:
       For example, if it was A -> B, it will become B -> A.
       This feature is useful for quickly creating a node connected to multiple nodes.
       Since connections can currently only be made one-to-many.
+  setSelectedEdgesToDashed:
+    title: Set Selected Edges to Dashed
+    description: Set the line type of selected edges to dashed
+  setSelectedEdgesToSolid:
+    title: Set Selected Edges to Solid
+    description: Set the line type of selected edges to solid
   reverseSelectedNodeEdge:
     title: Reverse All Connections of Selected Node
     description: |

@@ -1347,6 +1347,36 @@ export const allKeyBinds: KeyBindItem[] = [
       }
     },
   },
+  /*------- 将选中的边切换为虚线 -------*/
+  {
+    id: "setSelectedEdgesToDashed",
+    defaultKey: "S-t e d",
+    onPress: (project) => {
+      const selectedEdges = project!.stageManager.getLineEdges().filter((edge) => edge.isSelected);
+      if (selectedEdges.length === 0) {
+        return;
+      }
+      for (const edge of selectedEdges) {
+        edge.lineType = "dashed";
+      }
+      project!.historyManager.recordStep();
+    },
+  },
+  /*------- 将选中的边切换为实线 -------*/
+  {
+    id: "setSelectedEdgesToSolid",
+    defaultKey: "S-t e s",
+    onPress: (project) => {
+      const selectedEdges = project!.stageManager.getLineEdges().filter((edge) => edge.isSelected);
+      if (selectedEdges.length === 0) {
+        return;
+      }
+      for (const edge of selectedEdges) {
+        edge.lineType = "solid";
+      }
+      project!.historyManager.recordStep();
+    },
+  },
 
   /*------- 快速着色 -------*/
   {

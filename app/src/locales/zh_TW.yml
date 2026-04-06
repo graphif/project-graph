@@ -1659,6 +1659,12 @@ keyBinds:
   selectAllEdges:
     title: 選中所有連線
     description: 僅選擇所有視野內的連線
+  setSelectedEdgesToDashed:
+    title: 將選中的邊切換為虛線
+    description: 將當前選中的連線的線型設置為虛線
+  setSelectedEdgesToSolid:
+    title: 將選中的邊切換為實線
+    description: 將當前選中的連線的線型設置為實線
   colorSelectedRed:
     title: 將所有選中物體染色為純紅色
     description: 具體為：(239, 68, 68)，僅作快速標註用
