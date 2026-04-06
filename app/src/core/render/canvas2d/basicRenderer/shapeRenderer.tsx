@@ -189,6 +189,75 @@ export class ShapeRenderer {
   }
 
   /**
+   * 绘制一个以中心点为基准的三角形
+   * @param centerLocation 中心点位置
+   * @param size 三角形大小（外接圆半径）
+   * @param rotation 旋转角度（弧度）
+   * @param fillColor 填充颜色
+   * @param strokeColor 边框颜色
+   * @param strokeWidth 边框宽度
+   */
+  renderTriangleFromCenter(
+    centerLocation: Vector,
+    size: number,
+    rotation: number,
+    fillColor: Color,
+    strokeColor: Color,
+    strokeWidth: number,
+  ): void {
+    this.project.canvas.ctx.save();
+    this.project.canvas.ctx.translate(centerLocation.x, centerLocation.y);
+    this.project.canvas.ctx.rotate(rotation);
+
+    this.project.canvas.ctx.beginPath();
+    this.project.canvas.ctx.moveTo(0, -size);
+    this.project.canvas.ctx.lineTo(-size * 0.866, size * 0.5);
+    this.project.canvas.ctx.lineTo(size * 0.866, size * 0.5);
+    this.project.canvas.ctx.closePath();
+
+    this.project.canvas.ctx.fillStyle = fillColor.toString();
+    this.project.canvas.ctx.fill();
+    this.project.canvas.ctx.lineWidth = strokeWidth;
+    this.project.canvas.ctx.strokeStyle = strokeColor.toString();
+    this.project.canvas.ctx.stroke();
+
+    this.project.canvas.ctx.restore();
+  }
+
+  /**
+   * 绘制一个以中心点为基准的正方形
+   * @param centerLocation 中心点位置
+   * @param size 正方形边长
+   * @param rotation 旋转角度（弧度）
+   * @param fillColor 填充颜色
+   * @param strokeColor 边框颜色
+   * @param strokeWidth 边框宽度
+   */
+  renderSquareFromCenter(
+    centerLocation: Vector,
+    size: number,
+    rotation: number,
+    fillColor: Color,
+    strokeColor: Color,
+    strokeWidth: number,
+  ): void {
+    this.project.canvas.ctx.save();
+    this.project.canvas.ctx.translate(centerLocation.x, centerLocation.y);
+    this.project.canvas.ctx.rotate(rotation);
+
+    this.project.canvas.ctx.beginPath();
+    this.project.canvas.ctx.rect(-size / 2, -size / 2, size, size);
+
+    this.project.canvas.ctx.fillStyle = fillColor.toString();
+    this.project.canvas.ctx.fill();
+    this.project.canvas.ctx.lineWidth = strokeWidth;
+    this.project.canvas.ctx.strokeStyle = strokeColor.toString();
+    this.project.canvas.ctx.stroke();
+
+    this.project.canvas.ctx.restore();
+  }
+
+  /**
    * 绘制中心过渡的圆形不加边框
    * 常用于一些特效
    */

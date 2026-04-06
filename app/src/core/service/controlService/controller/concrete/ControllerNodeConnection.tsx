@@ -3,6 +3,7 @@ import { ControllerClass } from "@/core/service/controlService/controller/Contro
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { LineEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineEffect";
 import { RectangleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleNoteEffect";
+import { SparkBurstEffect } from "@/core/service/feedbackService/effectEngine/concrete/SparkBurstEffect";
 import { SoundService } from "@/core/service/feedbackService/SoundService";
 import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
@@ -463,6 +464,18 @@ export class ControllerNodeConnectionClass extends ControllerClass {
             // 从右侧发出
             sourceDirection = Direction.Right;
           }
+          // 触发火花特效 - 从源节点划出
+          if (sourceDirection !== null && !this._hasSourceSparkTriggered) {
+            this._hasSourceSparkTriggered = true;
+            this.project.effects.addEffect(
+              new SparkBurstEffect(
+                new ProgressNumber(0, 40),
+                intersectionPoint.clone(),
+                sourceDirection,
+                this.project.stageStyleManager.currentStyle.StageObjectBorder.clone(),
+              ),
+            );
+          }
         }
       }
       // 寻找目标端点位置
@@ -488,9 +501,39 @@ export class ControllerNodeConnectionClass extends ControllerClass {
           // 到达右侧
           targetDirection = Direction.Right;
         }
+        // 触发火花特效 - 划入目标节点
+        if (targetDirection !== null && !this._hasTargetSparkTriggered) {
+          this._hasTargetSparkTriggered = true;
+          // 划入时的方向与划出时相反
+          const sparkDirection = this.getOppositeDirection(targetDirection);
+          this.project.effects.addEffect(
+            new SparkBurstEffect(
+              new ProgressNumber(0, 40),
+              intersectionPoint.clone(),
+              sparkDirection,
+              this.project.stageStyleManager.currentStyle.StageObjectBorder.clone(),
+            ),
+          );
+        }
       }
     }
     return [sourceDirection, targetDirection];
+  }
+
+  private _hasSourceSparkTriggered = false;
+  private _hasTargetSparkTriggered = false;
+
+  private getOppositeDirection(direction: Direction): Direction {
+    switch (direction) {
+      case Direction.Up:
+        return Direction.Down;
+      case Direction.Down:
+        return Direction.Up;
+      case Direction.Left:
+        return Direction.Right;
+      case Direction.Right:
+        return Direction.Left;
+    }
   }
 
   /**
@@ -534,6 +577,8 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     this._hoverImageLocation = null;
     this._previewSourceDirection = null;
     this._previewTargetDirection = null;
+    this._hasSourceSparkTriggered = false;
+    this._hasTargetSparkTriggered = false;
   }
 
   private updatePreviewDirections() {
