@@ -24,5 +24,9 @@ export default function Markdown({ source, className = "" }: { source: string; c
     });
   }, [source]);
 
-  return <div className={cn(className, "markdown-body")}>{content}</div>;
+  return (
+    <div className={cn(className, "markdown-body cursor-text select-text [&_*]:cursor-text [&_*]:select-text")}>
+      {content}
+    </div>
+  );
 }

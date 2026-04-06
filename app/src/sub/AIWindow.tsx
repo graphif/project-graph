@@ -219,16 +219,16 @@ export default function AIWindow() {
   return project ? (
     <div className="flex h-full flex-col p-2">
       {/* 消息列表 */}
-      <div className="flex flex-1 select-text flex-col gap-2 overflow-y-auto" ref={messagesElRef}>
+      <div className="flex flex-1 cursor-text select-text flex-col gap-2 overflow-y-auto" ref={messagesElRef}>
         {messages.map((msg, i) =>
           msg.role === "user" ? (
             <div key={i} className="flex justify-end">
-              <div className="max-w-11/12 bg-accent text-accent-foreground rounded-2xl rounded-br-none px-3 py-2">
+              <div className="max-w-11/12 bg-accent text-accent-foreground cursor-text select-text rounded-2xl rounded-br-none px-3 py-2">
                 {msg.content as string}
               </div>
             </div>
           ) : msg.role === "assistant" ? (
-            <div key={i} className="flex flex-col gap-2">
+            <div key={i} className="flex cursor-text select-text flex-col gap-2">
               {msg.content && typeof msg.content === "string" && (
                 <>
                   {msg.content.startsWith("<think>") && (
@@ -238,8 +238,8 @@ export default function AIWindow() {
                         <span>思考中</span>
                         <ChevronRight className="transition-transform group-data-[state=open]/collapsible:rotate-90" />
                       </CollapsibleTrigger>
-                      <CollapsibleContent className="animate-none! mt-2 rounded-lg border px-3 py-2 opacity-50">
-                        <span className="text-sm">
+                      <CollapsibleContent className="animate-none! mt-2 cursor-text select-text rounded-lg border px-3 py-2 opacity-50">
+                        <span className="cursor-text select-text text-sm">
                           <Markdown source={msg.content.split("<think>")[1].split("</think>")[0]} />
                         </span>
                       </CollapsibleContent>
@@ -260,8 +260,8 @@ export default function AIWindow() {
                       <span>{toolCall.function.name}</span>
                       <ChevronRight className="transition-transform group-data-[state=open]/collapsible:rotate-90" />
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="animate-none! mt-2 rounded-lg border px-3 py-2 opacity-50">
-                      <div className="overflow-visible whitespace-pre-wrap break-words text-sm">
+                    <CollapsibleContent className="animate-none! mt-2 cursor-text select-text rounded-lg border px-3 py-2 opacity-50">
+                      <div className="cursor-text select-text overflow-visible whitespace-pre-wrap break-words text-sm">
                         <Markdown source={`\`\`\`json\n${toolCall.function.arguments}\n\`\`\``} />
                       </div>
                     </CollapsibleContent>
