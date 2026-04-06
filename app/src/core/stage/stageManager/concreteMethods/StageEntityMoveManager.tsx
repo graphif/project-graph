@@ -159,12 +159,13 @@ export class EntityMoveManager {
   /**
    * 树型移动 所有选中的实体
    * @param delta
+   * @param skipDashed 是否跳过虚线边（树形格式化时传 true，避免带动虚线连接的节点）
    */
-  moveEntitiesWithChildren(delta: Vector) {
+  moveEntitiesWithChildren(delta: Vector, skipDashed = true) {
     for (const node of this.project.stageManager.getEntities()) {
       if (node.isSelected) {
         if (node instanceof ConnectableEntity) {
-          this.moveWithChildren(node, delta);
+          this.moveWithChildren(node, delta, skipDashed);
         } else {
           this.moveEntityUtils(node, delta);
         }

@@ -435,7 +435,7 @@ export const allKeyBinds: KeyBindItem[] = [
           ),
         );
       }
-      project!.entityMoveManager.moveEntitiesWithChildren(new Vector(0, -100));
+      project!.entityMoveManager.moveEntitiesWithChildren(new Vector(0, -100), true);
     },
   },
   {
@@ -456,7 +456,7 @@ export const allKeyBinds: KeyBindItem[] = [
           ),
         );
       }
-      project!.entityMoveManager.moveEntitiesWithChildren(new Vector(0, 100));
+      project!.entityMoveManager.moveEntitiesWithChildren(new Vector(0, 100), true);
     },
   },
   {
@@ -476,7 +476,7 @@ export const allKeyBinds: KeyBindItem[] = [
           ),
         );
       }
-      project!.entityMoveManager.moveEntitiesWithChildren(new Vector(-100, 0));
+      project!.entityMoveManager.moveEntitiesWithChildren(new Vector(-100, 0), true);
     },
   },
   {
@@ -497,7 +497,7 @@ export const allKeyBinds: KeyBindItem[] = [
           ),
         );
       }
-      project!.entityMoveManager.moveEntitiesWithChildren(new Vector(100, 0));
+      project!.entityMoveManager.moveEntitiesWithChildren(new Vector(100, 0), true);
     },
   },
 
