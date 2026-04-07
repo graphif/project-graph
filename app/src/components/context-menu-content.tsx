@@ -520,7 +520,11 @@ export default function MyContextMenuContent() {
         <>
           <Item
             onClick={() =>
-              p.controllerUtils.addTextNodeByLocation(p.renderer.transformView2World(MouseLocation.vector()), true)
+              p.controllerUtils.addTextNodeByLocation(
+                p.renderer.transformView2World(MouseLocation.vector()),
+                true,
+                true,
+              )
             }
           >
             <TextSelect />
