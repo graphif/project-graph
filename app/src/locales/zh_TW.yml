@@ -41,6 +41,7 @@ globalMenu:
     generateKeyboardLayout: 根據當前快捷鍵配置生成鍵盤佈局圖
     export: 導出
     exportAsSVG: 導出為 SVG
+    exportAsPDF: 導出為 PDF
     exportAll: 導出全部內容
     plainTextType:
       exportAllNodeGraph: 導出 全部的 網狀關係
@@ -944,6 +945,11 @@ settings:
   autoImportTxtFileWhenOpenPrg:
     title: 打開PRG文件時自動導入同名TXT文件
     description: 啟用後，打開PRG文件時會自動導入同一文件夾下同名TXT文件的內容，並以文本節點形式添加到舞臺左下角。
+  enableAutoEdgeWidth:
+    title: 自動調整框之間連線的粗細
+    description: |
+      開啟後，連接兩個框（Section）之間的連線會根據框的大小自動調整粗細。
+      關閉後，所有連線將使用固定粗細。
 
 
 effects:

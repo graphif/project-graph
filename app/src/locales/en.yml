@@ -840,6 +840,11 @@ settings:
   autoImportTxtFileWhenOpenPrg:
     title: Auto Import TXT File When Opening PRG
     description: When enabled, automatically imports content from a TXT file with the same name as the PRG file when opening it. The content will be added as text nodes at the bottom left corner of the stage.
+  enableAutoEdgeWidth:
+    title: Auto Adjust Edge Width Between Sections
+    description: |
+      When enabled, edges connecting two sections will automatically adjust their thickness based on the section size.
+      When disabled, all edges will use a fixed thickness.
 plugins:
   welcome:
     title: Welcome to the Plugin System
@@ -870,6 +875,7 @@ globalMenu:
     generateKeyboardLayout: Generate Keyboard Layout from Current Keybindings
     export: Export
     exportAsSVG: Export as SVG
+    exportAsPDF: Export as PDF
     exportAll: Export All Content
     plainTextType:
       exportAllNodeGraph: Export All Node Graph as Plain Text

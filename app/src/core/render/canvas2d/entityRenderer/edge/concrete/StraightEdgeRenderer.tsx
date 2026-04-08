@@ -5,6 +5,7 @@ import { CircleFlameEffect } from "@/core/service/feedbackService/effectEngine/c
 import { EdgeCutEffect } from "@/core/service/feedbackService/effectEngine/concrete/EdgeCutEffect";
 import { LineCuttingEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineCuttingEffect";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
@@ -123,7 +124,7 @@ export class StraightEdgeRenderer extends EdgeRendererClass {
       : edge.color;
 
     let edgeWidth = 2;
-    if (edge.target instanceof Section && edge.source instanceof Section) {
+    if (Settings.enableAutoEdgeWidth && edge.target instanceof Section && edge.source instanceof Section) {
       const rect1 = edge.source.collisionBox.getRectangle();
       const rect2 = edge.target.collisionBox.getRectangle();
       edgeWidth = Math.min(

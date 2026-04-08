@@ -74,6 +74,7 @@ import {
   Moon,
   SunMoon,
   SquareMousePointer,
+  Minus,
 } from "lucide-react";
 
 export const settingsIcons = {
@@ -197,4 +198,5 @@ export const settingsIcons = {
   lightTheme: Sun,
   darkTheme: Moon,
   arrowKeySelectOnlyInViewport: ScanEye,
+  enableAutoEdgeWidth: Minus,
 };

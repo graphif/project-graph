@@ -218,7 +218,7 @@ const categories = {
       "stealthModeMaskShape",
     ],
     node: ["enableTagTextNodesBigDisplay", "showTextNodeBorder", "showTreeDirectionHint"],
-    edge: ["lineStyle"],
+    edge: ["lineStyle", "enableAutoEdgeWidth"],
     section: [
       "sectionBitTitleRenderType",
       "sectionBigTitleThresholdRatio",

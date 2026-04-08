@@ -205,6 +205,7 @@ export const settingsSchema = z.object({
   clearHistoryWhenManualSave: z.boolean().default(true),
   soundPitchVariationRange: z.number().min(0).max(1200).int().default(150),
   autoImportTxtFileWhenOpenPrg: z.boolean().default(false),
+  enableAutoEdgeWidth: z.boolean().default(true),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

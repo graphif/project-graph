@@ -954,6 +954,11 @@ settings:
   autoImportTxtFileWhenOpenPrg:
     title: 開啟 PRG 檔案時自動匯入同名 TXT 檔案
     description: 啟用後，開啟 PRG 檔案時會自動匯入同一資料夾下同名 TXT 檔案的內容，並以文字節點形式新增到舞台左下角。
+  enableAutoEdgeWidth:
+    title: 自動調整框之間連線的粗細
+    description: |
+      開啟後，連接兩個框（Section）之間的連線會根據框的大小自動調整粗細。
+      關閉後，所有連線將使用固定粗細。
 effects:
   CircleChangeRadiusEffect:
     title: 圆形变换半径效果

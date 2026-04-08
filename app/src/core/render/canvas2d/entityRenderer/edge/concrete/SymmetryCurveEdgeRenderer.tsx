@@ -161,7 +161,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
     }
 
     let edgeWidth = 2;
-    if (edge.target instanceof Section && edge.source instanceof Section) {
+    if (Settings.enableAutoEdgeWidth && edge.target instanceof Section && edge.source instanceof Section) {
       const rect1 = edge.source.collisionBox.getRectangle();
       const rect2 = edge.target.collisionBox.getRectangle();
       edgeWidth = Math.min(
