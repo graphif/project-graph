@@ -259,15 +259,15 @@ export class TextNodeRenderer {
   private renderTextNodeTextLayer(node: TextNode) {
     // 编辑状态
     if (node.isEditing) {
-      // 编辑状态下，显示一些提示信息
-      // this.project.textRenderer.renderText(
-      //   "Esc 或 Ctrl+Enter 退出编辑状态",
-      //   Renderer.transformWorld2View(
-      //     node.rectangle.location.add(new Vector(0, -25)),
-      //   ),
-      //   20 * Camera.currentScale,
-      //   this.project.stageStyleManager.currentStyle.GridHeavyColor,
-      // );
+      // 编辑状态下，在节点下方显示极简提示
+      const hintColor = this.project.stageStyleManager.currentStyle.StageObjectBorder.clone();
+      hintColor.a = 0.5;
+      this.project.textRenderer.renderTextFromCenter(
+        "Esc / Enter to exit",
+        this.project.renderer.transformWorld2View(node.rectangle.bottomCenter.add(new Vector(0, 20))),
+        12 * this.project.camera.currentScale,
+        hintColor,
+      );
       return;
     }
 
