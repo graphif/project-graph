@@ -271,7 +271,12 @@ export class AutoCompute {
     for (const name of Object.keys(this.MapNameFunction)) {
       if (node.text === name) {
         // 发现了一个逻辑节点
-        this.project.effects.addEffect(RectangleLittleNoteEffect.fromUtilsLittleNote(node));
+        this.project.effects.addEffect(
+          RectangleLittleNoteEffect.fromUtilsLittleNote(
+            node,
+            this.project.stageStyleManager.currentStyle.effects.successShadow,
+          ),
+        );
 
         const result = this.MapNameFunction[name](
           this.project.autoComputeUtils.getParentTextNodes(node).map((p) => p.text),

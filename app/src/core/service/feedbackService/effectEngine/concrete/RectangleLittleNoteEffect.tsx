@@ -22,19 +22,19 @@ export class RectangleLittleNoteEffect extends Effect {
     this.currentRect = targetRectangle.clone();
   }
 
-  static fromUtilsLittleNote(stageObject: StageObject): RectangleLittleNoteEffect {
+  static fromUtilsLittleNote(stageObject: StageObject, strokeColor: Color): RectangleLittleNoteEffect {
     return new RectangleLittleNoteEffect(
       new ProgressNumber(0, 15),
       stageObject.collisionBox.getRectangle(),
-      Color.Green,
+      strokeColor,
     );
   }
 
-  static fromUtilsSlowNote(stageObject: StageObject): RectangleLittleNoteEffect {
+  static fromUtilsSlowNote(stageObject: StageObject, strokeColor: Color): RectangleLittleNoteEffect {
     return new RectangleLittleNoteEffect(
       new ProgressNumber(0, 100),
       stageObject.collisionBox.getRectangle(),
-      Color.Green,
+      strokeColor,
     );
   }
 

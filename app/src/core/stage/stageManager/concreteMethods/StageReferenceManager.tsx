@@ -307,7 +307,12 @@ export class ReferenceManager {
           const center = referenceBlockNode.collisionBox.getRectangle().center;
           project.camera.location = center;
           // 加一个特效
-          project.effects.addEffect(RectangleLittleNoteEffect.fromUtilsSlowNote(referenceBlockNode));
+          project.effects.addEffect(
+            RectangleLittleNoteEffect.fromUtilsSlowNote(
+              referenceBlockNode,
+              project.stageStyleManager.currentStyle.effects.successShadow,
+            ),
+          );
         } else {
           toast.error(`没有找到引用标题为 “${referenceBlockNodeSectionName}” 的引用块节点`);
         }

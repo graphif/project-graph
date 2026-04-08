@@ -29,6 +29,7 @@ import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSma
 import { ReferenceManager } from "@/core/stage/stageManager/concreteMethods/StageReferenceManager";
 import _ from "lodash";
 import { Settings } from "@/core/service/Settings";
+import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 
 /**
  * 这里是专门存放代码相同的地方
@@ -56,6 +57,13 @@ export class ControllerUtils {
     ).toHexStringWithoutAlpha();
     // 编辑节点
     clickedNode.isEditing = true;
+    // 添加进入编辑状态的闪烁特效
+    this.project.effects.addEffect(
+      RectangleLittleNoteEffect.fromUtilsLittleNote(
+        clickedNode,
+        this.project.stageStyleManager.currentStyle.effects.successShadow,
+      ),
+    );
     // RectangleElement.div(rectView, this.project.stageStyleManager.currentStyle.CollideBoxSelected);
     let lastAutoCompleteWindowId: string;
     this.project.inputElement

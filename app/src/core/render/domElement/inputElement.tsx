@@ -1,6 +1,6 @@
 import { Project, service } from "@/core/Project";
-import { EntityDashTipEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityDashTipEffect";
 import { EntityShakeEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityShakeEffect";
+import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 import { Settings } from "@/core/service/Settings";
 import { getEnterKey } from "@/utils/keyboardFunctions";
 import { isMac } from "@/utils/platform";
@@ -342,7 +342,12 @@ export class InputElement {
   private addSuccessEffect() {
     const textNodes = this.project.stageManager.getTextNodes().filter((textNode) => textNode.isEditing);
     for (const textNode of textNodes) {
-      this.project.effects.addEffect(new EntityDashTipEffect(50, textNode.collisionBox.getRectangle()));
+      this.project.effects.addEffect(
+        RectangleLittleNoteEffect.fromUtilsLittleNote(
+          textNode,
+          this.project.stageStyleManager.currentStyle.effects.successShadow,
+        ),
+      );
     }
   }
 

@@ -208,7 +208,12 @@ export class ReferenceBlockNode extends ConnectableEntity implements ResizeAble 
     }
     const center = targetSection.collisionBox.getRectangle().center;
     project.camera.location = center;
-    project.effects.addEffect(RectangleLittleNoteEffect.fromUtilsSlowNote(targetSection));
+    project.effects.addEffect(
+      RectangleLittleNoteEffect.fromUtilsSlowNote(
+        targetSection,
+        project.stageStyleManager.currentStyle.effects.successShadow,
+      ),
+    );
   }
 
   /**
