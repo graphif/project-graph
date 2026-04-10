@@ -1,4 +1,5 @@
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { dirname, join } from "@tauri-apps/api/path";
 import { exists, writeFile } from "@tauri-apps/plugin-fs";
 import mime from "mime";
 
@@ -20,8 +21,8 @@ export async function exportImagesToProjectDirectory(
   let successCount = 0;
   let failedCount = 0;
 
-  // 获取当前 prg 文件所在目录
-  const projectDir = projectPath.substring(0, projectPath.lastIndexOf("/"));
+  // 获取当前 prg 文件所在目录（使用 Tauri 的 dirname 函数，支持跨平台）
+  const projectDir = await dirname(projectPath);
 
   for (let i = 0; i < imageNodes.length; i++) {
     const imageNode = imageNodes[i];
@@ -40,7 +41,7 @@ export async function exportImagesToProjectDirectory(
 
       // 构建文件名：如果是批量导出，添加数字后缀
       const finalFileName = isBatch ? `${fileName}_${i + 1}` : fileName;
-      const saveFilePath = `${projectDir}/${finalFileName}.${ext}`;
+      const saveFilePath = await join(projectDir, `${finalFileName}.${ext}`);
 
       // 检查文件是否已存在
       const fileExists = await exists(saveFilePath);
