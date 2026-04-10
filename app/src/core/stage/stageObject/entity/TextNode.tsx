@@ -152,9 +152,16 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
 
   /**
    * 更新字体大小缓存
+   * fontScaleLevel 存储的是"半个级别"，所以计算时要除以 2
+   * 这样步长就是 0.5，避免了浮点数精度问题
    */
   private updateFontSizeCache(): void {
-    this.fontSizeCache = Renderer.FONT_SIZE * Math.pow(2, this.fontScaleLevel);
+    this.fontSizeCache = Renderer.FONT_SIZE * Math.pow(2, this.fontScaleLevel / 2);
+    if (this.fontSizeCache >= 2) {
+      // 确保指数变化的过程中字体不会变小到0
+      this.fontSizeCache = Math.floor(this.fontSizeCache);
+    }
+    console.log(this.fontSizeCache);
   }
 
   public setFontScaleLevel(level: number) {
