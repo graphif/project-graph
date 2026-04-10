@@ -93,6 +93,8 @@ export class Renderer {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private renderViewElements(_viewRectangle: Rectangle) {
+    this.project.keyBindHintEngine.update();
+    this.project.keyBindHintEngine.render();
     this.renderSpecialKeys();
     this.renderCenterPointer();
     this.renderDebugDetails();

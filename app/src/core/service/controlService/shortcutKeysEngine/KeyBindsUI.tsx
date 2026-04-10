@@ -30,6 +30,13 @@ export namespace KeyBindsUI {
 
   let allUIKeyBinds: UIKeyBind[] = [];
 
+  /**
+   * 获取所有已注册的UI快捷键
+   */
+  export function getAllUIKeyBinds(): UIKeyBind[] {
+    return allUIKeyBinds;
+  }
+
   const registerSet = new Set<string>();
 
   /**

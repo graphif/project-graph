@@ -35,6 +35,7 @@ import type { KeyboardOnlyTreeEngine } from "@/core/service/controlService/keybo
 import type { SelectChangeEngine } from "@/core/service/controlService/keyboardOnlyEngine/selectChangeEngine";
 import type { RectangleSelect } from "@/core/service/controlService/rectangleSelectEngine/rectangleSelectEngine";
 import type { KeyBinds } from "@/core/service/controlService/shortcutKeysEngine/KeyBinds";
+import type { KeyBindHintEngine } from "@/core/service/controlService/shortcutKeysEngine/KeyBindHintEngine";
 import type { KeyBindsRegistrar } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import type { MouseInteraction } from "@/core/service/controlService/stageMouseInteractionCore/stageMouseInteractionCore";
 import type { AutoComputeUtils } from "@/core/service/dataGenerateService/autoComputeEngine/AutoComputeUtils";
@@ -612,6 +613,7 @@ declare module "./Project" {
     stageImport: StageImport;
     generateFromFolder: GenerateFromFolder;
     keyBindsRegistrar: KeyBindsRegistrar;
+    keyBindHintEngine: KeyBindHintEngine;
     sectionMethods: SectionMethods;
     graphMethods: GraphMethods;
     stageStyleManager: StageStyleManager;
