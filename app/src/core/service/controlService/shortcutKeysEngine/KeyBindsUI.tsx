@@ -1,4 +1,4 @@
-import { matchEmacsKeyPress, transEmacsKeyWinToMac } from "@/utils/emacs";
+import { formatEmacsKey, matchEmacsKeyPress, transEmacsKeyWinToMac } from "@/utils/emacs";
 import { isMac } from "@/utils/platform";
 import { createStore } from "@/utils/store";
 import { Queue } from "@graphif/data-structures";
@@ -341,5 +341,16 @@ export namespace KeyBindsUI {
   function onWheel(event: WheelEvent) {
     enqueue(event);
     check();
+  }
+
+  /**
+   * 获取当前按键序列的字符串表示
+   * 用于在debug模式下显示当前已按下的按键序列
+   */
+  export function getCurrentKeySequence(): string {
+    if (userEventQueue.length === 0) {
+      return "";
+    }
+    return userEventQueue.arrayList.map((event) => formatEmacsKey(event)).join(" ");
   }
 }

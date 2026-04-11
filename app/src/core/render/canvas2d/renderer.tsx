@@ -1,6 +1,7 @@
 import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
+import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/CubicCatmullRomSplineEdge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
@@ -665,6 +666,7 @@ export class Renderer {
       return;
     }
 
+    const keySequence = KeyBindsUI.getCurrentKeySequence();
     const detailsData = [
       "调试信息已开启，可在设置中关闭，或快捷键关闭",
       `scale: ${this.project.camera.currentScale}`,
@@ -679,6 +681,7 @@ export class Renderer {
       `edge count: ${this.project.stageManager.getLineEdges().length}`,
       `section count: ${this.project.stageManager.getSections().length}`,
       `pressingKeys: ${this.project.controller.pressingKeysString()}`,
+      `keySequence: ${keySequence || "(无)"}`,
       `鼠标按下情况: ${this.project.controller.isMouseDown}`,
       `框选框: ${JSON.stringify(this.project.rectangleSelect.getRectangle())}`,
       `正在切割: ${this.project.controller.cutting.isUsing}`,

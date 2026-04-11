@@ -6,6 +6,7 @@ import { Vector } from "@graphif/data-structures";
 import { getTextSize } from "@/utils/font";
 import { KeyBindsUI, type UIKeyBind } from "./KeyBindsUI";
 import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
+import i18next from "i18next";
 
 /**
  * 快捷键提示引擎
@@ -173,45 +174,12 @@ export class KeyBindHintEngine {
 
   /**
    * 获取快捷键标题
+   * 从 i18n 翻译文件中读取
    */
   private getKeyBindTitle(id: string): string {
-    const titleMap: Record<string, string> = {
-      saveFile: "保存文件",
-      openFile: "打开文件",
-      newDraft: "新建草稿",
-      undo: "撤销",
-      redo: "重做",
-      copy: "复制",
-      paste: "粘贴",
-      selectAll: "全选",
-      deleteSelectedStageObjects: "删除",
-      resetView: "重置视野",
-      toggleFullscreen: "全屏切换",
-      closeAllSubWindows: "关闭子窗口",
-      searchText: "搜索",
-      editEntityDetails: "编辑详情",
-      createTextNodeFromCameraLocation: "创建节点",
-      selectUp: "向上选择",
-      selectDown: "向下选择",
-      selectLeft: "向左选择",
-      selectRight: "向右选择",
-      moveUpSelectedEntities: "向上移动",
-      moveDownSelectedEntities: "向下移动",
-      moveLeftSelectedEntities: "向左移动",
-      moveRightSelectedEntities: "向右移动",
-      folderSection: "折叠/展开章节",
-      packEntityToSection: "打包到章节",
-      reverseEdges: "反向边",
-      generateNodeTreeWithDeepMode: "深度生成节点",
-      generateNodeTreeWithBroadMode: "广度生成节点",
-      switchActiveProject: "切换项目",
-      checkoutProtectPrivacy: "隐私模式",
-      openColorPanel: "颜色面板",
-      switchDebugShow: "调试显示",
-      setWindowToMiniSize: "迷你窗口",
-    };
-
-    return titleMap[id] || id;
+    // 使用 i18next 直接从翻译文件读取
+    const translation = i18next.t(`${id}.title`, { ns: "keyBinds", defaultValue: "" });
+    return translation || id;
   }
 
   /**
