@@ -290,6 +290,7 @@ const categories = {
     section: ["isEnableSectionCollision"],
     edge: [
       "allowAddCycleEdge",
+      "enableDragNodeShakeDetachFromEdge",
       "autoAdjustLineEndpointsByMouseTrack",
       "enableRightClickConnect",
       "enableDragEdgeRotateStructure",

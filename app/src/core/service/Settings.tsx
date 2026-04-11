@@ -147,6 +147,7 @@ export const settingsSchema = z.object({
     .union([z.literal("auto"), z.literal("manual"), z.literal("autoByLength")])
     .default("autoByLength"),
   allowAddCycleEdge: z.boolean().default(false),
+  enableDragNodeShakeDetachFromEdge: z.boolean().default(false),
   autoLayoutWhenTreeGenerate: z.boolean().default(true),
   treeGenerateInheritParentColor: z.boolean().default(false),
   textNodeAutoFormatTreeWhenExitEdit: z.boolean().default(false),

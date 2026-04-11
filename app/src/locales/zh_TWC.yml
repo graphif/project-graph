@@ -590,6 +590,11 @@ settings:
     description: '開啟後，節點之間可以添加自環，即節點與自身相連，用於狀態機繪製
 
       預設關閉，因為不常用，容易誤觸發'
+  enableDragNodeShakeDetachFromEdge:
+    title: 允許拖曳搖晃從連線中脫離節點
+    description: '開啟後，拖曳單個節點時快速搖晃滑鼠，可自動將節點從連線結構中脫離
+
+      預設關閉，防止誤觸發'
   enableDragEdgeRotateStructure:
     title: 允許拖曳連線旋轉結構
     description: '開啟後，可以透過拖曳選取的連線來旋轉節點結構

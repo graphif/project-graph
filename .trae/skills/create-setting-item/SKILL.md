@@ -64,6 +64,7 @@ export const settingsIcons = {
 - `app/src/locales/zh_TW.yml` - 繁体中文
 - `app/src/locales/en.yml` - 英文
 - `app/src/locales/zh_TWC.yml` - 接地气繁体中文
+- `app/src/locales/id.yml` - 印度尼西亚语
 
 **翻译结构：**
 

@@ -553,6 +553,11 @@ settings:
     description: |
       开启后，节点之间可以添加自环，即节点与自身相连，用于状态机绘制
       默认关闭，因为不常用，容易误触发
+  enableDragNodeShakeDetachFromEdge:
+    title: 允许拖拽摇晃从连线中脱离节点
+    description: |
+      开启后，拖拽单个节点时快速摇晃鼠标，可自动将节点从连线结构中脱离
+      默认关闭，防止误触发
   enableDragEdgeRotateStructure:
     title: 允许拖拽连线旋转结构
     description: |

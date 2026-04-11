@@ -543,6 +543,11 @@ settings:
     description: |
       Saat diaktifkan, dapat menambahkan loop pada node, yaitu node terhubung dengan dirinya sendiri, digunakan untuk menggambar mesin status
       Default mati, karena jarang digunakan, mudah memicu secara tidak sengaja
+  enableDragNodeShakeDetachFromEdge:
+    title: Izinkan Lepas Node dari Garis dengan Goyangan
+    description: |
+      Saat diaktifkan, menggoyangkan mouse dengan cepat saat menyeret satu node akan secara otomatis melepaskannya dari struktur garis
+      Default mati untuk mencegah pemicu yang tidak disengaja
   enableDragEdgeRotateStructure:
     title: Izinkan Rotasi Struktur dengan Menyeret Garis
     description: |

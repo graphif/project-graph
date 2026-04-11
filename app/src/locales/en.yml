@@ -412,6 +412,11 @@ settings:
     description: |
       When enabled, nodes can have self-loops, i.e., connections to themselves, which is useful for state machine diagrams.
       This is disabled by default because it is not commonly used and can be easily triggered by mistake.
+  enableDragNodeShakeDetachFromEdge:
+    title: Enable Drag Node Shake to Detach from Edge
+    description: |
+      When enabled, quickly shaking the mouse while dragging a single node will automatically detach it from the edge structure.
+      Disabled by default to prevent accidental triggers.
   enableDragEdgeRotateStructure:
     title: Enable Drag Edge to Rotate Structure
     description: |

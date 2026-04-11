@@ -1,4 +1,6 @@
 import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
+import { ShakeDetector } from "@/core/service/controlService/controller/utils/ShakeDetector";
+import { ConnectNodeSmartTools } from "@/core/service/dataManageService/connectNodeSmartTools";
 import { RectangleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleNoteEffect";
 import { RectangleRenderEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleRenderEffect";
 import { Settings } from "@/core/service/Settings";
@@ -15,6 +17,7 @@ import { Rectangle } from "@graphif/shapes";
 export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
   private isMovingEntity = false;
   private mouseDownViewLocation = Vector.getZero();
+  private shakeDetector = new ShakeDetector();
 
   public mousedown: (event: MouseEvent) => void = (event: MouseEvent) => {
     if (event.button !== 0) {
@@ -89,6 +92,7 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
     // 单击选中
     if (clickedStageObject !== null) {
       this.isMovingEntity = true;
+      this.shakeDetector.reset(); // 开始拖拽时重置摇晃检测器
 
       if (
         this.project.controller.pressingKeySet.has("shift") &&
@@ -188,6 +192,20 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
         this.project.autoAlign.preAlignAllSelected();
       }
 
+      // 检测摇晃动作 - 只在开启设置且选中单个节点时检测
+      if (Settings.enableDragNodeShakeDetachFromEdge && !this.shakeDetector.hasTriggered()) {
+        const selectedEntities = this.project.stageManager.getSelectedEntities();
+        if (selectedEntities.length === 1) {
+          // 使用窗口坐标（屏幕像素）进行摇晃检测，与世界坐标缩放无关
+          const viewLocation = new Vector(event.clientX, event.clientY);
+          const isShaking = this.shakeDetector.addSample(viewLocation, Date.now());
+          if (isShaking) {
+            // 检测到摇晃，触发节点脱离（不向上平移）
+            ConnectNodeSmartTools.removeNodeFromTree(this.project, false);
+          }
+        }
+      }
+
       this.lastMoveLocation = worldLocation.clone();
     }
   };
@@ -218,6 +236,7 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
     }
 
     this.isMovingEntity = false;
+    this.shakeDetector.reset();
   };
 
   public mouseMoveOutWindowForcedShutdown(_outsideLocation: Vector): void {

@@ -75,6 +75,7 @@ import {
   SunMoon,
   SquareMousePointer,
   Minus,
+  Unlink,
 } from "lucide-react";
 
 export const settingsIcons = {
@@ -127,6 +128,7 @@ export const settingsIcons = {
   textNodeBigContentThresholdWhenPaste: ArrowDownNarrowWide,
   textNodePasteSizeAdjustMode: Scaling,
   allowAddCycleEdge: RotateCw,
+  enableDragNodeShakeDetachFromEdge: Unlink,
   enableDragEdgeRotateStructure: SplinePointer,
   enableCtrlWheelRotateStructure: RefreshCcw,
   autoLayoutWhenTreeGenerate: ListTree,

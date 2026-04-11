@@ -155,8 +155,9 @@ export namespace ConnectNodeSmartTools {
   /**
    * 将选中的节点从树中移除，并重新连接其前后节点
    * @param project
+   * @param moveUp 是否在摘除后向上平移节点，默认为 true（快捷键触发时）
    */
-  export function removeNodeFromTree(project: Project) {
+  export function removeNodeFromTree(project: Project, moveUp: boolean = true) {
     const selectedEntities = project.stageManager
       .getSelectedEntities()
       .filter((node) => node instanceof ConnectableEntity);
@@ -207,12 +208,15 @@ export namespace ConnectNodeSmartTools {
       });
     });
 
-    // 将选中的节点从连线中跳出来，向上移动，移动距离等于节点高度
-    const rectangle = selectedNode.collisionBox.getRectangle();
-    const originalLocation = rectangle.location.clone();
-    // 计算新位置：原位置向上移动节点高度，使新位置的底部边缘对齐原位置的顶部边缘
-    const newLocation = new Vector(originalLocation.x, originalLocation.y - rectangle.size.y);
-    selectedNode.moveTo(newLocation);
+    // 根据参数决定是否向上平移节点
+    if (moveUp) {
+      // 将选中的节点从连线中跳出来，向上移动，移动距离等于节点高度
+      const rectangle = selectedNode.collisionBox.getRectangle();
+      const originalLocation = rectangle.location.clone();
+      // 计算新位置：原位置向上移动节点高度，使新位置的底部边缘对齐原位置的顶部边缘
+      const newLocation = new Vector(originalLocation.x, originalLocation.y - rectangle.size.y);
+      selectedNode.moveTo(newLocation);
+    }
     project.historyManager.recordStep();
   }
 }
