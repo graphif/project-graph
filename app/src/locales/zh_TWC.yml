@@ -964,6 +964,11 @@ settings:
     description: |
       開啟後，連接兩個框（Section）之間的連線會根據框的大小自動調整粗細。
       關閉後，所有連線將使用固定粗細。
+  showKeyBindHint:
+    title: 按下快捷鍵修飾鍵後顯示匹配的快捷鍵提示
+    description: |
+      開啟後，當按下 Ctrl/Alt/Shift/Win（Windows）或 ⌘/⌥/⇧/⌃（Mac）等修飾鍵時，會顯示匹配的快捷鍵提示。
+      按住修飾鍵不放可查看第一頁快捷鍵，鬆開後再次按下可翻頁查看更多。
 effects:
   CircleChangeRadiusEffect:
     title: 圆形变换半径效果

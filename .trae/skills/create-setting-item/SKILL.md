@@ -58,15 +58,11 @@ export const settingsIcons = {
 
 ### 3. 添加翻译文本
 
-在所有语言文件中添加翻译：
+> **注意：** 关于翻译管理的详细说明，请参考 `manage-translations` skill。
 
-- `app/src/locales/zh_CN.yml` - 简体中文
-- `app/src/locales/zh_TW.yml` - 繁体中文
-- `app/src/locales/en.yml` - 英文
-- `app/src/locales/zh_TWC.yml` - 接地气繁体中文
-- `app/src/locales/id.yml` - 印度尼西亚语
+在所有语言文件中添加翻译。首先查看 `app/src/locales/` 目录下有哪些 `.yml` 文件，然后为每个语言文件添加翻译。
 
-**翻译结构：**
+**设置项的翻译结构：**
 
 ```yaml
 settings:

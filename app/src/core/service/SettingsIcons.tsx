@@ -28,6 +28,7 @@ import {
   Keyboard,
   Languages,
   Layers,
+  Lightbulb,
   LineSquiggle,
   ListCheck,
   ListCollapse,
@@ -201,4 +202,5 @@ export const settingsIcons = {
   darkTheme: Moon,
   arrowKeySelectOnlyInViewport: ScanEye,
   enableAutoEdgeWidth: Minus,
+  showKeyBindHint: Lightbulb,
 };

@@ -850,6 +850,11 @@ settings:
     description: |
       When enabled, edges connecting two sections will automatically adjust their thickness based on the section size.
       When disabled, all edges will use a fixed thickness.
+  showKeyBindHint:
+    title: Show Key Bind Hints When Pressing Modifier Keys
+    description: |
+      When enabled, matching keyboard shortcut hints will be displayed when pressing modifier keys (Ctrl/Alt/Shift/Win on Windows or ⌘/⌥/⇧/⌃ on Mac).
+      Hold the modifier key to view the first page of shortcuts, release and press again to page through more.
 plugins:
   welcome:
     title: Welcome to the Plugin System

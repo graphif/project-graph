@@ -955,6 +955,11 @@ settings:
     description: |
       开启后，连接两个框（Section）之间的连线会根据框的大小自动调整粗细。
       关闭后，所有连线将使用固定粗细。
+  showKeyBindHint:
+    title: 按下快捷键修饰键后显示匹配的快捷键提示
+    description: |
+      开启后，当按下 Ctrl/Alt/Shift/Win（Windows）或 ⌘/⌥/⇧/⌃（Mac）等修饰键时，会显示匹配的快捷键提示。
+      按住修饰键不放可查看第一页快捷键，松开后再次按下可翻页查看更多。
 
 
 effects:

@@ -940,6 +940,11 @@ settings:
   autoImportTxtFileWhenOpenPrg:
     title: Impor File TXT dengan Nama Sama Otomatis Saat Buka File PRG
     description: Saat diaktifkan, saat membuka file PRG akan mengimpor konten file TXT dengan nama sama di folder yang sama secara otomatis, dan menambahkannya ke sudut kiri bawah panggung sebagai node teks.
+  showKeyBindHint:
+    title: Tampilkan Petunjuk Tombol Pintas Saat Menekan Tombol Modifikasi
+    description: |
+      Saat diaktifkan, petunjuk tombol pintas yang cocok akan ditampilkan saat menekan tombol modifikasi (Ctrl/Alt/Shift/Win di Windows atau ⌘/⌥/⇧/⌃ di Mac).
+      Tahan tombol modifikasi untuk melihat halaman pertama tombol pintas, lepaskan dan tekan lagi untuk melihat lebih banyak.
 
 effects:
   CircleChangeRadiusEffect:

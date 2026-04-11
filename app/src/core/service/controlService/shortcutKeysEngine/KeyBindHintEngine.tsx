@@ -1,4 +1,5 @@
 import { Project, service } from "@/core/Project";
+import { Settings } from "@/core/service/Settings";
 import { allKeyBinds } from "./shortcutKeysRegister";
 import { parseEmacsKey, parseSingleEmacsKey } from "@/utils/emacs";
 import { isMac } from "@/utils/platform";
@@ -247,7 +248,7 @@ export class KeyBindHintEngine {
    * 渲染快捷键提示
    */
   render() {
-    if (!this.isShowingHint || this.cachedKeyBinds.length === 0) {
+    if (!Settings.showKeyBindHint || !this.isShowingHint || this.cachedKeyBinds.length === 0) {
       return;
     }
 
