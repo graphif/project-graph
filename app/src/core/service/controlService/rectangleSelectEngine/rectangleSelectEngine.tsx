@@ -1,11 +1,12 @@
 import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
+import { RectangleFadeEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleFadeEffect";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { isMac } from "@/utils/platform";
-import { Vector } from "@graphif/data-structures";
+import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
 /**
@@ -102,6 +103,10 @@ export class RectangleSelect {
    * 相当于鼠标松开释放
    */
   endSelecting() {
+    // 保存当前框选矩形和模式，用于创建淡化特效
+    const currentRectangle = this.selectingRectangle;
+    const currentMode = this.getSelectMode();
+
     // 将所有选择到的增加到上次选择的节点中
     this.project.controller.lastSelectedEntityUUID.clear();
     for (const node of this.project.stageManager.getEntities()) {
@@ -116,6 +121,28 @@ export class RectangleSelect {
         this.project.controller.lastSelectedEdgeUUID.add(edge.uuid);
       }
     }
+
+    // 添加框选矩形淡化消失特效
+    if (currentRectangle) {
+      const style = this.project.stageStyleManager.currentStyle;
+      // 根据框选模式决定特效样式：
+      // - 碰撞框选(intersect)：只显示填充色，无边框
+      // - 完全覆盖框选(contain)：只显示边框色，无填充
+      const isIntersectMode = currentMode === "intersect";
+      const fillColor = isIntersectMode ? style.SelectRectangleFill.clone() : Color.Transparent;
+      const strokeColor = isIntersectMode ? Color.Transparent : style.SelectRectangleBorder.toNewAlpha(1);
+      const strokeWidth = isIntersectMode ? 0 : 1;
+
+      const effect = new RectangleFadeEffect(
+        new ProgressNumber(0, 20),
+        currentRectangle,
+        fillColor,
+        strokeColor,
+        strokeWidth,
+      );
+      this.project.effects.addEffect(effect);
+    }
+
     this.selectingRectangle = null;
   }
 
