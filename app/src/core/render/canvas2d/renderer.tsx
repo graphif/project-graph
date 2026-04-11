@@ -11,6 +11,7 @@ import { isFrame, isMac } from "@/utils/platform";
 import { Color, mixColors, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Rectangle } from "@graphif/shapes";
 import { GlobalMaskRenderer } from "./utilsRenderer/globalMaskRenderer";
+import i18next from "i18next";
 
 /**
  * 渲染器
@@ -215,6 +216,12 @@ export class Renderer {
           this.project.stageStyleManager.currentStyle.SelectRectangleBorder,
         );
       }
+
+      // 只有当移动距离超过阈值时才显示文字提示
+      const moveDistance = this.project.rectangleSelect.getSelectMoveDistance();
+      const minMoveDistance = 10; // 最小移动距离阈值
+      const shouldShowText = moveDistance > minMoveDistance;
+
       const selectMode = this.project.rectangleSelect.getSelectMode();
       if (selectMode === "intersect") {
         this.project.shapeRenderer.renderRect(
@@ -223,6 +230,16 @@ export class Renderer {
           this.project.stageStyleManager.currentStyle.SelectRectangleBorder,
           1,
         );
+        // 碰撞框选的提示
+        if (shouldShowText) {
+          const text = i18next.t("rectangleSelect.intersect", { ns: "renderer", defaultValue: "" });
+          this.project.textRenderer.renderText(
+            text,
+            this.transformWorld2View(rectangle.leftBottom).add(new Vector(20, 10)),
+            10,
+            this.project.stageStyleManager.currentStyle.SelectRectangleBorder,
+          );
+        }
       } else if (selectMode === "contain") {
         this.project.shapeRenderer.renderRect(
           this.transformWorld2View(rectangle),
@@ -236,12 +253,15 @@ export class Renderer {
           1,
         );
         // 完全覆盖框选的提示
-        this.project.textRenderer.renderText(
-          "完全覆盖框选",
-          this.transformWorld2View(rectangle.leftBottom).add(new Vector(20, 10)),
-          10,
-          this.project.stageStyleManager.currentStyle.SelectRectangleBorder,
-        );
+        if (shouldShowText) {
+          const text = i18next.t("rectangleSelect.contain", { ns: "renderer", defaultValue: "" });
+          this.project.textRenderer.renderText(
+            text,
+            this.transformWorld2View(rectangle.leftBottom).add(new Vector(20, 10)),
+            10,
+            this.project.stageStyleManager.currentStyle.SelectRectangleBorder,
+          );
+        }
       }
     }
     // if (Stage.selectMachine.isUsing && Stage.selectMachine.selectingRectangle) {

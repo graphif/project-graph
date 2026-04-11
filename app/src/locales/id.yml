@@ -946,6 +946,11 @@ settings:
       Saat diaktifkan, petunjuk tombol pintas yang cocok akan ditampilkan saat menekan tombol modifikasi (Ctrl/Alt/Shift/Win di Windows atau ⌘/⌥/⇧/⌃ di Mac).
       Tahan tombol modifikasi untuk melihat halaman pertama tombol pintas, lepaskan dan tekan lagi untuk melihat lebih banyak.
 
+renderer:
+  rectangleSelect:
+    intersect: Seleksi Tabrakan
+    contain: Seleksi Penuh
+
 effects:
   CircleChangeRadiusEffect:
     title: Efek Perubahan Radius Lingkaran

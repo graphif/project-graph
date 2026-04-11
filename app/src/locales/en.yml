@@ -855,6 +855,11 @@ settings:
     description: |
       When enabled, matching keyboard shortcut hints will be displayed when pressing modifier keys (Ctrl/Alt/Shift/Win on Windows or ⌘/⌥/⇧/⌃ on Mac).
       Hold the modifier key to view the first page of shortcuts, release and press again to page through more.
+renderer:
+  rectangleSelect:
+    intersect: Intersection Select
+    contain: Contain Select
+
 plugins:
   welcome:
     title: Welcome to the Plugin System

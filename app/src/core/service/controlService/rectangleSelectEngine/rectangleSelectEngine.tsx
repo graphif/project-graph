@@ -230,4 +230,9 @@ export class RectangleSelect {
       return Settings.rectangleSelectWhenLeft;
     }
   }
+
+  // 获取框选的移动距离
+  public getSelectMoveDistance(): number {
+    return this.selectStartLocation.distance(this.selectEndLocation);
+  }
 }

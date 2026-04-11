@@ -962,6 +962,11 @@ settings:
       按住修飾鍵不放可查看第一頁快捷鍵，鬆開後再次按下可翻頁查看更多。
 
 
+renderer:
+  rectangleSelect:
+    intersect: 碰撞框選
+    contain: 完全覆蓋框選
+
 effects:
   CircleChangeRadiusEffect:
     title: 圓形變換半徑效果
