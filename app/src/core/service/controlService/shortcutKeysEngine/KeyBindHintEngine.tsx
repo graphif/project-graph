@@ -1,11 +1,11 @@
 import { Project, service } from "@/core/Project";
 import { allKeyBinds } from "./shortcutKeysRegister";
-import { parseSingleEmacsKey } from "@/utils/emacs";
+import { parseEmacsKey, parseSingleEmacsKey } from "@/utils/emacs";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
 import { getTextSize } from "@/utils/font";
-import { KeyBindsUI } from "./KeyBindsUI";
+import { KeyBindsUI, type UIKeyBind } from "./KeyBindsUI";
+import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
 
 /**
  * 快捷键提示引擎
@@ -101,13 +101,14 @@ export class KeyBindHintEngine {
   private isKeyBindMatchModifier(key: string, modifierCombo: string): boolean {
     // 解析快捷键
     const parsed = parseSingleEmacsKey(key);
+    const parsedList = parseEmacsKey(key);
 
     // 构建快捷键的修饰键组合（存储格式）
     const keyModifiers: string[] = [];
-    if (parsed.control) keyModifiers.push("C");
-    if (parsed.alt) keyModifiers.push("A");
-    if (parsed.shift) keyModifiers.push("S");
-    if (parsed.meta) keyModifiers.push("M");
+    if (parsedList.some((p) => p.control)) keyModifiers.push("C");
+    if (parsedList.some((p) => p.alt)) keyModifiers.push("A");
+    if (parsedList.some((p) => p.shift)) keyModifiers.push("S");
+    if (parsedList.some((p) => p.meta)) keyModifiers.push("M");
 
     const keyModifierCombo = keyModifiers.join("-");
 
@@ -125,6 +126,7 @@ export class KeyBindHintEngine {
 
   /**
    * 获取所有匹配的快捷键
+   * O(N)
    */
   private getMatchingKeyBinds(modifierCombo: string): Array<{
     id: string;
@@ -147,16 +149,15 @@ export class KeyBindHintEngine {
       if (keyBind.isGlobal) continue;
 
       // 获取当前快捷键的配置
-      const uiKeyBind = allUIKeyBinds.find((kb: any) => kb.id === keyBind.id);
+      const uiKeyBind = allUIKeyBinds.find((kb: UIKeyBind) => kb.id === keyBind.id);
       if (uiKeyBind && !uiKeyBind.isEnabled) continue;
 
       const key = uiKeyBind?.key || keyBind.defaultKey;
 
       // 检查是否匹配当前修饰键组合
       if (this.isKeyBindMatchModifier(key, modifierCombo)) {
-        // 解析快捷键获取显示用的按键
-        const parsed = parseSingleEmacsKey(key);
-        const displayKey = this.formatKeyForDisplay(parsed.key);
+        // 使用复用的函数格式化按键显示
+        const displayKey = formatKeyBindSequenceToString(key);
 
         result.push({
           id: keyBind.id,
@@ -171,45 +172,9 @@ export class KeyBindHintEngine {
   }
 
   /**
-   * 格式化按键显示
-   */
-  private formatKeyForDisplay(key: string): string {
-    // 特殊键映射
-    const specialKeyMap: Record<string, string> = {
-      arrowup: "↑",
-      arrowdown: "↓",
-      arrowleft: "←",
-      arrowright: "→",
-      enter: "↵",
-      escape: "Esc",
-      backspace: "⌫",
-      delete: "Del",
-      tab: "Tab",
-      space: "Space",
-      home: "Home",
-      end: "End",
-      pageup: "PgUp",
-      pagedown: "PgDn",
-    };
-
-    if (key in specialKeyMap) {
-      return specialKeyMap[key];
-    }
-
-    // 大写字母
-    if (key.length === 1 && /[a-z]/.test(key)) {
-      return key.toUpperCase();
-    }
-
-    return key;
-  }
-
-  /**
    * 获取快捷键标题
    */
   private getKeyBindTitle(id: string): string {
-    // 这里可以后续从翻译文件中获取
-    // 暂时返回简化版的标题
     const titleMap: Record<string, string> = {
       saveFile: "保存文件",
       openFile: "打开文件",
@@ -331,60 +296,27 @@ export class KeyBindHintEngine {
     const lineHeight = 28;
     const startY = this.project.renderer.h - 140 - pageItems.length * lineHeight;
 
-    // 渲染背景
-    const maxWidth = this.calculateMaxWidth(pageItems);
-    const bgPadding = 8;
-    const bgRect = new Rectangle(
-      new Vector(margin - bgPadding, startY - bgPadding),
-      new Vector(maxWidth + bgPadding * 2, pageItems.length * lineHeight + bgPadding * 2),
-    );
-    this.project.shapeRenderer.renderRect(
-      bgRect,
-      this.project.stageStyleManager.currentStyle.Background.toNewAlpha(0.9),
-      this.project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(0.3),
-      1,
-    );
-
     // 渲染每个快捷键提示
     for (let i = 0; i < pageItems.length; i++) {
       const item = pageItems[i];
       const y = startY + i * lineHeight;
 
-      // 渲染修饰键组合
-      const modifierText = this.formatModifierCombo(this.currentModifierCombo);
-      this.project.textRenderer.renderText(
-        modifierText,
-        new Vector(margin, y),
-        14,
-        this.project.stageStyleManager.currentStyle.StageObjectBorder,
-      );
-
-      const modifierWidth = getTextSize(modifierText, 14).x;
-
-      // 渲染 + 号
-      this.project.textRenderer.renderText(
-        " + ",
-        new Vector(margin + modifierWidth, y),
-        14,
-        this.project.stageStyleManager.currentStyle.effects.successShadow,
-      );
-
-      const plusWidth = getTextSize(" + ", 14).x;
+      // 使用复用的函数格式化修饰键组合
+      let currentX = margin;
 
       // 渲染按键
       this.project.textRenderer.renderText(
         item.displayKey,
-        new Vector(margin + modifierWidth + plusWidth, y),
+        new Vector(currentX, y),
         16,
         this.project.stageStyleManager.currentStyle.effects.flash,
       );
-
-      const keyWidth = getTextSize(item.displayKey, 16).x;
+      currentX += getTextSize(item.displayKey, 16).x;
 
       // 渲染标题
       this.project.textRenderer.renderText(
         item.title,
-        new Vector(margin + modifierWidth + plusWidth + keyWidth + 15, y + 2),
+        new Vector(currentX + 15, y + 2),
         12,
         this.project.stageStyleManager.currentStyle.DetailsDebugText,
       );
@@ -393,48 +325,12 @@ export class KeyBindHintEngine {
     // 渲染页码指示器
     if (totalPages > 1) {
       const pageIndicator = `${actualPage + 1}/${totalPages}`;
-      const indicatorWidth = getTextSize(pageIndicator, 12).x;
       this.project.textRenderer.renderText(
         pageIndicator,
-        new Vector(margin + maxWidth - indicatorWidth, startY - 20),
+        new Vector(margin, startY - 20),
         12,
         this.project.stageStyleManager.currentStyle.DetailsDebugText,
       );
     }
-  }
-
-  /**
-   * 格式化修饰键组合显示
-   */
-  private formatModifierCombo(combo: string): string {
-    if (!combo) return "";
-
-    const parts = combo.split("-");
-    const displayMap: Record<string, string> = {
-      C: isMac ? "⌘" : "Ctrl",
-      A: isMac ? "⌥" : "Alt",
-      S: "⇧",
-      M: isMac ? "⌃" : "Win",
-    };
-
-    return parts.map((p) => displayMap[p] || p).join("");
-  }
-
-  /**
-   * 计算最大宽度
-   */
-  private calculateMaxWidth(items: Array<{ displayKey: string; title: string }>): number {
-    let maxWidth = 0;
-    const modifierWidth = getTextSize(this.formatModifierCombo(this.currentModifierCombo), 14).x;
-    const plusWidth = getTextSize(" + ", 14).x;
-
-    for (const item of items) {
-      const keyWidth = getTextSize(item.displayKey, 16).x;
-      const titleWidth = getTextSize(item.title, 12).x;
-      const totalWidth = modifierWidth + plusWidth + keyWidth + 15 + titleWidth;
-      maxWidth = Math.max(maxWidth, totalWidth);
-    }
-
-    return maxWidth;
   }
 }

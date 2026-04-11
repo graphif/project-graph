@@ -4,8 +4,15 @@ import { createStore } from "@/utils/store";
 import { Queue } from "@graphif/data-structures";
 import { allKeyBinds } from "./shortcutKeysRegister";
 import { activeProjectAtom, store } from "@/state";
-import { Project } from "@/core/Project";
+import type { Project } from "@/core/Project";
 
+export interface UIKeyBind {
+  id: string;
+  key: string;
+  isEnabled: boolean;
+  onPress: (project?: Project) => void;
+  onRelease?: (project?: Project) => void;
+}
 /**
  * UI级别的快捷键管理
  */
@@ -18,14 +25,6 @@ export namespace KeyBindsUI {
       userEventQueue.dequeue();
     }
     userEventQueue.enqueue(event);
-  }
-
-  interface UIKeyBind {
-    id: string;
-    key: string;
-    isEnabled: boolean;
-    onPress: (project?: Project) => void;
-    onRelease?: (project?: Project) => void;
   }
 
   let allUIKeyBinds: UIKeyBind[] = [];

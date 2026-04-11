@@ -10,6 +10,8 @@
  * C-S-end
  * C-s
  * C-<MWU>
+ *
+ * 例如：解析 "C-k C-t"
  */
 
 export function parseEmacsKey(key: string): {
@@ -24,6 +26,7 @@ export function parseEmacsKey(key: string): {
 
 /**
  * 解析按键字符串
+ * 例如：解析一个："A-S-f"
  */
 export function parseSingleEmacsKey(key: string): {
   key: string;
@@ -220,5 +223,5 @@ export function formatEmacsKey(event: KeyboardEvent | MouseEvent | WheelEvent): 
   if (event.shiftKey) modifiers.push("S");
   if (event.metaKey) modifiers.push("M");
 
-  return modifiers.map((it) => it + "-").join("") + key;
+  return modifiers.map((it) => `${it}-`).join("") + key;
 }

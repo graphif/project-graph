@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { formatEmacsKey, parseEmacsKey } from "@/utils/emacs";
-import { isLinux, isMac, isWindows } from "@/utils/platform";
+import { formatEmacsKey } from "@/utils/emacs";
+import { formatKeyBindSequence, formatSigalKeyForDisplay, getModifierDisplayTexts } from "@/utils/keyDisplay";
 import { Check, Delete } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -23,14 +23,14 @@ export default function KeyBind({
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     event.preventDefault();
     if (["Control", "Alt", "Shift", "Meta"].includes(event.key)) return;
-    setValue((prev) => prev + " " + formatEmacsKey(event));
+    setValue((prev) => `${prev} ${formatEmacsKey(event)}`);
   }, []);
 
   const handleMouseDown = useCallback((event: MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
     if (event.button !== 0) {
-      setValue((prev) => prev + " " + formatEmacsKey(event));
+      setValue((prev) => `${prev} ${formatEmacsKey(event)}`);
     }
   }, []);
 
@@ -42,7 +42,7 @@ export default function KeyBind({
   const handleWheel = useCallback((event: WheelEvent) => {
     event.preventDefault();
     event.stopPropagation();
-    setValue((prev) => prev + " " + formatEmacsKey(event));
+    setValue((prev) => `${prev} ${formatEmacsKey(event)}`);
   }, []);
 
   const startInput = useCallback(() => {
@@ -66,7 +66,18 @@ export default function KeyBind({
   return (
     <>
       <Button onClick={startInput} variant={choosing ? "outline" : "default"} className="gap-0">
-        {value ? parseEmacsKey(value.trim()).map((key, index) => <RenderKey key={index} data={key} />) : t("none")}
+        {value
+          ? formatKeyBindSequence(value.trim()).map((item, index) => (
+              <span key={index} className="not-first:before:content-[',_'] flex gap-1 font-bold">
+                {item.modifiers.map((modifier, modIndex) => (
+                  <span className="bg-card text-foreground rounded-sm px-1 font-semibold" key={modIndex}>
+                    {modifier}
+                  </span>
+                ))}
+                {item.key}
+              </span>
+            ))
+          : t("none")}
       </Button>
       {choosing && (
         <>
@@ -87,25 +98,27 @@ export default function KeyBind({
   );
 }
 
-export function RenderKey({ data }: { data: ReturnType<typeof parseEmacsKey>[number] }) {
-  let keyShow = data.key;
-  if (data.key === "arrowup") {
-    keyShow = "↑";
-  } else if (data.key === "arrowdown") {
-    keyShow = "↓";
-  } else if (data.key === "arrowleft") {
-    keyShow = "←";
-  } else if (data.key === "arrowright") {
-    keyShow = "→";
-  }
+/**
+ * @deprecated 使用 @/utils/keyDisplay 中的函数替代
+ */
+export function RenderKey({ data }: { data: ReturnType<typeof import("@/utils/emacs").parseEmacsKey>[number] }) {
+  const modifiers = getModifierDisplayTexts(data);
+  const keyShow = formatSigalKeyForDisplay(data.key);
   return (
     <span className="not-first:before:content-[',_'] flex gap-1 font-bold">
-      <Modifiers modifiers={data} />
+      {modifiers.map((modifier, index) => (
+        <span className="bg-card text-foreground rounded-sm px-1 font-semibold" key={index}>
+          {modifier}
+        </span>
+      ))}
       {data.key.startsWith("<") ? <MouseButton key_={data.key} /> : keyShow}
     </span>
   );
 }
 
+/**
+ * @deprecated 使用 @/utils/keyDisplay 中的 getModifierDisplayTexts 替代
+ */
 export function Modifiers({
   modifiers,
 }: {
@@ -116,52 +129,7 @@ export function Modifiers({
     meta: boolean;
   };
 }) {
-  const mods = [];
-
-  if (modifiers.control) {
-    if (isMac) {
-      mods.push("⌃");
-    } else if (isWindows) {
-      mods.push("Ctrl");
-    } else if (isLinux) {
-      mods.push("Ctrl");
-    } else {
-      mods.push("control");
-    }
-  }
-  if (modifiers.alt) {
-    if (isMac) {
-      mods.push("⌥");
-    } else if (isWindows) {
-      mods.push("Alt");
-    } else if (isLinux) {
-      mods.push("Alt");
-    } else {
-      mods.push("alt");
-    }
-  }
-  if (modifiers.shift) {
-    if (isMac) {
-      mods.push("⇧");
-    } else if (isWindows) {
-      mods.push("Shift");
-    } else if (isLinux) {
-      mods.push("Shift");
-    } else {
-      mods.push("shift");
-    }
-  }
-  if (modifiers.meta) {
-    if (isMac) {
-      mods.push("⌘");
-    } else if (isWindows) {
-      mods.push("❖");
-    } else if (isLinux) {
-      mods.push("Super");
-    } else {
-      mods.push("meta");
-    }
-  }
+  const mods = getModifierDisplayTexts(modifiers);
   return mods.map((modifier, index) => (
     <span className="bg-card text-foreground rounded-sm px-1 font-semibold" key={index}>
       {modifier}
