@@ -1765,3 +1765,12 @@ keyBinds:
 
 sounds:
   soundEnabled: Sakelar Suara
+
+common:
+  editModeHint:
+    startEditTitle: Masuk Mode Edit
+    doubleClick: Klik ganda
+    or: atau
+    editingMode: Mode Edit
+    lineBreak: Baris Baru
+    exitEdit: Keluar Mode Edit

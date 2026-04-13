@@ -1278,6 +1278,26 @@ keyBinds:
       When pressed, instantly grow a sibling node and place it below the currently selected node.
       Automatically arrange the entire node tree structure to ensure it forms a downward tree structure.
       Before using this feature, ensure a node is selected and that it has a parent node.
+  setNodeTreeDirectionUp:
+    title: Set Tree Growth Direction to Up
+    description: |
+      Press this shortcut after selecting a node to set the tree growth direction to upward.
+      New child nodes will be placed above the current node.
+  setNodeTreeDirectionDown:
+    title: Set Tree Growth Direction to Down
+    description: |
+      Press this shortcut after selecting a node to set the tree growth direction to downward.
+      New child nodes will be placed below the current node.
+  setNodeTreeDirectionLeft:
+    title: Set Tree Growth Direction to Left
+    description: |
+      Press this shortcut after selecting a node to set the tree growth direction to leftward.
+      New child nodes will be placed to the left of the current node.
+  setNodeTreeDirectionRight:
+    title: Set Tree Growth Direction to Right
+    description: |
+      Press this shortcut after selecting a node to set the tree growth direction to rightward.
+      New child nodes will be placed to the right of the current node.
   masterBrakeControl:
     title: Master Brake Control for Camera Movement
     description: |
@@ -1692,3 +1712,12 @@ visualSettingsGroup:
 
 sounds:
   soundEnabled: Sound Effect Switch
+
+common:
+  editModeHint:
+    startEditTitle: Enter Edit Mode
+    doubleClick: Double-click
+    or: or
+    editingMode: Editing Mode
+    lineBreak: New Line
+    exitEdit: Exit Edit Mode

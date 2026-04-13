@@ -1791,3 +1791,12 @@ keyBinds:
 
 sounds:
   soundEnabled: 音效开关
+
+common:
+  editModeHint:
+    startEditTitle: 进入编辑模式
+    doubleClick: 双击
+    or: 或
+    editingMode: 正在编辑模式
+    lineBreak: 换行
+    exitEdit: 退出编辑模式

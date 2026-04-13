@@ -1719,3 +1719,12 @@ keyBinds:
     description: 將窗口大小設置為設置中配置的迷你窗口寬度和高度。
 sounds:
   soundEnabled: 音效開關
+
+common:
+  editModeHint:
+    startEditTitle: 進入編輯模式
+    doubleClick: 雙擊
+    or: 或
+    editingMode: 正在編輯模式
+    lineBreak: 換行
+    exitEdit: 退出編輯模式
