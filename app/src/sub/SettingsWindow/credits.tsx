@@ -1,7 +1,19 @@
 import { Popover } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/utils/cn";
 import { open } from "@tauri-apps/plugin-shell";
-import { AlertCircle, Calendar, ExternalLink, Heart, Loader, Server, User } from "lucide-react";
+import {
+  AlertCircle,
+  Calendar,
+  ExternalLink,
+  Heart,
+  Loader,
+  RefreshCw,
+  Server,
+  Table,
+  User,
+  LayoutGrid,
+} from "lucide-react";
 import { Telemetry } from "@/core/service/Telemetry";
 import "./assets/font.css";
 import { isDevAtom } from "@/state";
@@ -227,9 +239,11 @@ export default function CreditsTab() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [isTableMode, setIsTableMode] = useState(true);
 
-  useEffect(() => {
+  const loadDonations = () => {
     setIsLoading(true);
+    setIsError(false);
 
     fetch(import.meta.env.LR_API_BASE_URL + "/api/donations")
       .then((res) => res.json())
@@ -243,6 +257,10 @@ export default function CreditsTab() {
       .finally(() => {
         setIsLoading(false);
       });
+  };
+
+  useEffect(() => {
+    loadDonations();
   }, []);
 
   // 计算从2024年9月1日到现在的天数
@@ -331,7 +349,7 @@ export default function CreditsTab() {
 
         <Popover.Confirm
           title="提示"
-          description="此列表并不是实时更新的，开发者将在您捐赠后的下一个版本中手动更新此列表，当您选择要捐赠时，请在开头添加备注“pg”，以便开发者能区分您的捐赠的项目是project-graph。"
+          description="注意：当您选择要捐赠时，请在开头添加备注“pg”，以便开发者能区分您的捐赠的项目是project-graph。"
           onConfirm={() => {
             Telemetry.event("credits_donate_clicked");
             open("https://2y.nz/pgdonate");
@@ -348,6 +366,25 @@ export default function CreditsTab() {
           </div>
         </Popover.Confirm>
       </div>
+      <div className="mb-4 flex items-center justify-end gap-4">
+        <button
+          onClick={loadDonations}
+          disabled={isLoading}
+          className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-sm transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+          <span>刷新</span>
+        </button>
+        <div className="flex items-center gap-2">
+          <Table className="h-4 w-4" />
+          <span className="text-sm">表格</span>
+        </div>
+        <Switch checked={isTableMode} onCheckedChange={setIsTableMode} />
+        <div className="flex items-center gap-2">
+          <LayoutGrid className="h-4 w-4" />
+          <span className="text-sm">瀑布流</span>
+        </div>
+      </div>
       {isLoading && (
         <div className="bg-muted/50 mb-4 inline-flex w-full break-inside-avoid flex-col gap-2 rounded-lg border p-4">
           <div className="flex items-center justify-center gap-2">
@@ -356,10 +393,49 @@ export default function CreditsTab() {
           </div>
         </div>
       )}
-      <div className="columns-1 gap-4 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5">
-        {!isLoading &&
-          !isError &&
-          donations.map((donation, index) => (
+      {!isLoading && !isError && isTableMode && (
+        <div className="flex flex-col overflow-hidden rounded-lg border" style={{ maxHeight: "calc(80vh - 200px)" }}>
+          <table className="w-full">
+            <thead className="bg-muted/50 sticky top-0 z-10">
+              <tr>
+                <th className="px-3 py-2 text-left text-sm font-medium">用户</th>
+                <th className="px-3 py-2 text-left text-sm font-medium">留言</th>
+                <th className="px-3 py-2 text-right text-sm font-medium">金额</th>
+              </tr>
+            </thead>
+          </table>
+          <div className="flex-1 overflow-auto">
+            <table className="w-full">
+              <tbody className="divide-y">
+                {[...donations].reverse().map((donation, index) => (
+                  <tr key={index} className={cn(donation.amount < 0 && "bg-destructive/10")}>
+                    <td className="px-3 py-1.5 text-sm">
+                      <div className="flex items-center gap-2">
+                        {donation.amount < 0 ? <Server className="size-4" /> : <User className="size-4" />}
+                        <span>{donation.user || "匿名"}</span>
+                      </div>
+                    </td>
+                    <td className="text-muted-foreground px-3 py-1.5 text-sm">{donation.note || "-"}</td>
+                    <td className="px-3 py-1.5 text-right">
+                      <span
+                        className={cn(
+                          "whitespace-nowrap font-[DINPro] font-bold",
+                          donation.amount < 0 ? "text-red-500" : "text-green-500",
+                        )}
+                      >
+                        {donation.amount} {donation.currency || "CNY"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      {!isLoading && !isError && !isTableMode && (
+        <div className="columns-1 gap-4 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5">
+          {[...donations].reverse().map((donation, index) => (
             <Donation
               key={index}
               user={donation.user}
@@ -368,7 +444,8 @@ export default function CreditsTab() {
               currency={donation.currency}
             />
           ))}
-      </div>
+        </div>
+      )}
       {!isLoading && isError && (
         <div className="flex h-64 w-full flex-col justify-center">
           <div className="flex items-center justify-center gap-2">
