@@ -175,6 +175,10 @@ export namespace ConnectNodeSmartTools {
       toast.error("树形摘除时，选中的节点没有入边");
       return;
     }
+    if (outEdges.length === 0) {
+      toast.error("树形摘除时，选中的节点没有出边");
+      return;
+    }
 
     // 保存入边的源节点和出边的目标节点及属性
     const sourceNodes = inEdges.map((edge) => ({
