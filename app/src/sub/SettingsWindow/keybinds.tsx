@@ -10,7 +10,7 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import KeyBind from "@/components/ui/key-bind";
 import { Switch } from "@/components/ui/switch";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, AlignStartVertical, Focus, LineSquiggle, TextCursorInput } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -26,9 +26,7 @@ import Fuse from "fuse.js";
 
 import {
   AppWindow,
-  Brush,
   FileQuestion,
-  Fullscreen,
   Image,
   Keyboard,
   MousePointer,
@@ -42,7 +40,6 @@ import {
   Spline,
   Split,
   SquareDashed,
-  SquareMenu,
   SunMoon,
   FileOutput,
 } from "lucide-react";
@@ -546,7 +543,7 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
   },
   {
     title: "camera",
-    icon: <Fullscreen />,
+    icon: <Scan />,
     keys: [
       "resetView",
       "restoreCameraState",
@@ -590,12 +587,12 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
   },
   {
     title: "draw",
-    icon: <Brush />,
+    icon: <LineSquiggle />,
     keys: ["selectEntityByPenStroke", "penStrokeWidthIncrease", "penStrokeWidthDecrease"],
   },
   {
     title: "select",
-    icon: <Scan />,
+    icon: <Focus />,
     keys: [
       "selectUp",
       "selectDown",
@@ -661,7 +658,7 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
   },
   {
     title: "aboutTextNode",
-    icon: <SquareMenu />,
+    icon: <TextCursorInput />,
     keys: [
       "createTextNodeFromCameraLocation",
       "createTextNodeFromMouseLocation",
@@ -725,7 +722,7 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
   },
   {
     title: "align",
-    icon: <Spline />,
+    icon: <AlignStartVertical />,
     keys: [
       "alignTop",
       "alignBottom",
