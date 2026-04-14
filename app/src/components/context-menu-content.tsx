@@ -2,12 +2,14 @@ import { Button } from "@/components/ui/button";
 import {
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuShortcut,
   ContextMenuSub,
   ContextMenuSubContent,
   ContextMenuSubTrigger,
 } from "@/components/ui/context-menu";
 import { Dialog } from "@/components/ui/dialog";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
+import { useKeyBind } from "@/core/service/controlService/shortcutKeysEngine/useKeyBind";
 import { ColorSmartTools } from "@/core/service/dataManageService/colorSmartTools";
 import { ConnectNodeSmartTools } from "@/core/service/dataManageService/connectNodeSmartTools";
 import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
@@ -121,6 +123,31 @@ export default function MyContextMenuContent() {
   const [p] = useAtom(activeProjectAtom);
   const [contextMenuTooltipWords] = useAtom(contextMenuTooltipWordsAtom);
   const { t } = useTranslation("contextMenu");
+
+  const toggleTextNodeSizeModeKey = useKeyBind("toggleTextNodeSizeMode");
+  const mergeTextNodesKey = useKeyBind("mergeTextNodes");
+  const splitTextNodesKey = useKeyBind("splitTextNodes");
+  const swapTextAndDetailsKey = useKeyBind("swapTextAndDetails");
+  const removeFirstCharKey = useKeyBind("removeFirstCharFromSelectedTextNodes");
+  const removeLastCharKey = useKeyBind("removeLastCharFromSelectedTextNodes");
+  const toggleCheckmarkKey = useKeyBind("toggleCheckmarkOnTextNodes");
+  const textNodeToSectionKey = useKeyBind("textNodeToSection");
+  const increaseFontSizeKey = useKeyBind("increaseFontSize");
+  const decreaseFontSizeKey = useKeyBind("decreaseFontSize");
+
+  const graftNodeToTreeKey = useKeyBind("graftNodeToTree");
+  const removeNodeFromTreeKey = useKeyBind("removeNodeFromTree");
+  const connectTopToBottomKey = useKeyBind("connectTopToBottom");
+  const connectLeftToRightKey = useKeyBind("connectLeftToRight");
+  const connectAllSelectedEntitiesKey = useKeyBind("connectAllSelectedEntities");
+
+  const increaseBrightnessKey = useKeyBind("increaseBrightness");
+  const decreaseBrightnessKey = useKeyBind("decreaseBrightness");
+  const changeColorHueUpKey = useKeyBind("changeColorHueUp");
+  const changeColorHueDownKey = useKeyBind("changeColorHueDown");
+  const changeColorHueMajorUpKey = useKeyBind("changeColorHueMajorUp");
+  const changeColorHueMajorDownKey = useKeyBind("changeColorHueMajorDown");
+
   if (!p) return <></>;
 
   const isSelectedTreeRoots = () => {
@@ -552,6 +579,7 @@ export default function MyContextMenuContent() {
           >
             <Maximize2 />
             放大字体
+            {increaseFontSizeKey && <ContextMenuShortcut>[{increaseFontSizeKey}]</ContextMenuShortcut>}
           </Item>
           <Item
             onClick={() => {
@@ -564,6 +592,12 @@ export default function MyContextMenuContent() {
           >
             <Minimize2 />
             缩小字体
+            {decreaseFontSizeKey && <ContextMenuShortcut>[{decreaseFontSizeKey}]</ContextMenuShortcut>}
+          </Item>
+          <Item onClick={() => TextNodeSmartTools.ttt(p)}>
+            <ListEnd />
+            切换换行模式
+            {toggleTextNodeSizeModeKey && <ContextMenuShortcut>[{toggleTextNodeSizeModeKey}]</ContextMenuShortcut>}
           </Item>
           <Sub>
             <SubTrigger>
@@ -571,41 +605,36 @@ export default function MyContextMenuContent() {
               文本节点 巧妙操作
             </SubTrigger>
             <SubContent>
-              <Item onClick={() => TextNodeSmartTools.ttt(p)}>
-                <ListEnd />
-                切换换行模式
-                <span className="text-xs opacity-50">[t, t, t]</span>
-              </Item>
               <Item onClick={() => TextNodeSmartTools.rua(p)}>
                 <SquaresUnite />
                 ruá成一个
-                <span className="text-xs opacity-50">[r, u, a]</span>
+                {mergeTextNodesKey && <ContextMenuShortcut>[{mergeTextNodesKey}]</ContextMenuShortcut>}
               </Item>
               <Item onClick={() => TextNodeSmartTools.kei(p)}>
                 <SquareSplitHorizontal />
                 kēi成多个
-                <span className="text-xs opacity-50">[k, e, i]</span>
+                {splitTextNodesKey && <ContextMenuShortcut>[{splitTextNodesKey}]</ContextMenuShortcut>}
               </Item>
               <Item onClick={() => TextNodeSmartTools.exchangeTextAndDetails(p)}>
                 <Repeat2 />
                 详略交换
-                <span className="text-xs opacity-50">[e, e, e, e, e]</span>
+                {swapTextAndDetailsKey && <ContextMenuShortcut>[{swapTextAndDetailsKey}]</ContextMenuShortcut>}
               </Item>
               <Item onClick={() => TextNodeSmartTools.removeFirstCharFromSelectedTextNodes(p)}>
                 <ArrowLeftFromLine />
                 削头
-                <span className="text-xs opacity-50">[ctrl+backspace]</span>
+                {removeFirstCharKey && <ContextMenuShortcut>[{removeFirstCharKey}]</ContextMenuShortcut>}
               </Item>
               <Item onClick={() => TextNodeSmartTools.removeLastCharFromSelectedTextNodes(p)}>
                 <ArrowRightFromLine />
                 剃尾
-                <span className="text-xs opacity-50">[ctrl+delete]</span>
+                {removeLastCharKey && <ContextMenuShortcut>[{removeLastCharKey}]</ContextMenuShortcut>}
               </Item>
 
               <Item onClick={() => TextNodeSmartTools.okk(p)}>
                 <Check />
                 打勾勾
-                <span className="text-xs opacity-50">[o, k, k]</span>
+                {toggleCheckmarkKey && <ContextMenuShortcut>[{toggleCheckmarkKey}]</ContextMenuShortcut>}
               </Item>
 
               <Item
@@ -618,7 +647,7 @@ export default function MyContextMenuContent() {
               >
                 <Package />
                 {t("convertToSection")}
-                <span className="text-xs opacity-50">[ctrl+shift+G]</span>
+                {textNodeToSectionKey && <ContextMenuShortcut>[{textNodeToSectionKey}]</ContextMenuShortcut>}
               </Item>
               <Sub>
                 <SubTrigger>
@@ -629,27 +658,29 @@ export default function MyContextMenuContent() {
                   <Item onClick={() => ConnectNodeSmartTools.insertNodeToTree(p)}>
                     <GitPullRequestCreateArrow />
                     嫁接到连线中
-                    <span className="text-xs opacity-50">[q, e]</span>
+                    {graftNodeToTreeKey && <ContextMenuShortcut>[{graftNodeToTreeKey}]</ContextMenuShortcut>}
                   </Item>
                   <Item onClick={() => ConnectNodeSmartTools.removeNodeFromTree(p)}>
                     <ArrowLeftFromLine />
                     从连线中摘除
-                    <span className="text-xs opacity-50">[q, r]</span>
+                    {removeNodeFromTreeKey && <ContextMenuShortcut>[{removeNodeFromTreeKey}]</ContextMenuShortcut>}
                   </Item>
                   <Item onClick={() => ConnectNodeSmartTools.connectDown(p)}>
                     <MoveDown />
                     向下连一串
-                    <span className="text-xs opacity-50">[-, -, d, o, w, n]</span>
+                    {connectTopToBottomKey && <ContextMenuShortcut>[{connectTopToBottomKey}]</ContextMenuShortcut>}
                   </Item>
                   <Item onClick={() => ConnectNodeSmartTools.connectRight(p)}>
                     <MoveRight />
                     向右连一串
-                    <span className="text-xs opacity-50">[-, -, r, i, g, h, t]</span>
+                    {connectLeftToRightKey && <ContextMenuShortcut>[{connectLeftToRightKey}]</ContextMenuShortcut>}
                   </Item>
                   <Item onClick={() => ConnectNodeSmartTools.connectAll(p)}>
                     <Asterisk />
                     全连接
-                    <span className="text-xs opacity-50">[-, -, a, l, l]</span>
+                    {connectAllSelectedEntitiesKey && (
+                      <ContextMenuShortcut>[{connectAllSelectedEntitiesKey}]</ContextMenuShortcut>
+                    )}
                   </Item>
                 </SubContent>
               </Sub>
@@ -662,32 +693,36 @@ export default function MyContextMenuContent() {
                   <Item onClick={() => ColorSmartTools.increaseBrightness(p)}>
                     <Sun />
                     增加亮度
-                    <span className="text-xs opacity-50">[b, .]</span>
+                    {increaseBrightnessKey && <ContextMenuShortcut>[{increaseBrightnessKey}]</ContextMenuShortcut>}
                   </Item>
                   <Item onClick={() => ColorSmartTools.decreaseBrightness(p)}>
                     <SunDim />
                     降低亮度
-                    <span className="text-xs opacity-50">[b, ,]</span>
+                    {decreaseBrightnessKey && <ContextMenuShortcut>[{decreaseBrightnessKey}]</ContextMenuShortcut>}
                   </Item>
                   <Item onClick={() => ColorSmartTools.changeColorHueUp(p)}>
                     <ChevronUp />
                     增加色相值
-                    <span className="text-xs opacity-50">[Alt+Shift+⬆]</span>
+                    {changeColorHueUpKey && <ContextMenuShortcut>[{changeColorHueUpKey}]</ContextMenuShortcut>}
                   </Item>
                   <Item onClick={() => ColorSmartTools.changeColorHueDown(p)}>
                     <ChevronDown />
                     降低色相值
-                    <span className="text-xs opacity-50">[Alt+Shift+⬇]</span>
+                    {changeColorHueDownKey && <ContextMenuShortcut>[{changeColorHueDownKey}]</ContextMenuShortcut>}
                   </Item>
                   <Item onClick={() => ColorSmartTools.changeColorHueMajorUp(p)}>
                     <MoveUp />
                     大幅度增加色相值
-                    <span className="text-xs opacity-50">[Alt+Shift+Home]</span>
+                    {changeColorHueMajorUpKey && (
+                      <ContextMenuShortcut>[{changeColorHueMajorUpKey}]</ContextMenuShortcut>
+                    )}
                   </Item>
                   <Item onClick={() => ColorSmartTools.changeColorHueMajorDown(p)}>
                     <MoveDown />
                     大幅度降低色相值
-                    <span className="text-xs opacity-50">[Alt+Shift+End]</span>
+                    {changeColorHueMajorDownKey && (
+                      <ContextMenuShortcut>[{changeColorHueMajorDownKey}]</ContextMenuShortcut>
+                    )}
                   </Item>
                 </SubContent>
               </Sub>

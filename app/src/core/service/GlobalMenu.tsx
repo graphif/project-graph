@@ -129,7 +129,6 @@ import {
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
 import { URI } from "vscode-uri";
 import { ProjectUpgrader } from "../stage/ProjectUpgrader";
 import { Entity } from "../stage/stageObject/abstract/StageEntity";
@@ -137,7 +136,7 @@ import { LineEdge } from "../stage/stageObject/association/LineEdge";
 import { CollisionBox } from "../stage/stageObject/collisionBox/collisionBox";
 import { TextNode } from "../stage/stageObject/entity/TextNode";
 import { AssetsRepository } from "./AssetsRepository";
-import { KeyBindsUI } from "./controlService/shortcutKeysEngine/KeyBindsUI";
+import { useKeyBind } from "./controlService/shortcutKeysEngine/useKeyBind";
 import { RecentFileManager } from "./dataFileService/RecentFileManager";
 import { generateKeyboardLayout } from "./dataGenerateService/generateFromFolderEngine/GenerateFromFolderEngine";
 import { DragFileIntoStageEngine } from "./dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
@@ -145,6 +144,7 @@ import { FeatureFlags } from "./FeatureFlags";
 import { Settings } from "./Settings";
 import { SubWindow } from "./SubWindow";
 import { Telemetry } from "./Telemetry";
+import { KeyBindsUI } from "./controlService/shortcutKeysEngine/KeyBindsUI";
 
 const Content = MenubarContent;
 const Item = MenubarItem;
@@ -154,31 +154,6 @@ const Sub = MenubarSub;
 const SubContent = MenubarSubContent;
 const SubTrigger = MenubarSubTrigger;
 const Trigger = MenubarTrigger;
-
-function useKeyBind(id: string): string {
-  const [keyBind, setKeyBind] = useState<string>("");
-
-  useEffect(() => {
-    // 立即尝试获取当前值（如果已注册）
-    const currentKeyBind = KeyBindsUI.getUIKeyBind(id);
-    if (currentKeyBind?.key) {
-      setKeyBind(formatKeyBindSequenceToString(currentKeyBind.key, "+", ","));
-    }
-
-    // 使用 KeyBindsUI 的事件监听机制
-    const unsubscribe = KeyBindsUI.onKeyBindChange(id, (uiKeyBind) => {
-      if (uiKeyBind?.key) {
-        setKeyBind(formatKeyBindSequenceToString(uiKeyBind.key, "+", ","));
-      }
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [id]);
-
-  return keyBind;
-}
 
 export function GlobalMenu() {
   // const [projects, setProjects] = useAtom(projectsAtom);
