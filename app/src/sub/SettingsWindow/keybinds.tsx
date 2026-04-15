@@ -668,6 +668,9 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "swapTextAndDetails",
       "decreaseFontSize",
       "increaseFontSize",
+      "adjustSelectedTextNodeWidthMin",
+      "adjustSelectedTextNodeWidthAverage",
+      "adjustSelectedTextNodeWidthMax",
     ],
   },
   {
