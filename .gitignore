@@ -28,3 +28,6 @@ backup_*
 .nx/workspace-data
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
+
+# Claude Code 本地配置
+.claude/settings.local.json

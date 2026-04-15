@@ -133,8 +133,8 @@ export class AutoSaveBackupService {
     // 确保备份目录存在
     if (!(await exists(backupDir))) {
       try {
-        // 创建备份目录
-        await mkdir(backupDir);
+        // 创建备份目录（recursive: true 确保父目录也会被一并创建）
+        await mkdir(backupDir, { recursive: true });
       } catch (err) {
         toast.error(`创建备份目录失败: ${err}`);
         return;
