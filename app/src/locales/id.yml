@@ -1640,13 +1640,13 @@ keyBinds:
     title: Tumpuk Rapat Rekursif
   adjustSelectedTextNodeWidthMin:
     title: Seragamkan Lebar ke Nilai Minimum
-    description: Hanya berlaku untuk node teks, seragamkan lebar semua node yang dipilih ke nilai minimum
+    description: Hanya berlaku untuk node teks, seragamkan lebar semua node yang dipilih ke nilai minimum (Tombol pintas：1→3→2)
   adjustSelectedTextNodeWidthMax:
     title: Seragamkan Lebar ke Nilai Maksimum
-    description: Hanya berlaku untuk node teks, seragamkan lebar semua node yang dipilih ke nilai maksimum
+    description: Hanya berlaku untuk node teks, seragamkan lebar semua node yang dipilih ke nilai maksimum (Tombol pintas：7→9→8)
   adjustSelectedTextNodeWidthAverage:
     title: Seragamkan Lebar ke Nilai Rata-rata
-    description: Hanya berlaku untuk node teks, seragamkan lebar semua node yang dipilih ke nilai rata-rata
+    description: Hanya berlaku untuk node teks, seragamkan lebar semua node yang dipilih ke nilai rata-rata (Tombol pintas：4→6→5)
   connectAllSelectedEntities:
     title: Hubungkan Semua Entitas yang Dipilih Secara Penuh
     description: Untuk skenario pengajaran khusus atau pengajaran teori graf, "--" di awal menunjukkan terkait garis

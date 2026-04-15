@@ -1693,6 +1693,15 @@ keyBindsGroup:
     title: Export Operations
     description: |
       Export selected content to various formats, such as plain text, Markdown, Mermaid, etc.
+  adjustSelectedTextNodeWidthMin:
+    title: Unify Width to Minimum
+    description: Only works on text nodes, unify the width of all selected nodes to the minimum value (Shortcut：1→3→2)
+  adjustSelectedTextNodeWidthMax:
+    title: Unify Width to Maximum
+    description: Only works on text nodes, unify the width of all selected nodes to the maximum value (Shortcut：7→9→8)
+  adjustSelectedTextNodeWidthAverage:
+    title: Unify Width to Average
+    description: Only works on text nodes, unify the width of all selected nodes to the average value (Shortcut：4→6→5)
 
 controlSettingsGroup:
   mouse:

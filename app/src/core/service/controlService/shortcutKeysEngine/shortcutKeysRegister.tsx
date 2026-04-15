@@ -1308,6 +1308,21 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "8 5 2",
     onPress: (project) => project!.layoutManager.alignTopToBottomNoSpace(),
   },
+  {
+    id: "adjustSelectedTextNodeWidthMin",
+    defaultKey: "1 3 2",
+    onPress: (project) => project!.layoutManager.adjustSelectedTextNodeWidth("minWidth"),
+  },
+  {
+    id: "adjustSelectedTextNodeWidthAverage",
+    defaultKey: "4 6 5",
+    onPress: (project) => project!.layoutManager.adjustSelectedTextNodeWidth("average"),
+  },
+  {
+    id: "adjustSelectedTextNodeWidthMax",
+    defaultKey: "7 9 8",
+    onPress: (project) => project!.layoutManager.adjustSelectedTextNodeWidth("maxWidth"),
+  },
 
   /*------- 连接 -------*/
   {

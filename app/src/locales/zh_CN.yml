@@ -1660,13 +1660,13 @@ keyBinds:
     title: 递归紧密堆积
   adjustSelectedTextNodeWidthMin:
     title: 统一宽度为最小值
-    description: 仅对文本节点生效，将所有选中节点的宽度统一为最小值
+    description: 仅对文本节点生效，将所有选中节点的宽度统一为最小值（快捷键：1→3→2）
   adjustSelectedTextNodeWidthMax:
     title: 统一宽度为最大值
-    description: 仅对文本节点生效，将所有选中节点的宽度统一为最大值
+    description: 仅对文本节点生效，将所有选中节点的宽度统一为最大值（快捷键：7→9→8）
   adjustSelectedTextNodeWidthAverage:
     title: 统一宽度为平均值
-    description: 仅对文本节点生效，将所有选中节点的宽度统一为平均值
+    description: 仅对文本节点生效，将所有选中节点的宽度统一为平均值（快捷键：4→6→5）
   connectAllSelectedEntities:
     title: 将所有选中实体进行全连接
     description: 用于特殊教学场景或图论教学，“- -”开头表示连线相关
