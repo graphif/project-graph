@@ -42,7 +42,6 @@ globalMenu:
     exportAsSVG: 匯出為 SVG
     exportAll: 匯出全部內容
     plainTextType:
-      exportAllNodeGraph: 匯出 全部的 網狀關係
       exportSelectedNodeGraph: 匯出 選取的 網狀關係
       exportSelectedNodeTree: 匯出 選取的 樹狀關係（純文字縮排）
       exportSelectedNodeTreeMarkdown: 匯出選取的樹狀關係（Markdown 格式）

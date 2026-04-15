@@ -44,7 +44,6 @@ globalMenu:
     exportAsPDF: 導出為 PDF
     exportAll: 導出全部內容
     plainTextType:
-      exportAllNodeGraph: 導出 全部的 網狀關係
       exportSelectedNodeGraph: 導出 選中的 網狀關係
       exportSelectedNodeTree: 導出 選中的 樹狀關係（純文本縮進）
       exportSelectedNodeTreeMarkdown: 導出 選中的 樹狀關係（Markdown格式）

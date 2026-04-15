@@ -562,21 +562,6 @@ export function GlobalMenu() {
                   {t("file.plainText")}
                 </SubTrigger>
                 <SubContent>
-                  {/* 导出 全部 网状关系 */}
-                  <Item
-                    onClick={() => {
-                      if (!activeProject) {
-                        toast.warning(t("file.noProject"));
-                        return;
-                      }
-                      const entities = activeProject.stageManager.getEntities();
-                      const result = activeProject.stageExport.getPlainTextByEntities(entities);
-                      Dialog.copy(t("file.exportSuccess"), "", result);
-                    }}
-                  >
-                    <VectorSquare />
-                    {t("file.plainTextType.exportAllNodeGraph")}
-                  </Item>
                   {/* 导出 选中 网状关系 */}
                   <Item
                     onClick={() => {

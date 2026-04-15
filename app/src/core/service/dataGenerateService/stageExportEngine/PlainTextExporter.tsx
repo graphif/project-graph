@@ -24,9 +24,12 @@ export class PlainTextExporter {
    * @returns 纯文本表示
    */
   public export(nodes: Entity[]): string {
+    const sortedNodes = [...nodes].sort(
+      (a, b) => a.collisionBox.getRectangle().location.y - b.collisionBox.getRectangle().location.y,
+    );
     let nodesContent = "";
     let linksContent = "";
-    for (const node of nodes) {
+    for (const node of sortedNodes) {
       if (!(node instanceof TextNode)) {
         continue;
       }

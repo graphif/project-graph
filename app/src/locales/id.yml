@@ -43,7 +43,6 @@ globalMenu:
     exportAsSVG: Ekspor sebagai SVG
     exportAll: Ekspor Semua Konten
     plainTextType:
-      exportAllNodeGraph: Ekspor Seluruh Struktur Jaringan
       exportSelectedNodeGraph: Ekspor Struktur Jaringan yang Dipilih
       exportSelectedNodeTree: Ekspor Struktur Pohon yang Dipilih (Indentasi Teks Murni)
       exportSelectedNodeTreeMarkdown: Ekspor Struktur Pohon yang Dipilih (Format Markdown)
