@@ -1,12 +1,17 @@
 import { Dialog } from "@/components/ui/dialog";
+import { loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project } from "@/core/Project";
+import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
+import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
+import { PathString } from "@/utils/pathString";
 import { averageColors, Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";
@@ -480,6 +485,75 @@ export namespace TextNodeSmartTools {
   }
 
   /**
+   * 递归地从一个实体中提取所有可搜索的纯文本（markdown格式）
+   */
+  function collectEntityText(entity: Entity): string {
+    const parts: string[] = [];
+
+    if (entity instanceof Section) {
+      parts.push(entity.text);
+      if (!entity.detailsManager.isEmpty()) {
+        parts.push(DetailsManager.detailsToMarkdown(entity.details));
+      }
+      for (const child of entity.children) {
+        parts.push(collectEntityText(child));
+      }
+    } else if (entity instanceof TextNode) {
+      parts.push(entity.text);
+      if (!entity.detailsManager.isEmpty()) {
+        parts.push(DetailsManager.detailsToMarkdown(entity.details));
+      }
+    } else {
+      if (!entity.detailsManager.isEmpty()) {
+        parts.push(DetailsManager.detailsToMarkdown(entity.details));
+      }
+    }
+
+    return parts.filter(Boolean).join("\n");
+  }
+
+  /**
+   * 加载被引用文件，提取目标Section（或全文件）的所有文本内容，返回markdown字符串。
+   * 找不到文件或Section时静默返回空字符串。
+   */
+  async function extractSectionText(fileName: string, sectionName: string): Promise<string> {
+    try {
+      const recentFiles = await RecentFileManager.getRecentFiles();
+      const file = recentFiles.find(
+        (f) =>
+          PathString.getFileNameFromPath(f.uri.path) === fileName ||
+          PathString.getFileNameFromPath(f.uri.fsPath) === fileName,
+      );
+      if (!file) return "";
+
+      const tempProject = new Project(file.uri);
+      loadAllServicesBeforeInit(tempProject);
+      await tempProject.init();
+
+      try {
+        if (sectionName) {
+          const targetSection = tempProject.stage.find((obj) => obj instanceof Section && obj.text === sectionName) as
+            | Section
+            | undefined;
+          if (!targetSection) return "";
+          return collectEntityText(targetSection);
+        } else {
+          // 引用整个文件：收集所有顶层实体
+          return tempProject.stage
+            .filter((obj) => obj instanceof Entity)
+            .map((obj) => collectEntityText(obj as Entity))
+            .filter(Boolean)
+            .join("\n");
+        }
+      } finally {
+        tempProject.dispose();
+      }
+    } catch {
+      return "";
+    }
+  }
+
+  /**
    * 将选中的特殊格式的文本节点，转换成引用块
    * @param project
    * @returns
@@ -534,6 +608,12 @@ export namespace TextNodeSmartTools {
     });
 
     project.stageManager.add(referenceBlock);
+
+    // 把被引用Section内的所有文字提取到details，供当前项目搜索
+    const markdown = await extractSectionText(fileName, sectionName);
+    if (markdown.trim()) {
+      referenceBlock.details = DetailsManager.markdownToDetails(markdown);
+    }
 
     // 2. 更新所有相关连线，将原节点替换为新的引用块节点
     for (const edge of relatedEdges) {
