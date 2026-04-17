@@ -65,7 +65,11 @@ export class ControllerNodeEditClass extends ControllerClass {
     const pressLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
     for (const entity of this.project.stageManager.getEntities()) {
       // 必须有详细信息才显示详细信息按钮，进而点进去，否则会误触
-      if (entity.isMouseInDetailsButton(pressLocation) && entity.details.length > 0) {
+      if (
+        entity.isMouseInDetailsButton(pressLocation) &&
+        entity.details.length > 0 &&
+        !entity.isHiddenBySectionCollapse
+      ) {
         this.project.controllerUtils.editNodeDetails(entity);
         return;
       }
