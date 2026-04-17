@@ -56,6 +56,7 @@ export class ControllerUtils {
         : colorInvert(this.project.stageStyleManager.currentStyle.Background)
     ).toHexStringWithoutAlpha();
     // 编辑节点
+    const textBeforeEdit = clickedNode.text;
     clickedNode.isEditing = true;
     // 添加进入编辑状态的闪烁特效
     this.project.effects.addEffect(
@@ -128,7 +129,9 @@ export class ControllerUtils {
         SubWindow.close(lastAutoCompleteWindowId);
         clickedNode!.isEditing = false;
         this.project.controller.isCameraLocked = false;
-        this.project.historyManager.recordStep();
+        if (clickedNode.text !== textBeforeEdit) {
+          this.project.historyManager.recordStep();
+        }
 
         // 实验
         this.finishChangeTextNode(clickedNode);
