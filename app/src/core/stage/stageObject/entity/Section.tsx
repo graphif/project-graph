@@ -172,13 +172,20 @@ export class Section extends ConnectableEntity {
    * 根据自身的折叠状态调整子节点的状态
    * 以屏蔽触碰和显示
    */
-  adjustChildrenStateByCollapse() {
-    if (this.isCollapsed) {
+  adjustChildrenStateByCollapse(parentCollapsed = false) {
+    const shouldHide = parentCollapsed || this.isCollapsed;
+    if (shouldHide) {
+      this.children.forEach((child) => {
+        child.isHiddenBySectionCollapse = true;
+        if (child instanceof Section) {
+          child.adjustChildrenStateByCollapse(true);
+        }
+      });
+    } else {
       this.children.forEach((child) => {
         if (child instanceof Section) {
-          child.adjustChildrenStateByCollapse();
+          child.adjustChildrenStateByCollapse(false);
         }
-        child.isHiddenBySectionCollapse = true;
       });
     }
   }
