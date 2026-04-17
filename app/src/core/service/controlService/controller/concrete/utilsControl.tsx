@@ -30,6 +30,11 @@ import { ReferenceManager } from "@/core/stage/stageManager/concreteMethods/Stag
 import _ from "lodash";
 import { Settings } from "@/core/service/Settings";
 import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
+import { ReferenceFileScanner } from "@/core/service/dataFileService/ReferenceFileScanner";
+import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
+import { activeProjectAtom, projectsAtom, store } from "@/state";
+import { URI } from "vscode-uri";
+import { exists } from "@tauri-apps/plugin-fs";
 
 /**
  * 这里是专门存放代码相同的地方
@@ -635,7 +640,6 @@ export class ControllerUtils {
   private async autoChangeTextNodeToReferenceBlock(project: Project, textNode: TextNode) {
     if (textNode.text.startsWith("[[") && textNode.text.endsWith("]]")) {
       textNode.isSelected = true;
-      // 要加一个前置判断，防止用户输入本来就没有的东西
 
       const recentFiles = await RecentFileManager.getRecentFiles();
       const parserResult = ReferenceManager.referenceBlockTextParser(textNode.text);
@@ -643,18 +647,69 @@ export class ControllerUtils {
         toast.error(parserResult.invalidReason);
         return;
       }
-      if (!recentFiles.map((item) => PathString.getFileNameFromPath(item.uri.fsPath)).includes(parserResult.fileName)) {
-        toast.error(`文件【${parserResult.fileName}】不在“最近打开的文件”中，不能创建引用`);
+
+      const isInRecentFiles = recentFiles
+        .map((item) => PathString.getFileNameFromPath(item.uri.fsPath))
+        .includes(parserResult.fileName);
+
+      if (isInRecentFiles) {
+        if (parserResult.sectionName) {
+          const sections = await CrossFileContentQuery.getSectionsByFileName(parserResult.fileName);
+          if (!sections.includes(parserResult.sectionName)) {
+            toast.error(`文件【${parserResult.fileName}】中没有section【${parserResult.sectionName}】，不能创建引用`);
+            return;
+          }
+        }
+        await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
         return;
       }
-      if (parserResult.sectionName) {
-        // 用户输入了#，需要检查section是否存在
-        const sections = await CrossFileContentQuery.getSectionsByFileName(parserResult.fileName);
-        if (!sections.includes(parserResult.sectionName)) {
-          toast.error(`文件【${parserResult.fileName}】中没有section【${parserResult.sectionName}】，不能创建引用`);
-          return;
-        }
+
+      if (project.isDraft) {
+        toast.error("草稿项目不能创建新引用文件");
+        return;
       }
+
+      const foundFilePath = await ReferenceFileScanner.findFileInReferenceFolder(
+        project.uri.fsPath,
+        parserResult.fileName,
+      );
+
+      if (foundFilePath) {
+        await RecentFileManager.addRecentFileByUri(URI.file(foundFilePath));
+        await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
+        return;
+      }
+
+      const newFilePath = ReferenceFileScanner.getNewFilePath(project.uri.fsPath, parserResult.fileName);
+      if (await exists(newFilePath)) {
+        await RecentFileManager.addRecentFileByUri(URI.file(newFilePath));
+        await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
+        return;
+      }
+
+      await ReferenceFileScanner.ensureReferenceFolderExists(project.uri.fsPath);
+
+      const newUri = ReferenceFileScanner.getNewFileUri(project.uri.fsPath, parserResult.fileName);
+      const newProject = Project.newDraft();
+      newProject.uri = newUri;
+
+      loadAllServicesBeforeInit(newProject);
+      await newProject.init();
+      loadAllServicesAfterInit(newProject);
+
+      const newTextNode = new TextNode(newProject, {
+        text: parserResult.fileName,
+      });
+      newProject.stageManager.add(newTextNode);
+      newTextNode.isSelected = true;
+
+      await newProject.save();
+      await RecentFileManager.addRecentFileByUri(newUri);
+      await ReferenceFileScanner.addFileToCache(project.uri.fsPath, parserResult.fileName);
+
+      store.set(projectsAtom, [...store.get(projectsAtom), newProject]);
+      store.set(activeProjectAtom, newProject);
+
       await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
     }
   }
