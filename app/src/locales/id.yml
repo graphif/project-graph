@@ -483,6 +483,22 @@ settings:
       Nilai 1 berarti zoom akan selesai seketika, tanpa efek transisi di tengah
       Nilai 0 berarti zoom tidak akan pernah selesai, dapat mensimulasikan efek kunci
       Perhatian: Jika Anda merasa lag saat zoom, atur ke 1
+  cameraZoomInLimitBehavior:
+    title: Perilaku Saat Zoom-In Maksimum
+    description: |
+      Dipicu saat zoom in melewati batas zoom atas.
+    options:
+      macro: Kembali ke tampilan makro
+      micro: Kembali ke batas mikro
+      reset: Kembali ke ukuran standar (skala 1)
+  cameraZoomOutLimitBehavior:
+    title: Perilaku Saat Zoom-Out Maksimum
+    description: |
+      Dipicu saat zoom out melewati batas zoom bawah.
+    options:
+      macro: Kembali ke tampilan makro
+      micro: Kembali ke batas mikro
+      reset: Kembali ke ukuran standar (skala 1)
   cameraKeyboardScaleRate:
     title: Laju Zoom Tampilan via Keyboard
     description: |

@@ -531,6 +531,20 @@ settings:
       值為0代表縮放永遠都不會完成，可模擬鎖死效果
 
       注意：若您在縮放畫面時感到卡頓，請調成1'
+  cameraZoomInLimitBehavior:
+    title: 放大到極限時的行為
+    description: 當視野縮放放大到超過縮放上限時觸發
+    options:
+      macro: 回到宏觀
+      micro: 回到微觀的極限
+      reset: 回到標準大小（縮放級別1）
+  cameraZoomOutLimitBehavior:
+    title: 縮小到極限時的行為
+    description: 當視野縮放縮小到低於縮放下限時觸發
+    options:
+      macro: 回到宏觀
+      micro: 回到微觀的極限
+      reset: 回到標準大小（縮放級別1）
   cameraKeyboardScaleRate:
     title: 視角縮放鍵盤速率
     description: '每次透過一次按鍵來縮放視野時，視野的縮放倍率

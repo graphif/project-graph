@@ -493,6 +493,22 @@ settings:
       值为1代表缩放会立刻完成，没有中间的过渡效果
       值为0代表缩放永远都不会完成，可模拟锁死效果
       注意：若您在缩放画面时感到卡顿，请调成1
+  cameraZoomInLimitBehavior:
+    title: 放大到极限时的行为
+    description: |
+      当视野缩放放大到超过缩放上限时触发
+    options:
+      macro: 回到宏观
+      micro: 回到微观的极限
+      reset: 回到标准大小（缩放级别1）
+  cameraZoomOutLimitBehavior:
+    title: 缩小到极限时的行为
+    description: |
+      当视野缩放缩小到低于缩放下限时触发
+    options:
+      macro: 回到宏观
+      micro: 回到微观的极限
+      reset: 回到标准大小（缩放级别1）
   cameraKeyboardScaleRate:
     title: 视角缩放键盘速率
     description: |

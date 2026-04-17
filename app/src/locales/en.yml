@@ -362,6 +362,22 @@ settings:
       A value of 1 means the zoom will be immediate with no transition effect.
       A value of 0 means the zoom will never complete and can simulate a locked effect.
       Note: If you experience lag while zooming, set this to 1.
+  cameraZoomInLimitBehavior:
+    title: Behavior at Max Zoom-In
+    description: |
+      Triggered when zooming in beyond the zoom upper limit.
+    options:
+      macro: Return to macro view
+      micro: Return to micro limit
+      reset: Return to standard size (scale 1)
+  cameraZoomOutLimitBehavior:
+    title: Behavior at Max Zoom-Out
+    description: |
+      Triggered when zooming out beyond the zoom lower limit.
+    options:
+      macro: Return to macro view
+      micro: Return to micro limit
+      reset: Return to standard size (scale 1)
   cameraKeyboardScaleRate:
     title: Keyboard Zoom Rate
     description: |

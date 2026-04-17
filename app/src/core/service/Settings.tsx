@@ -117,6 +117,8 @@ export const settingsSchema = z.object({
   moveAmplitude: z.number().min(0).max(10).default(2),
   moveFriction: z.number().min(0).max(1).default(0.1),
   scaleExponent: z.number().min(0).max(1).default(0.11),
+  cameraZoomInLimitBehavior: z.union([z.literal("macro"), z.literal("micro"), z.literal("reset")]).default("micro"),
+  cameraZoomOutLimitBehavior: z.union([z.literal("macro"), z.literal("micro"), z.literal("reset")]).default("macro"),
   cameraResetViewPaddingRate: z.number().min(1).max(2).default(1.5),
   cameraResetMaxScale: z.number().min(0.1).max(10).multipleOf(0.1).default(3),
   scaleCameraByMouseLocation: z.boolean().default(true),

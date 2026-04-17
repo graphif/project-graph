@@ -273,6 +273,8 @@ const categories = {
     cameraMove: ["allowMoveCameraByWSAD", "cameraKeyboardMoveReverse", "moveAmplitude", "moveFriction"],
     cameraZoom: [
       "scaleExponent",
+      "cameraZoomInLimitBehavior",
+      "cameraZoomOutLimitBehavior",
       "cameraResetViewPaddingRate",
       "cameraResetMaxScale",
       "scaleCameraByMouseLocation",
