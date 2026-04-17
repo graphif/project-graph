@@ -40,12 +40,17 @@ export class SectionPackManager {
    * @param isCollapsed
    */
   private modifyHiddenDfs(section: Section, isCollapsed: boolean) {
-    // section.isCollapsed = isCollapsed;
     for (const childEntity of section.children) {
-      if (childEntity instanceof Section) {
-        this.modifyHiddenDfs(childEntity, isCollapsed);
-      }
       childEntity.isHiddenBySectionCollapse = isCollapsed;
+      if (childEntity instanceof Section) {
+        if (isCollapsed) {
+          // 折叠：无论内层状态如何，所有后代都隐藏
+          this.modifyHiddenDfs(childEntity, true);
+        } else if (!childEntity.isCollapsed) {
+          // 展开：内层未折叠才继续向下展开，内层已折叠则停止
+          this.modifyHiddenDfs(childEntity, false);
+        }
+      }
     }
   }
 
