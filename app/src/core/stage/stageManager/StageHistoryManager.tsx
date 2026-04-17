@@ -90,6 +90,7 @@ class HistoryManagerTimeEfficient extends HistoryManagerAbs {
     if (this.currentIndex >= 0) {
       this.currentIndex--;
       this.project.stage = this.get(this.currentIndex);
+      this.project.stageManager.updateReferences();
     }
 
     // 显示toast信息，与memoryEfficient版本保持一致
@@ -126,6 +127,7 @@ class HistoryManagerTimeEfficient extends HistoryManagerAbs {
     if (this.currentIndex < this.history.length - 1) {
       this.currentIndex++;
       this.project.stage = this.get(this.currentIndex);
+      this.project.stageManager.updateReferences();
     }
 
     // 显示toast信息，与memoryEfficient版本保持一致
@@ -285,6 +287,7 @@ class HistorymanagerMemoryEfficient extends HistoryManagerAbs {
     if (this.currentIndex >= 0) {
       this.currentIndex--;
       this.project.stage = this.get(this.currentIndex);
+      this.project.stageManager.updateReferences();
     }
     if (Settings.showDebug) {
       toast(
@@ -315,6 +318,7 @@ class HistorymanagerMemoryEfficient extends HistoryManagerAbs {
     if (this.currentIndex < this.deltas.length - 1) {
       this.currentIndex++;
       this.project.stage = this.get(this.currentIndex);
+      this.project.stageManager.updateReferences();
     }
     if (Settings.showDebug) {
       toast(
