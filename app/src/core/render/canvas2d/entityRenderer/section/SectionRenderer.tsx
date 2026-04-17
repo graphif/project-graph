@@ -45,6 +45,21 @@ export class SectionRenderer {
           : colorInvert(this.project.stageStyleManager.currentStyle.Background),
       );
     }
+    // 选中时渲染展开尺寸的虚线框
+    if (section.isSelected) {
+      const normalRect = section["_collisionBoxNormal"].getRectangle();
+      this.project.shapeRenderer.renderDashedRect(
+        new Rectangle(
+          this.project.renderer.transformWorld2View(normalRect.location),
+          normalRect.size.multiply(this.project.camera.currentScale),
+        ),
+        Color.Transparent,
+        this.project.stageStyleManager.currentStyle.CollideBoxSelected,
+        1.5 * this.project.camera.currentScale,
+        Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+        6 * this.project.camera.currentScale,
+      );
+    }
   }
 
   // 非折叠状态
