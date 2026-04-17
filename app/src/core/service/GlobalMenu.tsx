@@ -310,7 +310,7 @@ export function GlobalMenu() {
             }}
           >
             <LayoutGrid />
-            查看全部历史文件
+            最近打开的文件（全部）
             {clickAppMenuRecentFileButtonKey && <MenubarShortcut>{clickAppMenuRecentFileButtonKey}</MenubarShortcut>}
           </Item>
           <Separator />
