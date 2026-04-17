@@ -34,7 +34,6 @@ import { ReferenceFileScanner } from "@/core/service/dataFileService/ReferenceFi
 import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { activeProjectAtom, projectsAtom, store } from "@/state";
 import { URI } from "vscode-uri";
-import { exists } from "@tauri-apps/plugin-fs";
 
 /**
  * 这里是专门存放代码相同的地方
@@ -641,26 +640,9 @@ export class ControllerUtils {
     if (textNode.text.startsWith("[[") && textNode.text.endsWith("]]")) {
       textNode.isSelected = true;
 
-      const recentFiles = await RecentFileManager.getRecentFiles();
       const parserResult = ReferenceManager.referenceBlockTextParser(textNode.text);
       if (!parserResult.isValid) {
         toast.error(parserResult.invalidReason);
-        return;
-      }
-
-      const isInRecentFiles = recentFiles
-        .map((item) => PathString.getFileNameFromPath(item.uri.fsPath))
-        .includes(parserResult.fileName);
-
-      if (isInRecentFiles) {
-        if (parserResult.sectionName) {
-          const sections = await CrossFileContentQuery.getSectionsByFileName(parserResult.fileName);
-          if (!sections.includes(parserResult.sectionName)) {
-            toast.error(`文件【${parserResult.fileName}】中没有section【${parserResult.sectionName}】，不能创建引用`);
-            return;
-          }
-        }
-        await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
         return;
       }
 
@@ -669,20 +651,20 @@ export class ControllerUtils {
         return;
       }
 
-      const foundFilePath = await ReferenceFileScanner.findFileInReferenceFolder(
+      const foundInReferenceFolder = await ReferenceFileScanner.findFileInReferenceFolder(
         project.uri.fsPath,
         parserResult.fileName,
       );
 
-      if (foundFilePath) {
-        await RecentFileManager.addRecentFileByUri(URI.file(foundFilePath));
-        await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
-        return;
-      }
-
-      const newFilePath = ReferenceFileScanner.getNewFilePath(project.uri.fsPath, parserResult.fileName);
-      if (await exists(newFilePath)) {
-        await RecentFileManager.addRecentFileByUri(URI.file(newFilePath));
+      if (foundInReferenceFolder) {
+        await RecentFileManager.addRecentFileByUri(URI.file(foundInReferenceFolder));
+        if (parserResult.sectionName) {
+          const sections = await CrossFileContentQuery.getSectionsByFileName(parserResult.fileName);
+          if (!sections.includes(parserResult.sectionName)) {
+            toast.error(`文件【${parserResult.fileName}】中没有section【${parserResult.sectionName}】，不能创建引用`);
+            return;
+          }
+        }
         await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
         return;
       }

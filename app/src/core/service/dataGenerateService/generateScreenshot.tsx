@@ -2,11 +2,13 @@ import { loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project } from "@/core/Project";
 import { PathString } from "@/utils/pathString";
 import { RecentFileManager } from "../dataFileService/RecentFileManager";
+import { ReferenceFileScanner } from "../dataFileService/ReferenceFileScanner";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { sleep } from "@/utils/sleep";
 import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";
 import { Vector } from "@graphif/data-structures";
+import { URI } from "vscode-uri";
 
 /**
  * 从一个文件中生成截图
@@ -103,16 +105,28 @@ export namespace GenerateScreenshot {
     fileName: string,
     sectionName: string,
     maxDimension: number = 1920,
+    currentProjectPath?: string,
   ): Promise<Blob | undefined> {
     try {
-      // 加载项目
-      const recentFiles = await RecentFileManager.getRecentFiles();
-      const file = recentFiles.find((file) => PathString.getFileNameFromPath(file.uri.fsPath) === fileName);
-      if (!file) {
-        return undefined;
+      let fileUri: URI | undefined;
+
+      if (currentProjectPath) {
+        const foundPath = await ReferenceFileScanner.findFileInReferenceFolder(currentProjectPath, fileName);
+        if (foundPath) {
+          fileUri = URI.file(foundPath);
+        }
       }
 
-      const project = new Project(file.uri);
+      if (!fileUri) {
+        const recentFiles = await RecentFileManager.getRecentFiles();
+        const file = recentFiles.find((file) => PathString.getFileNameFromPath(file.uri.fsPath) === fileName);
+        if (!file) {
+          return undefined;
+        }
+        fileUri = file.uri;
+      }
+
+      const project = new Project(fileUri);
       loadAllServicesBeforeInit(project);
       await project.init();
 
@@ -144,16 +158,31 @@ export namespace GenerateScreenshot {
    * @param maxDimension 自定义最大边长度，默认为1920
    * @returns 截图的Blob对象
    */
-  export async function generateFullView(fileName: string, maxDimension: number = 1920): Promise<Blob | undefined> {
+  export async function generateFullView(
+    fileName: string,
+    maxDimension: number = 1920,
+    currentProjectPath?: string,
+  ): Promise<Blob | undefined> {
     try {
-      // 加载项目
-      const recentFiles = await RecentFileManager.getRecentFiles();
-      const file = recentFiles.find((file) => PathString.getFileNameFromPath(file.uri.fsPath) === fileName);
-      if (!file) {
-        return undefined;
+      let fileUri: URI | undefined;
+
+      if (currentProjectPath) {
+        const foundPath = await ReferenceFileScanner.findFileInReferenceFolder(currentProjectPath, fileName);
+        if (foundPath) {
+          fileUri = URI.file(foundPath);
+        }
       }
 
-      const project = new Project(file.uri);
+      if (!fileUri) {
+        const recentFiles = await RecentFileManager.getRecentFiles();
+        const file = recentFiles.find((file) => PathString.getFileNameFromPath(file.uri.fsPath) === fileName);
+        if (!file) {
+          return undefined;
+        }
+        fileUri = file.uri;
+      }
+
+      const project = new Project(fileUri);
       loadAllServicesBeforeInit(project);
       await project.init();
 

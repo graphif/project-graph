@@ -609,6 +609,11 @@ export namespace TextNodeSmartTools {
 
     project.stageManager.add(referenceBlock);
 
+    const section = Section.fromEntities(project, [referenceBlock]);
+    section.rename(fileName);
+
+    project.stageManager.add(section);
+
     // 把被引用Section内的所有文字提取到details，供当前项目搜索
     const markdown = await extractSectionText(fileName, sectionName);
     if (markdown.trim()) {

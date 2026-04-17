@@ -17,7 +17,8 @@ export namespace ReferenceFileScanner {
   export function getReferenceFolderPath(projectPath: string): string {
     const dir = PathString.dirPath(projectPath);
     const fileName = PathString.getFileNameFromPath(projectPath);
-    return `${dir}/${fileName}`;
+    const sep = PathString.getSep();
+    return `${dir}${sep}${fileName}`;
   }
 
   export async function ensureReferenceFolderExists(projectPath: string): Promise<string> {
@@ -103,7 +104,8 @@ export namespace ReferenceFileScanner {
 
   export function getNewFilePath(projectPath: string, fileName: string): string {
     const folderPath = getReferenceFolderPath(projectPath);
-    return `${folderPath}/${fileName}.prg`;
+    const sep = PathString.getSep();
+    return `${folderPath}${sep}${fileName}.prg`;
   }
 
   export function getNewFileUri(projectPath: string, fileName: string): URI {

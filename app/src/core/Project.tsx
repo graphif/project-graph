@@ -320,29 +320,23 @@ export class Project extends EventEmitter<{
       return;
     }
     try {
-      // 解析项目文件
       const { serializedStageObjects, tags, references, metadata } = await this.parseProjectFile();
 
-      // 检查并确认升级
       const currentVersion = metadata?.version || "2.0.0";
       const latestVersion = ProjectUpgrader.NLatestVersion;
       const confirmed = await this.checkAndConfirmUpgrade(currentVersion, latestVersion);
-      if (!confirmed) return; // 用户取消升级，不打开文件，跳过 this.state = ProjectState.Saved
+      if (!confirmed) return;
 
-      // 升级数据
       const [upgradedStageObjects, upgradedMetadata] = ProjectUpgrader.upgradeNAnyToNLatest(
         serializedStageObjects,
         metadata,
       );
 
-      // 应用升级后的数据
       this.stage = deserialize(upgradedStageObjects, this);
       this.tags = tags;
       this.references = references;
       this.metadata = upgradedMetadata;
 
-      // 更新引用关系，包括双向线的偏移状态
-      // 注意：这里需要在服务加载后才能调用，所以需要检查服务是否已加载
       if (this.getService("stageManager")) {
         this.stageManager.updateReferences();
       }
