@@ -416,6 +416,7 @@ export class HistoryManager extends HistoryManagerAbs {
    */
   public undo(): void {
     this.currentManager.undo();
+    this.project.stageManager.updateReferences();
   }
 
   /**
@@ -423,6 +424,7 @@ export class HistoryManager extends HistoryManagerAbs {
    */
   public redo(): void {
     this.currentManager.redo();
+    this.project.stageManager.updateReferences();
   }
 
   /**
