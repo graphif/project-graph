@@ -84,6 +84,9 @@ export class MouseInteraction {
     const sections = this.project.stageManager.getSections();
 
     for (const section of sections) {
+      if (section.isHiddenBySectionCollapse) {
+        continue;
+      }
       if (section.collisionBox.isContainsPoint(mouseWorldLocation)) {
         this._hoverSections.push(section);
       }

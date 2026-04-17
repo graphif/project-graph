@@ -73,6 +73,9 @@ export class EntityRenderer {
       if (this.project.renderer.isOverView(viewRectangle, section)) {
         continue;
       }
+      if (section.isHiddenBySectionCollapse) {
+        continue;
+      }
       if (Settings.sectionBitTitleRenderType === "cover") {
         this.project.sectionRenderer.renderBigCoveredTitle(section);
       } else if (Settings.sectionBitTitleRenderType === "top") {
