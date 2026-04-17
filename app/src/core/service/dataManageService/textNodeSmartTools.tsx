@@ -561,13 +561,19 @@ export namespace TextNodeSmartTools {
   export async function changeTextNodeToReferenceBlock(project: Project) {
     // 仅当项目不是草稿时才更新引用
     if (project.isDraft) {
-      toast.error("草稿项目不能更新为引用块");
+      toast.error("在草稿项目中不能创建引用块");
       return;
     }
 
     const selectedTextNodes = project.stageManager.getSelectedEntities().filter((node) => node instanceof TextNode);
     if (selectedTextNodes.length !== 1) {
-      toast.error("只能选中一个节点作为引用块");
+      if (selectedTextNodes.length === 0) {
+        toast.error(
+          "没有选中任何文本节点，无法触发文本节点到引用块的转化，可以尝试按Enter键退出编辑状态的方式触发转化",
+        );
+        return;
+      }
+      toast.error("只能选中一个节点作为引用块，您选中了多个文本节点");
       return;
     }
     const selectedNode = selectedTextNodes[0];
