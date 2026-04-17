@@ -126,7 +126,7 @@ export class EntityRenderer {
       }
       this.project.sectionRenderer.render(section);
       // details右上角小按钮
-      if (this.project.camera.currentScale > 0.065) {
+      if (this.project.camera.currentScale > 0.065 && !section.isHiddenBySectionCollapse) {
         this.project.entityDetailsButtonRenderer.render(section);
       }
       this.renderEntityDebug(section);

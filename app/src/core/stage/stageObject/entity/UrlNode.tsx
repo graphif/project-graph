@@ -77,7 +77,9 @@ export class UrlNode extends ConnectableEntity {
     this.collisionBox.shapes[0] = newRectangle;
 
     // 移动雪花特效
-    this.project.effects.addEffect(new NodeMoveShadowEffect(new ProgressNumber(0, 30), this.rectangle, delta));
+    if (!this.isHiddenBySectionCollapse) {
+      this.project.effects.addEffect(new NodeMoveShadowEffect(new ProgressNumber(0, 30), this.rectangle, delta));
+    }
     this.updateFatherSectionByMove();
     // 移动其他实体，递归碰撞
     this.updateOtherEntityLocationByMove();
