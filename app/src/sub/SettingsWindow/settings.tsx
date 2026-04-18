@@ -294,6 +294,7 @@ const categories = {
       "textNodeBackspaceDeleteWhenEmpty",
       "textNodeBigContentThresholdWhenPaste",
       "textNodePasteSizeAdjustMode",
+      "textNodeManualDefaultCharWidth",
     ],
     section: ["isEnableSectionCollision"],
     edge: [

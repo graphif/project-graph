@@ -96,9 +96,15 @@ export namespace GenerateScreenshot {
 
   /**
    * 根据文件名和Section框名生成截图
+   *
+   * 文件查找优先级：
+   * 1. 如果提供了 currentProjectPath，优先在当前项目的引用文件夹中查找
+   * 2. 如果找不到，再从最近文件列表中查找
+   *
    * @param fileName 文件名
    * @param sectionName Section框名
    * @param maxDimension 自定义最大边长度，默认为1920
+   * @param currentProjectPath 当前项目路径（用于在引用文件夹中查找文件）
    * @returns 截图的Blob对象
    */
   export async function generateSection(
@@ -110,6 +116,7 @@ export namespace GenerateScreenshot {
     try {
       let fileUri: URI | undefined;
 
+      // 优先在当前项目的引用文件夹中查找（确保跨项目引用不会冲突）
       if (currentProjectPath) {
         const foundPath = await ReferenceFileScanner.findFileInReferenceFolder(currentProjectPath, fileName);
         if (foundPath) {
@@ -117,6 +124,7 @@ export namespace GenerateScreenshot {
         }
       }
 
+      // 如果引用文件夹中找不到，再从最近文件列表中查找
       if (!fileUri) {
         const recentFiles = await RecentFileManager.getRecentFiles();
         const file = recentFiles.find((file) => PathString.getFileNameFromPath(file.uri.fsPath) === fileName);
@@ -154,8 +162,14 @@ export namespace GenerateScreenshot {
 
   /**
    * 生成整个文件内容的广视野截图
+   *
+   * 文件查找优先级：
+   * 1. 如果提供了 currentProjectPath，优先在当前项目的引用文件夹中查找
+   * 2. 如果找不到，再从最近文件列表中查找
+   *
    * @param fileName 文件名
    * @param maxDimension 自定义最大边长度，默认为1920
+   * @param currentProjectPath 当前项目路径（用于在引用文件夹中查找文件）
    * @returns 截图的Blob对象
    */
   export async function generateFullView(
@@ -166,6 +180,7 @@ export namespace GenerateScreenshot {
     try {
       let fileUri: URI | undefined;
 
+      // 优先在当前项目的引用文件夹中查找（确保跨项目引用不会冲突）
       if (currentProjectPath) {
         const foundPath = await ReferenceFileScanner.findFileInReferenceFolder(currentProjectPath, fileName);
         if (foundPath) {
@@ -173,6 +188,7 @@ export namespace GenerateScreenshot {
         }
       }
 
+      // 如果引用文件夹中找不到，再从最近文件列表中查找
       if (!fileUri) {
         const recentFiles = await RecentFileManager.getRecentFiles();
         const file = recentFiles.find((file) => PathString.getFileNameFromPath(file.uri.fsPath) === fileName);

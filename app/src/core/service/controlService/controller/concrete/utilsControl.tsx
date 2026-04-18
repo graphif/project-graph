@@ -636,29 +636,57 @@ export class ControllerUtils {
     this.syncChangeTextNode(textNode);
   }
 
+  /**
+   * 自动将文本节点转换为引用块（支持自动创建新文件）
+   *
+   * 核心功能：
+   * 1. 检测文本节点内容是否为引用格式 [[文件名]] 或 [[文件名#Section名]]
+   * 2. 在当前项目的引用文件夹中查找目标文件
+   * 3. 如果文件存在：直接创建引用块
+   * 4. 如果文件不存在：自动创建新的 .prg 文件，然后创建引用块
+   *
+   * 自动创建文件的流程：
+   * - 在当前项目目录下创建同名子文件夹（引用文件夹）
+   * - 在引用文件夹中创建新的 .prg 文件
+   * - 新文件包含一个以文件名命名的文本节点
+   * - 自动切换到新创建的文件
+   *
+   * 使用场景：
+   * - 用户输入 [[新文件名]] 后退出编辑，自动创建新文件并建立引用
+   * - 类似 Obsidian 的双链功能，支持自动创建不存在的文件
+   *
+   * @param project 当前项目实例
+   * @param textNode 要转换的文本节点
+   */
   private async autoChangeTextNodeToReferenceBlock(project: Project, textNode: TextNode) {
+    // 检查是否为引用格式
     if (textNode.text.startsWith("[[") && textNode.text.endsWith("]]")) {
       textNode.isSelected = true;
 
+      // 解析引用文本
       const parserResult = ReferenceManager.referenceBlockTextParser(textNode.text);
       if (!parserResult.isValid) {
         toast.error(parserResult.invalidReason);
         return;
       }
 
+      // 草稿项目不能创建新引用文件
       if (project.isDraft) {
         toast.error("草稿项目不能创建新引用文件");
         return;
       }
 
+      // 在当前项目的引用文件夹中查找目标文件
       const foundInReferenceFolder = await ReferenceFileScanner.findFileInReferenceFolder(
         project.uri.fsPath,
         parserResult.fileName,
       );
 
       if (foundInReferenceFolder) {
+        // 文件已存在：添加到最近文件列表，验证 Section 是否存在，然后创建引用块
         await RecentFileManager.addRecentFileByUri(URI.file(foundInReferenceFolder));
         if (parserResult.sectionName) {
+          // 验证指定的 Section 是否存在
           const sections = await CrossFileContentQuery.getSectionsByFileName(parserResult.fileName);
           if (!sections.includes(parserResult.sectionName)) {
             toast.error(`文件【${parserResult.fileName}】中没有section【${parserResult.sectionName}】，不能创建引用`);
@@ -669,29 +697,37 @@ export class ControllerUtils {
         return;
       }
 
+      // 文件不存在：自动创建新文件
+      // 步骤1：确保引用文件夹存在
       await ReferenceFileScanner.ensureReferenceFolderExists(project.uri.fsPath);
 
+      // 步骤2：创建新项目
       const newUri = ReferenceFileScanner.getNewFileUri(project.uri.fsPath, parserResult.fileName);
       const newProject = Project.newDraft();
       newProject.uri = newUri;
 
+      // 步骤3：初始化新项目
       loadAllServicesBeforeInit(newProject);
       await newProject.init();
       loadAllServicesAfterInit(newProject);
 
+      // 步骤4：在新项目中创建一个以文件名命名的文本节点
       const newTextNode = new TextNode(newProject, {
         text: parserResult.fileName,
       });
       newProject.stageManager.add(newTextNode);
       newTextNode.isSelected = true;
 
+      // 步骤5：保存新文件并添加到最近文件列表
       await newProject.save();
       await RecentFileManager.addRecentFileByUri(newUri);
       await ReferenceFileScanner.addFileToCache(project.uri.fsPath, parserResult.fileName);
 
+      // 步骤6：切换到新创建的项目
       store.set(projectsAtom, [...store.get(projectsAtom), newProject]);
       store.set(activeProjectAtom, newProject);
 
+      // 步骤7：在原项目中创建引用块
       await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
     }
   }
