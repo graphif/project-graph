@@ -638,6 +638,18 @@ export default function MyContextMenuContent() {
               </Item>
 
               <Item
+                onClick={() => {
+                  const selectedTextNodes = p.stageManager.getSelectedEntities().filter((it) => it instanceof TextNode);
+                  for (const textNode of selectedTextNodes) {
+                    p.syncAssociationManager.createTwinTextNode(textNode);
+                  }
+                }}
+              >
+                <RefreshCcwDot />
+                创建孪生节点
+              </Item>
+
+              <Item
                 onClick={() =>
                   p.stageManager
                     .getSelectedEntities()

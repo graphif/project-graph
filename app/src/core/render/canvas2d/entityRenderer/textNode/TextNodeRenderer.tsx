@@ -1,6 +1,7 @@
 import { Random } from "@/core/algorithm/random";
 import { Project, service } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
+import { SyncAssociationRenderer } from "@/core/render/canvas2d/utilsRenderer/SyncAssociationRenderer";
 import {
   getLogicNodeRenderName,
   LogicNodeNameEnum,
@@ -87,6 +88,9 @@ export class TextNodeRenderer {
       if (this.project.keyboardOnlyEngine.isOpenning() && !node.isEditing && Settings.showTreeDirectionHint) {
         this.renderKeyboardTreeHint(node);
       }
+
+      // 渲染孪生同步关系的星形虚线（以选中节点为中心，连向所有孪生兄弟的中心）
+      SyncAssociationRenderer.renderSyncLines(this.project, node);
     }
     if (node.isAiGenerating) {
       const borderColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected.clone();

@@ -1,17 +1,17 @@
-import { Project } from "@/core/Project";
+import type { Project } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { NodeMoveShadowEffect } from "@/core/service/feedbackService/effectEngine/concrete/NodeMoveShadowEffect";
 import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { ResizeAble } from "@/core/stage/stageObject/abstract/StageObjectInterface";
+import type { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import type { ResizeAble } from "@/core/stage/stageObject/abstract/StageObjectInterface";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { getMultiLineTextSize } from "@/utils/font";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
-import { Value } from "platejs";
+import type { Value } from "platejs";
 
 /**
  *
@@ -260,6 +260,10 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       this.adjustSizeByText();
     } else if (this.sizeAdjust === "manual") {
       this.adjustHeightByText();
+    }
+    // 向孪生兄弟同步 text（_isSyncing 为 true 时说明自己正在被同步写入，跳过避免循环）
+    if (!this._isSyncing) {
+      this.project.syncAssociationManager.syncFrom(this, "text");
     }
   }
 

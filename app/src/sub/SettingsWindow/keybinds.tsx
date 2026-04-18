@@ -666,6 +666,7 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "splitTextNodes",
       "mergeTextNodes",
       "swapTextAndDetails",
+      "createTwinTextNode",
       "decreaseFontSize",
       "increaseFontSize",
       "adjustSelectedTextNodeWidthMin",

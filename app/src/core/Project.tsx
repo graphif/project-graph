@@ -70,6 +70,7 @@ import type { SectionInOutManager } from "@/core/stage/stageManager/concreteMeth
 import type { SectionPackManager } from "@/core/stage/stageManager/concreteMethods/StageSectionPackManager";
 import type { SectionCollisionSolver } from "@/core/stage/stageManager/concreteMethods/SectionCollisionSolver";
 import type { TagManager } from "@/core/stage/stageManager/concreteMethods/StageTagManager";
+import type { StageSyncAssociationManager } from "@/core/stage/stageManager/concreteMethods/StageSyncAssociationManager";
 import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import type { StageManager } from "@/core/stage/stageManager/StageManager";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
@@ -597,6 +598,7 @@ declare module "./Project" {
     sectionPackManager: SectionPackManager;
     sectionCollisionSolver: SectionCollisionSolver;
     tagManager: TagManager;
+    syncAssociationManager: StageSyncAssociationManager;
     keyboardOnlyEngine: KeyboardOnlyEngine;
     keyboardOnlyGraphEngine: KeyboardOnlyGraphEngine;
     keyboardOnlyTreeEngine: KeyboardOnlyTreeEngine;

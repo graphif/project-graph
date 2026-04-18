@@ -318,6 +318,9 @@ export class ControllerCuttingClass extends ControllerClass {
 
     this.warningAssociations = [];
     for (const edge of this.project.stageManager.getAssociations()) {
+      if (!edge.isPhysical) {
+        continue; // 非物理对象（如 SyncAssociation）不参与劈砍检测
+      }
       if (edge instanceof Edge && edge.isHiddenBySectionCollapse) {
         continue; // 连线被隐藏了
       }

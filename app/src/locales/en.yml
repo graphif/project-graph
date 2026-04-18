@@ -1398,6 +1398,9 @@ keyBinds:
   increaseFontSize:
     title: Increase Font Size
     description: Increase the font size of selected text nodes. Only works on text nodes. Press Ctrl+= to increase.
+  createTwinTextNode:
+    title: Create Twin Text Node
+    description: Create twin nodes for all selected text nodes. New nodes will sync content with original nodes. Press Shift+Y to trigger.
   checkoutProtectPrivacy:
     title: Enter/Exit Privacy Protection Mode
     description: |

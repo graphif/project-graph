@@ -238,8 +238,12 @@ export class StageManager {
     if (this.project.stage.length === 0) {
       return Vector.getZero();
     }
+    const physicalObjects = this.project.stage.filter((node) => node.isPhysical);
+    if (physicalObjects.length === 0) {
+      return Vector.getZero();
+    }
     const allNodesRectangle = Rectangle.getBoundingRectangle(
-      this.project.stage.map((node) => node.collisionBox.getRectangle()),
+      physicalObjects.map((node) => node.collisionBox.getRectangle()),
     );
     return allNodesRectangle.center;
   }
@@ -260,9 +264,11 @@ export class StageManager {
    * 获取舞台的矩形对象
    */
   getBoundingRectangle(): Rectangle {
-    const rect = Rectangle.getBoundingRectangle(
-      Array.from(this.project.stage).map((node) => node.collisionBox.getRectangle()),
-    );
+    const physicalObjects = Array.from(this.project.stage).filter((node) => node.isPhysical);
+    if (physicalObjects.length === 0) {
+      return new Rectangle(Vector.getZero(), Vector.getZero());
+    }
+    const rect = Rectangle.getBoundingRectangle(physicalObjects.map((node) => node.collisionBox.getRectangle()));
 
     return rect;
   }

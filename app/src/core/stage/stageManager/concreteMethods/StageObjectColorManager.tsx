@@ -14,6 +14,8 @@ export class StageObjectColorManager {
       if (node.isSelected) {
         node.color = color;
         this.project.controllerUtils.finishChangeTextNode(node);
+        // 向孪生兄弟同步 color
+        this.project.syncAssociationManager.syncFrom(node, "color");
       }
     }
     for (const node of this.project.stageManager.getSections()) {

@@ -176,6 +176,9 @@ export class DeleteManager {
     for (const edge of prepareDeleteAssociation) {
       this.project.stageManager.delete(edge);
     }
+
+    // 从孪生同步关系中移除（若成员数量不足2则整个关系也一起删除）
+    this.project.syncAssociationManager.onStageObjectDeleted(entity);
   }
 
   /**

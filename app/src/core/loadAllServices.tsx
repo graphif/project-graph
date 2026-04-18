@@ -71,6 +71,7 @@ import { SectionInOutManager } from "@/core/stage/stageManager/concreteMethods/S
 import { SectionPackManager } from "@/core/stage/stageManager/concreteMethods/StageSectionPackManager";
 import { SectionCollisionSolver } from "@/core/stage/stageManager/concreteMethods/SectionCollisionSolver";
 import { TagManager } from "@/core/stage/stageManager/concreteMethods/StageTagManager";
+import { StageSyncAssociationManager } from "@/core/stage/stageManager/concreteMethods/StageSyncAssociationManager";
 import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import { StageManager } from "@/core/stage/stageManager/StageManager";
 import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
@@ -131,6 +132,7 @@ export function loadAllServicesBeforeInit(project: Project): void {
   project.loadService(SectionPackManager);
   project.loadService(SectionCollisionSolver);
   project.loadService(TagManager);
+  project.loadService(StageSyncAssociationManager);
   project.loadService(ReferenceManager);
   project.loadService(KeyboardOnlyEngine);
   project.loadService(KeyboardOnlyGraphEngine);

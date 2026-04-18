@@ -1726,6 +1726,9 @@ keyBinds:
   swapTextAndDetails:
     title: Tukar Ringkas dan Detail
     description: Tukar informasi detail dan konten aktual semua node teks yang dipilih, tekan e 5 kali berturut-turut, terutama digunakan untuk konten teks yang ditempel langsung ingin ditulis ke informasi detail
+  createTwinTextNode:
+    title: Buat Node Teks Kembar
+    description: Buat node kembar untuk semua node teks yang dipilih. Node baru akan menyinkronkan konten dengan node asli. Tekan Shift+Y untuk memicu.
   reverseImageColors:
     title: Balikkan Warna Gambar
     description: Balikkan warna gambar yang dipilih (ubah latar belakang putih menjadi hitam, atau sebaliknya)

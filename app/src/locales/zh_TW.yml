@@ -1752,6 +1752,9 @@ keyBinds:
   swapTextAndDetails:
     title: 詳略交換
     description: 將所有選中的文本節點的詳細信息和實際內容進行交換，連按5次e，主要用於直接粘貼進來的文本內容想寫入詳細信息
+  createTwinTextNode:
+    title: 創建孿生節點
+    description: 為所有選中的文本節點分別創建孿生節點，新節點與原節點內容同步，按 Shift+Y 觸發
   reverseImageColors:
     title: 反轉圖片顏色
     description: 反轉選中圖片的顏色（將白色背景變為黑色，反之亦然）

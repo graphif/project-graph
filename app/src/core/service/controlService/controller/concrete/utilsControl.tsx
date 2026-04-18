@@ -310,6 +310,8 @@ export class ControllerUtils {
     console.log();
     NodeDetailsWindow.open(clickedNode.details, (value) => {
       clickedNode.details = value;
+      // 向孪生兄弟同步 details
+      this.project.syncAssociationManager.syncFrom(clickedNode, "details");
     });
   }
 
@@ -364,6 +366,9 @@ export class ControllerUtils {
     }
     if (clickedStageObject === null) {
       for (const association of this.project.stageManager.getAssociations()) {
+        if (!association.isPhysical) {
+          continue; // 非物理对象（如 SyncAssociation）不参与点击检测
+        }
         if (association instanceof LineEdge) {
           if (association.target.isHiddenBySectionCollapse && association.source.isHiddenBySectionCollapse) {
             continue;

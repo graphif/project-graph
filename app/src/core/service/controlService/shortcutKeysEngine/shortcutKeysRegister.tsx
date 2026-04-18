@@ -1463,6 +1463,18 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "e e e e e",
     onPress: (project) => TextNodeSmartTools.exchangeTextAndDetails(project!),
   },
+  {
+    id: "createTwinTextNode",
+    defaultKey: "S-y",
+    onPress: (project) => {
+      const selectedTextNodes = project!.stageManager
+        .getSelectedEntities()
+        .filter((node) => node instanceof TextNode) as TextNode[];
+      for (const textNode of selectedTextNodes) {
+        project!.syncAssociationManager.createTwinTextNode(textNode);
+      }
+    },
+  },
 
   /*------- 潜行模式 -------*/
   {
