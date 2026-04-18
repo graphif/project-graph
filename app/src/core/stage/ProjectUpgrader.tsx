@@ -11,7 +11,7 @@ import { DetailsManager } from "./stageObject/tools/entityDetailsManager";
 
 export namespace ProjectUpgrader {
   /** N系列的最新版本 */
-  export const NLatestVersion = "2.2.0";
+  export const NLatestVersion = "2.3.0";
 
   /**
    * 比较两个版本号字符串（格式：x.y.z）
@@ -374,6 +374,11 @@ export namespace ProjectUpgrader {
       [data, metadata] = convertN2toN3(data, metadata);
     }
 
+    // 如果版本小于 2.3.0，需要升级
+    if (compareVersion(currentVersion, "2.3.0") < 0) {
+      [data, metadata] = convertN3toN4(data, metadata);
+    }
+
     return [data, metadata];
   }
 
@@ -413,6 +418,19 @@ export namespace ProjectUpgrader {
       }
     }
     return [data, { ...metadata, version: "2.2.0" }];
+  }
+
+  /**
+   * 将 2.2.0 版本升级到 2.3.0 版本
+   * Section 新增 _collisionBoxNormal 字段用于保存空 Section 的位置信息。
+   * 旧版本没有此字段，加载时 Section 位置由子元素动态计算（有子元素时行为不变）。
+   * 空 Section 在旧版本本就无位置信息，升级时不需要补充，保持兼容即可。
+   * @param data 2.2.0版本数据
+   * @param metadata 2.2.0版本metadata
+   * @returns 2.3.0版本数据和metadata
+   */
+  function convertN3toN4(data: any[], metadata: any): [any[], ProjectMetadata] {
+    return [data, { ...metadata, version: "2.3.0" }];
   }
 
   export async function convertVAnyToN1(json: Record<string, any>, uri: URI) {

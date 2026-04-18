@@ -23,6 +23,7 @@ export class Section extends ConnectableEntity {
   public uuid: string;
   _isEditingTitle: boolean = false;
   private _collisionBoxWhenCollapsed: CollisionBox;
+  @serializable
   private _collisionBoxNormal: CollisionBox;
 
   public get isEditingTitle() {
@@ -38,7 +39,6 @@ export class Section extends ConnectableEntity {
    */
   static bigTitleCameraScale = 0.2;
 
-  @serializable
   public get collisionBox(): CollisionBox {
     if (this.isCollapsed) {
       return this._collisionBoxWhenCollapsed;
@@ -87,6 +87,7 @@ export class Section extends ConnectableEntity {
       uuid = crypto.randomUUID() as string,
       text = "",
       collisionBox = new CollisionBox([new Rectangle(new Vector(0, 0), new Vector(0, 0))]),
+      _collisionBoxNormal: collisionBoxNormal = undefined as CollisionBox | undefined,
       color = Color.Transparent,
       locked = false,
       isCollapsed = false,
@@ -98,14 +99,16 @@ export class Section extends ConnectableEntity {
     super();
     this.uuid = uuid;
 
+    if (collisionBoxNormal) {
+      // 从序列化数据恢复：直接使用保存的 _collisionBoxNormal（含正确位置）
+      this._collisionBoxNormal = collisionBoxNormal;
+    } else {
+      // 新建：从 collisionBox 参数构建 _collisionBoxNormal
+      const rect = collisionBox.getRectangle();
+      const shapes: Shape[] = rect.getBoundingLines();
+      this._collisionBoxNormal = new CollisionBox(shapes);
+    }
     this._collisionBoxWhenCollapsed = collisionBox;
-
-    const rect = collisionBox.getRectangle();
-    const shapes: Shape[] = rect.getBoundingLines();
-    // shapes.push(
-    //   new Rectangle(rect.location, new Vector(rect.size.x, 50)),
-    // );
-    this._collisionBoxNormal = new CollisionBox(shapes);
 
     this.color = color;
     this.text = text;

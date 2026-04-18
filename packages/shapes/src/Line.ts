@@ -1,4 +1,5 @@
 import { Vector } from "@graphif/data-structures";
+import { serializable } from "@graphif/serializer";
 import { Circle } from "./Circle";
 import { Rectangle } from "./Rectangle";
 import { Shape } from "./Shape";
@@ -12,7 +13,9 @@ export interface IntersectionResult {
  * 线段类
  */
 export class Line extends Shape {
+  @serializable
   start: Vector;
+  @serializable
   end: Vector;
 
   constructor(start: Vector, end: Vector) {

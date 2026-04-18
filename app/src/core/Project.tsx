@@ -230,13 +230,24 @@ export class Project extends EventEmitter<{
    * @param latestVersion 最新版本
    */
   private async checkAndConfirmUpgrade(currentVersion: string, latestVersion: string): Promise<boolean> {
-    const needsUpgrade = this.compareVersion(currentVersion, latestVersion) < 0;
+    const versionDiff = this.compareVersion(currentVersion, latestVersion);
 
-    if (!needsUpgrade) {
+    // 文件版本 > 软件版本：文件来自更新版本的软件，当前软件无法安全解析，拒绝打开
+    if (versionDiff > 0) {
+      await Dialog.buttons(
+        "文件版本过新，无法打开",
+        `该文件由更新版本的软件保存（prg文件版本 ${currentVersion}，当前软件支持的prg最高版本 ${latestVersion}）。\n\n请升级软件后再打开此文件，以避免数据损坏。`,
+        [{ id: "ok", label: "确定" }],
+      );
+      return false;
+    }
+
+    // 文件版本 == 软件版本：无需升级，直接打开
+    if (versionDiff === 0) {
       return true;
     }
 
-    // 显示确认对话框
+    // 文件版本 < 软件版本：需要升级旧文件，弹出确认对话框
     const response = await Dialog.buttons(
       "检测到旧版本项目文件",
       `当前文件版本为 ${currentVersion}，需要升级到 ${latestVersion} (是prg文件版本,非软件版本)。\n\n升级过程不可逆且可能存在风险，特别是对于大型文件，建议提前备份。是否继续升级？`,
@@ -348,6 +359,12 @@ export class Project extends EventEmitter<{
       }
     } catch (e) {
       console.warn(e);
+      await Dialog.buttons(
+        "文件解析失败",
+        `打开文件时发生错误，文件内容可能已损坏或与当前软件版本不兼容。\n\n错误信息：${e}`,
+        [{ id: "ok", label: "确定" }],
+      );
+      return;
     }
     this.state = ProjectState.Saved;
   }
