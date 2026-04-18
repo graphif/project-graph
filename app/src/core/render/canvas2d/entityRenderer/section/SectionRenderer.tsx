@@ -95,7 +95,8 @@ export class SectionRenderer {
 
   renderBackgroundColor(section: Section) {
     if (Settings.sectionBackgroundFillMode === "titleOnly") {
-      // 只填充顶部标题条（不透明）
+      // 只填充顶部标题条（不透明），标题为空时跳过
+      if (section.text === "") return;
       const color = section.color.clone();
       const titleBarHeight = (Renderer.FONT_SIZE + Renderer.NODE_PADDING * 2) * this.project.camera.currentScale;
       const titleBarRect = new Rectangle(

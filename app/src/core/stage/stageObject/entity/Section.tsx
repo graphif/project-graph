@@ -144,6 +144,8 @@ export class Section extends ConnectableEntity {
     let rectangle: Rectangle;
     const titleSize = getTextSize(this.text, Renderer.FONT_SIZE);
 
+    const titleBarHeight = this.text === "" ? 0 : 50;
+
     if (this.children.length === 0) {
       rectangle = new Rectangle(
         this.collisionBox.getRectangle().location,
@@ -157,14 +159,16 @@ export class Section extends ConnectableEntity {
       );
       rectangle.size.x = Math.max(rectangle.size.x, titleSize.x + Renderer.NODE_PADDING * 2);
       // 留白范围在上面调整
-      rectangle.location = rectangle.location.subtract(new Vector(0, 50));
-      rectangle.size = rectangle.size.add(new Vector(0, 50));
+      rectangle.location = rectangle.location.subtract(new Vector(0, titleBarHeight));
+      rectangle.size = rectangle.size.add(new Vector(0, titleBarHeight));
     }
 
     this._collisionBoxNormal.shapes = rectangle.getBoundingLines();
     // 群友需求：希望Section框扩大交互范围，标题也能拖动
-    const newRect = new Rectangle(rectangle.location.clone(), new Vector(rectangle.size.x, 50));
-    this._collisionBoxNormal.shapes.push(newRect);
+    if (titleBarHeight > 0) {
+      const newRect = new Rectangle(rectangle.location.clone(), new Vector(rectangle.size.x, titleBarHeight));
+      this._collisionBoxNormal.shapes.push(newRect);
+    }
     // 调整折叠状态
     this._collisionBoxWhenCollapsed = this.collapsedCollisionBox();
   }

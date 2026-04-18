@@ -268,7 +268,7 @@ export class ControllerUtils {
     this.project.inputElement
       .input(
         this.project.renderer
-          .transformWorld2View(section.rectangle.location)
+          .transformWorld2View(section.rectangle.location.subtract(new Vector(0, section.text === "" ? 50 : 0)))
           .add(Vector.same(Renderer.NODE_PADDING).multiply(this.project.camera.currentScale)),
         section.text,
         (text) => {
