@@ -456,6 +456,8 @@ export namespace TextNodeSmartTools {
       } else {
         node.color = new Color(59, 114, 60);
       }
+      // 向孪生兄弟同步 color
+      project.syncAssociationManager.syncFrom(node, "color");
       if (specialCharPrefix.some((value) => node.text.startsWith(value + " "))) {
         node.rename(node.text.slice(2));
       } else {
@@ -474,6 +476,8 @@ export namespace TextNodeSmartTools {
       } else {
         node.color = new Color(61, 10, 11);
       }
+      // 向孪生兄弟同步 color
+      project.syncAssociationManager.syncFrom(node, "color");
       if (specialCharPrefix.some((value) => node.text.startsWith(value + " "))) {
         node.rename(node.text.slice(2));
       } else {
