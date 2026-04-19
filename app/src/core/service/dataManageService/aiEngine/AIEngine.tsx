@@ -1,44 +1,48 @@
-import { service } from "@/core/Project";
+import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { AITools } from "@/core/service/dataManageService/aiEngine/AITools";
+import { ChatOpenAI } from "@langchain/openai";
 import { fetch } from "@tauri-apps/plugin-http";
-import OpenAI from "openai";
+import { createAgent } from "langchain";
 
 @service("aiEngine")
 export class AIEngine {
-  private openai = new OpenAI({
-    apiKey: "",
-    dangerouslyAllowBrowser: true,
-    fetch,
-  });
-
-  // constructor(private readonly project: Project) {}
+  private openai: ChatOpenAI | null = null;
 
   async updateConfig() {
-    this.openai.baseURL = Settings.aiApiBaseUrl;
-    this.openai.apiKey = Settings.aiApiKey;
+    this.openai = new ChatOpenAI({
+      apiKey: Settings.aiApiKey,
+      modelName: Settings.aiModel,
+      configuration: {
+        baseURL: Settings.aiApiBaseUrl,
+        fetch,
+      },
+      streaming: true,
+    });
   }
 
-  async chat(messages: OpenAI.ChatCompletionMessageParam[], abortSignal?: AbortSignal) {
+  async chat(messages: any[], project: Project, abortSignal?: AbortSignal) {
     await this.updateConfig();
-    const stream = await this.openai.chat.completions.create(
+    if (!this.openai) throw new Error("AI Engine not initialized");
+
+    const agent = createAgent({
+      model: this.openai,
+      tools: AITools.tools,
+    });
+
+    return agent.stream(
+      { messages },
       {
-        messages,
-        model: Settings.aiModel,
-        stream: true,
-        stream_options: {
-          include_usage: true,
+        configurable: {
+          project: project,
         },
-        tools: AITools.tools,
+        signal: abortSignal,
+        streamMode: "messages",
       },
-      { signal: abortSignal },
     );
-    return stream;
   }
 
   async getModels() {
-    await this.updateConfig();
-    const resp = await this.openai.models.list();
-    return resp.data.map((it) => it.id.replaceAll("models/", ""));
+    return ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"];
   }
 }

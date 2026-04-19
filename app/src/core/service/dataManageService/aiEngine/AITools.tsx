@@ -5,12 +5,11 @@ import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { Color, Vector } from "@graphif/data-structures";
 import { serialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
-import OpenAI from "openai";
+import { tool, StructuredTool } from "@langchain/core/tools";
 import z from "zod/v4";
 
 export namespace AITools {
-  export const tools: OpenAI.ChatCompletionTool[] = [];
-  export const handlers: Map<string, (project: Project, data: any) => any> = new Map();
+  export const tools: StructuredTool[] = [];
 
   function addTool<A extends z.ZodObject>(
     name: string,
@@ -18,16 +17,21 @@ export namespace AITools {
     parameters: A,
     fn: (project: Project, data: z.infer<A>) => any,
   ) {
-    tools.push({
-      type: "function",
-      function: {
+    const t = tool(
+      async (data, config) => {
+        const project = config.configurable?.project as Project;
+        if (!project) throw new Error("Project not found in config");
+        const result = await fn(project, data as any);
+        return typeof result === "object" ? JSON.stringify(result) : String(result);
+      },
+      {
         name,
         description,
-        parameters: z.toJSONSchema(parameters),
-        strict: true,
+        schema: parameters as any,
       },
-    });
-    handlers.set(name, fn);
+    );
+
+    tools.push(t);
   }
 
   addTool("get_all_nodes", "获取舞台上所有节点以及uuid", z.object({}), (project) => serialize(project.stage));
