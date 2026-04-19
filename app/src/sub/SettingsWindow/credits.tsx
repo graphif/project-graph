@@ -1,25 +1,24 @@
-import { Popover } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
+import { Telemetry } from "@/core/service/Telemetry";
+import { isDevAtom } from "@/state";
 import { cn } from "@/utils/cn";
+import { fetch } from "@tauri-apps/plugin-http";
 import { open } from "@tauri-apps/plugin-shell";
+import { useAtom } from "jotai";
 import {
   AlertCircle,
   Calendar,
   ExternalLink,
   Heart,
+  LayoutGrid,
   Loader,
   RefreshCw,
   Server,
   Table,
   User,
-  LayoutGrid,
 } from "lucide-react";
-import { Telemetry } from "@/core/service/Telemetry";
-import "./assets/font.css";
-import { isDevAtom } from "@/state";
-import { useAtom } from "jotai";
 import { useEffect, useRef, useState } from "react";
-import { fetch } from "@tauri-apps/plugin-http";
+import "./assets/font.css";
 
 interface DonationData {
   user: string;
@@ -347,24 +346,21 @@ export default function CreditsTab() {
           </div>
         )}
 
-        <Popover.Confirm
-          title="提示"
-          description="注意：当您选择要捐赠时，请在开头添加备注“pg”，以便开发者能区分您的捐赠的项目是project-graph。"
-          onConfirm={() => {
+        <div
+          className="bg-muted/50 **:cursor-pointer group flex flex-1 cursor-pointer flex-col justify-center gap-2 rounded-lg border p-4"
+          onClick={() => {
             Telemetry.event("credits_donate_clicked");
             open("https://2y.nz/pgdonate");
           }}
         >
-          <div className="bg-muted/50 **:cursor-pointer group flex flex-1 cursor-pointer flex-col justify-center gap-2 rounded-lg border p-4">
-            <div className="flex items-center justify-center gap-2">
-              <ExternalLink className="h-5 w-5" />
-              <span className="text-lg">前往捐赠页面</span>
-            </div>
-            <div className="flex items-end justify-center gap-2 text-center">
-              <span className="underline-offset-4 group-hover:underline">2y.nz/pgdonate</span>
-            </div>
+          <div className="flex items-center justify-center gap-2">
+            <ExternalLink className="h-5 w-5" />
+            <span className="text-lg">前往捐赠页面</span>
           </div>
-        </Popover.Confirm>
+          <div className="flex items-end justify-center gap-2 text-center">
+            <span className="underline-offset-4 group-hover:underline">2y.nz/pgdonate</span>
+          </div>
+        </div>
       </div>
       <div className="mb-4 flex items-center justify-end gap-4">
         <button
