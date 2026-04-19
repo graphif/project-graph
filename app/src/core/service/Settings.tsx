@@ -148,6 +148,7 @@ export const settingsSchema = z.object({
   textNodePasteSizeAdjustMode: z
     .union([z.literal("auto"), z.literal("manual"), z.literal("autoByLength")])
     .default("autoByLength"),
+  textNodeManualDefaultCharWidth: z.number().min(3).max(60).int().default(10),
   allowAddCycleEdge: z.boolean().default(false),
   enableDragNodeShakeDetachFromEdge: z.boolean().default(false),
   autoLayoutWhenTreeGenerate: z.boolean().default(true),

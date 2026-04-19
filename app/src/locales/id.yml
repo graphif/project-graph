@@ -693,6 +693,12 @@ settings:
       auto: Selalu Sesuaikan Otomatis
       manual: Selalu Sesuaikan Manual
       autoByLength: Sesuaikan Otomatis Berdasarkan Panjang
+  textNodeManualDefaultCharWidth:
+    title: Lebar Default Mode Manual Node Teks (Jumlah Karakter Cina)
+    description: |
+      Lebar default node teks saat beralih ke mode lebar manual menggunakan pintasan ttt.
+      Satuannya adalah karakter Cina, misalnya mengatur ke 10 berarti lebar 10 karakter Cina.
+      Lebar karakter Inggris adalah setengah dari karakter Cina.
   textNodeAutoFormatTreeWhenExitEdit:
     title: Format Struktur Pohon Otomatis Saat Keluar Mode Edit
     description: |

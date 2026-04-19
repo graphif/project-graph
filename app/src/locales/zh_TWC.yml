@@ -734,6 +734,9 @@ settings:
       auto: 總是自動調整
       manual: 總是手動調整
       autoByLength: 根據長度自動調整
+  textNodeManualDefaultCharWidth:
+    title: 文字節點手動模式預設寬度（中文字元數）
+    description: 使用ttt快捷鍵切換到手動寬度模式時，文字節點的預設寬度。單位為中文字元數，例如設定為10表示寬度為10個中文字元。英文字元寬度為中文字元的一半。
   textNodeAutoFormatTreeWhenExitEdit:
     title: 退出編輯模式時自動格式化樹狀結構
     description: 當文字節點退出編輯模式時，自動對其所在的樹狀結構進行格式化佈局

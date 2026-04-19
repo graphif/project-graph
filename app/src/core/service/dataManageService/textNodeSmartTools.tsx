@@ -2,6 +2,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project } from "@/core/Project";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
+import { Settings } from "@/core/service/Settings";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
@@ -16,6 +17,7 @@ import { averageColors, Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";
 import { v4 } from "uuid";
+import { Renderer } from "@/core/render/canvas2d/renderer";
 
 export namespace TextNodeSmartTools {
   /**
@@ -29,12 +31,22 @@ export namespace TextNodeSmartTools {
     return new Vector(0.5, 0.5);
   }
 
+  /**
+   * 切换文本节点的宽度调整模式（ttt 快捷键）
+   *
+   * - auto → manual：将宽度设为「textNodeManualDefaultCharWidth」设置项指定的字符数对应的像素值
+   *   换算公式：pixelWidth = charWidth × FONT_SIZE + NODE_PADDING × 2
+   * - manual → auto：根据文本内容自动调整宽度
+   */
   export function ttt(project: Project) {
     const selectedTextNodes = project.stageManager.getSelectedEntities().filter((node) => node instanceof TextNode);
     for (const node of selectedTextNodes) {
       if (node.sizeAdjust === "auto") {
         node.sizeAdjust = "manual";
-        node.resizeHandle(Vector.getZero());
+        const charWidth = Settings.textNodeManualDefaultCharWidth;
+        // FONT_SIZE = 32（一个中文字符的宽度），NODE_PADDING = 14（节点内边距）
+        const pixelWidth = charWidth * Renderer.FONT_SIZE + Renderer.NODE_PADDING * 2;
+        node.resizeWidthTo(pixelWidth);
       } else if (node.sizeAdjust === "manual") {
         node.sizeAdjust = "auto";
         node.forceAdjustSizeByText();
@@ -558,9 +570,16 @@ export namespace TextNodeSmartTools {
   }
 
   /**
-   * 将选中的特殊格式的文本节点，转换成引用块
-   * @param project
-   * @returns
+   * 将选中的特殊格式文本节点转换成引用块
+   *
+   * 流程：
+   * 1. 解析 [[文件名]] 或 [[文件名#Section名]]
+   * 2. 收集原节点上的所有连线（用于后续迁移）
+   * 3. 创建引用块节点
+   * 4. 用 Section 框包裹引用块，以文件名作为框标题
+   * 5. 将被引用 Section 的文字提取到 details，供搜索使用
+   * 6. 迁移原节点的所有连线到新引用块
+   * 7. 删除原文本节点
    */
   export async function changeTextNodeToReferenceBlock(project: Project) {
     // 仅当项目不是草稿时才更新引用
@@ -582,6 +601,8 @@ export namespace TextNodeSmartTools {
     }
     const selectedNode = selectedTextNodes[0];
     const text = selectedNode.text;
+
+    // 解析引用格式：[[文件名]] 或 [[文件名#Section名]]
     let referenceName = "";
     if (text.trim().startsWith("[[") && text.trim().endsWith("]]")) {
       referenceName = text.trim().slice(2, -2);
@@ -592,23 +613,22 @@ export namespace TextNodeSmartTools {
     const fileName = referenceName.split("#")[0];
     const sectionName = referenceName.split("#")[1] || "";
 
-    // 1. 获取所有与原节点相关的连线
+    // 步骤1：收集所有与原节点相关的连线（用于后续迁移）
     const associations = project.stageManager.getAssociations();
     const relatedEdges: (Edge | MultiTargetUndirectedEdge)[] = [];
     for (const association of associations) {
       if (association instanceof Edge) {
-        // 检查普通有向边
         if (association.source === selectedNode || association.target === selectedNode) {
           relatedEdges.push(association);
         }
       } else if (association instanceof MultiTargetUndirectedEdge) {
-        // 检查多目标无向边
         if (association.associationList.includes(selectedNode)) {
           relatedEdges.push(association);
         }
       }
     }
 
+    // 步骤2：创建引用块节点
     const referenceBlock = new ReferenceBlockNode(project, {
       collisionBox: new CollisionBox([
         new Rectangle(selectedNode.collisionBox.getRectangle().leftTop, new Vector(100, 100)),
@@ -619,32 +639,29 @@ export namespace TextNodeSmartTools {
 
     project.stageManager.add(referenceBlock);
 
-    // 把被引用Section内的所有文字提取到details，供当前项目搜索
+    // 步骤3：用 Section 框包裹引用块，以文件名作为标题
+    const section = Section.fromEntities(project, [referenceBlock]);
+    section.rename(fileName);
+    project.stageManager.add(section);
+
+    // 步骤4：提取被引用 Section 内的所有文字到 details，供当前项目搜索
     const markdown = await extractSectionText(fileName, sectionName);
     if (markdown.trim()) {
       referenceBlock.details = DetailsManager.markdownToDetails(markdown);
     }
 
-    // 2. 更新所有相关连线，将原节点替换为新的引用块节点
+    // 步骤5：迁移所有相关连线到新的引用块节点
     for (const edge of relatedEdges) {
       if (edge instanceof Edge) {
-        // 更新普通有向边
-        if (edge.source === selectedNode) {
-          edge.source = referenceBlock;
-        }
-        if (edge.target === selectedNode) {
-          edge.target = referenceBlock;
-        }
+        if (edge.source === selectedNode) edge.source = referenceBlock;
+        if (edge.target === selectedNode) edge.target = referenceBlock;
       } else if (edge instanceof MultiTargetUndirectedEdge) {
-        // 更新多目标无向边
         const index = edge.associationList.indexOf(selectedNode);
-        if (index !== -1) {
-          edge.associationList[index] = referenceBlock;
-        }
+        if (index !== -1) edge.associationList[index] = referenceBlock;
       }
     }
 
-    // 3. 删除原节点
+    // 步骤6：删除原文本节点
     project.stageManager.delete(selectedNode);
     await project.referenceManager.insertRefDataToSourcePrgFile(fileName, sectionName);
   }

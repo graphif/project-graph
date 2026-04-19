@@ -2,7 +2,9 @@ import { loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project } from "@/core/Project";
 import { PathString } from "@/utils/pathString";
 import { RecentFileManager } from "../dataFileService/RecentFileManager";
+import { ReferenceFileScanner } from "../dataFileService/ReferenceFileScanner";
 import { Section } from "@/core/stage/stageObject/entity/Section";
+import { URI } from "vscode-uri";
 import { sleep } from "@/utils/sleep";
 import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";
@@ -93,26 +95,44 @@ export namespace GenerateScreenshot {
   }
 
   /**
+   * 根据文件名查找对应的 URI
+   *
+   * 查找优先级：
+   * 1. 若提供了 currentProjectPath，优先在当前项目的引用文件夹中查找
+   * 2. 兜底：从最近打开文件列表中查找
+   *
+   * @returns 找到时返回 URI，否则返回 undefined
+   */
+  async function resolveFileUri(fileName: string, currentProjectPath?: string): Promise<URI | undefined> {
+    if (currentProjectPath) {
+      const foundPath = await ReferenceFileScanner.findFileInReferenceFolder(currentProjectPath, fileName);
+      if (foundPath) return URI.file(foundPath);
+    }
+    const recentFiles = await RecentFileManager.getRecentFiles();
+    const file = recentFiles.find((f) => PathString.getFileNameFromPath(f.uri.fsPath) === fileName);
+    return file?.uri;
+  }
+
+  /**
    * 根据文件名和Section框名生成截图
+   *
    * @param fileName 文件名
    * @param sectionName Section框名
    * @param maxDimension 自定义最大边长度，默认为1920
+   * @param currentProjectPath 当前项目路径（用于在引用文件夹中优先查找）
    * @returns 截图的Blob对象
    */
   export async function generateSection(
     fileName: string,
     sectionName: string,
     maxDimension: number = 1920,
+    currentProjectPath?: string,
   ): Promise<Blob | undefined> {
     try {
-      // 加载项目
-      const recentFiles = await RecentFileManager.getRecentFiles();
-      const file = recentFiles.find((file) => PathString.getFileNameFromPath(file.uri.fsPath) === fileName);
-      if (!file) {
-        return undefined;
-      }
+      const fileUri = await resolveFileUri(fileName, currentProjectPath);
+      if (!fileUri) return undefined;
 
-      const project = new Project(file.uri);
+      const project = new Project(fileUri);
       loadAllServicesBeforeInit(project);
       await project.init();
 
@@ -140,20 +160,22 @@ export namespace GenerateScreenshot {
 
   /**
    * 生成整个文件内容的广视野截图
+   *
    * @param fileName 文件名
    * @param maxDimension 自定义最大边长度，默认为1920
+   * @param currentProjectPath 当前项目路径（用于在引用文件夹中优先查找）
    * @returns 截图的Blob对象
    */
-  export async function generateFullView(fileName: string, maxDimension: number = 1920): Promise<Blob | undefined> {
+  export async function generateFullView(
+    fileName: string,
+    maxDimension: number = 1920,
+    currentProjectPath?: string,
+  ): Promise<Blob | undefined> {
     try {
-      // 加载项目
-      const recentFiles = await RecentFileManager.getRecentFiles();
-      const file = recentFiles.find((file) => PathString.getFileNameFromPath(file.uri.fsPath) === fileName);
-      if (!file) {
-        return undefined;
-      }
+      const fileUri = await resolveFileUri(fileName, currentProjectPath);
+      if (!fileUri) return undefined;
 
-      const project = new Project(file.uri);
+      const project = new Project(fileUri);
       loadAllServicesBeforeInit(project);
       await project.init();
 

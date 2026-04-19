@@ -548,6 +548,12 @@ settings:
       auto: Always Auto Adjust
       manual: Always Manual Adjust
       autoByLength: Auto Adjust By Length
+  textNodeManualDefaultCharWidth:
+    title: Text Node Manual Mode Default Width (Chinese Characters)
+    description: |
+      The default width of text nodes when switching to manual width mode using the ttt shortcut.
+      Unit is Chinese characters, e.g. setting to 10 means width of 10 Chinese characters.
+      English character width is half of Chinese character width.
   textNodeAutoFormatTreeWhenExitEdit:
     title: Auto Format Tree Structure When Exiting Edit Mode
     description: |

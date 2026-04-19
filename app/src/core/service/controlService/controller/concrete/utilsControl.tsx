@@ -30,6 +30,10 @@ import { ReferenceManager } from "@/core/stage/stageManager/concreteMethods/Stag
 import _ from "lodash";
 import { Settings } from "@/core/service/Settings";
 import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
+import { ReferenceFileScanner } from "@/core/service/dataFileService/ReferenceFileScanner";
+import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
+import { activeProjectAtom, projectsAtom, store } from "@/state";
+import { URI } from "vscode-uri";
 
 /**
  * 这里是专门存放代码相同的地方
@@ -637,23 +641,40 @@ export class ControllerUtils {
     this.syncChangeTextNode(textNode);
   }
 
+  /**
+   * 自动将文本节点转换为引用块（支持自动创建新文件）
+   *
+   * 流程：
+   * 1. 检测文本节点是否为 [[文件名]] 或 [[文件名#Section名]] 格式
+   * 2. 优先在当前项目的引用文件夹中查找目标文件
+   * 3. 找到文件：校验 Section 是否存在，然后直接创建引用块
+   * 4. 未找到文件：自动创建新的 .prg 文件（含初始文本节点），切换到新项目，再创建引用块
+   */
   private async autoChangeTextNodeToReferenceBlock(project: Project, textNode: TextNode) {
-    if (textNode.text.startsWith("[[") && textNode.text.endsWith("]]")) {
-      textNode.isSelected = true;
-      // 要加一个前置判断，防止用户输入本来就没有的东西
+    if (!(textNode.text.startsWith("[[") && textNode.text.endsWith("]]"))) {
+      return;
+    }
+    textNode.isSelected = true;
 
-      const recentFiles = await RecentFileManager.getRecentFiles();
-      const parserResult = ReferenceManager.referenceBlockTextParser(textNode.text);
-      if (!parserResult.isValid) {
-        toast.error(parserResult.invalidReason);
-        return;
-      }
-      if (!recentFiles.map((item) => PathString.getFileNameFromPath(item.uri.fsPath)).includes(parserResult.fileName)) {
-        toast.error(`文件【${parserResult.fileName}】不在“最近打开的文件”中，不能创建引用`);
-        return;
-      }
+    const parserResult = ReferenceManager.referenceBlockTextParser(textNode.text);
+    if (!parserResult.isValid) {
+      toast.error(parserResult.invalidReason);
+      return;
+    }
+
+    // 草稿项目不允许创建引用文件
+    if (project.isDraft) {
+      toast.error("草稿项目不能创建新引用文件");
+      return;
+    }
+
+    // 优先在当前项目的引用文件夹中查找
+    const foundPath = await ReferenceFileScanner.findFileInReferenceFolder(project.uri.fsPath, parserResult.fileName);
+
+    if (foundPath) {
+      // 文件已存在：加入最近文件列表，校验 Section，然后创建引用块
+      await RecentFileManager.addRecentFileByUri(URI.file(foundPath));
       if (parserResult.sectionName) {
-        // 用户输入了#，需要检查section是否存在
         const sections = await CrossFileContentQuery.getSectionsByFileName(parserResult.fileName);
         if (!sections.includes(parserResult.sectionName)) {
           toast.error(`文件【${parserResult.fileName}】中没有section【${parserResult.sectionName}】，不能创建引用`);
@@ -661,7 +682,51 @@ export class ControllerUtils {
         }
       }
       await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
+      return;
     }
+
+    // 文件不存在：尝试从最近文件列表中查找（兼容旧逻辑）
+    const recentFiles = await RecentFileManager.getRecentFiles();
+    const recentFile = recentFiles.find(
+      (item) => PathString.getFileNameFromPath(item.uri.fsPath) === parserResult.fileName,
+    );
+    if (recentFile) {
+      if (parserResult.sectionName) {
+        const sections = await CrossFileContentQuery.getSectionsByFileName(parserResult.fileName);
+        if (!sections.includes(parserResult.sectionName)) {
+          toast.error(`文件【${parserResult.fileName}】中没有section【${parserResult.sectionName}】，不能创建引用`);
+          return;
+        }
+      }
+      await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
+      return;
+    }
+
+    // 文件完全不存在：自动在引用文件夹中创建新文件
+    await ReferenceFileScanner.ensureReferenceFolderExists(project.uri.fsPath);
+    const newUri = ReferenceFileScanner.getNewFileUri(project.uri.fsPath, parserResult.fileName);
+
+    const newProject = Project.newDraft();
+    newProject.uri = newUri;
+    loadAllServicesBeforeInit(newProject);
+    await newProject.init();
+    loadAllServicesAfterInit(newProject);
+
+    // 新文件中创建一个以文件名命名的初始文本节点
+    const newTextNode = new TextNode(newProject, { text: parserResult.fileName });
+    newProject.stageManager.add(newTextNode);
+    newTextNode.isSelected = true;
+
+    await newProject.save();
+    await RecentFileManager.addRecentFileByUri(newUri);
+    await ReferenceFileScanner.addFileToCache(project.uri.fsPath, parserResult.fileName);
+
+    // 将新项目加入项目列表并切换
+    store.set(projectsAtom, [...store.get(projectsAtom), newProject]);
+    store.set(activeProjectAtom, newProject);
+
+    // 在原项目中创建引用块
+    await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
   }
 
   // 同步更改孪生节点
