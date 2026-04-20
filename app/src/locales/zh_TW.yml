@@ -1240,6 +1240,11 @@ keyBinds:
     title: 打開文件
     description: |
       選擇一個曾經保存的json/prg文件並打開
+  openCurrentProjectFileFolder:
+    title: 打開當前工程文件所在文件夾
+    description: |
+      在系統文件管理器中打開當前工程文件所在的文件夾
+      當前文件為草稿時不可用
   undo:
     title: 撤銷
     description: 撤銷上一次操作

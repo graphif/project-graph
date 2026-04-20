@@ -1512,6 +1512,9 @@ keyBinds:
   openFile:
     title: Open File
     description: "Select a previously saved json/prg file and open it.\n"
+  openCurrentProjectFileFolder:
+    title: Open Current Project File Folder
+    description: "Open the folder containing the current project file in the system file manager.\nNot available when the current file is a draft.\n"
   newDraft:
     title: Create New Draft
     description: "Create a new draft file and switch to this file.\nIf the current

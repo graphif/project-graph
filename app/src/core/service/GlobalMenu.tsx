@@ -175,6 +175,7 @@ export function GlobalMenu() {
   const newDraftKey = useKeyBind("newDraft");
   const openFileKey = useKeyBind("openFile");
   const saveFileKey = useKeyBind("saveFile");
+  const openCurrentProjectFileFolderKey = useKeyBind("openCurrentProjectFileFolder");
   // 操作快捷键
   const searchTextKey = useKeyBind("searchText");
   const undoKey = useKeyBind("undo");
@@ -254,13 +255,11 @@ export function GlobalMenu() {
           </Item>
           <Item
             disabled={!activeProject || activeProject.isDraft}
-            onClick={async () => {
-              const path = await join(activeProject!.uri.fsPath, "..");
-              await shellOpen(path);
-            }}
+            onClick={() => openCurrentProjectFolder(activeProject!)}
           >
             <FolderOpen />
             打开当前工程文件所在文件夹
+            {openCurrentProjectFileFolderKey && <MenubarShortcut>{openCurrentProjectFileFolderKey}</MenubarShortcut>}
           </Item>
           <Sub>
             <SubTrigger
@@ -1604,6 +1603,10 @@ export function GlobalMenu() {
       )}
     </Menubar>
   );
+}
+
+export function openCurrentProjectFolder(project: Project) {
+  shellOpen(PathString.dirPath(project.uri.fsPath));
 }
 
 export async function onNewDraft() {

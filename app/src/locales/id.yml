@@ -1224,6 +1224,11 @@ keyBinds:
     title: Buka File
     description: |
       Pilih file json/prg yang pernah disimpan dan buka
+  openCurrentProjectFileFolder:
+    title: Buka Folder File Proyek Saat Ini
+    description: |
+      Buka folder yang berisi file proyek saat ini di manajer file sistem
+      Tidak tersedia saat file saat ini adalah konsep
   undo:
     title: Batalkan
     description: Batalkan operasi sebelumnya

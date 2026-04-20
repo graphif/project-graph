@@ -529,6 +529,7 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
     keys: [
       "saveFile",
       "openFile",
+      "openCurrentProjectFileFolder",
       "newDraft",
       "newFileAtCurrentProjectDir",
       "undo",

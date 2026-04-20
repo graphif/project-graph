@@ -33,7 +33,7 @@ import { RecentFileManager } from "../../dataFileService/RecentFileManager";
 import { ColorSmartTools } from "../../dataManageService/colorSmartTools";
 import { ConnectNodeSmartTools } from "../../dataManageService/connectNodeSmartTools";
 import { TextNodeSmartTools } from "../../dataManageService/textNodeSmartTools";
-import { createFileAtCurrentProjectDir, onNewDraft, onOpenFile } from "../../GlobalMenu";
+import { createFileAtCurrentProjectDir, onNewDraft, onOpenFile, openCurrentProjectFolder } from "../../GlobalMenu";
 
 interface KeyBindItem {
   id: string;
@@ -839,6 +839,19 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "openFile",
     defaultKey: "C-o",
     onPress: () => onOpenFile(),
+    isUI: true,
+  },
+  {
+    id: "openCurrentProjectFileFolder",
+    defaultKey: "C-S-l",
+    onPress: () => {
+      const activeProject = store.get(activeProjectAtom);
+      if (!activeProject || activeProject.isDraft) {
+        toast.error("当前没有可用的工程文件");
+        return;
+      }
+      openCurrentProjectFolder(activeProject);
+    },
     isUI: true,
   },
 
