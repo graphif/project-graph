@@ -171,46 +171,46 @@ export namespace ConnectNodeSmartTools {
     const inEdges: LineEdge[] = project.stageManager.getLineEdges().filter((edge) => edge.target === selectedNode);
     const outEdges: LineEdge[] = project.stageManager.getLineEdges().filter((edge) => edge.source === selectedNode);
 
-    if (inEdges.length === 0) {
-      toast.error("树形摘除时，选中的节点没有入边");
-      return;
-    }
-    if (outEdges.length === 0) {
-      toast.error("树形摘除时，选中的节点没有出边");
+    if (inEdges.length === 0 && outEdges.length === 0) {
       return;
     }
 
-    // 保存入边的源节点和出边的目标节点及属性
-    const sourceNodes = inEdges.map((edge) => ({
-      node: edge.source,
-      sourceRectangleRate: edge.sourceRectangleRate,
-      text: edge.text,
-      color: edge.color,
-    }));
-    const targetNodes = outEdges.map((edge) => ({
-      node: edge.target,
-      targetRectangleRate: edge.targetRectangleRate,
-      text: edge.text,
-      color: edge.color,
-    }));
+    if (inEdges.length > 0 && outEdges.length > 0) {
+      // 保存入边的源节点和出边的目标节点及属性
+      const sourceNodes = inEdges.map((edge) => ({
+        node: edge.source,
+        sourceRectangleRate: edge.sourceRectangleRate,
+        text: edge.text,
+        color: edge.color,
+      }));
+      const targetNodes = outEdges.map((edge) => ({
+        node: edge.target,
+        targetRectangleRate: edge.targetRectangleRate,
+        text: edge.text,
+        color: edge.color,
+      }));
 
-    // 删除所有入边和出边
-    [...inEdges, ...outEdges].forEach((edge) => project.stageManager.deleteAssociation(edge));
+      // 删除所有入边和出边
+      [...inEdges, ...outEdges].forEach((edge) => project.stageManager.deleteAssociation(edge));
 
-    // 将入边的源节点直接连接到出边的目标节点
-    sourceNodes.forEach((source) => {
-      targetNodes.forEach((target) => {
-        project.stageManager.add(
-          new LineEdge(project, {
-            associationList: [source.node, target.node],
-            text: source.text || target.text,
-            sourceRectangleRate: source.sourceRectangleRate,
-            targetRectangleRate: target.targetRectangleRate,
-            color: source.color || target.color,
-          }),
-        );
+      // 将入边的源节点直接连接到出边的目标节点
+      sourceNodes.forEach((source) => {
+        targetNodes.forEach((target) => {
+          project.stageManager.add(
+            new LineEdge(project, {
+              associationList: [source.node, target.node],
+              text: source.text || target.text,
+              sourceRectangleRate: source.sourceRectangleRate,
+              targetRectangleRate: target.targetRectangleRate,
+              color: source.color || target.color,
+            }),
+          );
+        });
       });
-    });
+    } else {
+      // 端点节点：只有入边或只有出边，直接删除所有连边
+      [...inEdges, ...outEdges].forEach((edge) => project.stageManager.deleteAssociation(edge));
+    }
 
     // 根据参数决定是否向上平移节点
     if (moveUp) {
