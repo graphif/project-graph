@@ -9,6 +9,7 @@ import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { Section } from "@/core/stage/stageObject/entity/Section";
 import { CursorNameEnum } from "@/types/cursors";
 import { Direction } from "@/types/directions";
 import { isMac } from "@/utils/platform";
@@ -446,21 +447,24 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     for (const line of lines) {
       // 寻找源头端点位置
       for (const fromEntity of this.connectFromEntities) {
-        if (fromEntity.collisionBox.isContainsPoint(line.start) && !fromEntity.collisionBox.isContainsPoint(line.end)) {
+        const fromRect = fromEntity.collisionBox
+          .getRectangle()
+          .expandFromCenter(fromEntity instanceof Section ? 15 : 0);
+        // 起点在矩形内、且线段与矩形边界有交点（即从内部穿出）
+        if (fromRect.isPointIn(line.start) && fromRect.isCollideWithLine(line)) {
           // 找到了出去的一小段线段
-          const rect = fromEntity.collisionBox.getRectangle();
-          const intersectionPoint = rect.getLineIntersectionPoint(line);
+          const intersectionPoint = fromRect.getLineIntersectionPoint(line);
           // 找到交点，判断交点在哪个方位上
-          if (intersectionPoint.y === rect.top) {
+          if (intersectionPoint.y === fromRect.top) {
             // 从顶部发出
             sourceDirection = Direction.Up;
-          } else if (intersectionPoint.y === rect.bottom) {
+          } else if (intersectionPoint.y === fromRect.bottom) {
             // 从底部发出
             sourceDirection = Direction.Down;
-          } else if (intersectionPoint.x === rect.left) {
+          } else if (intersectionPoint.x === fromRect.left) {
             // 从左侧发出
             sourceDirection = Direction.Left;
-          } else if (intersectionPoint.x === rect.right) {
+          } else if (intersectionPoint.x === fromRect.right) {
             // 从右侧发出
             sourceDirection = Direction.Right;
           }
@@ -479,41 +483,42 @@ export class ControllerNodeConnectionClass extends ControllerClass {
         }
       }
       // 寻找目标端点位置
-      if (
-        this.connectToEntity &&
-        this.connectToEntity.collisionBox.isContainsPoint(line.end) &&
-        !this.connectToEntity.collisionBox.isContainsPoint(line.start)
-      ) {
-        // 找到了入来的一小段线段
-        const rect = this.connectToEntity.collisionBox.getRectangle();
-        const intersectionPoint = rect.getLineIntersectionPoint(line);
-        // 找到交点，判断交点在哪个方位上
-        if (intersectionPoint.y === rect.top) {
-          // 到达顶部
-          targetDirection = Direction.Up;
-        } else if (intersectionPoint.y === rect.bottom) {
-          // 到达底部
-          targetDirection = Direction.Down;
-        } else if (intersectionPoint.x === rect.left) {
-          // 到达左侧
-          targetDirection = Direction.Left;
-        } else if (intersectionPoint.x === rect.right) {
-          // 到达右侧
-          targetDirection = Direction.Right;
-        }
-        // 触发火花特效 - 划入目标节点
-        if (targetDirection !== null && !this._hasTargetSparkTriggered) {
-          this._hasTargetSparkTriggered = true;
-          // 划入时的方向与划出时相反
-          const sparkDirection = this.getOppositeDirection(targetDirection);
-          this.project.effects.addEffect(
-            new SparkBurstEffect(
-              new ProgressNumber(0, 40),
-              intersectionPoint.clone(),
-              sparkDirection,
-              this.project.stageStyleManager.currentStyle.StageObjectBorder.clone(),
-            ),
-          );
+      if (this.connectToEntity) {
+        const toRect = this.connectToEntity.collisionBox
+          .getRectangle()
+          .expandFromCenter(this.connectToEntity instanceof Section ? 15 : 0);
+        // 起点不在矩形内、且线段与矩形边界有交点（即从外部穿入，包括终点刚好在边框上的情况）
+        if (!toRect.isPointIn(line.start) && toRect.isCollideWithLine(line)) {
+          // 找到了入来的一小段线段
+          const intersectionPoint = toRect.getLineIntersectionPoint(line);
+          // 找到交点，判断交点在哪个方位上
+          if (intersectionPoint.y === toRect.top) {
+            // 到达顶部
+            targetDirection = Direction.Up;
+          } else if (intersectionPoint.y === toRect.bottom) {
+            // 到达底部
+            targetDirection = Direction.Down;
+          } else if (intersectionPoint.x === toRect.left) {
+            // 到达左侧
+            targetDirection = Direction.Left;
+          } else if (intersectionPoint.x === toRect.right) {
+            // 到达右侧
+            targetDirection = Direction.Right;
+          }
+          // 触发火花特效 - 划入目标节点
+          if (targetDirection !== null && !this._hasTargetSparkTriggered) {
+            this._hasTargetSparkTriggered = true;
+            // 划入时的方向与划出时相反
+            const sparkDirection = this.getOppositeDirection(targetDirection);
+            this.project.effects.addEffect(
+              new SparkBurstEffect(
+                new ProgressNumber(0, 40),
+                intersectionPoint.clone(),
+                sparkDirection,
+                this.project.stageStyleManager.currentStyle.StageObjectBorder.clone(),
+              ),
+            );
+          }
         }
       }
     }
