@@ -9,7 +9,7 @@ import { LinkKit } from "@/components/editor/plugins/link-kit";
 import { ListKit } from "@/components/editor/plugins/list-kit";
 import { MathKit } from "@/components/editor/plugins/math-kit";
 import { TableKit } from "@/components/editor/plugins/table-kit";
-import { MarkdownPlugin } from "@platejs/markdown";
+import { MarkdownPlugin, remarkMdx, remarkMention } from "@platejs/markdown";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -88,7 +88,11 @@ export class DetailsManager {
           ...CodeBlockKit,
           ...ListKit,
           ...LinkKit,
-          MarkdownPlugin,
+          MarkdownPlugin.configure({
+            options: {
+              remarkPlugins: [remarkMath, remarkGfm, remarkMdx, remarkMention],
+            },
+          }),
         ],
       });
       editor.children = details;
