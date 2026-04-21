@@ -45,7 +45,7 @@ export class TextNodeRenderer {
       ),
       fillColor,
       borderColor,
-      2 * this.project.camera.currentScale,
+      node.getBorderWidth() * this.project.camera.currentScale,
       Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
     );
 

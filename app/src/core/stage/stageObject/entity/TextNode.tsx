@@ -158,6 +158,13 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
   }
 
   /**
+   * 动态边框粗细，与字体大小等比缩放，基准为 2px
+   */
+  public getBorderWidth(): number {
+    return (this.fontSizeCache / Renderer.FONT_SIZE) * 2;
+  }
+
+  /**
    * 更新字体大小缓存
    * fontScaleLevel 存储的是"半个级别"，所以计算时要除以 2
    * 这样步长就是 0.5，避免了浮点数精度问题
