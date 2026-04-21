@@ -17,7 +17,6 @@ import { averageColors, Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";
 import { v4 } from "uuid";
-import { Renderer } from "@/core/render/canvas2d/renderer";
 
 export namespace TextNodeSmartTools {
   /**
@@ -45,7 +44,7 @@ export namespace TextNodeSmartTools {
         node.sizeAdjust = "manual";
         const charWidth = Settings.textNodeManualDefaultCharWidth;
         // FONT_SIZE = 32（一个中文字符的宽度），NODE_PADDING = 14（节点内边距）
-        const pixelWidth = charWidth * Renderer.FONT_SIZE + Renderer.NODE_PADDING * 2;
+        const pixelWidth = charWidth * node.getFontSize() + node.getPadding() * 2;
         node.resizeWidthTo(pixelWidth);
       } else if (node.sizeAdjust === "manual") {
         node.sizeAdjust = "auto";
