@@ -88,7 +88,7 @@ export class TextNodeRenderer {
         this.project.keyboardOnlyEngine.isOpenning() &&
         !node.isEditing &&
         Settings.showTreeDirectionHint &&
-        this.project.stageManager.getSelectedEntities().length === 1
+        !this.project.stage.some((so) => so.isSelected && so !== node)
       ) {
         this.renderKeyboardTreeHint(node);
       }
