@@ -11,6 +11,7 @@ import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
+import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { SvgUtils } from "@/core/render/svg/SvgUtils";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { EdgeRendererClass } from "@/core/render/canvas2d/entityRenderer/edge/EdgeRendererClass";
@@ -131,6 +132,8 @@ export class StraightEdgeRenderer extends EdgeRendererClass {
         Math.min(Math.max(rect1.width, rect1.height), Math.max(rect2.width, rect2.height)) / 100,
         100,
       );
+    } else if (edge.source instanceof TextNode) {
+      edgeWidth = edge.source.getBorderWidth();
     }
     const straightBodyLine = edge.bodyLine;
     const scaledWidth = edgeWidth * this.project.camera.currentScale;

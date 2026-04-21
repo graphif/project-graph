@@ -14,6 +14,7 @@ import { ConnectableEntity } from "@/core/stage/stageObject/abstract/Connectable
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 
 /**
  * 贝塞尔曲线
@@ -168,6 +169,8 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
         Math.min(Math.max(rect1.width, rect1.height), Math.max(rect2.width, rect2.height)) / 100,
         100,
       );
+    } else if (edge.source instanceof TextNode) {
+      edgeWidth = edge.source.getBorderWidth();
     }
 
     const curve = new SymmetryCurve(
