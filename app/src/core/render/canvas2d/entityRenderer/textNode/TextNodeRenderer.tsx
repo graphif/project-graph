@@ -84,7 +84,12 @@ export class TextNodeRenderer {
         );
       }
       // 渲染键盘树形模式方向提示（仅在键盘操作模式下且非编辑状态时显示）
-      if (this.project.keyboardOnlyEngine.isOpenning() && !node.isEditing && Settings.showTreeDirectionHint) {
+      if (
+        this.project.keyboardOnlyEngine.isOpenning() &&
+        !node.isEditing &&
+        Settings.showTreeDirectionHint &&
+        this.project.stageManager.getSelectedEntities().length === 1
+      ) {
         this.renderKeyboardTreeHint(node);
       }
 
@@ -150,7 +155,7 @@ export class TextNodeRenderer {
   private renderKeyboardTreeHint(node: TextNode): void {
     const direction = this.project.keyboardOnlyTreeEngine.getNodePreDirection(node);
     const rect = node.collisionBox.getRectangle();
-    const GAP = 25;
+    const GAP = node.getFontSize() * 0.8;
 
     const tabColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected.clone();
     tabColor.a = 0.8;
@@ -172,10 +177,11 @@ export class TextNodeRenderer {
     const tabKey = getKeyById("generateNodeTreeWithDeepMode");
     const backslashKey = getKeyById("generateNodeTreeWithBroadMode");
 
-    // 字体大小设置
-    const titleFontSize = 8; // 标题字体很小
-    const keyFontSizeActive = 14; // 当前方向快捷键字体
-    const keyFontSizeInactive = 10; // 非当前方向快捷键字体
+    // 字체大小跟随节点字体大小
+    const nodeFontSize = node.getFontSize();
+    const titleFontSize = nodeFontSize * 0.5; // 标题稍小
+    const keyFontSizeActive = nodeFontSize; // 当前方向快捷键与节点字体一致
+    const keyFontSizeInactive = nodeFontSize * 0.7; // 非当前方向稍小
 
     // 获取进入编辑模式的快捷键设置
     const startEditMode = Settings.textNodeStartEditMode;
@@ -190,7 +196,9 @@ export class TextNodeRenderer {
     const startEditTitle = i18next.t("editModeHint.startEditTitle", { ns: "common", defaultValue: "" });
 
     // 渲染进入编辑模式提示（在顶部更上方）
-    const editModeGap = GAP + 35; // 比顶部提示更上方
+    // 编辑提示需要在向上提示的上方，间距 = 标题行 + 快捷键行 + 额外间隔，均随字体缩放
+    const upBlockHeight = (titleFontSize + keyFontSizeInactive) * 1.5;
+    const editModeGap = GAP + upBlockHeight;
     const editModeBasePos = rect.topCenter.add(new Vector(0, -editModeGap));
     const editModeViewPos = this.project.renderer.transformWorld2View(editModeBasePos);
     const editModeColor = hintColor;
