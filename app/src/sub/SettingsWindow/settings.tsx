@@ -297,6 +297,7 @@ const categories = {
       "textNodeBigContentThresholdWhenPaste",
       "textNodePasteSizeAdjustMode",
       "textNodeManualDefaultCharWidth",
+      "newNodeScaleByCamera",
     ],
     section: ["isEnableSectionCollision"],
     edge: [

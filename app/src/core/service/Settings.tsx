@@ -210,6 +210,7 @@ export const settingsSchema = z.object({
   soundPitchVariationRange: z.number().min(0).max(1200).int().default(150),
   autoImportTxtFileWhenOpenPrg: z.boolean().default(false),
   enableAutoEdgeWidth: z.boolean().default(true),
+  newNodeScaleByCamera: z.boolean().default(false),
   showKeyBindHint: z.boolean().default(true),
 });
 

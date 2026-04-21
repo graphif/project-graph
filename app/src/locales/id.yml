@@ -273,6 +273,11 @@ settings:
     description: |
       Saat node teks dipilih, tampilkan petunjuk keyboard (tab/W W/S S/A A/D D) di sekitar node yang menunjukkan arah pertumbuhan pohon.
       Saat dinonaktifkan, label petunjuk ini tidak akan dirender.
+  newNodeScaleByCamera:
+    title: Node Baru Mengikuti Zoom Kamera
+    description: |
+      Saat diaktifkan, node teks yang baru dibuat akan menyesuaikan ukuran font secara otomatis
+      berdasarkan level zoom kamera saat ini, sehingga ukuran visual tetap konstan di layar. Dinonaktifkan secara default.
   sectionBitTitleRenderType:
     title: Jenis Render Judul Besar Ringkasan Kotak
     options:

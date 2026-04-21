@@ -324,6 +324,9 @@ settings:
   showTreeDirectionHint:
     title: 顯示樹形生長方向提示
     description: 選中文字節點時，在節點四周顯示 tab/W W/S S/A A/D D 等鍵盤樹形生長方向提示。關閉後不再渲染這些提示文字。
+  newNodeScaleByCamera:
+    title: 新建節點時，根據視野自動設置節點大小
+    description: 開啟後，創建文字節點時會根據當前視野縮放級別自動調整節點字體大小，使節點在螢幕上的視覺大小保持恆定。預設關閉。
   sectionBitTitleRenderType:
     title: 框的縮略大標題渲染類型
     options:
