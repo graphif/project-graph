@@ -176,7 +176,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
    * 这样步长就是 0.5，避免了浮点数精度问题
    */
   private updateFontSizeCache(): void {
-    this.fontSizeCache = Renderer.FONT_SIZE * Math.pow(2, this.fontScaleLevel / 2);
+    this.fontSizeCache = Renderer.FONT_SIZE * 2 ** (this.fontScaleLevel / 2);
     if (this.fontSizeCache >= 2) {
       // 确保指数变化的过程中字体不会变小到0
       this.fontSizeCache = Math.floor(this.fontSizeCache);

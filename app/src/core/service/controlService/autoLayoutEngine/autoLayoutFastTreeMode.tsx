@@ -1,5 +1,6 @@
 import { Project, service } from "@/core/Project";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle, Line } from "@graphif/shapes";
 
@@ -576,21 +577,31 @@ export class AutoLayoutFastTree {
         dfs(child); // 递归口
       }
       // 排列这些子节点，然后调整子树位置到根节点旁边
-      this.alignTrees(rightChildList, "right", 20, true);
-      this.adjustChildrenTreesByRootNodeLocation(node, rightChildList, 150, "rightCenter", true);
 
-      this.alignTrees(topChildList, "top", 20, true);
+      // 计算动态距离
+      let treesGap = 20;
+      let fatherChildNearGap = 50;
+      if (node instanceof TextNode) {
+        treesGap = treesGap * 2 ** (node.fontScaleLevel / 2);
+        fatherChildNearGap = fatherChildNearGap * 2 ** (node.fontScaleLevel / 2);
+      }
+      const fatherChildNormalGap = fatherChildNearGap * 3;
+
+      this.alignTrees(rightChildList, "right", treesGap, true);
+      this.adjustChildrenTreesByRootNodeLocation(node, rightChildList, fatherChildNormalGap, "rightCenter", true);
+
+      this.alignTrees(topChildList, "top", treesGap, true);
       // 如果是向上生长且只有一个子节点（唯一子节点），使用较短距离，否则使用150像素
-      const topGap = topChildList.length === 1 ? 50 : 150;
+      const topGap = topChildList.length === 1 ? fatherChildNearGap : fatherChildNormalGap;
       this.adjustChildrenTreesByRootNodeLocation(node, topChildList, topGap, "topCenter", true);
 
-      this.alignTrees(bottomChildList, "bottom", 20, true);
+      this.alignTrees(bottomChildList, "bottom", treesGap, true);
       // 如果是向下生长且只有一个子节点（唯一子节点），使用较短距离，否则使用150像素
-      const bottomGap = bottomChildList.length === 1 ? 50 : 150;
+      const bottomGap = bottomChildList.length === 1 ? fatherChildNearGap : fatherChildNormalGap;
       this.adjustChildrenTreesByRootNodeLocation(node, bottomChildList, bottomGap, "bottomCenter", true);
 
-      this.alignTrees(leftChildList, "left", 20, true);
-      this.adjustChildrenTreesByRootNodeLocation(node, leftChildList, 150, "leftCenter", true);
+      this.alignTrees(leftChildList, "left", treesGap, true);
+      this.adjustChildrenTreesByRootNodeLocation(node, leftChildList, fatherChildNormalGap, "leftCenter", true);
 
       // 检测并解决不同方向子树群之间的重叠问题
       this.resolveSubtreeOverlaps(
