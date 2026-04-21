@@ -42,8 +42,6 @@ interface KeyBindItem {
   onRelease?: (project?: Project) => void;
   // 全局快捷键
   isGlobal?: boolean;
-  // UI级别快捷键
-  isUI?: boolean;
   // 默认是否启用
   defaultEnabled?: boolean;
 }
@@ -56,7 +54,6 @@ export const allKeyBinds: KeyBindItem[] = [
       Dialog.buttons("测试快捷键", "您按下了自定义的测试快捷键，这一功能是测试开发所用，可在设置中更改触发方式", [
         { id: "close", label: "关闭" },
       ]),
-    isUI: true,
   },
 
   /*------- 窗口管理 -------*/
@@ -67,7 +64,6 @@ export const allKeyBinds: KeyBindItem[] = [
       if (!SubWindow.hasOpenWindows()) return;
       SubWindow.closeAll();
     },
-    isUI: true,
   },
   {
     id: "toggleFullscreen",
@@ -82,7 +78,6 @@ export const allKeyBinds: KeyBindItem[] = [
       const isFullscreen = await window.isFullscreen();
       await window.setFullscreen(!isFullscreen);
     },
-    isUI: true,
   },
   {
     id: "setWindowToMiniSize",
@@ -103,7 +98,6 @@ export const allKeyBinds: KeyBindItem[] = [
       const height = Settings.windowCollapsingHeight;
       await window.setSize(new LogicalSize(width, height));
     },
-    isUI: true,
   },
 
   /*------- 基础编辑 -------*/
@@ -137,7 +131,7 @@ export const allKeyBinds: KeyBindItem[] = [
         window.location.reload();
       }
     },
-    isUI: true,
+
     defaultEnabled: false,
   },
 
@@ -153,7 +147,7 @@ export const allKeyBinds: KeyBindItem[] = [
       }
       Settings.isClassroomMode = !Settings.isClassroomMode;
     },
-    isUI: true,
+
     defaultEnabled: false,
   },
 
@@ -550,7 +544,6 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "openColorPanel",
     defaultKey: "F6",
     onPress: () => ColorWindow.open(),
-    isUI: true,
   },
   {
     id: "switchDebugShow",
@@ -558,7 +551,6 @@ export const allKeyBinds: KeyBindItem[] = [
     onPress: async () => {
       Settings.showDebug = !Settings.showDebug;
     },
-    isUI: true,
   },
   {
     id: "selectAll",
@@ -599,7 +591,6 @@ export const allKeyBinds: KeyBindItem[] = [
     onPress: async () => {
       Settings.protectingPrivacy = !Settings.protectingPrivacy;
     },
-    isUI: true,
   },
 
   /*------- 搜索/外部打开 -------*/
@@ -623,19 +614,16 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "clickAppMenuSettingsButton",
     defaultKey: "S-!",
     onPress: () => SettingsWindow.open("settings"),
-    isUI: true,
   },
   {
     id: "clickAppMenuRecentFileButton",
     defaultKey: "S-#",
     onPress: () => RecentFilesWindow.open(),
-    isUI: true,
   },
   {
     id: "clickTagPanelButton",
     defaultKey: "S-@",
     onPress: () => TagWindow.open(),
-    isUI: true,
   },
   {
     id: "switchActiveProject",
@@ -663,7 +651,6 @@ export const allKeyBinds: KeyBindItem[] = [
       const nextActiveProjectIndex = (activeProjectIndex + 1) % projects.length;
       store.set(activeProjectAtom, projects[nextActiveProjectIndex]);
     },
-    isUI: true,
   },
   {
     id: "switchActiveProjectReversed",
@@ -692,7 +679,6 @@ export const allKeyBinds: KeyBindItem[] = [
       const nextActiveProjectIndex = mod(activeProjectIndex - 1, projects.length);
       store.set(activeProjectAtom, projects[nextActiveProjectIndex]);
     },
-    isUI: true,
   },
   {
     id: "closeCurrentProjectTab",
@@ -733,7 +719,6 @@ export const allKeyBinds: KeyBindItem[] = [
       }
       store.set(projectsAtom, result);
     },
-    isUI: true,
   },
   /*------- 导出操作 ------- */
   {
@@ -808,13 +793,11 @@ export const allKeyBinds: KeyBindItem[] = [
         RecentFileManager.addRecentFileByUri(activeProject.uri);
       }
     },
-    isUI: true,
   },
   {
     id: "newDraft",
     defaultKey: "C-n",
     onPress: () => onNewDraft(),
-    isUI: true,
   },
   {
     id: "newFileAtCurrentProjectDir",
@@ -832,14 +815,13 @@ export const allKeyBinds: KeyBindItem[] = [
       }
       createFileAtCurrentProjectDir(activeProject, async () => {});
     },
-    isUI: true,
+
     defaultEnabled: false,
   },
   {
     id: "openFile",
     defaultKey: "C-o",
     onPress: () => onOpenFile(),
-    isUI: true,
   },
   {
     id: "openCurrentProjectFileFolder",
@@ -852,7 +834,6 @@ export const allKeyBinds: KeyBindItem[] = [
       }
       openCurrentProjectFolder(activeProject);
     },
-    isUI: true,
   },
 
   /*------- 窗口透明度 -------*/
@@ -862,7 +843,6 @@ export const allKeyBinds: KeyBindItem[] = [
     onPress: async () => {
       Settings.windowBackgroundAlpha = Settings.windowBackgroundAlpha === 0 ? 1 : 0;
     },
-    isUI: true,
   },
   {
     id: "windowOpacityAlphaIncrease",
@@ -1199,7 +1179,6 @@ export const allKeyBinds: KeyBindItem[] = [
       Settings.theme = "dark";
       Themes.applyThemeById("dark");
     },
-    isUI: true,
   },
   {
     id: "switchToLightTheme",
@@ -1209,7 +1188,6 @@ export const allKeyBinds: KeyBindItem[] = [
       Settings.theme = "light";
       Themes.applyThemeById("light");
     },
-    isUI: true,
   },
   {
     id: "switchToParkTheme",
@@ -1219,7 +1197,6 @@ export const allKeyBinds: KeyBindItem[] = [
       Settings.theme = "park";
       Themes.applyThemeById("park");
     },
-    isUI: true,
   },
   {
     id: "switchToMacaronTheme",
@@ -1229,7 +1206,6 @@ export const allKeyBinds: KeyBindItem[] = [
       Settings.theme = "macaron";
       Themes.applyThemeById("macaron");
     },
-    isUI: true,
   },
   {
     id: "switchToMorandiTheme",
@@ -1239,7 +1215,6 @@ export const allKeyBinds: KeyBindItem[] = [
       Settings.theme = "morandi";
       Themes.applyThemeById("morandi");
     },
-    isUI: true,
   },
 
   /*------- 画笔透明度 -------*/
@@ -1497,7 +1472,6 @@ export const allKeyBinds: KeyBindItem[] = [
       Settings.isStealthModeEnabled = !Settings.isStealthModeEnabled;
       toast(Settings.isStealthModeEnabled ? "已开启潜行模式" : "已关闭潜行模式");
     },
-    isUI: true,
   },
 
   /*------- 拆分字符 -------*/
@@ -1630,13 +1604,13 @@ export class KeyBindsRegistrar {
   }
 }
 
-export function getKeyBindTypeById(id: string): "global" | "ui" | "project" {
+export function getKeyBindTypeById(id: string): "global" | "software" {
   for (const keyBind of allKeyBinds) {
     if (keyBind.id === id) {
-      return keyBind.isGlobal ? "global" : keyBind.isUI ? "ui" : "project";
+      return keyBind.isGlobal ? "global" : "software";
     }
   }
-  return "project";
+  return "software";
 }
 
 export function isKeyBindHasRelease(id: string) {
