@@ -28,6 +28,7 @@ import {
   Languages,
   Layers,
   Lightbulb,
+  MessageSquareText,
   LineSquiggle,
   ListCheck,
   ListCollapse,
@@ -215,4 +216,5 @@ export const settingsIcons = {
   arrowKeySelectOnlyInViewport: ScanEye,
   enableAutoEdgeWidth: Minus,
   showKeyBindHint: Lightbulb,
+  showEditModeHint: MessageSquareText,
 };

@@ -220,7 +220,7 @@ const categories = {
       "stealthModeReverseMask",
       "stealthModeMaskShape",
     ],
-    node: ["enableTagTextNodesBigDisplay", "showTextNodeBorder", "showTreeDirectionHint"],
+    node: ["enableTagTextNodesBigDisplay", "showTextNodeBorder", "showTreeDirectionHint", "showEditModeHint"],
     edge: ["lineStyle", "enableAutoEdgeWidth"],
     section: [
       "sectionBitTitleRenderType",

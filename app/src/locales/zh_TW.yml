@@ -986,6 +986,11 @@ settings:
     description: |
       開啟後，當按下 Ctrl/Alt/Shift/Win（Windows）或 ⌘/⌥/⇧/⌃（Mac）等修飾鍵時，會顯示匹配的快捷鍵提示。
       按住修飾鍵不放可查看第一頁快捷鍵，鬆開後再次按下可翻頁查看更多。
+  showEditModeHint:
+    title: 文本節點編輯模式提示
+    description: |
+      進入文本節點編輯模式時，在節點頂部顯示"正在編輯模式"，底部顯示換行和退出編輯的快捷鍵提示。
+      關閉後不再渲染這些提示文字。
 
 
 renderer:

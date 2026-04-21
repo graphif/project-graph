@@ -212,6 +212,7 @@ export const settingsSchema = z.object({
   enableAutoEdgeWidth: z.boolean().default(true),
   newNodeScaleByCamera: z.boolean().default(false),
   showKeyBindHint: z.boolean().default(true),
+  showEditModeHint: z.boolean().default(true),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

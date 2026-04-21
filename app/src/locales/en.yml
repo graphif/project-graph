@@ -882,6 +882,11 @@ settings:
     description: |
       When enabled, matching keyboard shortcut hints will be displayed when pressing modifier keys (Ctrl/Alt/Shift/Win on Windows or ⌘/⌥/⇧/⌃ on Mac).
       Hold the modifier key to view the first page of shortcuts, release and press again to page through more.
+  showEditModeHint:
+    title: Text Node Edit Mode Hints
+    description: |
+      When entering text node edit mode, displays "Editing" at the top of the node and line break / exit shortcut hints at the bottom.
+      When disabled, these hint labels will not be rendered.
 renderer:
   rectangleSelect:
     intersect: Intersection Select

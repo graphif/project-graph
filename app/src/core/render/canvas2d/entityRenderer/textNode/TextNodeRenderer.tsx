@@ -449,57 +449,59 @@ export class TextNodeRenderer {
     // 编辑状态
     if (node.isEditing) {
       // 编辑状态下，在节点顶部显示"正在编辑模式"，底部显示换行和退出提示
-      const hintColor = this.project.stageStyleManager.currentStyle.StageObjectBorder.clone();
-      hintColor.a = 0.5;
-      const titleColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected.clone();
-      titleColor.a = 0.8;
+      if (Settings.showEditModeHint) {
+        const hintColor = this.project.stageStyleManager.currentStyle.StageObjectBorder.clone();
+        hintColor.a = 0.5;
+        const titleColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected.clone();
+        titleColor.a = 0.8;
 
-      // 快捷键映射
-      const keyMap: Record<string, string> = {
-        enter: "Enter",
-        ctrlEnter: "Ctrl + Enter",
-        altEnter: "Alt + Enter",
-        shiftEnter: "Shift + Enter",
-      };
+        // 快捷键映射
+        const keyMap: Record<string, string> = {
+          enter: "Enter",
+          ctrlEnter: "Ctrl + Enter",
+          altEnter: "Alt + Enter",
+          shiftEnter: "Shift + Enter",
+        };
 
-      // 读取设置
-      const lineBreakKey = keyMap[Settings.textNodeContentLineBreak] || "Shift + Enter";
-      const exitEditKey = keyMap[Settings.textNodeExitEditMode] || "Enter";
+        // 读取设置
+        const lineBreakKey = keyMap[Settings.textNodeContentLineBreak] || "Shift + Enter";
+        const exitEditKey = keyMap[Settings.textNodeExitEditMode] || "Enter";
 
-      // 获取翻译
-      const editingModeTitle = i18next.t("editModeHint.editingMode", { ns: "common", defaultValue: "正在编辑模式" });
-      const lineBreakTitle = i18next.t("editModeHint.lineBreak", { ns: "common", defaultValue: "换行" });
-      const exitEditTitle = i18next.t("editModeHint.exitEdit", { ns: "common", defaultValue: "退出编辑模式" });
-      const orText = i18next.t("editModeHint.or", { ns: "common", defaultValue: "或" });
+        // 获取翻译
+        const editingModeTitle = i18next.t("editModeHint.editingMode", { ns: "common", defaultValue: "正在编辑模式" });
+        const lineBreakTitle = i18next.t("editModeHint.lineBreak", { ns: "common", defaultValue: "换行" });
+        const exitEditTitle = i18next.t("editModeHint.exitEdit", { ns: "common", defaultValue: "退出编辑模式" });
+        const orText = i18next.t("editModeHint.or", { ns: "common", defaultValue: "或" });
 
-      const titleFontSize = 10;
-      const keyFontSize = 12;
+        const titleFontSize = 10;
+        const keyFontSize = 12;
 
-      // 顶部显示"正在编辑模式"
-      this.project.textRenderer.renderTextFromCenter(
-        editingModeTitle,
-        this.project.renderer.transformWorld2View(node.rectangle.topCenter.add(new Vector(0, -15))),
-        titleFontSize * this.project.camera.currentScale,
-        titleColor,
-      );
+        // 顶部显示"正在编辑模式"
+        this.project.textRenderer.renderTextFromCenter(
+          editingModeTitle,
+          this.project.renderer.transformWorld2View(node.rectangle.topCenter.add(new Vector(0, -15))),
+          titleFontSize * this.project.camera.currentScale,
+          titleColor,
+        );
 
-      // 底部第一行：换行提示
-      const lineBreakText = `${lineBreakKey} ${lineBreakTitle}`;
-      this.project.textRenderer.renderTextFromCenter(
-        lineBreakText,
-        this.project.renderer.transformWorld2View(node.rectangle.bottomCenter.add(new Vector(0, 20))),
-        keyFontSize * this.project.camera.currentScale,
-        hintColor,
-      );
+        // 底部第一行：换行提示
+        const lineBreakText = `${lineBreakKey} ${lineBreakTitle}`;
+        this.project.textRenderer.renderTextFromCenter(
+          lineBreakText,
+          this.project.renderer.transformWorld2View(node.rectangle.bottomCenter.add(new Vector(0, 20))),
+          keyFontSize * this.project.camera.currentScale,
+          hintColor,
+        );
 
-      // 底部第二行：退出编辑模式提示
-      const exitEditText = `Esc ${orText} ${exitEditKey} ${exitEditTitle}`;
-      this.project.textRenderer.renderTextFromCenter(
-        exitEditText,
-        this.project.renderer.transformWorld2View(node.rectangle.bottomCenter.add(new Vector(0, 35))),
-        keyFontSize * this.project.camera.currentScale,
-        hintColor,
-      );
+        // 底部第二行：退出编辑模式提示
+        const exitEditText = `Esc ${orText} ${exitEditKey} ${exitEditTitle}`;
+        this.project.textRenderer.renderTextFromCenter(
+          exitEditText,
+          this.project.renderer.transformWorld2View(node.rectangle.bottomCenter.add(new Vector(0, 35))),
+          keyFontSize * this.project.camera.currentScale,
+          hintColor,
+        );
+      }
       return;
     }
 
