@@ -1,6 +1,5 @@
 import { Random } from "@/core/algorithm/random";
 import { Project, service } from "@/core/Project";
-import { Renderer } from "@/core/render/canvas2d/renderer";
 import { SyncAssociationRenderer } from "@/core/render/canvas2d/utilsRenderer/SyncAssociationRenderer";
 import {
   getLogicNodeRenderName,
@@ -46,7 +45,7 @@ export class TextNodeRenderer {
       fillColor,
       borderColor,
       node.getBorderWidth() * this.project.camera.currentScale,
-      Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+      node.getBorderRadius() * this.project.camera.currentScale,
     );
 
     // 如果是逻辑节点，在内部边缘绘制标记
@@ -104,7 +103,7 @@ export class TextNodeRenderer {
         node.color,
         borderColor,
         Random.randomFloat(1, 10) * this.project.camera.currentScale,
-        Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+        node.getBorderRadius() * this.project.camera.currentScale,
       );
     }
     // 用户不建议放大标签，所以这里注释掉了，但又有用户觉得这个也挺好，所以加个设置项
@@ -544,7 +543,7 @@ export class TextNodeRenderer {
           node.color,
           new Color(255, 0, 0, 0.5),
           Random.randomFloat(1, 10) * this.project.camera.currentScale,
-          Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+          node.getBorderRadius() * this.project.camera.currentScale,
         );
       }
     } else {

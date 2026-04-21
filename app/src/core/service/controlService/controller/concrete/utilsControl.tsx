@@ -124,7 +124,7 @@ export class ControllerUtils {
           backgroundColor: "transparent",
           color: fontColor,
           outline: `solid ${1 * this.project.camera.currentScale}px ${this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.1).toString()}`,
-          borderRadius: `${Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale}px`,
+          borderRadius: `${clickedNode.getBorderRadius() * this.project.camera.currentScale}px`,
         },
         selectAll,
         // rectWorld.width * this.project.camera.currentScale, // limit width
