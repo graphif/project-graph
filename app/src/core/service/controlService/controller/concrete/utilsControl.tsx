@@ -119,7 +119,7 @@ export class ControllerUtils {
           minWidth: `${rectView.width.toFixed(2)}px`,
           minHeight: `${rectView.height.toFixed(2)}px`,
           // height: `${rectView.height.toFixed(2)}px`,
-          padding: Renderer.NODE_PADDING * this.project.camera.currentScale + "px",
+          padding: clickedNode.getPadding() * this.project.camera.currentScale + "px",
           fontSize: clickedNode.getFontSize() * this.project.camera.currentScale + "px",
           backgroundColor: "transparent",
           color: fontColor,

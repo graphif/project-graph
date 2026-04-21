@@ -151,6 +151,13 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
   }
 
   /**
+   * 动态内边距，与字体大小等比缩放
+   */
+  public getPadding(): number {
+    return (this.fontSizeCache / Renderer.FONT_SIZE) * Renderer.NODE_PADDING;
+  }
+
+  /**
    * 更新字体大小缓存
    * fontScaleLevel 存储的是"半个级别"，所以计算时要除以 2
    * 这样步长就是 0.5，避免了浮点数精度问题
@@ -219,11 +226,11 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
   private adjustSizeByText() {
     this.collisionBox.shapes[0] = new Rectangle(
       this.rectangle.location.clone(),
-      getMultiLineTextSize(this.text, this.getFontSize(), 1.5).add(Vector.same(Renderer.NODE_PADDING).multiply(2)),
+      getMultiLineTextSize(this.text, this.getFontSize(), 1.5).add(Vector.same(this.getPadding()).multiply(2)),
     );
   }
   private adjustHeightByText() {
-    const wrapWidth = this.rectangle.size.x - Renderer.NODE_PADDING * 2;
+    const wrapWidth = this.rectangle.size.x - this.getPadding() * 2;
     const newTextSize = this.project.textRenderer.measureMultiLineTextSize(
       this.text,
       this.getFontSize(),
@@ -232,7 +239,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     );
     this.collisionBox.shapes[0] = new Rectangle(
       this.rectangle.location.clone(),
-      new Vector(this.rectangle.size.x, newTextSize.y + Renderer.NODE_PADDING * 2),
+      new Vector(this.rectangle.size.x, newTextSize.y + this.getPadding() * 2),
     );
     this.updateFatherSectionByMove();
   }
@@ -276,10 +283,10 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     const newTextSize = this.project.textRenderer.measureMultiLineTextSize(
       this.text,
       this.getFontSize(),
-      newSize.x - Renderer.NODE_PADDING * 2,
+      newSize.x - this.getPadding() * 2,
       1.5,
     );
-    newSize.y = newTextSize.y + Renderer.NODE_PADDING * 2;
+    newSize.y = newTextSize.y + this.getPadding() * 2;
     newRectangle.size = newSize;
 
     this.collisionBox.shapes[0] = newRectangle;

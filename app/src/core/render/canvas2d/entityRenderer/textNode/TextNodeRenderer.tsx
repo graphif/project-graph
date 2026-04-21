@@ -551,12 +551,12 @@ export class TextNodeRenderer {
       this.project.textRenderer.renderMultiLineText(
         node.text,
         this.project.renderer.transformWorld2View(
-          node.rectangle.location.add(Vector.same(Renderer.NODE_PADDING)).add(new Vector(0, node.getFontSize() / 4)),
+          node.rectangle.location.add(Vector.same(node.getPadding())).add(new Vector(0, node.getFontSize() / 4)),
         ),
         fontSize,
         // Infinity,
         node.sizeAdjust === "manual"
-          ? (node.rectangle.size.x - Renderer.NODE_PADDING * 2) * this.project.camera.currentScale
+          ? (node.rectangle.size.x - node.getPadding() * 2) * this.project.camera.currentScale
           : Infinity,
         node.color.a === 1
           ? colorInvert(node.color)
