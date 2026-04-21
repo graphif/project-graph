@@ -10,6 +10,7 @@ import { cn } from "@/utils/cn";
 import _ from "lodash";
 import { ChevronRight, RotateCw } from "lucide-react";
 import React, { CSSProperties, Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
 export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof Settings; extra?: React.ReactNode }) {
@@ -72,7 +73,18 @@ export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof 
           />
           <Input
             value={value}
-            onChange={(e) => setValue(parseFloat(e.target.value))}
+            onChange={(e) => {
+              const parsed = parseFloat(e.target.value);
+              if (Number.isNaN(parsed)) return;
+              const min = parseFloat(e.target.min);
+              const max = parseFloat(e.target.max);
+              if (parsed < min) {
+                toast.warning(`最小值为 ${min}，已自动修正`, { id: `field-clamp-${settingKey}`, duration: 2000 });
+              } else if (parsed > max) {
+                toast.warning(`最大值为 ${max}，已自动修正`, { id: `field-clamp-${settingKey}`, duration: 2000 });
+              }
+              setValue(Math.min(max, Math.max(min, parsed)));
+            }}
             type="number"
             min={schema._def.innerType._def.checks.find((it) => it.kind === "min")?.value ?? 0}
             max={schema._def.innerType._def.checks.find((it) => it.kind === "max")?.value ?? 1}
