@@ -27,16 +27,18 @@ export class LineEdge extends Edge {
   }
 
   /**
-   * 是否是偏移状态
-   * 偏移是为双向线准备的 A->B, B->A，防止重叠
+   * 几何组偏移索引（运行时计算，非持久化）
+   * 0 = 正常直线/曲线
+   * 正负整数 = 向垂直方向偏移，用于同几何组的多重边自动散开
+   * 取代旧的 isShifting boolean，逻辑被几何组方案完全包含
    */
-  get isShifting(): boolean {
-    return this._isShifting;
+  get shiftingIndex(): number {
+    return this._shiftingIndex;
   }
-  set isShifting(value: boolean) {
-    this._isShifting = value;
+  set shiftingIndex(value: number) {
+    this._shiftingIndex = value;
   }
-  private _isShifting: boolean = false;
+  private _shiftingIndex: number = 0;
 
   constructor(
     protected readonly project: Project,
@@ -85,7 +87,7 @@ export class LineEdge extends Edge {
       const textLocation = this.source.collisionBox.getRectangle().location.add(new Vector(0, -50));
       return new Rectangle(textLocation.subtract(textSize.divide(2)), textSize);
     }
-    if (this.isShifting) {
+    if (this._shiftingIndex !== 0) {
       return new Rectangle(this.shiftingMidPoint.subtract(textSize.divide(2)), textSize);
     } else {
       return new Rectangle(this.bodyLine.midPoint().subtract(textSize.divide(2)), textSize);
@@ -93,18 +95,28 @@ export class LineEdge extends Edge {
   }
 
   get shiftingMidPoint(): Vector {
+    const BASE_OFFSET = 60;
     const midPoint = Vector.average(
       this.source.collisionBox.getRectangle().center,
       this.target.collisionBox.getRectangle().center,
     );
+    // 使用规范化方向（uuid 较小的节点 → uuid 较大的节点）
+    // 保证同一几何组内所有边（包括反向边）共享同一垂直轴，
+    // 避免 A→B 和 B→A 因方向取反 × index 取反相互抵消、落到同侧
+    const canonicalFrom =
+      this.source.uuid <= this.target.uuid
+        ? this.source.collisionBox.getRectangle().getCenter()
+        : this.target.collisionBox.getRectangle().getCenter();
+    const canonicalTo =
+      this.source.uuid <= this.target.uuid
+        ? this.target.collisionBox.getRectangle().getCenter()
+        : this.source.collisionBox.getRectangle().getCenter();
     return midPoint.add(
-      this.target.collisionBox
-        .getRectangle()
-        .getCenter()
-        .subtract(this.source.collisionBox.getRectangle().getCenter())
+      canonicalTo
+        .subtract(canonicalFrom)
         .normalize()
         .rotateDegrees(90)
-        .multiply(50),
+        .multiply(this._shiftingIndex * BASE_OFFSET),
     );
   }
 

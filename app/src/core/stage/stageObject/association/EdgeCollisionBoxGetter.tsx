@@ -42,7 +42,7 @@ export namespace EdgeCollisionBoxGetter {
   }
 
   function getBezierCollisionBox(edge: LineEdge): CollisionBox {
-    if (edge.isShifting) {
+    if (edge.shiftingIndex !== 0) {
       const shiftingMidPoint = edge.shiftingMidPoint;
       // 从source.Center到shiftingMidPoint的线
       const sourceRectangle = edge.source.collisionBox.getRectangle();
@@ -94,7 +94,7 @@ export namespace EdgeCollisionBoxGetter {
   }
 
   function getStraightCollisionBox(edge: LineEdge): CollisionBox {
-    if (edge.isShifting) {
+    if (edge.shiftingIndex !== 0) {
       const shiftingMidPoint = edge.shiftingMidPoint;
       // 从source.Center到shiftingMidPoint的线
       const startLine = new Line(edge.source.collisionBox.getRectangle().center, shiftingMidPoint);

@@ -65,7 +65,7 @@ export class EdgeRenderer {
     if (source.uuid == target.uuid) {
       this.currentRenderer.renderCycleState(edge);
     } else {
-      if (edge.isShifting) {
+      if (edge.shiftingIndex !== 0) {
         this.currentRenderer.renderShiftingState(edge);
       } else {
         this.currentRenderer.renderNormalState(edge);
@@ -202,7 +202,7 @@ export class EdgeRenderer {
     if (edge.source.uuid == edge.target.uuid) {
       return this.currentRenderer.getCycleStageSvg(edge);
     } else {
-      if (edge.isShifting) {
+      if (edge.shiftingIndex !== 0) {
         return this.currentRenderer.getShiftingStageSvg(edge);
       } else {
         return this.currentRenderer.getNormalStageSvg(edge);

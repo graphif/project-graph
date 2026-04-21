@@ -151,7 +151,7 @@ export class StageManager {
    * 节点什么情况下会是unknown的？
    *
    * 包含了对Section框的更新
-   * 包含了对Edge双向线偏移状态的更新
+   * 包含了对Edge几何组偏移索引的更新（多重边/双向边自动散开）
    */
   updateReferences() {
     for (const entity of this.getEntities()) {
@@ -191,16 +191,53 @@ export class StageManager {
       section.adjustChildrenStateByCollapse();
     }
 
-    // 以下是LineEdge双向线偏移状态的更新
+    // 以下是LineEdge几何组偏移索引的更新
+    // 几何组 key：无向，(minNodeId, maxNodeId, epAtMin, epAtMax)
+    // A→B 和 B→A 端点位置相同时归入同一几何组，统一分配 shiftingIndex
+    const rateKey = (v: Vector): string => `${v.x.toFixed(2)},${v.y.toFixed(2)}`;
+    const geoGroups = new Map<string, LineEdge[]>();
+
     for (const edge of this.getLineEdges()) {
-      let isShifting = false;
-      for (const otherEdge of this.getLineEdges()) {
-        if (edge.source === otherEdge.target && edge.target === otherEdge.source) {
-          isShifting = true;
-          break;
-        }
+      if (edge.source.uuid === edge.target.uuid) {
+        // 自环跳过，不参与几何组，shiftingIndex 保持 0
+        edge.shiftingIndex = 0;
+        continue;
       }
-      edge.isShifting = isShifting;
+      const idA = edge.source.uuid;
+      const idB = edge.target.uuid;
+      let key: string;
+      if (idA <= idB) {
+        key = `${idA}|${idB}|${rateKey(edge.sourceRectangleRate)}|${rateKey(edge.targetRectangleRate)}`;
+      } else {
+        // B→A 方向：交换端点对应关系，使 A→B 与 B→A 落入同一几何组
+        key = `${idB}|${idA}|${rateKey(edge.targetRectangleRate)}|${rateKey(edge.sourceRectangleRate)}`;
+      }
+      if (!geoGroups.has(key)) geoGroups.set(key, []);
+      geoGroups.get(key)!.push(edge);
+    }
+
+    for (const [, edges] of geoGroups) {
+      // 按 uuid 字典序稳定排序，避免重渲染时 index 跳变
+      edges.sort((a, b) => a.uuid.localeCompare(b.uuid));
+      const count = edges.length;
+      // 对称分配 shiftingIndex：
+      // count=1 → [0]
+      // count=2 → [-1, 1]（跳过0，两条都弯，视觉对称）
+      // count=3 → [-1, 0, 1]
+      // count=4 → [-2, -1, 1, 2]
+      // count=5 → [-2, -1, 0, 1, 2]
+      for (let i = 0; i < count; i++) {
+        let idx: number;
+        if (count === 1) {
+          idx = 0;
+        } else if (count % 2 === 0) {
+          const half = count / 2;
+          idx = i < half ? i - half : i - half + 1;
+        } else {
+          idx = i - Math.floor(count / 2);
+        }
+        edges[i].shiftingIndex = idx;
+      }
     }
   }
 
