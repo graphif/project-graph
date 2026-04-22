@@ -1,7 +1,6 @@
 import { Dialog } from "@/components/ui/dialog";
 import { Project, ProjectState } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { RectangleSlideEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleSlideEffect";
 import { ViewFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewFlashEffect";
 import { ViewOutlineFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewOutlineFlashEffect";
 import { Settings } from "@/core/service/Settings";
@@ -509,84 +508,49 @@ export const allKeyBinds: KeyBindItem[] = [
   {
     id: "moveUpSelectedEntities",
     defaultKey: "C-arrowup",
+    isContinuous: true,
     onPress: (project) => {
       if (!project!.keyboardOnlyEngine.isOpenning()) return;
-      const entities = project!.stageManager.getEntities().filter((e) => e.isSelected);
-      if (entities.length > 0) {
-        const rect = entities[0].collisionBox.getRectangle();
-        const newRect = rect.clone();
-        newRect.location.y -= 100;
-        project!.effects.addEffect(
-          RectangleSlideEffect.verticalSlide(
-            rect,
-            newRect,
-            project!.stageStyleManager.currentStyle.effects.successShadow,
-          ),
-        );
-      }
-      project!.entityMoveManager.moveEntitiesWithChildren(new Vector(0, -100), true);
+      project!.entityMoveManager.continuousMoveKeyPress(new Vector(0, -1));
+    },
+    onRelease: (project) => {
+      project!.entityMoveManager.continuousMoveKeyRelease(new Vector(0, -1));
     },
   },
   {
     id: "moveDownSelectedEntities",
     defaultKey: "C-arrowdown",
+    isContinuous: true,
     onPress: (project) => {
       if (!project!.keyboardOnlyEngine.isOpenning()) return;
-      const entities = project!.stageManager.getEntities().filter((e) => e.isSelected);
-      if (entities.length > 0) {
-        const rect = entities[0].collisionBox.getRectangle();
-        const newRect = rect.clone();
-        newRect.location.y += 100;
-        project!.effects.addEffect(
-          RectangleSlideEffect.verticalSlide(
-            rect,
-            newRect,
-            project!.stageStyleManager.currentStyle.effects.successShadow,
-          ),
-        );
-      }
-      project!.entityMoveManager.moveEntitiesWithChildren(new Vector(0, 100), true);
+      project!.entityMoveManager.continuousMoveKeyPress(new Vector(0, 1));
+    },
+    onRelease: (project) => {
+      project!.entityMoveManager.continuousMoveKeyRelease(new Vector(0, 1));
     },
   },
   {
     id: "moveLeftSelectedEntities",
     defaultKey: "C-arrowleft",
+    isContinuous: true,
     onPress: (project) => {
-      const entities = project!.stageManager.getEntities().filter((e) => e.isSelected);
-      if (entities.length > 0) {
-        const rect = entities[0].collisionBox.getRectangle();
-        const newRect = rect.clone();
-        newRect.location.x -= 100;
-        project!.effects.addEffect(
-          RectangleSlideEffect.horizontalSlide(
-            rect,
-            newRect,
-            project!.stageStyleManager.currentStyle.effects.successShadow,
-          ),
-        );
-      }
-      project!.entityMoveManager.moveEntitiesWithChildren(new Vector(-100, 0), true);
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.entityMoveManager.continuousMoveKeyPress(new Vector(-1, 0));
+    },
+    onRelease: (project) => {
+      project!.entityMoveManager.continuousMoveKeyRelease(new Vector(-1, 0));
     },
   },
   {
     id: "moveRightSelectedEntities",
     defaultKey: "C-arrowright",
+    isContinuous: true,
     onPress: (project) => {
       if (!project!.keyboardOnlyEngine.isOpenning()) return;
-      const entities = project!.stageManager.getEntities().filter((e) => e.isSelected);
-      if (entities.length > 0) {
-        const rect = entities[0].collisionBox.getRectangle();
-        const newRect = rect.clone();
-        newRect.location.x += 100;
-        project!.effects.addEffect(
-          RectangleSlideEffect.horizontalSlide(
-            rect,
-            newRect,
-            project!.stageStyleManager.currentStyle.effects.successShadow,
-          ),
-        );
-      }
-      project!.entityMoveManager.moveEntitiesWithChildren(new Vector(100, 0), true);
+      project!.entityMoveManager.continuousMoveKeyPress(new Vector(1, 0));
+    },
+    onRelease: (project) => {
+      project!.entityMoveManager.continuousMoveKeyRelease(new Vector(1, 0));
     },
   },
 

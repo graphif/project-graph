@@ -1466,19 +1466,19 @@ keyBinds:
   moveUpSelectedEntities:
     title: Gerakkan Semua Entitas yang Dipilih ke Atas
     description: |
-      Setelah ditekan, semua entitas yang dipilih akan bergerak ke atas satu jarak tetap
+      Tahan untuk terus menggerakkan semua entitas yang dipilih ke atas; lepas untuk meluncur berhenti.
   moveDownSelectedEntities:
     title: Gerakkan Semua Entitas yang Dipilih ke Bawah
     description: |
-      Setelah ditekan, semua entitas yang dipilih akan bergerak ke bawah satu jarak tetap
+      Tahan untuk terus menggerakkan semua entitas yang dipilih ke bawah; lepas untuk meluncur berhenti.
   moveLeftSelectedEntities:
     title: Gerakkan Semua Entitas yang Dipilih ke Kiri
     description: |
-      Setelah ditekan, semua entitas yang dipilih akan bergerak ke kiri satu jarak tetap
+      Tahan untuk terus menggerakkan semua entitas yang dipilih ke kiri; lepas untuk meluncur berhenti.
   moveRightSelectedEntities:
     title: Gerakkan Semua Entitas yang Dipilih ke Kanan
     description: |
-      Setelah ditekan, semua entitas yang Dipilih akan bergerak ke kanan satu jarak tetap
+      Tahan untuk terus menggerakkan semua entitas yang dipilih ke kanan; lepas untuk meluncur berhenti.
   jumpMoveUpSelectedEntities:
     title: Lompat Gerakkan Semua Entitas yang Dipilih ke Atas
     description: |

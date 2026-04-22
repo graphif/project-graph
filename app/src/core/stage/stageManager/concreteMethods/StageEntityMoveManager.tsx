@@ -1,4 +1,5 @@
 import { Project, service } from "@/core/Project";
+import { Settings } from "@/core/service/Settings";
 import { EntityJumpMoveEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityJumpMoveEffect";
 import { RectanglePushInEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectanglePushInEffect";
 import { SoundService } from "@/core/service/feedbackService/SoundService";
@@ -15,6 +16,69 @@ import { Vector } from "@graphif/data-structures";
 @service("entityMoveManager")
 export class EntityMoveManager {
   constructor(private readonly project: Project) {}
+
+  // ─────── 持续移动物理引擎（复用 Camera 同款物理模型）───────
+  /** 方向命令向量，由快捷键 press/release 写入，值域 [-1,1]×[-1,1] */
+  public moveAccelerateCommander: Vector = Vector.getZero();
+  /** 当前速度 */
+  private moveSpeed: Vector = Vector.getZero();
+  /** 速度指数摩擦力指数（与 Camera 保持一致） */
+  private readonly frictionExponent = 1.5;
+
+  /**
+   * 每帧物理 tick：把速度转化为实体位移
+   * 注意：移动过程中不记录历史（避免历史爆炸），松开按键速度归零后再记录一次
+   */
+  tick() {
+    if (this.moveAccelerateCommander.isZero() && this.moveSpeed.isZero()) {
+      return;
+    }
+
+    // 摩擦力（与 Camera.tick 完全相同的公式）
+    let friction = Vector.getZero();
+    if (!this.moveSpeed.isZero()) {
+      const speedSize = this.moveSpeed.magnitude();
+      friction = this.moveSpeed
+        .normalize()
+        .multiply(-1)
+        .multiply(Settings.moveFriction * speedSize ** this.frictionExponent)
+        .limitX(-300, 300)
+        .limitY(-300, 300);
+    }
+
+    // 动力（节点移动不依赖 camera scale，使用固定振幅）
+    const power = this.moveAccelerateCommander.multiply(Settings.moveAmplitude).limitX(-300, 300).limitY(-300, 300);
+
+    this.moveSpeed = this.moveSpeed.add(power).add(friction);
+
+    // 速度足够小时归零，防止无限微小漂移
+    if (this.moveSpeed.magnitude() < 0.01) {
+      this.moveSpeed = Vector.getZero();
+      // 速度真正停止时记录一次历史
+      if (this.moveAccelerateCommander.isZero()) {
+        this.project.historyManager.recordStep();
+      }
+      return;
+    }
+
+    // 用整帧位移驱动实体（不触发历史记录）
+    this.moveEntitiesWithChildren(this.moveSpeed, true);
+  }
+
+  /**
+   * 持续移动：某方向键按下
+   */
+  public continuousMoveKeyPress(direction: Vector) {
+    this.moveAccelerateCommander = this.moveAccelerateCommander.add(direction).limitX(-1, 1).limitY(-1, 1);
+  }
+
+  /**
+   * 持续移动：某方向键松开（速度会自然衰减至停止后记录历史）
+   */
+  public continuousMoveKeyRelease(direction: Vector) {
+    this.moveAccelerateCommander = this.moveAccelerateCommander.subtract(direction).limitX(-1, 1).limitY(-1, 1);
+  }
+  // ─────────────────────────────────────────────────────────────
 
   /**
    * 检查实体是否可以移动（考虑锁定状态）

@@ -1370,19 +1370,19 @@ keyBinds:
   moveUpSelectedEntities:
     title: Move Selected Entities Up
     description: |
-      When pressed, all selected entities will move up by a fixed distance.
+      Hold to continuously accelerate all selected entities upward; release to glide to a stop.
   moveDownSelectedEntities:
     title: Move Selected Entities Down
     description: |
-      When pressed, all selected entities will move down by a fixed distance.
+      Hold to continuously accelerate all selected entities downward; release to glide to a stop.
   moveLeftSelectedEntities:
     title: Move Selected Entities Left
     description: |
-      When pressed, all selected entities will move left by a fixed distance.
+      Hold to continuously accelerate all selected entities to the left; release to glide to a stop.
   moveRightSelectedEntities:
     title: Move Selected Entities Right
     description: |
-      When pressed, all selected entities will move right by a fixed distance.
+      Hold to continuously accelerate all selected entities to the right; release to glide to a stop.
   jumpMoveUpSelectedEntities:
     title: Jump Move Selected Entities Up
     description: |

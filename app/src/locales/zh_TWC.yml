@@ -1429,16 +1429,16 @@ keyBinds:
     description: 按下後，附加選取右側節點
   moveUpSelectedEntities:
     title: 向上移動所有選取的實體
-    description: 按下後，所有選取的實體會向上移動一個固定距離
+    description: 持續按住時，所有選取的實體會持續向上加速移動，放開後緩動停止
   moveDownSelectedEntities:
     title: 向下移動所有選取的實體
-    description: 按下後，所有選取的實體會向下移動一個固定距離
+    description: 持續按住時，所有選取的實體會持續向下加速移動，放開後緩動停止
   moveLeftSelectedEntities:
     title: 向左移動所有選取的實體
-    description: 按下後，所有選取的實體會向左移動一個固定距離
+    description: 持續按住時，所有選取的實體會持續向左加速移動，放開後緩動停止
   moveRightSelectedEntities:
     title: 向右移動所有選取的實體
-    description: 按下後，所有選取的實體會向右移動一個固定距離
+    description: 持續按住時，所有選取的實體會持續向右加速移動，放開後緩動停止
   jumpMoveUpSelectedEntities:
     title: 跳躍向上移動所有選取的實體
     description: 按下後，所有選取的實體會跳躍向上移動一個固定距離，能夠跳入或者跳出Section框

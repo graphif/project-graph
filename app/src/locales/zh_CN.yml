@@ -1472,19 +1472,19 @@ keyBinds:
   moveUpSelectedEntities:
     title: 向上移动所有选中的实体
     description: |
-      按下后，所有选中的实体会向上移动一个固定距离
+      持续按住时，所有选中的实体会持续向上加速移动，松开后缓动停止
   moveDownSelectedEntities:
     title: 向下移动所有选中的实体
     description: |
-      按下后，所有选中的实体会向下移动一个固定距离
+      持续按住时，所有选中的实体会持续向下加速移动，松开后缓动停止
   moveLeftSelectedEntities:
     title: 向左移动所有选中的实体
     description: |
-      按下后，所有选中的实体会向左移动一个固定距离
+      持续按住时，所有选中的实体会持续向左加速移动，松开后缓动停止
   moveRightSelectedEntities:
     title: 向右移动所有选中的实体
     description: |
-      按下后，所有选中的实体会向右移动一个固定距离
+      持续按住时，所有选中的实体会持续向右加速移动，松开后缓动停止
   jumpMoveUpSelectedEntities:
     title: 跳跃向上移动所有选中的实体
     description: |
