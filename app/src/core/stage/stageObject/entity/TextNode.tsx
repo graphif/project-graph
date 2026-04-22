@@ -7,6 +7,7 @@ import type { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import type { ResizeAble } from "@/core/stage/stageObject/abstract/StageObjectInterface";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Section } from "@/core/stage/stageObject/entity/Section";
+import { getMultiLineTextSize } from "@/utils/font";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
@@ -242,16 +243,9 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
    * 调整后的矩形是当前文字加了一圈padding之后的大小
    */
   private adjustSizeByText() {
-    // 用主 canvas 在 scale=1 下测量，结果稳定且与渲染一致，不依赖相机缩放
-    const worldTextSize = this.project.textRenderer.measureMultiLineTextSize(
-      this.text,
-      this.getFontSize(),
-      Infinity,
-      1.5,
-    );
     this.collisionBox.shapes[0] = new Rectangle(
       this.rectangle.location.clone(),
-      worldTextSize.add(Vector.same(this.getPadding()).multiply(2)),
+      getMultiLineTextSize(this.text, this.getFontSize(), 1.5).add(Vector.same(this.getPadding()).multiply(2)),
     );
   }
   private adjustHeightByText() {
