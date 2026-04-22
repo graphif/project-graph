@@ -44,7 +44,7 @@ export class EntityDetailsButtonRenderer {
         rect.size.multiply(this.project.camera.currentScale),
       ),
       color,
-      this.project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(0.5),
+      this.project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(0.32),
       2 * this.project.camera.currentScale,
       5 * this.project.camera.currentScale,
     );
