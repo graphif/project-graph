@@ -1,4 +1,10 @@
-import { formatEmacsKey, matchEmacsKeyPress, transEmacsKeyWinToMac, transformedKeys } from "@/utils/emacs";
+import {
+  formatEmacsKey,
+  matchEmacsKeyPress,
+  parseSingleEmacsKey,
+  transEmacsKeyWinToMac,
+  transformedKeys,
+} from "@/utils/emacs";
 import { isMac } from "@/utils/platform";
 import { createStore } from "@/utils/store";
 import { Queue } from "@graphif/data-structures";
@@ -393,15 +399,20 @@ export namespace KeyBindsUI {
     const activeProject = store.get(activeProjectAtom);
 
     // ——持续型快捷键独立路径——
-    // 持续型快捷键：ctrl/meta 按下时跳过（避免与 ctrl+s 等冲突）
-    if (!event.ctrlKey && !event.metaKey) {
+    {
       const rawKey = event.key.toLowerCase();
       // 兼容中文输入法下的全角符号（如「【」→「[」）
       const pressedKey = rawKey in transformedKeys ? transformedKeys[rawKey as keyof typeof transformedKeys] : rawKey;
       for (const uiKeyBind of allUIKeyBinds) {
         if (!uiKeyBind.isContinuous) continue;
         if (!uiKeyBind.isEnabled) continue;
-        if (uiKeyBind.key.toLowerCase() !== pressedKey) continue;
+        // 解析快捷键字符串，同时比对裸键和修饰键
+        const parsed = parseSingleEmacsKey(uiKeyBind.key);
+        if (parsed.key !== pressedKey) continue;
+        if (parsed.control !== event.ctrlKey) continue;
+        if (parsed.alt !== event.altKey) continue;
+        if (parsed.shift !== event.shiftKey) continue;
+        if (parsed.meta !== event.metaKey) continue;
         // 防止 keydown 重复触发（按住时浏览器会持续发送 keydown 事件）
         if (pressedContinuousKeyBindIds.has(uiKeyBind.id)) continue;
         pressedContinuousKeyBindIds.add(uiKeyBind.id);
@@ -423,6 +434,7 @@ export namespace KeyBindsUI {
     const key = event.key;
 
     // ——持续型快捷键松开——
+    // 只比对裸键（不检查修饰键），这样松开主键即可立即停止，无需等待修饰键松开
     const rawKeyUp = key.toLowerCase();
     // 兼容中文输入法下的全角符号（如「】」→「]」）
     const keyUpNormalized =
@@ -430,7 +442,8 @@ export namespace KeyBindsUI {
     for (const uiKeyBind of allUIKeyBinds) {
       if (!uiKeyBind.isContinuous) continue;
       if (!uiKeyBind.isEnabled) continue;
-      if (uiKeyBind.key.toLowerCase() !== keyUpNormalized) continue;
+      const parsed = parseSingleEmacsKey(uiKeyBind.key);
+      if (parsed.key !== keyUpNormalized) continue;
       if (!pressedContinuousKeyBindIds.has(uiKeyBind.id)) continue;
       pressedContinuousKeyBindIds.delete(uiKeyBind.id);
       uiKeyBind.onRelease?.(activeProject);
