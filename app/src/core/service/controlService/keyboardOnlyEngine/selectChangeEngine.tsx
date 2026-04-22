@@ -1,7 +1,7 @@
 import { Project, service } from "@/core/Project";
-import { LineCuttingEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineCuttingEffect";
+import { RectangleTransformEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleTransformEffect";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { ProgressNumber, Vector } from "@graphif/data-structures";
+import { Vector } from "@graphif/data-structures";
 import { Line, Rectangle } from "@graphif/shapes";
 import { Settings } from "../../Settings";
 
@@ -216,44 +216,9 @@ export class SelectChangeEngine {
   }
 
   private addEffect(selectedNodeRect: Rectangle, newSelectNodeRect: Rectangle) {
-    const color = this.project.stageStyleManager.currentStyle.effects.successShadow;
-    // 节点切换移动的特效有待专门写一个
-    this.project.effects.addEffects([
-      new LineCuttingEffect(
-        new ProgressNumber(0, 20),
-        selectedNodeRect.leftTop,
-        newSelectNodeRect.leftTop,
-        color,
-        color,
-      ),
-    ]);
-    this.project.effects.addEffects([
-      new LineCuttingEffect(
-        new ProgressNumber(0, 20),
-        selectedNodeRect.rightTop,
-        newSelectNodeRect.rightTop,
-        color,
-        color,
-      ),
-    ]);
-    this.project.effects.addEffects([
-      new LineCuttingEffect(
-        new ProgressNumber(0, 20),
-        selectedNodeRect.rightBottom,
-        newSelectNodeRect.rightBottom,
-        color,
-        color,
-      ),
-    ]);
-    this.project.effects.addEffects([
-      new LineCuttingEffect(
-        new ProgressNumber(0, 20),
-        selectedNodeRect.leftBottom,
-        newSelectNodeRect.leftBottom,
-        color,
-        color,
-      ),
-    ]);
+    // 使用新的矩形变换特效
+    const effect = RectangleTransformEffect.fromRectangles(this.project, selectedNodeRect, newSelectNodeRect);
+    this.project.effects.addEffect(effect);
   }
 
   private getMostNearConnectableEntity(nodes: ConnectableEntity[], location: Vector): ConnectableEntity | null {
