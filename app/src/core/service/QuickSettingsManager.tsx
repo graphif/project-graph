@@ -30,7 +30,6 @@ export namespace QuickSettingsManager {
     { settingKey: "showDebug" },
     { settingKey: "enableDragAutoAlign" },
     { settingKey: "reverseTreeMoveMode" },
-    { settingKey: "allowMoveCameraByWSAD" },
     { settingKey: "textIntegerLocationAndSizeRender" },
   ];
 

@@ -18,18 +18,9 @@ import { LimitLengthQueue, Vector } from "@graphif/data-structures";
  * @param event - 键盘事件
  */
 export class ControllerCameraClass extends ControllerClass {
-  // 按键映射
-  private static keyMap: { [key: string]: Vector } = {
-    w: new Vector(0, -1),
-    s: new Vector(0, 1),
-    a: new Vector(-1, 0),
-    d: new Vector(1, 0),
-  };
-
   // 是否正在使用
   public isUsingMouseGrabMove = false;
   private lastMousePressLocation: Vector[] = [Vector.getZero(), Vector.getZero(), Vector.getZero()];
-  private isPressingCtrlOrMeta = false;
   /**
    * 是否正在使用空格+左键 拖动视野
    */
@@ -43,48 +34,6 @@ export class ControllerCameraClass extends ControllerClass {
     }
     const key = event.key.toLowerCase();
 
-    // 视野缩放：根据设置决定起飞和降落的方向
-    if (key === "[" || key === "【") {
-      if (Settings.cameraKeyboardScaleReverse) {
-        // 反转模式：[=起飞（缩小）
-        this.project.camera.isStartZoomOut = true;
-      } else {
-        // 正常模式：[=降落（放大）
-        this.project.camera.isStartZoomIn = true;
-      }
-      this.project.camera.addScaleFollowMouseLocationTime(1);
-      return;
-    }
-    if (key === "]" || key === "】") {
-      if (Settings.cameraKeyboardScaleReverse) {
-        // 反转模式：]=降落（放大）
-        this.project.camera.isStartZoomIn = true;
-      } else {
-        // 正常模式：]=起飞（缩小）
-        this.project.camera.isStartZoomOut = true;
-      }
-      this.project.camera.addScaleFollowMouseLocationTime(1);
-      return;
-    }
-
-    if (ControllerCameraClass.keyMap[key] && Settings.allowMoveCameraByWSAD) {
-      if (this.project.controller.pressingKeySet.has("control") || this.project.controller.pressingKeySet.has("meta")) {
-        // ctrl按下时，可能在按 ctrl+s 保存，防止出现冲突
-        this.isPressingCtrlOrMeta = true;
-        return;
-      }
-
-      let addAccelerate = ControllerCameraClass.keyMap[key];
-
-      if (Settings.cameraKeyboardMoveReverse) {
-        addAccelerate = addAccelerate.multiply(-1);
-      }
-      // 当按下某一个方向的时候,相当于朝着某个方向赋予一次加速度
-      this.project.camera.accelerateCommander = this.project.camera.accelerateCommander
-        .add(addAccelerate)
-        .limitX(-1, 1)
-        .limitY(-1, 1);
-    }
     if (key === " " && Settings.enableSpaceKeyMouseLeftDrag) {
       if (!this.isPreGrabbingWhenSpace) {
         this.isPreGrabbingWhenSpace = true;
@@ -103,55 +52,6 @@ export class ControllerCameraClass extends ControllerClass {
     }
     const key = event.key.toLowerCase();
 
-    // 解决ctrl+s 冲突
-    if (isMac ? key === "meta" : key === "control") {
-      setTimeout(() => {
-        this.isPressingCtrlOrMeta = false;
-      }, 500);
-    }
-    // ------
-
-    // 停止视野缩放：根据设置决定起飞和降落的方向
-    if (key === "[" || key === "【") {
-      if (Settings.cameraKeyboardScaleReverse) {
-        // 反转模式：[=起飞（缩小）
-        this.project.camera.isStartZoomOut = false;
-      } else {
-        // 正常模式：[=降落（放大）
-        this.project.camera.isStartZoomIn = false;
-      }
-      this.project.camera.addScaleFollowMouseLocationTime(5);
-      return;
-    }
-    // 停止视野缩放：起飞
-    if (key === "]" || key === "】") {
-      if (Settings.cameraKeyboardScaleReverse) {
-        // 反转模式：]=降落（放大）
-        this.project.camera.isStartZoomIn = false;
-      } else {
-        // 正常模式：]=起飞（缩小）
-        this.project.camera.isStartZoomOut = false;
-      }
-      this.project.camera.addScaleFollowMouseLocationTime(5);
-      return;
-    }
-
-    if (ControllerCameraClass.keyMap[key] && Settings.allowMoveCameraByWSAD) {
-      if (this.isPressingCtrlOrMeta) {
-        // ctrl按下时，可能在按 ctrl+s 保存，防止出现冲突
-        return;
-      }
-      let addAccelerate = ControllerCameraClass.keyMap[key];
-
-      if (Settings.cameraKeyboardMoveReverse) {
-        addAccelerate = addAccelerate.multiply(-1);
-      }
-      // 当松开某一个方向的时候,相当于停止加速度
-      this.project.camera.accelerateCommander = this.project.camera.accelerateCommander
-        .subtract(addAccelerate)
-        .limitX(-1, 1)
-        .limitY(-1, 1);
-    }
     if (key === " ") {
       if (this.isPreGrabbingWhenSpace) {
         this.isPreGrabbingWhenSpace = false;

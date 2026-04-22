@@ -1604,6 +1604,25 @@ keyBinds:
     title: 反向扩散选择节点（保留当前节点的选择状态）
     description: |
       按下后，实体的选择状态会转移到父级节点上，同时保留当前节点的选择状态
+  CameraMoveUp:
+    title: 向上移动视野
+    description: 按下后，视野向上移动
+  CameraMoveDown:
+    title: 向下移动视野
+    description: 按下后，视野向下移动
+  CameraMoveLeft:
+    title: 向左移动视野
+    description: 按下后，视野向左移动
+  CameraMoveRight:
+    title: 向右移动视野
+    description: 按下后，视野向右移动
+  continuousShortcut:
+    title: 持续型快捷键
+  continuousShortcutTooltip:
+    title: 持续型快捷键说明
+    description: 需要持续按下，然后一小段时间松开才感觉到效果的快捷键。并且不像序列型快捷键那样长度可以是一个按键序列。
+  resetToDefault:
+    title: 重置为默认
   checkoutLeftMouseToSelectAndMove:
     title: 设置左键为“选中/移动”模式
     description: |

@@ -10,6 +10,7 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import KeyBind from "@/components/ui/key-bind";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertCircle, AlignStartVertical, Focus, LineSquiggle, TextCursorInput } from "lucide-react";
 import {
   Sidebar,
@@ -26,9 +27,11 @@ import Fuse from "fuse.js";
 
 import {
   AppWindow,
+  Dot,
   FileQuestion,
   Image,
   Keyboard,
+  KeyboardOff,
   MousePointer,
   Move,
   Network,
@@ -39,7 +42,10 @@ import {
   SendToBack,
   Spline,
   Split,
+  SquareAsterisk,
   SquareDashed,
+  SquareRoundCorner,
+  SquareStack,
   SunMoon,
   FileOutput,
 } from "lucide-react";
@@ -152,8 +158,19 @@ export default function KeyBindsPage() {
   };
 
   // 检测快捷键冲突（含完全一致 + 序列前缀重叠）
+  // 持续型与序列型监听路径不同，互不冲突，只在同类型之间检测
   const detectKeyConflicts = (targetKey: string, targetId: string) => {
-    return data.filter((item) => item.id !== targetId && item.isEnabled && isKeyOverlap(item.key, targetKey));
+    const targetKeyBind = allKeyBinds.find((kb) => kb.id === targetId);
+    const targetIsContinuous = targetKeyBind?.isContinuous ?? false;
+    return data.filter((item) => {
+      if (item.id === targetId) return false;
+      if (!item.isEnabled) return false;
+      const itemKeyBind = allKeyBinds.find((kb) => kb.id === item.id);
+      const itemIsContinuous = itemKeyBind?.isContinuous ?? false;
+      // 不同类型不冲突
+      if (targetIsContinuous !== itemIsContinuous) return false;
+      return isKeyOverlap(item.key, targetKey);
+    });
   };
 
   // 处理冲突提示点击
@@ -184,10 +201,32 @@ export default function KeyBindsPage() {
       const keyBindData = data.find((item) => item.id === id);
       const keyBind = allKeyBinds.find((kb) => kb.id === id);
       const conflicts = keyBindData ? detectKeyConflicts(keyBindData.key, id) : [];
+
+      // 确定显示的图标
+      const getKeyBindIcon = () => {
+        // 未绑定快捷键
+        if (!keyBindData?.key || keyBindData.key.trim() === "") {
+          return <Dot />;
+        }
+        if (!keyBindData?.isEnabled) {
+          return <KeyboardOff />;
+        }
+        if (keyBind?.isContinuous) {
+          return <SquareAsterisk />;
+        }
+        const keyParts = keyBindData.key.trim().split(" ");
+        if (keyParts.length > 1) {
+          return <SquareStack />;
+        } else {
+          const hasModifiers = keyParts[0].includes("-");
+          return hasModifiers ? <Keyboard /> : <SquareRoundCorner />;
+        }
+      };
+
       return (
         <Field
           key={id}
-          icon={<Keyboard />}
+          icon={getKeyBindIcon()}
           title={t(`${id}.title`, { defaultValue: id })}
           description={t(`${id}.description`, { defaultValue: "" })}
           className="border-accent border-b"
@@ -207,26 +246,34 @@ export default function KeyBindsPage() {
           }
         >
           <div className="flex items-center gap-2">
-            <RotateCw
-              className="text-panel-details-text h-4 w-4 cursor-pointer opacity-0 transition-all hover:rotate-180 group-hover/field:opacity-100"
-              onClick={() => {
-                if (keyBind) {
-                  let defaultValue = keyBind.defaultKey;
-                  // 应用Mac键位转换
-                  if (isMac) {
-                    defaultValue = transEmacsKeyWinToMac(defaultValue);
-                  }
-                  setData((data) => data.map((item) => (item.id === id ? { ...item, key: defaultValue } : item)));
-                  KeyBindsUI.changeOneUIKeyBind(id, defaultValue);
-                  Dialog.confirm(
-                    `已重置为 '${defaultValue}'，但需要刷新页面后生效`,
-                    "切换左侧选项卡即可更新页面显示，看到效果。",
-                  );
-                }
-              }}
-            />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <RotateCw
+                  className="text-panel-details-text h-4 w-4 cursor-pointer opacity-0 transition-all hover:rotate-180 group-hover/field:opacity-100"
+                  onClick={() => {
+                    if (keyBind) {
+                      let defaultValue = keyBind.defaultKey;
+                      // 应用Mac键位转换
+                      if (isMac) {
+                        defaultValue = transEmacsKeyWinToMac(defaultValue);
+                      }
+                      setData((data) => data.map((item) => (item.id === id ? { ...item, key: defaultValue } : item)));
+                      KeyBindsUI.changeOneUIKeyBind(id, defaultValue);
+                      Dialog.confirm(
+                        `已重置为 '${defaultValue}'，但需要刷新页面后生效`,
+                        "切换左侧选项卡即可更新页面显示，看到效果。",
+                      );
+                    }
+                  }}
+                />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t("resetToDefault.title")}</p>
+              </TooltipContent>
+            </Tooltip>
             <KeyBind
               defaultValue={keyBindData?.key}
+              isContinuous={keyBind?.isContinuous}
               onChange={(value) => {
                 setData((data) =>
                   data.map((item) => {
@@ -553,6 +600,10 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "masterBrakeControl",
       "CameraScaleZoomIn",
       "CameraScaleZoomOut",
+      "CameraMoveUp",
+      "CameraMoveDown",
+      "CameraMoveLeft",
+      "CameraMoveRight",
       "CameraPageMoveUp",
       "CameraPageMoveDown",
       "CameraPageMoveLeft",

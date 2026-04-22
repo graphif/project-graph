@@ -1,4 +1,4 @@
-import { formatEmacsKey, matchEmacsKeyPress, transEmacsKeyWinToMac } from "@/utils/emacs";
+import { formatEmacsKey, matchEmacsKeyPress, transEmacsKeyWinToMac, transformedKeys } from "@/utils/emacs";
 import { isMac } from "@/utils/platform";
 import { createStore } from "@/utils/store";
 import { Queue } from "@graphif/data-structures";
@@ -11,6 +11,8 @@ export interface UIKeyBind {
   key: string;
   isEnabled: boolean;
   onPress: (project?: Project) => void;
+  // 是否是持续型快捷键
+  isContinuous?: boolean;
   onRelease?: (project?: Project) => void;
 }
 /**
@@ -114,7 +116,14 @@ export namespace KeyBindsUI {
         isEnabled = savedData.isEnabled !== false;
       }
 
-      KeyBindsUI.registerOneUIKeyBind(keybind.id, key, isEnabled, keybind.onPress, keybind.onRelease);
+      KeyBindsUI.registerOneUIKeyBind(
+        keybind.id,
+        key,
+        isEnabled,
+        keybind.onPress,
+        keybind.onRelease,
+        keybind.isContinuous,
+      );
     }
     await store.save();
   }
@@ -129,6 +138,7 @@ export namespace KeyBindsUI {
     isEnabled: boolean = true,
     onPress = () => {},
     onRelease?: () => void,
+    isContinuous?: boolean,
   ) {
     if (registerSet.has(id)) {
       // 防止开发时热更新重复注册
@@ -136,7 +146,7 @@ export namespace KeyBindsUI {
       return;
     }
     registerSet.add(id);
-    const keyBind: UIKeyBind = { id, key, isEnabled, onPress, onRelease };
+    const keyBind: UIKeyBind = { id, key, isEnabled, onPress, onRelease, isContinuous };
     allUIKeyBinds.push(keyBind);
 
     // 通知监听器有新的快捷键注册
@@ -300,8 +310,11 @@ export namespace KeyBindsUI {
     }
   }
 
-  // 跟踪当前按下的单键快捷键
+  // 跟踪当前按下的单键快捷键（序列型）
   const pressedSingleKeyBinds = new Set<string>();
+
+  // 跟踪当前按下的持续型快捷键（存放 id，防止重复触发）
+  const pressedContinuousKeyBindIds = new Set<string>();
 
   export function uiStartListen() {
     window.addEventListener("mousedown", onMouseDown);
@@ -316,6 +329,7 @@ export namespace KeyBindsUI {
     window.removeEventListener("keyup", onKeyUp);
     window.removeEventListener("wheel", onWheel);
     pressedSingleKeyBinds.clear();
+    pressedContinuousKeyBindIds.clear();
   }
 
   /**
@@ -342,6 +356,10 @@ export namespace KeyBindsUI {
     for (const uiKeyBind of allUIKeyBinds) {
       // 如果快捷键未启用，跳过
       if (!uiKeyBind.isEnabled) {
+        continue;
+      }
+      // 持续型快捷键不走序列匹配
+      if (uiKeyBind.isContinuous) {
         continue;
       }
       if (matchEmacsKeyPress(uiKeyBind.key, userEventQueue.arrayList)) {
@@ -371,6 +389,28 @@ export namespace KeyBindsUI {
       return;
     }
     if (["control", "alt", "shift", "meta"].includes(event.key.toLowerCase())) return;
+
+    const activeProject = store.get(activeProjectAtom);
+
+    // ——持续型快捷键独立路径——
+    // 持续型快捷键：ctrl/meta 按下时跳过（避免与 ctrl+s 等冲突）
+    if (!event.ctrlKey && !event.metaKey) {
+      const rawKey = event.key.toLowerCase();
+      // 兼容中文输入法下的全角符号（如「【」→「[」）
+      const pressedKey = rawKey in transformedKeys ? transformedKeys[rawKey as keyof typeof transformedKeys] : rawKey;
+      for (const uiKeyBind of allUIKeyBinds) {
+        if (!uiKeyBind.isContinuous) continue;
+        if (!uiKeyBind.isEnabled) continue;
+        if (uiKeyBind.key.toLowerCase() !== pressedKey) continue;
+        // 防止 keydown 重复触发（按住时浏览器会持续发送 keydown 事件）
+        if (pressedContinuousKeyBindIds.has(uiKeyBind.id)) continue;
+        pressedContinuousKeyBindIds.add(uiKeyBind.id);
+        uiKeyBind.onPress(activeProject);
+      }
+    }
+    // 持续型路径处理后，不 return——序列型照常入队检测（两者不冲突）
+
+    // ——序列型快捷键路径——
     enqueue(event);
     check();
   }
@@ -382,12 +422,26 @@ export namespace KeyBindsUI {
     const activeProject = store.get(activeProjectAtom);
     const key = event.key;
 
+    // ——持续型快捷键松开——
+    const rawKeyUp = key.toLowerCase();
+    // 兼容中文输入法下的全角符号（如「】」→「]」）
+    const keyUpNormalized =
+      rawKeyUp in transformedKeys ? transformedKeys[rawKeyUp as keyof typeof transformedKeys] : rawKeyUp;
+    for (const uiKeyBind of allUIKeyBinds) {
+      if (!uiKeyBind.isContinuous) continue;
+      if (!uiKeyBind.isEnabled) continue;
+      if (uiKeyBind.key.toLowerCase() !== keyUpNormalized) continue;
+      if (!pressedContinuousKeyBindIds.has(uiKeyBind.id)) continue;
+      pressedContinuousKeyBindIds.delete(uiKeyBind.id);
+      uiKeyBind.onRelease?.(activeProject);
+    }
+
+    // ——序列型快捷键松开——
     // 检查是否有对应的单键快捷键需要处理松开事件
     for (const uiKeyBind of allUIKeyBinds) {
       // 如果快捷键未启用，跳过
-      if (!uiKeyBind.isEnabled) {
-        continue;
-      }
+      if (!uiKeyBind.isEnabled) continue;
+      if (uiKeyBind.isContinuous) continue;
       if (uiKeyBind.onRelease && uiKeyBind.key === key && pressedSingleKeyBinds.has(key)) {
         uiKeyBind.onRelease(activeProject);
         pressedSingleKeyBinds.delete(key);

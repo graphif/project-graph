@@ -1705,6 +1705,25 @@ keyBindsGroup:
   camera:
     title: Camera Control
     description: "Used for controlling camera movement and zoom\n"
+  CameraMoveUp:
+    title: Move Camera Up
+    description: When pressed, move the camera upward
+  CameraMoveDown:
+    title: Move Camera Down
+    description: When pressed, move the camera downward
+  CameraMoveLeft:
+    title: Move Camera Left
+    description: When pressed, move the camera to the left
+  CameraMoveRight:
+    title: Move Camera Right
+    description: When pressed, move the camera to the right
+  continuousShortcut:
+    title: Continuous Shortcut
+  continuousShortcutTooltip:
+    title: Continuous Shortcut Description
+    description: A shortcut that needs to be held down continuously, and you'll feel the effect after releasing it after a short period. Unlike sequence shortcuts, it can't be a key sequence.
+  resetToDefault:
+    title: Reset to default
   app:
     title: Application Control
     description: "Some functions used to control the application\n"

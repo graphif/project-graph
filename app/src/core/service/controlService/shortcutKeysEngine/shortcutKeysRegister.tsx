@@ -42,6 +42,8 @@ interface KeyBindItem {
   onRelease?: (project?: Project) => void;
   // 全局快捷键
   isGlobal?: boolean;
+  // 是否是持续型快捷键
+  isContinuous?: boolean;
   // 默认是否启用
   defaultEnabled?: boolean;
 }
@@ -174,7 +176,100 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "C-A-r",
     onPress: (project) => project!.camera.resetScale(),
   },
-
+  {
+    id: "CameraScaleZoomIn",
+    defaultKey: "[",
+    isContinuous: true,
+    onPress: (project) => {
+      project!.camera.isStartZoomIn = true;
+      project!.camera.addScaleFollowMouseLocationTime(1);
+    },
+    onRelease: (project) => {
+      project!.camera.isStartZoomIn = false;
+      project!.camera.addScaleFollowMouseLocationTime(5);
+    },
+  },
+  {
+    id: "CameraScaleZoomOut",
+    defaultKey: "]",
+    isContinuous: true,
+    onPress: (project) => {
+      project!.camera.isStartZoomOut = true;
+      project!.camera.addScaleFollowMouseLocationTime(1);
+    },
+    onRelease: (project) => {
+      project!.camera.isStartZoomOut = false;
+      project!.camera.addScaleFollowMouseLocationTime(5);
+    },
+  },
+  {
+    id: "CameraMoveUp",
+    defaultKey: "w",
+    isContinuous: true,
+    onPress: (project) => {
+      project!.camera.accelerateCommander = project!.camera.accelerateCommander
+        .add(new Vector(0, -1))
+        .limitX(-1, 1)
+        .limitY(-1, 1);
+    },
+    onRelease: (project) => {
+      project!.camera.accelerateCommander = project!.camera.accelerateCommander
+        .subtract(new Vector(0, -1))
+        .limitX(-1, 1)
+        .limitY(-1, 1);
+    },
+  },
+  {
+    id: "CameraMoveDown",
+    defaultKey: "s",
+    isContinuous: true,
+    onPress: (project) => {
+      project!.camera.accelerateCommander = project!.camera.accelerateCommander
+        .add(new Vector(0, 1))
+        .limitX(-1, 1)
+        .limitY(-1, 1);
+    },
+    onRelease: (project) => {
+      project!.camera.accelerateCommander = project!.camera.accelerateCommander
+        .subtract(new Vector(0, 1))
+        .limitX(-1, 1)
+        .limitY(-1, 1);
+    },
+  },
+  {
+    id: "CameraMoveLeft",
+    defaultKey: "a",
+    isContinuous: true,
+    onPress: (project) => {
+      project!.camera.accelerateCommander = project!.camera.accelerateCommander
+        .add(new Vector(-1, 0))
+        .limitX(-1, 1)
+        .limitY(-1, 1);
+    },
+    onRelease: (project) => {
+      project!.camera.accelerateCommander = project!.camera.accelerateCommander
+        .subtract(new Vector(-1, 0))
+        .limitX(-1, 1)
+        .limitY(-1, 1);
+    },
+  },
+  {
+    id: "CameraMoveRight",
+    defaultKey: "d",
+    isContinuous: true,
+    onPress: (project) => {
+      project!.camera.accelerateCommander = project!.camera.accelerateCommander
+        .add(new Vector(1, 0))
+        .limitX(-1, 1)
+        .limitY(-1, 1);
+    },
+    onRelease: (project) => {
+      project!.camera.accelerateCommander = project!.camera.accelerateCommander
+        .subtract(new Vector(1, 0))
+        .limitX(-1, 1)
+        .limitY(-1, 1);
+    },
+  },
   /*------- 相机分页移动（Win） -------*/
   // 注意：实际运行时会根据 isMac 注册其一，这里两份都列出方便查阅
   {
@@ -1016,7 +1111,6 @@ export const allKeyBinds: KeyBindItem[] = [
       if (!project!.keyboardOnlyEngine.isOpenning()) return;
       project!.camera.clearMoveCommander();
       project!.camera.speed = Vector.getZero();
-      Settings.allowMoveCameraByWSAD = !Settings.allowMoveCameraByWSAD;
     },
   },
 

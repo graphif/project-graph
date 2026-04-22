@@ -1113,6 +1113,25 @@ keyBindsGroup:
     title: Kontrol Kamera
     description: |
       Untuk mengontrol gerakan kamera, zoom
+  CameraMoveUp:
+    title: Gerakkan Kamera Ke Atas
+    description: Saat ditekan, gerakkan kamera ke atas
+  CameraMoveDown:
+    title: Gerakkan Kamera Ke Bawah
+    description: Saat ditekan, gerakkan kamera ke bawah
+  CameraMoveLeft:
+    title: Gerakkan Kamera Ke Kiri
+    description: Saat ditekan, gerakkan kamera ke kiri
+  CameraMoveRight:
+    title: Gerakkan Kamera Ke Kanan
+    description: Saat ditekan, gerakkan kamera ke kanan
+  continuousShortcut:
+    title: pintasan berkelanjutan
+  continuousShortcutTooltip:
+    title: deskripsi pintasan berkelanjutan
+    description: Pintasan yang perlu ditekan secara berkelanjutan, dan Anda akan merasakan efeknya setelah melepaskannya setelah periode singkat. Tidak seperti pintasan urutan, ini tidak bisa menjadi urutan tombol.
+  resetToDefault:
+    title: Atur ulang ke default
   app:
     title: Kontrol Aplikasi
     description: |

@@ -270,7 +270,7 @@ const categories = {
       "enableCtrlWheelRotateStructure",
     ],
     touchpad: ["enableWindowsTouchPad", "macTrackpadAndMouseWheelDifference", "macTrackpadScaleSensitivity"],
-    cameraMove: ["allowMoveCameraByWSAD", "cameraKeyboardMoveReverse", "moveAmplitude", "moveFriction"],
+    cameraMove: ["moveAmplitude", "moveFriction"],
     cameraZoom: [
       "scaleExponent",
       "cameraZoomInLimitBehavior",
@@ -279,7 +279,6 @@ const categories = {
       "cameraResetMaxScale",
       "scaleCameraByMouseLocation",
       "cameraKeyboardScaleRate",
-      "cameraKeyboardScaleReverse",
     ],
     objectSelect: [
       "rectangleSelectWhenRight",

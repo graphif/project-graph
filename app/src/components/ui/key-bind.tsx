@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatEmacsKey } from "@/utils/emacs";
 import { formatKeyBindSequence, formatSigalKeyForDisplay, getModifierDisplayTexts } from "@/utils/keyDisplay";
-import { Check, Delete } from "lucide-react";
-import { useCallback, useState } from "react";
+import { Check, Delete, Info } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -12,19 +13,41 @@ import { useTranslation } from "react-i18next";
 export default function KeyBind({
   defaultValue = "",
   onChange = () => {},
+  isContinuous = false,
 }: {
   defaultValue?: string;
   onChange?: (value: string) => void;
+  isContinuous?: boolean;
 }) {
   const [choosing, setChoosing] = useState(false);
   const [value, setValue] = useState(defaultValue);
   const { t } = useTranslation("keyBinds");
 
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    event.preventDefault();
-    if (["Control", "Alt", "Shift", "Meta"].includes(event.key)) return;
-    setValue((prev) => `${prev} ${formatEmacsKey(event)}`);
-  }, []);
+  const endInputRef = useRef<() => void>(() => {});
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      event.preventDefault();
+      if (["Control", "Alt", "Shift", "Meta"].includes(event.key)) return;
+      if (isContinuous) {
+        // 持续型：只允许单键，录入第一个键后立即完成
+        const singleKey = formatEmacsKey(event);
+        setValue(singleKey);
+        // 延迟调用 endInput 确保 value 已更新
+        setTimeout(() => {
+          document.removeEventListener("keydown", handleKeyDown);
+          document.removeEventListener("mousedown", handleMouseDown);
+          document.removeEventListener("mouseup", handleMouseUp);
+          document.removeEventListener("wheel", handleWheel);
+          setChoosing(false);
+          onChange(singleKey);
+        }, 0);
+      } else {
+        setValue((prev) => `${prev} ${formatEmacsKey(event)}`);
+      }
+    },
+    [isContinuous, onChange], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const handleMouseDown = useCallback((event: MouseEvent) => {
     event.preventDefault();
@@ -54,7 +77,7 @@ export default function KeyBind({
     setValue("");
   }, [handleKeyDown, handleMouseDown, handleMouseUp, handleWheel]);
 
-  const endInput = useCallback(() => {
+  const endInputCallback = useCallback(() => {
     document.removeEventListener("keydown", handleKeyDown);
     document.removeEventListener("mousedown", handleMouseDown);
     document.removeEventListener("mouseup", handleMouseUp);
@@ -63,8 +86,24 @@ export default function KeyBind({
     onChange(value.trim());
   }, [handleKeyDown, handleMouseDown, handleMouseUp, handleWheel, value, onChange]);
 
+  // 保持 ref 最新
+  endInputRef.current = endInputCallback;
+
   return (
     <>
+      {isContinuous && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="bg-accent text-accent-foreground flex cursor-help items-center gap-1 rounded px-1.5 py-0.5 text-xs">
+              <Info size={12} />
+              {t("continuousShortcut.title")}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{t("continuousShortcutTooltip.description")}</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
       <Button onClick={startInput} variant={choosing ? "outline" : "default"} className="gap-0">
         {value
           ? formatKeyBindSequence(value.trim()).map((item, index) => (
@@ -79,7 +118,7 @@ export default function KeyBind({
             ))
           : t("none")}
       </Button>
-      {choosing && (
+      {choosing && !isContinuous && (
         <>
           <Button
             onClick={() => {
@@ -89,7 +128,7 @@ export default function KeyBind({
           >
             <Delete />
           </Button>
-          <Button onClick={endInput} size="icon">
+          <Button onClick={endInputCallback} size="icon">
             <Check />
           </Button>
         </>

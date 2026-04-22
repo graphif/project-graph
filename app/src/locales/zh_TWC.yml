@@ -1553,6 +1553,25 @@ keyBinds:
   expandSelectEntityReversedKeepLastSelected:
     title: 反向擴散選擇節點（保留目前節點的選擇狀態）
     description: 按下後，實體的選取狀態會轉移到父節點上，同時保留目前節點的選取狀態
+  CameraMoveUp:
+    title: 向上移動視野
+    description: 按下後，視野向上移動
+  CameraMoveDown:
+    title: 向下移動視野
+    description: 按下後，視野向下移動
+  CameraMoveLeft:
+    title: 向左移動視野
+    description: 按下後，視野向左移動
+  CameraMoveRight:
+    title: 向右移動視野
+    description: 按下後，視野向右移動
+  continuousShortcut:
+    title: 持續型快捷鍵
+  continuousShortcutTooltip:
+    title: 持續型快捷鍵說明
+    description: 需要持續按下，然後一小段時間鬆開才感覺到效果的快捷鍵。並且不像序列型快捷鍵那樣長度可以是一個按鍵序列。
+  resetToDefault:
+    title: 重置為默認
   checkoutLeftMouseToSelectAndMove:
     title: 設定左鍵為“選取/移動”模式
     description: 也就是滑鼠左鍵切換為正常模式

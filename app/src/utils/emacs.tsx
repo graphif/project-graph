@@ -108,7 +108,7 @@ export function parseSingleEmacsKey(key: string): {
  * 解决macbook特殊中文按键符号问题
  * 左边是中文符号，右边是对应的英文符号
  */
-const transformedKeys = {
+export const transformedKeys = {
   "【": "[",
   "】": "]",
   "；": ";",
