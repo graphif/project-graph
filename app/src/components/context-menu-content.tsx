@@ -27,6 +27,7 @@ import ColorPaletteWindow from "@/sub/ColorPaletteWindow";
 import ColorWindow from "@/sub/ColorWindow";
 import { Direction } from "@/types/directions";
 import { parseEmacsKey } from "@/utils/emacs";
+import { KeyBindsUI, type UIKeyBind } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { openBrowserOrFile } from "@/utils/externalOpen";
 import { exportImagesToProjectDirectory } from "@/utils/imageExport";
 import { Color, Vector } from "@graphif/data-structures";
@@ -1075,7 +1076,11 @@ export default function MyContextMenuContent() {
             改变画笔颜色
           </SubTrigger>
           <SubContent>
-            <Item onClick={() => (Settings.autoFillPenStrokeColor = Color.Transparent.toArray())}>
+            <Item
+              onClick={() => {
+                Settings.autoFillPenStrokeColor = Color.Transparent.toArray();
+              }}
+            >
               <Slash />
               {t("resetColor")}
             </Item>
@@ -1298,16 +1303,16 @@ export default function MyContextMenuContent() {
 
 function ContextMenuTooltip({ keyId, children = <></> }: { keyId: string; children: ReactNode }) {
   const [keySeq, setKeySeq] = useState<ReturnType<typeof parseEmacsKey>[number][]>();
-  const [activeProject] = useAtom(activeProjectAtom);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, setContextMenuTooltipWords] = useAtom(contextMenuTooltipWordsAtom);
   const { t } = useTranslation("keyBinds");
 
   useEffect(() => {
-    activeProject?.keyBinds.get(keyId)?.then((key) => {
-      if (key) {
-        const keyStr = typeof key === "string" ? key : key.key;
+    // 立即获取当前快捷键配置
+    const updateKeySeq = (keyBind: UIKeyBind | undefined) => {
+      if (keyBind) {
+        const keyStr = keyBind.key;
         const parsed = parseEmacsKey(keyStr);
         if (parsed.length > 0) {
           setKeySeq(parsed);
@@ -1317,8 +1322,19 @@ function ContextMenuTooltip({ keyId, children = <></> }: { keyId: string; childr
       } else {
         setKeySeq(undefined);
       }
-    });
-  }, [keyId, activeProject]);
+    };
+
+    // 初始获取
+    const currentKeyBind = KeyBindsUI.getUIKeyBind(keyId);
+    updateKeySeq(currentKeyBind);
+
+    // 监听快捷键变化
+    const unsubscribe = KeyBindsUI.onKeyBindChange(keyId, updateKeySeq);
+
+    return () => {
+      unsubscribe();
+    };
+  }, [keyId]);
 
   const onMouseEnter = () => {
     const title = t(`${keyId}.title`);

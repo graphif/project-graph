@@ -35,9 +35,7 @@ import { KeyboardOnlyGraphEngine } from "@/core/service/controlService/keyboardO
 import { KeyboardOnlyTreeEngine } from "@/core/service/controlService/keyboardOnlyEngine/keyboardOnlyTreeEngine";
 import { SelectChangeEngine } from "@/core/service/controlService/keyboardOnlyEngine/selectChangeEngine";
 import { RectangleSelect } from "@/core/service/controlService/rectangleSelectEngine/rectangleSelectEngine";
-import { KeyBinds } from "@/core/service/controlService/shortcutKeysEngine/KeyBinds";
 import { KeyBindHintEngine } from "@/core/service/controlService/shortcutKeysEngine/KeyBindHintEngine";
-import { KeyBindsRegistrar } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import { MouseInteraction } from "@/core/service/controlService/stageMouseInteractionCore/stageMouseInteractionCore";
 import { AutoComputeUtils } from "@/core/service/dataGenerateService/autoComputeEngine/AutoComputeUtils";
 import { AutoCompute } from "@/core/service/dataGenerateService/autoComputeEngine/mainTick";
@@ -87,7 +85,7 @@ export function loadAllServicesBeforeInit(project: Project): void {
   project.loadService(Canvas);
   project.loadService(InputElement);
   project.loadService(StageStyleManager);
-  project.loadService(KeyBinds);
+  // project.loadService(KeyBinds);
   project.loadService(ControllerUtils);
 
   // 基础算法
@@ -170,7 +168,6 @@ export function loadAllServicesBeforeInit(project: Project): void {
   project.loadService(GenerateFromFolder);
 
   // 快捷键交互
-  project.loadService(KeyBindsRegistrar);
   project.loadService(KeyBindHintEngine);
 
   // 自动保存与备份

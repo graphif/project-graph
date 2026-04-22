@@ -1,20 +1,19 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { activeProjectAtom } from "@/state";
 import { parseEmacsKey } from "@/utils/emacs";
-import { useAtom } from "jotai";
 import { ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RenderKey } from "./ui/key-bind";
+import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 
 export default function KeyTooltip({ keyId, children = <></> }: { keyId: string; children: ReactNode }) {
   const [keySeq, setKeySeq] = useState<ReturnType<typeof parseEmacsKey>[number][]>();
-  const [activeProject] = useAtom(activeProjectAtom);
   const { t } = useTranslation("keyBinds");
 
   useEffect(() => {
-    activeProject?.keyBinds.get(keyId)?.then((key) => {
-      if (key) {
-        const keyStr = typeof key === "string" ? key : key.key;
+    // 立即获取当前快捷键配置
+    const updateKeySeq = (keyBind: any) => {
+      if (keyBind) {
+        const keyStr = keyBind.key;
         const parsed = parseEmacsKey(keyStr);
         if (parsed.length > 0) {
           setKeySeq(parsed);
@@ -24,8 +23,19 @@ export default function KeyTooltip({ keyId, children = <></> }: { keyId: string;
       } else {
         setKeySeq(undefined);
       }
-    });
-  }, [keyId, activeProject]);
+    };
+
+    // 初始获取
+    const currentKeyBind = KeyBindsUI.getUIKeyBind(keyId);
+    updateKeySeq(currentKeyBind);
+
+    // 监听快捷键变化
+    const unsubscribe = KeyBindsUI.onKeyBindChange(keyId, updateKeySeq);
+
+    return () => {
+      unsubscribe();
+    };
+  }, [keyId]);
 
   return (
     <Tooltip>

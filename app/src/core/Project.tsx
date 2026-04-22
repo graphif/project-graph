@@ -34,9 +34,7 @@ import type { KeyboardOnlyGraphEngine } from "@/core/service/controlService/keyb
 import type { KeyboardOnlyTreeEngine } from "@/core/service/controlService/keyboardOnlyEngine/keyboardOnlyTreeEngine";
 import type { SelectChangeEngine } from "@/core/service/controlService/keyboardOnlyEngine/selectChangeEngine";
 import type { RectangleSelect } from "@/core/service/controlService/rectangleSelectEngine/rectangleSelectEngine";
-import type { KeyBinds } from "@/core/service/controlService/shortcutKeysEngine/KeyBinds";
 import type { KeyBindHintEngine } from "@/core/service/controlService/shortcutKeysEngine/KeyBindHintEngine";
-import type { KeyBindsRegistrar } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import type { MouseInteraction } from "@/core/service/controlService/stageMouseInteractionCore/stageMouseInteractionCore";
 import type { AutoComputeUtils } from "@/core/service/dataGenerateService/autoComputeEngine/AutoComputeUtils";
 import type { AutoCompute } from "@/core/service/dataGenerateService/autoComputeEngine/mainTick";
@@ -565,7 +563,7 @@ declare module "./Project" {
   interface Project {
     canvas: Canvas;
     inputElement: InputElement;
-    keyBinds: KeyBinds;
+    // keyBinds: KeyBinds;
     controllerUtils: ControllerUtils;
     autoComputeUtils: AutoComputeUtils;
     renderUtils: RenderUtils;
@@ -631,7 +629,6 @@ declare module "./Project" {
     stageExportSvg: StageExportSvg;
     stageImport: StageImport;
     generateFromFolder: GenerateFromFolder;
-    keyBindsRegistrar: KeyBindsRegistrar;
     keyBindHintEngine: KeyBindHintEngine;
     sectionMethods: SectionMethods;
     graphMethods: GraphMethods;

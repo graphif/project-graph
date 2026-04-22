@@ -75,7 +75,9 @@ export namespace KeyBindsUI {
   function notifyKeyBindChange(id: string, keyBind: UIKeyBind) {
     const listeners = keyBindChangeListeners.get(id);
     if (listeners) {
-      listeners.forEach((callback) => callback(keyBind));
+      listeners.forEach((callback) => {
+        callback(keyBind);
+      });
     }
   }
 

@@ -9,6 +9,7 @@ import { Rectangle } from "@graphif/shapes";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { parseSingleEmacsKey } from "@/utils/emacs";
 import { allKeyBinds } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
+import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 // 快捷键分组定义（从SettingsWindow/keybinds.tsx复制）
 
 import { Renderer } from "@/core/render/canvas2d/renderer";
@@ -236,24 +237,14 @@ export async function generateKeyboardLayout(project: Project): Promise<void> {
   const keyGap = 30; // 键之间的间距（增大）
   const rowGap = 40; // 行之间的间距（增大）
 
-  // 获取当前快捷键配置
-  const keyBindEntries = await project.keyBinds.entries();
-  const keyBindMap = new Map<string, { key: string; isEnabled: boolean }>();
-
-  for (const [id, config] of keyBindEntries) {
-    if (typeof config === "string") {
-      keyBindMap.set(id, { key: config, isEnabled: true });
-    } else {
-      keyBindMap.set(id, { key: config.key, isEnabled: config.isEnabled !== false });
-    }
-  }
-
   // 获取所有快捷键的翻译信息
   const keyBindInfoMap = new Map<string, { title: string; description: string; keySequence: string }>();
-  for (const keyBind of allKeyBinds.filter((kb) => !kb.isGlobal)) {
-    const config = keyBindMap.get(keyBind.id);
-    if (config && config.isEnabled) {
-      // 获取翻译文本
+  const keyBindMap = new Map<string, { key: string; isEnabled: boolean }>();
+  const allUIKeyBinds = KeyBindsUI.getAllUIKeyBinds();
+
+  for (const keyBind of allUIKeyBinds) {
+    keyBindMap.set(keyBind.id, { key: keyBind.key, isEnabled: keyBind.isEnabled });
+    if (keyBind.isEnabled) {
       const translation = i18next.t(`${keyBind.id}`, { ns: "keyBinds", returnObjects: true }) as {
         title?: string;
         description?: string;
@@ -264,7 +255,7 @@ export async function generateKeyboardLayout(project: Project): Promise<void> {
       keyBindInfoMap.set(keyBind.id, {
         title,
         description,
-        keySequence: config.key,
+        keySequence: keyBind.key,
       });
     }
   }

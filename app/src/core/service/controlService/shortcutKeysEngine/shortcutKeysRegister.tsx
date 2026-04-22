@@ -1,5 +1,5 @@
 import { Dialog } from "@/components/ui/dialog";
-import { Project, ProjectState, service } from "@/core/Project";
+import { Project, ProjectState } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { RectangleSlideEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleSlideEffect";
 import { ViewFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewFlashEffect";
@@ -1584,25 +1584,6 @@ export const allKeyBinds: KeyBindItem[] = [
     },
   },
 ];
-
-/**
- * 快捷键注册函数
- * 现在所有非全局快捷键都由KeyBindsUI类在应用启动时统一注册
- * 这个东西现在没用了
- */
-@service("keyBindsRegistrar")
-export class KeyBindsRegistrar {
-  constructor(private readonly project: Project) {}
-
-  /**
-   * 注册所有快捷键
-   * 现在所有非全局快捷键都由KeyBindsUI类在应用启动时统一注册
-   */
-  async registerAllKeyBinds() {
-    // 所有非全局快捷键都由KeyBindsUI类在应用启动时统一注册
-    // 这里不再需要注册项目级快捷键
-  }
-}
 
 export function getKeyBindTypeById(id: string): "global" | "software" {
   for (const keyBind of allKeyBinds) {
