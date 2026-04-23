@@ -58,6 +58,7 @@ export const settingsSchema = z.object({
   isEnableSectionCollision: z.boolean().default(false),
   autoNamerTemplate: z.string().default("..."),
   autoNamerSectionTemplate: z.string().default("Section_{{i}}"),
+  autoNamerDetailsTemplate: z.string().default(""),
   autoSaveWhenClose: z.boolean().default(false),
   autoSave: z.boolean().default(true),
   autoSaveInterval: z.number().min(1).max(60).int().default(10),

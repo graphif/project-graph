@@ -433,6 +433,15 @@ settings:
       Masukkan `{{date}}` akan diganti dengan tanggal saat ini, saat membuat dengan klik ganda dapat memperbarui tanggal secara otomatis.
       Masukkan `{{time}}` akan diganti dengan waktu saat ini, saat membuat dengan klik ganda dapat memperbarui waktu secara otomatis.
       Dapat dikombinasikan, contoh `{{i}}-{{date}}-{{time}}`
+  autoNamerDetailsTemplate:
+    title: Isi Detail Otomatis Saat Membuat Node
+    description: |
+      Saat membuat node teks, konten ini akan otomatis diisi ke kolom "Detail" node.
+      Biarkan kosong agar tidak mengisi konten apapun secara otomatis.
+      Mendukung sintaks template yang sama dengan judul:
+      Masukkan `{{i}}` akan diganti dengan nomor (sinkron dengan judul).
+      Masukkan `{{date}}` akan diganti dengan tanggal saat ini.
+      Masukkan `{{time}}` akan diganti dengan waktu saat ini.
   autoSaveWhenClose:
     title: Simpan File Proyek Otomatis Saat Klik Tombol Tutup Jendela
     description: |

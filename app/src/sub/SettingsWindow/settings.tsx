@@ -246,7 +246,7 @@ const categories = {
     ],
   },
   automation: {
-    autoNamer: ["autoNamerTemplate", "autoNamerSectionTemplate"],
+    autoNamer: ["autoNamerTemplate", "autoNamerSectionTemplate", "autoNamerDetailsTemplate"],
     autoSave: ["autoSaveWhenClose", "autoSave", "autoSaveInterval"],
     autoBackup: ["autoBackup", "autoBackupInterval", "autoBackupLimitCount", "autoBackupCustomPath"],
     autoImport: ["autoImportTxtFileWhenOpenPrg"],

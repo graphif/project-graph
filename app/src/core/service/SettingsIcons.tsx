@@ -91,6 +91,7 @@ import {
 export const settingsIcons = {
   autoNamerTemplate: Tag,
   autoNamerSectionTemplate: Tag,
+  autoNamerDetailsTemplate: Tag,
   autoSaveWhenClose: HardDriveDownload,
   autoSave: HardDrive,
   autoSaveInterval: Hourglass,

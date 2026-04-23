@@ -1007,6 +1007,19 @@ export function GlobalMenu() {
               </Item>
               <Item
                 onClick={() => {
+                  Dialog.input("设置创建节点时自动填入的详细信息", "留空则不填入任何内容", {
+                    defaultValue: Settings.autoNamerDetailsTemplate,
+                  }).then((result) => {
+                    if (result === undefined) return;
+                    Settings.autoNamerDetailsTemplate = result;
+                  });
+                }}
+              >
+                <span>创建节点时自动填入详细信息：</span>
+                <span>{Settings.autoNamerDetailsTemplate || "（空）"}</span>
+              </Item>
+              <Item
+                onClick={() => {
                   Dialog.confirm("确认改变？", Settings.autoFillNodeColorEnable ? "即将关闭" : "即将开启").then(() => {
                     Settings.autoFillNodeColorEnable = !Settings.autoFillNodeColorEnable;
                   });

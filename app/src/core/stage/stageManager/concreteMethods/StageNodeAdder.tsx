@@ -6,6 +6,7 @@ import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
 import { Direction } from "@/types/directions";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -33,8 +34,18 @@ export class NodeAdder {
     shouldRecordHistory = true,
   ): Promise<string> {
     const autoFillColor = this.getAutoColor();
+    const autoDetailsTemplate = Settings.autoNamerDetailsTemplate;
+    const autoDetails = autoDetailsTemplate
+      ? DetailsManager.markdownToDetails(
+          this.project.stageUtils.replaceAutoNameTemplate(
+            autoDetailsTemplate,
+            this.project.stageManager.getTextNodes()[0],
+          ),
+        )
+      : [];
     const node = new TextNode(this.project, {
       text: await this.getAutoName(),
+      details: autoDetails,
       collisionBox: new CollisionBox([new Rectangle(clickWorldLocation, Vector.getZero())]),
       color: autoFillColor,
     });

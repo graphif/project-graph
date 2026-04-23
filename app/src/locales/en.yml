@@ -323,6 +323,15 @@ settings:
       Input `{{date}}` to automatically replace with the current date, which will update automatically when creating by double-clicking.
       Input `{{time}}` to automatically replace with the current time, which will update automatically when creating by double-clicking.
       These can be combined, such as `{{i}}-{{date}}-{{time}}`.
+  autoNamerDetailsTemplate:
+    title: Auto-Fill Details Content for New Nodes
+    description: |
+      When creating a text node, this content will be automatically filled into the node's "Details" field.
+      Leave empty to not fill in any content automatically.
+      Supports the same template syntax as the title:
+      Input `{{i}}` to automatically replace with a number (synchronized with the title).
+      Input `{{date}}` to automatically replace with the current date.
+      Input `{{time}}` to automatically replace with the current time.
   autoSaveWhenClose:
     title: Auto-Save When Closing
     description: |
