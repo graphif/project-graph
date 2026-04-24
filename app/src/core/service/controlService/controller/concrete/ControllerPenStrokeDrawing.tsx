@@ -18,6 +18,8 @@ export class ControllerPenStrokeDrawingClass extends ControllerClass {
   /** 当前是否是在绘制直线 */
   public isDrawingLine = false;
 
+  public currentStrokeWidth: number = 5;
+
   /**
    * 初始化函数
    */

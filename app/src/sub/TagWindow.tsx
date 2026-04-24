@@ -1,3 +1,4 @@
+import { Project } from "@/core/Project";
 import { Button } from "@/components/ui/button";
 import { SubWindow } from "@/core/service/SubWindow";
 import { Vector } from "@graphif/data-structures";
@@ -5,7 +6,7 @@ import { Rectangle } from "@graphif/shapes";
 import { Angry, MousePointerClick, RefreshCcw, Smile, Table, Tags, Telescope } from "lucide-react";
 import React from "react";
 import { useAtom } from "jotai";
-import { activeProjectAtom } from "@/state";
+import { activeTabAtom } from "@/state";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -14,7 +15,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
  * @param param0
  */
 export default function TagWindow() {
-  const [project] = useAtom(activeProjectAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
 
   const [tagNameList, setTagNameList] = React.useState<
@@ -180,7 +182,8 @@ TagWindow.open = () => {
  * 单个的标签成一个子窗口
  */
 function LittleTagWindow({ uuid, tagName }: { uuid: string; tagName: string }) {
-  const [project] = useAtom(activeProjectAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
   const onClick = () => {
     project.tagManager.moveCameraToTag(uuid);

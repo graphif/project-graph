@@ -1,3 +1,4 @@
+import { Project } from "@/core/Project";
 import { Button } from "@/components/ui/button";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { ColorManager } from "@/core/service/feedbackService/ColorManager";
@@ -5,7 +6,7 @@ import { SubWindow } from "@/core/service/SubWindow";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { activeProjectAtom } from "@/state";
+import { activeTabAtom } from "@/state";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useAtom } from "jotai";
@@ -20,7 +21,8 @@ import { toast } from "sonner";
  */
 export default function ColorWindow() {
   const [currentColors, setCurrentColors] = useState<Color[]>([]);
-  const [project] = useAtom(activeProjectAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const project = tab instanceof Project ? tab : undefined;
 
   useEffect(() => {
     ColorManager.getUserEntityFillColors().then((colors) => {
@@ -146,7 +148,8 @@ function ColorManagerPanel() {
   });
   const [preAddColor, setPreAddColor] = useState("#000000");
   const [currentColorList, setCurrentColorList] = useState<Color[]>([]);
-  const [project] = useAtom(activeProjectAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const project = tab instanceof Project ? tab : undefined;
 
   return (
     <div className="bg-panel-bg flex flex-col p-4">

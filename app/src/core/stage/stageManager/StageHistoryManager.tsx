@@ -56,7 +56,7 @@ class HistoryManagerTimeEfficient extends HistoryManagerAbs {
       this.currentIndex--;
     }
 
-    this.project.state = ProjectState.Unsaved;
+    this.project.projectState = ProjectState.Unsaved;
   }
 
   /**
@@ -183,7 +183,7 @@ class HistoryManagerTimeEfficient extends HistoryManagerAbs {
     this.history = [];
     this.currentIndex = -1;
     this.initialStage = serialize(this.project.stage);
-    this.project.state = ProjectState.Saved;
+    this.project.projectState = ProjectState.Saved;
     if (Settings.showDebug) {
       toast("历史记录已清空");
     }
@@ -276,7 +276,7 @@ class HistorymanagerMemoryEfficient extends HistoryManagerAbs {
     if (this.currentIndex >= this.deltas.length) {
       this.currentIndex = this.deltas.length - 1;
     }
-    this.project.state = ProjectState.Unsaved;
+    this.project.projectState = ProjectState.Unsaved;
   }
 
   /**
@@ -373,7 +373,7 @@ class HistorymanagerMemoryEfficient extends HistoryManagerAbs {
     this.deltas = [];
     this.currentIndex = -1;
     this.initialStage = serialize(this.project.stage);
-    this.project.state = ProjectState.Saved;
+    this.project.projectState = ProjectState.Saved;
     if (Settings.showDebug) {
       toast("历史记录已清空");
     }

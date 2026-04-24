@@ -95,7 +95,7 @@ export class ControllerPenStrokeControlClass extends ControllerClass {
     // if (currentWorldLocation.y > this.lastAdjustWidthLocation.y) {
     //   delta = -delta;
     // }
-    const lastWidth = this.project.controller.penStrokeDrawing.currentStrokeWidth;
+    const lastWidth = this.project.controller.penStrokeDrawing.currentStrokeWidth ?? 1;
     // this.project.effects.addEffect(LineEffect.default(this.startAdjustWidthLocation, worldLocation.clone()));
     const newWidth = Math.round(lastWidth + change);
 

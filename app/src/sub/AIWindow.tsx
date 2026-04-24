@@ -1,9 +1,10 @@
+import { Project } from "@/core/Project";
 import { Button } from "@/components/ui/button";
 import Markdown from "@/components/ui/markdown";
 import { Textarea } from "@/components/ui/textarea";
 import { Settings } from "@/core/service/Settings";
 import { SubWindow } from "@/core/service/SubWindow";
-import { activeProjectAtom } from "@/state";
+import { activeTabAtom } from "@/state";
 import SettingsWindow from "@/sub/SettingsWindow";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -15,7 +16,8 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 export default function AIWindow() {
-  const [project] = useAtom(activeProjectAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const project = tab instanceof Project ? tab : undefined;
   const [inputValue, setInputValue] = useState("");
   const [messages, setMessages] = useState<BaseMessage[]>([
     new SystemMessage(

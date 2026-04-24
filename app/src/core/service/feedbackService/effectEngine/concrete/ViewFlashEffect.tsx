@@ -14,11 +14,8 @@ export class ViewFlashEffect extends Effect {
     super(timeProgress);
   }
 
-  static SaveFile() {
-    return new ViewFlashEffect(
-      this.project.stageStyleManager.currentStyle.effects.windowFlash,
-      new ProgressNumber(0, 10),
-    );
+  static SaveFile(project: Project) {
+    return new ViewFlashEffect(project.stageStyleManager.currentStyle.effects.windowFlash, new ProgressNumber(0, 10));
   }
   static Portal() {
     return new ViewFlashEffect(new Color(127, 75, 124), new ProgressNumber(0, 10));

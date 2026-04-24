@@ -1,3 +1,4 @@
+import { Project } from "@/core/Project";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -5,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Settings } from "@/core/service/Settings";
 import { SubWindow } from "@/core/service/SubWindow";
-import { activeProjectAtom } from "@/state";
+import { activeTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { save } from "@tauri-apps/plugin-dialog";
@@ -16,7 +17,8 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export default function ExportPngWindow() {
-  const [project] = useAtom(activeProjectAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
   const [scale, setScale] = useState(1);
   const scaleBefore = useMemo(() => project.camera.targetScale, []);

@@ -52,7 +52,7 @@ export class AutoSaveBackupService {
       // 临时草稿先不备份
       return;
     }
-    if (this.project.state === ProjectState.Unsaved) {
+    if (this.project.projectState === ProjectState.Unsaved) {
       this.project.save();
     }
   }

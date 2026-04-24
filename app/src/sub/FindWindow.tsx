@@ -1,3 +1,4 @@
+import { Project } from "@/core/Project";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -5,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { SearchScope } from "@/core/service/dataManageService/contentSearchEngine/contentSearchEngine";
 import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 import { SubWindow } from "@/core/service/SubWindow";
-import { activeProjectAtom } from "@/state";
+import { activeTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useAtom } from "jotai";
@@ -31,7 +32,8 @@ export default function FindWindow() {
   const [isMouseEnterCameraMovable, setIsMouseEnterCameraMovable] = useState(false);
   // 搜索范围
   const [searchScope, setSearchScope] = useState<SearchScope>(SearchScope.ALL);
-  const [project] = useAtom(activeProjectAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const project = tab instanceof Project ? tab : undefined;
 
   const selectAllResult = () => {
     for (const result of searchResults) {

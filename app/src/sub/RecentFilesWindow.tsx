@@ -1,3 +1,4 @@
+import { Project } from "@/core/Project";
 import { Input } from "@/components/ui/input";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { SubWindow } from "@/core/service/SubWindow";
@@ -26,7 +27,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { URI } from "vscode-uri";
 import { SoundService } from "@/core/service/feedbackService/SoundService";
 import { useAtom } from "jotai";
-import { activeProjectAtom } from "@/state";
+import { activeTabAtom } from "@/state";
 import { DragFileIntoStageEngine } from "@/core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 
 /**
@@ -79,7 +80,8 @@ type FolderNode = {
  * @returns
  */
 export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
-  const [activeProject] = useAtom(activeProjectAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const project = tab instanceof Project ? tab : undefined;
   /**
    * 数据中有多少就是多少
    */
@@ -214,18 +216,18 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
   };
 
   const addCurrentFileToCurrentProject = (fileAbsolutePath: string, isAbsolute: boolean) => {
-    if (!activeProject) {
+    if (!project) {
       toast.error("当前没有激活的项目，无法添加传送门");
       return;
     }
     if (isAbsolute) {
-      DragFileIntoStageEngine.handleDropFileAbsolutePath(activeProject, [fileAbsolutePath]);
+      DragFileIntoStageEngine.handleDropFileAbsolutePath(project, [fileAbsolutePath]);
     } else {
-      if (activeProject.isDraft) {
+      if (project.isDraft) {
         toast.error("草稿是未保存文件，没有路径，不能用相对路径导入");
         return;
       }
-      DragFileIntoStageEngine.handleDropFileRelativePath(activeProject, [fileAbsolutePath]);
+      DragFileIntoStageEngine.handleDropFileRelativePath(project, [fileAbsolutePath]);
     }
   };
 

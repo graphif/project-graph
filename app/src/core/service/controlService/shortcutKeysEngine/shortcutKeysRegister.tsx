@@ -12,7 +12,7 @@ import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { activeProjectAtom, isWindowMaxsizedAtom, projectsAtom, store } from "@/state";
+import { activeTabAtom, isWindowMaxsizedAtom, tabsAtom, store } from "@/state";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
@@ -690,12 +690,13 @@ export const allKeyBinds: KeyBindItem[] = [
     onPress: () => {
       //
 
-      const projects = store.get(projectsAtom);
+      const projects = store.get(tabsAtom);
       if (projects.length <= 1) {
         toast.error("至少打开两个项目才能切换项目");
         return;
       }
-      const activeProject = store.get(activeProjectAtom);
+      const tab = store.get(activeTabAtom);
+      const activeProject = tab instanceof Project ? tab : undefined;
       if (!activeProject) {
         toast.error("当前没有活动项目，无法切换项目");
         return;
@@ -708,19 +709,20 @@ export const allKeyBinds: KeyBindItem[] = [
         }
       }
       const nextActiveProjectIndex = (activeProjectIndex + 1) % projects.length;
-      store.set(activeProjectAtom, projects[nextActiveProjectIndex]);
+      store.set(activeTabAtom, projects[nextActiveProjectIndex]);
     },
   },
   {
     id: "switchActiveProjectReversed",
     defaultKey: "C-S-tab",
     onPress: () => {
-      const projects = store.get(projectsAtom);
+      const projects = store.get(tabsAtom);
       if (projects.length <= 1) {
         toast.error("至少打开两个项目才能切换项目");
         return;
       }
-      const activeProject = store.get(activeProjectAtom);
+      const tab = store.get(activeTabAtom);
+      const activeProject = tab instanceof Project ? tab : undefined;
       if (!activeProject) {
         toast.error("当前没有活动项目，无法切换项目");
         return;
@@ -736,7 +738,7 @@ export const allKeyBinds: KeyBindItem[] = [
         return ((n % m) + m) % m;
       };
       const nextActiveProjectIndex = mod(activeProjectIndex - 1, projects.length);
-      store.set(activeProjectAtom, projects[nextActiveProjectIndex]);
+      store.set(activeTabAtom, projects[nextActiveProjectIndex]);
     },
   },
   {
@@ -744,39 +746,41 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "A-S-q",
     defaultEnabled: false,
     onPress: async () => {
-      const project = store.get(activeProjectAtom);
-      if (!project) {
-        toast.error("当前没有打开的项目标签页");
+      const tab = store.get(activeTabAtom);
+      if (!tab) {
+        toast.error("当前没有打开的标签页");
         return;
       }
-      const projects = store.get(projectsAtom);
-      if (project.state === ProjectState.Stashed) {
-        toast("文件还没有保存，但已经暂存，在“最近打开的文件”中可恢复文件");
-      } else if (project.state === ProjectState.Unsaved) {
-        const response = await Dialog.buttons("是否保存更改？", decodeURI(project.uri.toString()), [
-          { id: "cancel", label: "取消", variant: "ghost" },
-          { id: "discard", label: "不保存", variant: "destructive" },
-          { id: "save", label: "保存" },
-        ]);
-        if (response === "save") {
-          await project.save();
-        } else if (response === "cancel") {
-          return;
+      const tabs = store.get(tabsAtom);
+      if (tab instanceof Project) {
+        if (tab.projectState === ProjectState.Stashed) {
+          toast("文件还没有保存，但已经暂存，在“最近打开的文件”中可恢复文件");
+        } else if (tab.projectState === ProjectState.Unsaved) {
+          const response = await Dialog.buttons("是否保存更改？", decodeURI(tab.uri.toString()), [
+            { id: "cancel", label: "取消", variant: "ghost" },
+            { id: "discard", label: "不保存", variant: "destructive" },
+            { id: "save", label: "保存" },
+          ]);
+          if (response === "save") {
+            await tab.save();
+          } else if (response === "cancel") {
+            return;
+          }
         }
       }
-      await project.dispose();
-      const result = projects.filter((p) => p.uri.toString() !== project.uri.toString());
-      const activeProjectIndex = projects.findIndex((p) => p.uri.toString() === project.uri.toString());
+      await tab.dispose();
+      const result = tabs.filter((t) => t !== tab);
+      const activeTabIndex = tabs.indexOf(tab);
       if (result.length > 0) {
-        if (activeProjectIndex === projects.length - 1) {
-          store.set(activeProjectAtom, result[activeProjectIndex - 1]);
+        if (activeTabIndex === tabs.length - 1) {
+          store.set(activeTabAtom, result[activeTabIndex - 1]);
         } else {
-          store.set(activeProjectAtom, result[activeProjectIndex]);
+          store.set(activeTabAtom, result[activeTabIndex]);
         }
       } else {
-        store.set(activeProjectAtom, undefined);
+        store.set(activeTabAtom, undefined);
       }
-      store.set(projectsAtom, result);
+      store.set(tabsAtom, result);
     },
   },
   /*------- 导出操作 ------- */
@@ -784,7 +788,8 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "exportSelectedTreeStructureToPlainText",
     defaultKey: "S-e t p",
     onPress: () => {
-      const activeProject = store.get(activeProjectAtom);
+      const tab = store.get(activeTabAtom);
+      const activeProject = tab instanceof Project ? tab : undefined;
       const textNode = getOneSelectedTextNodeWhenExportingPlainText(activeProject);
       if (textNode) {
         const result = activeProject!.stageExport.getTabStringByTextNode(textNode);
@@ -797,7 +802,8 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "exportSelectedTreeStructureToMarkdown",
     defaultKey: "S-e t m",
     onPress: () => {
-      const activeProject = store.get(activeProjectAtom);
+      const tab = store.get(activeTabAtom);
+      const activeProject = tab instanceof Project ? tab : undefined;
       const textNode = getOneSelectedTextNodeWhenExportingPlainText(activeProject);
       if (textNode) {
         const result = activeProject!.stageExport.getMarkdownStringByTextNode(textNode);
@@ -810,7 +816,8 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "exportSelectedNetStructureToPlainText",
     defaultKey: "S-e n p",
     onPress: () => {
-      const activeProject = store.get(activeProjectAtom);
+      const tab = store.get(activeTabAtom);
+      const activeProject = tab instanceof Project ? tab : undefined;
       if (!activeProject) {
         toast.warning("请先打开工程文件");
         return;
@@ -826,7 +833,8 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "exportSelectedNetStructureToMermaid",
     defaultKey: "S-e n m",
     onPress: () => {
-      const activeProject = store.get(activeProjectAtom);
+      const tab = store.get(activeTabAtom);
+      const activeProject = tab instanceof Project ? tab : undefined;
       if (!activeProject) {
         toast.warning("请先打开工程文件");
         return;
@@ -842,7 +850,8 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "saveFile",
     defaultKey: "C-s",
     onPress: () => {
-      const activeProject = store.get(activeProjectAtom);
+      const tab = store.get(activeTabAtom);
+      const activeProject = tab instanceof Project ? tab : undefined;
       if (activeProject) {
         activeProject.camera.clearMoveCommander();
         activeProject.save();
@@ -863,7 +872,8 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "C-S-n",
     onPress: () => {
       //
-      const activeProject = store.get(activeProjectAtom);
+      const tab = store.get(activeTabAtom);
+      const activeProject = tab instanceof Project ? tab : undefined;
       if (!activeProject) {
         toast.error("当前没有激活的项目，无法在当前工程文件目录下创建新文件");
         return;
@@ -886,7 +896,8 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "openCurrentProjectFileFolder",
     defaultKey: "C-S-l",
     onPress: () => {
-      const activeProject = store.get(activeProjectAtom);
+      const tab = store.get(activeTabAtom);
+      const activeProject = tab instanceof Project ? tab : undefined;
       if (!activeProject || activeProject.isDraft) {
         toast.error("当前没有可用的工程文件");
         return;
@@ -1187,7 +1198,7 @@ export const allKeyBinds: KeyBindItem[] = [
     // TODO 不触发了
     id: "screenFlashEffect",
     defaultKey: "arrowup arrowup arrowdown arrowdown arrowleft arrowright arrowleft arrowright b a",
-    onPress: (project) => project!.effects.addEffect(ViewFlashEffect.SaveFile()),
+    onPress: (project) => project!.effects.addEffect(ViewFlashEffect.SaveFile(project!)),
   },
   {
     id: "alignNodesToInteger",

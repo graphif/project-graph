@@ -8,6 +8,7 @@ import { ControllerCuttingClass } from "@/core/service/controlService/controller
 import { ControllerEdgeEditClass } from "@/core/service/controlService/controller/concrete/ControllerEdgeEdit";
 import { ControllerEntityClickSelectAndMoveClass } from "@/core/service/controlService/controller/concrete/ControllerEntityClickSelectAndMove";
 import { ControllerEntityCreateClass } from "@/core/service/controlService/controller/concrete/ControllerEntityCreate";
+import { ControllerImageScaleClass } from "@/core/service/controlService/controller/concrete/ControllerImageScale";
 import { ControllerLayerMovingClass } from "@/core/service/controlService/controller/concrete/ControllerEntityLayerMoving";
 import { ControllerEntityResizeClass } from "@/core/service/controlService/controller/concrete/ControllerEntityResize";
 import { ControllerNodeConnectionClass } from "@/core/service/controlService/controller/concrete/ControllerNodeConnection";
@@ -315,12 +316,12 @@ declare module "./Controller" {
     entityCreate: ControllerEntityCreateClass;
     layerMoving: ControllerLayerMovingClass;
     entityResize: ControllerEntityResizeClass;
-    imageScale: ControllerImageScaleClass;
     nodeConnection: ControllerNodeConnectionClass;
     nodeEdit: ControllerNodeEditClass;
     penStrokeControl: ControllerPenStrokeControlClass;
     penStrokeDrawing: ControllerPenStrokeDrawingClass;
     rectangleSelect: ControllerRectangleSelectClass;
     sectionEdit: ControllerSectionEditClass;
+    imageScale: ControllerImageScaleClass;
   }
 }

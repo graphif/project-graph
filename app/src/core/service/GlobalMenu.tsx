@@ -14,8 +14,8 @@ import {
 
 import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project, ProjectState } from "@/core/Project";
-import { showTreeValidationErrors } from "@/utils/treeValidation";
-import { activeProjectAtom, isClassroomModeAtom, isDevAtom, projectsAtom, store } from "@/state";
+import { TestTab } from "@/core/TestTab";
+import { activeTabAtom, isClassroomModeAtom, isDevAtom, store, tabsAtom } from "@/state";
 import AIToolsWindow from "@/sub/AIToolsWindow";
 import AIWindow from "@/sub/AIWindow";
 import AttachmentsWindow from "@/sub/AttachmentsWindow";
@@ -40,6 +40,7 @@ import TestWindow from "@/sub/TestWindow";
 import UserWindow from "@/sub/UserWindow";
 import { getDeviceId } from "@/utils/otherApi";
 import { PathString } from "@/utils/pathString";
+import { showTreeValidationErrors } from "@/utils/treeValidation";
 import { Color, Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
@@ -136,6 +137,7 @@ import { LineEdge } from "../stage/stageObject/association/LineEdge";
 import { CollisionBox } from "../stage/stageObject/collisionBox/collisionBox";
 import { TextNode } from "../stage/stageObject/entity/TextNode";
 import { AssetsRepository } from "./AssetsRepository";
+import { KeyBindsUI } from "./controlService/shortcutKeysEngine/KeyBindsUI";
 import { useKeyBind } from "./controlService/shortcutKeysEngine/useKeyBind";
 import { RecentFileManager } from "./dataFileService/RecentFileManager";
 import { generateKeyboardLayout } from "./dataGenerateService/generateFromFolderEngine/GenerateFromFolderEngine";
@@ -144,7 +146,6 @@ import { FeatureFlags } from "./FeatureFlags";
 import { Settings } from "./Settings";
 import { SubWindow } from "./SubWindow";
 import { Telemetry } from "./Telemetry";
-import { KeyBindsUI } from "./controlService/shortcutKeysEngine/KeyBindsUI";
 
 const Content = MenubarContent;
 const Item = MenubarItem;
@@ -156,8 +157,9 @@ const SubTrigger = MenubarSubTrigger;
 const Trigger = MenubarTrigger;
 
 export function GlobalMenu() {
-  // const [projects, setProjects] = useAtom(projectsAtom);
-  const [activeProject] = useAtom(activeProjectAtom);
+  // const [projects, setProjects] = useAtom(tabsAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const activeProject = tab instanceof Project ? tab : undefined;
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
   const [recentFiles, setRecentFiles] = useState<RecentFileManager.RecentFile[]>([]);
   const [version, setVersion] = useState<string>("");
@@ -1566,6 +1568,16 @@ export function GlobalMenu() {
                 </Sub>
                 <Item onClick={() => NodeDetailsWindow.open()}>plate</Item>
                 <Item
+                  onClick={async () => {
+                    const testTab = new TestTab();
+                    await testTab.init();
+                    store.set(tabsAtom, [...store.get(tabsAtom), testTab]);
+                    store.set(activeTabAtom, testTab);
+                  }}
+                >
+                  创建 TestTab
+                </Item>
+                <Item
                   onClick={() => {
                     console.log(activeProject!.stage);
                   }}
@@ -1627,8 +1639,8 @@ export async function onNewDraft() {
   loadAllServicesBeforeInit(project);
   await project.init();
   loadAllServicesAfterInit(project);
-  store.set(projectsAtom, [...store.get(projectsAtom), project]);
-  store.set(activeProjectAtom, project);
+  store.set(tabsAtom, [...store.get(tabsAtom), project]);
+  store.set(activeTabAtom, project);
 }
 
 export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise<Project | undefined> {
@@ -1695,15 +1707,19 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
     uri = uri.with({ path: uri.path.replace(/\.json$/, ".prg") });
   }
 
-  if (store.get(projectsAtom).some((p) => p.uri.toString() === uri.toString())) {
-    store.set(activeProjectAtom, store.get(projectsAtom).find((p) => p.uri.toString() === uri.toString())!);
-    const activeProject = store.get(activeProjectAtom);
+  if (store.get(tabsAtom).some((p) => p instanceof Project && p.uri.toString() === uri.toString())) {
+    store.set(
+      activeTabAtom,
+      store.get(tabsAtom).find((p) => p instanceof Project && p.uri.toString() === uri.toString())!,
+    );
+    const tab = store.get(activeTabAtom);
+    const activeProject = tab instanceof Project ? tab : undefined;
     if (!activeProject) return;
     activeProject.loop();
     // 把其他项目pause
     store
-      .get(projectsAtom)
-      .filter((p) => p.uri.toString() !== uri.toString())
+      .get(tabsAtom)
+      .filter((p) => p instanceof Project && p.uri.toString() !== uri.toString())
       .forEach((p) => p.pause());
     toast.success("切换到已打开的标签页");
     return activeProject;
@@ -1718,7 +1734,7 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
       .promise(
         async () => {
           await project.init();
-          if (project.state !== ProjectState.Saved) {
+          if (project.projectState !== ProjectState.Saved) {
             // 用户取消了升级对话框，不打开文件
             throw new Error("USER_CANCELLED");
           }
@@ -1734,8 +1750,8 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
               project.stageManager.updateReferences();
             }
             const readFileTime = performance.now() - t;
-            store.set(projectsAtom, [...store.get(projectsAtom), project]);
-            store.set(activeProjectAtom, project);
+            store.set(tabsAtom, [...store.get(tabsAtom), project]);
+            store.set(activeTabAtom, project);
             setTimeout(() => {
               project.camera.reset();
             }, 100);
@@ -1805,7 +1821,7 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
                       });
 
                       // 设置项目状态为未保存
-                      project.state = ProjectState.Unsaved;
+                      project.projectState = ProjectState.Unsaved;
                     }
                   }
                 } catch (e) {
@@ -1895,8 +1911,8 @@ export async function createFileAtCurrentProjectDir(activeProject: Project | und
             .save()
             .then(async () => {
               // 更新项目列表和活动项目
-              store.set(projectsAtom, [...store.get(projectsAtom), newProject]);
-              store.set(activeProjectAtom, newProject);
+              store.set(tabsAtom, [...store.get(tabsAtom), newProject]);
+              store.set(activeTabAtom, newProject);
               await RecentFileManager.addRecentFileByUri(newUri);
               await refresh();
               toast.success(`成功创建新文件：${fileName}.prg`);

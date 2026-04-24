@@ -9,8 +9,8 @@ import { isMac } from "@/utils/platform";
 import { createStore } from "@/utils/store";
 import { Queue } from "@graphif/data-structures";
 import { allKeyBinds } from "./shortcutKeysRegister";
-import { activeProjectAtom, store } from "@/state";
-import type { Project } from "@/core/Project";
+import { activeTabAtom, store } from "@/state";
+import { Project } from "@/core/Project";
 
 export interface UIKeyBind {
   id: string;
@@ -357,7 +357,8 @@ export namespace KeyBindsUI {
       userEventQueue.clear();
       return;
     }
-    const activeProject = store.get(activeProjectAtom);
+    const tab = store.get(activeTabAtom);
+    const activeProject = tab instanceof Project ? tab : undefined;
     let executed = false;
     for (const uiKeyBind of allUIKeyBinds) {
       // 如果快捷键未启用，跳过
@@ -396,7 +397,8 @@ export namespace KeyBindsUI {
     }
     if (["control", "alt", "shift", "meta"].includes(event.key.toLowerCase())) return;
 
-    const activeProject = store.get(activeProjectAtom);
+    const tab = store.get(activeTabAtom);
+    const activeProject = tab instanceof Project ? tab : undefined;
 
     // ——持续型快捷键独立路径——
     {
@@ -430,7 +432,8 @@ export namespace KeyBindsUI {
     if (!isMac && !shouldProcessKeyboardEvent()) {
       return;
     }
-    const activeProject = store.get(activeProjectAtom);
+    const tab = store.get(activeTabAtom);
+    const activeProject = tab instanceof Project ? tab : undefined;
     const key = event.key;
 
     // ——持续型快捷键松开——

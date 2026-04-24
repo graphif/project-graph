@@ -1,8 +1,7 @@
 import { Dialog } from "@/components/ui/dialog";
-import { FileSystemProvider, Service } from "@/core/interfaces/Service";
+import { FileSystemProvider } from "@/core/interfaces/Service";
 import type { CurveRenderer } from "@/core/render/canvas2d/basicRenderer/curveRenderer";
 import type { ImageRenderer } from "@/core/render/canvas2d/basicRenderer/ImageRenderer";
-import type { ReferenceBlockRenderer } from "@/core/render/canvas2d/entityRenderer/ReferenceBlockRenderer";
 import type { ShapeRenderer } from "@/core/render/canvas2d/basicRenderer/shapeRenderer";
 import type { SvgRenderer } from "@/core/render/canvas2d/basicRenderer/svgRenderer";
 import type { TextRenderer } from "@/core/render/canvas2d/basicRenderer/textRenderer";
@@ -15,6 +14,7 @@ import type { EdgeRenderer } from "@/core/render/canvas2d/entityRenderer/edge/Ed
 import type { EntityDetailsButtonRenderer } from "@/core/render/canvas2d/entityRenderer/EntityDetailsButtonRenderer";
 import type { EntityRenderer } from "@/core/render/canvas2d/entityRenderer/EntityRenderer";
 import type { MultiTargetUndirectedEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/multiTargetUndirectedEdge/MultiTargetUndirectedEdgeRenderer";
+import type { ReferenceBlockRenderer } from "@/core/render/canvas2d/entityRenderer/ReferenceBlockRenderer";
 import type { SectionRenderer } from "@/core/render/canvas2d/entityRenderer/section/SectionRenderer";
 import type { SvgNodeRenderer } from "@/core/render/canvas2d/entityRenderer/svgNode/SvgNodeRenderer";
 import type { TextNodeRenderer } from "@/core/render/canvas2d/entityRenderer/textNode/TextNodeRenderer";
@@ -54,6 +54,7 @@ import type { Canvas } from "@/core/stage/Canvas";
 import { GraphMethods } from "@/core/stage/stageManager/basicMethods/GraphMethods";
 import { SectionMethods } from "@/core/stage/stageManager/basicMethods/SectionMethods";
 import type { LayoutManager } from "@/core/stage/stageManager/concreteMethods/LayoutManager";
+import type { SectionCollisionSolver } from "@/core/stage/stageManager/concreteMethods/SectionCollisionSolver";
 import type { AutoAlign } from "@/core/stage/stageManager/concreteMethods/StageAutoAlignManager";
 import type { DeleteManager } from "@/core/stage/stageManager/concreteMethods/StageDeleteManager";
 import type { EntityMoveManager } from "@/core/stage/stageManager/concreteMethods/StageEntityMoveManager";
@@ -66,28 +67,24 @@ import type { StageObjectColorManager } from "@/core/stage/stageManager/concrete
 import type { StageObjectSelectCounter } from "@/core/stage/stageManager/concreteMethods/StageObjectSelectCounter";
 import type { SectionInOutManager } from "@/core/stage/stageManager/concreteMethods/StageSectionInOutManager";
 import type { SectionPackManager } from "@/core/stage/stageManager/concreteMethods/StageSectionPackManager";
-import type { SectionCollisionSolver } from "@/core/stage/stageManager/concreteMethods/SectionCollisionSolver";
-import type { TagManager } from "@/core/stage/stageManager/concreteMethods/StageTagManager";
 import type { StageSyncAssociationManager } from "@/core/stage/stageManager/concreteMethods/StageSyncAssociationManager";
+import type { TagManager } from "@/core/stage/stageManager/concreteMethods/StageTagManager";
 import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import type { StageManager } from "@/core/stage/stageManager/StageManager";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import { nextProjectIdAtom, projectsAtom, store } from "@/state";
-import { Vector } from "@graphif/data-structures";
+import { nextProjectIdAtom, tabsAtom, store } from "@/state";
+import { ProjectMetadata, createDefaultMetadata, isValidMetadata } from "@/types/metadata";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Decoder, Encoder } from "@msgpack/msgpack";
 import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, ZipWriter } from "@zip.js/zip.js";
-import { EventEmitter } from "events";
 import md5 from "md5";
 import mime from "mime";
-import { toast } from "sonner";
-import { getOriginalNameOf } from "virtual:original-class-name";
+import React from "react";
 import { URI } from "vscode-uri";
-import { Telemetry } from "./service/Telemetry";
 import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
-import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageReferenceManager";
 import { ProjectUpgrader } from "./stage/ProjectUpgrader";
-import { ProjectMetadata, createDefaultMetadata, isValidMetadata } from "@/types/metadata";
+import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageReferenceManager";
+import { Tab } from "./Tab";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -119,23 +116,17 @@ export enum ProjectState {
  * 一个标签页对应一个工程，一个工程只能对应一个URI
  * 一个工程可以加载不同的服务，类似vscode的扩展（Extensions）机制
  */
-export class Project extends EventEmitter<{
-  "state-change": [state: ProjectState];
-  contextmenu: [location: Vector];
-}> {
+export class Project extends Tab {
   static readonly latestVersion = 18;
 
-  private readonly services = new Map<string, Service>();
-  private readonly tickableServices: Service[] = [];
   /**
    * 工程文件的URI
    * key: 服务ID
    * value: 服务实例
    */
   private readonly fileSystemProviders = new Map<string, FileSystemProvider>();
-  private rafHandle = -1;
   private _uri: URI;
-  private _state: ProjectState = ProjectState.Unsaved;
+  private _projectState: ProjectState = ProjectState.Unsaved;
   private _isSaving = false;
   public stage: StageObject[] = [];
   public tags: string[] = [];
@@ -160,7 +151,7 @@ export class Project extends EventEmitter<{
    * @see https://code.visualstudio.com/api/references/vscode-api#workspace.workspaceFile
    */
   constructor(uri: URI) {
-    super();
+    super({});
     this._uri = uri;
   }
   /**
@@ -168,39 +159,12 @@ export class Project extends EventEmitter<{
    * URI为draft:UUID
    */
   static newDraft(): Project {
-    // const num = store.get(projectsAtom).filter((p) => p.isDraft).length + 1;
-    if (store.get(projectsAtom).length === 0) store.set(nextProjectIdAtom, 1);
+    // const num = store.get(tabsAtom).filter((p) => p.isDraft).length + 1;
+    if (store.get(tabsAtom).length === 0) store.set(nextProjectIdAtom, 1);
     const num = store.get(nextProjectIdAtom);
     const uri = URI.parse("draft:" + num);
     store.set(nextProjectIdAtom, num + 1);
     return new Project(uri);
-  }
-
-  /**
-   * 立刻加载一个新的服务
-   */
-  loadService(service: { id?: string; new (...args: any[]): any }) {
-    if (!service.id) {
-      service.id = crypto.randomUUID();
-      console.warn("[Project] 服务 %o 未指定 ID，自动生成：%s", service, service.id);
-    }
-    const inst = new service(this);
-    this.services.set(service.id, inst);
-    if ("tick" in inst) {
-      this.tickableServices.push(inst);
-    }
-    this[service.id as keyof this] = inst as this[keyof this];
-  }
-  /**
-   * 立刻销毁一个服务
-   */
-  disposeService(serviceId: string) {
-    const service = this.services.get(serviceId);
-    if (service) {
-      service.dispose?.();
-      this.services.delete(serviceId);
-      this.tickableServices.splice(this.tickableServices.indexOf(service), 1);
-    }
   }
 
   /**
@@ -337,7 +301,7 @@ export class Project extends EventEmitter<{
       const currentVersion = metadata?.version || "2.0.0";
       const latestVersion = ProjectUpgrader.NLatestVersion;
       const confirmed = await this.checkAndConfirmUpgrade(currentVersion, latestVersion);
-      if (!confirmed) return; // 用户取消升级，不打开文件，跳过 this.state = ProjectState.Saved
+      if (!confirmed) return; // 用户取消升级，不打开文件，跳过 this.projectState = ProjectState.Saved
 
       // 升级数据
       const [upgradedStageObjects, upgradedMetadata] = ProjectUpgrader.upgradeNAnyToNLatest(
@@ -365,73 +329,7 @@ export class Project extends EventEmitter<{
       );
       return;
     }
-    this.state = ProjectState.Saved;
-  }
-
-  loop() {
-    if (this.rafHandle !== -1) return;
-    const animationFrame = () => {
-      this.tick();
-      this.rafHandle = requestAnimationFrame(animationFrame.bind(this));
-    };
-    animationFrame();
-  }
-  pause() {
-    if (this.rafHandle === -1) return;
-    cancelAnimationFrame(this.rafHandle);
-    this.rafHandle = -1;
-  }
-  private tick() {
-    for (const service of this.tickableServices) {
-      try {
-        service.tick?.();
-      } catch (e) {
-        console.error("[%s] %o", service, e);
-        this.tickableServices.splice(this.tickableServices.indexOf(service), 1);
-        Dialog.buttons(`${getOriginalNameOf(service.constructor)} 发生未知错误`, String(e), [
-          { id: "cancel", label: "取消", variant: "ghost" },
-          { id: "save", label: "保存文件" },
-        ]).then((result) => {
-          if (result === "save") {
-            this.save();
-          }
-        });
-        if (e !== null && typeof e === "object" && "message" in e && e.message === "test") {
-          continue;
-        }
-        toast.promise(
-          Telemetry.event("服务tick方法报错", { service: getOriginalNameOf(service.constructor), error: String(e) }),
-          {
-            loading: "正在上报错误",
-            success: "错误信息已发送给开发者",
-            error: "上报失败",
-          },
-        );
-      }
-    }
-  }
-  /**
-   * 用户关闭标签页时，销毁工程
-   */
-  async dispose() {
-    cancelAnimationFrame(this.rafHandle);
-    const promises: Promise<void>[] = [];
-    for (const service of this.services.values()) {
-      const result = service.dispose?.();
-      if (result instanceof Promise) {
-        promises.push(result);
-      }
-    }
-    await Promise.allSettled(promises);
-    this.services.clear();
-    this.tickableServices.length = 0;
-  }
-
-  /**
-   * 获取某个服务的实例
-   */
-  getService<T extends keyof this & string>(serviceId: T): this[T] {
-    return this.services.get(serviceId) as this[T];
+    this.projectState = ProjectState.Saved;
   }
 
   get isDraft() {
@@ -442,7 +340,7 @@ export class Project extends EventEmitter<{
   }
   set uri(uri: URI) {
     this._uri = uri;
-    this.state = ProjectState.Unsaved;
+    this.projectState = ProjectState.Unsaved;
   }
 
   /**
@@ -458,15 +356,12 @@ export class Project extends EventEmitter<{
    */
   async stash() {
     // TODO: stash
-    // const stashFilePath = await join(await appLocalDataDir(), "stash", Base64.encode(this.uri.toString()));
-    // const encoded = this.encoder.encodeSharedRef(this.data);
-    // await writeFile(stashFilePath, encoded);
   }
   async save() {
     try {
       this.isSaving = true;
       await this.fs.write(this.uri, await this.getFileContent());
-      this.state = ProjectState.Saved;
+      this.projectState = ProjectState.Saved;
     } finally {
       this.isSaving = false;
     }
@@ -475,8 +370,6 @@ export class Project extends EventEmitter<{
   // 反向引用数据
   public references: { sections: Record<string, string[]>; files: string[] } = { sections: {}, files: [] };
   public metadata: ProjectMetadata = createDefaultMetadata(ProjectUpgrader.NLatestVersion);
-
-  // 更新引用信息的方法已经在changeTextNodeToReferenceBlock中直接实现，这里暂时不需要单独的方法
 
   // 备份也要用到这个
   async getFileContent() {
@@ -528,42 +421,76 @@ export class Project extends EventEmitter<{
     return uuid;
   }
 
-  set state(state: ProjectState) {
-    if (state === this._state) return;
-    this._state = state;
+  set projectState(state: ProjectState) {
+    if (state === this._projectState) return;
+    this._projectState = state;
     this.emit("state-change", state);
   }
 
-  get state(): ProjectState {
-    return this._state;
+  get projectState(): ProjectState {
+    return this._projectState;
   }
 
   set isSaving(isSaving: boolean) {
     if (isSaving === this._isSaving) return;
     this._isSaving = isSaving;
-    this.emit("state-change", this._state);
+    this.emit("state-change", this._projectState);
   }
 
   get isSaving(): boolean {
     return this._isSaving;
   }
 
-  get isRunning(): boolean {
-    return this.rafHandle !== -1;
+  private containerRef = React.createRef<HTMLDivElement>();
+
+  /**
+   * 立刻加载一个新的服务
+   */
+  loadService(service: { id?: string; new (...args: any[]): any }) {
+    super.loadService(service);
+    // 如果加载的是 canvas 服务，且容器已经准备好了，就进行挂载
+    if (service.id === "canvas" && (this as any)._lastContainer) {
+      this.canvas.mount((this as any)._lastContainer);
+    }
+  }
+
+  componentDidMount(): void {
+    // 这里的 this 是 Project 实例，不再作为 React 组件直接使用
+  }
+
+  private currentComponent: React.ComponentType | null = null;
+
+  public getComponent(): React.ComponentType {
+    if (this.currentComponent) return this.currentComponent;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    this.currentComponent = class extends React.Component {
+      displayName = "ProjectContainer";
+      private containerRef = React.createRef<HTMLDivElement>();
+
+      componentDidMount(): void {
+        (self as any)._lastContainer = this.containerRef.current;
+        if (this.containerRef.current && self.getService("canvas")) {
+          self.canvas.mount(this.containerRef.current);
+        }
+      }
+
+      render() {
+        return <div className="absolute inset-0 overflow-hidden" ref={this.containerRef}></div>;
+      }
+    };
+    return this.currentComponent as React.ComponentType;
+  }
+
+  render(): React.ReactNode {
+    return <div className="absolute inset-0 overflow-hidden" ref={this.containerRef}></div>;
   }
 }
 
 declare module "./Project" {
-  /*
-   * 不直接在class中定义的原因
-   * 在class中定义的话ts会报错，因为它没有初始值并且没有在构造函数中赋值
-   * 在这里用语法糖定义就能优雅的绕过这个限制
-   * 服务加载的顺序在调用registerService()时确定
-   */
   interface Project {
     canvas: Canvas;
     inputElement: InputElement;
-    // keyBinds: KeyBinds;
     controllerUtils: ControllerUtils;
     autoComputeUtils: AutoComputeUtils;
     renderUtils: RenderUtils;
@@ -640,12 +567,6 @@ declare module "./Project" {
 
 /**
  * 装饰器
- * @example
- * @service("renderer")
- * class Renderer {}
- *
- * 装饰了这个类之后，这个类会多一个id属性（静态属性），值为"renderer"
- * 可以通过 Renderer.id 获取到这个值
  */
 export const service =
   (id: string) =>

@@ -1,7 +1,8 @@
+import { Project } from "@/core/Project";
 import { Button } from "@/components/ui/button";
 import { SubWindow } from "@/core/service/SubWindow";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { activeProjectAtom } from "@/state";
+import { activeTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useAtom } from "jotai";
@@ -9,7 +10,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function BackgroundManagerWindow() {
-  const [project] = useAtom(activeProjectAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const project = tab instanceof Project ? tab : undefined;
   const [backgroundImages, setBackgroundImages] = useState<ImageNode[]>([]);
   const [urls, setUrls] = useState(new Map<string, string>());
   const [brokenUuids, setBrokenUuids] = useState(new Set<string>());

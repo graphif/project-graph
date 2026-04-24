@@ -9,7 +9,7 @@ import { ReferenceBlockNode } from "../../stageObject/entity/ReferenceBlockNode"
 import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 import { SectionReferencePanel } from "@/sub/ReferencesWindow";
 import { loadAllServicesBeforeInit } from "@/core/loadAllServices";
-import { projectsAtom, store } from "@/state";
+import { tabsAtom, store } from "@/state";
 
 interface parserResult {
   /**
@@ -153,7 +153,7 @@ export class ReferenceManager {
         } else {
           toast.warning(`文件 ${fileName} 中不再引用 ${sectionName}，已从引用列表中移除`);
         }
-        thatProject.dispose();
+        await thatProject.dispose();
       }
     }
     if (fileNameListNew.length === 0) {
@@ -192,7 +192,7 @@ export class ReferenceManager {
         if (this.checkReferenceBlockInProject(thatProject, fileName, "")) {
           fileNameListNew.push(fileName);
         }
-        thatProject.dispose();
+        await thatProject.dispose();
       }
     }
     this.project.references.files = fileNameListNew;
@@ -227,12 +227,13 @@ export class ReferenceManager {
       if (!referencedFile) return;
 
       // 先检查当前是否已经打开了该文件的Project实例
-      const allProjects = store.get(projectsAtom);
-      let referencedProject = allProjects.find((project) => {
-        const projectFileName = PathString.getFileNameFromPath(project.uri.path);
-        const projectFileNameFs = PathString.getFileNameFromPath(project.uri.fsPath);
+      const allProjects = store.get(tabsAtom);
+      let referencedProject = allProjects.find((tab) => {
+        if (!(tab instanceof Project)) return false;
+        const projectFileName = PathString.getFileNameFromPath(tab.uri.path);
+        const projectFileNameFs = PathString.getFileNameFromPath(tab.uri.fsPath);
         return projectFileName === fileName || projectFileNameFs === fileName;
-      });
+      }) as Project | undefined;
 
       // 如果没有打开，则创建新的Project实例
       let shouldDisposeProject = false;

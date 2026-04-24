@@ -1,3 +1,4 @@
+import { Project } from "@/core/Project";
 import {
   LogicNodeNameEnum,
   LogicNodeNameToArgsTipsMap,
@@ -6,7 +7,7 @@ import {
 import { SubWindow } from "@/core/service/SubWindow";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { activeProjectAtom } from "@/state";
+import { activeTabAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -16,7 +17,8 @@ import { useAtom } from "jotai";
  *
  */
 export default function LogicNodePanel({ className = "" }: { className?: string }) {
-  const [project] = useAtom(activeProjectAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const project = tab instanceof Project ? tab : undefined;
   return (
     <div className={cn("flex h-full w-full flex-col p-2 pb-32 transition-all", className)}>
       <table className="w-full">

@@ -1,9 +1,10 @@
+import { Project } from "@/core/Project";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { SubWindow } from "@/core/service/SubWindow";
-import { activeProjectAtom } from "@/state";
+import { activeTabAtom } from "@/state";
 import { GenerateScreenshot } from "@/core/service/dataGenerateService/generateScreenshot";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -15,7 +16,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 export default function NewExportPngWindow() {
-  const [project] = useAtom(activeProjectAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
 
   const [maxDimension, setMaxDimension] = useState(1920);

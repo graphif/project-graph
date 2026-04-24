@@ -1,3 +1,4 @@
+import { Project } from "@/core/Project";
 import { Button } from "@/components/ui/button";
 import {
   ContextMenuContent,
@@ -22,7 +23,7 @@ import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { activeProjectAtom, contextMenuTooltipWordsAtom } from "@/state";
+import { activeTabAtom, contextMenuTooltipWordsAtom } from "@/state";
 import ColorPaletteWindow from "@/sub/ColorPaletteWindow";
 import ColorWindow from "@/sub/ColorWindow";
 import { Direction } from "@/types/directions";
@@ -121,7 +122,8 @@ const SubContent = ContextMenuSubContent;
  * @returns
  */
 export default function MyContextMenuContent() {
-  const [p] = useAtom(activeProjectAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const p = tab instanceof Project ? tab : undefined;
   const [contextMenuTooltipWords] = useAtom(contextMenuTooltipWordsAtom);
   const { t } = useTranslation("contextMenu");
 
@@ -1377,7 +1379,8 @@ function ContextMenuTooltip({ keyId, children = <></> }: { keyId: string; childr
 
 const ColorLine: React.FC = () => {
   const [currentColors, setCurrentColors] = useState<Color[]>([]);
-  const [project] = useAtom(activeProjectAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const project = tab instanceof Project ? tab : undefined;
 
   useEffect(() => {
     ColorManager.getUserEntityFillColors().then((colors) => {

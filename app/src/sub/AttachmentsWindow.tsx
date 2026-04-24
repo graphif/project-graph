@@ -1,10 +1,11 @@
+import { Project } from "@/core/Project";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Dialog } from "@/components/ui/dialog";
 import { Popover } from "@/components/ui/popover";
 import { SubWindow } from "@/core/service/SubWindow";
-import { activeProjectAtom } from "@/state";
+import { activeTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { open, save } from "@tauri-apps/plugin-dialog";
@@ -16,7 +17,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function AttachmentsWindow() {
-  const [project] = useAtom(activeProjectAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
   const [attachments, setAttachments] = useState(new Map<string, Blob>());
   const [urls, setUrls] = useState(new Map<string, string>());

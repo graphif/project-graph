@@ -1,6 +1,7 @@
+import { Project } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { SubWindow } from "@/core/service/SubWindow";
-import { activeProjectAtom } from "@/state";
+import { activeTabAtom } from "@/state";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useAtom } from "jotai";
@@ -15,7 +16,8 @@ interface ColorInfo {
  * 颜色表窗口 - 显示当前文件中所有颜色及其使用数量
  */
 export default function ColorPaletteWindow() {
-  const [project] = useAtom(activeProjectAtom);
+  const [tab] = useAtom(activeTabAtom);
+  const project = tab instanceof Project ? tab : undefined;
   const [colorInfos, setColorInfos] = useState<ColorInfo[]>([]);
 
   useEffect(() => {

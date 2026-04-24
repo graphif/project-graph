@@ -32,7 +32,7 @@ import { Settings } from "@/core/service/Settings";
 import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 import { ReferenceFileScanner } from "@/core/service/dataFileService/ReferenceFileScanner";
 import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
-import { activeProjectAtom, projectsAtom, store } from "@/state";
+import { activeTabAtom, tabsAtom, store } from "@/state";
 import { URI } from "vscode-uri";
 
 /**
@@ -722,8 +722,8 @@ export class ControllerUtils {
     await ReferenceFileScanner.addFileToCache(project.uri.fsPath, parserResult.fileName);
 
     // 将新项目加入项目列表并切换
-    store.set(projectsAtom, [...store.get(projectsAtom), newProject]);
-    store.set(activeProjectAtom, newProject);
+    store.set(tabsAtom, [...store.get(tabsAtom), newProject]);
+    store.set(activeTabAtom, newProject);
 
     // 在原项目中创建引用块
     await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);

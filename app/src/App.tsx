@@ -5,18 +5,19 @@ import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Dialog } from "@/components/ui/dialog";
 import Welcome from "@/components/welcome-page";
 import { Project, ProjectState } from "@/core/Project";
+import { Tab } from "@/core/Tab";
 import { GlobalMenu } from "@/core/service/GlobalMenu";
 import { Settings } from "@/core/service/Settings";
 import { Telemetry } from "@/core/service/Telemetry";
 import { Themes } from "@/core/service/Themes";
 import { globalShortcutManager } from "@/core/service/controlService/shortcutKeysEngine/GlobalShortcutManager";
 import {
-  activeProjectAtom,
+  activeTabAtom,
   isClassroomModeAtom,
   isClickThroughEnabledAtom,
   isWindowAlwaysOnTopAtom,
   isWindowMaxsizedAtom,
-  projectsAtom,
+  tabsAtom,
 } from "@/state";
 import { getVersion } from "@tauri-apps/api/app";
 import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
@@ -24,7 +25,7 @@ import { arch, platform, version } from "@tauri-apps/plugin-os";
 import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
 import { useAtom } from "jotai";
 import { ChevronsLeftRight, Copy, Minus, Pin, PinOff, Square, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { cpuInfo } from "tauri-plugin-system-info-api";
 import { cn } from "./utils/cn";
@@ -41,12 +42,10 @@ export default function App() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, _setMaximized] = useAtom(isWindowMaxsizedAtom);
 
-  const [projects, setProjects] = useAtom(projectsAtom);
-  const [activeProject, setActiveProject] = useAtom(activeProjectAtom);
-  const canvasWrapperRef = useRef<HTMLDivElement>(null);
+  const [tabs, setTabs] = useAtom(tabsAtom);
+  const [activeTab, setActiveTab] = useAtom(activeTabAtom);
   // const [isWide, setIsWide] = useState(false);
   const [telemetryEventSent, setTelemetryEventSent] = useState(false);
-  const [ignoreMouseEvents, setIgnoreMouseEvents] = useState(false);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
   const [showQuickSettingsToolbar, setShowQuickSettingsToolbar] = useState(Settings.showQuickSettingsToolbar);
   const [windowBackgroundAlpha, setWindowBackgroundAlpha] = useState(Settings.windowBackgroundAlpha);
@@ -181,24 +180,10 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (!canvasWrapperRef.current) return;
-    if (!activeProject) return;
-    activeProject.canvas.mount(canvasWrapperRef.current);
-    activeProject.loop();
-    projects.filter((p) => p.uri.toString() !== activeProject.uri.toString()).forEach((p) => p.pause());
-    const onPointerDown = () => {
-      setIgnoreMouseEvents(true);
-    };
-    const onPointerUp = () => {
-      setIgnoreMouseEvents(false);
-    };
-    activeProject.canvas.element.addEventListener("pointerdown", onPointerDown);
-    activeProject.canvas.element.addEventListener("pointerup", onPointerUp);
-    return () => {
-      activeProject.canvas.element.removeEventListener("pointerdown", onPointerDown);
-      activeProject.canvas.element.removeEventListener("pointerup", onPointerUp);
-    };
-  }, [activeProject]);
+    if (!activeTab) return;
+    activeTab.loop();
+    tabs.filter((p) => p !== activeTab).forEach((p) => p.pause());
+  }, [activeTab]);
 
   /**
    * 首次启动时显示欢迎页面
@@ -220,15 +205,17 @@ export default function App() {
         e.preventDefault();
 
         // 检查是否有未保存的项目
-        const unsavedProjects = projects.filter(
-          (project) => project.state === ProjectState.Unsaved || project.state === ProjectState.Stashed,
+        const unsavedTabs = tabs.filter(
+          (tab): tab is Project =>
+            tab instanceof Project &&
+            (tab.projectState === ProjectState.Unsaved || tab.projectState === ProjectState.Stashed),
         );
 
-        if (unsavedProjects.length > 0) {
+        if (unsavedTabs.length > 0) {
           // 弹出警告对话框
           const response = await Dialog.buttons(
             "检测到未保存文件",
-            `当前有 ${unsavedProjects.length} 个未保存的文件。直接关闭可能有文件被清空的风险，建议先手动保存文件。`,
+            `当前有 ${unsavedTabs.length} 个未保存的文件。直接关闭可能有文件被清空的风险，建议先手动保存文件。`,
             [
               { id: "cancel", label: "取消", variant: "ghost" },
               { id: "continue", label: "继续关闭", variant: "destructive" },
@@ -243,9 +230,9 @@ export default function App() {
         }
 
         try {
-          for (const project of projects) {
-            console.log("尝试关闭", project);
-            await closeProject(project);
+          for (const tab of tabs) {
+            console.log("尝试关闭", tab);
+            await closeTab(tab);
           }
         } catch {
           Telemetry.event("关闭应用提示是否保存文件选择了取消");
@@ -260,12 +247,12 @@ export default function App() {
         unlisten1 = it;
       });
 
-    for (const project of projects) {
-      project.on("state-change", () => {
+    for (const tab of tabs) {
+      tab.on("state-change", () => {
         // 强制重新渲染一次
-        setProjects([...projects]);
+        setTabs([...tabs]);
       });
-      project.on("contextmenu", ({ x, y }) => {
+      tab.on("contextmenu", ({ x, y }) => {
         contextMenuTriggerRef.current?.dispatchEvent(
           new MouseEvent("contextmenu", {
             bubbles: true,
@@ -273,66 +260,68 @@ export default function App() {
             clientY: y,
           }),
         );
-        setProjects([...projects]);
+        setTabs([...tabs]);
       });
     }
 
     return () => {
       unlisten1?.();
-      for (const project of projects) {
-        project.removeAllListeners("state-change");
-        project.removeAllListeners("contextmenu");
+      for (const tab of tabs) {
+        tab.removeAllListeners("state-change");
+        tab.removeAllListeners("contextmenu");
       }
     };
-  }, [projects.length]);
+  }, [tabs.length]);
 
-  const closeProject = async (project: Project) => {
-    if (project.state === ProjectState.Stashed) {
-      toast("文件还没有保存，但已经暂存，在“最近打开的文件”中可恢复文件");
-    } else if (project.state === ProjectState.Unsaved) {
-      // 切换到这个文件
-      setActiveProject(project);
-      const response = await Dialog.buttons("是否保存更改？", decodeURI(project.uri.toString()), [
-        { id: "cancel", label: "取消", variant: "ghost" },
-        { id: "discard", label: "不保存", variant: "destructive" },
-        { id: "save", label: "保存" },
-      ]);
-      if (response === "save") {
-        await project.save();
-      } else if (response === "cancel") {
-        throw new Error("取消操作");
+  const closeTab = async (tab: Tab) => {
+    if (tab instanceof Project) {
+      if (tab.projectState === ProjectState.Stashed) {
+        toast("文件还没有保存，但已经暂存，在“最近打开的文件”中可恢复文件");
+      } else if (tab.projectState === ProjectState.Unsaved) {
+        // 切换到这个文件
+        setActiveTab(tab);
+        const response = await Dialog.buttons("是否保存更改？", decodeURI(tab.uri.toString()), [
+          { id: "cancel", label: "取消", variant: "ghost" },
+          { id: "discard", label: "不保存", variant: "destructive" },
+          { id: "save", label: "保存" },
+        ]);
+        if (response === "save") {
+          await tab.save();
+        } else if (response === "cancel") {
+          throw new Error("取消操作");
+        }
       }
     }
-    await project.dispose();
-    setProjects((projects) => {
-      const result = projects.filter((p) => p.uri.toString() !== project.uri.toString());
+    await tab.dispose();
+    setTabs((tabs) => {
+      const result = tabs.filter((p) => p !== tab);
       // 如果删除了当前标签页，就切换到下一个标签页
-      if (activeProject?.uri.toString() === project.uri.toString() && result.length > 0) {
-        const activeProjectIndex = projects.findIndex((p) => p.uri.toString() === activeProject?.uri.toString());
-        if (activeProjectIndex === projects.length - 1) {
+      if (activeTab === tab && result.length > 0) {
+        const activeTabIndex = tabs.findIndex((p) => p === activeTab);
+        if (activeTabIndex === tabs.length - 1) {
           // 关闭了最后一个标签页
-          setActiveProject(result[activeProjectIndex - 1]);
+          setActiveTab(result[activeTabIndex - 1]);
         } else {
-          setActiveProject(result[activeProjectIndex]);
+          setActiveTab(result[activeTabIndex]);
         }
       }
       // 如果删除了唯一一个标签页，就显示欢迎页面
       if (result.length === 0) {
-        setActiveProject(undefined);
+        setActiveTab(undefined);
       }
       return result;
     });
   };
 
-  const handleTabClick = useCallback((project: Project) => {
-    setActiveProject(project);
+  const handleTabClick = useCallback((tab: Tab) => {
+    setActiveTab(tab);
   }, []);
 
   const handleTabClose = useCallback(
-    async (project: Project) => {
-      await closeProject(project);
+    async (tab: Tab) => {
+      await closeTab(tab);
     },
-    [closeProject],
+    [closeTab],
   );
 
   return (
@@ -348,7 +337,6 @@ export default function App() {
           className={cn(
             "z-10 flex h-4 items-center transition-all hover:opacity-100 sm:h-9 sm:gap-2",
             isClassroomMode && "opacity-0",
-            ignoreMouseEvents && "pointer-events-none",
           )}
         >
           <div
@@ -366,19 +354,25 @@ export default function App() {
         </div>
 
         <ProjectTabs
-          projects={projects}
-          activeProject={activeProject}
+          tabs={tabs}
+          activeTab={activeTab}
           onTabClick={handleTabClick}
           onTabClose={handleTabClose}
           isClassroomMode={isClassroomMode}
-          ignoreMouseEvents={ignoreMouseEvents}
         />
 
-        {/* canvas */}
-        <div className="absolute inset-0 overflow-hidden" ref={canvasWrapperRef}></div>
+        {/* content */}
+        {tabs.map((p) => (
+          <div
+            key={p instanceof Project ? p.uri.toString() : p.constructor.name}
+            className={cn("absolute inset-0 overflow-hidden", activeTab === p ? "block" : "hidden")}
+          >
+            {React.createElement(p.getComponent())}
+          </div>
+        ))}
 
         {/* 没有项目处于打开状态时，显示欢迎页面 */}
-        {projects.length === 0 && (
+        {tabs.length === 0 && (
           <div className="absolute inset-0 overflow-hidden *:h-full *:w-full">
             <Welcome />
           </div>
@@ -403,10 +397,10 @@ export default function App() {
         <RenderSubWindows />
 
         {/* 底部工具栏 */}
-        {activeProject && <ToolbarContent />}
+        {activeTab && <ToolbarContent />}
 
         {/* 右侧工具栏 */}
-        {activeProject && showQuickSettingsToolbar && <RightToolbar />}
+        {activeTab && showQuickSettingsToolbar && <RightToolbar />}
 
         {/* 右上角关闭的触发角 */}
         {isWindows && (
@@ -415,7 +409,7 @@ export default function App() {
             onClick={() => getCurrentWindow().close()}
           ></div>
         )}
-        {activeProject ? <DropWindowCover project={activeProject} /> : null}
+        {activeTab instanceof Project ? <DropWindowCover project={activeTab} /> : null}
       </div>
     </>
   );
@@ -441,7 +435,7 @@ function WindowButtons() {
 
   return (
     <div className="bg-background shadow-xs flex h-full items-center sm:rounded-md sm:border">
-      {isClickThroughEnabled && <span className="text-destructive!">Alt + 2关闭窗口穿透点击</span>}
+      {isClickThroughEnabled && <span className="text-destructive font-bold">Alt + 2关闭窗口穿透点击</span>}
       {isMac ? (
         <span className="flex *:flex *:size-3 sm:px-2 sm:*:m-1">
           <div

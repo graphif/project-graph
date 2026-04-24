@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SubWindow } from "@/core/service/SubWindow";
-import { activeProjectAtom, store } from "@/state";
+import { activeTabAtom, store } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useState } from "react";
@@ -63,7 +63,7 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
 
 // TODO: page参数
 SettingsWindow.open = (tab: TabName = "settings") => {
-  store.get(activeProjectAtom)?.pause();
+  store.get(activeTabAtom)?.pause();
   SubWindow.create({
     children: <SettingsWindow defaultTab={tab} />,
     rect: Rectangle.inCenter(new Vector(innerWidth > 1653 ? 1240 : innerWidth * 0.75, innerHeight * 0.875)),
