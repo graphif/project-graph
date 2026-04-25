@@ -1,6 +1,5 @@
 import { runCli } from "@/cli";
 import { Toaster } from "@/components/ui/sonner";
-import { UserScriptsManager } from "@/core/plugin/UserScriptsManager";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { StartFilesManager } from "@/core/service/dataFileService/StartFilesManager";
@@ -45,7 +44,6 @@ const el = document.getElementById("root")!;
     StartFilesManager.init(),
     ColorManager.init(),
     Tutorials.init(),
-    UserScriptsManager.init(),
     UserState.init(),
     QuickSettingsManager.init(),
   ]);

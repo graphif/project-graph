@@ -12,8 +12,10 @@ import {
   MenubarTrigger,
 } from "@/components/ui/menubar";
 
+import { Extension } from "@/core/extension/Extension";
 import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project, ProjectState } from "@/core/Project";
+import { TabFactory } from "@/core/TabFactory";
 import { TestTab } from "@/core/TestTab";
 import { activeTabAtom, isClassroomModeAtom, isDevAtom, store, tabsAtom } from "@/state";
 import AIToolsWindow from "@/sub/AIToolsWindow";
@@ -44,13 +46,14 @@ import { showTreeValidationErrors } from "@/utils/treeValidation";
 import { Color, Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
-import { Decoder } from "@msgpack/msgpack";
+import { Decoder, Encoder } from "@msgpack/msgpack";
 import { getVersion } from "@tauri-apps/api/app";
 import { appCacheDir, dataDir, join, tempDir } from "@tauri-apps/api/path";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { exists, readFile, writeFile } from "@tauri-apps/plugin-fs";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
+import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
 import { useAtom } from "jotai";
 import {
   Airplay,
@@ -131,6 +134,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
+import { FileSystemProviderDraft } from "../fileSystemProvider/FileSystemProviderDraft";
+import { FileSystemProviderFile } from "../fileSystemProvider/FileSystemProviderFile";
 import { ProjectUpgrader } from "../stage/ProjectUpgrader";
 import { Entity } from "../stage/stageObject/abstract/StageEntity";
 import { LineEdge } from "../stage/stageObject/association/LineEdge";
@@ -1595,6 +1600,47 @@ export function GlobalMenu() {
                   输出选中节点的详细信息
                 </Item>
                 <Item
+                  onClick={async () => {
+                    const metadata = {
+                      version: "2.0.0",
+                      extension: {
+                        id: "com.example.hello-world",
+                        name: "示例扩展",
+                        description: "这是一个用于演示的示例扩展包",
+                        version: "1.0.0",
+                        author: "Author <author@example.com>",
+                      },
+                    };
+                    const encoder = new Encoder();
+                    const uwriter = new Uint8ArrayWriter();
+                    const writer = new ZipWriter(uwriter);
+                    await writer.add("metadata.msgpack", new Uint8ArrayReader(encoder.encode(metadata)));
+                    await writer.add(
+                      "extension.js",
+                      new Uint8ArrayReader(new TextEncoder().encode("console.log('Hello from extension!');")),
+                    );
+                    await writer.add(
+                      "README.md",
+                      new Uint8ArrayReader(
+                        new TextEncoder().encode("# 示例扩展\n\n这是一个示例扩展，用于演示 .prg 文件的扩展识别功能。"),
+                      ),
+                    );
+                    await writer.close();
+                    const content = await uwriter.getData();
+                    const path = await save({
+                      filters: [{ name: "Project Graph Extension", extensions: ["prg"] }],
+                      defaultPath: "example-extension.prg",
+                    });
+                    if (path) {
+                      await writeFile(path, content);
+                      toast.success("示例扩展已创建");
+                    }
+                  }}
+                >
+                  <FileCode className="mr-2 h-4 w-4" />
+                  创建示例扩展 (.prg)
+                </Item>
+                <Item
                   onClick={() => {
                     const selectedEntity = activeProject!.stageManager.getSelectedEntities();
                     for (const entity of selectedEntity) {
@@ -1707,54 +1753,74 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
     uri = uri.with({ path: uri.path.replace(/\.json$/, ".prg") });
   }
 
-  if (store.get(tabsAtom).some((p) => p instanceof Project && p.uri.toString() === uri.toString())) {
+  if (
+    store
+      .get(tabsAtom)
+      .some((p) => (p instanceof Project || p instanceof Extension) && p.uri.toString() === uri.toString())
+  ) {
     store.set(
       activeTabAtom,
-      store.get(tabsAtom).find((p) => p instanceof Project && p.uri.toString() === uri.toString())!,
+      store
+        .get(tabsAtom)
+        .find((p) => (p instanceof Project || p instanceof Extension) && p.uri.toString() === uri.toString())!,
     );
     const tab = store.get(activeTabAtom);
     const activeProject = tab instanceof Project ? tab : undefined;
-    if (!activeProject) return;
-    activeProject.loop();
+    if (activeProject) activeProject.loop();
+    // const activeExtension = tab instanceof Extension ? tab : undefined;
     // 把其他项目pause
     store
       .get(tabsAtom)
       .filter((p) => p instanceof Project && p.uri.toString() !== uri.toString())
-      .forEach((p) => p.pause());
+      .forEach((p) => (p as Project).pause());
     toast.success("切换到已打开的标签页");
-    return activeProject;
+    return tab as any;
   }
-  const project = new Project(uri);
+
+  const dummyProject = new Project(uri);
+  loadAllServicesBeforeInit(dummyProject);
+  const tab = await TabFactory.create(uri, dummyProject.fs);
   const t = performance.now();
-  loadAllServicesBeforeInit(project);
+  if (tab instanceof Project) {
+    loadAllServicesBeforeInit(tab);
+  } else {
+    // Extension 只加载必要的基础服务
+    tab.registerFileSystemProvider("file", FileSystemProviderFile);
+    tab.registerFileSystemProvider("draft", FileSystemProviderDraft);
+  }
   const loadServiceTime = performance.now() - t;
 
   try {
     await toast
       .promise(
         async () => {
-          await project.init();
-          if (project.projectState !== ProjectState.Saved) {
-            // 用户取消了升级对话框，不打开文件
-            throw new Error("USER_CANCELLED");
+          await tab.init();
+          if (tab instanceof Project) {
+            if (tab.projectState !== ProjectState.Saved) {
+              // 用户取消了升级对话框，不打开文件
+              throw new Error("USER_CANCELLED");
+            }
+            loadAllServicesAfterInit(tab);
           }
-          loadAllServicesAfterInit(project);
         },
         {
           loading: "正在打开文件...",
           success: async () => {
-            if (upgraded) {
-              project.stage = deserialize(upgraded.data, project);
-              project.attachments = upgraded.attachments;
+            if (tab instanceof Project && upgraded) {
+              tab.stage = deserialize(upgraded.data, tab);
+              tab.attachments = upgraded.attachments;
               // 更新引用关系，包括双向线的偏移状态
-              project.stageManager.updateReferences();
+              tab.stageManager.updateReferences();
             }
             const readFileTime = performance.now() - t;
-            store.set(tabsAtom, [...store.get(tabsAtom), project]);
-            store.set(activeTabAtom, project);
-            setTimeout(() => {
-              project.camera.reset();
-            }, 100);
+            store.set(tabsAtom, [...store.get(tabsAtom), tab]);
+            store.set(activeTabAtom, tab);
+            const project = tab instanceof Project ? tab : undefined;
+            if (project) {
+              setTimeout(() => {
+                project.camera.reset();
+              }, 100);
+            }
             await RecentFileManager.addRecentFileByUri(uri);
             Telemetry.event("打开文件", {
               loadServiceTime,
@@ -1764,6 +1830,7 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
 
             // 处理同名TXT文件内容（仅在用户直接打开文件且设置项开启时执行，生成双链时跳过）
             if (
+              project &&
               Settings.autoImportTxtFileWhenOpenPrg &&
               source !== "ReferenceBlockNode跳转打开-prg文件" &&
               source !== "ReferencesWindow跳转打开-prg文件"
@@ -1783,15 +1850,15 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
                       .split("\n")
                       .filter((line) => line.trim() !== "");
 
-                    if (lines.length > 0) {
+                    if (lines.length > 0 && tab instanceof Project) {
                       // 获取舞台上所有实体
-                      const entities = project.stageManager.getEntities();
+                      const entities = tab.stageManager.getEntities();
 
                       // 计算外接矩形
                       let startY = 0;
                       if (entities.length > 0) {
                         const boundingRect = Rectangle.getBoundingRectangle(
-                          entities.map((entity) => entity.collisionBox.getRectangle()),
+                          entities.map((entity: any) => entity.collisionBox.getRectangle()),
                         );
                         startY = boundingRect.bottom;
                       }
@@ -1799,14 +1866,14 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
                       // 创建并添加文本节点
                       for (let i = 0; i < lines.length; i++) {
                         const line = lines[i];
-                        const textNode = new TextNode(project, {
+                        const textNode = new TextNode(tab, {
                           text: line,
                           collisionBox: new CollisionBox([
                             new Rectangle(new Vector(0, startY + i * 100), new Vector(300, 100)),
                           ]),
                           sizeAdjust: "auto",
                         });
-                        project.stageManager.add(textNode);
+                        tab.stageManager.add(textNode);
                       }
 
                       // 清空TXT文件内容，避免下次打开时重复吸入
@@ -1821,7 +1888,7 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
                       });
 
                       // 设置项目状态为未保存
-                      project.projectState = ProjectState.Unsaved;
+                      tab.projectState = ProjectState.Unsaved;
                     }
                   }
                 } catch (e) {
@@ -1830,7 +1897,7 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
               }, 200);
             }
 
-            return `耗时 ${readFileTime}ms，共 ${project.stage.length} 个舞台对象，${project.attachments.size} 个附件`;
+            return `耗时 ${readFileTime}ms${project ? `，共 ${project.stage.length} 个舞台对象，${project.attachments.size} 个附件` : ""}`;
           },
           error: (e) => {
             if (e instanceof Error && e.message === "USER_CANCELLED") {
@@ -1850,7 +1917,7 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
     }
     throw e;
   }
-  return project;
+  return tab as any;
 }
 
 /**

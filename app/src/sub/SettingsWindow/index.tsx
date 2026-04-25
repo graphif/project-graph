@@ -7,11 +7,12 @@ import { useState } from "react";
 import AboutTab from "./about";
 import AppearanceTab from "./appearance";
 import CreditsTab from "./credits";
+import ExtensionsTab from "./extensions";
 import KeyBindsPage from "./keybinds";
-import SettingsTab from "./settings";
-import ThemesTab from "./themes";
 import KeyBindsGlobalPage from "./keybindsGlobal";
 import QuickSettingsTab from "./quick-settings";
+import SettingsTab from "./settings";
+import ThemesTab from "./themes";
 
 type TabName = "settings" | "keybinds" | "appearance" | "about" | "quickSettings";
 
@@ -50,6 +51,9 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
       </TabsContent>
       <TabsContent value="quickSettings" className="overflow-auto">
         <QuickSettingsTab />
+      </TabsContent>
+      <TabsContent value="extensions" className="overflow-auto">
+        <ExtensionsTab />
       </TabsContent>
       <TabsContent value="about" className="overflow-auto">
         <AboutTab />

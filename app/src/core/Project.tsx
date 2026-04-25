@@ -1,5 +1,4 @@
 import { Dialog } from "@/components/ui/dialog";
-import { FileSystemProvider } from "@/core/interfaces/Service";
 import type { CurveRenderer } from "@/core/render/canvas2d/basicRenderer/curveRenderer";
 import type { ImageRenderer } from "@/core/render/canvas2d/basicRenderer/ImageRenderer";
 import type { ShapeRenderer } from "@/core/render/canvas2d/basicRenderer/shapeRenderer";
@@ -72,13 +71,14 @@ import type { TagManager } from "@/core/stage/stageManager/concreteMethods/Stage
 import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import type { StageManager } from "@/core/stage/stageManager/StageManager";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import { nextProjectIdAtom, tabsAtom, store } from "@/state";
-import { ProjectMetadata, createDefaultMetadata, isValidMetadata } from "@/types/metadata";
+import { nextProjectIdAtom, store, tabsAtom } from "@/state";
+import { createDefaultMetadata, isValidMetadata, PrgMetadata } from "@/types/metadata";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Decoder, Encoder } from "@msgpack/msgpack";
 import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, ZipWriter } from "@zip.js/zip.js";
 import md5 from "md5";
 import mime from "mime";
+import { File } from "lucide-react";
 import React from "react";
 import { URI } from "vscode-uri";
 import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
@@ -124,7 +124,6 @@ export class Project extends Tab {
    * key: 服务ID
    * value: 服务实例
    */
-  private readonly fileSystemProviders = new Map<string, FileSystemProvider>();
   private _uri: URI;
   private _projectState: ProjectState = ProjectState.Unsaved;
   private _isSaving = false;
@@ -238,7 +237,8 @@ export class Project extends Tab {
     serializedStageObjects: any[];
     tags: string[];
     references: { sections: Record<string, string[]>; files: string[] };
-    metadata: ProjectMetadata;
+    metadata: PrgMetadata;
+    readme?: string;
   }> {
     const fileContent = await this.fs.read(this.uri);
     const reader = new ZipReader(new Uint8ArrayReader(fileContent));
@@ -247,7 +247,8 @@ export class Project extends Tab {
     let serializedStageObjects: any[] = [];
     let tags: string[] = [];
     let references: { sections: Record<string, string[]>; files: string[] } = { sections: {}, files: [] };
-    let metadata: ProjectMetadata = createDefaultMetadata("2.0.0");
+    let metadata: PrgMetadata = createDefaultMetadata("2.0.0");
+    let readme: string | undefined = undefined;
 
     for (const entry of entries) {
       if (entry.filename === "stage.msgpack") {
@@ -269,6 +270,9 @@ export class Project extends Tab {
           // 如果格式不正确，使用默认值
           metadata = createDefaultMetadata("2.0.0");
         }
+      } else if (entry.filename === "README.md") {
+        const readmeRawData = await entry.getData!(new Uint8ArrayWriter());
+        readme = new TextDecoder().decode(readmeRawData);
       } else if (entry.filename.startsWith("attachments/")) {
         const match = entry.filename.trim().match(/^attachments\/([a-zA-Z0-9-]+)\.([a-zA-Z0-9]+)$/);
         if (!match) {
@@ -283,7 +287,7 @@ export class Project extends Tab {
       }
     }
 
-    return { serializedStageObjects, tags, references, metadata };
+    return { serializedStageObjects, tags, references, metadata, readme };
   }
 
   /**
@@ -295,7 +299,7 @@ export class Project extends Tab {
     }
     try {
       // 解析项目文件
-      const { serializedStageObjects, tags, references, metadata } = await this.parseProjectFile();
+      const { serializedStageObjects, tags, references, metadata, readme } = await this.parseProjectFile();
 
       // 检查并确认升级
       const currentVersion = metadata?.version || "2.0.0";
@@ -306,7 +310,7 @@ export class Project extends Tab {
       // 升级数据
       const [upgradedStageObjects, upgradedMetadata] = ProjectUpgrader.upgradeNAnyToNLatest(
         serializedStageObjects,
-        metadata,
+        metadata as any,
       );
 
       // 应用升级后的数据
@@ -314,6 +318,7 @@ export class Project extends Tab {
       this.tags = tags;
       this.references = references;
       this.metadata = upgradedMetadata;
+      this.readme = readme;
 
       // 更新引用关系，包括双向线的偏移状态
       // 注意：这里需要在服务加载后才能调用，所以需要检查服务是否已加载
@@ -334,6 +339,16 @@ export class Project extends Tab {
 
   get isDraft() {
     return this.uri.scheme === "draft";
+  }
+  get title(): string {
+    return this.uri.scheme === "draft"
+      ? `临时草稿 (${this.uri.path})`
+      : this.uri.scheme === "file"
+        ? this.uri.path.split("/").pop()!
+        : this.uri.toString();
+  }
+  get icon() {
+    return File;
   }
   get uri() {
     return this._uri;
@@ -369,7 +384,8 @@ export class Project extends Tab {
 
   // 反向引用数据
   public references: { sections: Record<string, string[]>; files: string[] } = { sections: {}, files: [] };
-  public metadata: ProjectMetadata = createDefaultMetadata(ProjectUpgrader.NLatestVersion);
+  public metadata: PrgMetadata = createDefaultMetadata(ProjectUpgrader.NLatestVersion);
+  public readme?: string;
 
   // 备份也要用到这个
   async getFileContent() {
@@ -382,6 +398,9 @@ export class Project extends Tab {
     writer.add("tags.msgpack", new Uint8ArrayReader(this.encoder.encode(this.tags)));
     writer.add("reference.msgpack", new Uint8ArrayReader(this.encoder.encode(this.references)));
     writer.add("metadata.msgpack", new Uint8ArrayReader(this.encoder.encode(this.metadata)));
+    if (this.readme) {
+      writer.add("README.md", new Uint8ArrayReader(new TextEncoder().encode(this.readme)));
+    }
     // 添加附件
     for (const [uuid, attachment] of this.attachments.entries()) {
       writer.add(`attachments/${uuid}.${mime.getExtension(attachment.type)}`, new BlobReader(attachment));
@@ -407,13 +426,6 @@ export class Project extends Tab {
    * 注册一个文件管理器
    * @param scheme 目前有 "file" | "draft"， 以后可能有其他的协议
    */
-  registerFileSystemProvider(scheme: string, provider: { new (...args: any[]): FileSystemProvider }) {
-    this.fileSystemProviders.set(scheme, new provider(this));
-  }
-
-  get fs(): FileSystemProvider {
-    return this.fileSystemProviders.get(this.uri.scheme)!;
-  }
 
   addAttachment(data: Blob) {
     const uuid = crypto.randomUUID();

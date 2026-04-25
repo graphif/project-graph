@@ -3,20 +3,41 @@ import { EventEmitter } from "events";
 import React from "react";
 import { toast } from "sonner";
 import { getOriginalNameOf } from "virtual:original-class-name";
-import { Service } from "./interfaces/Service";
+import { FileSystemProvider, Service } from "./interfaces/Service";
 import { Telemetry } from "./service/Telemetry";
 
 export abstract class Tab extends React.Component<Record<string, never>, Record<string, never>> {
   protected eventEmitter = new EventEmitter();
 
   protected readonly services = new Map<string, Service>();
+  protected readonly fileSystemProviders = new Map<string, FileSystemProvider>();
   protected readonly tickableServices: Service[] = [];
   protected rafHandle = -1;
 
   abstract getComponent(): React.ComponentType;
 
+  get title(): string {
+    return this.constructor.name;
+  }
+
+  get icon(): React.ComponentType<any> | null {
+    return null;
+  }
+
   constructor(props: Record<string, never>) {
     super(props);
+  }
+
+  /**
+   * 注册一个文件管理器
+   * @param scheme 目前有 "file" | "draft"， 以后可能有其他的协议
+   */
+  registerFileSystemProvider(scheme: string, provider: { new (...args: any[]): FileSystemProvider }) {
+    this.fileSystemProviders.set(scheme, new provider(this as any));
+  }
+
+  get fs(): FileSystemProvider {
+    return this.fileSystemProviders.get((this as any).uri.scheme)!;
   }
 
   // EventEmitter proxy methods

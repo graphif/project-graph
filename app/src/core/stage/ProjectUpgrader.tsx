@@ -1,5 +1,5 @@
 import { Serialized } from "@/types/node";
-import { ProjectMetadata } from "@/types/metadata";
+import { PrgMetadata } from "@/types/metadata";
 import { Path } from "@/utils/path";
 import { readFile } from "@tauri-apps/plugin-fs";
 import { v4 as uuidv4 } from "uuid";
@@ -361,7 +361,7 @@ export namespace ProjectUpgrader {
    * @param metadata 原始metadata
    * @returns 升级后的N版本数据和metadata
    */
-  export function upgradeNAnyToNLatest(data: any[], metadata: any): [any[], ProjectMetadata] {
+  export function upgradeNAnyToNLatest(data: any[], metadata: any): [any[], PrgMetadata] {
     const currentVersion = metadata?.version || "2.0.0";
 
     // 如果版本小于 2.1.0，需要升级
@@ -388,7 +388,7 @@ export namespace ProjectUpgrader {
    * @param metadata 2.0.0版本metadata
    * @returns 2.1.0版本数据和metadata
    */
-  function convertN1toN2(data: any[], metadata: any): [any[], ProjectMetadata] {
+  function convertN1toN2(data: any[], metadata: any): [any[], PrgMetadata] {
     // 为LineEdge添加lineType属性，默认值为'solid'
     for (const item of data) {
       if (item._ === "LineEdge") {
@@ -407,7 +407,7 @@ export namespace ProjectUpgrader {
    * @param metadata 2.1.0版本metadata
    * @returns 2.2.0版本数据和metadata
    */
-  function convertN2toN3(data: any[], metadata: any): [any[], ProjectMetadata] {
+  function convertN2toN3(data: any[], metadata: any): [any[], PrgMetadata] {
     // 为TextNode添加fontScaleLevel属性，默认值为0
     for (const item of data) {
       if (item._ === "TextNode") {
@@ -429,7 +429,7 @@ export namespace ProjectUpgrader {
    * @param metadata 2.2.0版本metadata
    * @returns 2.3.0版本数据和metadata
    */
-  function convertN3toN4(data: any[], metadata: any): [any[], ProjectMetadata] {
+  function convertN3toN4(data: any[], metadata: any): [any[], PrgMetadata] {
     return [data, { ...metadata, version: "2.3.0" }];
   }
 

@@ -110,18 +110,11 @@ export const ProjectTabs = memo(function ProjectTabs({
             SoundService.play.mouseEnterButton();
           }}
         >
-          <span className="text-xs">
+          <span className="flex items-center gap-1 text-xs">
+            {tab.icon && <tab.icon className="size-3" />}
             {(() => {
-              if (tab instanceof Project) {
-                const name =
-                  tab.uri.scheme === "draft"
-                    ? `临时草稿 (${tab.uri.path})`
-                    : tab.uri.scheme === "file"
-                      ? tab.uri.path.split("/").pop()
-                      : tab.uri.toString();
-                return protectingPrivacy ? replaceTextWhenProtect(name ?? "") : name;
-              }
-              return tab.constructor.name;
+              const name = tab.title;
+              return protectingPrivacy ? replaceTextWhenProtect(name ?? "") : name;
             })()}
           </span>
           <div
