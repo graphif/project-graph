@@ -211,6 +211,7 @@ export const settingsSchema = z.object({
   newNodeScaleByCamera: z.boolean().default(false),
   showKeyBindHint: z.boolean().default(true),
   showEditModeHint: z.boolean().default(true),
+  disabledExtensions: z.array(z.string()).default([]),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

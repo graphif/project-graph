@@ -381,6 +381,9 @@ importers:
       cmdk:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      comlink:
+        specifier: ^4.4.2
+        version: 4.4.2
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -5725,6 +5728,10 @@ packages:
     resolution:
       { integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg== }
     engines: { node: ">= 0.8" }
+
+  comlink@4.4.2:
+    resolution:
+      { integrity: sha512-OxGdvBmJuNKSCMO4NTl1L47VRp6xn2wG4F/2hYzB6tiCb709otOxtEYCSvK80PtjODfXXZu8ds+Nw5kVCjqd2g== }
 
   comma-separated-tokens@2.0.3:
     resolution:
@@ -15540,6 +15547,8 @@ snapshots:
   combined-stream@1.0.8:
     dependencies:
       delayed-stream: 1.0.0
+
+  comlink@4.4.2: {}
 
   comma-separated-tokens@2.0.3: {}
 

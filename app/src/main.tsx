@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import VConsole from "vconsole";
 import { URI } from "vscode-uri";
 import App from "./App";
+import { ExtensionManager } from "./core/extension/ExtensionManager";
 import { onOpenFile } from "./core/service/GlobalMenu";
 import "./css/index.css";
 
@@ -46,6 +47,7 @@ const el = document.getElementById("root")!;
     Tutorials.init(),
     UserState.init(),
     QuickSettingsManager.init(),
+    ExtensionManager.init(),
   ]);
   // 这些东西依赖上面的东西，所以单独一个Promise.all
   await Promise.all([loadLanguageFiles(), loadSyncModules()]);

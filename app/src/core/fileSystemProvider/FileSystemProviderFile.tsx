@@ -1,6 +1,6 @@
+import { FileSystemProvider } from "@/core/interfaces/Service";
 import { exists, mkdir, readDir, readFile, remove, rename, writeFile } from "@tauri-apps/plugin-fs";
 import { URI } from "vscode-uri";
-import { FileSystemProvider } from "@/core/interfaces/Service";
 
 export class FileSystemProviderFile implements FileSystemProvider {
   async read(uri: URI) {
@@ -13,7 +13,9 @@ export class FileSystemProviderFile implements FileSystemProvider {
     return await writeFile(uri.fsPath, content);
   }
   async remove(uri: URI) {
-    return await remove(uri.fsPath);
+    return await remove(uri.fsPath, {
+      recursive: true,
+    });
   }
   async exists(uri: URI) {
     return await exists(uri.fsPath);
