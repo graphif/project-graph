@@ -2,10 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import Markdown from "@/components/ui/markdown";
 import { PrgMetadata } from "@/types/metadata";
-import { Decoder } from "@msgpack/msgpack";
+import { Decoder, Encoder } from "@msgpack/msgpack";
 import { appDataDir, join } from "@tauri-apps/api/path";
-import { writeFile } from "@tauri-apps/plugin-fs";
-import { Uint8ArrayReader, Uint8ArrayWriter, ZipReader } from "@zip.js/zip.js";
+import { mkdir, writeFile } from "@tauri-apps/plugin-fs";
 import { Blocks } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -41,61 +40,32 @@ export class Extension extends Tab {
 
     const decoder = new Decoder();
 
-    if (this.uri.path.endsWith(".prg")) {
-      const fileContent = await fs.read(this.uri);
-      const reader = new ZipReader(new Uint8ArrayReader(fileContent));
-      const entries = await reader.getEntries();
+    const codeUri = this.uri.with({ path: this.uri.path + "/extension.js" });
+    const metadataUri = this.uri.with({ path: this.uri.path + "/metadata.msgpack" });
+    const readmeUri = this.uri.with({ path: this.uri.path + "/README.md" });
 
-      for (const entry of entries) {
-        if (entry.filename === "metadata.msgpack") {
-          const metadataRawData = await entry.getData!(new Uint8ArrayWriter());
-          this.metadata = decoder.decode(metadataRawData) as PrgMetadata;
-        } else if (entry.filename === "README.md") {
-          const readmeRawData = await entry.getData!(new Uint8ArrayWriter());
-          this.readmeContent = new TextDecoder().decode(readmeRawData);
-        } else if (entry.filename === "extension.js") {
-          const codeRawData = await entry.getData!(new Uint8ArrayWriter());
-          this.code = new TextDecoder().decode(codeRawData);
-        }
-      }
+    try {
+      const [codeContent, metadataContent, readmeContent] = await Promise.all([
+        fs.read(codeUri),
+        fs.read(metadataUri),
+        fs.read(readmeUri),
+      ]);
 
-      if (this.metadata.extension?.id ?? "" !== this.uri.path.split("/").slice(-1)[0].replace(".prg", "")) {
-        const newUri = this.uri.with({
-          path: this.uri.path.replace(/\/?[^/]*$/, `/${this.metadata.extension?.id || "unknown"}.prg`),
-        });
-        this.fs.rename(this.uri, newUri);
-        this._uri = newUri;
-        toast.warning("扩展包名称与实际扩展 ID 不一致，已自动重命名");
-      }
-    } else {
-      // 直接读文件夹
-      const codeUri = this.uri.with({ path: this.uri.path + "/extension.js" });
-      const metadataUri = this.uri.with({ path: this.uri.path + "/metadata.msgpack" });
-      const readmeUri = this.uri.with({ path: this.uri.path + "/README.md" });
+      this.code = new TextDecoder().decode(codeContent);
+      this.metadata = decoder.decode(metadataContent) as PrgMetadata;
+      this.readmeContent = new TextDecoder().decode(readmeContent);
+    } catch (e) {
+      console.error("Failed to load extension from folder", e);
+      toast.error("加载扩展失败，请检查文件结构是否正确");
+    }
 
-      try {
-        const [codeContent, metadataContent, readmeContent] = await Promise.all([
-          fs.read(codeUri),
-          fs.read(metadataUri),
-          fs.read(readmeUri),
-        ]);
-
-        this.code = new TextDecoder().decode(codeContent);
-        this.metadata = decoder.decode(metadataContent) as PrgMetadata;
-        this.readmeContent = new TextDecoder().decode(readmeContent);
-      } catch (e) {
-        console.error("Failed to load extension from folder", e);
-        toast.error("加载扩展失败，请检查文件结构是否正确");
-      }
-
-      if (this.metadata.extension?.id ?? "" !== this.uri.path.split("/").slice(-1)[0]) {
-        const newUri = this.uri.with({
-          path: this.uri.path.replace(/\/?[^/]*$/, `/${this.metadata.extension?.id || "unknown"}`),
-        });
-        this.fs.rename(this.uri, newUri);
-        this._uri = newUri;
-        toast.warning("扩展文件夹名称与实际扩展 ID 不一致，已自动重命名");
-      }
+    if (this.metadata.extension?.id ?? "" !== this.uri.path.split("/").slice(-1)[0]) {
+      const newUri = this.uri.with({
+        path: this.uri.path.replace(/\/?[^/]*$/, `/${this.metadata.extension?.id || "unknown"}`),
+      });
+      this.fs.rename(this.uri, newUri);
+      this._uri = newUri;
+      toast.warning("扩展文件夹名称与实际扩展 ID 不一致，已自动重命名");
     }
   }
 
@@ -139,7 +109,10 @@ export class Extension extends Tab {
                     variant="outline"
                     onClick={async () => {
                       if (await Dialog.confirm("确认卸载", "将彻底删除此扩展，无法恢复。请确认是否继续。")) {
-                        await self.fs.remove(self.uri);
+                        await self.fs.remove(
+                          URI.file(await join(await appDataDir(), "extensions", self.metadata.extension?.id || "")),
+                        );
+                        setDisabledExtensions(disabledExtensions.filter((id) => id !== self.metadata.extension?.id));
                         setInstalled(false);
                         toast.success("扩展已卸载");
                       }
@@ -171,10 +144,14 @@ export class Extension extends Tab {
               ) : (
                 <Button
                   onClick={async () => {
+                    const base = await join(await appDataDir(), "extensions", self.metadata.extension?.id || "unknown");
+                    await mkdir(base);
                     await writeFile(
-                      await join(await appDataDir(), "extensions", (self.metadata.extension?.id || "unknown") + ".prg"),
-                      await self.fs.read(self.uri),
+                      await join(base, "metadata.msgpack"),
+                      new Uint8Array(new Encoder().encode(self.metadata)),
                     );
+                    await writeFile(await join(base, "extension.js"), new TextEncoder().encode(self.code));
+                    await writeFile(await join(base, "README.md"), new TextEncoder().encode(self.readmeContent));
                     setInstalled(true);
                     toast.success("扩展已安装");
                   }}
