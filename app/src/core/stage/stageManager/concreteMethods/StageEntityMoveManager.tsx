@@ -46,8 +46,11 @@ export class EntityMoveManager {
         .limitY(-300, 300);
     }
 
-    // 动力（节点移动不依赖 camera scale，使用固定振幅）
-    const power = this.moveAccelerateCommander.multiply(Settings.moveAmplitude).limitX(-300, 300).limitY(-300, 300);
+    // 动力（与相机移动相同的缩放感知公式：视野越宏观，移动速度越快）
+    const power = this.moveAccelerateCommander
+      .multiply(Settings.moveAmplitude * (1 / this.project.camera.currentScale) ** 2)
+      .limitX(-300, 300)
+      .limitY(-300, 300);
 
     this.moveSpeed = this.moveSpeed.add(power).add(friction);
 
