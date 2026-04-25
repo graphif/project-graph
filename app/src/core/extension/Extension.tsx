@@ -113,7 +113,10 @@ export class Extension extends Tab {
         (async () => {
           const extensions = await ExtensionManager.getExtensions();
           console.log("已安装的扩展", extensions);
-          setInstalled(extensions.includes((self.metadata.extension?.id || "") + ".prg"));
+          setInstalled(
+            extensions.includes((self.metadata.extension?.id || "") + ".prg") ||
+              extensions.includes(self.metadata.extension?.id || ""),
+          );
         })();
       }, []);
 
@@ -172,6 +175,8 @@ export class Extension extends Tab {
                       await join(await appDataDir(), "extensions", (self.metadata.extension?.id || "unknown") + ".prg"),
                       await self.fs.read(self.uri),
                     );
+                    setInstalled(true);
+                    toast.success("扩展已安装");
                   }}
                 >
                   安装

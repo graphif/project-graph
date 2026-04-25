@@ -2,6 +2,7 @@ import { appDataDir, join } from "@tauri-apps/api/path";
 import { exists, mkdir, readDir } from "@tauri-apps/plugin-fs";
 import { URI } from "vscode-uri";
 import { FileSystemProviderFile } from "../fileSystemProvider/FileSystemProviderFile";
+import { Settings } from "../service/Settings";
 import { Extension } from "./Extension";
 import { ExtensionRuntime } from "./ExtensionRuntime";
 
@@ -48,6 +49,10 @@ export namespace ExtensionManager {
   export async function init() {
     const extensionNames = await getExtensions();
     for (const name of extensionNames) {
+      if (Settings.disabledExtensions.includes(name)) {
+        console.log(`扩展 ${name} 已被禁用，跳过加载`);
+        continue;
+      }
       await getRuntime(name);
     }
   }
