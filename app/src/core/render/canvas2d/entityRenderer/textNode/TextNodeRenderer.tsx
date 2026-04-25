@@ -143,7 +143,7 @@ export class TextNodeRenderer {
 
   /**
    * 渲染键盘树形模式下的方向提示：
-   * - 当前预测生长方向：显示 "tab→/←/↑/↓"（绿色高亮）
+   * - 当前预测生长方向：在生长位置渲染叉号（X），若该位置有可连接实体则高亮并渲染预览连线
    * - 其余三个方向：显示对应的方向切换快捷键，颜色较淡
    * - 广度生长：显示反斜杠快捷键
    * 布局要求：
@@ -177,11 +177,62 @@ export class TextNodeRenderer {
     const tabKey = getKeyById("generateNodeTreeWithDeepMode");
     const backslashKey = getKeyById("generateNodeTreeWithBroadMode");
 
-    // 字체大小跟随节点字体大小
+    // 字体大小跟随节点字体大小
     const nodeFontSize = node.getFontSize();
     const titleFontSize = nodeFontSize * 0.5; // 标题稍小
     const keyFontSizeActive = nodeFontSize; // 当前方向快捷键与节点字体一致
     const keyFontSizeInactive = nodeFontSize * 0.7; // 非当前方向稍小
+
+    // 用生长探测线（线段相交）检测是否有可连接目标，比点命中范围更大
+    const connectTarget = this.project.keyboardOnlyTreeEngine.findConnectTargetByGrowthLine(node, direction);
+    const hasConnectTarget = connectTarget !== null;
+
+    // 渲染生长探测虚线：从当前节点边缘中点 → 探测线终点
+    const growthLineStart = this.project.keyboardOnlyTreeEngine.getGrowthLineStart(node, direction);
+    const growthLineEnd = this.project.keyboardOnlyTreeEngine.getGrowthLineEnd(node, direction);
+    const probeLineColor = hasConnectTarget ? tabColor.clone() : hintColor.clone();
+    probeLineColor.a = hasConnectTarget ? 0.8 : 0.4;
+    this.project.curveRenderer.renderDashedLine(
+      this.project.renderer.transformWorld2View(growthLineStart),
+      this.project.renderer.transformWorld2View(growthLineEnd),
+      probeLineColor,
+      (hasConnectTarget ? 2 : 1.5) * this.project.camera.currentScale,
+      8 * this.project.camera.currentScale,
+    );
+
+    // 有可连接目标时：渲染从当前节点边缘 → 目标节点对应边缘的预览连线
+    if (hasConnectTarget) {
+      const targetRect = connectTarget.collisionBox.getRectangle();
+      let previewLineStart: Vector = rect.rightCenter;
+      let previewLineEnd: Vector = targetRect.leftCenter;
+      switch (direction) {
+        case "right":
+          previewLineStart = rect.rightCenter;
+          previewLineEnd = targetRect.leftCenter;
+          break;
+        case "left":
+          previewLineStart = rect.leftCenter;
+          previewLineEnd = targetRect.rightCenter;
+          break;
+        case "up":
+          previewLineStart = rect.topCenter;
+          previewLineEnd = targetRect.bottomCenter;
+          break;
+        case "down":
+          previewLineStart = rect.bottomCenter;
+          previewLineEnd = targetRect.topCenter;
+          break;
+      }
+      const previewLineColor = tabColor.clone();
+      previewLineColor.a = 0.6;
+      this.project.curveRenderer.renderDashedLine(
+        this.project.renderer.transformWorld2View(previewLineStart),
+        this.project.renderer.transformWorld2View(previewLineEnd),
+        previewLineColor,
+        1.5 * this.project.camera.currentScale,
+        8 * this.project.camera.currentScale,
+      );
+    }
 
     // 获取进入编辑模式的快捷键设置
     const startEditMode = Settings.textNodeStartEditMode;
@@ -227,124 +278,281 @@ export class TextNodeRenderer {
     );
 
     // 顶部提示：居中对齐，分两行
-    const upKey = direction === "up" ? `${tabKey}↑` : getKeyById("setNodeTreeDirectionUp");
-    const upTitle = getKeyTitle(direction === "up" ? "generateNodeTreeWithDeepMode" : "setNodeTreeDirectionUp");
-    const upKeyFontSize = direction === "up" ? keyFontSizeActive : keyFontSizeInactive;
-    const upColor = direction === "up" ? tabColor : hintColor;
     const upBasePos = rect.topCenter.add(new Vector(0, -GAP));
     const upViewPos = this.project.renderer.transformWorld2View(upBasePos);
-
-    // 渲染标题（第一行）
-    if (upTitle) {
-      const upTitlePos = upViewPos.subtract(new Vector(0, upKeyFontSize * this.project.camera.currentScale));
+    if (direction === "up") {
+      // 生长方向为上：根据是否有可连接实体决定显示内容
+      if (hasConnectTarget) {
+        // 有可连接实体：显示"Tab 连接节点"提示
+        const connectTitle = i18next.t("connectExistingNode.title", { ns: "keyBinds", defaultValue: "连接节点" });
+        const connectKey = tabKey;
+        const connectTitlePos = upViewPos.subtract(new Vector(0, keyFontSizeActive * this.project.camera.currentScale));
+        this.project.textRenderer.renderTextFromCenter(
+          connectTitle,
+          connectTitlePos,
+          titleFontSize * this.project.camera.currentScale,
+          tabColor,
+        );
+        this.project.textRenderer.renderTextFromCenter(
+          connectKey,
+          upViewPos,
+          keyFontSizeActive * this.project.camera.currentScale,
+          tabColor,
+        );
+      } else {
+        // 无可连接实体：显示原有生长提示
+        const upKey = `${tabKey}↑`;
+        const upTitle = getKeyTitle("generateNodeTreeWithDeepMode");
+        if (upTitle) {
+          const upTitlePos = upViewPos.subtract(new Vector(0, keyFontSizeActive * this.project.camera.currentScale));
+          this.project.textRenderer.renderTextFromCenter(
+            upTitle,
+            upTitlePos,
+            titleFontSize * this.project.camera.currentScale,
+            tabColor,
+          );
+        }
+        this.project.textRenderer.renderTextFromCenter(
+          upKey,
+          upViewPos,
+          keyFontSizeActive * this.project.camera.currentScale,
+          tabColor,
+        );
+      }
+    } else {
+      // 非生长方向：显示方向切换快捷键
+      const upKey = getKeyById("setNodeTreeDirectionUp");
+      const upTitle = getKeyTitle("setNodeTreeDirectionUp");
+      if (upTitle) {
+        const upTitlePos = upViewPos.subtract(new Vector(0, keyFontSizeInactive * this.project.camera.currentScale));
+        this.project.textRenderer.renderTextFromCenter(
+          upTitle,
+          upTitlePos,
+          titleFontSize * this.project.camera.currentScale,
+          hintColor,
+        );
+      }
       this.project.textRenderer.renderTextFromCenter(
-        upTitle,
-        upTitlePos,
-        titleFontSize * this.project.camera.currentScale,
-        upColor,
+        upKey,
+        upViewPos,
+        keyFontSizeInactive * this.project.camera.currentScale,
+        hintColor,
       );
     }
-    // 渲染快捷键（第二行）
-    this.project.textRenderer.renderTextFromCenter(
-      upKey,
-      upViewPos,
-      upKeyFontSize * this.project.camera.currentScale,
-      upColor,
-    );
 
     // 底部提示：居中对齐，分两行
-    const downKey = direction === "down" ? `${tabKey}↓` : getKeyById("setNodeTreeDirectionDown");
-    const downTitle = getKeyTitle(direction === "down" ? "generateNodeTreeWithDeepMode" : "setNodeTreeDirectionDown");
-    const downKeyFontSize = direction === "down" ? keyFontSizeActive : keyFontSizeInactive;
-    const downColor = direction === "down" ? tabColor : hintColor;
     const downBasePos = rect.bottomCenter.add(new Vector(0, GAP));
     const downViewPos = this.project.renderer.transformWorld2View(downBasePos);
-
-    // 渲染标题（第一行）
-    if (downTitle) {
+    if (direction === "down") {
+      // 生长方向为下：根据是否有可连接实体决定显示内容
+      if (hasConnectTarget) {
+        // 有可连接实体：显示"Tab 连接节点"提示
+        const connectTitle = i18next.t("connectExistingNode.title", { ns: "keyBinds", defaultValue: "连接节点" });
+        this.project.textRenderer.renderTextFromCenter(
+          connectTitle,
+          downViewPos,
+          titleFontSize * this.project.camera.currentScale,
+          tabColor,
+        );
+        const connectKeyPos = downViewPos.add(new Vector(0, titleFontSize * this.project.camera.currentScale));
+        this.project.textRenderer.renderTextFromCenter(
+          tabKey,
+          connectKeyPos,
+          keyFontSizeActive * this.project.camera.currentScale,
+          tabColor,
+        );
+      } else {
+        // 无可连接实体：显示原有生长提示
+        const downKey = `${tabKey}↓`;
+        const downTitle = getKeyTitle("generateNodeTreeWithDeepMode");
+        if (downTitle) {
+          this.project.textRenderer.renderTextFromCenter(
+            downTitle,
+            downViewPos,
+            titleFontSize * this.project.camera.currentScale,
+            tabColor,
+          );
+        }
+        const downKeyPos = downViewPos.add(new Vector(0, titleFontSize * this.project.camera.currentScale));
+        this.project.textRenderer.renderTextFromCenter(
+          downKey,
+          downKeyPos,
+          keyFontSizeActive * this.project.camera.currentScale,
+          tabColor,
+        );
+      }
+    } else {
+      // 非生长方向：显示方向切换快捷键
+      const downKey = getKeyById("setNodeTreeDirectionDown");
+      const downTitle = getKeyTitle("setNodeTreeDirectionDown");
+      if (downTitle) {
+        this.project.textRenderer.renderTextFromCenter(
+          downTitle,
+          downViewPos,
+          titleFontSize * this.project.camera.currentScale,
+          hintColor,
+        );
+      }
+      const downKeyPos = downViewPos.add(new Vector(0, titleFontSize * this.project.camera.currentScale));
       this.project.textRenderer.renderTextFromCenter(
-        downTitle,
-        downViewPos,
-        titleFontSize * this.project.camera.currentScale,
-        downColor,
+        downKey,
+        downKeyPos,
+        keyFontSizeInactive * this.project.camera.currentScale,
+        hintColor,
       );
     }
-    // 渲染快捷键（第二行，在标题下方）
-    const downKeyPos = downViewPos.add(new Vector(0, titleFontSize * this.project.camera.currentScale));
-    this.project.textRenderer.renderTextFromCenter(
-      downKey,
-      downKeyPos,
-      downKeyFontSize * this.project.camera.currentScale,
-      downColor,
-    );
 
     // 左侧提示：文字右侧紧贴节点左侧，分两行
-    const leftKey = direction === "left" ? `${tabKey}←` : getKeyById("setNodeTreeDirectionLeft");
-    const leftTitle = getKeyTitle(direction === "left" ? "generateNodeTreeWithDeepMode" : "setNodeTreeDirectionLeft");
-    const leftKeyFontSize = direction === "left" ? keyFontSizeActive : keyFontSizeInactive;
-    const leftColor = direction === "left" ? tabColor : hintColor;
     const leftBasePos = rect.leftCenter.add(new Vector(-GAP, 0));
     const leftViewPos = this.project.renderer.transformWorld2View(leftBasePos);
-
-    // 计算快捷键文字尺寸
-    const leftKeySize = getTextSize(leftKey, leftKeyFontSize * this.project.camera.currentScale);
-    const leftTitleSize = leftTitle
-      ? getTextSize(leftTitle, titleFontSize * this.project.camera.currentScale)
-      : { x: 0, y: 0 };
-
-    // 渲染标题（第一行，在快捷键上方）
-    if (leftTitle) {
-      const leftTitlePos = leftViewPos.subtract(new Vector(leftTitleSize.x, leftKeySize.y / 2 + leftTitleSize.y));
+    if (direction === "left") {
+      // 生长方向为左：根据是否有可连接实体决定显示内容
+      if (hasConnectTarget) {
+        // 有可连接实体：显示"Tab 连接节点"提示
+        const connectTitle = i18next.t("connectExistingNode.title", { ns: "keyBinds", defaultValue: "连接节点" });
+        const connectTitleSize = getTextSize(connectTitle, titleFontSize * this.project.camera.currentScale);
+        const connectKeySize = getTextSize(tabKey, keyFontSizeActive * this.project.camera.currentScale);
+        const connectTitlePos = leftViewPos.subtract(
+          new Vector(connectTitleSize.x, connectKeySize.y / 2 + connectTitleSize.y),
+        );
+        this.project.textRenderer.renderText(
+          connectTitle,
+          connectTitlePos,
+          titleFontSize * this.project.camera.currentScale,
+          tabColor,
+        );
+        const connectKeyPos = leftViewPos.subtract(new Vector(connectKeySize.x, connectKeySize.y / 2));
+        this.project.textRenderer.renderText(
+          tabKey,
+          connectKeyPos,
+          keyFontSizeActive * this.project.camera.currentScale,
+          tabColor,
+        );
+      } else {
+        // 无可连接实体：显示原有生长提示
+        const leftKey = `${tabKey}←`;
+        const leftTitle = getKeyTitle("generateNodeTreeWithDeepMode");
+        const leftKeySize = getTextSize(leftKey, keyFontSizeActive * this.project.camera.currentScale);
+        const leftTitleSize = leftTitle
+          ? getTextSize(leftTitle, titleFontSize * this.project.camera.currentScale)
+          : { x: 0, y: 0 };
+        if (leftTitle) {
+          const leftTitlePos = leftViewPos.subtract(new Vector(leftTitleSize.x, leftKeySize.y / 2 + leftTitleSize.y));
+          this.project.textRenderer.renderText(
+            leftTitle,
+            leftTitlePos,
+            titleFontSize * this.project.camera.currentScale,
+            tabColor,
+          );
+        }
+        const leftKeyPos = leftViewPos.subtract(new Vector(leftKeySize.x, leftKeySize.y / 2));
+        this.project.textRenderer.renderText(
+          leftKey,
+          leftKeyPos,
+          keyFontSizeActive * this.project.camera.currentScale,
+          tabColor,
+        );
+      }
+    } else {
+      // 非生长方向：显示方向切换快捷键
+      const leftKey = getKeyById("setNodeTreeDirectionLeft");
+      const leftTitle = getKeyTitle("setNodeTreeDirectionLeft");
+      const leftKeySize = getTextSize(leftKey, keyFontSizeInactive * this.project.camera.currentScale);
+      const leftTitleSize = leftTitle
+        ? getTextSize(leftTitle, titleFontSize * this.project.camera.currentScale)
+        : { x: 0, y: 0 };
+      if (leftTitle) {
+        const leftTitlePos = leftViewPos.subtract(new Vector(leftTitleSize.x, leftKeySize.y / 2 + leftTitleSize.y));
+        this.project.textRenderer.renderText(
+          leftTitle,
+          leftTitlePos,
+          titleFontSize * this.project.camera.currentScale,
+          hintColor,
+        );
+      }
+      const leftKeyPos = leftViewPos.subtract(new Vector(leftKeySize.x, leftKeySize.y / 2));
       this.project.textRenderer.renderText(
-        leftTitle,
-        leftTitlePos,
-        titleFontSize * this.project.camera.currentScale,
-        leftColor,
+        leftKey,
+        leftKeyPos,
+        keyFontSizeInactive * this.project.camera.currentScale,
+        hintColor,
       );
     }
-    // 渲染快捷键（第二行）
-    const leftKeyPos = leftViewPos.subtract(new Vector(leftKeySize.x, leftKeySize.y / 2));
-    this.project.textRenderer.renderText(
-      leftKey,
-      leftKeyPos,
-      leftKeyFontSize * this.project.camera.currentScale,
-      leftColor,
-    );
 
     // 右侧提示：文字左侧紧贴节点右侧，分两行
-    const rightKey = direction === "right" ? `${tabKey}→` : getKeyById("setNodeTreeDirectionRight");
-    const rightTitle = getKeyTitle(
-      direction === "right" ? "generateNodeTreeWithDeepMode" : "setNodeTreeDirectionRight",
-    );
-    const rightKeyFontSize = direction === "right" ? keyFontSizeActive : keyFontSizeInactive;
-    const rightColor = direction === "right" ? tabColor : hintColor;
     const rightBasePos = rect.rightCenter.add(new Vector(GAP, 0));
     const rightViewPos = this.project.renderer.transformWorld2View(rightBasePos);
-
-    // 计算快捷键文字尺寸
-    const rightKeySize = getTextSize(rightKey, rightKeyFontSize * this.project.camera.currentScale);
-    const rightTitleSize = rightTitle
-      ? getTextSize(rightTitle, titleFontSize * this.project.camera.currentScale)
-      : { x: 0, y: 0 };
-
-    // 渲染标题（第一行，在快捷键上方）
-    if (rightTitle) {
-      const rightTitlePos = rightViewPos.subtract(new Vector(0, rightKeySize.y / 2 + rightTitleSize.y));
+    if (direction === "right") {
+      // 生长方向为右：根据是否有可连接实体决定显示内容
+      if (hasConnectTarget) {
+        // 有可连接实体：显示"Tab 连接节点"提示
+        const connectTitle = i18next.t("connectExistingNode.title", { ns: "keyBinds", defaultValue: "连接节点" });
+        const connectTitleSize = getTextSize(connectTitle, titleFontSize * this.project.camera.currentScale);
+        const connectKeySize = getTextSize(tabKey, keyFontSizeActive * this.project.camera.currentScale);
+        const connectTitlePos = rightViewPos.subtract(new Vector(0, connectKeySize.y / 2 + connectTitleSize.y));
+        this.project.textRenderer.renderText(
+          connectTitle,
+          connectTitlePos,
+          titleFontSize * this.project.camera.currentScale,
+          tabColor,
+        );
+        const connectKeyPos = rightViewPos.subtract(new Vector(0, connectKeySize.y / 2));
+        this.project.textRenderer.renderText(
+          tabKey,
+          connectKeyPos,
+          keyFontSizeActive * this.project.camera.currentScale,
+          tabColor,
+        );
+      } else {
+        // 无可连接实体：显示原有生长提示
+        const rightKey = `${tabKey}→`;
+        const rightTitle = getKeyTitle("generateNodeTreeWithDeepMode");
+        const rightKeySize = getTextSize(rightKey, keyFontSizeActive * this.project.camera.currentScale);
+        const rightTitleSize = rightTitle
+          ? getTextSize(rightTitle, titleFontSize * this.project.camera.currentScale)
+          : { x: 0, y: 0 };
+        if (rightTitle) {
+          const rightTitlePos = rightViewPos.subtract(new Vector(0, rightKeySize.y / 2 + rightTitleSize.y));
+          this.project.textRenderer.renderText(
+            rightTitle,
+            rightTitlePos,
+            titleFontSize * this.project.camera.currentScale,
+            tabColor,
+          );
+        }
+        const rightKeyPos = rightViewPos.subtract(new Vector(0, rightKeySize.y / 2));
+        this.project.textRenderer.renderText(
+          rightKey,
+          rightKeyPos,
+          keyFontSizeActive * this.project.camera.currentScale,
+          tabColor,
+        );
+      }
+    } else {
+      // 非生长方向：显示方向切换快捷键
+      const rightKey = getKeyById("setNodeTreeDirectionRight");
+      const rightTitle = getKeyTitle("setNodeTreeDirectionRight");
+      const rightKeySize = getTextSize(rightKey, keyFontSizeInactive * this.project.camera.currentScale);
+      const rightTitleSize = rightTitle
+        ? getTextSize(rightTitle, titleFontSize * this.project.camera.currentScale)
+        : { x: 0, y: 0 };
+      if (rightTitle) {
+        const rightTitlePos = rightViewPos.subtract(new Vector(0, rightKeySize.y / 2 + rightTitleSize.y));
+        this.project.textRenderer.renderText(
+          rightTitle,
+          rightTitlePos,
+          titleFontSize * this.project.camera.currentScale,
+          hintColor,
+        );
+      }
+      const rightKeyPos = rightViewPos.subtract(new Vector(0, rightKeySize.y / 2));
       this.project.textRenderer.renderText(
-        rightTitle,
-        rightTitlePos,
-        titleFontSize * this.project.camera.currentScale,
-        rightColor,
+        rightKey,
+        rightKeyPos,
+        keyFontSizeInactive * this.project.camera.currentScale,
+        hintColor,
       );
     }
-    // 渲染快捷键（第二行）
-    const rightKeyPos = rightViewPos.subtract(new Vector(0, rightKeySize.y / 2));
-    this.project.textRenderer.renderText(
-      rightKey,
-      rightKeyPos,
-      rightKeyFontSize * this.project.camera.currentScale,
-      rightColor,
-    );
 
     // 反斜杠（\）广度生长：渲染在节点的左下角，远离四个方向提示
     const parents = this.project.graphMethods.nodeParentArray(node);

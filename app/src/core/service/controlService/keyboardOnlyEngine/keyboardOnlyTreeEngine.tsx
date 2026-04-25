@@ -7,7 +7,7 @@ import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Direction } from "@/types/directions";
 import { showTreeValidationErrors } from "@/utils/treeValidation";
 import { ProgressNumber, Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
+import { Line, Rectangle } from "@graphif/shapes";
 import { v4 } from "uuid";
 import { LineEffect } from "../../feedbackService/effectEngine/concrete/LineEffect";
 import { RectangleRenderEffect } from "../../feedbackService/effectEngine/concrete/RectangleRenderEffect";
@@ -62,6 +62,107 @@ export class KeyboardOnlyTreeEngine {
   private preDirectionCacheMap: Map<string, "right" | "left" | "down" | "up"> = new Map();
 
   /**
+   * 计算生长探测线的起点：当前节点在生长方向上的边缘中点
+   */
+  public getGrowthLineStart(node: ConnectableEntity, direction: "right" | "left" | "down" | "up"): Vector {
+    const rect = node.collisionBox.getRectangle();
+    switch (direction) {
+      case "right":
+        return rect.rightCenter;
+      case "left":
+        return rect.leftCenter;
+      case "up":
+        return rect.topCenter;
+      case "down":
+        return rect.bottomCenter;
+    }
+  }
+
+  /**
+   * 计算生长探测线的终点（原叉号中心）世界坐标。
+   *
+   * 间距逻辑与 autoLayoutFastTreeMode 完全一致：
+   *   - 基础间距：fatherChildNearGap = 50 * 2^(fontScaleLevel/2)
+   *   - 左右方向始终用 fatherChildNormalGap（= nearGap * 3）
+   *   - 上下方向：同方向已有子节点 ≤ 1 时用 nearGap，否则用 normalGap
+   */
+  public getGrowthLineEnd(node: ConnectableEntity, direction: "right" | "left" | "down" | "up"): Vector {
+    const rect = node.collisionBox.getRectangle();
+
+    // 与布局引擎一致的动态间距
+    let fatherChildNearGap = 50;
+    if (node instanceof TextNode) {
+      fatherChildNearGap = fatherChildNearGap * 2 ** (node.fontScaleLevel / 2);
+    }
+    const fatherChildNormalGap = fatherChildNearGap * 3;
+
+    // 计算当前节点在该方向上已有的同向子节点数量（用于上下方向近距/远距切换）
+    const outEdges = this.project.graphMethods.getOutgoingEdges(node);
+    let sameDirectionChildCount = 0;
+    switch (direction) {
+      case "right":
+        sameDirectionChildCount = outEdges.filter((e) => e instanceof Edge && e.isLeftToRight()).length;
+        break;
+      case "left":
+        sameDirectionChildCount = outEdges.filter((e) => e instanceof Edge && e.isRightToLeft()).length;
+        break;
+      case "down":
+        sameDirectionChildCount = outEdges.filter((e) => e instanceof Edge && e.isTopToBottom()).length;
+        break;
+      case "up":
+        sameDirectionChildCount = outEdges.filter((e) => e instanceof Edge && e.isBottomToTop()).length;
+        break;
+    }
+
+    let gap: number;
+    switch (direction) {
+      case "right":
+      case "left":
+        gap = fatherChildNormalGap;
+        break;
+      case "up":
+      case "down":
+        gap = sameDirectionChildCount <= 1 ? fatherChildNearGap : fatherChildNormalGap;
+        break;
+    }
+
+    switch (direction) {
+      case "right":
+        return rect.rightCenter.add(new Vector(gap, 0));
+      case "left":
+        return rect.leftCenter.add(new Vector(-gap, 0));
+      case "up":
+        return rect.topCenter.add(new Vector(0, -gap));
+      case "down":
+        return rect.bottomCenter.add(new Vector(0, gap));
+    }
+  }
+
+  /**
+   * 用生长探测线（起点→终点）与舞台上所有可连接实体的碰撞箱做线段相交检测，
+   * 返回第一个与探测线相交且满足条件的实体（排除自身、排除已有连线的实体）。
+   * 没有则返回 null。
+   */
+  public findConnectTargetByGrowthLine(
+    node: ConnectableEntity,
+    direction: "right" | "left" | "down" | "up",
+  ): ConnectableEntity | null {
+    const start = this.getGrowthLineStart(node, direction);
+    const end = this.getGrowthLineEnd(node, direction);
+    const line = new Line(start, end);
+
+    for (const entity of this.project.stageManager.getConnectableEntity()) {
+      if (entity === node) continue;
+      if (entity.isHiddenBySectionCollapse) continue;
+      if (!entity.collisionBox.isIntersectsWithLine(line)) continue;
+      // 已有连线则跳过（走新建节点流程）
+      if (this.project.graphMethods.getEdgesBetween(node, entity).length > 0) continue;
+      return entity;
+    }
+    return null;
+  }
+
+  /**
    * 改变节点的“预方向”
    * @param nodes
    * @param direction
@@ -106,6 +207,58 @@ export class KeyboardOnlyTreeEngine {
     this.project.camera.speed = Vector.getZero();
     // 确定创建方向：默认向右
     const direction = this.getNodePreDirection(rootNode);
+
+    // 检测生长探测线上是否有可连接实体（线段相交检测，比点命中范围更大）
+    {
+      const targetEntity = this.findConnectTargetByGrowthLine(rootNode, direction);
+      if (targetEntity !== null) {
+        // 有可连接实体且尚无连线：直接连线，不新建节点
+        this.project.stageManager.connectEntity(rootNode, targetEntity);
+        const newEdges = this.project.graphMethods.getEdgesBetween(rootNode, targetEntity);
+        // 根据方向设置边的连接位置
+        switch (direction) {
+          case "right":
+            this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Right, true);
+            this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Left);
+            break;
+          case "left":
+            this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Left, true);
+            this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Right);
+            break;
+          case "down":
+            this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Down, true);
+            this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Up);
+            break;
+          case "up":
+            this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Up, true);
+            this.project.stageManager.changeEdgesConnectLocation(newEdges, Direction.Down);
+            break;
+        }
+        this.project.effects.addEffects(this.project.edgeRenderer.getConnectedEffects(rootNode, targetEntity));
+        SoundService.play.treeGenerateDeepSoundFile();
+        // 连接成功后触发树形格式化布局（与新建节点逻辑一致）
+        const rootNodeParents = this.project.graphMethods.getRoots(rootNode, true);
+        if (rootNodeParents.length === 1) {
+          const rootNodeParent = rootNodeParents[0];
+          const validationResult = this.project.graphMethods.validateTreeStructure(rootNodeParent, true);
+          if (validationResult.isValid) {
+            if (Settings.autoLayoutWhenTreeGenerate) {
+              this.project.autoAlign.autoLayoutSelectedFastTreeMode(rootNodeParent);
+            }
+          } else {
+            if (Settings.autoLayoutWhenTreeGenerate) {
+              showTreeValidationErrors(validationResult, "warning");
+            }
+          }
+        } else {
+          if (Settings.autoLayoutWhenTreeGenerate) {
+            toast.warning("当前结构不符合树形结构：无法确定唯一的根节点");
+          }
+        }
+        return;
+      }
+    }
+
     // 先找到自己所有的第一层后继节点
     const childSet = this.project.graphMethods.getOneStepSuccessorSet(rootNode);
 

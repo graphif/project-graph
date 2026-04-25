@@ -182,7 +182,6 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       // 确保指数变化的过程中字体不会变小到0
       this.fontSizeCache = Math.floor(this.fontSizeCache);
     }
-    console.log(this.fontSizeCache);
   }
 
   public setFontScaleLevel(level: number) {

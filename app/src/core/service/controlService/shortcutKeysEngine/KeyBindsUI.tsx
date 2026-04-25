@@ -350,12 +350,12 @@ export namespace KeyBindsUI {
     );
   }
 
-  function check() {
+  function check(): boolean {
     // 如果有文本输入元素获得焦点，不处理键盘事件
     if (!shouldProcessKeyboardEvent()) {
       // 清空队列，防止事件积累
       userEventQueue.clear();
-      return;
+      return false;
     }
     const tab = store.get(activeTabAtom);
     const activeProject = tab instanceof Project ? tab : undefined;
@@ -382,6 +382,7 @@ export namespace KeyBindsUI {
     if (executed) {
       userEventQueue.clear();
     }
+    return executed;
   }
 
   function onMouseDown(event: MouseEvent) {
@@ -401,6 +402,7 @@ export namespace KeyBindsUI {
     const activeProject = tab instanceof Project ? tab : undefined;
 
     // ——持续型快捷键独立路径——
+    let continuousExecuted = false;
     {
       const rawKey = event.key.toLowerCase();
       // 兼容中文输入法下的全角符号（如「【」→「[」）
@@ -419,13 +421,19 @@ export namespace KeyBindsUI {
         if (pressedContinuousKeyBindIds.has(uiKeyBind.id)) continue;
         pressedContinuousKeyBindIds.add(uiKeyBind.id);
         uiKeyBind.onPress(activeProject);
+        continuousExecuted = true;
       }
     }
     // 持续型路径处理后，不 return——序列型照常入队检测（两者不冲突）
 
     // ——序列型快捷键路径——
     enqueue(event);
-    check();
+    const sequenceExecuted = check();
+
+    // 只要有快捷键被执行，就阻止浏览器默认行为（防止 Tab 跳焦点、方向键滚动页面等）
+    if (continuousExecuted || sequenceExecuted) {
+      event.preventDefault();
+    }
   }
   function onKeyUp(event: KeyboardEvent) {
     // 如果有文本输入元素获得焦点，不处理键盘事件
