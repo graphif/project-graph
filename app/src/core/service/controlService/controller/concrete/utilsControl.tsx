@@ -52,6 +52,8 @@ export class ControllerUtils {
     this.project.controller.isCameraLocked = true;
     // 停止摄像机漂移
     this.project.camera.stopImmediately();
+    // 停止实体移动漂移
+    this.project.entityMoveManager.stopImmediately();
     const rectWorld = clickedNode.collisionBox.getRectangle();
     const rectView = this.project.renderer.transformWorld2View(rectWorld);
     const fontColor = (

@@ -81,6 +81,14 @@ export class EntityMoveManager {
   public continuousMoveKeyRelease(direction: Vector) {
     this.moveAccelerateCommander = this.moveAccelerateCommander.subtract(direction).limitX(-1, 1).limitY(-1, 1);
   }
+
+  /**
+   * 立刻刹车：清除命令向量和速度（进入编辑模式等场景使用）
+   */
+  public stopImmediately() {
+    this.moveAccelerateCommander = Vector.getZero();
+    this.moveSpeed = Vector.getZero();
+  }
   // ─────────────────────────────────────────────────────────────
 
   /**
