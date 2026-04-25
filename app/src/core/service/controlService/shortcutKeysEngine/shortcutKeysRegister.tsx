@@ -690,55 +690,33 @@ export const allKeyBinds: KeyBindItem[] = [
     onPress: () => {
       //
 
-      const projects = store.get(tabsAtom);
-      if (projects.length <= 1) {
-        toast.error("至少打开两个项目才能切换项目");
+      const tabs = store.get(tabsAtom);
+      if (tabs.length <= 1) {
+        toast.error("至少打开两个标签页才能切换");
         return;
       }
-      const tab = store.get(activeTabAtom);
-      const activeProject = tab instanceof Project ? tab : undefined;
-      if (!activeProject) {
-        toast.error("当前没有活动项目，无法切换项目");
-        return;
-      }
-      let activeProjectIndex = -1;
-      for (const p of projects) {
-        activeProjectIndex++;
-        if (p === activeProject) {
-          break;
-        }
-      }
-      const nextActiveProjectIndex = (activeProjectIndex + 1) % projects.length;
-      store.set(activeTabAtom, projects[nextActiveProjectIndex]);
+      const activeTab = store.get(activeTabAtom);
+      const activeIndex = tabs.findIndex((t) => t === activeTab);
+      const nextIndex = (activeIndex + 1) % tabs.length;
+      store.set(activeTabAtom, tabs[nextIndex]);
     },
   },
   {
     id: "switchActiveProjectReversed",
     defaultKey: "C-S-tab",
     onPress: () => {
-      const projects = store.get(tabsAtom);
-      if (projects.length <= 1) {
-        toast.error("至少打开两个项目才能切换项目");
+      const tabs = store.get(tabsAtom);
+      if (tabs.length <= 1) {
+        toast.error("至少打开两个标签页才能切换");
         return;
       }
-      const tab = store.get(activeTabAtom);
-      const activeProject = tab instanceof Project ? tab : undefined;
-      if (!activeProject) {
-        toast.error("当前没有活动项目，无法切换项目");
-        return;
-      }
-      let activeProjectIndex = -1;
-      for (const p of projects) {
-        activeProjectIndex++;
-        if (p === activeProject) {
-          break;
-        }
-      }
+      const activeTab = store.get(activeTabAtom);
+      const activeIndex = tabs.findIndex((t) => t === activeTab);
       const mod = (n: number, m: number) => {
         return ((n % m) + m) % m;
       };
-      const nextActiveProjectIndex = mod(activeProjectIndex - 1, projects.length);
-      store.set(activeTabAtom, projects[nextActiveProjectIndex]);
+      const nextIndex = mod(activeIndex - 1, tabs.length);
+      store.set(activeTabAtom, tabs[nextIndex]);
     },
   },
   {
