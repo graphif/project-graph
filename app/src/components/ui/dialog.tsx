@@ -125,7 +125,11 @@ Dialog.confirm = (title = "你确定？", description = "", { destructive = fals
           <DialogContent showCloseButton={false}>
             <DialogHeader>
               <DialogTitle>{title}</DialogTitle>
-              <DialogDescription>{description}</DialogDescription>
+              <DialogDescription>
+                {description.split("\n").map((it) => (
+                  <p>{it}</p>
+                ))}
+              </DialogDescription>
               <DialogFooter>
                 <Button
                   variant="outline"

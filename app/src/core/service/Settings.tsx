@@ -212,6 +212,7 @@ export const settingsSchema = z.object({
   showKeyBindHint: z.boolean().default(true),
   showEditModeHint: z.boolean().default(true),
   disabledExtensions: z.array(z.string()).default([]),
+  extensionSettings: z.record(z.record(z.unknown())).default({}),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;
