@@ -1,5 +1,5 @@
 import { appDataDir, join } from "@tauri-apps/api/path";
-import { readDir } from "@tauri-apps/plugin-fs";
+import { exists, mkdir, readDir } from "@tauri-apps/plugin-fs";
 import { URI } from "vscode-uri";
 import { FileSystemProviderFile } from "../fileSystemProvider/FileSystemProviderFile";
 import { Extension } from "./Extension";
@@ -14,6 +14,9 @@ export namespace ExtensionManager {
   }
   export async function getExtensions() {
     const extensionsDir = await getExtensionsDir();
+    if (!(await exists(extensionsDir))) {
+      await mkdir(extensionsDir);
+    }
     const entries = await readDir(extensionsDir);
     return entries.map((it) => it.name);
   }
