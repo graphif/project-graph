@@ -228,7 +228,7 @@ settings:
     options:
       straight: 直線
       bezier: 貝塞爾曲線
-      vertical: 垂直折線
+      vertical: 垂直折線（已廢棄⚠️）
   isRenderCenterPointer:
     title: 顯示中心十字準星
     description: |
@@ -284,12 +284,12 @@ settings:
       選中文本節點時，在節點四周顯示 tab/W W/S S/A A/D D 等鍵盤樹形生長方向提示。
       關閉後不再渲染這些提示文字。
   newNodeScaleByCamera:
-    title: 新建節點時，根據視野自動設置節點大小
+    title: 新建文本節點時，根據視野縮放等級自動設置節點大小
     description: |
       開啟後，創建文本節點時會根據當前視野縮放級別自動調整節點字體大小，
       使節點在屏幕上的視覺大小保持恆定。默認關閉。
   newNodeScaleByCameraOffset:
-    title: 視野自動大小的級別修正偏移
+    title: 新建文本節點時，根據視野縮放等級自動設置大小的級別修正偏移
     description: 配合"根據視野自動設置節點大小"使用。正數使新建節點更大，負數使新建節點更小。
   sectionBitTitleRenderType:
     title: 框的縮略大標題渲染類型

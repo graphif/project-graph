@@ -228,7 +228,7 @@ settings:
     options:
       straight: 直线
       bezier: 贝塞尔曲线
-      vertical: 垂直折线
+      vertical: 垂直折线（已废弃⚠️）
   isRenderCenterPointer:
     title: 显示中心十字准星
     description: |
