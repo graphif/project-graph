@@ -170,7 +170,7 @@ settings:
       node: 節點樣式
       edge: 連線樣式
       section: “框”的樣式
-      entityDetails: 實體詳细讯息
+      entityDetails: 實體詳細信息
       debug: 調試
       miniWindow: 迷你窗口
       experimental: 實驗性功能
@@ -288,6 +288,9 @@ settings:
     description: |
       開啟後，創建文本節點時會根據當前視野縮放級別自動調整節點字體大小，
       使節點在屏幕上的視覺大小保持恆定。默認關閉。
+  newNodeScaleByCameraOffset:
+    title: 視野自動大小的級別修正偏移
+    description: 配合"根據視野自動設置節點大小"使用。正數使新建節點更大，負數使新建節點更小。
   sectionBitTitleRenderType:
     title: 框的縮略大標題渲染類型
     options:

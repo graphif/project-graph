@@ -837,6 +837,9 @@ settings:
     description: |
       When enabled, newly created text nodes will automatically adjust their font size
       based on the current camera zoom level, keeping the visual size constant on screen. Disabled by default.
+  newNodeScaleByCameraOffset:
+    title: Camera Auto-Size Level Offset
+    description: Used together with "New Node Scales with Camera". Positive values make new nodes larger; negative values make them smaller.
   autoLayoutWhenTreeGenerate:
     title: Automatically update layout when growing nodes
     description: "After it is turned on, the layout will be automatically updated

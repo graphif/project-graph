@@ -176,6 +176,7 @@ export const settingsIcons = {
   enableTagTextNodesBigDisplay: Tag,
   showTextNodeBorder: Square,
   newNodeScaleByCamera: Scaling,
+  newNodeScaleByCameraOffset: Scaling,
   showTreeDirectionHint: TrendingUpDown,
   lineStyle: Spline,
   sectionBitTitleRenderType: SquareM,

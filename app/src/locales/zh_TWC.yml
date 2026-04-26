@@ -327,6 +327,9 @@ settings:
   newNodeScaleByCamera:
     title: 新建節點時，根據視野自動設置節點大小
     description: 開啟後，創建文字節點時會根據當前視野縮放級別自動調整節點字體大小，使節點在螢幕上的視覺大小保持恆定。預設關閉。
+  newNodeScaleByCameraOffset:
+    title: 視野自動大小的級別修正偏移
+    description: 配合「根據視野自動設置節點大小」使用。正數使新建節點更大，負數使新建節點更小。
   sectionBitTitleRenderType:
     title: 框的縮略大標題渲染類型
     options:

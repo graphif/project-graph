@@ -278,6 +278,9 @@ settings:
     description: |
       Saat diaktifkan, node teks yang baru dibuat akan menyesuaikan ukuran font secara otomatis
       berdasarkan level zoom kamera saat ini, sehingga ukuran visual tetap konstan di layar. Dinonaktifkan secara default.
+  newNodeScaleByCameraOffset:
+    title: Offset Level Ukuran Otomatis Kamera
+    description: Digunakan bersama "Node Baru Mengikuti Zoom Kamera". Nilai positif membuat node baru lebih besar; nilai negatif membuatnya lebih kecil.
   sectionBitTitleRenderType:
     title: Jenis Render Judul Besar Ringkasan Kotak
     options:

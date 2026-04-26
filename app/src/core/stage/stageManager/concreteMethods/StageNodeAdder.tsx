@@ -51,7 +51,8 @@ export class NodeAdder {
     });
     // 根据摄像机缩放级别自动设置字体大小，使节点视觉大小保持恒定
     if (Settings.newNodeScaleByCamera) {
-      const autoLevel = Math.round(-2 * Math.log2(this.project.camera.currentScale));
+      const autoLevel =
+        Math.round(-2 * Math.log2(this.project.camera.currentScale)) + Settings.newNodeScaleByCameraOffset;
       if (autoLevel !== 0) {
         node.setFontScaleLevel(autoLevel);
       }

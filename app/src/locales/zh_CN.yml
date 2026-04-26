@@ -284,10 +284,13 @@ settings:
       选中文本节点时，在节点四周显示 tab/W W/S S/A A/D D 等键盘树形生长方向提示。
       关闭后不再渲染这些提示文字。
   newNodeScaleByCamera:
-    title: 新建节点时，根据视野自动设置节点大小
+    title: 新建文本节点时，根据视野缩放等级自动设置节点大小
     description: |
       开启后，创建文本节点时会根据当前视野缩放级别自动调整节点字体大小，
       使节点在屏幕上的视觉大小保持恒定。默认关闭。
+  newNodeScaleByCameraOffset:
+    title: 新建文本节点时，根据视野缩放等级自动设置大小的级别修正偏移
+    description: 配合"根据视野自动设置节点大小"使用。正数使新建节点更大，负数使新建节点更小。
   sectionBitTitleRenderType:
     title: 框的缩略大标题渲染类型
     options:

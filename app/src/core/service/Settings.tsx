@@ -209,6 +209,7 @@ export const settingsSchema = z.object({
   autoImportTxtFileWhenOpenPrg: z.boolean().default(false),
   enableAutoEdgeWidth: z.boolean().default(true),
   newNodeScaleByCamera: z.boolean().default(false),
+  newNodeScaleByCameraOffset: z.number().min(-5).max(5).int().default(-1),
   showKeyBindHint: z.boolean().default(true),
   showEditModeHint: z.boolean().default(true),
   disabledExtensions: z.array(z.string()).default([]),

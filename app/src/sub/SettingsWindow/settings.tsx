@@ -297,6 +297,7 @@ const categories = {
       "textNodePasteSizeAdjustMode",
       "textNodeManualDefaultCharWidth",
       "newNodeScaleByCamera",
+      "newNodeScaleByCameraOffset",
     ],
     section: ["isEnableSectionCollision"],
     edge: [
