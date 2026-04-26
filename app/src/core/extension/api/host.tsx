@@ -50,7 +50,18 @@ export function extensionHostApiFactory(extensionName: string) {
       Dialog.buttons(title, `${description}\n(来自扩展: ${extensionName})`, buttons)) satisfies typeof Dialog.buttons,
 
     //region 网络请求
-    fetch,
+    fetch: (async (input, init?) => {
+      if (
+        await Dialog.confirm(
+          `${extensionName} 请求发起网络请求`,
+          `${init?.method?.toUpperCase() ?? "GET"} ${input}\n是否允许？`,
+        )
+      ) {
+        return await fetch(input, init);
+      } else {
+        throw new Error("用户拒绝发起网络请求");
+      }
+    }) satisfies typeof fetch,
 
     //region 设置
     async settings_getOwn(key: string) {
