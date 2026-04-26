@@ -29,7 +29,7 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
           <TabsTrigger value="appearance">个性化</TabsTrigger>
           <TabsTrigger value="themes">主题</TabsTrigger>
           <TabsTrigger value="quickSettings">快捷设置</TabsTrigger>
-          {import.meta.env.DEV && <TabsTrigger value="extensions">扩展</TabsTrigger>}
+          <TabsTrigger value="extensions">扩展</TabsTrigger>
           <TabsTrigger value="about">关于</TabsTrigger>
           <TabsTrigger value="credits">鸣谢</TabsTrigger>
         </TabsList>
