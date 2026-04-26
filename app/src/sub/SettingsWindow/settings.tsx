@@ -17,7 +17,6 @@ import { SoundService } from "@/core/service/feedbackService/SoundService";
 import { settingsSchema } from "@/core/service/Settings";
 import Fuse from "fuse.js";
 import {
-  AppWindowMac,
   Bot,
   Brain,
   Bug,
@@ -34,22 +33,23 @@ import {
   MoveUpRight,
   Network,
   PictureInPicture,
+  Proportions,
+  RectangleHorizontal,
   Save,
+  Scan,
+  ScanSearch,
   Search,
   Sparkle,
   SplinePointer,
   SquareDashedMousePointer,
   SquareDashedTopSolid,
   SquareFunction,
-  Telescope,
   TextCursorInput,
   TextQuote,
   Touchpad,
   Unplug,
-  Workflow,
   Wrench,
   Zap,
-  ZoomIn,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -221,7 +221,6 @@ const categories = {
       "stealthModeMaskShape",
     ],
     node: ["enableTagTextNodesBigDisplay", "showTextNodeBorder", "showTreeDirectionHint", "showEditModeHint"],
-    edge: ["lineStyle", "enableAutoEdgeWidth"],
     section: [
       "sectionBitTitleRenderType",
       "sectionBigTitleThresholdRatio",
@@ -229,6 +228,7 @@ const categories = {
       "sectionBigTitleOpacity",
       "sectionBackgroundFillMode",
     ],
+    edge: ["lineStyle", "enableAutoEdgeWidth"],
     entityDetails: [
       "nodeDetailsPanel",
       "alwaysShowDetails",
@@ -352,8 +352,8 @@ const categoryIcons = {
     icon: Wrench,
     mouse: Mouse,
     touchpad: Touchpad,
-    cameraMove: Telescope,
-    cameraZoom: ZoomIn,
+    cameraMove: Scan,
+    cameraZoom: ScanSearch,
     objectSelect: SquareDashedMousePointer,
     textNode: TextCursorInput,
     section: SquareDashedTopSolid,
@@ -370,9 +370,9 @@ const categoryIcons = {
   },
   visual: {
     icon: Eye,
-    basic: AppWindowMac,
+    basic: Proportions,
     background: Layers,
-    node: Workflow,
+    node: RectangleHorizontal,
     edge: MoveUpRight,
     section: SquareDashedTopSolid,
     entityDetails: TextQuote,

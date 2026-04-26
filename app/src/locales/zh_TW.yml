@@ -170,7 +170,7 @@ settings:
       node: 節點樣式
       edge: 連線樣式
       section: “框”的樣式
-      entityDetails: 實體詳情
+      entityDetails: 實體詳细讯息
       debug: 調試
       miniWindow: 迷你窗口
       experimental: 實驗性功能

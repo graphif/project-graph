@@ -170,7 +170,7 @@ settings:
       node: 节点样式
       edge: 连线样式
       section: “框”的样式
-      entityDetails: 实体详情
+      entityDetails: 实体详细信息
       debug: 调试
       miniWindow: 迷你窗口
       experimental: 实验性功能

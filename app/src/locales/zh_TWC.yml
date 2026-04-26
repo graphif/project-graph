@@ -217,7 +217,7 @@ settings:
       node: 節點樣式
       edge: 連線樣式
       section: “框”的樣式
-      entityDetails: 實體詳情
+      entityDetails: 實體詳细讯息
       debug: 偵錯
       miniWindow: 迷你視窗
       experimental: 實驗性功能
