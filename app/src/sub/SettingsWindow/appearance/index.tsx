@@ -7,13 +7,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Sparkles, Volume2 } from "lucide-react";
+import { Sparkles, Volume2, Menu as MenuIcon } from "lucide-react";
 import { Fragment, useState } from "react";
 import EffectsPage from "./effects";
 import SoundEffectsPage from "./sounds";
+import ContextMenuPage from "./context-menu";
 
 export default function AppearanceTab() {
-  const [currentCategory, setCurrentCategory] = useState("");
+  const [currentCategory, setCurrentCategory] = useState("effects");
 
   // @ts-expect-error fuck ts
   const Component = currentCategory && currentCategory in categories ? categories[currentCategory].component : Fragment;
@@ -28,7 +29,7 @@ export default function AppearanceTab() {
                   <SidebarMenuItem key={k}>
                     <SidebarMenuButton asChild onClick={() => setCurrentCategory(k)} isActive={currentCategory === k}>
                       <div>
-                        <v.icon />
+                        <v.icon className="size-4" />
                         <span>{v.name}</span>
                       </div>
                     </SidebarMenuButton>
@@ -39,7 +40,7 @@ export default function AppearanceTab() {
           </SidebarGroup>
         </SidebarContent>
       </Sidebar>
-      <div className="mx-auto flex w-2/3 flex-col overflow-auto">
+      <div className="mx-auto flex w-full flex-col overflow-auto p-4">
         <Component />
       </div>
     </div>
@@ -56,5 +57,10 @@ const categories = {
     name: "音效",
     icon: Volume2,
     component: SoundEffectsPage,
+  },
+  contextMenu: {
+    name: "右键菜单",
+    icon: MenuIcon,
+    component: ContextMenuPage,
   },
 };

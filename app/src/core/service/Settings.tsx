@@ -211,6 +211,66 @@ export const settingsSchema = z.object({
   newNodeScaleByCamera: z.boolean().default(false),
   showKeyBindHint: z.boolean().default(true),
   showEditModeHint: z.boolean().default(true),
+  contextMenuConfig: z
+    .array(
+      z.object({
+        type: z.union([z.literal("item"), z.literal("separator"), z.literal("sub"), z.literal("group")]),
+        id: z.string(),
+        label: z.string().optional(),
+        icon: z.string().optional(),
+        visible: z.boolean().default(true),
+        children: z.array(z.any()).optional(),
+        layout: z.union([z.literal("row"), z.literal("grid")]).optional(),
+        cols: z.number().optional(),
+      }),
+    )
+    .default([
+      {
+        type: "group",
+        id: "clipboard-group",
+        layout: "row",
+        children: [
+          { type: "item", id: "copy", icon: "Copy" },
+          { type: "item", id: "paste", icon: "Clipboard" },
+          { type: "item", id: "deleteSelectedStageObjects", icon: "Trash" },
+          { type: "item", id: "undo", icon: "Undo" },
+        ],
+      },
+      {
+        type: "group",
+        id: "align-group",
+        layout: "grid",
+        cols: 3,
+        children: [
+          { type: "item", id: "alignTop", icon: "AlignStartHorizontal" },
+          { type: "item", id: "alignTopToBottomNoSpace", icon: "AlignVerticalJustifyStart" },
+          { type: "separator", id: "sep-1" },
+          { type: "item", id: "alignCenterHorizontal", icon: "AlignCenterHorizontal" },
+          { type: "item", id: "alignVerticalSpaceBetween", icon: "AlignVerticalSpaceBetween" },
+          { type: "item", id: "layoutToSquare", icon: "Grip" },
+          { type: "item", id: "alignBottom", icon: "AlignEndHorizontal" },
+          { type: "item", id: "layoutToTightSquare", icon: "LayoutDashboard" },
+          { type: "separator", id: "sep-2" },
+        ],
+      },
+      {
+        type: "group",
+        id: "align-group-2",
+        layout: "grid",
+        cols: 3,
+        children: [
+          { type: "item", id: "alignLeft", icon: "AlignStartVertical" },
+          { type: "item", id: "alignCenterVertical", icon: "AlignCenterVertical" },
+          { type: "item", id: "alignRight", icon: "AlignEndVertical" },
+          { type: "item", id: "alignLeftToRightNoSpace", icon: "AlignHorizontalJustifyStart" },
+          { type: "item", id: "alignHorizontalSpaceBetween", icon: "AlignHorizontalSpaceBetween" },
+          { type: "separator", id: "sep-3" },
+          { type: "item", id: "adjustSelectedTextNodeWidthMin", icon: "ChevronsRightLeft" },
+          { type: "item", id: "adjustSelectedTextNodeWidthAverage", icon: "MoveHorizontal" },
+          { type: "item", id: "adjustSelectedTextNodeWidthMax", icon: "Code" },
+        ],
+      },
+    ]),
   disabledExtensions: z.array(z.string()).default([]),
   extensionSettings: z.record(z.record(z.unknown())).default({}),
 });

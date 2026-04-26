@@ -9,7 +9,6 @@ export const activeTabAtom = atom<Tab | undefined>(undefined);
 export const isClassroomModeAtom = atom(false);
 // export const isPrivacyModeAtom = atom(false);
 export const nextProjectIdAtom = atom(1);
-export const contextMenuTooltipWordsAtom = atom<string>("");
 export const isWindowAlwaysOnTopAtom = atom<boolean>(false);
 
 export const isWindowMaxsizedAtom = atom<boolean>(false);
