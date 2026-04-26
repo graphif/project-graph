@@ -151,9 +151,14 @@ export class KeyboardOnlyTreeEngine {
     const end = this.getGrowthLineEnd(node, direction);
     const line = new Line(start, end);
 
+    // 当前节点的所有祖先 Section（直接父 + 更上层），探针碰到这些框时应忽略，
+    // 避免树形节点与包含它自己的框意外连接。
+    const ancestorUUIDs = new Set(this.project.sectionMethods.getFatherSectionsList(node).map((s) => s.uuid));
+
     for (const entity of this.project.stageManager.getConnectableEntity()) {
       if (entity === node) continue;
       if (entity.isHiddenBySectionCollapse) continue;
+      if (ancestorUUIDs.has(entity.uuid)) continue;
       if (!entity.collisionBox.isIntersectsWithLine(line)) continue;
       // 已有连线则跳过（走新建节点流程）
       if (this.project.graphMethods.getEdgesBetween(node, entity).length > 0) continue;
