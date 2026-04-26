@@ -1,6 +1,9 @@
 import { Dialog } from "@/components/ui/dialog";
+import { Project } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
+import { activeTabAtom, store, tabsAtom } from "@/state";
 import { fetch } from "@tauri-apps/plugin-http";
+import { proxy } from "comlink";
 import { toast } from "sonner";
 import { Extension } from "../Extension";
 import { ExtensionKeyBindManager } from "../ExtensionKeyBindManager";
@@ -96,6 +99,28 @@ export function extensionHostApiFactory(extension: Extension) {
     },
     async keybinds_unregisterAll() {
       return ExtensionKeyBindManager.unregisterAll(extensionId);
+    },
+
+    //region Tab,Project
+    async tabs_getAll() {
+      return store.get(tabsAtom).map((it) => proxy(it));
+    },
+    async tabs_getAllProjects() {
+      return store
+        .get(tabsAtom)
+        .filter((it) => it instanceof Project)
+        .map((it) => proxy(it));
+    },
+    async tabs_getCurrent() {
+      const activeTab = store.get(activeTabAtom);
+      return activeTab ? proxy(activeTab) : null;
+    },
+    async tabs_getCurrentProject() {
+      const activeTab = store.get(activeTabAtom);
+      if (activeTab instanceof Project) {
+        return proxy(activeTab);
+      }
+      return null;
     },
   };
 }

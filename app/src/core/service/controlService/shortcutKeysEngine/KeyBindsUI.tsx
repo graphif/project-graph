@@ -1,3 +1,5 @@
+import { Project } from "@/core/Project";
+import { activeTabAtom, store } from "@/state";
 import {
   formatEmacsKey,
   matchEmacsKeyPress,
@@ -8,9 +10,8 @@ import {
 import { isMac } from "@/utils/platform";
 import { createStore } from "@/utils/store";
 import { Queue } from "@graphif/data-structures";
+import { proxy } from "comlink";
 import { allKeyBinds } from "./shortcutKeysRegister";
-import { activeTabAtom, store } from "@/state";
-import { Project } from "@/core/Project";
 
 export interface UIKeyBind {
   id: string;
@@ -386,7 +387,7 @@ export namespace KeyBindsUI {
         continue;
       }
       if (matchEmacsKeyPress(uiKeyBind.key, userEventQueue.arrayList)) {
-        uiKeyBind.onPress(activeProject);
+        uiKeyBind.onPress(uiKeyBind.id.startsWith("ext:") && activeProject ? proxy(activeProject) : activeProject);
         // 如果是单键快捷键且有onRelease回调，记录为已按下状态
         if (uiKeyBind.onRelease && uiKeyBind.key.length === 1) {
           pressedSingleKeyBinds.add(uiKeyBind.key);
