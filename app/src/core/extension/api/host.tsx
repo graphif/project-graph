@@ -50,18 +50,7 @@ export function extensionHostApiFactory(extensionName: string) {
       Dialog.buttons(title, `${description}\n(来自扩展: ${extensionName})`, buttons)) satisfies typeof Dialog.buttons,
 
     //region 网络请求
-    fetch: (async (input, init?) => {
-      if (
-        await Dialog.confirm(
-          `${extensionName} 请求发起网络请求`,
-          `${init?.method?.toUpperCase() ?? "GET"} ${input}\n是否允许？`,
-        )
-      ) {
-        return await fetch(input, init);
-      } else {
-        throw new Error("用户拒绝发起网络请求");
-      }
-    }) satisfies typeof fetch,
+    fetch,
 
     //region 设置
     async settings_getOwn(key: string) {
@@ -81,31 +70,13 @@ export function extensionHostApiFactory(extensionName: string) {
       if (key === "aiApiKey") {
         throw new Error("出于安全考虑，扩展无法访问 aiApiKey 设置项");
       }
-      if (
-        await Dialog.confirm(
-          `${extensionName} 请求访问全局设置: ${key}`,
-          `此设置项的值为 ${(Settings as any)[key]}，是否允许访问？`,
-        )
-      ) {
-        return (Settings as any)[key];
-      } else {
-        throw new Error("用户拒绝访问全局设置");
-      }
+      return (Settings as any)[key];
     },
     async settings_setGlobal(key: string, value: unknown) {
       if (key === "aiApiBaseUrl") {
         throw new Error("出于安全考虑，扩展无法修改 aiApiBaseUrl 设置项");
       }
-      if (
-        await Dialog.confirm(
-          `${extensionName} 请求修改全局设置: ${key}`,
-          `当前值为 ${(Settings as any)[key]}，修改后值为 ${value}，是否允许修改？`,
-        )
-      ) {
-        (Settings as any)[key] = value;
-      } else {
-        throw new Error("用户拒绝修改全局设置");
-      }
+      return ((Settings as any)[key] = value);
     },
   };
 }

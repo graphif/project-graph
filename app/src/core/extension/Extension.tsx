@@ -5,11 +5,13 @@ import { PrgMetadata } from "@/types/metadata";
 import { Decoder, Encoder } from "@msgpack/msgpack";
 import { appDataDir, join } from "@tauri-apps/api/path";
 import { mkdir, writeFile } from "@tauri-apps/plugin-fs";
+import { Uint8ArrayReader, Uint8ArrayWriter, ZipReader } from "@zip.js/zip.js";
 import { Blocks } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import { Settings } from "../service/Settings";
+import { Tutorials } from "../service/Tourials";
 import { Tab } from "../Tab";
 import { ExtensionManager } from "./ExtensionManager";
 
@@ -40,32 +42,61 @@ export class Extension extends Tab {
 
     const decoder = new Decoder();
 
-    const codeUri = this.uri.with({ path: this.uri.path + "/extension.js" });
-    const metadataUri = this.uri.with({ path: this.uri.path + "/metadata.msgpack" });
-    const readmeUri = this.uri.with({ path: this.uri.path + "/README.md" });
+    if (this.uri.path.endsWith(".prg")) {
+      const fileContent = await fs.read(this.uri);
+      const reader = new ZipReader(new Uint8ArrayReader(fileContent));
+      const entries = await reader.getEntries();
 
-    try {
-      const [codeContent, metadataContent, readmeContent] = await Promise.all([
-        fs.read(codeUri),
-        fs.read(metadataUri),
-        fs.read(readmeUri),
-      ]);
+      for (const entry of entries) {
+        if (entry.filename === "metadata.msgpack") {
+          const metadataRawData = await entry.getData!(new Uint8ArrayWriter());
+          this.metadata = decoder.decode(metadataRawData) as PrgMetadata;
+        } else if (entry.filename === "README.md") {
+          const readmeRawData = await entry.getData!(new Uint8ArrayWriter());
+          this.readmeContent = new TextDecoder().decode(readmeRawData);
+        } else if (entry.filename === "extension.js") {
+          const codeRawData = await entry.getData!(new Uint8ArrayWriter());
+          this.code = new TextDecoder().decode(codeRawData);
+        }
+      }
 
-      this.code = new TextDecoder().decode(codeContent);
-      this.metadata = decoder.decode(metadataContent) as PrgMetadata;
-      this.readmeContent = new TextDecoder().decode(readmeContent);
-    } catch (e) {
-      console.error("Failed to load extension from folder", e);
-      toast.error("加载扩展失败，请检查文件结构是否正确");
-    }
+      if (this.metadata.extension?.id ?? "" !== this.uri.path.split("/").slice(-1)[0].replace(".prg", "")) {
+        const newUri = this.uri.with({
+          path: this.uri.path.replace(/\/?[^/]*$/, `/${this.metadata.extension?.id || "unknown"}.prg`),
+        });
+        this.fs.rename(this.uri, newUri);
+        this._uri = newUri;
+        toast.warning("扩展包名称与实际扩展 ID 不一致，已自动重命名");
+      }
+    } else {
+      // 直接读文件夹
+      const codeUri = this.uri.with({ path: this.uri.path + "/extension.js" });
+      const metadataUri = this.uri.with({ path: this.uri.path + "/metadata.msgpack" });
+      const readmeUri = this.uri.with({ path: this.uri.path + "/README.md" });
 
-    if (this.metadata.extension?.id ?? "" !== this.uri.path.split("/").slice(-1)[0]) {
-      const newUri = this.uri.with({
-        path: this.uri.path.replace(/\/?[^/]*$/, `/${this.metadata.extension?.id || "unknown"}`),
-      });
-      this.fs.rename(this.uri, newUri);
-      this._uri = newUri;
-      toast.warning("扩展文件夹名称与实际扩展 ID 不一致，已自动重命名");
+      try {
+        const [codeContent, metadataContent, readmeContent] = await Promise.all([
+          fs.read(codeUri),
+          fs.read(metadataUri),
+          fs.read(readmeUri),
+        ]);
+
+        this.code = new TextDecoder().decode(codeContent);
+        this.metadata = decoder.decode(metadataContent) as PrgMetadata;
+        this.readmeContent = new TextDecoder().decode(readmeContent);
+      } catch (e) {
+        console.error("Failed to load extension from folder", e);
+        toast.error("加载扩展失败，请检查文件结构是否正确");
+      }
+
+      if (this.metadata.extension?.id ?? "" !== this.uri.path.split("/").slice(-1)[0]) {
+        const newUri = this.uri.with({
+          path: this.uri.path.replace(/\/?[^/]*$/, `/${this.metadata.extension?.id || "unknown"}`),
+        });
+        this.fs.rename(this.uri, newUri);
+        this._uri = newUri;
+        toast.warning("扩展文件夹名称与实际扩展 ID 不一致，已自动重命名");
+      }
     }
   }
 
@@ -144,6 +175,18 @@ export class Extension extends Tab {
               ) : (
                 <Button
                   onClick={async () => {
+                    if (!(await Tutorials.isFinished("thirdPartyExtensionsWarning"))) {
+                      const s = await Dialog.buttons(
+                        "安装第三方扩展",
+                        "在您继续安装第三方扩展之前，请务必仔细阅读并理解以下声明：\nProject Graph 作为一个开放生态系统，允许用户通过扩展增强其功能。您当前尝试安装的扩展程序由第三方开发者独立提供，未经 Project Graph 开发者审核、测试或验证，其安全性、稳定性及对隐私保护的合规性无法得到保证。\n根据 GPL-3.0 的相关条款，本软件及其所有配套扩展均按「原样（AS IS）」提供，不附带任何形式的明示或暗示担保。在适用法律允许的最大范围内，开发者明确声明不承担任何关于适销性、特定用途适用性或不侵权的担保责任。您需自行承担因安装、运行此类扩展而可能导致的任何风险，包括但不限于数据丢失、系统损坏、隐私泄露或工作中断。\n一旦点击“确认安装”，即表示您已阅读并同意上述条款，并确认开发者不对任何因使用该第三方扩展而产生的直接或间接损害承担法律责任。",
+                        [
+                          { id: "cancel", label: "取消安装", variant: "outline" },
+                          { id: "proceed", label: "我已了解风险，继续安装且不再提醒", variant: "destructive" },
+                        ],
+                      );
+                      if (s === "cancel") return;
+                      await Tutorials.finish("thirdPartyExtensionsWarning");
+                    }
                     const base = await join(await appDataDir(), "extensions", self.metadata.extension?.id || "unknown");
                     await mkdir(base);
                     await writeFile(
