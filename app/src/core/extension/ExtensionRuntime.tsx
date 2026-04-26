@@ -11,7 +11,7 @@ export class ExtensionRuntime {
   constructor(public extension: Extension) {
     const blob = new Blob([comlinkMinJs + extension.code], { type: "application/javascript" });
     this.worker = new Worker(URL.createObjectURL(blob));
-    expose(extensionHostApiFactory(extension.metadata.extension?.name || "未知扩展"), this.worker);
+    expose(extensionHostApiFactory(extension), this.worker);
     this.remote = wrap(this.worker);
   }
 }

@@ -1,18 +1,25 @@
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import KeyBind from "@/components/ui/key-bind";
 import Markdown from "@/components/ui/markdown";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PrgMetadata } from "@/types/metadata";
 import { Decoder, Encoder } from "@msgpack/msgpack";
 import { appDataDir, join } from "@tauri-apps/api/path";
 import { mkdir, writeFile } from "@tauri-apps/plugin-fs";
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipReader } from "@zip.js/zip.js";
-import { Blocks } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { Blocks, Dot, Keyboard, KeyboardOff, SquareAsterisk, SquareRoundCorner, SquareStack } from "lucide-react";
+import React, { useEffect, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
+import { KeyBindsUI } from "../service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { Settings } from "../service/Settings";
 import { Tutorials } from "../service/Tourials";
 import { Tab } from "../Tab";
+import { ExtensionKeyBindManager } from "./ExtensionKeyBindManager";
 import { ExtensionManager } from "./ExtensionManager";
 
 export class Extension extends Tab {
@@ -106,6 +113,7 @@ export class Extension extends Tab {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this._component = function ExtensionComponent() {
+      const [, forceUpdate] = useReducer((x) => x + 1, 0);
       const [installed, setInstalled] = useState(false);
       const [disabledExtensions, setDisabledExtensions] = Settings.use("disabledExtensions");
       const disabled = disabledExtensions.includes(self.metadata.extension?.id || "");
@@ -140,6 +148,7 @@ export class Extension extends Tab {
                     variant="outline"
                     onClick={async () => {
                       if (await Dialog.confirm("确认卸载", "将彻底删除此扩展，无法恢复。请确认是否继续。")) {
+                        ExtensionKeyBindManager.unregisterAll(self.metadata.extension?.id || "");
                         await self.fs.remove(
                           URI.file(await join(await appDataDir(), "extensions", self.metadata.extension?.id || "")),
                         );
@@ -164,6 +173,7 @@ export class Extension extends Tab {
                   ) : (
                     <Button
                       onClick={async () => {
+                        ExtensionKeyBindManager.unregisterAll(self.metadata.extension?.id || "");
                         setDisabledExtensions([...disabledExtensions, self.metadata.extension?.id || ""]);
                         toast.success("扩展已禁用");
                       }}
@@ -205,11 +215,125 @@ export class Extension extends Tab {
             </div>
           </div>
 
-          {self.readmeContent && (
-            <div className="max-w-none">
+          <Tabs defaultValue="readme" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="readme">README</TabsTrigger>
+              {installed && (
+                <>
+                  <TabsTrigger value="settings">设置</TabsTrigger>
+                  <TabsTrigger value="keybinds">快捷键</TabsTrigger>
+                </>
+              )}
+            </TabsList>
+            <TabsContent value="readme">
               <Markdown source={self.readmeContent} />
-            </div>
-          )}
+            </TabsContent>
+            {installed && (
+              <>
+                <TabsContent value="settings">
+                  <div className="space-y-4">
+                    {Object.entries(Settings.extensionSettings[self.metadata.extension?.id || ""] || {}).length ===
+                    0 ? (
+                      <p className="text-muted-foreground">该扩展没有设置项</p>
+                    ) : (
+                      Object.entries(Settings.extensionSettings[self.metadata.extension?.id || ""] || {}).map(
+                        ([key, value]) => (
+                          <Field key={key} title={key} description={`扩展 ${self.metadata.extension?.name} 的设置项`}>
+                            {typeof value === "boolean" ? (
+                              <Switch
+                                checked={value}
+                                onCheckedChange={(checked) => {
+                                  const extensionId = self.metadata.extension?.id || "";
+                                  const current = Settings.extensionSettings[extensionId] ?? {};
+                                  Settings.extensionSettings = {
+                                    ...Settings.extensionSettings,
+                                    [extensionId]: {
+                                      ...current,
+                                      [key]: checked,
+                                    },
+                                  };
+                                }}
+                              />
+                            ) : (
+                              <Input
+                                value={String(value)}
+                                onChange={(e) => {
+                                  const extensionId = self.metadata.extension?.id || "";
+                                  const current = Settings.extensionSettings[extensionId] ?? {};
+                                  Settings.extensionSettings = {
+                                    ...Settings.extensionSettings,
+                                    [extensionId]: {
+                                      ...current,
+                                      [key]: e.target.value,
+                                    },
+                                  };
+                                }}
+                              />
+                            )}
+                          </Field>
+                        ),
+                      )
+                    )}
+                  </div>
+                </TabsContent>
+                <TabsContent value="keybinds">
+                  <div className="space-y-1">
+                    {(() => {
+                      const extensionId = self.metadata.extension?.id || "";
+                      const prefix = `ext:${extensionId}:`;
+                      const extensionKeyBinds = KeyBindsUI.getAllUIKeyBinds().filter((kb) => kb.id.startsWith(prefix));
+
+                      if (extensionKeyBinds.length === 0) {
+                        return <p className="text-muted-foreground">该扩展没有注册快捷键</p>;
+                      }
+
+                      return extensionKeyBinds.map((kb) => {
+                        const getKeyBindIcon = () => {
+                          if (!kb.key || kb.key.trim() === "") return <Dot />;
+                          if (!kb.isEnabled) return <KeyboardOff />;
+                          if (kb.isContinuous) return <SquareAsterisk />;
+                          const keyParts = kb.key.trim().split(" ");
+                          if (keyParts.length > 1) return <SquareStack />;
+                          return kb.key.includes("-") ? <Keyboard /> : <SquareRoundCorner />;
+                        };
+
+                        return (
+                          <Field
+                            key={kb.id}
+                            icon={getKeyBindIcon()}
+                            title={kb.id.replace(prefix, "")}
+                            description={`快捷键 ID: ${kb.id}`}
+                            className="border-accent border-b"
+                          >
+                            <div className="flex items-center gap-2">
+                              <KeyBind
+                                defaultValue={kb.key}
+                                isContinuous={kb.isContinuous}
+                                onChange={(value) => {
+                                  KeyBindsUI.changeOneUIKeyBind(kb.id, value);
+                                }}
+                              />
+                              <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground text-sm">启用</span>
+                                <Switch
+                                  checked={kb.isEnabled}
+                                  onCheckedChange={async () => {
+                                    await KeyBindsUI.toggleEnabled(kb.id);
+                                    forceUpdate();
+                                    toast.info("状态已更新");
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </Field>
+                        );
+                      });
+                    })()}
+                  </div>
+                </TabsContent>
+              </>
+            )}
+          </Tabs>
         </div>
       );
     };

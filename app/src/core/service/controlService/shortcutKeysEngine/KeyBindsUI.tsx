@@ -147,7 +147,13 @@ export namespace KeyBindsUI {
     isContinuous?: boolean,
   ) {
     if (registerSet.has(id)) {
-      // 防止开发时热更新重复注册
+      // 检查是否已经是同 ID 的快捷键，如果是，则更新它（用于扩展重新认领逻辑）
+      const index = allUIKeyBinds.findIndex((kb) => kb.id === id);
+      if (index !== -1) {
+        allUIKeyBinds[index] = { id, key, isEnabled, onPress, onRelease, isContinuous };
+        notifyKeyBindChange(id, allUIKeyBinds[index]);
+        return;
+      }
       console.warn(`Keybind ${id} 已经注册过了`);
       return;
     }
@@ -157,6 +163,16 @@ export namespace KeyBindsUI {
 
     // 通知监听器有新的快捷键注册
     notifyKeyBindChange(id, keyBind);
+  }
+
+  /**
+   * 注销一个快捷键
+   */
+  export function unregisterOneUIKeyBind(id: string) {
+    if (!registerSet.has(id)) return;
+    registerSet.delete(id);
+    allUIKeyBinds = allUIKeyBinds.filter((kb) => kb.id !== id);
+    // 这里不需要特别通知，因为 UI 应该会随之消失或不再响应
   }
 
   /**

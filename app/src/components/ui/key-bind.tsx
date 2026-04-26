@@ -3,7 +3,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { formatEmacsKey } from "@/utils/emacs";
 import { formatKeyBindSequence, formatSigalKeyForDisplay, getModifierDisplayTexts } from "@/utils/keyDisplay";
 import { Check, Delete, Info } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -85,6 +85,15 @@ export default function KeyBind({
     setChoosing(false);
     onChange(value.trim());
   }, [handleKeyDown, handleMouseDown, handleMouseUp, handleWheel, value, onChange]);
+
+  useEffect(() => {
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("wheel", handleWheel);
+    };
+  }, [handleKeyDown, handleMouseDown, handleMouseUp, handleWheel]);
 
   // 保持 ref 最新
   endInputRef.current = endInputCallback;

@@ -2,8 +2,13 @@ import { Dialog } from "@/components/ui/dialog";
 import { Settings } from "@/core/service/Settings";
 import { fetch } from "@tauri-apps/plugin-http";
 import { toast } from "sonner";
+import { Extension } from "../Extension";
+import { ExtensionKeyBindManager } from "../ExtensionKeyBindManager";
 
-export function extensionHostApiFactory(extensionName: string) {
+export function extensionHostApiFactory(extension: Extension) {
+  const extensionName = extension.metadata.extension?.name || "未知扩展";
+  const extensionId = extension.metadata.extension?.id || "unknown";
+
   return {
     //region toast
     async toast(message: string) {
@@ -54,13 +59,13 @@ export function extensionHostApiFactory(extensionName: string) {
 
     //region 设置
     async settings_getOwn(key: string) {
-      return Settings.extensionSettings[extensionName]?.[key];
+      return Settings.extensionSettings[extensionId]?.[key];
     },
     async settings_setOwn(key: string, value: unknown) {
-      const current = Settings.extensionSettings[extensionName] ?? {};
+      const current = Settings.extensionSettings[extensionId] ?? {};
       Settings.extensionSettings = {
         ...Settings.extensionSettings,
-        [extensionName]: {
+        [extensionId]: {
           ...current,
           [key]: value,
         },
@@ -77,6 +82,20 @@ export function extensionHostApiFactory(extensionName: string) {
         throw new Error("出于安全考虑，扩展无法修改 aiApiBaseUrl 设置项");
       }
       return ((Settings as any)[key] = value);
+    },
+
+    //region 快捷键
+    async keybinds_register(
+      id: string,
+      defaultKey: string,
+      onPress: () => void,
+      onRelease?: () => void,
+      isContinuous?: boolean,
+    ) {
+      return ExtensionKeyBindManager.register(extensionId, id, defaultKey, onPress, onRelease, isContinuous);
+    },
+    async keybinds_unregisterAll() {
+      return ExtensionKeyBindManager.unregisterAll(extensionId);
     },
   };
 }
