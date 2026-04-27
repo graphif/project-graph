@@ -16,6 +16,7 @@ import type { MultiTargetUndirectedEdgeRenderer } from "@/core/render/canvas2d/e
 import type { ReferenceBlockRenderer } from "@/core/render/canvas2d/entityRenderer/ReferenceBlockRenderer";
 import type { SectionRenderer } from "@/core/render/canvas2d/entityRenderer/section/SectionRenderer";
 import type { SvgNodeRenderer } from "@/core/render/canvas2d/entityRenderer/svgNode/SvgNodeRenderer";
+import type { LatexNodeRenderer } from "@/core/render/canvas2d/entityRenderer/latexNode/LatexNodeRenderer";
 import type { TextNodeRenderer } from "@/core/render/canvas2d/entityRenderer/textNode/TextNodeRenderer";
 import type { UrlNodeRenderer } from "@/core/render/canvas2d/entityRenderer/urlNode/urlNodeRenderer";
 import type { Renderer } from "@/core/render/canvas2d/renderer";
@@ -557,6 +558,7 @@ declare module "./Project" {
     verticalPolyEdgeRenderer: VerticalPolyEdgeRenderer;
     sectionRenderer: SectionRenderer;
     svgNodeRenderer: SvgNodeRenderer;
+    latexNodeRenderer: LatexNodeRenderer;
     textNodeRenderer: TextNodeRenderer;
     urlNodeRenderer: UrlNodeRenderer;
     backgroundRenderer: BackgroundRenderer;

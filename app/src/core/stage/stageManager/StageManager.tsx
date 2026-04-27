@@ -13,6 +13,7 @@ import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
 import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
@@ -106,6 +107,9 @@ export class StageManager {
   }
   getSvgNodes(): SvgNode[] {
     return this.project.stage.filter((node) => node instanceof SvgNode);
+  }
+  getLatexNodes(): LatexNode[] {
+    return this.project.stage.filter((node) => node instanceof LatexNode) as LatexNode[];
   }
 
   getStageObjects(): StageObject[] {

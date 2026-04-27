@@ -12,6 +12,7 @@ import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
 import { activeTabAtom, isWindowMaxsizedAtom, tabsAtom, store } from "@/state";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { LogicalSize } from "@tauri-apps/api/dpi";
@@ -1558,13 +1559,16 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "C--",
     onPress: (project) => {
       if (!project!.keyboardOnlyEngine.isOpenning()) return;
-      const selectedTextNodes = project!.stageManager
-        .getSelectedEntities()
-        .filter((node) => node instanceof TextNode) as TextNode[];
-      if (selectedTextNodes.length === 0) return;
+      const selectedNodes = project!.stageManager.getSelectedEntities();
+      const textNodes = selectedNodes.filter((node) => node instanceof TextNode) as TextNode[];
+      const latexNodes = selectedNodes.filter((node) => node instanceof LatexNode) as LatexNode[];
+      if (textNodes.length === 0 && latexNodes.length === 0) return;
       project!.historyManager.recordStep();
-      for (const node of selectedTextNodes) {
+      for (const node of textNodes) {
         node.decreaseFontSize(TextNodeSmartTools.getAnchorRateForTextNode(project!, node));
+      }
+      for (const node of latexNodes) {
+        node.decreaseFontSize();
       }
     },
   },
@@ -1573,13 +1577,16 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "C-=",
     onPress: (project) => {
       if (!project!.keyboardOnlyEngine.isOpenning()) return;
-      const selectedTextNodes = project!.stageManager
-        .getSelectedEntities()
-        .filter((node) => node instanceof TextNode) as TextNode[];
-      if (selectedTextNodes.length === 0) return;
+      const selectedNodes = project!.stageManager.getSelectedEntities();
+      const textNodes = selectedNodes.filter((node) => node instanceof TextNode) as TextNode[];
+      const latexNodes = selectedNodes.filter((node) => node instanceof LatexNode) as LatexNode[];
+      if (textNodes.length === 0 && latexNodes.length === 0) return;
       project!.historyManager.recordStep();
-      for (const node of selectedTextNodes) {
+      for (const node of textNodes) {
         node.increaseFontSize(TextNodeSmartTools.getAnchorRateForTextNode(project!, node));
+      }
+      for (const node of latexNodes) {
+        node.increaseFontSize();
       }
     },
   },

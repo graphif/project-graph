@@ -17,6 +17,10 @@ import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
+import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
+import LatexEditWindow from "@/sub/LatexEditWindow";
+import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Rectangle } from "@graphif/shapes";
 import AutoCompleteWindow from "@/sub/AutoCompleteWindow";
 import NodeDetailsWindow from "@/sub/NodeDetailsWindow";
 import { Direction } from "@/types/directions";
@@ -73,6 +77,14 @@ export class ControllerUtils {
     );
     // RectangleElement.div(rectView, this.project.stageStyleManager.currentStyle.CollideBoxSelected);
     let lastAutoCompleteWindowId: string;
+    // 实时 LaTeX 预览 div（输入 $...$ 时在节点上方显示）
+    let latexPreviewDiv: HTMLDivElement | null = null;
+    const removeLatexPreview = () => {
+      if (latexPreviewDiv) {
+        latexPreviewDiv.remove();
+        latexPreviewDiv = null;
+      }
+    };
     this.project.inputElement
       .textarea(
         clickedNode.text,
@@ -105,6 +117,50 @@ export class ControllerUtils {
           }
 
           this.finishChangeTextNode(clickedNode);
+
+          // 实时 LaTeX 预览：检测 $...$ 格式
+          const trimmedText = text.trim();
+          if (trimmedText.startsWith("$") && trimmedText.length > 1) {
+            const latexContent =
+              trimmedText.startsWith("$") && trimmedText.endsWith("$") && trimmedText.length > 2
+                ? trimmedText.slice(1, -1)
+                : trimmedText.slice(1); // 还没输入结尾的 $
+            try {
+              const { default: katex } = await import("katex");
+              const previewHtml = katex.renderToString(latexContent || "\\ldots", {
+                throwOnError: false,
+                displayMode: true,
+                output: "htmlAndMathml",
+              });
+              const currentRectView = this.project.renderer.transformWorld2View(
+                clickedNode.collisionBox.getRectangle(),
+              );
+              if (!latexPreviewDiv) {
+                latexPreviewDiv = document.createElement("div");
+                latexPreviewDiv.style.cssText = `
+                  position: fixed;
+                  z-index: 9999;
+                  background: var(--background, white);
+                  border: 1px solid rgba(128,128,128,0.4);
+                  border-radius: 6px;
+                  padding: 8px 12px;
+                  pointer-events: none;
+                  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                  max-width: 500px;
+                `;
+                document.body.appendChild(latexPreviewDiv);
+              }
+              latexPreviewDiv.innerHTML = previewHtml;
+              // 定位到节点正上方
+              const previewHeight = latexPreviewDiv.offsetHeight || 60;
+              latexPreviewDiv.style.left = `${currentRectView.left}px`;
+              latexPreviewDiv.style.top = `${currentRectView.top - previewHeight - 8}px`;
+            } catch {
+              // 忽略渲染错误
+            }
+          } else {
+            removeLatexPreview();
+          }
         },
         {
           position: "fixed",
@@ -133,6 +189,8 @@ export class ControllerUtils {
       )
       .then(async () => {
         SubWindow.close(lastAutoCompleteWindowId);
+        // 移除 LaTeX 实时预览 div
+        removeLatexPreview();
         clickedNode!.isEditing = false;
         this.project.controller.isCameraLocked = false;
         if (clickedNode.text !== textBeforeEdit) {
@@ -142,6 +200,8 @@ export class ControllerUtils {
         // 实验
         this.finishChangeTextNode(clickedNode);
         await this.autoChangeTextNodeToReferenceBlock(this.project, clickedNode);
+        // 检测 $...$ 格式，自动转换为 LaTeX 公式节点
+        await this.autoChangeTextNodeToLatexNode(this.project, clickedNode);
         // 文本节点退出编辑模式后，检查是否需要自动格式化树形结构
         if (Settings.textNodeAutoFormatTreeWhenExitEdit) {
           // 格式化树形结构
@@ -729,6 +789,49 @@ export class ControllerUtils {
 
     // 在原项目中创建引用块
     await TextNodeSmartTools.changeTextNodeToReferenceBlock(project);
+  }
+
+  /**
+   * 自动将文本节点转换为 LaTeX 公式节点
+   * 检测文本是否以 $ 开头和结尾（且长度 > 2），若是则创建 LatexNode 替换 TextNode
+   */
+  private async autoChangeTextNodeToLatexNode(project: Project, textNode: TextNode) {
+    const text = textNode.text.trim();
+    // 格式检测：以 $ 开头和结尾，且中间有内容
+    if (!(text.startsWith("$") && text.endsWith("$") && text.length > 2)) {
+      return;
+    }
+    // 防止误匹配 $$ 空公式（即 text = "$$"）
+    const latexSource = text.slice(1, -1).trim();
+    if (!latexSource) {
+      return;
+    }
+
+    const location = textNode.collisionBox.getRectangle().location.clone();
+
+    // 创建 LatexNode，放置在原 TextNode 相同位置
+    const latexNode = new LatexNode(project, {
+      latexSource,
+      fontScaleLevel: 0,
+      collisionBox: new CollisionBox([new Rectangle(location, Vector.getZero())]),
+    });
+
+    // 删除旧 TextNode（会自动清理关联边）
+    project.deleteManager.deleteEntities([textNode]);
+
+    // 添加新 LatexNode
+    project.stageManager.add(latexNode);
+    latexNode.isSelected = true;
+
+    project.historyManager.recordStep();
+  }
+
+  /**
+   * 编辑 LaTeX 公式节点（双击时调用）
+   * 弹出编辑小窗口
+   */
+  editLatexNode(node: LatexNode) {
+    LatexEditWindow.open(this.project, node);
   }
 
   // 同步更改孪生节点

@@ -6,6 +6,7 @@ import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
+import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
@@ -36,7 +37,7 @@ export class EntityRenderer {
   private tickNumber = 0;
 
   renderAllSectionsBackground(viewRectangle: Rectangle) {
-    if (this.sectionSortedZIndex.length != this.project.stageManager.getSections().length) {
+    if (this.sectionSortedZIndex.length !== this.project.stageManager.getSections().length) {
       this.sortSectionsByZIndex();
     } else {
       // 假设fps=60，则10秒更新一次
@@ -162,6 +163,8 @@ export class EntityRenderer {
       this.renderPenStroke(entity);
     } else if (entity instanceof SvgNode) {
       this.project.svgNodeRenderer.render(entity);
+    } else if (entity instanceof LatexNode) {
+      this.project.latexNodeRenderer.render(entity);
     } else if (entity instanceof ReferenceBlockNode) {
       this.project.referenceBlockRenderer.render(entity);
     }

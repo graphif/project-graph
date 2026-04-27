@@ -7,6 +7,7 @@ import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
 import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
@@ -38,6 +39,7 @@ export class DeleteManager {
     this.registerHandler(UrlNode, this.deleteUrlNode.bind(this));
     this.registerHandler(PenStroke, this.deletePenStroke.bind(this));
     this.registerHandler(SvgNode, this.deleteSvgNode.bind(this));
+    this.registerHandler(LatexNode, this.deleteLatexNode.bind(this));
     this.registerHandler(ReferenceBlockNode, this.deleteReferenceBlockNode.bind(this));
     this.registerHandler(MultiTargetUndirectedEdge, this.deleteMultiTargetUndirectedEdge.bind(this));
   }
@@ -58,6 +60,14 @@ export class DeleteManager {
   }
 
   private deleteSvgNode(entity: SvgNode) {
+    if (this.project.stageManager.getEntities().includes(entity)) {
+      this.project.stageManager.delete(entity);
+      // 删除所有相关的边
+      this.deleteEntityAfterClearAssociation(entity);
+    }
+  }
+
+  private deleteLatexNode(entity: LatexNode) {
     if (this.project.stageManager.getEntities().includes(entity)) {
       this.project.stageManager.delete(entity);
       // 删除所有相关的边

@@ -4,6 +4,7 @@ import { ControllerClass } from "@/core/service/controlService/controller/Contro
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
+import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 import { open } from "@tauri-apps/plugin-shell";
@@ -40,6 +41,8 @@ export class ControllerNodeEditClass extends ControllerClass {
 
     if (clickedEntity instanceof TextNode) {
       this.project.controllerUtils.editTextNode(clickedEntity, Settings.textNodeSelectAllWhenStartEditByMouseClick);
+    } else if (clickedEntity instanceof LatexNode) {
+      this.project.controllerUtils.editLatexNode(clickedEntity);
     } else if (clickedEntity instanceof UrlNode) {
       const diffNodeLeftTopLocation = pressLocation.subtract(clickedEntity.rectangle.leftTop);
       if (diffNodeLeftTopLocation.y < UrlNode.titleHeight) {
