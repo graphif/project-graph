@@ -72,6 +72,7 @@ export class KeyboardOnlyEngine {
         this.addFailEffect();
       }
     } else if (event.key === "Escape") {
+      this.project.keyboardOnlyGraphEngine.createCancel();
       // 取消全部选择
       for (const stageObject of this.project.stageManager.getStageObjects()) {
         stageObject.isSelected = false;

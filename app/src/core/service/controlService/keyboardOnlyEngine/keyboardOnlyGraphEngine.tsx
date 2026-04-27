@@ -20,6 +20,24 @@ export class KeyboardOnlyGraphEngine {
   }
 
   tick() {
+    // --- 退出选中状态后，关闭激光线
+    if (this._isCreating) {
+      if (!this.project.keyboardOnlyEngine.isOpenning()) {
+        this.createCancel();
+      } else {
+        const selectConnectableEntities = this.project.stageManager
+          .getConnectableEntity()
+          .filter((node) => node.isSelected);
+        if (
+          selectConnectableEntities.length !== 1 ||
+          this._creatingFromUUID === null ||
+          selectConnectableEntities[0].uuid !== this._creatingFromUUID
+        ) {
+          this.createCancel();
+        }
+      }
+    }
+    // ---
     this.targetLocationController.logicTick();
   }
 
@@ -41,6 +59,10 @@ export class KeyboardOnlyGraphEngine {
   }
 
   private _isCreating = false;
+  private _creatingFromUUID: string | null = null;
+  creatingFromUUID(): string | null {
+    return this._creatingFromUUID;
+  }
   /**
    * 当前是否是按下Tab键不松开的情况
    * @returns
@@ -61,25 +83,26 @@ export class KeyboardOnlyGraphEngine {
       // 已经在创建状态，不要重复创建
       return;
     }
-    this._isCreating = true;
-    // 记录上一次按下Tab键的时间
-    this.lastPressTabTime = Date.now();
-    // 计算并更新虚拟目标位置
     const selectConnectableEntities = this.project.stageManager
       .getConnectableEntity()
       .filter((node) => node.isSelected);
-
-    // 如果只有一个节点被选中，则生成到右边的位置
-    if (selectConnectableEntities.length === 1) {
-      // 更新方向控制器的位置
-      this.targetLocationController.resetLocation(
-        selectConnectableEntities[0].collisionBox.getRectangle().center.add(NewTargetLocationSelector.diffLocation),
-      );
-      // 清空加速度和速度
-      this.targetLocationController.clearSpeedAndAcc();
-      // 最后更新虚拟目标位置
-      NewTargetLocationSelector.onTabDown(selectConnectableEntities[0]);
+    if (selectConnectableEntities.length !== 1) {
+      return;
     }
+    this._isCreating = true;
+    this._creatingFromUUID = selectConnectableEntities[0].uuid;
+    // 记录上一次按下Tab键的时间
+    this.lastPressTabTime = Date.now();
+    // 计算并更新虚拟目标位置
+    // 如果只有一个节点被选中，则生成到右边的位置
+    // 更新方向控制器的位置
+    this.targetLocationController.resetLocation(
+      selectConnectableEntities[0].collisionBox.getRectangle().center.add(NewTargetLocationSelector.diffLocation),
+    );
+    // 清空加速度和速度
+    this.targetLocationController.clearSpeedAndAcc();
+    // 最后更新虚拟目标位置
+    NewTargetLocationSelector.onTabDown(selectConnectableEntities[0]);
   }
   private lastPressTabTime = 0;
 
@@ -95,7 +118,9 @@ export class KeyboardOnlyGraphEngine {
   }
 
   async createFinished() {
+    const creatingFromUUID = this._creatingFromUUID;
     this._isCreating = false;
+    this._creatingFromUUID = null;
     if (this.getPressTabTimeInterval() < 100) {
       toast.error("节点生长快捷键松开过快");
       return;
@@ -105,6 +130,13 @@ export class KeyboardOnlyGraphEngine {
     const selectConnectableEntities = this.project.stageManager
       .getConnectableEntity()
       .filter((node) => node.isSelected);
+    if (
+      creatingFromUUID === null ||
+      selectConnectableEntities.length !== 1 ||
+      selectConnectableEntities[0].uuid !== creatingFromUUID
+    ) {
+      return;
+    }
     if (this.isTargetLocationHaveEntity()) {
       // 连接到之前的节点
       const entity = this.project.stageManager.findEntityByLocation(this.virtualTargetLocation());
@@ -156,8 +188,9 @@ export class KeyboardOnlyGraphEngine {
    * 取消创建
    */
   createCancel(): void {
-    // do nothing
     this._isCreating = false;
+    this._creatingFromUUID = null;
+    this.lastPressTabTime = 0;
   }
 
   /**
