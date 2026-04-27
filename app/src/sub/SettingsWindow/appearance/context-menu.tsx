@@ -1,6 +1,5 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -201,7 +200,7 @@ export default function ContextMenuPage() {
   };
 
   const addItem = (id: string) => {
-    const newItem = { type: "item", id, visible: true, icon: "Circle" };
+    const newItem = { type: "item", id, visible: true };
     saveConfig([...config, newItem]);
     toast.success(`已添加: ${id}`);
   };
@@ -384,22 +383,6 @@ export default function ContextMenuPage() {
                           onChange={(e) => updateItemProperty(selectedPath!, { label: e.target.value })}
                         />
                       </div>
-
-                      <div className="flex flex-col gap-1.5">
-                        <Label>图标 (Lucide)</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            value={selectedItem.icon || ""}
-                            placeholder="例如: Copy"
-                            onChange={(e) => updateItemProperty(selectedPath!, { icon: e.target.value })}
-                          />
-                          {selectedItem.icon && (
-                            <div className="bg-muted flex size-9 shrink-0 items-center justify-center rounded-md border">
-                              <DynamicIcon name={selectedItem.icon} className="size-4" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
                     </>
                   )}
 
@@ -533,11 +516,14 @@ function MenuEditorItem({ item, path, isSelected, onDelete, onSelect, onToggleVi
           ) : (
             <>
               <div className="flex size-5 items-center justify-center">
-                {item.icon ? (
-                  <DynamicIcon name={item.icon} className="size-3.5" />
-                ) : (
-                  <Type className="text-muted-foreground/50 size-3.5" />
-                )}
+                {(() => {
+                  const kb = staticKeyBinds.find((k) => k.id === item.id);
+                  if (kb?.icon) {
+                    const IconComp = kb.icon;
+                    return <IconComp className="size-3.5" />;
+                  }
+                  return <Type className="text-muted-foreground/50 size-3.5" />;
+                })()}
               </div>
               <div className="flex flex-1 items-center justify-between overflow-hidden">
                 <span className="truncate text-sm">{item.label || item.id}</span>

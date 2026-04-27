@@ -9,9 +9,6 @@ import {
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import KeyBind from "@/components/ui/key-bind";
-import { Switch } from "@/components/ui/switch";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { AlertCircle, AlignStartVertical, Focus, LineSquiggle, TextCursorInput } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -21,13 +18,20 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { allKeyBinds, getKeyBindTypeById } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import Fuse from "fuse.js";
+import { AlertCircle, AlignStartVertical, Focus, LineSquiggle, TextCursorInput } from "lucide-react";
 
+import { transEmacsKeyWinToMac } from "@/utils/emacs";
+import { isMac } from "@/utils/platform";
+import { createStore } from "@/utils/store";
 import {
   AppWindow,
   Dot,
+  FileOutput,
   FileQuestion,
   Image,
   Keyboard,
@@ -47,13 +51,9 @@ import {
   SquareRoundCorner,
   SquareStack,
   SunMoon,
-  FileOutput,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { createStore } from "@/utils/store";
-import { isMac } from "@/utils/platform";
-import { transEmacsKeyWinToMac } from "@/utils/emacs";
 
 interface KeyBindData {
   id: string;
@@ -204,6 +204,11 @@ export default function KeyBindsPage() {
 
       // 确定显示的图标
       const getKeyBindIcon = () => {
+        // 如果 shortcutKeysRegister 里的 allKeyBinds 有定义图标，优先使用
+        if (keyBind?.icon) {
+          const IconComponent = keyBind.icon;
+          return <IconComponent />;
+        }
         // 未绑定快捷键
         if (!keyBindData?.key || keyBindData.key.trim() === "") {
           return <Dot />;

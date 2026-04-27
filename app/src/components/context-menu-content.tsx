@@ -6,9 +6,9 @@ import {
   ContextMenuSubContent,
   ContextMenuSubTrigger,
 } from "@/components/ui/context-menu";
-import { DynamicIcon } from "@/components/ui/dynamic-icon";
 import { Project } from "@/core/Project";
 import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
+import { allKeyBinds } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import { Settings } from "@/core/service/Settings";
 import { activeTabAtom } from "@/state";
 import { useAtom } from "jotai";
@@ -37,6 +37,17 @@ export default function MyContextMenuContent() {
   const renderItem = (itemConfig: (typeof Settings)["contextMenuConfig"][number]) => {
     if (!itemConfig.visible) return null;
 
+    const getIcon = (itemId?: string) => {
+      if (itemId) {
+        const kb = allKeyBinds.find((k) => k.id === itemId);
+        if (kb?.icon) {
+          const IconComp = kb.icon;
+          return <IconComp />;
+        }
+      }
+      return null;
+    };
+
     if (itemConfig.type === "separator") {
       return <div key={itemConfig.id} className="bg-border my-1 h-px" />;
     }
@@ -47,7 +58,7 @@ export default function MyContextMenuContent() {
           {itemConfig.children?.map((it) => (
             <KeyTooltip key={`tooltip-${it.id}`} keyId={it.id}>
               <Button variant="ghost" size="icon" onClick={() => KeyBindsUI.getUIKeyBind(it.id)?.onPress?.(p)}>
-                <DynamicIcon name={it.icon} />
+                {getIcon(it.id)}
               </Button>
             </KeyTooltip>
           ))}
@@ -71,7 +82,7 @@ export default function MyContextMenuContent() {
                 className="size-6"
                 onClick={() => KeyBindsUI.getUIKeyBind(it.id)?.onPress?.(p)}
               >
-                <DynamicIcon name={it.icon} />
+                {getIcon(it.id)}
               </Button>
             </KeyTooltip>
           ))}
@@ -83,7 +94,7 @@ export default function MyContextMenuContent() {
       return (
         <Sub key={itemConfig.id}>
           <SubTrigger>
-            {itemConfig.icon && <DynamicIcon name={itemConfig.icon} className="mr-2 size-4" />}
+            {getIcon(itemConfig.id)}
             {itemConfig.label || t(itemConfig.id) || itemConfig.id}
           </SubTrigger>
           <SubContent>{itemConfig.children?.map((child: any) => renderItem(child))}</SubContent>
@@ -98,7 +109,7 @@ export default function MyContextMenuContent() {
 
     return (
       <Item key={itemConfig.id} onClick={() => action?.(p)} disabled={!action}>
-        {itemConfig.icon && <DynamicIcon name={itemConfig.icon} />}
+        {getIcon(itemConfig.id)}
         {itemConfig.label || t(itemConfig.id) || itemConfig.id}
         {shortcut && <ContextMenuShortcut>{shortcut}</ContextMenuShortcut>}
       </Item>
