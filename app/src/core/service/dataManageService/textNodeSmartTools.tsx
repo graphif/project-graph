@@ -474,7 +474,6 @@ export namespace TextNodeSmartTools {
       } else {
         node.rename("✅ " + node.text);
       }
-      project.controllerUtils.finishChangeTextNode(node);
     }
     project.stageManager.updateReferences();
   }
@@ -494,7 +493,6 @@ export namespace TextNodeSmartTools {
       } else {
         node.rename("❌ " + node.text);
       }
-      project.controllerUtils.finishChangeTextNode(node);
     }
     project.stageManager.updateReferences();
   }

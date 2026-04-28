@@ -13,7 +13,6 @@ export class StageObjectColorManager {
     for (const node of this.project.stageManager.getTextNodes()) {
       if (node.isSelected) {
         node.color = color;
-        this.project.controllerUtils.finishChangeTextNode(node);
         // 向孪生兄弟同步 color
         this.project.syncAssociationManager.syncFrom(node, "color");
       }

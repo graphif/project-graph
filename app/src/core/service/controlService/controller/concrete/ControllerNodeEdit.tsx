@@ -9,6 +9,8 @@ import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 import { open } from "@tauri-apps/plugin-shell";
 import { MouseLocation } from "../../MouseLocation";
+import { Renderer } from "@/core/render/canvas2d/renderer";
+import LatexEditWindow from "@/sub/LatexEditWindow";
 /**
  * 包含编辑节点文字，编辑详细信息等功能的控制器
  *
@@ -42,11 +44,11 @@ export class ControllerNodeEditClass extends ControllerClass {
     if (clickedEntity instanceof TextNode) {
       this.project.controllerUtils.editTextNode(clickedEntity, Settings.textNodeSelectAllWhenStartEditByMouseClick);
     } else if (clickedEntity instanceof LatexNode) {
-      this.project.controllerUtils.editLatexNode(clickedEntity);
+      this.editLatexNode(clickedEntity);
     } else if (clickedEntity instanceof UrlNode) {
       const diffNodeLeftTopLocation = pressLocation.subtract(clickedEntity.rectangle.leftTop);
       if (diffNodeLeftTopLocation.y < UrlNode.titleHeight) {
-        this.project.controllerUtils.editUrlNodeTitle(clickedEntity);
+        this.editUrlNodeTitle(clickedEntity);
       } else {
         // 跳转链接
         open(clickedEntity.url);
@@ -100,4 +102,43 @@ export class ControllerNodeEditClass extends ControllerClass {
       }
     }
   };
+
+  private editUrlNodeTitle(clickedUrlNode: UrlNode) {
+    this.project.controller.isCameraLocked = true;
+    // 停止摄像机漂移
+    this.project.camera.stopImmediately();
+    // 编辑节点
+    clickedUrlNode.isEditingTitle = true;
+    this.project.inputElement
+      .input(
+        this.project.renderer
+          .transformWorld2View(clickedUrlNode.rectangle.location)
+          .add(Vector.same(Renderer.NODE_PADDING).multiply(this.project.camera.currentScale)),
+        clickedUrlNode.title,
+        (text) => {
+          clickedUrlNode?.rename(text);
+        },
+        {
+          fontSize: `${Renderer.FONT_SIZE * this.project.camera.currentScale}px`,
+          backgroundColor: "transparent",
+          color: this.project.stageStyleManager.currentStyle.StageObjectBorder.toString(),
+          outline: "none",
+          marginTop: `${-8 * this.project.camera.currentScale}px`,
+          width: "100vw",
+        },
+      )
+      .then(() => {
+        clickedUrlNode.isEditingTitle = false;
+        this.project.controller.isCameraLocked = false;
+        this.project.historyManager.recordStep();
+      });
+  }
+
+  /**
+   * 编辑 LaTeX 公式节点（双击时调用）
+   * 弹出编辑小窗口
+   */
+  editLatexNode(node: LatexNode) {
+    LatexEditWindow.open(this.project, node);
+  }
 }

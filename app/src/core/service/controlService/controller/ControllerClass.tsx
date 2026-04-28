@@ -1,6 +1,6 @@
-import { Project } from "@/core/Project";
-import { ViewOutlineFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewOutlineFlashEffect";
 import { Vector } from "@graphif/data-structures";
+import type { Project } from "@/core/Project";
+import { ViewOutlineFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewOutlineFlashEffect";
 
 /**
  * 控制器类，用于处理事件绑定和解绑
@@ -84,7 +84,7 @@ export class ControllerClass {
   private _mouseup = (event: PointerEvent) => {
     this.mouseup(event);
     // 检测双击
-    const now = new Date().getTime();
+    const now = Date.now();
     if (
       now - this.lastClickTime < 300 &&
       this.lastClickLocation.distance(new Vector(event.clientX, event.clientY)) < 20
