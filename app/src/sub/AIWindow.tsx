@@ -12,8 +12,16 @@ import { AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage } from
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { useAtom } from "jotai";
 import { Bot, ChevronRight, CornerDownRight, FolderOpen, Send, SettingsIcon, Square, User, Wrench } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
+
+let pendingInitialText: string | null = null;
+let pendingInitialPrompt: string | null = null;
+
+export function setAIWindowInitialText(text: string, prompt?: string) {
+  pendingInitialText = text;
+  pendingInitialPrompt = prompt || null;
+}
 
 export default function AIWindow() {
   const [tab] = useAtom(activeTabAtom);
@@ -31,6 +39,21 @@ export default function AIWindow() {
   const messagesElRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [showTokenCount] = Settings.use("aiShowTokenCount");
+
+  useEffect(() => {
+    if (pendingInitialText) {
+      const text = pendingInitialText;
+      const prompt = pendingInitialPrompt;
+      pendingInitialText = null;
+      pendingInitialPrompt = null;
+
+      if (prompt) {
+        setInputValue(`${prompt}\n\n---\n\n${text}`);
+      } else {
+        setInputValue(text);
+      }
+    }
+  }, []);
 
   function addMessage(message: BaseMessage) {
     setMessages((prev) => [...prev, message]);

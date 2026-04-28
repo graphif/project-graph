@@ -26,6 +26,7 @@ import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { activeTabAtom, contextMenuTooltipWordsAtom } from "@/state";
 import ColorPaletteWindow from "@/sub/ColorPaletteWindow";
 import ColorWindow from "@/sub/ColorWindow";
+import AIWindow, { setAIWindowInitialText } from "@/sub/AIWindow";
 import { Direction } from "@/types/directions";
 import { parseEmacsKey } from "@/utils/emacs";
 import { KeyBindsUI, type UIKeyBind } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
@@ -90,6 +91,7 @@ import {
   Repeat2,
   Save,
   Slash,
+  Sparkles,
   Spline,
   SquareDashedBottomCode,
   SquareDot,
@@ -750,6 +752,74 @@ export default function MyContextMenuContent() {
                   <Item onClick={() => TextNodeSmartTools.changeTextNodeToReferenceBlock(p)}>
                     <SquareDashedBottomCode />
                     将选中的文本节点转换为引用块
+                  </Item>
+                </SubContent>
+              </Sub>
+              <Sub>
+                <SubTrigger>
+                  <Sparkles />
+                  AI 处理
+                </SubTrigger>
+                <SubContent>
+                  <Item
+                    onClick={() => {
+                      const selectedTextNodes = p.stageManager
+                        .getSelectedEntities()
+                        .filter((it) => it instanceof TextNode);
+                      if (selectedTextNodes.length === 0) {
+                        toast.error("请先选中文本节点");
+                        return;
+                      }
+                      const texts = selectedTextNodes.map((node) => (node as TextNode).text);
+                      const combinedText = texts.join("\n\n");
+                      setAIWindowInitialText(
+                        combinedText,
+                        "请分析以下文本的结构，提取关键概念和关系，生成树形节点图：",
+                      );
+                      AIWindow.open();
+                    }}
+                  >
+                    <Network />
+                    生成树形结构
+                  </Item>
+                  <Item
+                    onClick={() => {
+                      const selectedTextNodes = p.stageManager
+                        .getSelectedEntities()
+                        .filter((it) => it instanceof TextNode);
+                      if (selectedTextNodes.length === 0) {
+                        toast.error("请先选中文本节点");
+                        return;
+                      }
+                      const texts = selectedTextNodes.map((node) => (node as TextNode).text);
+                      const combinedText = texts.join("\n\n");
+                      setAIWindowInitialText(
+                        combinedText,
+                        "请分析以下文本中的因果关系、条件关系、时间顺序等逻辑关系，生成网状关系图：",
+                      );
+                      AIWindow.open();
+                    }}
+                  >
+                    <Workflow />
+                    生成关系图
+                  </Item>
+                  <Item
+                    onClick={() => {
+                      const selectedTextNodes = p.stageManager
+                        .getSelectedEntities()
+                        .filter((it) => it instanceof TextNode);
+                      if (selectedTextNodes.length === 0) {
+                        toast.error("请先选中文本节点");
+                        return;
+                      }
+                      const texts = selectedTextNodes.map((node) => (node as TextNode).text);
+                      const combinedText = texts.join("\n\n");
+                      setAIWindowInitialText(combinedText, "请总结以下文本的核心内容：");
+                      AIWindow.open();
+                    }}
+                  >
+                    <TextSelect />
+                    生成摘要
                   </Item>
                 </SubContent>
               </Sub>
