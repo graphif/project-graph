@@ -10,6 +10,18 @@ import { Rectangle } from "@graphif/shapes";
 export class LatexNodeRenderer {
   constructor(private readonly project: Project) {}
 
+  /**
+   * 计算节点当前应显示的公式颜色：
+   *  - node.color 透明（alpha === 0）→ 跟随主题边框色（StageObjectBorder）
+   *  - 否则 → 使用用户自定义的 node.color
+   * 返回 CSS color 字符串（如 rgba(...)），与 currentRenderedColorCss 格式一致。
+   */
+  private getTargetColorCss(node: LatexNode): string {
+    const themeColor = this.project.stageStyleManager.currentStyle.StageObjectBorder.clone();
+    const displayColor = node.color.a === 0 ? themeColor : node.color;
+    return displayColor.toString();
+  }
+
   render(node: LatexNode) {
     const worldRect = node.collisionBox.getRectangle();
     const viewLocation = this.project.renderer.transformWorld2View(worldRect.location);
@@ -51,6 +63,13 @@ export class LatexNodeRenderer {
         new Color(255, 80, 80),
       );
     } else if (node.state === "success") {
+      // 每帧检查颜色是否需要更新（主题切换 / 用户改色）
+      const targetColorCss = this.getTargetColorCss(node);
+      if (targetColorCss !== node.currentRenderedColorCss) {
+        // 异步重渲染，期间继续显示旧图片（不闪烁）
+        node.reRenderWithColor(targetColorCss);
+      }
+
       // 成功：渲染公式图片
       // renderImageElement 的 scale 参数：最终宽度 = image.width * scale * camera.currentScale
       // 所以传入 node.getScale()，即 2^(fontScaleLevel/2)

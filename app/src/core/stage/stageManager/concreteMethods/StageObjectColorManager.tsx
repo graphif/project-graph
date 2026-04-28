@@ -33,6 +33,11 @@ export class StageObjectColorManager {
         entity.changeColor(color);
       }
     }
+    for (const node of this.project.stageManager.getLatexNodes()) {
+      if (node.isSelected) {
+        node.color = color;
+      }
+    }
     for (const entity of this.project.stageManager.getUrlNodes()) {
       if (entity.isSelected) {
         entity.color = color;

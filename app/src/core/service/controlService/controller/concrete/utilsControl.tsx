@@ -60,11 +60,6 @@ export class ControllerUtils {
     this.project.entityMoveManager.stopImmediately();
     const rectWorld = clickedNode.collisionBox.getRectangle();
     const rectView = this.project.renderer.transformWorld2View(rectWorld);
-    const fontColor = (
-      clickedNode.color.a === 1
-        ? colorInvert(clickedNode.color)
-        : colorInvert(this.project.stageStyleManager.currentStyle.Background)
-    ).toHexStringWithoutAlpha();
     // 编辑节点
     const textBeforeEdit = clickedNode.text;
     clickedNode.isEditing = true;
@@ -79,17 +74,39 @@ export class ControllerUtils {
     let lastAutoCompleteWindowId: string;
     // 实时 LaTeX 预览 div（输入 $...$ 时在节点上方显示）
     let latexPreviewDiv: HTMLDivElement | null = null;
+    let latexPreviewDismissed = false; // 标志：编辑已结束，禁止异步回调继续创建预览框
+    let latexPreviewRequestId = 0;
+    let katexPromise: Promise<typeof import("katex")> | null = null;
     const removeLatexPreview = () => {
       if (latexPreviewDiv) {
         latexPreviewDiv.remove();
         latexPreviewDiv = null;
       }
     };
+    const dismissLatexPreview = () => {
+      latexPreviewDismissed = true;
+      removeLatexPreview();
+    };
+    const getInlineLatexAtCursor = (value: string, cursor: number): string | null => {
+      const pos = Math.max(0, Math.min(cursor, value.length));
+      const dollarIndices: number[] = [];
+      for (let i = 0; i < value.length; i++) {
+        if (value[i] === "$") dollarIndices.push(i);
+      }
+      let k = 0;
+      while (k < dollarIndices.length && dollarIndices[k] < pos) k++;
+      if (k % 2 === 0) return null;
+      const start = dollarIndices[k - 1]!;
+      const end = dollarIndices[k] ?? -1;
+      const content = end === -1 ? value.slice(start + 1, pos) : value.slice(start + 1, end);
+      return content;
+    };
     this.project.inputElement
       .textarea(
         clickedNode.text,
         // "",
         async (text, ele) => {
+          const currentRequestId = ++latexPreviewRequestId;
           if (lastAutoCompleteWindowId) {
             SubWindow.close(lastAutoCompleteWindowId);
           }
@@ -118,15 +135,19 @@ export class ControllerUtils {
 
           this.finishChangeTextNode(clickedNode);
 
-          // 实时 LaTeX 预览：检测 $...$ 格式
-          const trimmedText = text.trim();
-          if (trimmedText.startsWith("$") && trimmedText.length > 1) {
-            const latexContent =
-              trimmedText.startsWith("$") && trimmedText.endsWith("$") && trimmedText.length > 2
-                ? trimmedText.slice(1, -1)
-                : trimmedText.slice(1); // 还没输入结尾的 $
+          // 实时 LaTeX 预览：检测光标附近的 $...$ 片段
+          const cursor =
+            ele.selectionStart === null
+              ? text.length
+              : ele.selectionStart > 0 && text[ele.selectionStart - 1] === "$"
+                ? ele.selectionStart - 1
+                : ele.selectionStart;
+          const latexContent = getInlineLatexAtCursor(text, cursor);
+          if (latexContent !== null) {
             try {
-              const { default: katex } = await import("katex");
+              const { default: katex } = await (katexPromise ??= import("katex"));
+              // 异步 import 之后先检查编辑是否已结束，避免在退出后重建预览框
+              if (latexPreviewDismissed || currentRequestId !== latexPreviewRequestId) return;
               const previewHtml = katex.renderToString(latexContent || "\\ldots", {
                 throwOnError: false,
                 displayMode: true,
@@ -151,10 +172,18 @@ export class ControllerUtils {
                 document.body.appendChild(latexPreviewDiv);
               }
               latexPreviewDiv.innerHTML = previewHtml;
-              // 定位到节点正上方
+              const margin = 8;
               const previewHeight = latexPreviewDiv.offsetHeight || 60;
-              latexPreviewDiv.style.left = `${currentRectView.left}px`;
-              latexPreviewDiv.style.top = `${currentRectView.top - previewHeight - 8}px`;
+              const previewWidth = latexPreviewDiv.offsetWidth || 200;
+              let left = currentRectView.left;
+              let top = currentRectView.top - previewHeight - margin;
+              if (top < margin) {
+                top = currentRectView.top + currentRectView.height + margin;
+              }
+              left = Math.max(margin, Math.min(left, window.innerWidth - previewWidth - margin));
+              top = Math.max(margin, Math.min(top, window.innerHeight - previewHeight - margin));
+              latexPreviewDiv.style.left = `${left}px`;
+              latexPreviewDiv.style.top = `${top}px`;
             } catch {
               // 忽略渲染错误
             }
@@ -180,7 +209,10 @@ export class ControllerUtils {
           padding: clickedNode.getPadding() * this.project.camera.currentScale + "px",
           fontSize: clickedNode.getFontSize() * this.project.camera.currentScale + "px",
           backgroundColor: "transparent",
-          color: fontColor,
+          color: (clickedNode.color.a === 1
+            ? colorInvert(clickedNode.color)
+            : colorInvert(this.project.stageStyleManager.currentStyle.Background)
+          ).toHexStringWithoutAlpha(),
           outline: `solid ${1 * this.project.camera.currentScale}px ${this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.1).toString()}`,
           borderRadius: `${clickedNode.getBorderRadius() * this.project.camera.currentScale}px`,
         },
@@ -190,7 +222,7 @@ export class ControllerUtils {
       .then(async () => {
         SubWindow.close(lastAutoCompleteWindowId);
         // 移除 LaTeX 实时预览 div
-        removeLatexPreview();
+        dismissLatexPreview();
         clickedNode!.isEditing = false;
         this.project.controller.isCameraLocked = false;
         if (clickedNode.text !== textBeforeEdit) {

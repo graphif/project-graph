@@ -50,6 +50,11 @@ export class LatexNode extends ConnectableEntity {
   svgOriginalSize: Vector = Vector.getZero();
   /** 渲染状态 */
   state: "loading" | "success" | "error" = "loading";
+  /**
+   * 当前图片实际渲染时使用的颜色（CSS color 字符串，如 rgba(...) / #rrggbb）。
+   * LatexNodeRenderer 在每帧对比"应显示颜色"与此值，不一致时触发重新渲染。
+   */
+  currentRenderedColorCss: string = "";
 
   /** 节点是否被选中 */
   _isSelected: boolean = false;
@@ -77,7 +82,7 @@ export class LatexNode extends ConnectableEntity {
       details = [],
       latexSource = "",
       collisionBox = new CollisionBox([new Rectangle(Vector.getZero(), Vector.getZero())]),
-      color = Color.Transparent,
+      color = Color.Transparent.clone(),
       fontScaleLevel = 0,
     }: {
       uuid?: string;
@@ -96,8 +101,9 @@ export class LatexNode extends ConnectableEntity {
     this.color = color;
     this.fontScaleLevel = fontScaleLevel;
 
-    // 异步渲染 LaTeX 公式
-    this.renderLatexToImage(latexSource);
+    // 异步渲染 LaTeX 公式，初始颜色：透明色→主题边框色，否则→用户自定义色
+    const initColor = color.a === 0 ? this.project.stageStyleManager.currentStyle.StageObjectBorder : color;
+    this.renderLatexToImage(latexSource, initColor.toString());
   }
 
   /**
@@ -149,17 +155,28 @@ export class LatexNode extends ConnectableEntity {
 
   /**
    * 更新 LaTeX 源码并重新渲染
+   * @param newLatex 新的 LaTeX 字符串
+   * @param colorCss 渲染颜色（CSS color 字符串，如 "rgba(255,0,0,0.5)" / "#ffffff"），不传则沿用当前已记录的颜色
    */
-  public async updateLatex(newLatex: string): Promise<void> {
+  public async updateLatex(newLatex: string, colorCss?: string): Promise<void> {
     this.latexSource = newLatex;
-    await this.renderLatexToImage(newLatex);
+    await this.renderLatexToImage(newLatex, colorCss ?? (this.currentRenderedColorCss || "#000000"));
+  }
+
+  /**
+   * 以指定颜色重新渲染当前 LaTeX（颜色变化时由 LatexNodeRenderer 调用）
+   */
+  public async reRenderWithColor(colorCss: string): Promise<void> {
+    await this.renderLatexToImage(this.latexSource, colorCss);
   }
 
   /**
    * 将 LaTeX 字符串渲染为 HTMLImageElement
    * 流程：katex.renderToString → SVG foreignObject → Blob URL → Image
+   * @param latex LaTeX 源码
+   * @param colorCss 公式颜色（CSS color 字符串，如 "rgba(255,0,0,0.5)" / "#ffffff"）
    */
-  private async renderLatexToImage(latex: string): Promise<void> {
+  private async renderLatexToImage(latex: string, colorCss: string = "#000000"): Promise<void> {
     if (!latex.trim()) {
       this.state = "error";
       return;
@@ -192,12 +209,13 @@ export class LatexNode extends ConnectableEntity {
       document.body.removeChild(measureDiv);
 
       // 4. 构造 SVG，用 foreignObject 包裹 katex HTML
+      //    通过 color CSS 属性让 katex 公式颜色跟随传入的 colorCss
       const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${measuredWidth}" height="${measuredHeight}">
   <defs>
     <style>${katexCss}</style>
   </defs>
   <foreignObject width="${measuredWidth}" height="${measuredHeight}">
-    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;box-sizing:border-box;">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="color:${colorCss};font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;box-sizing:border-box;">
       ${htmlContent}
     </div>
   </foreignObject>
@@ -215,6 +233,8 @@ export class LatexNode extends ConnectableEntity {
           URL.revokeObjectURL(url);
           this.svgOriginalSize = new Vector(measuredWidth, measuredHeight);
           this.image = img;
+          // 记录本次渲染使用的颜色，供 LatexNodeRenderer 对比
+          this.currentRenderedColorCss = colorCss;
 
           // 更新碰撞箱大小
           const scale = this.getScale();
