@@ -458,11 +458,11 @@ export namespace TextNodeSmartTools {
   }
 
   export function okk() {
-    toast.warning("此功能已迁移到插件，相见插件系统 与 https://github.com/graphif/extension-text-node-todolist");
+    toast.warning("此功能已迁移到插件，详见插件系统 与 https://github.com/graphif/extension-text-node-todolist");
   }
 
   export function err() {
-    toast.warning("此功能已迁移到插件，相见插件系统 与 https://github.com/graphif/extension-text-node-todolist");
+    toast.warning("此功能已迁移到插件，详见插件系统 与 https://github.com/graphif/extension-text-node-todolist");
   }
 
   /**
