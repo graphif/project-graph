@@ -69,6 +69,9 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
   const { messages, sendMessage, stop, status, error } = useChat<UIMessage<AIMessageMetadata>>({
     transport,
     experimental_throttle: 50,
+    onError: (err) => {
+      toast.error(`AI 请求失败: ${err.message || err.toString() || JSON.stringify(err)}`);
+    },
   });
   const requesting = status === "submitted" || status === "streaming";
   const tokenUsage = useMemo(() => getTokenUsage(messages), [messages]);
@@ -78,7 +81,7 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
   }, [messages]);
 
   useEffect(() => {
-    if (error) toast.error(error.message);
+    if (error) console.error("AI Chat state error:", error);
   }, [error]);
 
   useEffect(() => {

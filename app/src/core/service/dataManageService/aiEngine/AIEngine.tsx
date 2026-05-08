@@ -2,7 +2,6 @@ import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { AITools } from "@/core/service/dataManageService/aiEngine/AITools";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { convertToModelMessages, DefaultChatTransport, stepCountIs, streamText, type UIMessage } from "ai";
 
 const SYSTEM_PROMPT =
@@ -32,13 +31,29 @@ export class AIEngine {
         name: "project-graph",
         baseURL: Settings.aiApiBaseUrl,
         apiKey: Settings.aiApiKey || undefined,
-        fetch: tauriFetch as typeof fetch,
+        fetch: async (url, init) => {
+          const response = await fetch(url.toString(), {
+            ...init,
+            headers: {
+              ...init?.headers,
+              //"Content-Type": "application/json",
+            },
+            mode: "cors",
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text().catch(() => "unknown error");
+            throw new Error(`API 请求失败 (${response.status}): ${errorText}`);
+          }
+
+          return response;
+        },
         includeUsage: true,
       });
 
       const tools = AITools.createTools(project);
 
-      const result = streamText({
+      const textStream = streamText({
         model: provider.chatModel(Settings.aiModel),
         system: SYSTEM_PROMPT,
         messages: await convertToModelMessages(messages, {
@@ -48,9 +63,10 @@ export class AIEngine {
         tools,
         stopWhen: stepCountIs(8),
         abortSignal: options?.signal ?? undefined,
+        maxRetries: 0,
       });
 
-      return result.toUIMessageStreamResponse<UIMessage<AIMessageMetadata>>({
+      return textStream.toUIMessageStreamResponse<UIMessage<AIMessageMetadata>>({
         originalMessages: messages as UIMessage<AIMessageMetadata>[],
         messageMetadata: ({ part }) => {
           if (part.type !== "finish") return;
