@@ -3,7 +3,8 @@ import { Project } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
 import { Section } from "@/core/stage/stageObject/entity/Section";
-import { Vector } from "@graphif/data-structures";
+import { textToTextArray } from "@/utils/font";
+import { colorInvert, Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
 
 /**
@@ -63,20 +64,28 @@ export class ControllerSectionEditClass extends ControllerClass {
   };
 
   private editSectionTitle(section: Section) {
-    // 检查section是否被锁定（包括祖先section的锁定状态）
     if (this.project.sectionMethods.isObjectBeLockedBySection(section)) {
       toast.error("无法编辑已锁定的section");
       return;
     }
     this.project.controller.isCameraLocked = true;
-    // 停止摄像机漂移
     this.project.camera.stopImmediately();
-    // 编辑节点
     section.isEditingTitle = true;
+
+    if (section.mode === "caption") {
+      this.editCaptionTitle(section);
+    } else {
+      this.editGroupTitle(section);
+    }
+  }
+
+  private editGroupTitle(section: Section) {
+    const inputLocation = section.rectangle.location.subtract(new Vector(0, section.text === "" ? 50 : 0));
+
     this.project.inputElement
       .input(
         this.project.renderer
-          .transformWorld2View(section.rectangle.location.subtract(new Vector(0, section.text === "" ? 50 : 0)))
+          .transformWorld2View(inputLocation)
           .add(Vector.same(Renderer.NODE_PADDING).multiply(this.project.camera.currentScale)),
         section.text,
         (text) => {
@@ -92,6 +101,62 @@ export class ControllerSectionEditClass extends ControllerClass {
           outline: `solid ${2 * this.project.camera.currentScale}px ${this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.25).toString()}`,
           marginTop: `${-8 * this.project.camera.currentScale}px`,
         },
+      )
+      .then(() => {
+        section.isEditingTitle = false;
+        this.project.controller.isCameraLocked = false;
+        this.project.historyManager.recordStep();
+      });
+  }
+
+  private editCaptionTitle(section: Section) {
+    const padding = 10;
+    const lineHeight = 1.2;
+    const rect = section.rectangle;
+    const scale = this.project.camera.currentScale;
+
+    // 计算 caption 区域位置，与 renderCaption 中的逻辑一致
+    const limitWidth = rect.size.x - padding * 2;
+    const lines = section.text === "" ? [] : textToTextArray(section.text, Renderer.FONT_SIZE, limitWidth);
+    const captionHeight = lines.length === 0 ? 0 : lines.length * Renderer.FONT_SIZE * lineHeight + padding * 2;
+
+    // caption 文本起始位置（世界坐标），与 renderCaption 中的 captionLocation 一致
+    const captionLocation = new Vector(
+      rect.location.x + padding,
+      rect.location.y + rect.size.y - captionHeight + padding,
+    );
+    const captionViewLocation = this.project.renderer.transformWorld2View(captionLocation);
+    const captionViewWidth = limitWidth * scale;
+
+    this.project.inputElement
+      .textarea(
+        section.text,
+        (text, ele) => {
+          section.rename(text);
+          ele.style.height = "auto";
+          ele.style.height = `${ele.scrollHeight}px`;
+        },
+        {
+          position: "fixed",
+          resize: "none",
+          boxSizing: "border-box",
+          overflow: "hidden",
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-all",
+          left: `${captionViewLocation.x}px`,
+          top: `${captionViewLocation.y}px`,
+          width: `${captionViewWidth}px`,
+          minWidth: `${captionViewWidth}px`,
+          fontSize: `${Renderer.FONT_SIZE * scale}px`,
+          backgroundColor: "transparent",
+          color: (section.color.a === 1
+            ? colorInvert(section.color)
+            : colorInvert(this.project.stageStyleManager.currentStyle.Background)
+          ).toHexStringWithoutAlpha(),
+          outline: `solid ${1 * scale}px ${this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.1).toString()}`,
+          padding: `${padding * scale}px`,
+        },
+        true,
       )
       .then(() => {
         section.isEditingTitle = false;
