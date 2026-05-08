@@ -312,6 +312,32 @@ settings:
     title: Enable Section Collision
     description: |
       When enabled, sibling sections will automatically push each other apart to avoid overlapping.
+  isEnableForceDirected:
+    title: Enable Force-Directed Layout
+    description: |
+      When enabled, nodes simulate physical forces (repulsion, spring, centering) to automatically arrange the layout.
+      Nodes can be dragged, and the force simulation continues after release.
+  forceDirectedLinkDistance:
+    title: Link Distance
+    description: Target distance between connected nodes in the force-directed layout.
+  forceDirectedLinkStrength:
+    title: Link Strength
+    description: Spring force strength between connected nodes. Higher values pull nodes together more quickly.
+  forceDirectedCollisionStrength:
+    title: Collision Strength
+    description: Force applied when nodes overlap. Higher values push overlapping nodes apart more aggressively.
+  forceDirectedVelocityDecay:
+    title: Velocity Decay
+    description: Speed damping per frame. Lower values slow nodes down faster, making the simulation converge sooner.
+  forceDirectedMaxMovePerFrame:
+    title: Max Move Per Frame
+    description: Maximum distance a node can move in a single frame. Prevents simulation from exploding.
+  forceDirectedConvergenceThreshold:
+    title: Convergence Threshold
+    description: Total kinetic energy below which the simulation stops. Higher values stop the simulation earlier.
+  forceDirectedMinDistance:
+    title: Min Distance
+    description: Minimum allowed distance between connected nodes. Prevents nodes from overlapping completely.
   autoNamerTemplate:
     title: Auto-Naming Template for Node Creation
     description: |
@@ -1258,6 +1284,9 @@ keyBinds:
   toggleSectionLock:
     title: Lock/Unlock Section Box
     description: Toggle lock state of selected section boxes. Locked sections prevent moving internal objects.
+  toggleForceDirected:
+    title: Toggle Force-Directed Layout
+    description: Toggle the force-directed layout on and off
   reverseEdges:
     title: Reverse Connection Direction
     description: |

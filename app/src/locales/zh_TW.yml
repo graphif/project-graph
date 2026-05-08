@@ -430,6 +430,32 @@ settings:
     title: 啟用框碰撞
     description: |
       開啟後，框與框之間會自動進行碰撞排斥（推開重疊的同級框），避免框重疊。
+  isEnableForceDirected:
+    title: 啟用力導向佈局
+    description: |
+      開啟後，節點之間會模擬物理力（斥力、彈簧力、向心力），自動排列布局。
+       節點可以被拖拽，鬆開後力導向會繼續作用。
+  forceDirectedLinkDistance:
+    title: 連線目標距離
+    description: 力導向佈局中連線節點之間的目標距離。
+  forceDirectedLinkStrength:
+    title: 彈簧力強度
+    description: 連線節點之間的彈簧力強度。值越大，節點越快地拉向目標距離。
+  forceDirectedCollisionStrength:
+    title: 碰撞力強度
+    description: 節點重疊時施加的排斥力強度。值越大，重疊節點被推開得越劇烈。
+  forceDirectedVelocityDecay:
+    title: 速度衰減
+    description: 每幀的速度阻尼係數。值越小，節點減速越快，仿真越快收斂。
+  forceDirectedMaxMovePerFrame:
+    title: 每幀最大移動距離
+    description: 節點每幀可移動的最大距離。防止仿真爆炸。
+  forceDirectedConvergenceThreshold:
+    title: 收斂閾值
+    description: 總動能低於此值時仿真停止。值越高，仿真越早停止。
+  forceDirectedMinDistance:
+    title: 最小距離
+    description: 連線節點之間允許的最小距離。防止節點完全重疊。
   autoRefreshStageByMouseAction:
     title: 鼠標操作時自動刷新舞臺
     description: |
@@ -1301,6 +1327,9 @@ keyBinds:
   toggleSectionLock:
     title: 鎖定/解鎖分組框
     description: 切換選中分組框的鎖定狀態，鎖定後內部物體不可移動
+  toggleForceDirected:
+    title: 切換力導向佈局
+    description: 切換力導向佈局的開啟和關閉
   reverseEdges:
     title: 反轉連線的方向
     description: |
