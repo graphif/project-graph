@@ -954,17 +954,26 @@ settings:
   aiApiBaseUrl:
     title: AI API 地址
     description: |
-      目前仅支持 OpenAI 格式的 API
+      OpenAI 兼容 API 的基础地址。
+      默认: https://generativelanguage.googleapis.com/v1beta/openai/ (Gemini API)
+      可改为 https://api.openai.com/v1 (OpenAI) 或其他兼容 API。
   aiApiKey:
     title: AI API 密钥
     description: |
-      密钥将会明文存储在本地
+      API 的认证密钥。密钥仅存储在本地。
+      Gemini 密钥: https://aistudio.google.com/apikey
+      OpenAI 密钥: https://platform.openai.com/api-keys
   aiModel:
     title: AI 模型
-  aiShowTokenCount:
-    title: 显示 AI 消耗的token数
     description: |
-      启用后，在 AI 操作时显示消耗的token数
+      使用的 AI 模型名称。
+      默认: gemini-2.5-flash
+      OpenAI: gpt-4o, gpt-4-turbo
+      其他: 按服务商提供的模型名填写
+  aiShowTokenCount:
+    title: 显示 Token 计数
+    description: |
+      在 AI 聊天窗口底部显示输入/输出的 Token 数量。
   cacheTextAsBitmap:
     title: 开启位图式渲染文本
     description: |

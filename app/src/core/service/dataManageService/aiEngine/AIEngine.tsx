@@ -27,26 +27,49 @@ export class AIEngine {
       const body = await this.readRequestBody(options?.body);
       const messages = Array.isArray(body.messages) ? (body.messages as UIMessage[]) : [];
 
+      // Pre-flight validation
+      if (!Settings.aiApiBaseUrl) {
+        throw new Error("AI API 地址未配置 (aiApiBaseUrl)，请在设置中填写。");
+      }
+      if (!Settings.aiApiKey) {
+        throw new Error("AI API 密钥未配置 (aiApiKey)，请在设置中填写。");
+      }
+
       const provider = createOpenAICompatible({
         name: "project-graph",
         baseURL: Settings.aiApiBaseUrl,
         apiKey: Settings.aiApiKey || undefined,
         fetch: async (url, init) => {
-          const response = await fetch(url.toString(), {
-            ...init,
-            headers: {
-              ...init?.headers,
-              //"Content-Type": "application/json",
-            },
-            mode: "cors",
-          });
+          try {
+            const response = await fetch(url.toString(), {
+              ...init,
+              headers: {
+                ...init?.headers,
+                "Content-Type": "application/json",
+              },
+              mode: "cors",
+            });
 
-          if (!response.ok) {
-            const errorText = await response.text().catch(() => "unknown error");
-            throw new Error(`API 请求失败 (${response.status}): ${errorText}`);
+            if (!response.ok) {
+              const errorText = await response.text().catch(() => "unknown error");
+              throw new Error(`API 请求失败 (${response.status}): ${errorText}`);
+            }
+
+            return response;
+          } catch (err) {
+            // Network-level errors (DNS, CORS, timeout, etc.)
+            if (err instanceof TypeError && err.message === "Failed to fetch") {
+              throw new Error(
+                `无法连接到 AI API 服务器 (${Settings.aiApiBaseUrl})。请检查：\n` +
+                  "1. 网络连接是否正常\n" +
+                  "2. API 地址是否正确\n" +
+                  "3. API 密钥是否有效\n" +
+                  `原始错误: ${err.message}`,
+                { cause: err },
+              );
+            }
+            throw err;
           }
-
-          return response;
         },
         includeUsage: true,
       });

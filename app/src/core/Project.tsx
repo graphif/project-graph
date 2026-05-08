@@ -27,6 +27,7 @@ import type { WorldRenderUtils } from "@/core/render/canvas2d/utilsRenderer/Worl
 import type { InputElement } from "@/core/render/domElement/inputElement";
 import type { AutoLayoutFastTree } from "@/core/service/controlService/autoLayoutEngine/autoLayoutFastTreeMode";
 import type { AutoLayout } from "@/core/service/controlService/autoLayoutEngine/mainTick";
+import type { ForceDirectedLayout } from "@/core/service/controlService/autoLayoutEngine/forceDirectedLayout";
 import type { ControllerUtils } from "@/core/service/controlService/controller/concrete/utilsControl";
 import type { Controller } from "@/core/service/controlService/controller/Controller";
 import type { KeyboardOnlyEngine } from "@/core/service/controlService/keyboardOnlyEngine/keyboardOnlyEngine";
@@ -530,6 +531,7 @@ declare module "./Project" {
     copyEngine: CopyEngine;
     autoLayout: AutoLayout;
     autoLayoutFastTree: AutoLayoutFastTree;
+    forceDirectedLayout: ForceDirectedLayout;
     layoutManager: LayoutManager;
     autoAlign: AutoAlign;
     mouseInteraction: MouseInteraction;

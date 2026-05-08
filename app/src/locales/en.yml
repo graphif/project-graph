@@ -901,17 +901,26 @@ settings:
   aiApiBaseUrl:
     title: AI API Base URL
     description: |
-      Currently only supports OpenAI format API
+      Base URL for OpenAI-compatible API.
+      Default: https://generativelanguage.googleapis.com/v1beta/openai/ (Gemini API)
+      Can be set to https://api.openai.com/v1 (OpenAI) or other compatible APIs.
   aiApiKey:
     title: AI API Key
     description: |
-      The key will be stored in plain text locally
+      Authentication key for the API. The key is stored locally only.
+      Gemini key: https://aistudio.google.com/apikey
+      OpenAI key: https://platform.openai.com/api-keys
   aiModel:
     title: AI Model
+    description: |
+      Name of the AI model to use.
+      Default: gemini-2.5-flash
+      OpenAI: gpt-4o, gpt-4-turbo
+      Others: Use the model name provided by your service provider.
   aiShowTokenCount:
     title: Show AI token count
     description: |
-      When enabled, shows the token count for AI operations
+      When enabled, displays input/output token count at the bottom of the AI chat window.
   soundPitchVariationRange:
     title: Sound Pitch Variation
     description: Controls how much the pitch of sound effects varies randomly. Range for 0-1200 cents (1200 cents = 1 octave, 100 cents = 1 semitone). Higher values create more noticeable variations.

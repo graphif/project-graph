@@ -986,6 +986,17 @@ export const allKeyBinds: KeyBindItem[] = [
     },
   },
 
+  /*------- force directed layout -------*/
+  {
+    id: "toggleForceDirected",
+    defaultKey: "",
+    icon: Network,
+    when: whenAlways,
+    onPress: async () => {
+      Settings.isEnableForceDirected = !Settings.isEnableForceDirected;
+    },
+  },
+
   /*------- 搜索/外部打开 -------*/
   {
     id: "searchText",

@@ -29,6 +29,7 @@ import { WorldRenderUtils } from "@/core/render/canvas2d/utilsRenderer/WorldRend
 import { InputElement } from "@/core/render/domElement/inputElement";
 import { AutoLayoutFastTree } from "@/core/service/controlService/autoLayoutEngine/autoLayoutFastTreeMode";
 import { AutoLayout } from "@/core/service/controlService/autoLayoutEngine/mainTick";
+import { ForceDirectedLayout } from "@/core/service/controlService/autoLayoutEngine/forceDirectedLayout";
 import { ControllerUtils } from "@/core/service/controlService/controller/concrete/utilsControl";
 import { Controller } from "@/core/service/controlService/controller/Controller";
 import { KeyboardOnlyEngine } from "@/core/service/controlService/keyboardOnlyEngine/keyboardOnlyEngine";
@@ -115,6 +116,7 @@ export function loadAllServicesBeforeInit(project: Project): void {
   project.loadService(CopyEngine);
   project.loadService(AutoLayout);
   project.loadService(AutoLayoutFastTree);
+  project.loadService(ForceDirectedLayout);
   project.loadService(LayoutManager);
   project.loadService(AutoAlign);
   project.loadService(MouseInteraction);
