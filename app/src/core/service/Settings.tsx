@@ -1,4 +1,4 @@
-import { LazyStore } from "@tauri-apps/plugin-store";
+﻿import { LazyStore } from "@tauri-apps/plugin-store";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
@@ -374,6 +374,7 @@ export const settingsSchema = z.object({
       { type: "item", id: "openTextNodeByContentExternal", label: "将内容视为路径并打开", icon: "ExternalLink" },
       { type: "item", id: "folderSection", icon: "Package" },
       { type: "item", id: "toggleSectionLock", label: "锁定/解锁 section 框", icon: "Lock" },
+      { type: "item", id: "toggleSectionMode", label: "转为解说框/分组框", icon: "Repeat2" },
       { type: "item", id: "refreshReferenceBlockNode", label: "刷新引用块", icon: "RefreshCcwDot" },
       { type: "item", id: "goToReferenceBlockSource", label: "进入该引用块所在的源头位置", icon: "CornerUpRight" },
       { type: "item", id: "switchEdgeToUndirectedEdge", label: "转换为无向边", icon: "Spline" },
@@ -447,6 +448,7 @@ export const settingsSchema = z.object({
       { type: "item", id: "setSelectedImageAsBackground", label: "转化为背景图片", icon: "Images" },
       { type: "item", id: "unsetSelectedImageAsBackground", label: "取消背景化", icon: "SquareSquare" },
       { type: "item", id: "saveSelectedImagesToProjectDirectory", label: "另存图片到当前prg所在目录下", icon: "Save" },
+      { type: "item", id: "wrapImageInCaptionSection", label: "将图片包裹到说明框中", icon: "ImagePlus" },
     ]),
   disabledExtensions: z.array(z.string()).default([]),
   extensionSettings: z.record(z.record(z.unknown())).default({}),

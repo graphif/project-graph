@@ -1,4 +1,4 @@
-import { Dialog } from "@/components/ui/dialog";
+﻿import { Dialog } from "@/components/ui/dialog";
 import { Project, ProjectState } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { ViewFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewFlashEffect";
@@ -91,6 +91,7 @@ import {
   Grip,
   History,
   Images,
+  ImagePlus,
   Layers,
   LayoutDashboard,
   LayoutPanelTop,
@@ -116,6 +117,7 @@ import {
   RefreshCcwDot,
   RefreshCw,
   Repeat,
+  Repeat2,
   Save,
   Scissors,
   Search,
@@ -958,8 +960,22 @@ export const allKeyBinds: KeyBindItem[] = [
     when: whenHasSelectedSections,
     onPress: (project) => project!.sectionPackManager.unpackSelectedSections(),
   },
+  {
+    id: "toggleSectionMode",
+    defaultKey: "",
+    icon: Repeat2,
+    when: whenHasSelectedSections,
+    onPress: (project) => project!.sectionPackManager.toggleSectionMode(),
+  },
+  {
+    id: "wrapImageInCaptionSection",
+    defaultKey: "",
+    icon: Images,
+    when: whenHasSelectedImageNodes,
+    onPress: async (project) => project!.sectionPackManager.wrapImageInCaptionSection(),
+  },
 
-  /*------- 隐私模式 -------*/
+  /*------- privacy mode -------*/
   {
     id: "checkoutProtectPrivacy",
     defaultKey: "C-2",
@@ -1817,6 +1833,15 @@ export const allKeyBinds: KeyBindItem[] = [
       } else {
         toast.error("保存失败，请检查文件名或文件权限");
       }
+    },
+  },
+  {
+    id: "wrapImageInCaptionSection",
+    defaultKey: "i w",
+    icon: ImagePlus,
+    when: whenHasSelectedImageNodes,
+    onPress: async (project) => {
+      await project!.sectionPackManager.wrapImageInCaptionSection();
     },
   },
 
