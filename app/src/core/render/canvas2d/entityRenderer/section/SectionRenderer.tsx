@@ -2,7 +2,7 @@ import { Project, service } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { Settings } from "@/core/service/Settings";
 import { Section } from "@/core/stage/stageObject/entity/Section";
-import { getTextSize } from "@/utils/font";
+import { getTextSize, textToTextArray } from "@/utils/font";
 import { Color, colorInvert, mixColors, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Rectangle } from "@graphif/shapes";
 
@@ -89,6 +89,44 @@ export class SectionRenderer {
         section.color.a === 1
           ? colorInvert(section.color)
           : colorInvert(this.project.stageStyleManager.currentStyle.Background),
+      );
+    }
+  }
+
+  private renderCaption(section: Section) {
+    const borderWidth = 2 * this.project.camera.currentScale;
+    const rect = section.rectangle;
+
+    this.project.shapeRenderer.renderRect(
+      new Rectangle(
+        this.project.renderer.transformWorld2View(rect.location),
+        rect.size.multiply(this.project.camera.currentScale),
+      ),
+      Color.Transparent,
+      this.project.stageStyleManager.currentStyle.StageObjectBorder,
+      borderWidth,
+      Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+    );
+
+    if (section.text !== "" && this.project.camera.currentScale > 0.065 && !section.isEditingTitle) {
+      const padding = 10;
+      const lineHeight = 1.2;
+      const limitWidth = rect.size.x - padding * 2;
+      const lines = textToTextArray(section.text, Renderer.FONT_SIZE, limitWidth);
+      const captionHeight = lines.length * Renderer.FONT_SIZE * lineHeight + padding * 2;
+      const captionLocation = new Vector(
+        rect.location.x + padding,
+        rect.location.y + rect.size.y - captionHeight + padding,
+      );
+      this.project.textRenderer.renderMultiLineText(
+        section.text,
+        this.project.renderer.transformWorld2View(captionLocation),
+        Renderer.FONT_SIZE * this.project.camera.currentScale,
+        limitWidth * this.project.camera.currentScale,
+        section.color.a === 1
+          ? colorInvert(section.color)
+          : colorInvert(this.project.stageStyleManager.currentStyle.Background),
+        lineHeight,
       );
     }
   }
@@ -216,42 +254,16 @@ export class SectionRenderer {
     this.project.textRenderer.renderText(section.text, leftTopFontViewLocation, fontSize, textColor);
   }
 
-  // private getFontSizeBySectionSize(section: Section): Vector {
-  //   // 使用getTextSize获取准确的文本尺寸
-  //   const baseFontSize = 100;
-  //   const measuredSize = getTextSize(section.text, baseFontSize);
-  //   const ratio = measuredSize.x / measuredSize.y;
-  //   const sectionRatio = section.rectangle.size.x / section.rectangle.size.y;
-
-  //   // 计算最大可用字体高度
-  //   let fontHeight;
-  //   const paddingRatio = 0.9; // 增加边距比例，确保文字不会贴边
-  //   if (sectionRatio < ratio) {
-  //     // 宽度受限
-  //     fontHeight = (section.rectangle.size.x / ratio) * paddingRatio;
-  //   } else {
-  //     // 高度受限
-  //     fontHeight = section.rectangle.size.y * paddingRatio;
-  //   }
-
-  //   // 确保字体大小合理
-  //   const minFontSize = 8;
-  //   const maxFontSize = Math.max(section.rectangle.size.x, section.rectangle.size.y) * 0.8; // 限制最大字体
-  //   fontHeight = Math.max(minFontSize, Math.min(fontHeight, maxFontSize));
-
-  //   return new Vector(ratio * fontHeight, fontHeight);
-  // }
-
   render(section: Section): void {
     if (section.isHiddenBySectionCollapse) {
       return;
     }
 
     if (section.isCollapsed) {
-      // 折叠状态
       this.renderCollapsed(section);
+    } else if (section.mode === "caption") {
+      this.renderCaption(section);
     } else {
-      // 非折叠状态
       this.renderNoCollapse(section);
     }
 

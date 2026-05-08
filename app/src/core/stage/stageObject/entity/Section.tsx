@@ -5,11 +5,13 @@ import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { getTextSize } from "@/utils/font";
+import { getTextSize, textToTextArray } from "@/utils/font";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Line, Rectangle, Shape } from "@graphif/shapes";
 import { Value } from "platejs";
+
+export type SectionMode = "group" | "caption";
 
 @passExtraAtArg1
 @passObject
@@ -79,6 +81,13 @@ export class Section extends ConnectableEntity {
    */
   @serializable
   locked: boolean = false;
+  /**
+   * Section 的模式
+   * group: 普通分组框，标题在顶部
+   * caption: 图片解说框，图片在上，文字在下方
+   */
+  @serializable
+  mode: SectionMode = "group";
   isHiddenBySectionCollapse = false;
 
   constructor(
@@ -91,6 +100,7 @@ export class Section extends ConnectableEntity {
       color = Color.Transparent,
       locked = false,
       isCollapsed = false,
+      mode = "group" as SectionMode,
       children = [] as Entity[],
       details = [] as Value,
     } = {},
@@ -114,6 +124,7 @@ export class Section extends ConnectableEntity {
     this.text = text;
     this.locked = locked;
     this.isCollapsed = isCollapsed;
+    this.mode = mode;
     this.details = details;
     this.children = children;
     // 一定要放在最后
@@ -144,6 +155,11 @@ export class Section extends ConnectableEntity {
    *   自动调整大小为 标题+padding，位置为 当前碰撞箱外接矩形的左上角
    */
   adjustLocationAndSize() {
+    if (this.mode === "caption") {
+      this.adjustLocationAndSizeCaption();
+      return;
+    }
+
     let rectangle: Rectangle;
     const titleSize = getTextSize(this.text, Renderer.FONT_SIZE);
 
@@ -175,6 +191,55 @@ export class Section extends ConnectableEntity {
     // 调整折叠状态
     this._collisionBoxWhenCollapsed = this.collapsedCollisionBox();
   }
+
+  private adjustLocationAndSizeCaption() {
+    const padding = 10;
+    const lineHeight = 1.2;
+
+    // 先算出子内容区域宽度，用于确定文字换行的 limitWidth
+    let childrenRect: Rectangle | undefined;
+    if (this.children.length > 0) {
+      childrenRect = Rectangle.getBoundingRectangle(
+        this.children.map((child) => child.collisionBox.getRectangle()),
+        padding,
+      );
+    }
+
+    const sectionWidth = childrenRect
+      ? childrenRect.size.x
+      : Math.max(getTextSize(this.text, Renderer.FONT_SIZE).x + padding * 2, 100);
+    const limitWidth = sectionWidth - padding * 2;
+    const lines = this.text === "" ? [] : textToTextArray(this.text, Renderer.FONT_SIZE, limitWidth);
+    const captionHeight = lines.length === 0 ? 0 : lines.length * Renderer.FONT_SIZE * lineHeight + padding * 2;
+
+    if (this.children.length === 0) {
+      const maxTextWidth =
+        lines.length > 0 ? Math.max(...lines.map((line) => getTextSize(line, Renderer.FONT_SIZE).x)) : 0;
+      const rectangle = new Rectangle(
+        this.collisionBox.getRectangle().location,
+        new Vector(Math.max(maxTextWidth + padding * 2, 100), captionHeight > 0 ? captionHeight : 100),
+      );
+      this._collisionBoxNormal.shapes = rectangle.getBoundingLines();
+      this._collisionBoxWhenCollapsed = this.collapsedCollisionBox();
+      return;
+    }
+
+    const totalHeight = childrenRect!.size.y + captionHeight;
+    const rectangle = new Rectangle(childrenRect!.location, new Vector(childrenRect!.size.x, totalHeight));
+
+    this._collisionBoxNormal.shapes = rectangle.getBoundingLines();
+
+    if (captionHeight > 0) {
+      const captionRect = new Rectangle(
+        new Vector(rectangle.location.x, rectangle.location.y + childrenRect!.size.y),
+        new Vector(rectangle.size.x, captionHeight),
+      );
+      this._collisionBoxNormal.shapes.push(captionRect);
+    }
+
+    this._collisionBoxWhenCollapsed = this.collapsedCollisionBox();
+  }
+
   /**
    * 根据自身的折叠状态调整子节点的状态
    * 以屏蔽触碰和显示
@@ -273,7 +338,7 @@ export class Section extends ConnectableEntity {
   }
 
   /**
-   * 将某个物体 的最小外接矩形的左上角位置 移动到某个位置
+   * 将某个物体 的最小外接矩形的左上角位置 积动到某个位置
    * @param location
    */
   moveTo(location: Vector): void {
