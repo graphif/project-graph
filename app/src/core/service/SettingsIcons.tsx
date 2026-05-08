@@ -85,6 +85,7 @@ import {
   MouseRight,
   MouseLeft,
   LoaderPinwheel,
+  Network,
   Circle,
 } from "lucide-react";
 
@@ -163,6 +164,14 @@ export const settingsIcons = {
   antialiasing: Calculator,
   compatibilityMode: Turtle,
   isEnableEntityCollision: Ungroup,
+  isEnableForceDirected: Network,
+  forceDirectedLinkDistance: MoveHorizontal,
+  forceDirectedLinkStrength: Spline,
+  forceDirectedCollisionStrength: Ungroup,
+  forceDirectedVelocityDecay: TrendingUpDown,
+  forceDirectedMaxMovePerFrame: Move,
+  forceDirectedConvergenceThreshold: ScanEye,
+  forceDirectedMinDistance: Minus,
   language: Languages,
   showTipsOnUI: AppWindow,
   useNativeTitleBar: AppWindowMac,
