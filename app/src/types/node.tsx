@@ -32,6 +32,7 @@ export namespace Serialized {
     return obj.type === "core:text_node";
   }
 
+  export type SectionMode = "group" | "caption";
   export type Section = Entity & {
     type: "core:section";
     size: Vector;
@@ -41,6 +42,7 @@ export namespace Serialized {
     children: string[]; // uuid[]
     isHidden: boolean;
     isCollapsed: boolean;
+    mode?: SectionMode; // 默认 "group"，旧文件可能没有此字段
   };
 
   export function isSection(obj: StageObject): obj is Section {
