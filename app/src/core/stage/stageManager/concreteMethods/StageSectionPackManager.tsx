@@ -1,4 +1,4 @@
-// import { Section } from "@/core/stageObject/entity/Section";
+﻿// import { Section } from "@/core/stageObject/entity/Section";
 // import { Entity } from "@/core/stageObject/StageEntity";
 import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
@@ -6,6 +6,7 @@ import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { toast } from "sonner";
@@ -419,5 +420,45 @@ export class SectionPackManager {
     const root = this.project.graphMethods.getTreeRootByNodes(connectableEntities);
     if (!root || !(root instanceof TextNode)) return "";
     return root.text;
+  }
+
+  /**
+   * 将选中的图片包裹到一个带说明文字的Section中
+   */
+  async wrapImageInCaptionSection(): Promise<void> {
+    const selectedImages = this.project.stageManager
+      .getEntities()
+      .filter((entity) => entity.isSelected && entity instanceof ImageNode) as ImageNode[];
+
+    if (selectedImages.length === 0) return;
+
+    // 将图片从父Section中剥离
+    const firstParents = this.project.sectionMethods.getFatherSections(selectedImages[0]);
+    for (const fatherSection of firstParents) {
+      this.project.stageManager.goOutSection(selectedImages, fatherSection);
+    }
+
+    // 创建Section包裹图片，默认文字为"..."
+    const section = Section.fromEntities(this.project, selectedImages);
+    section.text = "...";
+    section.mode = "caption";
+    section.adjustLocationAndSize();
+
+    // 将Section添加到舞台
+    this.project.stageManager.add(section);
+    for (const fatherSection of firstParents) {
+      this.project.stageManager.goInSection([section], fatherSection);
+    }
+
+    this.project.historyManager.recordStep();
+  }
+
+  toggleSectionMode(): void {
+    const selectedSections = this.project.stageManager.getSections().filter((section) => section.isSelected);
+    for (const section of selectedSections) {
+      section.mode = section.mode === "caption" ? "group" : "caption";
+      section.adjustLocationAndSize();
+    }
+    this.project.historyManager.recordStep();
   }
 }

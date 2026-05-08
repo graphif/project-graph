@@ -2,6 +2,7 @@ import { Project, service } from "@/core/Project";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { CollisionBox } from "../../stageObject/collisionBox/collisionBox";
@@ -76,9 +77,15 @@ export class SectionInOutManager {
     }
     section.children = newChildren;
 
-    // 当section的最后一个子元素被移除时，将section转换为TextNode
     if (section.children.length === 0) {
       this.convertSectionToTextNode(section);
+    } else if (section.mode === "caption") {
+      // caption 模式下删除了图片后，如果没有图片子节点了，回退为 group 模式
+      const hasImageChild = section.children.some((child) => child instanceof ImageNode);
+      if (!hasImageChild) {
+        section.mode = "group";
+        section.adjustLocationAndSize();
+      }
     }
   }
 
