@@ -63,6 +63,8 @@ export const settingsSchema = z.object({
   forceDirectedMaxMovePerFrame: z.number().int().min(10).max(200).default(50),
   forceDirectedConvergenceThreshold: z.number().min(0.01).max(10).multipleOf(0.01).default(0.5),
   forceDirectedMinDistance: z.number().int().min(5).max(100).default(30),
+  moveToAxis: z.union([z.literal("y"), z.literal("x"), z.literal("both")]).default("y"),
+  moveToClamp: z.number().int().min(10).max(10000).default(200),
   autoNamerTemplate: z.string().default("..."),
   autoNamerSectionTemplate: z.string().default("Section_{{i}}"),
   autoNamerDetailsTemplate: z.string().default(""),

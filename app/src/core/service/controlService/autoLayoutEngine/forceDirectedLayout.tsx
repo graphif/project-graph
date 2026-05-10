@@ -4,6 +4,99 @@ import { ConnectableEntity } from "@/core/stage/stageObject/abstract/Connectable
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
+
+/**
+ * 四叉树：空间分区加速碰撞检测
+ * 查询与指定矩形重叠的所有条目，复杂度 O(log N) 每次查询
+ */
+class QuadTree<T> {
+  private boundary: Rectangle;
+  private capacity: number;
+  private items: Array<{ rect: Rectangle; data: T }> = [];
+  private divided = false;
+  private northWest: QuadTree<T> | null = null;
+  private northEast: QuadTree<T> | null = null;
+  private southWest: QuadTree<T> | null = null;
+  private southEast: QuadTree<T> | null = null;
+
+  constructor(boundary: Rectangle, capacity: number = 4) {
+    this.boundary = boundary;
+    this.capacity = capacity;
+  }
+
+  /** 插入一个条目，返回是否成功 */
+  insert(rect: Rectangle, data: T): boolean {
+    if (!this.boundary.isCollideWith(rect)) return false;
+
+    if (!this.divided) {
+      if (this.items.length < this.capacity) {
+        this.items.push({ rect, data });
+        return true;
+      }
+      this.subdivide();
+    }
+
+    return (
+      this.northWest!.insert(rect, data) ||
+      this.northEast!.insert(rect, data) ||
+      this.southWest!.insert(rect, data) ||
+      this.southEast!.insert(rect, data)
+    );
+  }
+
+  /** 查询与 range 重叠的所有条目 */
+  query(range: Rectangle, result: Array<{ rect: Rectangle; data: T }> = []): Array<{ rect: Rectangle; data: T }> {
+    if (!this.boundary.isCollideWith(range)) return result;
+
+    for (const item of this.items) {
+      if (range.isCollideWith(item.rect)) {
+        result.push(item);
+      }
+    }
+
+    if (this.divided) {
+      this.northWest!.query(range, result);
+      this.northEast!.query(range, result);
+      this.southWest!.query(range, result);
+      this.southEast!.query(range, result);
+    }
+
+    return result;
+  }
+
+  /** 清空整棵树 */
+  clear(): void {
+    this.items = [];
+    this.northWest = null;
+    this.northEast = null;
+    this.southWest = null;
+    this.southEast = null;
+    this.divided = false;
+  }
+
+  private subdivide(): void {
+    const { left, top, right, bottom } = this.boundary;
+    const midX = (left + right) / 2;
+    const midY = (top + bottom) / 2;
+
+    this.northWest = new QuadTree(Rectangle.fromEdges(left, top, midX, midY), this.capacity);
+    this.northEast = new QuadTree(Rectangle.fromEdges(midX, top, right, midY), this.capacity);
+    this.southWest = new QuadTree(Rectangle.fromEdges(left, midY, midX, bottom), this.capacity);
+    this.southEast = new QuadTree(Rectangle.fromEdges(midX, midY, right, bottom), this.capacity);
+
+    for (const item of this.items) {
+      void (
+        this.northWest.insert(item.rect, item.data) ||
+        this.northEast.insert(item.rect, item.data) ||
+        this.southWest.insert(item.rect, item.data) ||
+        this.southEast.insert(item.rect, item.data)
+      );
+    }
+    this.items = [];
+    this.divided = true;
+  }
+}
 
 @service("forceDirectedLayout")
 export class ForceDirectedLayout {
@@ -156,29 +249,52 @@ export class ForceDirectedLayout {
       linkForces.set(target.uuid, linkForces.get(target.uuid)!.add(force.multiply(-1)));
     }
 
-    // ===== 2. 碰撞力（防止任何重叠） =====
+    // ===== 2. 碰撞力（基于四叉树，O(N log N)） =====
     const collisionForces = new Map<string, Vector>();
     for (const entity of connectableEntities) {
       collisionForces.set(entity.uuid, Vector.getZero());
     }
 
-    for (let i = 0; i < connectableEntities.length; i++) {
-      for (let j = i + 1; j < connectableEntities.length; j++) {
-        const a = connectableEntities[i];
-        const b = connectableEntities[j];
-        const rectA = a.collisionBox.getRectangle();
-        const rectB = b.collisionBox.getRectangle();
+    // 构建四叉树边界
+    let minLeft = Infinity,
+      minTop = Infinity,
+      maxRight = -Infinity,
+      maxBottom = -Infinity;
+    const entityRects = new Map<string, Rectangle>();
+    for (const entity of connectableEntities) {
+      const rect = entity.collisionBox.getRectangle();
+      entityRects.set(entity.uuid, rect);
+      minLeft = Math.min(minLeft, rect.left);
+      minTop = Math.min(minTop, rect.top);
+      maxRight = Math.max(maxRight, rect.right);
+      maxBottom = Math.max(maxBottom, rect.bottom);
+    }
+    const bounds = Rectangle.fromEdges(minLeft - 1, minTop - 1, maxRight + 1, maxBottom + 1);
 
-        if (!rectA.isCollideWith(rectB)) continue;
+    // 插入四叉树
+    const tree = new QuadTree<ConnectableEntity>(bounds, 4);
+    for (const entity of connectableEntities) {
+      tree.insert(entityRects.get(entity.uuid)!, entity);
+    }
 
-        const overlap = rectA.getOverlapSize(rectB);
-        const delta = rectB.center.subtract(rectA.center);
+    // 对每个实体查询四叉树找碰撞
+    for (const entity of connectableEntities) {
+      const rect = entityRects.get(entity.uuid)!;
+      const candidates = tree.query(rect);
+      let netForce = Vector.getZero();
+
+      for (const candidate of candidates) {
+        if (candidate.data === entity) continue;
+
+        const rectB = candidate.rect;
+        const overlap = rect.getOverlapSize(rectB);
+        const delta = rectB.center.subtract(rect.center);
         const forceDir = delta.magnitude() < 1 ? new Vector(1, 0) : delta.normalize();
         const force = forceDir.multiply(Math.min(Math.abs(overlap.x), Math.abs(overlap.y)) * this.collisionStrength);
-
-        collisionForces.set(a.uuid, collisionForces.get(a.uuid)!.add(force.multiply(-1)));
-        collisionForces.set(b.uuid, collisionForces.get(b.uuid)!.add(force));
+        netForce = netForce.add(force.multiply(-1));
       }
+
+      collisionForces.set(entity.uuid, netForce);
     }
 
     // ===== 3. 合并力，更新速度 =====

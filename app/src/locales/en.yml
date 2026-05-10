@@ -751,6 +751,22 @@ settings:
   compatibilityMode:
     description: "When enabled, another render method will be used.\n"
     title: Compatibility Mode
+  moveToAxis:
+    title: Clamp Target Axis
+    description: |
+      Choose which axis to operate on (Ctrl+Shift+H).
+      - Y (default): clamp top/bottom to horizontal lines
+      - X: clamp left/right to vertical lines
+      - Both: process both axes
+    options:
+      y: Y-Axis Only
+      x: X-Axis Only
+      both: Both Axes
+  moveToClamp:
+    title: Clamp Threshold
+    description: |
+      Boundary value for clamping. Nodes exceeding this range
+      are pulled back. Default 200, range 10～10000.
   autoRefreshStageByMouseAction:
     description: "When enabled, mouse actions (camera view drags) will automatically
       refresh the stage.\nThis prevents manual refreshes for images that fail to load
@@ -1825,6 +1841,13 @@ keyBindsGroup:
   adjustSelectedTextNodeWidthAverage:
     title: Unify Width to Average
     description: Only works on text nodes, unify the width of all selected nodes to the average value (Shortcut：4→6→5)
+  moveAllToOrigin:
+    title: Clamp Nodes to Origin Range
+    description: |
+      Clamp nodes whose X/Y coordinates exceed [-200, 200] back into that range.
+      Nodes already within the range stay put.
+      Useful for pulling scattered nodes back into view after large deletions.
+      Shortcut: Ctrl+Shift+H
 
 controlSettingsGroup:
   mouse:

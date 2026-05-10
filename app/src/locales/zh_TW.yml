@@ -440,6 +440,22 @@ settings:
   forceDirectedMinDistance:
     title: 最小距離
     description: 連線節點之間允許的最小距離。防止節點完全重疊。
+  moveToAxis:
+    title: 夾緊操作的目標軸
+    description: |
+      選擇按哪個軸進行夾緊操作（Ctrl+Shift+H）。
+      - Y軸（默認）：上下夾緊到水平線
+      - X軸：左右夾緊到垂直線
+      - 雙向：同時處理兩個軸
+    options:
+      y: 僅Y軸
+      x: 僅X軸
+      both: 雙向
+  moveToClamp:
+    title: 夾緊範圍閾值
+    description: |
+      設置夾緊操作的邊界值。節點坐標超出此範圍時會被拉回。
+      默認值200，範圍10～10000。
   autoRefreshStageByMouseAction:
     title: 鼠標操作時自動刷新舞臺
     description: |
@@ -947,17 +963,26 @@ settings:
   aiApiBaseUrl:
     title: AI API 地址
     description: |
-      目前僅支持 OpenAI 格式的 API
+      OpenAI 兼容 API 的基礎地址。
+      默認: https://generativelanguage.googleapis.com/v1beta/openai/ (Gemini API)
+      可改為 https://api.openai.com/v1 (OpenAI) 或其他兼容 API。
   aiApiKey:
     title: AI API 密鑰
     description: |
-      密鑰將會明文存儲在本地
+      API 的認證密鑰。密鑰僅存儲在本地。
+      Gemini 密鑰: https://aistudio.google.com/apikey
+      OpenAI 密鑰: https://platform.openai.com/api-keys
   aiModel:
     title: AI 模型
-  aiShowTokenCount:
-    title: 顯示 AI 消耗的token數
     description: |
-      啟用後，在 AI 操作時顯示消耗的token數
+      使用的 AI 模型名稱。
+      默認: gemini-2.5-flash
+      OpenAI: gpt-4o, gpt-4-turbo
+      其他: 按服務商提供的模型名填寫
+  aiShowTokenCount:
+    title: 顯示 Token 計數
+    description: |
+      在 AI 聊天窗口底部顯示輸入/輸出的 Token 數量。
   cacheTextAsBitmap:
     title: 開啟位圖式渲染文本
     description: |
@@ -1998,6 +2023,13 @@ keyBinds:
   swapTwoSelectedEntitiesPositions:
     title: 交換位置
     description: 交換兩個選中實體的位置
+  moveAllToOrigin:
+    title: 夾緊節點到原點範圍
+    description: |
+      將 X/Y 座標超出 [-200, 200] 範圍的節點夾緊回該範圍內，
+      不在此範圍內的節點保持不動。
+      方便在大刪改後快速把散落遠處的節點拉回視野中央。
+      快捷鍵 Ctrl+Shift+H
 
 sounds:
   soundEnabled: 音效開關

@@ -225,4 +225,10 @@ export const settingsIcons = {
   enableAutoEdgeWidth: Minus,
   showKeyBindHint: Lightbulb,
   showEditModeHint: MessageSquareText,
+  aiApiBaseUrl: Link,
+  aiApiKey: KeyRound,
+  aiModel: Cpu,
+  aiShowTokenCount: Tally4,
+  moveToAxis: Move,
+  moveToClamp: Scaling,
 };

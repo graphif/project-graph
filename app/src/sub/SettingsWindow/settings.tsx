@@ -313,6 +313,8 @@ const categories = {
       "forceDirectedMaxMovePerFrame",
       "forceDirectedConvergenceThreshold",
       "forceDirectedMinDistance",
+      "moveToAxis",
+      "moveToClamp",
     ],
     edge: [
       "allowAddCycleEdge",

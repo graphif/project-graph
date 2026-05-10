@@ -613,6 +613,7 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "CameraPageMoveDown",
       "CameraPageMoveLeft",
       "CameraPageMoveRight",
+      "moveAllToOrigin",
     ],
   },
   {

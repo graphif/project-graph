@@ -467,6 +467,22 @@ settings:
   forceDirectedMinDistance:
     title: 最小距离
     description: 连线节点之间允许的最小距离。防止节点完全重叠。
+  moveToAxis:
+    title: 夾緊操作的目標軸
+    description: |
+      選擇按哪個軸進行夾緊操作（Ctrl+Shift+H）。
+      - Y軸（默認）：上下夾緊到水平線
+      - X軸：左右夾緊到垂直線
+      - 雙向：同時處理兩個軸
+    options:
+      y: 僅Y軸
+      x: 僅X軸
+      both: 雙向
+  moveToClamp:
+    title: 夾緊範圍閾值
+    description: |
+      設置夾緊操作的邊界值。節點坐標超出此範圍時會被拉回。
+      默認值200，範圍10～10000。
   autoRefreshStageByMouseAction:
     title: 滑鼠操作時自動刷新舞台
     description: '開啟後，滑鼠操作(拖曳移動視野)會自動重新整理舞台
@@ -1816,6 +1832,11 @@ keyBinds:
   setWindowToMiniSize:
     title: 設置窗口為迷你大小
     description: 將窗口大小設置為設置中配置的迷你窗口寬度和高度。
+  moveAllToOrigin:
+    title: 全部移回原點
+    description: |
+      將所有節點整體平移回原點附近，方便在大刪改後重新佈局。
+      快捷鍵 Ctrl+Shift+H
 sounds:
   soundEnabled: 音效開關
 

@@ -440,6 +440,22 @@ settings:
   forceDirectedMinDistance:
     title: 最小距离
     description: 连线节点之间允许的最小距离。防止节点完全重叠。
+  moveToAxis:
+    title: 夹紧操作的目标轴
+    description: |
+      选择按哪个轴进行夹紧操作（Ctrl+Shift+H）。
+      - Y轴（默认）：上下夹紧到水平线
+      - X轴：左右夹紧到垂直线
+      - 双向：同时处理两个轴
+    options:
+      y: 仅Y轴
+      x: 仅X轴
+      both: 双向
+  moveToClamp:
+    title: 夹紧范围阈值
+    description: |
+      设置夹紧操作的边界值。节点坐标超出此范围时会被拉回。
+      默认值200，范围10～10000。
   autoRefreshStageByMouseAction:
     title: 鼠标操作时自动刷新舞台
     description: |
@@ -1998,6 +2014,13 @@ keyBinds:
   swapTwoSelectedEntitiesPositions:
     title: 交换位置
     description: 交换两个选中实体的位置
+  moveAllToOrigin:
+    title: 夹紧节点到原点范围
+    description: |
+      将 X/Y 坐标超出 [-200, 200] 范围的节点夹紧回该范围内，
+      不在此范围内的节点保持不动。
+      方便在大删改后快速把散落远处的节点拉回视野中央。
+      快捷键 Ctrl+Shift+H
 
 sounds:
   soundEnabled: 音效开关
