@@ -441,6 +441,48 @@ settings:
     title: 启用框碰撞
     description: |
       开启后，框与框之间会自动进行碰撞排斥（推开重叠的同级框），避免框重叠。
+  isEnableForceDirected:
+    title: 启用力导向布局
+    description: |
+      开启后，节点之间会模拟物理力（斥力、弹簣力、向心力），自动排列布局。
+       节点可以被拖拽，松开后力导向会继续作用。
+  forceDirectedLinkDistance:
+    title: 连线目标距离
+    description: 力导向布局中连线节点之间的目标距离。
+  forceDirectedLinkStrength:
+    title: 弹簣力强度
+    description: 连线节点之间的弹簣力强度。值越大，节点越快地拉向目标距离。
+  forceDirectedCollisionStrength:
+    title: 碰撞力强度
+    description: 节点重叠时施加的排斥力强度。值越大，重叠节点被推开得越剧烈。
+  forceDirectedVelocityDecay:
+    title: 速度衰减
+    description: 每帧的速度阻尼系数。值越小，节点减速越快，仿真越快收敛。
+  forceDirectedMaxMovePerFrame:
+    title: 每帧最大移动距离
+    description: 节点每帧可移动的最大距离。防止仿真爆炸。
+  forceDirectedConvergenceThreshold:
+    title: 收敛阈值
+    description: 总动能低于此值时仿真停止。值越高，仿真越早停止。
+  forceDirectedMinDistance:
+    title: 最小距离
+    description: 连线节点之间允许的最小距离。防止节点完全重叠。
+  moveToAxis:
+    title: 夾緊操作的目標軸
+    description: |
+      選擇按哪個軸進行夾緊操作（Ctrl+Shift+H）。
+      - Y軸（默認）：上下夾緊到水平線
+      - X軸：左右夾緊到垂直線
+      - 雙向：同時處理兩個軸
+    options:
+      y: 僅Y軸
+      x: 僅X軸
+      both: 雙向
+  moveToClamp:
+    title: 夾緊範圍閾值
+    description: |
+      設置夾緊操作的邊界值。節點坐標超出此範圍時會被拉回。
+      默認值200，範圍10～10000。
   autoRefreshStageByMouseAction:
     title: 滑鼠操作時自動刷新舞台
     description: '開啟後，滑鼠操作(拖曳移動視野)會自動重新整理舞台
@@ -1242,6 +1284,9 @@ keyBinds:
   toggleSectionLock:
     title: 鎖定/解鎖分组框
     description: 切換選中分组框的鎖定狀態，鎖定後內部物體不可移動
+  toggleForceDirected:
+    title: 切換力導向佈局
+    description: 切換力導向佈局的開啟和關閉
   reverseEdges:
     title: 反转连线的方向
     description: '按下後，選取的連線的方向會變成相反方向
@@ -1787,6 +1832,11 @@ keyBinds:
   setWindowToMiniSize:
     title: 設置窗口為迷你大小
     description: 將窗口大小設置為設置中配置的迷你窗口寬度和高度。
+  moveAllToOrigin:
+    title: 全部移回原點
+    description: |
+      將所有節點整體平移回原點附近，方便在大刪改後重新佈局。
+      快捷鍵 Ctrl+Shift+H
 sounds:
   soundEnabled: 音效開關
 

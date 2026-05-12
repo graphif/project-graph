@@ -414,6 +414,48 @@ settings:
     title: 啟用框碰撞
     description: |
       開啟後，框與框之間會自動進行碰撞排斥（推開重疊的同級框），避免框重疊。
+  isEnableForceDirected:
+    title: 啟用力導向佈局
+    description: |
+      開啟後，節點之間會模擬物理力（斥力、彈簧力、向心力），自動排列布局。
+       節點可以被拖拽，鬆開後力導向會繼續作用。
+  forceDirectedLinkDistance:
+    title: 連線目標距離
+    description: 力導向佈局中連線節點之間的目標距離。
+  forceDirectedLinkStrength:
+    title: 彈簧力強度
+    description: 連線節點之間的彈簧力強度。值越大，節點越快地拉向目標距離。
+  forceDirectedCollisionStrength:
+    title: 碰撞力強度
+    description: 節點重疊時施加的排斥力強度。值越大，重疊節點被推開得越劇烈。
+  forceDirectedVelocityDecay:
+    title: 速度衰減
+    description: 每幀的速度阻尼係數。值越小，節點減速越快，仿真越快收斂。
+  forceDirectedMaxMovePerFrame:
+    title: 每幀最大移動距離
+    description: 節點每幀可移動的最大距離。防止仿真爆炸。
+  forceDirectedConvergenceThreshold:
+    title: 收斂閾值
+    description: 總動能低於此值時仿真停止。值越高，仿真越早停止。
+  forceDirectedMinDistance:
+    title: 最小距離
+    description: 連線節點之間允許的最小距離。防止節點完全重疊。
+  moveToAxis:
+    title: 夾緊操作的目標軸
+    description: |
+      選擇按哪個軸進行夾緊操作（Ctrl+Shift+H）。
+      - Y軸（默認）：上下夾緊到水平線
+      - X軸：左右夾緊到垂直線
+      - 雙向：同時處理兩個軸
+    options:
+      y: 僅Y軸
+      x: 僅X軸
+      both: 雙向
+  moveToClamp:
+    title: 夾緊範圍閾值
+    description: |
+      設置夾緊操作的邊界值。節點坐標超出此範圍時會被拉回。
+      默認值200，範圍10～10000。
   autoRefreshStageByMouseAction:
     title: 鼠標操作時自動刷新舞臺
     description: |
@@ -921,17 +963,26 @@ settings:
   aiApiBaseUrl:
     title: AI API 地址
     description: |
-      目前僅支持 OpenAI 格式的 API
+      OpenAI 兼容 API 的基礎地址。
+      默認: https://generativelanguage.googleapis.com/v1beta/openai/ (Gemini API)
+      可改為 https://api.openai.com/v1 (OpenAI) 或其他兼容 API。
   aiApiKey:
     title: AI API 密鑰
     description: |
-      密鑰將會明文存儲在本地
+      API 的認證密鑰。密鑰僅存儲在本地。
+      Gemini 密鑰: https://aistudio.google.com/apikey
+      OpenAI 密鑰: https://platform.openai.com/api-keys
   aiModel:
     title: AI 模型
-  aiShowTokenCount:
-    title: 顯示 AI 消耗的token數
     description: |
-      啟用後，在 AI 操作時顯示消耗的token數
+      使用的 AI 模型名稱。
+      默認: gemini-2.5-flash
+      OpenAI: gpt-4o, gpt-4-turbo
+      其他: 按服務商提供的模型名填寫
+  aiShowTokenCount:
+    title: 顯示 Token 計數
+    description: |
+      在 AI 聊天窗口底部顯示輸入/輸出的 Token 數量。
   cacheTextAsBitmap:
     title: 開啟位圖式渲染文本
     description: |
@@ -1294,6 +1345,9 @@ keyBinds:
   toggleSectionLock:
     title: 鎖定/解鎖分組框
     description: 切換選中分組框的鎖定狀態，鎖定後內部物體不可移動
+  toggleForceDirected:
+    title: 切換力導向佈局
+    description: 切換力導向佈局的開啟和關閉
   reverseEdges:
     title: 反轉連線的方向
     description: |
@@ -1969,6 +2023,13 @@ keyBinds:
   swapTwoSelectedEntitiesPositions:
     title: 交換位置
     description: 交換兩個選中實體的位置
+  moveAllToOrigin:
+    title: 夾緊節點到原點範圍
+    description: |
+      將 X/Y 座標超出 [-200, 200] 範圍的節點夾緊回該範圍內，
+      不在此範圍內的節點保持不動。
+      方便在大刪改後快速把散落遠處的節點拉回視野中央。
+      快捷鍵 Ctrl+Shift+H
 
 sounds:
   soundEnabled: 音效開關

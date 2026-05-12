@@ -220,6 +220,11 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
         }
       }
 
+      // 力导向模式下，拖拽后重启仿真，防止收敛检测误判为停止
+      if (Settings.isEnableForceDirected) {
+        this.project.forceDirectedLayout.restartSimulation();
+      }
+
       // 预瞄反馈
       if (Settings.enableDragAutoAlign) {
         this.project.autoAlign.preAlignAllSelected();
@@ -265,6 +270,11 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
         }
 
         this.project.historyManager.recordStep(); // 记录一次历史
+
+        // 力导向模式下，拖拽结束后重启仿真，防止收敛检测误判为停止
+        if (Settings.isEnableForceDirected) {
+          this.project.forceDirectedLayout.restartSimulation();
+        }
       }
     }
 

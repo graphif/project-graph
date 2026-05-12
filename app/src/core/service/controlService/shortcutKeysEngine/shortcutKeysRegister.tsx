@@ -2641,6 +2641,103 @@ export const allKeyBinds: KeyBindItem[] = [
       if (project) TextNodeSmartTools.generateSummaryBySelectedTextNodeTextWithAI(project);
     },
   },
+  {
+    id: "moveAllToOrigin",
+    defaultKey: "C-S-H",
+    icon: Focus,
+    when: whenHasProject,
+    onPress: (project) => {
+      if (!project) {
+        toast.warning("请先打开工程文件");
+        return;
+      }
+      const AXIS = Settings.moveToAxis;
+      const CLAMP = Settings.moveToClamp;
+      const entities = project.stageManager.getEntities();
+
+      // 收集 Section 内部子节点 UUID，避免重复移动
+      const sections = entities.filter((e) => e instanceof Section) as Section[];
+      const childUuids = new Set<string>();
+      for (const section of sections) {
+        for (const child of section.children) {
+          childUuids.add(child.uuid);
+        }
+      }
+      // 只操作可连接实体（节点/分组框），跳过涂鸦和 Section 内部子节点
+      const movableEntities = entities.filter(
+        (e) => e instanceof ConnectableEntity && !childUuids.has(e.uuid),
+      ) as ConnectableEntity[];
+      if (movableEntities.length === 0) {
+        toast.warning("没有可移动的实体");
+        return;
+      }
+
+      // 根据设置选择操作的轴
+      const useX = AXIS === "x" || AXIS === "both";
+
+      // 分两组：正方向组（> CLAMP）和负方向组（< -CLAMP）
+      const posGroup: ConnectableEntity[] = [];
+      const negGroup: ConnectableEntity[] = [];
+      for (const entity of movableEntities) {
+        const center = entity.collisionBox.getRectangle().center;
+        const coord = useX ? center.x : center.y;
+        if (coord > CLAMP) posGroup.push(entity);
+        else if (coord < -CLAMP) negGroup.push(entity);
+      }
+
+      // 正方向组：最近节点落到 CLAMP，同组统一偏移
+      let posOffset = 0;
+      if (posGroup.length > 0) {
+        const coords = posGroup.map((e) => {
+          const c = e.collisionBox.getRectangle().center;
+          return useX ? c.x : c.y;
+        });
+        posOffset = CLAMP - Math.min(...coords);
+      }
+      // 负方向组：最近节点落到 -CLAMP，同组统一偏移
+      let negOffset = 0;
+      if (negGroup.length > 0) {
+        const coords = negGroup.map((e) => {
+          const c = e.collisionBox.getRectangle().center;
+          return useX ? c.x : c.y;
+        });
+        negOffset = -CLAMP - Math.max(...coords);
+      }
+
+      if (posOffset === 0 && negOffset === 0) {
+        const axisLabel = useX ? "X" : "Y";
+        toast.success(`所有节点 ${axisLabel} 已在 [-${CLAMP}, ${CLAMP}] 范围内`);
+        return;
+      }
+
+      // 禁用碰撞，分两组各自移动
+      const savedEntityCollision = Settings.isEnableEntityCollision;
+      const savedSectionCollision = Settings.isEnableSectionCollision;
+      Settings.isEnableEntityCollision = false;
+      Settings.isEnableSectionCollision = false;
+
+      const makeOffset = (d: number) => (useX ? new Vector(d, 0) : new Vector(0, d));
+
+      if (posOffset !== 0) {
+        const offset = makeOffset(posOffset);
+        for (const entity of posGroup) entity.move(offset);
+      }
+      if (negOffset !== 0) {
+        const offset = makeOffset(negOffset);
+        for (const entity of negGroup) entity.move(offset);
+      }
+
+      Settings.isEnableEntityCollision = savedEntityCollision;
+      Settings.isEnableSectionCollision = savedSectionCollision;
+
+      project.camera.saveCameraState();
+      project.camera.resetBySelected();
+      const axisLabel = useX ? "X" : "Y";
+      toast.success(
+        `${axisLabel}轴 正侧 ${posGroup.length} 个偏移 ${posOffset.toFixed(0)}，负侧 ${negGroup.length} 个偏移 ${negOffset.toFixed(0)}`,
+      );
+    },
+  },
 ];
 
 export function getKeyBindTypeById(id: string): "global" | "software" {

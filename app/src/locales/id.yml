@@ -404,6 +404,48 @@ settings:
     title: Aktifkan Tabrakan Bagian
     description: |
       Saat diaktifkan, bagian-bagian yang berdampingan akan saling mendorong untuk menghindari tumpang tindih.
+  isEnableForceDirected:
+    title: Aktifkan Tata Letak Force-Directed
+    description: |
+      Saat diaktifkan, node akan mensimulasikan gaya fisik (tolakan, pegas, sentripetal) untuk mengatur tata letak secara otomatis.
+      Node dapat diseret, dan simulasi gaya akan berlanjut setelah dilepaskan.
+  forceDirectedLinkDistance:
+    title: Jarak Tautan
+    description: Jarak target antara node yang terhubung dalam tata letak force-directed.
+  forceDirectedLinkStrength:
+    title: Kekuatan Tautan
+    description: Kekuatan gaya pegas antara node yang terhubung. Nilai lebih tinggi menarik node lebih cepat ke jarak target.
+  forceDirectedCollisionStrength:
+    title: Kekuatan Tabrakan
+    description: Gaya yang diterapkan saat node tumpang tindih. Nilai lebih tinggi mendorong node lebih kuat.
+  forceDirectedVelocityDecay:
+    title: Peluruhan Kecepatan
+    description: Redaman kecepatan per frame. Nilai lebih rendah memperlambat node lebih cepat.
+  forceDirectedMaxMovePerFrame:
+    title: Gerakan Maks per Frame
+    description: Jarak maksimum node dapat bergerak dalam satu frame. Mencegah simulasi meledak.
+  forceDirectedConvergenceThreshold:
+    title: Ambang Konvergensi
+    description: Energi kinetik total di bawah ini simulasi berhenti. Nilai lebih tinggi menghentikan simulasi lebih awal.
+  forceDirectedMinDistance:
+    title: Jarak Minimum
+    description: Jarak minimum yang diizinkan antara node yang terhubung. Mencegah node tumpang tindih sepenuhnya.
+  moveToAxis:
+    title: Sumbu Target Jepitan
+    description: |
+      Pilih sumbu untuk operasi jepitan (Ctrl+Shift+H).
+      - Y (default): jepit atas/bawah ke garis horizontal
+      - X: jepit kiri/kanan ke garis vertikal
+      - Kedua: proses kedua sumbu
+    options:
+      y: Hanya Sumbu Y
+      x: Hanya Sumbu X
+      both: Kedua Sumbu
+  moveToClamp:
+    title: Ambang Jepitan
+    description: |
+      Nilai batas untuk penjepitan. Node yang melebihi rentang ini
+      akan ditarik kembali. Default 200, rentang 10～10000.
   autoRefreshStageByMouseAction:
     title: Segarkan Panggung Otomatis Saat Operasi Mouse
     description: |
@@ -1292,6 +1334,9 @@ keyBinds:
   toggleSectionLock:
     title: Kunci/Buka Kunci Kotak Section
     description: Alihkan status kunci kotak section yang dipilih. Section terkunci mencegah pergerakan objek internal.
+  toggleForceDirected:
+    title: Alihkan Tata Letak Force-Directed
+    description: Mengaktifkan atau menonaktifkan tata letak force-directed
   reverseEdges:
     title: Balikkan Arah Garis
     description: |
@@ -1847,6 +1892,13 @@ keyBinds:
     description: |
       Ekspor struktur jaringan yang dipilih ke format diagram Mermaid dan salin ke clipboard
       Dapat ditempel di editor yang mendukung Mermaid
+  moveAllToOrigin:
+    title: Jepit Node ke Rentang Origin
+    description: |
+      Jepit node yang koordinat X/Y-nya melebihi [-200, 200] kembali ke dalam rentang tersebut.
+      Node yang sudah berada dalam rentang tidak berubah.
+      Berguna untuk menarik node yang tersebar jauh kembali ke tengah.
+      Pintasan: Ctrl+Shift+H
 
 sounds:
   soundEnabled: Sakelar Suara
