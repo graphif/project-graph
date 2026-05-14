@@ -30,7 +30,6 @@ import GenerateNodeTree, {
   GenerateNodeMermaid,
   GenerateNodeTreeByMarkdown,
 } from "@/sub/GenerateNodeWindow";
-import LoginWindow from "@/sub/LoginWindow";
 import NewExportPngWindow from "@/sub/NewExportPngWindow";
 import NodeDetailsWindow from "@/sub/NodeDetailsWindow";
 import OnboardingWindow from "@/sub/OnboardingWindow";
@@ -39,7 +38,6 @@ import ReferencesWindow from "@/sub/ReferencesWindow";
 import SettingsWindow from "@/sub/SettingsWindow";
 import TagWindow from "@/sub/TagWindow";
 import TestWindow from "@/sub/TestWindow";
-import UserWindow from "@/sub/UserWindow";
 import { openTextImportWindow } from "@/sub/TextImportWindow";
 import { getDeviceId } from "@/utils/otherApi";
 import { PathString } from "@/utils/pathString";
@@ -1697,8 +1695,6 @@ export function GlobalMenu() {
                 >
                   输出选中节点的详细信息转换成Markdown
                 </Item>
-                <Item onClick={() => LoginWindow.open()}>login</Item>
-                <Item onClick={() => UserWindow.open()}>user</Item>
                 <Item onClick={() => OnboardingWindow.open()}>onboarding</Item>
                 <Item
                   onClick={() => {

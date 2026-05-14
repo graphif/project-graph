@@ -16,3 +16,15 @@ export const isWindowMaxsizedAtom = atom<boolean>(false);
 export const isClickThroughEnabledAtom = atom<boolean>(false);
 
 export const isDevAtom = atom<boolean>(false);
+
+// 认证相关
+export interface AuthUser {
+  id: string;
+  email: string;
+  name?: string;
+  emailVerified?: boolean;
+  image?: string;
+}
+
+export const currentUserAtom = atom<AuthUser | null>(null);
+export const isAuthLoadingAtom = atom(true);

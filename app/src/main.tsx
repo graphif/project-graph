@@ -1,5 +1,6 @@
 import { runCli } from "@/cli";
 import { Toaster } from "@/components/ui/sonner";
+import { authClient } from "@/core/service/AuthClient";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { StartFilesManager } from "@/core/service/dataFileService/StartFilesManager";
@@ -9,7 +10,7 @@ import { Settings } from "@/core/service/Settings";
 import { Tutorials } from "@/core/service/Tourials";
 import { UserState } from "@/core/service/UserState";
 import { EdgeCollisionBoxGetter } from "@/core/stage/stageObject/association/EdgeCollisionBoxGetter";
-import { store } from "@/state";
+import { currentUserAtom, isAuthLoadingAtom, store } from "@/state";
 import { exit, writeStderr } from "@/utils/otherApi";
 import { isDesktop, isMobile, isWeb } from "@/utils/platform";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -52,7 +53,7 @@ const el = document.getElementById("root")!;
     ExtensionManager.init(),
   ]);
   // 这些东西依赖上面的东西，所以单独一个Promise.all
-  await Promise.all([loadLanguageFiles(), loadSyncModules()]);
+  await Promise.all([loadLanguageFiles(), loadSyncModules(), initAuth()]);
   await renderApp(isCliMode);
   await loadStartFile();
   if (isCliMode) {
@@ -71,6 +72,32 @@ async function loadSyncModules() {
   EdgeCollisionBoxGetter.init();
   // SoundService.init();
   MouseLocation.init();
+}
+
+/** 初始化认证状态：从持久化存储中恢复 session */
+async function initAuth() {
+  if (!authClient) {
+    store.set(isAuthLoadingAtom, false);
+    return;
+  }
+  try {
+    const session = await UserState.getSession();
+    if (session?.token) {
+      // 验证 session 是否仍然有效
+      const { data } = await authClient.getSession();
+      if (data?.user) {
+        store.set(currentUserAtom, data.user);
+      } else {
+        // token 失效，清理本地存储
+        await UserState.clearSession();
+      }
+    }
+  } catch {
+    // 网络错误等不影响启动，清理本地 session 即可
+    await UserState.clearSession();
+  } finally {
+    store.set(isAuthLoadingAtom, false);
+  }
 }
 
 /** 加载语言文件 */

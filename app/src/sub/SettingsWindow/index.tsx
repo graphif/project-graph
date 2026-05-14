@@ -5,6 +5,7 @@ import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useState } from "react";
 import AboutTab from "./about";
+import AccountTab from "./account";
 import AppearanceTab from "./appearance";
 import CreditsTab from "./credits";
 import ExtensionsTab from "./extensions";
@@ -14,7 +15,7 @@ import QuickSettingsTab from "./quick-settings";
 import SettingsTab from "./settings";
 import ThemesTab from "./themes";
 
-type TabName = "settings" | "keybinds" | "appearance" | "about" | "quickSettings" | "extensions";
+type TabName = "settings" | "keybinds" | "appearance" | "about" | "quickSettings" | "extensions" | "account";
 
 export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab?: TabName }) {
   const [currentTab, setCurrentTab] = useState<TabName>(defaultTab);
@@ -28,6 +29,7 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
           <TabsTrigger value="keybindsGlobal">全局快捷键</TabsTrigger>
           <TabsTrigger value="appearance">个性化</TabsTrigger>
           <TabsTrigger value="themes">主题</TabsTrigger>
+          <TabsTrigger value="account">账户</TabsTrigger>
           <TabsTrigger value="quickSettings">快捷设置</TabsTrigger>
           <TabsTrigger value="extensions">扩展</TabsTrigger>
           <TabsTrigger value="about">关于</TabsTrigger>
@@ -49,6 +51,9 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
       </TabsContent>
       <TabsContent value="themes" className="overflow-auto">
         <ThemesTab />
+      </TabsContent>
+      <TabsContent value="account" className="overflow-auto">
+        <AccountTab />
       </TabsContent>
       <TabsContent value="quickSettings" className="overflow-auto">
         <QuickSettingsTab />
