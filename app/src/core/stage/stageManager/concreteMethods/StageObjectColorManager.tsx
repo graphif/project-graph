@@ -9,7 +9,7 @@ import { Color } from "@graphif/data-structures";
 export class StageObjectColorManager {
   constructor(private readonly project: Project) {}
 
-  setSelectedStageObjectColor(color: Color) {
+  setSelectedStageObjectColor(color: Color, skipHistory = false) {
     for (const node of this.project.stageManager.getTextNodes()) {
       if (node.isSelected) {
         node.color = color;
@@ -49,7 +49,9 @@ export class StageObjectColorManager {
     }
     // 特性：统一取消框选
     // this.project.stageManager.clearSelectAll();  // 不能统一取消全选，因为填充后可能会发现颜色不合适
-    this.project.historyManager.recordStep();
+    if (!skipHistory) {
+      this.project.historyManager.recordStep();
+    }
   }
 
   darkenNodeColor() {

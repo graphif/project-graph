@@ -19,9 +19,63 @@ import type { LucideProps } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import tailwindColors from "tailwindcss/colors";
 import KeyTooltip from "./key-tooltip";
 import { Button } from "./ui/button";
+
+// 简化色盘：红绿各有低饱和度行 + 高饱和度行，其余色系各4个 + 黑白灰
+// 排列：grid-cols-4，每行4个色块
+const SIMPLE_PALETTE: (Color | null)[] = [
+  // 红（低饱和度，亮→暗）
+  new Color(235, 205, 205),
+  new Color(200, 145, 145),
+  new Color(155, 85, 85),
+  new Color(100, 45, 45),
+  // 红（高饱和度，亮→暗）
+  new Color(240, 160, 155),
+  new Color(210, 80, 75),
+  new Color(150, 35, 30),
+  new Color(47, 14, 15),
+  // 橙
+  new Color(235, 215, 195),
+  new Color(210, 170, 130),
+  new Color(165, 120, 80),
+  new Color(110, 75, 45),
+  // 黄
+  new Color(235, 230, 190),
+  new Color(210, 200, 120),
+  new Color(165, 150, 60),
+  new Color(110, 95, 30),
+  // 绿（低饱和度，亮→暗）
+  new Color(200, 225, 200),
+  new Color(135, 185, 135),
+  new Color(80, 140, 80),
+  new Color(40, 85, 40),
+  // 绿（高饱和度，亮→暗）
+  new Color(155, 220, 140),
+  new Color(90, 165, 75),
+  new Color(65, 101, 57),
+  new Color(30, 55, 25),
+  // 青
+  new Color(195, 225, 225),
+  new Color(120, 180, 180),
+  new Color(65, 130, 130),
+  new Color(30, 80, 80),
+  // 蓝
+  new Color(200, 210, 235),
+  new Color(130, 150, 200),
+  new Color(70, 95, 160),
+  new Color(35, 50, 105),
+  // 紫
+  new Color(220, 205, 235),
+  new Color(170, 140, 205),
+  new Color(115, 80, 160),
+  new Color(65, 40, 105),
+  // 消色
+  new Color(255, 255, 255),
+  new Color(180, 180, 180),
+  new Color(90, 90, 90),
+  new Color(0, 0, 0),
+];
 
 const Content = ContextMenuContent;
 const Item = ContextMenuItem;
@@ -134,19 +188,22 @@ export default function MyContextMenuContent() {
             {getIcon("resetSelectedStageObjectColor", "Slash")}
             {t("resetColor")}
           </Item>
-          <Item className="grid grid-cols-11 gap-0 bg-transparent!">
-            {Object.values(tailwindColors)
-              .filter((it) => typeof it !== "string")
-              .slice(4)
-              .flatMap((it) => Object.values(it).map(Color.fromCss))
-              .map((color, index) => (
+          <Item className="grid w-fit grid-cols-4 gap-0 bg-transparent!">
+            {SIMPLE_PALETTE.map((color, index) =>
+              color ? (
                 <div
                   key={index}
                   className="hover:outline-accent-foreground size-4 -outline-offset-2 hover:outline-2"
                   style={{ backgroundColor: color.toString() }}
-                  onMouseEnter={() => p.stageObjectColorManager.setSelectedStageObjectColor(color)}
+                  onMouseEnter={() => {
+                    p.controller.resetCountdownTimer();
+                    p.stageObjectColorManager.setSelectedStageObjectColor(color, true);
+                  }}
                 />
-              ))}
+              ) : (
+                <div key={index} className="size-4" />
+              ),
+            )}
           </Item>
           <Item onClick={() => p.stageObjectColorManager.setSelectedStageObjectColor(new Color(11, 45, 14, 0))}>
             改为强制特殊透明色
@@ -170,19 +227,22 @@ export default function MyContextMenuContent() {
             {getIcon("resetPenStrokeColor", "Slash")}
             {t("resetColor")}
           </Item>
-          <Item className="grid grid-cols-11 gap-0 bg-transparent!">
-            {Object.values(tailwindColors)
-              .filter((it) => typeof it !== "string")
-              .slice(4)
-              .flatMap((it) => Object.values(it).map(Color.fromCss))
-              .map((color, index) => (
+          <Item className="grid w-fit grid-cols-4 gap-0 bg-transparent!">
+            {SIMPLE_PALETTE.map((color, index) =>
+              color ? (
                 <div
                   key={index}
                   className="hover:outline-accent-foreground size-4 -outline-offset-2 hover:outline-2"
                   style={{ backgroundColor: color.toString() }}
-                  onMouseEnter={() => (Settings.autoFillPenStrokeColor = color.toArray())}
+                  onMouseEnter={() => {
+                    p.controller.resetCountdownTimer();
+                    Settings.autoFillPenStrokeColor = color.toArray();
+                  }}
                 />
-              ))}
+              ) : (
+                <div key={index} className="size-4" />
+              ),
+            )}
           </Item>
           <Item onClick={() => ColorWindow.open()}>打开调色板</Item>
         </SubContent>
