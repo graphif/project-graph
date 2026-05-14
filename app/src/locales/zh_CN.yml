@@ -1940,6 +1940,16 @@ keyBinds:
     title: 设置终点连接位置为右方
   setSelectedEdgeTargetConnectLocationDown:
     title: 设置终点连接位置为下方
+  setSelectedEdgeToRight:
+    title: 设置连线向右
+  setSelectedEdgeToLeft:
+    title: 设置连线向左
+  setSelectedEdgeToUp:
+    title: 设置连线向上
+  setSelectedEdgeToDown:
+    title: 设置连线向下
+  setSelectedEdgeToCenter:
+    title: 设置连线向中心
   setMTUEdgeArrowOuter:
     title: 设置多端点连线箭头朝外
   setMTUEdgeArrowInner:

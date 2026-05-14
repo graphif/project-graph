@@ -103,7 +103,11 @@ import {
   Minimize2,
   Moon,
   MousePointer,
+  MoveDown,
   MoveHorizontal,
+  MoveLeft,
+  MoveRight,
+  MoveUp,
   MoveUpRight,
   Network,
   Package,
@@ -2232,6 +2236,56 @@ export const allKeyBinds: KeyBindItem[] = [
     icon: ArrowUpToLine,
     when: whenHasSelectedLineEdges,
     onPress: (project) => project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Down),
+  },
+  {
+    id: "setSelectedEdgeToRight",
+    defaultKey: "6 6",
+    icon: MoveRight,
+    when: whenHasSelectedLineEdges,
+    onPress: (project) => {
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Right, true);
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Left);
+    },
+  },
+  {
+    id: "setSelectedEdgeToLeft",
+    defaultKey: "4 4",
+    icon: MoveLeft,
+    when: whenHasSelectedLineEdges,
+    onPress: (project) => {
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Left, true);
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Right);
+    },
+  },
+  {
+    id: "setSelectedEdgeToUp",
+    defaultKey: "8 8",
+    icon: MoveUp,
+    when: whenHasSelectedLineEdges,
+    onPress: (project) => {
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Up, true);
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Down);
+    },
+  },
+  {
+    id: "setSelectedEdgeToDown",
+    defaultKey: "2 2",
+    icon: MoveDown,
+    when: whenHasSelectedLineEdges,
+    onPress: (project) => {
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Down, true);
+      project!.stageManager.changeSelectedEdgeConnectLocation(Direction.Up);
+    },
+  },
+  {
+    id: "setSelectedEdgeToCenter",
+    defaultKey: "5 5",
+    icon: SquareDot,
+    when: whenHasSelectedLineEdges,
+    onPress: (project) => {
+      project!.stageManager.changeSelectedEdgeConnectLocation(null, true);
+      project!.stageManager.changeSelectedEdgeConnectLocation(null);
+    },
   },
   {
     id: "setMTUEdgeArrowOuter",
