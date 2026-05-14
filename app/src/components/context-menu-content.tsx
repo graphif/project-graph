@@ -196,8 +196,13 @@ export default function MyContextMenuContent() {
                   className="hover:outline-accent-foreground size-4 -outline-offset-2 hover:outline-2"
                   style={{ backgroundColor: color.toString() }}
                   onMouseEnter={() => {
+                    if (!Settings.colorPanelMouseEnterPreview) return;
                     p.controller.resetCountdownTimer();
                     p.stageObjectColorManager.setSelectedStageObjectColor(color, true);
+                  }}
+                  onClick={() => {
+                    p.controller.resetCountdownTimer();
+                    p.stageObjectColorManager.setSelectedStageObjectColor(color, false);
                   }}
                 />
               ) : (
@@ -235,6 +240,11 @@ export default function MyContextMenuContent() {
                   className="hover:outline-accent-foreground size-4 -outline-offset-2 hover:outline-2"
                   style={{ backgroundColor: color.toString() }}
                   onMouseEnter={() => {
+                    if (!Settings.colorPanelMouseEnterPreview) return;
+                    p.controller.resetCountdownTimer();
+                    Settings.autoFillPenStrokeColor = color.toArray();
+                  }}
+                  onClick={() => {
                     p.controller.resetCountdownTimer();
                     Settings.autoFillPenStrokeColor = color.toArray();
                   }}

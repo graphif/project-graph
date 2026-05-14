@@ -218,4 +218,5 @@ export const settingsIcons = {
   enableAutoEdgeWidth: Minus,
   showKeyBindHint: Lightbulb,
   showEditModeHint: MessageSquareText,
+  colorPanelMouseEnterPreview: Mouse,
 };

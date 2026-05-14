@@ -293,6 +293,11 @@ settings:
     description: |
       选中文本节点时，在节点四周显示 tab/W W/S S/A A/D D 等键盘树形生长方向提示。
       关闭后不再渲染这些提示文字。
+  colorPanelMouseEnterPreview:
+    title: 鼠标划过色盘时立即预览颜色
+    description: |
+      开启后，鼠标在右键菜单色盘上悬浮时会立即将颜色应用到已选中的元素上，松开后可继续调整。
+      关闭后需要单击色块才能更改颜色。
   newNodeScaleByCamera:
     title: 新建文本节点时，根据视野缩放等级自动设置节点大小
     description: |

@@ -167,6 +167,7 @@ export const settingsSchema = z.object({
   autoFillNodeColorEnable: z.boolean().default(true),
   autoFillPenStrokeColor: z.tuple([z.number(), z.number(), z.number(), z.number()]).default([0, 0, 0, 0]),
   autoFillPenStrokeColorEnable: z.boolean().default(true),
+  colorPanelMouseEnterPreview: z.boolean().default(true),
   autoFillEdgeColor: z.tuple([z.number(), z.number(), z.number(), z.number()]).default([0, 0, 0, 0]),
   autoOpenPath: z.string().default(""), // 废弃
   generateTextNodeByStringTabCount: z.number().default(4),
