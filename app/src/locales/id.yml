@@ -277,6 +277,10 @@ settings:
     title: Tampilkan Batas Node Teks
     description: |
       Mengontrol apakah menampilkan batas node teks
+  defaultFontFamily:
+    title: Font Default
+    description: |
+      Atur font default untuk kanvas. Kosongkan untuk menggunakan font default sistem.
   showTreeDirectionHint:
     title: Tampilkan Petunjuk Arah Pertumbuhan Pohon
     description: |
@@ -1788,6 +1792,12 @@ keyBinds:
   increaseFontSize:
     title: Tingkatkan Ukuran Font Node Teks yang Dipilih
     description: Hanya berlaku untuk node teks, tekan Ctrl+= untuk meningkatkan ukuran font node teks yang dipilih
+  setFontFamily:
+    title: Atur Font Family
+    description: Atur CSS font-family kustom untuk node teks yang dipilih. Kosongkan untuk kembali ke font bawaan.
+  setFontWeight:
+    title: Atur Font Weight
+    description: Atur CSS font-weight kustom untuk node teks yang dipilih (mis. bold, 600). Kosongkan untuk kembali ke normal.
   splitTextNodes:
     title: Pecah Node Teks yang Dipilih menjadi Potongan Kecil
     description: Hanya berlaku untuk node teks, berdasarkan tanda baca, spasi, pemisah baris, dll. untuk memecah menjadi potongan kecil

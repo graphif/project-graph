@@ -331,6 +331,9 @@ settings:
   showTextNodeBorder:
     title: 顯示文字節點邊框
     description: 控制是否顯示文字節點的邊框
+  defaultFontFamily:
+    title: 預設字型
+    description: 設定畫布預設字型，留空則使用系統預設字型
   showTreeDirectionHint:
     title: 顯示樹形生長方向提示
     description: 選中文字節點時，在節點四周顯示 tab/W W/S S/A A/D D 等鍵盤樹形生長方向提示。關閉後不再渲染這些提示文字。
@@ -1750,6 +1753,12 @@ keyBinds:
   increaseFontSize:
     title: 增大選取的文字節點字體大小
     description: 僅對文字節點生效，按下Ctrl+=增大選取的文字節點字體大小
+  setFontFamily:
+    title: 設定字型
+    description: 為選取的文字節點設定自訂 CSS font-family 字型，留空恢復預設字型
+  setFontWeight:
+    title: 設定字重
+    description: 為選取的文字節點設定自訂 CSS font-weight 值（如 bold、600），留空恢復 normal
   splitTextNodes:
     title: 將選取的文字節點，剋(kēi)成小塊
     description: 僅對文字節點生效，根據標點符號、空格、換行符等進行分割，將其分割成小塊

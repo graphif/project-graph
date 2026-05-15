@@ -735,6 +735,8 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "generateTreeBySelectedTextNodeTextWithAI",
       "generateNetBySelectedTextNodeTextWithAI",
       "generateSummaryBySelectedTextNodeTextWithAI",
+      "setFontFamily",
+      "setFontWeight",
     ],
   },
   {

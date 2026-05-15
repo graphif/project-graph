@@ -288,6 +288,10 @@ settings:
     title: 显示文本节点边框
     description: |
       控制是否显示文本节点的边框
+  defaultFontFamily:
+    title: 默认字体
+    description: |
+      设置画布默认字体
   showTreeDirectionHint:
     title: 显示树形生长方向提示
     description: |
@@ -1825,6 +1829,12 @@ keyBinds:
   increaseFontSize:
     title: 增大选中的文本节点字体大小
     description: 仅对文本节点生效，按下Ctrl+=增大选中的文本节点字体大小
+  setFontFamily:
+    title: 设置字体
+    description: 为选中的文本节点设置自定义 CSS font-family 字体，留空恢复默认字体
+  setFontWeight:
+    title: 设置字重
+    description: 为选中的文本节点设置自定义 CSS font-weight 值（如 bold、600），留空恢复 normal
   splitTextNodes:
     title: 将选中的文本节点，剋(kēi)成小块
     description: 仅对文本节点生效，根据标点符号，空格、换行符等进行分割，将其分割成小块

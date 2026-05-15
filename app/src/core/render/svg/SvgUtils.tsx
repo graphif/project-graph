@@ -1,8 +1,9 @@
+import { Renderer } from "@/core/render/canvas2d/renderer";
+import { Settings } from "@/core/service/Settings";
+import { getTextSize, textToTextArray } from "@/utils/font";
 import { Color, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Rectangle } from "@graphif/shapes";
 import { v4 } from "uuid";
-import { FONT, getTextSize, textToTextArray } from "@/utils/font";
-import { Renderer } from "@/core/render/canvas2d/renderer";
 
 /**
  * 专门存放生成svg的东西
@@ -38,7 +39,7 @@ export namespace SvgUtils {
         fill={color.toString()}
         fontSize={fontSize}
         textAnchor="middle"
-        fontFamily={FONT}
+        fontFamily={Settings.defaultFontFamily}
       >
         {text}
       </text>
@@ -68,7 +69,7 @@ export namespace SvgUtils {
         paintOrder="stroke fill"
         fontSize={fontSize}
         textAnchor="middle"
-        fontFamily={FONT}
+        fontFamily={Settings.defaultFontFamily}
       >
         {text}
       </text>
@@ -85,7 +86,7 @@ export namespace SvgUtils {
         fill={color.toString()}
         fontSize={fontSize}
         textAnchor="start"
-        fontFamily={FONT}
+        fontFamily={Settings.defaultFontFamily}
       >
         {text}
       </text>
@@ -220,7 +221,7 @@ export namespace SvgUtils {
           fill={color.toString()}
           fontSize={fontSize}
           textAnchor="start"
-          fontFamily={FONT}
+          fontFamily={Settings.defaultFontFamily}
         >
           {line}
         </text>,

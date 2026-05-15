@@ -1,6 +1,7 @@
 import { Random } from "@/core/algorithm/random";
 import { Project, service } from "@/core/Project";
 import { SyncAssociationRenderer } from "@/core/render/canvas2d/utilsRenderer/SyncAssociationRenderer";
+import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import {
   getLogicNodeRenderName,
   LogicNodeNameEnum,
@@ -8,11 +9,10 @@ import {
 } from "@/core/service/dataGenerateService/autoComputeEngine/logicNodeNameEnum";
 import { Settings } from "@/core/service/Settings";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { getTextSize } from "@/utils/font";
+import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
 import { Color, colorInvert, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
-import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
-import { getTextSize } from "@/utils/font";
 import i18next from "i18next";
 
 @service("textNodeRenderer")
@@ -621,6 +621,9 @@ export class TextNodeRenderer {
           ? colorInvert(node.color)
           : colorInvert(this.project.stageStyleManager.currentStyle.Background),
         1.5,
+        undefined,
+        node.fontFamily || undefined,
+        node.fontWeight || undefined,
       );
     }
   }

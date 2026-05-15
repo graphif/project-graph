@@ -832,6 +832,9 @@ settings:
   showTextNodeBorder:
     title: Show Text Node Border
     description: "Controls whether to show the text node border or not.\n"
+  defaultFontFamily:
+    title: Default Font
+    description: "Set the default font for the canvas. Leave empty to use the platform default font.\n"
   showTreeDirectionHint:
     title: Show Tree Growth Direction Hints
     description: |
@@ -1438,6 +1441,12 @@ keyBinds:
   increaseFontSize:
     title: Increase Font Size
     description: Increase the font size of selected text nodes. Only works on text nodes. Press Ctrl+= to increase.
+  setFontFamily:
+    title: Set Font Family
+    description: Set a custom CSS font-family for selected text nodes. Leave empty to reset to the default font.
+  setFontWeight:
+    title: Set Font Weight
+    description: Set a custom CSS font-weight for selected text nodes (e.g. bold, 600). Leave empty to reset to normal.
   createTwinTextNode:
     title: Create Twin Text Node
     description: Create twin nodes for all selected text nodes. New nodes will sync content with original nodes. Press Shift+Y to trigger.

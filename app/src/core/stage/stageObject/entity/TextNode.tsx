@@ -49,6 +49,18 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
   public sizeAdjust: string = "auto";
 
   /**
+   * 自定义字体，空字符串表示使用默认字体
+   */
+  @serializable
+  public fontFamily: string = "";
+
+  /**
+   * 自定义字重，空字符串表示使用 normal
+   */
+  @serializable
+  public fontWeight: string = "";
+
+  /**
    * 节点是否被选中
    */
   _isSelected: boolean = false;
@@ -102,6 +114,8 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       color = Color.Transparent,
       sizeAdjust = "auto",
       fontScaleLevel = 0,
+      fontFamily = "",
+      fontWeight = "",
     }: {
       uuid?: string;
       text?: string;
@@ -110,6 +124,8 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       sizeAdjust?: "auto" | "manual";
       collisionBox?: CollisionBox;
       fontScaleLevel?: number;
+      fontFamily?: string;
+      fontWeight?: string;
     },
     public unknown = false,
   ) {
@@ -121,6 +137,8 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     this.color = color;
     this.sizeAdjust = sizeAdjust;
     this.fontScaleLevel = fontScaleLevel;
+    this.fontFamily = fontFamily;
+    this.fontWeight = fontWeight;
     // 初始化字体大小缓存
     this.updateFontSizeCache();
     // if (this.text.length < TextNode.enableResizeCharCount) {
@@ -239,7 +257,9 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
   private adjustSizeByText() {
     this.collisionBox.shapes[0] = new Rectangle(
       this.rectangle.location.clone(),
-      getMultiLineTextSize(this.text, this.getFontSize(), 1.5).add(Vector.same(this.getPadding()).multiply(2)),
+      getMultiLineTextSize(this.text, this.getFontSize(), 1.5, undefined, this.fontFamily, this.fontWeight).add(
+        Vector.same(this.getPadding()).multiply(2),
+      ),
     );
   }
   private adjustHeightByText() {
@@ -249,6 +269,8 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       this.getFontSize(),
       wrapWidth,
       1.5,
+      this.fontFamily,
+      this.fontWeight,
     );
     this.collisionBox.shapes[0] = new Rectangle(
       this.rectangle.location.clone(),
@@ -261,6 +283,13 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
    */
   public forceAdjustSizeByText() {
     this.adjustSizeByText();
+  }
+
+  /**
+   * 强制触发手动模式下的高度调整
+   */
+  public forceAdjustHeightByText() {
+    this.adjustHeightByText();
   }
 
   // private adjustSizeByTextWidthLimitWidth(width: number) {

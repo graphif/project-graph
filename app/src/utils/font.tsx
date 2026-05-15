@@ -1,17 +1,19 @@
-import { isMac } from "@/utils/platform";
-import { MaxSizeCache, Vector } from "@graphif/data-structures";
 import { Settings } from "@/core/service/Settings";
+import { MaxSizeCache, Vector } from "@graphif/data-structures";
 
 const _canvas = document.createElement("canvas");
 const _context = _canvas.getContext("2d");
 
 const _cache = new MaxSizeCache<string, number>(10000);
 
-/** canvas中使用的字体 */
-export let FONT = "-apple-system, BlinkMacSystemFont, MiSans, system-ui, sans-serif";
-if (isMac) {
-  // 只有 PingFang TC 在mac中，中英文混合文字 宽度才能计算正确，离谱
-  FONT = "PingFang SC, PingFang TC, -apple-system";
+/**
+ * 解析字体字符串，支持自定义字体族和字重
+ * @param fontSize 字体大小
+ * @param fontFamily 自定义字体族，空字符串或 undefined 时使用全局默认字体
+ * @param fontWeight 自定义字重，空字符串或 undefined 时使用 normal
+ */
+export function resolveFont(fontSize: number, fontFamily?: string, fontWeight?: string): string {
+  return `${fontWeight || "normal"} ${fontSize}px ${fontFamily ? `"${fontFamily}"` : Settings.defaultFontFamily}`;
 }
 
 // eslint-disable-next-line prefer-const
@@ -23,10 +25,10 @@ let useCache = true;
  * @param size
  * @returns
  */
-export function getTextSize(text: string, size: number): Vector {
+export function getTextSize(text: string, size: number, fontFamily?: string, fontWeight?: string): Vector {
   // const t1 = performance.now();
   if (useCache) {
-    const value = _cache.get(`${text}-${size}`);
+    const value = _cache.get(`${text}-${size}-${fontFamily || ""}-${fontWeight || ""}`);
     if (value) {
       return new Vector(value, size);
     }
@@ -36,11 +38,11 @@ export function getTextSize(text: string, size: number): Vector {
     throw new Error("Failed to get canvas context");
   }
 
-  _context.font = `${size}px normal ${FONT}`;
+  _context.font = resolveFont(size, fontFamily, fontWeight);
   const metrics = _context.measureText(text);
   // const t2 = performance.now();
   if (useCache) {
-    _cache.set(`${text}-${size}`, metrics.width);
+    _cache.set(`${text}-${size}-${fontFamily || ""}-${fontWeight || ""}`, metrics.width);
   }
 
   return new Vector(metrics.width, size);
@@ -53,12 +55,19 @@ export function getTextSize(text: string, size: number): Vector {
  * @param lineHeight 行高，是一个比率
  * @returns
  */
-export function getMultiLineTextSize(text: string, fontSize: number, lineHeight: number): Vector {
+export function getMultiLineTextSize(
+  text: string,
+  fontSize: number,
+  lineHeight: number,
+  _limitWidth?: number,
+  fontFamily?: string,
+  fontWeight?: string,
+): Vector {
   const lines = text.split("\n");
   let width = 0;
   let height = 0;
   for (const line of lines) {
-    const size = getTextSize(line, fontSize);
+    const size = getTextSize(line, fontSize, fontFamily, fontWeight);
     width = Math.max(width, size.x);
     height += size.y * lineHeight;
   }
@@ -126,7 +135,13 @@ export function camelCaseToDashCase(text: string) {
  * @param limitWidth 宽度限制
  * @returns 分割后的行数组
  */
-export function textToTextArray(text: string, fontSize: number, limitWidth: number): string[] {
+export function textToTextArray(
+  text: string,
+  fontSize: number,
+  limitWidth: number,
+  fontFamily?: string,
+  fontWeight?: string,
+): string[] {
   if (!_context) {
     return text.split("\n");
   }
@@ -135,7 +150,7 @@ export function textToTextArray(text: string, fontSize: number, limitWidth: numb
   const lines: string[] = [];
 
   // 设置字体以进行测量
-  _context.font = `${fontSize}px normal ${FONT}`;
+  _context.font = resolveFont(fontSize, fontFamily, fontWeight);
 
   for (const char of text) {
     // 新来字符的宽度

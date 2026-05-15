@@ -26,6 +26,8 @@ export namespace Serialized {
     text: string;
     color: Color;
     sizeAdjust: TextNodeSizeAdjust;
+    fontFamily: string;
+    fontWeight: string;
   };
 
   export function isTextNode(obj: StageObject): obj is TextNode {

@@ -227,6 +227,7 @@ const categories = {
       "showTreeDirectionHint",
       "showEditModeHint",
       "colorPanelMouseEnterPreview",
+      "defaultFontFamily",
     ],
     section: [
       "sectionBitTitleRenderType",

@@ -1,3 +1,4 @@
+import { isMac } from "@/utils/platform";
 import { LazyStore } from "@tauri-apps/plugin-store";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -451,6 +452,13 @@ export const settingsSchema = z.object({
     ] as any),
   disabledExtensions: z.array(z.string()).default([]),
   extensionSettings: z.record(z.string(), z.record(z.string(), z.unknown())).default({}),
+  defaultFontFamily: z
+    .string()
+    .default(
+      isMac
+        ? "PingFang SC, PingFang TC, -apple-system"
+        : "-apple-system, BlinkMacSystemFont, MiSans, system-ui, sans-serif",
+    ),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

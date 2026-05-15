@@ -21,6 +21,7 @@ import { writeImage, writeText } from "@tauri-apps/plugin-clipboard-manager";
 // import ColorWindow from "@/sub/ColorWindow";
 import FindWindow from "@/sub/FindWindow";
 // import KeyboardRecentFilesWindow from "@/sub/KeyboardRecentFilesWindow";
+import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
 import ColorPaletteWindow from "@/sub/ColorPaletteWindow";
 import ColorWindow from "@/sub/ColorWindow";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
@@ -151,7 +152,6 @@ import { ColorSmartTools } from "../../dataManageService/colorSmartTools";
 import { ConnectNodeSmartTools } from "../../dataManageService/connectNodeSmartTools";
 import { TextNodeSmartTools } from "../../dataManageService/textNodeSmartTools";
 import { createFileAtCurrentProjectDir, onNewDraft, onOpenFile, openCurrentProjectFolder } from "../../GlobalMenu";
-import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
 
 export type KeyBindWhen = (project?: Project) => boolean | Promise<boolean>;
 
@@ -2693,6 +2693,65 @@ export const allKeyBinds: KeyBindItem[] = [
     when: whenHasSelectedTextNodes,
     onPress: (project) => {
       if (project) TextNodeSmartTools.generateSummaryBySelectedTextNodeTextWithAI(project);
+    },
+  },
+  /*------- 字体相关 -------*/
+  {
+    id: "setFontFamily",
+    defaultKey: "A-f",
+    icon: Type,
+    when: whenHasSelectedTextNodes,
+    onPress: async (project) => {
+      const selectedTextNodes = project!.stageManager
+        .getSelectedEntities()
+        .filter((n) => n instanceof TextNode) as TextNode[];
+
+      const fontFamily = await Dialog.input("设置字体 (Font Family)", "输入 CSS font-family 值（留空恢复默认字体）", {
+        defaultValue: selectedTextNodes[0]?.fontFamily ?? "",
+      });
+      if (fontFamily === undefined) return;
+
+      for (const node of selectedTextNodes) {
+        node.fontFamily = fontFamily;
+        if (node.sizeAdjust === "auto") {
+          node.forceAdjustSizeByText();
+        } else if (node.sizeAdjust === "manual") {
+          node.forceAdjustHeightByText();
+        }
+        project!.textNodeRenderer.renderTextNode(node);
+      }
+      project!.historyManager.recordStep();
+    },
+  },
+  {
+    id: "setFontWeight",
+    defaultKey: "A-w",
+    icon: Type,
+    when: whenHasSelectedTextNodes,
+    onPress: async (project) => {
+      const selectedTextNodes = project!.stageManager
+        .getSelectedEntities()
+        .filter((n) => n instanceof TextNode) as TextNode[];
+
+      const fontWeight = await Dialog.input(
+        "设置字重 (Font Weight)",
+        "输入 CSS font-weight 值（如 bold、600，留空恢复 normal）",
+        {
+          defaultValue: selectedTextNodes[0]?.fontWeight ?? "",
+        },
+      );
+      if (fontWeight === undefined) return;
+
+      for (const node of selectedTextNodes) {
+        node.fontWeight = fontWeight;
+        if (node.sizeAdjust === "auto") {
+          node.forceAdjustSizeByText();
+        } else if (node.sizeAdjust === "manual") {
+          node.forceAdjustHeightByText();
+        }
+        project!.textNodeRenderer.renderTextNode(node);
+      }
+      project!.historyManager.recordStep();
     },
   },
 ];
