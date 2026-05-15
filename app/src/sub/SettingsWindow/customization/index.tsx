@@ -7,13 +7,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Sparkles, Volume2, Menu as MenuIcon } from "lucide-react";
+import { Menu as MenuIcon, Sparkles, Volume2 } from "lucide-react";
 import { Fragment, useState } from "react";
+import ContextMenuPage from "./context-menu";
 import EffectsPage from "./effects";
 import SoundEffectsPage from "./sounds";
-import ContextMenuPage from "./context-menu";
 
-export default function AppearanceTab() {
+export default function CustomizationTab() {
   const [currentCategory, setCurrentCategory] = useState("effects");
 
   // @ts-expect-error fuck ts

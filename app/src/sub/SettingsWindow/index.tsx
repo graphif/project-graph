@@ -3,11 +3,12 @@ import { SubWindow } from "@/core/service/SubWindow";
 import { activeTabAtom, store } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
+import { Blocks, Brush, Command, HandHeart, Info, Keyboard, Palette, PanelRight, Settings, User } from "lucide-react";
 import { useState } from "react";
 import AboutTab from "./about";
 import AccountTab from "./account";
-import AppearanceTab from "./appearance";
 import CreditsTab from "./credits";
+import CustomizationTab from "./customization";
 import ExtensionsTab from "./extensions";
 import KeyBindsPage from "./keybinds";
 import KeyBindsGlobalPage from "./keybindsGlobal";
@@ -15,7 +16,7 @@ import QuickSettingsTab from "./quick-settings";
 import SettingsTab from "./settings";
 import ThemesTab from "./themes";
 
-type TabName = "settings" | "keybinds" | "appearance" | "about" | "quickSettings" | "extensions" | "account";
+type TabName = "settings" | "keybinds" | "customization" | "about" | "quickSettings" | "extensions" | "account";
 
 export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab?: TabName }) {
   const [currentTab, setCurrentTab] = useState<TabName>(defaultTab);
@@ -24,16 +25,46 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
     <Tabs value={currentTab} onValueChange={setCurrentTab as any} className="h-full gap-0 overflow-hidden">
       <div className="flex">
         <TabsList>
-          <TabsTrigger value="settings">设置</TabsTrigger>
-          <TabsTrigger value="keybinds">快捷键</TabsTrigger>
-          <TabsTrigger value="keybindsGlobal">全局快捷键</TabsTrigger>
-          <TabsTrigger value="appearance">个性化</TabsTrigger>
-          <TabsTrigger value="themes">主题</TabsTrigger>
-          <TabsTrigger value="account">账户</TabsTrigger>
-          <TabsTrigger value="quickSettings">快捷设置</TabsTrigger>
-          <TabsTrigger value="extensions">扩展</TabsTrigger>
-          <TabsTrigger value="about">关于</TabsTrigger>
-          <TabsTrigger value="credits">鸣谢</TabsTrigger>
+          <TabsTrigger value="settings">
+            <Settings />
+            设置
+          </TabsTrigger>
+          <TabsTrigger value="keybinds">
+            <Keyboard />
+            快捷键
+          </TabsTrigger>
+          <TabsTrigger value="keybindsGlobal">
+            <Command />
+            全局快捷键
+          </TabsTrigger>
+          <TabsTrigger value="customization">
+            <Brush />
+            个性化
+          </TabsTrigger>
+          <TabsTrigger value="themes">
+            <Palette />
+            主题
+          </TabsTrigger>
+          <TabsTrigger value="account">
+            <User />
+            账户
+          </TabsTrigger>
+          <TabsTrigger value="quickSettings">
+            <PanelRight />
+            快捷设置
+          </TabsTrigger>
+          <TabsTrigger value="extensions">
+            <Blocks />
+            扩展
+          </TabsTrigger>
+          <TabsTrigger value="about">
+            <Info />
+            关于
+          </TabsTrigger>
+          <TabsTrigger value="credits">
+            <HandHeart />
+            鸣谢
+          </TabsTrigger>
         </TabsList>
         <div data-pg-drag-region className="h-full flex-1" />
       </div>
@@ -46,8 +77,8 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
       <TabsContent value="keybindsGlobal" className="overflow-auto">
         <KeyBindsGlobalPage />
       </TabsContent>
-      <TabsContent value="appearance" className="overflow-auto">
-        <AppearanceTab />
+      <TabsContent value="customization" className="overflow-auto">
+        <CustomizationTab />
       </TabsContent>
       <TabsContent value="themes" className="overflow-auto">
         <ThemesTab />

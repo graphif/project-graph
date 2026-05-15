@@ -122,19 +122,14 @@ const downloadAndSetAllSounds = async () => {
 
         // 逐个下载音效文件并设置
         for (const config of SOUND_CONFIGS) {
-          try {
-            // 从GitHub仓库下载音效文件
-            const u8a = await AssetsRepository.fetchFile(`sfx/${config.fileName}`);
-            const path = await join(dir, config.fileName);
-            await writeFile(path, u8a);
+          // 从GitHub仓库下载音效文件
+          const u8a = await AssetsRepository.fetchFile(`sfx/${config.fileName}`);
+          const path = await join(dir, config.fileName);
+          await writeFile(path, u8a);
 
-            // 设置音效文件路径
-            // @ts-expect-error settingKey is keyof Settings
-            Settings[config.settingKey] = path;
-          } catch (error) {
-            console.error(`下载音效文件 ${config.fileName} 失败:`, error);
-            throw new Error(`下载音效文件 ${config.fileName} 失败`);
-          }
+          // 设置音效文件路径
+          // @ts-expect-error settingKey is keyof Settings
+          Settings[config.settingKey] = path;
         }
 
         // 播放一个音效来验证设置成功
@@ -197,7 +192,7 @@ export default function SoundEffectsPage() {
         <div className="space-y-2">
           {/* 一键设置所有音效按钮 */}
           <button
-            className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-primary/50 flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium shadow transition-colors focus-visible:outline-none focus-visible:ring-2"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-primary/50 flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium shadow transition-colors focus-visible:ring-2 focus-visible:outline-none"
             onClick={downloadAndSetAllSounds}
           >
             <Download className="h-4 w-4" />
@@ -210,7 +205,7 @@ export default function SoundEffectsPage() {
         description="即将跳转github页面。如果github页面无法打开，请自行解决或使用自定义音效。"
         onConfirm={() => open("https://github.com/graphif/assets")}
       >
-        <div className="bg-muted/50 **:cursor-pointer group flex flex-1 cursor-pointer flex-col justify-center gap-2 rounded-lg border p-4">
+        <div className="bg-muted/50 group flex flex-1 cursor-pointer flex-col justify-center gap-2 rounded-lg border p-4 **:cursor-pointer">
           <div className="flex items-center justify-center gap-2">
             <ExternalLink className="h-5 w-5" />
             <span className="text-lg">前往官方静态资源Github仓库:</span>
