@@ -347,7 +347,7 @@ export default function CreditsTab() {
         )}
 
         <div
-          className="bg-muted/50 **:cursor-pointer group flex flex-1 cursor-pointer flex-col justify-center gap-2 rounded-lg border p-4"
+          className="bg-muted/50 group flex flex-1 cursor-pointer flex-col justify-center gap-2 rounded-lg border p-4 **:cursor-pointer"
           onClick={() => {
             Telemetry.event("credits_donate_clicked");
             open("https://2y.nz/pgdonate");
@@ -415,7 +415,7 @@ export default function CreditsTab() {
                     <td className="px-3 py-1.5 text-right">
                       <span
                         className={cn(
-                          "whitespace-nowrap font-[DINPro] font-bold",
+                          "font-[DINPro] font-bold whitespace-nowrap",
                           donation.amount < 0 ? "text-red-500" : "text-green-500",
                         )}
                       >

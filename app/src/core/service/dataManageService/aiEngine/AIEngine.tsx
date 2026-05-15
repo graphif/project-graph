@@ -2,6 +2,7 @@ import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { AITools } from "@/core/service/dataManageService/aiEngine/AITools";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { fetch } from "@tauri-apps/plugin-http";
 import { convertToModelMessages, DefaultChatTransport, stepCountIs, streamText, type UIMessage } from "ai";
 
 const SYSTEM_PROMPT =
