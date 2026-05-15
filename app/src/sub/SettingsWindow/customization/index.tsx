@@ -7,10 +7,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Menu as MenuIcon, Sparkles, Volume2 } from "lucide-react";
+import { Menu as MenuIcon, SlidersHorizontal, Sparkles, Volume2 } from "lucide-react";
 import { Fragment, useState } from "react";
 import ContextMenuPage from "./context-menu";
 import EffectsPage from "./effects";
+import QuickSettingsTab from "./quick-settings";
 import SoundEffectsPage from "./sounds";
 
 export default function CustomizationTab() {
@@ -62,5 +63,10 @@ const categories = {
     name: "右键菜单",
     icon: MenuIcon,
     component: ContextMenuPage,
+  },
+  quickSettings: {
+    name: "快捷设置",
+    icon: SlidersHorizontal,
+    component: QuickSettingsTab,
   },
 };

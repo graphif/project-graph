@@ -3,20 +3,20 @@ import { SubWindow } from "@/core/service/SubWindow";
 import { activeTabAtom, store } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { Blocks, Brush, Command, HandHeart, Info, Keyboard, Palette, PanelRight, Settings, User } from "lucide-react";
+import { Blocks, Brush, Command, HandHeart, Info, Keyboard, Palette, Settings, User } from "lucide-react";
 import { useState } from "react";
 import AboutTab from "./about";
 import AccountTab from "./account";
 import CreditsTab from "./credits";
 import CustomizationTab from "./customization";
+import QuickSettingsTab from "./customization/quick-settings";
 import ExtensionsTab from "./extensions";
 import KeyBindsPage from "./keybinds";
 import KeyBindsGlobalPage from "./keybindsGlobal";
-import QuickSettingsTab from "./quick-settings";
 import SettingsTab from "./settings";
 import ThemesTab from "./themes";
 
-type TabName = "settings" | "keybinds" | "customization" | "about" | "quickSettings" | "extensions" | "account";
+type TabName = "settings" | "keybinds" | "customization" | "about" | "extensions" | "account";
 
 export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab?: TabName }) {
   const [currentTab, setCurrentTab] = useState<TabName>(defaultTab);
@@ -48,10 +48,6 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
           <TabsTrigger value="account">
             <User />
             账户
-          </TabsTrigger>
-          <TabsTrigger value="quickSettings">
-            <PanelRight />
-            快捷设置
           </TabsTrigger>
           <TabsTrigger value="extensions">
             <Blocks />
