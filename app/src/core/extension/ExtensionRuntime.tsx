@@ -32,4 +32,8 @@ self.prg = Comlink.wrap(self);
     expose(extensionHostApiFactory(extension), this.worker);
     this.remote = wrap(this.worker);
   }
+
+  terminate() {
+    this.worker.terminate();
+  }
 }

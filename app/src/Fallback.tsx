@@ -1,4 +1,4 @@
-import { ErrorBoundaryContextType } from "react-error-boundary";
+import { FallbackProps } from "react-error-boundary";
 import { toast } from "sonner";
 import { Button } from "./components/ui/button";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "./components/ui/card";
@@ -6,7 +6,7 @@ import { Popover } from "./components/ui/popover";
 import { Project } from "./core/Project";
 import { store, tabsAtom } from "./state";
 
-export default function Fallback({ error, resetErrorBoundary }: ErrorBoundaryContextType) {
+export default function Fallback({ error, resetErrorBoundary }: FallbackProps) {
   return (
     <div className="bg-background text-foreground flex h-screen w-screen flex-col items-center justify-center gap-4">
       <Card className="w-96">

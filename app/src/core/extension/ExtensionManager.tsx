@@ -56,4 +56,14 @@ export namespace ExtensionManager {
       await getRuntime(name);
     }
   }
+
+  export async function reload() {
+    // 终止所有扩展的 Worker
+    for (const runtime of runtimes.values()) {
+      runtime.terminate();
+    }
+    runtimes.clear();
+    extensions.clear();
+    await init();
+  }
 }

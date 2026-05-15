@@ -11,8 +11,9 @@ import {
 import { Extension } from "@/core/extension/Extension";
 import { ExtensionManager } from "@/core/extension/ExtensionManager";
 import { open } from "@tauri-apps/plugin-shell";
-import { Blocks, Store } from "lucide-react";
+import { Blocks, RefreshCcw, Store } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function ExtensionsTab() {
   const [extensions, setExtensions] = useState<Extension[]>([]);
@@ -79,6 +80,18 @@ export default function ExtensionsTab() {
         </SidebarContent>
         <SidebarFooter>
           <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() =>
+                  toast.promise(ExtensionManager.reload, {
+                    loading: "正在加载扩展…",
+                  })
+                }
+              >
+                <RefreshCcw />
+                重载扩展
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton onClick={() => open(`${import.meta.env.LR_API_BASE_URL}/ext/marketplace`)}>
                 <Store />
