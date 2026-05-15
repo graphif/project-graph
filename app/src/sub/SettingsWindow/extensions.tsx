@@ -1,6 +1,7 @@
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
@@ -9,7 +10,8 @@ import {
 } from "@/components/ui/sidebar";
 import { Extension } from "@/core/extension/Extension";
 import { ExtensionManager } from "@/core/extension/ExtensionManager";
-import { Blocks } from "lucide-react";
+import { open } from "@tauri-apps/plugin-shell";
+import { Blocks, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function ExtensionsTab() {
@@ -75,6 +77,16 @@ export default function ExtensionsTab() {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => open(`${import.meta.env.LR_API_BASE_URL}/ext/marketplace`)}>
+                <Store />
+                扩展市场
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
       </Sidebar>
       <div className="bg-background/50 flex-1 overflow-auto">
         {selectedExtension && ContentComponent ? (
