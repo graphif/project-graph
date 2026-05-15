@@ -21,9 +21,11 @@ export const isDevAtom = atom<boolean>(false);
 export interface AuthUser {
   id: string;
   email: string;
-  name?: string;
-  emailVerified?: boolean;
-  image?: string;
+  name: string;
+  emailVerified: boolean;
+  image?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export const currentUserAtom = atom<AuthUser | null>(null);

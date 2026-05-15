@@ -31,7 +31,7 @@ export class AIEngine {
         name: "project-graph",
         baseURL: Settings.aiApiBaseUrl,
         apiKey: Settings.aiApiKey || undefined,
-        fetch: async (url: string | URL, init: RequestInit | undefined) => {
+        fetch: async (url: any, init: any) => {
           const response = await fetch(url.toString(), {
             ...init,
             headers: {

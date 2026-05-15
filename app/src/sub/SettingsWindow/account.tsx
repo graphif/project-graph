@@ -6,19 +6,13 @@ import { UserState } from "@/core/service/UserState";
 import type { AuthUser } from "@/state";
 import { currentUserAtom, store } from "@/state";
 import { open } from "@tauri-apps/plugin-shell";
+import { useAtom } from "jotai";
 import { ExternalLink, LoaderCircle, LogIn, LogOut, Mail } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 export default function AccountTab() {
-  const [user, setUser] = useState(store.get(currentUserAtom));
-
-  useEffect(() => {
-    const unsub = store.sub(currentUserAtom, () => {
-      setUser(store.get(currentUserAtom));
-    });
-    return unsub;
-  }, []);
+  const [user] = useAtom(currentUserAtom);
 
   if (!FeatureFlags.USER || !authClient) {
     return (
@@ -34,7 +28,7 @@ export default function AccountTab() {
         user={user}
         onSignOut={async () => {
           try {
-            await authClient.signOut();
+            await authClient!.signOut();
           } catch {
             /* ignore */
           }
@@ -73,12 +67,12 @@ function LoginForm({ onLogin }: { onLogin: (user: AuthUser) => void }) {
         return;
       }
       if (data?.user) {
-        await UserState.setSession({ user: data.user, token: data.token ?? "" });
-        onLogin(data.user);
+        await UserState.setSession({ user: data.user as AuthUser, token: data.token ?? "" });
+        onLogin(data.user as AuthUser);
       }
       toast.success("登录成功");
     } catch (e) {
-      console.error("登录出错", e);
+      console.error("Login error", e);
       setError(e instanceof Error ? e.message : "网络错误，请稍后重试");
     } finally {
       setLoading(false);

@@ -10,7 +10,7 @@ import { Settings } from "@/core/service/Settings";
 import { Tutorials } from "@/core/service/Tourials";
 import { UserState } from "@/core/service/UserState";
 import { EdgeCollisionBoxGetter } from "@/core/stage/stageObject/association/EdgeCollisionBoxGetter";
-import { currentUserAtom, isAuthLoadingAtom, store } from "@/state";
+import { type AuthUser, currentUserAtom, isAuthLoadingAtom, store } from "@/state";
 import { exit, writeStderr } from "@/utils/otherApi";
 import { isDesktop, isMobile, isWeb } from "@/utils/platform";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -86,7 +86,7 @@ async function initAuth() {
       // 验证 session 是否仍然有效
       const { data } = await authClient.getSession();
       if (data?.user) {
-        store.set(currentUserAtom, data.user);
+        store.set(currentUserAtom, data.user as AuthUser);
       } else {
         // token 失效，清理本地存储
         await UserState.clearSession();

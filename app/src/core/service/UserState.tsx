@@ -1,15 +1,10 @@
 import { FeatureFlags } from "@/core/service/FeatureFlags";
+import type { AuthUser } from "@/state";
 import { createStore } from "@/utils/store";
 import { Store } from "@tauri-apps/plugin-store";
 
 export interface StoredSession {
-  user: {
-    id: string;
-    email: string;
-    name?: string;
-    emailVerified?: boolean;
-    image?: string;
-  };
+  user: AuthUser;
   token: string;
 }
 
@@ -54,7 +49,10 @@ export namespace UserState {
     if (existing) {
       await setSession({ ...existing, token });
     } else {
-      await setSession({ user: { id: "", email: "" }, token });
+      await setSession({
+        user: { id: "", email: "", name: "", emailVerified: false, createdAt: new Date(), updatedAt: new Date() },
+        token,
+      });
     }
   }
 }
