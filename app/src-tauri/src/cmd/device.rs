@@ -1,4 +1,6 @@
-use std::{io::Read, process::Command};
+#[cfg(target_os = "linux")]
+use std::io::Read;
+use std::process::Command;
 
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;

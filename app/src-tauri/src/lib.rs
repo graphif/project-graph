@@ -1,8 +1,21 @@
 mod cmd;
 
+use std::sync::Mutex;
+
+use tauri::{Emitter, Manager, State};
+
 // 这两行可能不能去掉，否则会导致linux打包软件报错
+#[cfg(target_os = "linux")]
 use std::path::Path;
-use tauri::Manager;
+
+#[derive(Default)]
+struct PendingOpenFiles(Mutex<Vec<String>>);
+
+#[tauri::command]
+fn take_pending_open_files(state: State<PendingOpenFiles>) -> Vec<String> {
+    let mut guard = state.0.lock().unwrap();
+    std::mem::take(&mut *guard)
+}
 
 #[tauri::command]
 fn write_stdout(content: String) {
@@ -32,7 +45,9 @@ pub fn run() {
         }
     }
 
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
+        .manage(PendingOpenFiles::default())
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_http::init())
@@ -66,10 +81,37 @@ pub fn run() {
             cmd::fs::read_folder_structure,
             cmd::fs::read_folder_recursive,
             cmd::shell::run_command,
+            take_pending_open_files,
             write_stdout,
             write_stderr,
             exit,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application");
+
+    // macos 双击打开prg文件时
+    app.run(|app_handle, event| {
+        #[cfg(target_os = "macos")]
+        if let tauri::RunEvent::Opened { urls } = event {
+            let mut paths = Vec::new();
+            for url in urls {
+                if url.scheme() == "file" {
+                    if let Ok(path_buf) = url.to_file_path() {
+                        let path = path_buf.to_string_lossy().to_string();
+                        paths.push(path);
+                    }
+                }
+            }
+            if !paths.is_empty() {
+                {
+                    let state = app_handle.state::<PendingOpenFiles>();
+                    let mut guard = state.0.lock().unwrap();
+                    guard.extend(paths.iter().cloned());
+                }
+                for path in paths {
+                    let _ = app_handle.emit("open-file-from-os", path);
+                }
+            }
+        }
+    });
 }

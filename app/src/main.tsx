@@ -13,8 +13,10 @@ import { EdgeCollisionBoxGetter } from "@/core/stage/stageObject/association/Edg
 import { type AuthUser, currentUserAtom, isAuthLoadingAtom, store } from "@/state";
 import { exit, writeStderr } from "@/utils/otherApi";
 import { isDesktop, isMobile, isWeb } from "@/utils/platform";
+import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { getMatches } from "@tauri-apps/plugin-cli";
+import { listen } from "@tauri-apps/api/event";
 import { exists } from "@tauri-apps/plugin-fs";
 import "driver.js/dist/driver.css";
 import i18next from "i18next";
@@ -156,5 +158,28 @@ async function loadStartFile() {
     } else {
       toast.error("文件不存在");
     }
+  }
+
+  if (!isWeb && isDesktop) {
+    const pending = await invoke<string[]>("take_pending_open_files");
+    for (const path of pending) {
+      if (!path.toLowerCase().endsWith(".prg")) continue;
+      const isExists = await exists(path);
+      if (isExists) {
+        onOpenFile(URI.file(path), "macOS双击文件(启动)");
+      } else {
+        toast.error("文件不存在");
+      }
+    }
+
+    listen<string>("open-file-from-os", async (event) => {
+      const path = event.payload;
+      const isExists = await exists(path);
+      if (isExists) {
+        onOpenFile(URI.file(path), "macOS双击文件");
+      } else {
+        toast.error("文件不存在");
+      }
+    });
   }
 }
