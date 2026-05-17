@@ -24,7 +24,7 @@ export class MarkdownExporter extends BaseExporter {
    */
   private getNodeMarkdown(node: TextNode, level: number): string {
     let stringResult = "";
-    if (level < 6) {
+    if (level <= 6) {
       stringResult += `${"#".repeat(level)} ${node.text}\n\n`;
     } else {
       stringResult += `**${node.text}**\n\n`;
