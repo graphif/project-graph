@@ -117,7 +117,16 @@ export class Camera {
     }
   }
 
+  private tickIndex = -1;
+  private hasResetOnOpen = false;
+
   tick() {
+    // --- 初次打开文件的时候，重制视野
+    this.tickIndex++; // 从0开始
+    if (this.tickIndex >= 3 && this.tickIndex <= 10 && !this.hasResetOnOpen) {
+      this.reset(); // 刚打开文件的时候，重制视野。如果画布还没挂载（w=0或h=0），会在后续tick中重试
+    }
+
     // 计算摩擦力 与速度方向相反,固定值,但速度为0摩擦力就不存在
     // 获得速度的大小和方向
 
@@ -319,6 +328,12 @@ export class Camera {
    * 还是不要有动画过度了，因为过度效果会带来一点卡顿（2024年10月25日）
    */
   reset() {
+    // --防止初次打开文件就重制视野，导致NaN--
+    if (this.project.renderer.w === 0 || this.project.renderer.h === 0) {
+      return;
+    }
+    this.hasResetOnOpen = true;
+    // --
     this.location = this.project.stageManager.getCenter();
     this.targetLocationByScale = this.location.clone();
     // this.currentScale = 0.01;

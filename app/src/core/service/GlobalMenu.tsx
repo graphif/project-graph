@@ -1800,11 +1800,6 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
             store.set(tabsAtom, [...store.get(tabsAtom), tab]);
             store.set(activeTabAtom, tab);
             const project = tab instanceof Project ? tab : undefined;
-            if (project) {
-              setTimeout(() => {
-                project.camera.reset();
-              }, 100);
-            }
             await RecentFileManager.addRecentFileByUri(uri);
             if (
               isMac &&
