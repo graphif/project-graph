@@ -62,7 +62,7 @@ export const settingsSchema = z.object({
   autoNamerDetailsTemplate: z.string().default(""),
   autoNamerTreeNodeTemplate: z.string().default("Node_{{i}}"),
   autoSaveWhenClose: z.boolean().default(false),
-  autoSave: z.boolean().default(true),
+  autoSave: z.boolean().default(false),
   autoSaveInterval: z.number().int().min(1).max(60).default(10),
   autoBackup: z.boolean().default(true),
   autoBackupInterval: z.number().int().min(60).max(6000).default(600),
