@@ -1025,7 +1025,10 @@ settings:
     description: |
       进入文本节点编辑模式时，在节点顶部显示"正在编辑模式"，底部显示换行和退出编辑的快捷键提示。
       关闭后不再渲染这些提示文字。
-
+  textNodeEditModeOutlineOpacity:
+    title: 文本节点编辑状态交互区域提示性边框透明度
+    description: |
+      设置文本节点进入编辑状态时，交互区域边框的透明度。数值越低越透明，越高越明显。
 
 renderer:
   rectangleSelect:

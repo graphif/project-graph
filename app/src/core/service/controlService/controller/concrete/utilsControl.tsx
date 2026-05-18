@@ -134,7 +134,7 @@ export class ControllerUtils {
             ? colorInvert(clickedNode.color)
             : colorInvert(this.project.stageStyleManager.currentStyle.Background)
           ).toHexStringWithoutAlpha(),
-          outline: `solid ${1 * this.project.camera.currentScale}px ${this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.1).toString()}`,
+          outline: `solid 1px ${this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(Settings.textNodeEditModeOutlineOpacity).toString()}`,
           borderRadius: `${clickedNode.getBorderRadius() * this.project.camera.currentScale}px`,
         },
         selectAll,

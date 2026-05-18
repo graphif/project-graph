@@ -217,6 +217,7 @@ export const settingsSchema = z.object({
   newNodeScaleByCameraOffset: z.number().int().min(-5).max(5).default(-1),
   showKeyBindHint: z.boolean().default(true),
   showEditModeHint: z.boolean().default(true),
+  textNodeEditModeOutlineOpacity: z.number().min(0).max(1).default(0.5),
   contextMenuConfig: z
     .array(
       z.object({

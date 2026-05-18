@@ -226,6 +226,7 @@ const categories = {
       "showTextNodeBorder",
       "showTreeDirectionHint",
       "showEditModeHint",
+      "textNodeEditModeOutlineOpacity",
       "colorPanelMouseEnterPreview",
       "defaultFontFamily",
     ],

@@ -1012,6 +1012,10 @@ settings:
     description: |
       開啟後，當按下 Ctrl/Alt/Shift/Win（Windows）或 ⌘/⌥/⇧/⌃（Mac）等修飾鍵時，會顯示匹配的快捷鍵提示。
       按住修飾鍵不放可查看第一頁快捷鍵，鬆開後再次按下可翻頁查看更多。
+  textNodeEditModeOutlineOpacity:
+    title: 文本節點編輯狀態交互區域提示性邊框透明度
+    description: |
+      設置文本節點進入編輯狀態時，交互區域邊框的透明度。數值越低越透明，越高越明顯。
 
 renderer:
   rectangleSelect:

@@ -911,6 +911,10 @@ settings:
     description: |
       When entering text node edit mode, displays "Editing" at the top of the node and line break / exit shortcut hints at the bottom.
       When disabled, these hint labels will not be rendered.
+  textNodeEditModeOutlineOpacity:
+    title: Text Node Edit Mode Outline Opacity
+    description: |
+      Sets the opacity of the outline for text nodes in edit mode. Lower values are more transparent, higher values are more visible.
 renderer:
   rectangleSelect:
     intersect: Intersection Select

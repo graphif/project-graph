@@ -71,6 +71,7 @@ import {
   Square,
   SquareArrowDownRight,
   SquareArrowUpLeft,
+  SquareDashed,
   SquareM,
   Sun,
   SunMoon,
@@ -219,5 +220,6 @@ export const settingsIcons = {
   enableAutoEdgeWidth: Minus,
   showKeyBindHint: Lightbulb,
   showEditModeHint: MessageSquareText,
+  textNodeEditModeOutlineOpacity: SquareDashed,
   colorPanelMouseEnterPreview: Mouse,
 };

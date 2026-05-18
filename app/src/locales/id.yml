@@ -999,6 +999,10 @@ settings:
     description: |
       Saat diaktifkan, petunjuk tombol pintas yang cocok akan ditampilkan saat menekan tombol modifikasi (Ctrl/Alt/Shift/Win di Windows atau ⌘/⌥/⇧/⌃ di Mac).
       Tahan tombol modifikasi untuk melihat halaman pertama tombol pintas, lepaskan dan tekan lagi untuk melihat lebih banyak.
+  textNodeEditModeOutlineOpacity:
+    title: Opasitas Garis Tepi Mode Edit Node Teks
+    description: |
+      Mengatur opasitas garis tepi area interaksi saat node teks memasuki mode edit. Nilai lebih rendah lebih transparan, nilai lebih tinggi lebih terlihat.
 
 renderer:
   rectangleSelect:
