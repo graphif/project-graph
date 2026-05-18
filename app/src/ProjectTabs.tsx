@@ -78,7 +78,7 @@ export const ProjectTabs = memo(function ProjectTabs({
     <div
       ref={tabsContainerRef}
       className={cn(
-        "scrollbar-hide z-10 flex h-4 overflow-x-auto whitespace-nowrap hover:opacity-100 sm:h-6 sm:gap-1",
+        "scrollbar-hide hover:bg-primary/20 z-10 flex h-4 overflow-x-auto whitespace-nowrap transition-colors hover:opacity-100 sm:h-6 sm:gap-1",
         isClassroomMode && "opacity-0",
       )}
       onScroll={handleScroll}
