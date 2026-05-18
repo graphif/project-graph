@@ -11,20 +11,14 @@ import { Settings } from "@/core/service/Settings";
 export class CollisionBoxRenderer {
   constructor(private readonly project: Project) {}
 
-  private isDefaultZoom(): boolean {
-    const scale = this.project.camera.currentScale;
-    return 0.1 < scale && scale < 4; // 缩小宏观 <--------> 放大围观
-    // return scale < 4; // 缩小宏观 <--------> 放大围观
-  }
-
   private get dynamicScale() {
     if (!Settings.enableCollisionBoxAutoWidth) return 1;
-    return this.isDefaultZoom() ? this.project.camera.currentScale : 1;
+    return this.project.camera.isDefaultZoom() ? this.project.camera.currentScale : 1;
   }
 
   private get reDynamicScale() {
     if (!Settings.enableCollisionBoxAutoWidth) return 1;
-    return this.isDefaultZoom() ? 1 : 1 / this.project.camera.currentScale;
+    return this.project.camera.isDefaultZoom() ? 1 : 1 / this.project.camera.currentScale;
   }
 
   render(collideBox: CollisionBox, color: Color, dashed: boolean = false) {

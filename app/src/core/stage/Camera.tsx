@@ -411,4 +411,8 @@ export class Camera {
       this.savedCameraState = null;
     }
   }
+
+  isDefaultZoom(): boolean {
+    return 0.1 < this.currentScale && this.currentScale < 4;
+  }
 }

@@ -340,6 +340,7 @@ export class InputElement {
   }
 
   private addSuccessEffect() {
+    if (!this.project.camera.isDefaultZoom()) return;
     const textNodes = this.project.stageManager.getTextNodes().filter((textNode) => textNode.isEditing);
     for (const textNode of textNodes) {
       this.project.effects.addEffect(
@@ -352,6 +353,7 @@ export class InputElement {
   }
 
   private addFailEffect(withToast = true) {
+    if (!this.project.camera.isDefaultZoom()) return;
     const textNodes = this.project.stageManager.getTextNodes().filter((textNode) => textNode.isEditing);
     for (const textNode of textNodes) {
       this.project.effects.addEffect(EntityShakeEffect.fromEntity(textNode));

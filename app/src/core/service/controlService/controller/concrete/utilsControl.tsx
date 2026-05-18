@@ -49,13 +49,15 @@ export class ControllerUtils {
     // 编辑节点
     const textBeforeEdit = clickedNode.text;
     clickedNode.isEditing = true;
-    // 添加进入编辑状态的闪烁特效
-    this.project.effects.addEffect(
-      RectangleLittleNoteEffect.fromUtilsLittleNote(
-        clickedNode,
-        this.project.stageStyleManager.currentStyle.effects.successShadow,
-      ),
-    );
+    // 添加进入编辑状态的闪烁特效（只在默认缩放级别时显示）
+    if (this.project.camera.isDefaultZoom()) {
+      this.project.effects.addEffect(
+        RectangleLittleNoteEffect.fromUtilsLittleNote(
+          clickedNode,
+          this.project.stageStyleManager.currentStyle.effects.successShadow,
+        ),
+      );
+    }
     let lastAutoCompleteWindowId: string;
     // 实时 LaTeX 预览管理器（输入 $...$ 时在节点上方显示）
     const latexPreview = new LatexPreviewManager();
