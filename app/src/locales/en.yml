@@ -897,6 +897,10 @@ settings:
     description: |
       When enabled, edges connecting two sections will automatically adjust their thickness based on the section size.
       When disabled, all edges will use a fixed thickness.
+  enableCollisionBoxAutoWidth:
+    title: Collision Box Auto Width
+    description: |
+      When enabled, the collision box border thickness will automatically adjust based on zoom level.
   showKeyBindHint:
     title: Show Key Bind Hints When Pressing Modifier Keys
     description: |

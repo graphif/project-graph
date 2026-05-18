@@ -2,6 +2,7 @@ import { Color, Vector } from "@graphif/data-structures";
 import { Circle, CubicCatmullRomSpline, Line, Rectangle, SymmetryCurve } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Settings } from "@/core/service/Settings";
 
 /**
  * 碰撞箱渲染器
@@ -12,15 +13,17 @@ export class CollisionBoxRenderer {
 
   private isDefaultZoom(): boolean {
     const scale = this.project.camera.currentScale;
-    // return 0.1 < scale && scale < 4; // 缩小宏观 <--------> 放大围观
-    return scale < 4; // 缩小宏观 <--------> 放大围观
+    return 0.1 < scale && scale < 4; // 缩小宏观 <--------> 放大围观
+    // return scale < 4; // 缩小宏观 <--------> 放大围观
   }
 
   private get dynamicScale() {
+    if (!Settings.enableCollisionBoxAutoWidth) return 1;
     return this.isDefaultZoom() ? this.project.camera.currentScale : 1;
   }
 
   private get reDynamicScale() {
+    if (!Settings.enableCollisionBoxAutoWidth) return 1;
     return this.isDefaultZoom() ? 1 : 1 / this.project.camera.currentScale;
   }
 

@@ -1003,6 +1003,10 @@ settings:
     description: |
       開啟後，連接兩個框（Section）之間的連線會根據框的大小自動調整粗細。
       關閉後，所有連線將使用固定粗細。
+  enableCollisionBoxAutoWidth:
+    title: 碰撞箱邊框自動粗細
+    description: |
+      開啟後，選中物體的碰撞箱邊框粗細會根據縮放自動調整。
   showKeyBindHint:
     title: 按下快捷鍵修飾鍵後顯示匹配的快捷鍵提示
     description: |

@@ -170,6 +170,7 @@ settings:
       node: 節點樣式
       edge: 連線樣式
       section: 分組框的樣式
+      selectedState: 選中狀態
       entityDetails: 實體詳細信息
       debug: 調試
       miniWindow: 迷你窗口
@@ -1009,6 +1010,10 @@ settings:
     title: 自動調整框之間連線的粗細
     description: |
       開啟後，連接兩個框（Section）之間的連線會根據框的大小自動調整粗細。
+  enableCollisionBoxAutoWidth:
+    title: 碰撞箱邊框自動粗細
+    description: |
+      開啟後，選中物體的碰撞箱邊框粗細會根據縮放自動調整。
       關閉後，所有連線將使用固定粗細。
   showKeyBindHint:
     title: 按下快捷鍵修飾鍵後顯示匹配的快捷鍵提示

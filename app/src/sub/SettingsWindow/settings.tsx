@@ -237,6 +237,7 @@ const categories = {
       "sectionBackgroundFillMode",
     ],
     edge: ["lineStyle", "hideArrowWhenPointingToConnectPoint", "enableAutoEdgeWidth"],
+    selectedState: ["enableCollisionBoxAutoWidth"],
     entityDetails: [
       "nodeDetailsPanel",
       "alwaysShowDetails",
@@ -389,6 +390,7 @@ const categoryIcons = {
     node: RectangleHorizontal,
     edge: MoveUpRight,
     section: SquareDashedTopSolid,
+    selectedState: SquareDashedMousePointer,
     entityDetails: TextQuote,
     debug: Bug,
     miniWindow: PictureInPicture,

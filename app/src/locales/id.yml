@@ -169,6 +169,7 @@ settings:
       node: Gaya Node
       edge: Gaya Garis
       section: Gaya "Kotak"
+      selectedState: Status Terpilih
       entityDetails: Detail Entitas
       debug: Debug
       miniWindow: Jendela Mini
@@ -989,6 +990,10 @@ settings:
   autoImportTxtFileWhenOpenPrg:
     title: Impor File TXT dengan Nama Sama Otomatis Saat Buka File PRG
     description: Saat diaktifkan, saat membuka file PRG akan mengimpor konten file TXT dengan nama sama di folder yang sama secara otomatis, dan menambahkannya ke sudut kiri bawah panggung sebagai node teks.
+  enableCollisionBoxAutoWidth:
+    title: Lebar Otomatis Kotak Tabrakan
+    description: |
+      Saat diaktifkan, ketebalan batas kotak tabrakan objek yang dipilih akan disesuaikan secara otomatis berdasarkan zoom.
   showKeyBindHint:
     title: Tampilkan Petunjuk Tombol Pintas Saat Menekan Tombol Modifikasi
     description: |
