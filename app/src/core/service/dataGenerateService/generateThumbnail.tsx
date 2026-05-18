@@ -7,7 +7,7 @@ import { toast } from "sonner";
 const THUMBNAIL_MAX_DIMENSION = 256;
 
 /** 极端宽高比，超过这个比例视为极端 */
-const EXTREME_ASPECT_RATIO = 3;
+const EXTREME_ASPECT_RATIO = 6;
 
 /**
  * 给一个矩形增加padding
@@ -62,7 +62,9 @@ export async function generateThumbnail(project: Project): Promise<Blob | undefi
   const ratio = w === 0 || h === 0 ? Infinity : Math.max(w / h, h / w);
   const useSquare = ratio >= EXTREME_ASPECT_RATIO;
   if (useSquare) {
-    toast.warning("此内容的外接矩形比例过于极端，开始生成正方形缩略图");
+    toast.warning(
+      `舞台上全部内容的外接矩形比例过于极端，超过1:${EXTREME_ASPECT_RATIO}，开始生成正方形缩略图\n建议排查异常内容，可能是在很远的地方创建了节点。可尝试ctrl+A全选后, F键重制视野观察选中的内容`,
+    );
   }
   const squareDim = Math.max(paddedRect.width, paddedRect.height);
 
