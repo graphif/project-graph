@@ -821,6 +821,9 @@ settings:
       move: 縱向移動
       moveX: 橫向移動
       none: 无操作
+  mouseWheelModeReverse:
+    title: 滑鼠滾輪反向
+    description: 開啟後滑鼠滾輪的效果反轉
   mouseWheelWithShiftMode:
     title: 按住 Shift 時，滑鼠滾輪模式
     options:
@@ -828,6 +831,9 @@ settings:
       move: 縱向移動
       moveX: 橫向移動
       none: 无操作
+  mouseWheelWithShiftModeReverse:
+    title: Shift+滾輪反向
+    description: 開啟後 Shift+滾輪的效果反轉
   mouseWheelWithCtrlMode:
     title: 按住 Ctrl 時，滑鼠滾輪模式
     description: '提示：这里的 Ctrl 是 Control
@@ -838,6 +844,9 @@ settings:
       move: 縱向移動
       moveX: 橫向移動
       none: 无操作
+  mouseWheelWithCtrlModeReverse:
+    title: Ctrl+滾輪反向
+    description: 開啟後 Ctrl+滾輪的效果反轉
   mouseWheelWithAltMode:
     title: 按住 Alt 時，滑鼠滾輪模式
     description: '此功能於2025年4月10日新增
@@ -850,6 +859,9 @@ settings:
       move: 縱向移動
       moveX: 橫向移動
       none: 无操作
+  mouseWheelWithAltModeReverse:
+    title: Alt+滾輪反向
+    description: 開啟後 Alt+滾輪的效果反轉
   rectangleSelectWhenLeft:
     title: 向左框選的策略
     description: '選擇滑鼠向左框選的策略，包含完全覆蓋框選和碰撞框選
