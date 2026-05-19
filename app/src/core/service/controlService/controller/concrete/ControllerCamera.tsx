@@ -261,12 +261,13 @@ export class ControllerCameraClass extends ControllerClass {
     this.project.camera.targetLocationByScale = worldLocation;
 
     if (this.project.controller.pressingKeySet.has("shift")) {
+      const overrideDeltaY = Settings.mouseWheelWithShiftModeReverse ? -event.deltaY : undefined;
       if (Settings.mouseWheelWithShiftMode === "zoom") {
-        this.zoomCameraByMouseWheel(event);
+        this.zoomCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelWithShiftMode === "move") {
-        this.moveYCameraByMouseWheel(event);
+        this.moveYCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelWithShiftMode === "moveX") {
-        this.moveXCameraByMouseWheel(event);
+        this.moveXCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelWithShiftMode === "none") {
         return;
       }
@@ -275,32 +276,35 @@ export class ControllerCameraClass extends ControllerClass {
       this.project.controller.pressingKeySet.has("meta")
     ) {
       // 不要在节点上滚动
+      const overrideDeltaY = Settings.mouseWheelWithCtrlModeReverse ? -event.deltaY : undefined;
       if (Settings.mouseWheelWithCtrlMode === "zoom") {
-        this.zoomCameraByMouseWheel(event);
+        this.zoomCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelWithCtrlMode === "move") {
-        this.moveYCameraByMouseWheel(event);
+        this.moveYCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelWithCtrlMode === "moveX") {
-        this.moveXCameraByMouseWheel(event);
+        this.moveXCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelWithCtrlMode === "none") {
         return;
       }
     } else if (this.project.controller.pressingKeySet.has("alt")) {
+      const overrideDeltaY = Settings.mouseWheelWithAltModeReverse ? -event.deltaY : undefined;
       if (Settings.mouseWheelWithAltMode === "zoom") {
-        this.zoomCameraByMouseWheel(event);
+        this.zoomCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelWithAltMode === "move") {
-        this.moveYCameraByMouseWheel(event);
+        this.moveYCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelWithAltMode === "moveX") {
-        this.moveXCameraByMouseWheel(event);
+        this.moveXCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelWithAltMode === "none") {
         return;
       }
     } else {
+      const overrideDeltaY = Settings.mouseWheelModeReverse ? -event.deltaY : undefined;
       if (Settings.mouseWheelMode === "zoom") {
-        this.zoomCameraByMouseWheel(event);
+        this.zoomCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelMode === "move") {
-        this.moveYCameraByMouseWheel(event);
+        this.moveYCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelMode === "moveX") {
-        this.moveXCameraByMouseWheel(event);
+        this.moveXCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelMode === "none") {
         return;
       }
@@ -366,44 +370,45 @@ export class ControllerCameraClass extends ControllerClass {
     this.project.camera.location = this.project.camera.location.add(diffLocation);
   }
 
-  private zoomCameraByMouseWheel(event: WheelEvent) {
+  private zoomCameraByMouseWheel(event: WheelEvent, overrideDeltaY?: number) {
+    const deltaY = overrideDeltaY ?? event.deltaY;
     if (isMac) {
       // mac电脑滚动一格滚轮会触发很多次事件。这个列表里是每个事件的deltaY
       // [7, 7, 7, 7, 6, 7, 7, 6, 5, 5, 4, 4, 3, 3, 3, 2, 2, 1, 1, 1, 1, 1]
       if (Settings.macMouseWheelIsSmoothed) {
         // 盲猜是开了平滑滚动了
-        const deltaY = event.deltaY;
         this.project.camera.targetScale *= 1 + deltaY / 500;
       } else {
         // 如果没有开平滑滚动
-        if (event.deltaY > 0) {
+        if (deltaY > 0) {
           this.project.camera.targetScale *= 0.8;
           this.project.effects.addEffect(MouseTipFeedbackEffect.default("shrink"));
-        } else if (event.deltaY < 0) {
+        } else if (deltaY < 0) {
           this.project.camera.targetScale *= 1.2;
           this.project.effects.addEffect(MouseTipFeedbackEffect.default("expand"));
         }
       }
     } else {
-      if (event.deltaY > 0) {
+      if (deltaY > 0) {
         this.project.camera.targetScale *= 0.8;
         this.project.effects.addEffect(MouseTipFeedbackEffect.default("shrink"));
-      } else if (event.deltaY < 0) {
+      } else if (deltaY < 0) {
         this.project.camera.targetScale *= 1.2;
         this.project.effects.addEffect(MouseTipFeedbackEffect.default("expand"));
       }
     }
   }
 
-  private moveYCameraByMouseWheel(event: WheelEvent) {
+  private moveYCameraByMouseWheel(event: WheelEvent, overrideDeltaY?: number) {
+    const deltaY = overrideDeltaY ?? event.deltaY;
     this.project.camera.bombMove(
       this.project.camera.location.add(
-        new Vector(0, (Settings.moveAmplitude * event.deltaY * 0.5) / this.project.camera.currentScale),
+        new Vector(0, (Settings.moveAmplitude * deltaY * 0.5) / this.project.camera.currentScale),
       ),
     );
-    if (event.deltaY > 0) {
+    if (deltaY > 0) {
       this.project.effects.addEffect(MouseTipFeedbackEffect.default("moveDown"));
-    } else if (event.deltaY < 0) {
+    } else if (deltaY < 0) {
       this.project.effects.addEffect(MouseTipFeedbackEffect.default("moveUp"));
     }
   }
@@ -479,15 +484,16 @@ export class ControllerCameraClass extends ControllerClass {
     }
   }
 
-  private moveXCameraByMouseWheel(event: WheelEvent) {
+  private moveXCameraByMouseWheel(event: WheelEvent, overrideDeltaY?: number) {
+    const deltaY = overrideDeltaY ?? event.deltaY;
     this.project.camera.bombMove(
       this.project.camera.location.add(
-        new Vector((Settings.moveAmplitude * event.deltaY * 0.5) / this.project.camera.currentScale, 0),
+        new Vector((Settings.moveAmplitude * deltaY * 0.5) / this.project.camera.currentScale, 0),
       ),
     );
-    if (event.deltaY > 0) {
+    if (deltaY > 0) {
       this.project.effects.addEffect(MouseTipFeedbackEffect.default("moveRight"));
-    } else if (event.deltaY < 0) {
+    } else if (deltaY < 0) {
       this.project.effects.addEffect(MouseTipFeedbackEffect.default("moveLeft"));
     }
   }

@@ -839,6 +839,9 @@ settings:
       move: 纵向移动
       moveX: 横向移动
       none: 无操作
+  mouseWheelModeReverse:
+    title: 鼠标滚轮反向
+    description: 开启后鼠标滚轮的效果反转
   mouseWheelWithShiftMode:
     title: 按住 Shift 时，鼠标滚轮模式
     options:
@@ -846,6 +849,9 @@ settings:
       move: 纵向移动
       moveX: 横向移动
       none: 无操作
+  mouseWheelWithShiftModeReverse:
+    title: Shift+滚轮反向
+    description: 开启后 Shift+滚轮的效果反转
   mouseWheelWithCtrlMode:
     title: 按住 Ctrl 时，鼠标滚轮模式
     description: |
@@ -855,6 +861,9 @@ settings:
       move: 纵向移动
       moveX: 横向移动
       none: 无操作
+  mouseWheelWithCtrlModeReverse:
+    title: Ctrl+滚轮反向
+    description: 开启后 Ctrl+滚轮的效果反转
   mouseWheelWithAltMode:
     title: 按住 Alt 时，鼠标滚轮模式
     description: |
@@ -866,6 +875,9 @@ settings:
       move: 纵向移动
       moveX: 横向移动
       none: 无操作
+  mouseWheelWithAltModeReverse:
+    title: Alt+滚轮反向
+    description: 开启后 Alt+滚轮的效果反转
   rectangleSelectWhenLeft:
     title: 向左框选的策略
     description: |

@@ -85,15 +85,19 @@ export const settingsSchema = z.object({
   mouseWheelMode: z
     .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none")])
     .default("zoom"),
+  mouseWheelModeReverse: z.boolean().default(false),
   mouseWheelWithShiftMode: z
     .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none")])
     .default("moveX"),
+  mouseWheelWithShiftModeReverse: z.boolean().default(false),
   mouseWheelWithCtrlMode: z
     .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none")])
     .default("none"),
+  mouseWheelWithCtrlModeReverse: z.boolean().default(false),
   mouseWheelWithAltMode: z
     .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none")])
     .default("none"),
+  mouseWheelWithAltModeReverse: z.boolean().default(false),
   doubleClickMiddleMouseButton: z.union([z.literal("adjustCamera"), z.literal("none")]).default("adjustCamera"),
   doubleClickMiddleMouseButtonOnEntity: z.union([z.literal("openUrl"), z.literal("none")]).default("openUrl"),
   mouseSideWheelMode: z

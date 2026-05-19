@@ -823,6 +823,9 @@ settings:
       move: Gerakkan Vertikal
       moveX: Gerakkan Horizontal
       none: Tidak Ada Operasi
+  mouseWheelModeReverse:
+    title: Balikkan Roda Mouse
+    description: Membalikkan arah gulir roda mouse
   mouseWheelWithShiftMode:
     title: Mode Roda Mouse dengan Shift
     options:
@@ -830,6 +833,9 @@ settings:
       move: Gerakkan Vertikal
       moveX: Gerakkan Horizontal
       none: Tidak Ada Operasi
+  mouseWheelWithShiftModeReverse:
+    title: Balikkan Shift+Roda
+    description: Membalikkan arah gulir Shift+roda
   mouseWheelWithCtrlMode:
     title: Mode Roda Mouse dengan Ctrl
     description: |
@@ -839,6 +845,9 @@ settings:
       move: Gerakkan Vertikal
       moveX: Gerakkan Horizontal
       none: Tidak Ada Operasi
+  mouseWheelWithCtrlModeReverse:
+    title: Balikkan Ctrl+Roda
+    description: Membalikkan arah gulir Ctrl+roda
   mouseWheelWithAltMode:
     title: Mode Roda Mouse dengan Alt
     description: |
@@ -850,6 +859,9 @@ settings:
       move: Gerakkan Vertikal
       moveX: Gerakkan Horizontal
       none: Tidak Ada Operasi
+  mouseWheelWithAltModeReverse:
+    title: Balikkan Alt+Roda
+    description: Membalikkan arah gulir Alt+roda
   rectangleSelectWhenLeft:
     title: Strategi Seleksi Kotak ke Kiri
     description: |

@@ -609,6 +609,9 @@ settings:
       move: Vertical Movement
       moveX: Horizontal Movement
       none: No operation
+  mouseWheelModeReverse:
+    title: Reverse Mouse Wheel
+    description: Reverses the direction of mouse wheel scrolling
   mouseWheelWithShiftMode:
     title: Mouse Wheel Mode with Shift Key
     options:
@@ -616,6 +619,9 @@ settings:
       move: Vertical Movement
       moveX: Horizontal Movement
       none: No operation
+  mouseWheelWithShiftModeReverse:
+    title: Reverse Shift+Wheel
+    description: Reverses the direction of Shift+wheel scrolling
   mouseWheelWithCtrlMode:
     title: Mouse Wheel Mode with Ctrl Key
     options:
@@ -757,6 +763,12 @@ settings:
       moveX: Horizontal Movement
       none: No operation
     title: Mouse Wheel Mode with Alt Key
+  mouseWheelWithAltModeReverse:
+    title: Reverse Alt+Wheel
+    description: Reverses the direction of Alt+wheel scrolling
+  mouseWheelWithCtrlModeReverse:
+    title: Reverse Ctrl+Wheel
+    description: Reverses the direction of Ctrl+wheel scrolling
   macTrackpadScaleSensitivity:
     title: MacBook trackpad two-finger zoom sensitivity
     description: The larger the value, the faster the scaling speed
