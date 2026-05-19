@@ -209,6 +209,7 @@ export const categories = {
       "windowBackgroundAlpha",
       "windowBackgroundOpacityAfterOpenClickThrough",
       "windowBackgroundOpacityAfterCloseClickThrough",
+      "uiScalePercent",
     ],
     background: [
       "isRenderCenterPointer",

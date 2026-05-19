@@ -110,6 +110,7 @@ export const settingsIcons = {
   doubleClickEmptySpaceAction: MousePointerClick,
   enableDragAutoAlign: AlignStartVertical,
   reverseTreeMoveMode: Move,
+  uiScalePercent: Scaling,
   mouseWheelMode: LoaderPinwheel,
   mouseWheelWithShiftMode: LoaderPinwheel,
   mouseWheelWithCtrlMode: LoaderPinwheel,

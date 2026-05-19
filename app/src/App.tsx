@@ -49,6 +49,7 @@ export default function App() {
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
   const [showQuickSettingsToolbar, setShowQuickSettingsToolbar] = useState(Settings.showQuickSettingsToolbar);
   const [windowBackgroundAlpha, setWindowBackgroundAlpha] = useState(Settings.windowBackgroundAlpha);
+  const [uiScalePercent, setUiScalePercent] = useState(Settings.uiScalePercent);
 
   const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
 
@@ -112,6 +113,12 @@ export default function App() {
       setWindowBackgroundAlpha(value);
     });
 
+    // 初始化 UI 缩放（只缩放 UI 组件层，不缩放 Canvas 画布）
+    setUiScalePercent(Settings.uiScalePercent);
+    const unwatchUiScale = Settings.watch("uiScalePercent", (value) => {
+      setUiScalePercent(value);
+    });
+
     // 恢复窗口位置大小
     restoreStateCurrent(StateFlags.SIZE | StateFlags.POSITION | StateFlags.MAXIMIZED);
 
@@ -160,6 +167,7 @@ export default function App() {
       // 清理全局快捷键资源
       unwatchShowQuickSettingsToolbar();
       unwatchWindowBackgroundAlpha();
+      unwatchUiScale();
       globalShortcutManager.dispose();
     };
   }, []);
@@ -326,6 +334,9 @@ export default function App() {
     [closeTab],
   );
 
+  const zoomStyle = uiScalePercent !== 100 ? { zoom: `${uiScalePercent / 100}` } as React.CSSProperties : undefined;
+  const zoomClass = "relative z-10 flex h-full w-full flex-col gap-2 pointer-events-none [&>*]:pointer-events-auto";
+
   return (
     <>
       {/* 这是一个底层的 div，用于在拖拽改变窗口大小时填充背景，防止窗口出现透明闪烁 */}
@@ -334,36 +345,7 @@ export default function App() {
         className="relative flex h-full w-full flex-col overflow-clip rounded-lg sm:gap-2 sm:p-2"
         onContextMenu={(e) => e.preventDefault()}
       >
-        {/* 菜单 | 标签页 | ...移动窗口区域... | 窗口控制按钮 */}
-        <div
-          className={cn(
-            "z-10 flex h-4 items-center transition-all hover:opacity-100 sm:h-9 sm:gap-2",
-            isClassroomMode && "opacity-0",
-          )}
-        >
-          <div
-            className="hover:bg-primary/25 h-full min-w-6 cursor-grab transition-colors active:cursor-grabbing sm:hidden"
-            data-tauri-drag-region
-          />
-          {isMac && <WindowButtons />}
-          <GlobalMenu />
-          <div
-            className="hover:bg-primary/25 h-full flex-1 cursor-grab transition-colors hover:*:opacity-100 active:cursor-grabbing sm:rounded-sm sm:hover:border"
-            data-tauri-drag-region
-          />
-          <ThemeModeSwitch />
-          {!isMac && <WindowButtons />}
-        </div>
-
-        <ProjectTabs
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabClick={handleTabClick}
-          onTabClose={handleTabClose}
-          isClassroomMode={isClassroomMode}
-        />
-
-        {/* content */}
+        {/* Canvas content - NOT zoomed */}
         {tabs.map((p) => (
           <div
             key={p instanceof Project ? p.uri.toString() : p.constructor.name}
@@ -373,36 +355,61 @@ export default function App() {
           </div>
         ))}
 
-        {/* 没有项目处于打开状态时，显示欢迎页面 */}
-        {tabs.length === 0 && (
-          <div className="absolute inset-0 overflow-hidden *:h-full *:w-full">
-            <Welcome />
+        {/* Zoomed UI layer - 只缩放主窗口的 UI 组件，不缩放 Canvas 画布 */}
+        <div style={zoomStyle} className={zoomClass}>
+          {/* 菜单 | 标签页 | ...移动窗口区域... | 窗口控制按钮 */}
+          <div
+            className={cn(
+              "z-10 flex h-4 items-center transition-all hover:opacity-100 sm:h-9 sm:gap-2",
+              isClassroomMode && "opacity-0",
+            )}
+          >
+            <div
+              className="hover:bg-primary/25 h-full min-w-6 cursor-grab transition-colors active:cursor-grabbing sm:hidden"
+              data-tauri-drag-region
+            />
+            {isMac && <WindowButtons />}
+            <GlobalMenu />
+            <div
+              className="hover:bg-primary/25 h-full flex-1 cursor-grab transition-colors hover:*:opacity-100 active:cursor-grabbing sm:rounded-sm sm:hover:border"
+              data-tauri-drag-region
+            />
+            <ThemeModeSwitch />
+            {!isMac && <WindowButtons />}
           </div>
-        )}
 
-        {/* 右键菜单 */}
-        <ContextMenu>
-          <ContextMenuTrigger>
-            <div ref={contextMenuTriggerRef} />
-          </ContextMenuTrigger>
-          <MyContextMenuContent />
-        </ContextMenu>
+          <ProjectTabs
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabClick={handleTabClick}
+            onTabClose={handleTabClose}
+            isClassroomMode={isClassroomMode}
+          />
 
-        {/* ======= */}
-        {/* <ErrorHandler /> */}
+          {/* 没有项目处于打开状态时，显示欢迎页面 */}
+          {tabs.length === 0 && (
+            <div className="absolute inset-0 overflow-hidden *:h-full *:w-full">
+              <Welcome />
+            </div>
+          )}
 
-        {/* <PGCanvas /> */}
+          {/* 右键菜单 */}
+          <ContextMenu>
+            <ContextMenuTrigger>
+              <div ref={contextMenuTriggerRef} />
+            </ContextMenuTrigger>
+            <MyContextMenuContent />
+          </ContextMenu>
 
-        {/* <FloatingOutlet />
-      <RenderSubWindows /> */}
+          {/* 底部工具栏 */}
+          {activeTab && <ToolbarContent />}
 
+          {/* 右侧工具栏 */}
+          {activeTab && showQuickSettingsToolbar && <RightToolbar />}
+        </div>
+
+        {/* NOT zoomed - 使用固定/全屏定位的组件，缩放会破坏它们的位置计算 */}
         <RenderSubWindows />
-
-        {/* 底部工具栏 */}
-        {activeTab && <ToolbarContent />}
-
-        {/* 右侧工具栏 */}
-        {activeTab && showQuickSettingsToolbar && <RightToolbar />}
 
         {/* 右上角关闭的触发角 */}
         {isWindows && (

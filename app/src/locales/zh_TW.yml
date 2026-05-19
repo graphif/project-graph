@@ -832,6 +832,10 @@ settings:
       cameraMoveToMouse: 將視野向鼠標位置移動
       adjustWindowOpacity: 調整窗口透明度
       adjustPenStrokeWidth: 調整畫筆粗細
+  uiScalePercent:
+    title: UI 縮放比例
+    description: |
+      縮放 UI 界面元素和字體的大小，範圍 25% ~ 200%。
   mouseWheelMode:
     title: 鼠標滾輪模式
     options:
@@ -839,6 +843,7 @@ settings:
       move: 縱向移動
       moveX: 橫向移動
       none: 無操作
+      zoomUI: 縮放UI
   mouseWheelModeReverse:
     title: 鼠標滾輪反向
     description: 開啟後鼠標滾輪的效果反轉
@@ -849,6 +854,7 @@ settings:
       move: 縱向移動
       moveX: 橫向移動
       none: 無操作
+      zoomUI: 縮放UI
   mouseWheelWithShiftModeReverse:
     title: Shift+滾輪反向
     description: 開啟後 Shift+滾輪的效果反轉
@@ -861,6 +867,7 @@ settings:
       move: 縱向移動
       moveX: 橫向移動
       none: 無操作
+      zoomUI: 縮放UI
   mouseWheelWithCtrlModeReverse:
     title: Ctrl+滾輪反向
     description: 開啟後 Ctrl+滾輪的效果反轉
@@ -875,6 +882,7 @@ settings:
       move: 縱向移動
       moveX: 橫向移動
       none: 無操作
+      zoomUI: 縮放UI
   mouseWheelWithAltModeReverse:
     title: Alt+滾輪反向
     description: 開啟後 Alt+滾輪的效果反轉
