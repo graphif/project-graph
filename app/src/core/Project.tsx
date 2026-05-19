@@ -374,10 +374,10 @@ export class Project extends Tab {
   async stash() {
     // TODO: stash
   }
-  async save() {
+  async save(options: { includeThumbnail?: boolean } = {}) {
     try {
       this.isSaving = true;
-      await this.fs.write(this.uri, await this.getFileContent());
+      await this.fs.write(this.uri, await this.getFileContent(options));
       this.projectState = ProjectState.Saved;
     } finally {
       this.isSaving = false;
@@ -390,31 +390,37 @@ export class Project extends Tab {
   public readme?: string;
 
   // 备份也要用到这个
-  async getFileContent() {
+  async getFileContent(options: { includeThumbnail?: boolean } = {}) {
+    const includeThumbnail = options.includeThumbnail !== false;
     const serializedStage = serialize(this.stage);
     const encodedStage = this.encoder.encode(serializedStage);
     const uwriter = new Uint8ArrayWriter();
 
-    const writer = new ZipWriter(uwriter); // zip writer用于把zip文件写入uint8array writer
-    writer.add("stage.msgpack", new Uint8ArrayReader(encodedStage));
-    writer.add("tags.msgpack", new Uint8ArrayReader(this.encoder.encode(this.tags)));
-    writer.add("reference.msgpack", new Uint8ArrayReader(this.encoder.encode(this.references)));
-    writer.add("metadata.msgpack", new Uint8ArrayReader(this.encoder.encode(this.metadata)));
+    // @zip.js/zip.js 从 ^2.7.63 升到了 ^2.8.26，需要显示指定 level: 0，防止保存的时候卡顿
+    const writer = new ZipWriter(uwriter, { level: 0 });
+    await writer.add("stage.msgpack", new Uint8ArrayReader(encodedStage), { level: 0 });
+    await writer.add("tags.msgpack", new Uint8ArrayReader(this.encoder.encode(this.tags)), { level: 0 });
+    await writer.add("reference.msgpack", new Uint8ArrayReader(this.encoder.encode(this.references)), { level: 0 });
+    await writer.add("metadata.msgpack", new Uint8ArrayReader(this.encoder.encode(this.metadata)), { level: 0 });
     if (this.readme) {
-      writer.add("README.md", new Uint8ArrayReader(new TextEncoder().encode(this.readme)));
+      await writer.add("README.md", new Uint8ArrayReader(new TextEncoder().encode(this.readme)), { level: 0 });
     }
     // 添加附件
     for (const [uuid, attachment] of this.attachments.entries()) {
-      writer.add(`attachments/${uuid}.${mime.getExtension(attachment.type)}`, new BlobReader(attachment));
+      await writer.add(`attachments/${uuid}.${mime.getExtension(attachment.type)}`, new BlobReader(attachment), {
+        level: 0,
+      });
     }
     // 添加缩略图
-    try {
-      const thumbnailBlob = await generateThumbnail(this);
-      if (thumbnailBlob) {
-        writer.add("thumbnail.png", new BlobReader(thumbnailBlob));
+    if (includeThumbnail) {
+      try {
+        const thumbnailBlob = await generateThumbnail(this);
+        if (thumbnailBlob) {
+          await writer.add("thumbnail.png", new BlobReader(thumbnailBlob), { level: 0 });
+        }
+      } catch {
+        // 缩略图生成失败不阻止保存
       }
-    } catch {
-      // 缩略图生成失败不阻止保存
     }
     await writer.close();
 
