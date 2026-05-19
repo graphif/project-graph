@@ -253,6 +253,17 @@ export class ControllerCameraClass extends ControllerClass {
    * @param event
    * @returns
    */
+  private zoomUIMethod(event: WheelEvent, overrideDeltaY?: number) {
+    const deltaY = overrideDeltaY ?? event.deltaY;
+    const step = 25;
+    const current = Settings.uiScalePercent;
+    if (deltaY > 0) {
+      Settings.uiScalePercent = Math.max(25, current - step);
+    } else if (deltaY < 0) {
+      Settings.uiScalePercent = Math.min(200, current + step);
+    }
+  }
+
   private mousewheelFunction(event: WheelEvent) {
     // 获取触发滚轮的鼠标位置
     const mouseLocation = new Vector(event.clientX, event.clientY);
@@ -270,6 +281,8 @@ export class ControllerCameraClass extends ControllerClass {
         this.moveXCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelWithShiftMode === "none") {
         return;
+      } else if (Settings.mouseWheelWithShiftMode === "zoomUI") {
+        this.zoomUIMethod(event, overrideDeltaY);
       }
     } else if (
       this.project.controller.pressingKeySet.has("control") ||
@@ -285,6 +298,8 @@ export class ControllerCameraClass extends ControllerClass {
         this.moveXCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelWithCtrlMode === "none") {
         return;
+      } else if (Settings.mouseWheelWithCtrlMode === "zoomUI") {
+        this.zoomUIMethod(event, overrideDeltaY);
       }
     } else if (this.project.controller.pressingKeySet.has("alt")) {
       const overrideDeltaY = Settings.mouseWheelWithAltModeReverse ? -event.deltaY : undefined;
@@ -296,6 +311,8 @@ export class ControllerCameraClass extends ControllerClass {
         this.moveXCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelWithAltMode === "none") {
         return;
+      } else if (Settings.mouseWheelWithAltMode === "zoomUI") {
+        this.zoomUIMethod(event, overrideDeltaY);
       }
     } else {
       const overrideDeltaY = Settings.mouseWheelModeReverse ? -event.deltaY : undefined;
@@ -307,6 +324,8 @@ export class ControllerCameraClass extends ControllerClass {
         this.moveXCameraByMouseWheel(event, overrideDeltaY);
       } else if (Settings.mouseWheelMode === "none") {
         return;
+      } else if (Settings.mouseWheelMode === "zoomUI") {
+        this.zoomUIMethod(event, overrideDeltaY);
       }
     }
 

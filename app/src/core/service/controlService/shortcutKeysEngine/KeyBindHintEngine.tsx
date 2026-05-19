@@ -9,6 +9,11 @@ import { KeyBindsUI, type UIKeyBind } from "./KeyBindsUI";
 import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
 import i18next from "i18next";
 
+// 根据 UI 缩放比例计算缩放后的字号
+function scaledFontSize(base: number): number {
+  return base * (Settings.uiScalePercent / 100);
+}
+
 /**
  * 快捷键提示引擎
  * 当按下修饰键时，显示匹配的快捷键提示
@@ -260,10 +265,12 @@ export class KeyBindHintEngine {
     const endIndex = Math.min(startIndex + this.ITEMS_PER_PAGE, this.cachedKeyBinds.length);
     const pageItems = this.cachedKeyBinds.slice(startIndex, endIndex);
 
+    const scale = Settings.uiScalePercent / 100;
+
     // 计算起始位置（在左下角按键提示的上方）
-    const margin = 10;
-    const lineHeight = 28;
-    const startY = this.project.renderer.h - 140 - pageItems.length * lineHeight;
+    const margin = 10 * scale;
+    const lineHeight = 28 * scale;
+    const startY = this.project.renderer.h - 140 * scale - pageItems.length * lineHeight;
 
     // 渲染每个快捷键提示
     for (let i = 0; i < pageItems.length; i++) {
@@ -273,20 +280,22 @@ export class KeyBindHintEngine {
       // 使用复用的函数格式化修饰键组合
       let currentX = margin;
 
+      const keyFontSize = scaledFontSize(16);
       // 渲染按键
       this.project.textRenderer.renderText(
         item.displayKey,
         new Vector(currentX, y),
-        16,
+        keyFontSize,
         this.project.stageStyleManager.currentStyle.effects.flash,
       );
-      currentX += getTextSize(item.displayKey, 16).x;
+      currentX += getTextSize(item.displayKey, keyFontSize).x;
 
+      const titleFontSize = scaledFontSize(12);
       // 渲染标题
       this.project.textRenderer.renderText(
         item.title,
-        new Vector(currentX + 15, y + 2),
-        12,
+        new Vector(currentX + 15 * scale, y + 2 * scale),
+        titleFontSize,
         this.project.stageStyleManager.currentStyle.DetailsDebugText,
       );
     }
@@ -296,8 +305,8 @@ export class KeyBindHintEngine {
       const pageIndicator = `${actualPage + 1}/${totalPages}`;
       this.project.textRenderer.renderText(
         pageIndicator,
-        new Vector(margin, startY - 20),
-        12,
+        new Vector(margin, startY - 20 * scale),
+        scaledFontSize(12),
         this.project.stageStyleManager.currentStyle.DetailsDebugText,
       );
     }

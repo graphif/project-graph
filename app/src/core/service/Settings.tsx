@@ -80,21 +80,22 @@ export const settingsSchema = z.object({
   enableDragAutoAlign: z.boolean().default(false),
   reverseTreeMoveMode: z.boolean().default(false),
   mouseWheelMode: z
-    .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none")])
+    .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none"), z.literal("zoomUI")])
     .default("zoom"),
   mouseWheelModeReverse: z.boolean().default(false),
   mouseWheelWithShiftMode: z
-    .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none")])
+    .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none"), z.literal("zoomUI")])
     .default("moveX"),
   mouseWheelWithShiftModeReverse: z.boolean().default(false),
   mouseWheelWithCtrlMode: z
-    .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none")])
+    .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none"), z.literal("zoomUI")])
     .default("none"),
   mouseWheelWithCtrlModeReverse: z.boolean().default(false),
   mouseWheelWithAltMode: z
-    .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none")])
+    .union([z.literal("zoom"), z.literal("move"), z.literal("moveX"), z.literal("none"), z.literal("zoomUI")])
     .default("none"),
   mouseWheelWithAltModeReverse: z.boolean().default(false),
+  uiScalePercent: z.number().min(25).max(200).default(100),
   doubleClickMiddleMouseButton: z.union([z.literal("adjustCamera"), z.literal("none")]).default("adjustCamera"),
   doubleClickMiddleMouseButtonOnEntity: z.union([z.literal("openUrl"), z.literal("none")]).default("openUrl"),
   mouseSideWheelMode: z
