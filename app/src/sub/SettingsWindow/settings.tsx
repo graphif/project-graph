@@ -198,7 +198,7 @@ export default function SettingsTab() {
   );
 }
 
-const categories = {
+export const categories = {
   visual: {
     basic: [
       "language",
@@ -352,7 +352,7 @@ const categories = {
   },
 };
 
-const categoryIcons = {
+export const categoryIcons = {
   ai: {
     icon: Brain,
     api: Unplug,

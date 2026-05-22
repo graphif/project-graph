@@ -3,10 +3,11 @@ import { QuickSettingsManager } from "@/core/service/QuickSettingsManager";
 import { settingsIcons } from "@/core/service/SettingsIcons";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Fragment } from "react";
-import { ArrowDown, ArrowUp, GripVertical, Plus, Trash2 } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { ArrowDown, ArrowUp, GripVertical, Plus, Trash2, ChevronRight } from "lucide-react";
+import { categories, categoryIcons } from "../settings";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 /**
  * 设置类型标签
@@ -25,12 +26,29 @@ function SettingTypeBadge({ type }: { type: QuickSettingsManager.SettingType }) 
 }
 
 /**
+ * 构建 settingKey -> { category, group } 的映射
+ */
+function buildSettingGroupMap(): Record<string, { category: string; group: string }> {
+  const map: Record<string, { category: string; group: string }> = {};
+  for (const [category, groups] of Object.entries(categories)) {
+    for (const [group, keys] of Object.entries(groups)) {
+      for (const key of keys) {
+        map[key] = { category, group };
+      }
+    }
+  }
+  return map;
+}
+
+/**
  * 快捷设置项管理页面
  */
 export default function QuickSettingsTab() {
   const { t } = useTranslation("settings");
   const [quickSettings, setQuickSettings] = useState<QuickSettingsManager.QuickSettingItem[]>([]);
   const [availableSettings, setAvailableSettings] = useState<Array<keyof typeof settingsSchema.shape>>([]);
+
+  const settingGroupMap = useMemo(() => buildSettingGroupMap(), []);
 
   useEffect(() => {
     loadData();
@@ -72,12 +90,19 @@ export default function QuickSettingsTab() {
     await loadData();
   };
 
-  // 按类型对可添加项分组
-  const availableByType = {
-    boolean: availableSettings.filter((k) => QuickSettingsManager.getSettingType(k as string) === "boolean"),
-    enum: availableSettings.filter((k) => QuickSettingsManager.getSettingType(k as string) === "enum"),
-    number: availableSettings.filter((k) => QuickSettingsManager.getSettingType(k as string) === "number"),
-  };
+  // 按 settings 分组整理可添加项
+  const availableByGroup = useMemo(() => {
+    const grouped: Record<string, Record<string, Array<keyof typeof settingsSchema.shape>>> = {};
+    for (const settingKey of availableSettings) {
+      const info = settingGroupMap[settingKey as string];
+      if (!info) continue;
+      const { category, group } = info;
+      if (!grouped[category]) grouped[category] = {};
+      if (!grouped[category][group]) grouped[category][group] = [];
+      grouped[category][group].push(settingKey);
+    }
+    return grouped;
+  }, [availableSettings, settingGroupMap]);
 
   return (
     <div className="flex h-full flex-col gap-4 p-4">
@@ -147,52 +172,68 @@ export default function QuickSettingsTab() {
           )}
         </div>
 
-        {/* 可添加的设置项，按类型分组展示 */}
-        {availableSettings.length > 0 && (
+        {/* 可添加的设置项，按设置分组展示（与设置页面一致） */}
+        {Object.keys(availableByGroup).length > 0 && (
           <div className="mt-6 space-y-4">
             <h3 className="text-sm font-medium">可添加的设置项</h3>
 
-            {(
-              [
-                { key: "boolean" as const, label: "开关型", badgeClass: "bg-blue-500/20 text-blue-400" },
-                { key: "enum" as const, label: "下拉菜单型", badgeClass: "bg-purple-500/20 text-purple-400" },
-                { key: "number" as const, label: "数值调整型", badgeClass: "bg-orange-500/20 text-orange-400" },
-              ] as const
-            ).map(({ key, label, badgeClass }) => {
-              const items = availableByType[key];
-              if (items.length === 0) return null;
+            {Object.entries(availableByGroup).map(([category, groups]) => {
+              // @ts-expect-error fuck ts
+              const CategoryIcon = categoryIcons[category]?.icon;
               return (
-                <div key={key} className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className={cn("rounded-full px-2 py-0.5 text-xs", badgeClass)}>{label}</span>
-                  </div>
-                  <div className="space-y-1">
-                    {items.map((settingKey) => {
-                      const Icon = settingsIcons[settingKey as keyof typeof settingsIcons] ?? Fragment;
-                      const title = t(`${settingKey as string}.title` as string);
-
+                <Collapsible key={category} defaultOpen className="group/collapsible">
+                  <CollapsibleTrigger className="hover:bg-accent/50 flex w-full items-center gap-2 rounded-lg px-1 py-1.5 text-sm font-medium">
+                    {CategoryIcon && <CategoryIcon className="h-4 w-4" />}
+                    <span>{t(`categories.${category}.title`)}</span>
+                    <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2 space-y-3 pl-2">
+                    {Object.entries(groups).map(([group, items]) => {
+                      // @ts-expect-error fuck ts
+                      const GroupIcon = categoryIcons[category]?.[group];
                       return (
-                        <div key={settingKey as string} className="flex items-center gap-2 rounded-lg border p-2.5">
-                          {Icon !== Fragment ? (
-                            <Icon className="h-4 w-4 flex-shrink-0" />
-                          ) : (
-                            <div className="h-4 w-4 flex-shrink-0" />
-                          )}
-                          <span className="flex-1 text-sm">{title}</span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 text-xs"
-                            onClick={() => handleAdd(settingKey)}
-                          >
-                            <Plus className="mr-1 h-3.5 w-3.5" />
-                            添加
-                          </Button>
+                        <div key={group} className="space-y-1">
+                          <div className="flex items-center gap-1.5 px-1 py-0.5">
+                            {GroupIcon && <GroupIcon className="text-muted-foreground h-3.5 w-3.5" />}
+                            <span className="text-muted-foreground text-xs">
+                              {t(`categories.${category}.${group}`)}
+                            </span>
+                          </div>
+                          <div className="space-y-1 pl-1">
+                            {items.map((settingKey) => {
+                              const Icon = settingsIcons[settingKey as keyof typeof settingsIcons] ?? Fragment;
+                              const title = t(`${settingKey as string}.title` as string);
+                              const type = QuickSettingsManager.getSettingType(settingKey as string);
+                              return (
+                                <div
+                                  key={settingKey as string}
+                                  className="flex items-center gap-2 rounded-lg border p-2.5"
+                                >
+                                  {Icon !== Fragment ? (
+                                    <Icon className="h-4 w-4 flex-shrink-0" />
+                                  ) : (
+                                    <div className="h-4 w-4 flex-shrink-0" />
+                                  )}
+                                  <span className="flex-1 text-sm">{title}</span>
+                                  <SettingTypeBadge type={type} />
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-xs"
+                                    onClick={() => handleAdd(settingKey)}
+                                  >
+                                    <Plus className="mr-1 h-3.5 w-3.5" />
+                                    添加
+                                  </Button>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       );
                     })}
-                  </div>
-                </div>
+                  </CollapsibleContent>
+                </Collapsible>
               );
             })}
           </div>
