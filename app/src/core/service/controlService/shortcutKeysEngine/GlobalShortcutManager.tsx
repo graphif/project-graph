@@ -107,6 +107,8 @@ export class GlobalShortcutManager {
   private async handleShowWindow() {
     console.log("开始呼出窗口");
     const window = getCurrentWindow();
+    // Tauri v2 中 show() 不会自动从最小化恢复，需要显式调用 unminimize
+    await window.unminimize();
     await window.show();
     await window.setSkipTaskbar(false);
     await window.setFocus();
