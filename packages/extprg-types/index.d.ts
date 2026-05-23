@@ -3,7 +3,7 @@
 
 /**
  * Auto-generated. Do not edit manually.
- * 2026-05-12T12:57:55.114Z
+ * 2026-05-23T14:46:44.556Z
  */
 
 // ── 第三方类型导入 ──
@@ -92,7 +92,11 @@ import type {
   Minimize2,
   Moon,
   MousePointer,
+  MoveDown,
   MoveHorizontal,
+  MoveLeft,
+  MoveRight,
+  MoveUp,
   MoveUpRight,
   Network,
   Package,
@@ -340,14 +344,16 @@ declare class AutoSaveBackupService {
   tick(): Promise<void>;
   autoSave(): Promise<void>;
   autoBackup(): Promise<void>;
+  localAutoBackup(strategy: "sideBySide" | "subfolder"): Promise<boolean>;
   manualBackup(): Promise<void>;
   resolveAutoBackupDir(candidate: { kind: "custom"; path: string } | { kind: "default" }): Promise<string | null>;
   tryBackupToDir(backupDir: string): Promise<boolean>;
   backupCurrentProject(backupDir: string): Promise<boolean>;
   generateBackupFileName(): Promise<string>;
+  generateTimestamp(): Promise<string>;
   getOriginalFileName(): Promise<string>;
   createBackupFile(backupFilePath: string): Promise<void>;
-  manageBackupFiles(backupDir: string): Promise<void>;
+  manageBackupFiles(backupDir: string, prefix?: string): Promise<void>;
 }
 
 declare class BackgroundRenderer {
@@ -393,6 +399,8 @@ declare class Camera {
   shockMoveDiffLocationsQueue;
   pageMove(direction: Direction): Promise<void>;
   bombMove(targetLocation: Vector | { _: "Vector" | (string & {}) }, frameCount = 40): Promise<void>;
+  tickIndex;
+  hasResetOnOpen;
   tick(): Promise<void>;
   tickNumber;
   allowScaleFollowMouseLocationTicks;
@@ -417,6 +425,7 @@ declare class Camera {
   resetLocationToZero(): Promise<void>;
   saveCameraState(): Promise<void>;
   restoreCameraState(): Promise<void>;
+  isDefaultZoom(): Promise<boolean>;
 }
 
 declare class Canvas {
@@ -451,9 +460,12 @@ declare class CollisionBox {
 
 declare class CollisionBoxRenderer {
   constructor(project: Project | { _: "Project" | (string & {}) });
+  get dynamicScale(): Promise<any>;
+  get reDynamicScale(): Promise<any>;
   render(
     collideBox: CollisionBox | { _: "CollisionBox" | (string & {}) },
     color: Color | { _: "Color" | (string & {}) },
+    dashed: boolean = false,
   ): Promise<void>;
 }
 
@@ -2108,11 +2120,11 @@ declare class Project extends Tab {
   get uri(): Promise<any>;
   set uri(uri: URI);
   stash(): Promise<void>;
-  save(): Promise<void>;
+  save(options: { includeThumbnail?: boolean } = {}): Promise<void>;
   references: Promise<{ sections: Record<string, string[]>; files: string[] }>;
   metadata: Promise<PrgMetadata>;
   readme?: Promise<string>;
-  getFileContent(): Promise<void>;
+  getFileContent(options: { includeThumbnail?: boolean } = {}): Promise<void>;
   get stageHash(): Promise<any>;
   addAttachment(data: Blob): Promise<void>;
   set projectState(state: ProjectState);
@@ -2610,6 +2622,8 @@ declare namespace Serialized {
     text: string;
     color: Color;
     sizeAdjust: TextNodeSizeAdjust;
+    fontFamily: string;
+    fontWeight: string;
   };
   function isTextNode(obj: StageObject | { _: "StageObject" | (string & {}) }): obj is TextNode;
   declare type Section = Entity & {
@@ -3020,7 +3034,7 @@ declare class StageObject {
 
 declare class StageObjectColorManager {
   constructor(project: Project | { _: "Project" | (string & {}) });
-  setSelectedStageObjectColor(color: Color | { _: "Color" | (string & {}) }): Promise<void>;
+  setSelectedStageObjectColor(color: Color | { _: "Color" | (string & {}) }, skipHistory = false): Promise<void>;
   darkenNodeColor(): Promise<void>;
   lightenNodeColor(): Promise<void>;
 }
@@ -3292,6 +3306,8 @@ declare class TextNode extends ConnectableEntity implements ResizeAble {
   fontScaleLevel: Promise<number>;
   enableResizeCharCount;
   sizeAdjust: Promise<string>;
+  fontFamily: Promise<string>;
+  fontWeight: Promise<string>;
   _isSelected: Promise<boolean>;
   get isSelected(): Promise<any>;
   get rectangle(): Promise<Rectangle>;
@@ -3311,6 +3327,8 @@ declare class TextNode extends ConnectableEntity implements ResizeAble {
       color = Color.Transparent,
       sizeAdjust = "auto",
       fontScaleLevel = 0,
+      fontFamily = "",
+      fontWeight = "",
     }: {
       uuid?: string;
       text?: string;
@@ -3319,6 +3337,8 @@ declare class TextNode extends ConnectableEntity implements ResizeAble {
       sizeAdjust?: "auto" | "manual";
       collisionBox?: CollisionBox;
       fontScaleLevel?: number;
+      fontFamily?: string;
+      fontWeight?: string;
     },
     unknown = false,
   );
@@ -3338,6 +3358,7 @@ declare class TextNode extends ConnectableEntity implements ResizeAble {
   adjustSizeByText(): Promise<void>;
   adjustHeightByText(): Promise<void>;
   forceAdjustSizeByText(): Promise<void>;
+  forceAdjustHeightByText(): Promise<void>;
   rename(text: string): Promise<void>;
   resizeHandle(delta: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
   resizeWidthTo(width: number): Promise<void>;
@@ -3358,40 +3379,66 @@ declare class TextNodeRenderer {
 declare class TextRenderer {
   cache;
   constructor(project: Project | { _: "Project" | (string & {}) });
-  hash(text: string, size: number): Promise<string>;
-  getCache(text: string, size: number): Promise<void>;
-  getCacheNearestSize(text: string, size: number): Promise<ImageBitmap | undefined>;
-  buildCache(text: string, size: number, color: Color | { _: "Color" | (string & {}) }): Promise<CanvasImageSource>;
+  hash(text: string, size: number, fontFamily?: string, fontWeight?: string): Promise<string>;
+  getCache(text: string, size: number, fontFamily?: string, fontWeight?: string): Promise<void>;
+  getCacheNearestSize(
+    text: string,
+    size: number,
+    fontFamily?: string,
+    fontWeight?: string,
+  ): Promise<ImageBitmap | undefined>;
+  buildCache(
+    text: string,
+    size: number,
+    color: Color | { _: "Color" | (string & {}) },
+    fontFamily?: string,
+    fontWeight?: string,
+  ): Promise<CanvasImageSource>;
   renderText(
     text: string,
     location: Vector | { _: "Vector" | (string & {}) },
     size: number,
     color: Color | { _: "Color" | (string & {}) } = Color.White,
+    fontFamily?: string,
+    fontWeight?: string,
   ): void;
   renderTempText(
     text: string,
     location: Vector | { _: "Vector" | (string & {}) },
     size: number,
     color: Color | { _: "Color" | (string & {}) } = Color.White,
+    fontFamily?: string,
+    fontWeight?: string,
   ): void;
   renderTextFromCenter(
     text: string,
     centerLocation: Vector | { _: "Vector" | (string & {}) },
     size: number,
     color: Color | { _: "Color" | (string & {}) } = Color.White,
+    fontFamily?: string,
+    fontWeight?: string,
   ): void;
   renderTempTextFromCenter(
     text: string,
     centerLocation: Vector | { _: "Vector" | (string & {}) },
     size: number,
     color: Color | { _: "Color" | (string & {}) } = Color.White,
+    fontFamily?: string,
+    fontWeight?: string,
   ): void;
   renderTextInRectangle(
     text: string,
     rectangle: Rectangle | { _: "Rectangle" | (string & {}) },
     color: Color | { _: "Color" | (string & {}) },
+    fontFamily?: string,
+    fontWeight?: string,
   ): void;
-  getFontSizeByRectangleSize(text: string, rectangle: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<Vector>;
+  getFontSizeByRectangleSize(
+    text: string,
+    rectangle: Rectangle | { _: "Rectangle" | (string & {}) },
+    fontFamily?: string,
+    fontWeight?: string,
+  ): Promise<Vector>;
   renderMultiLineText(
     text: string,
     location: Vector | { _: "Vector" | (string & {}) },
@@ -3400,6 +3447,8 @@ declare class TextRenderer {
     color: Color | { _: "Color" | (string & {}) } = Color.White,
     lineHeight: number = 1.2,
     limitLines: number = Infinity,
+    fontFamily?: string,
+    fontWeight?: string,
   ): void;
   renderTempMultiLineText(
     text: string,
@@ -3409,6 +3458,8 @@ declare class TextRenderer {
     color: Color | { _: "Color" | (string & {}) } = Color.White,
     lineHeight: number = 1.2,
     limitLines: number = Infinity,
+    fontFamily?: string,
+    fontWeight?: string,
   ): void;
   renderMultiLineTextFromCenterWithStroke(
     text: string,
@@ -3418,6 +3469,8 @@ declare class TextRenderer {
     strokeColor: Color | { _: "Color" | (string & {}) },
     limitWidth: number = Infinity,
     lineHeight: number = 1.2,
+    fontFamily?: string,
+    fontWeight?: string,
   ): void;
   renderMultiLineTextFromCenter(
     text: string,
@@ -3427,6 +3480,8 @@ declare class TextRenderer {
     color: Color | { _: "Color" | (string & {}) },
     lineHeight: number = 1.2,
     limitLines: number = Infinity,
+    fontFamily?: string,
+    fontWeight?: string,
   ): void;
   renderTempMultiLineTextFromCenter(
     text: string,
@@ -3436,15 +3491,31 @@ declare class TextRenderer {
     color: Color | { _: "Color" | (string & {}) },
     lineHeight: number = 1.2,
     limitLines: number = Infinity,
+    fontFamily?: string,
+    fontWeight?: string,
   ): void;
   textArrayCache: Promise<LruCache<string, string[]>>;
-  textToTextArrayWrapCache(text: string, fontSize: number, limitWidth: number): Promise<string>[];
-  textToTextArray(text: string, fontSize: number, limitWidth: number): Promise<string>[];
+  textToTextArrayWrapCache(
+    text: string,
+    fontSize: number,
+    limitWidth: number,
+    fontFamily?: string,
+    fontWeight?: string,
+  ): Promise<string>[];
+  textToTextArray(
+    text: string,
+    fontSize: number,
+    limitWidth: number,
+    fontFamily?: string,
+    fontWeight?: string,
+  ): Promise<string>[];
   measureMultiLineTextSize(
     text: string,
     fontSize: number,
     limitWidth: number,
     lineHeight: number = 1.2,
+    fontFamily?: string,
+    fontWeight?: string,
   ): Promise<Vector>;
 }
 
