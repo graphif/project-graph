@@ -284,7 +284,6 @@ export class Extension extends Tab {
                   <Markdown source={self.readmeContent} />
                 </div>
               )}
-              <Markdown source={self.readmeContent} />
             </TabsContent>
             {installed && (
               <>
