@@ -79,6 +79,7 @@ import {
   Tally4,
   Text,
   TextCursorInput,
+  Timer,
   TrendingUpDown,
   Turtle,
   Undo,
@@ -223,4 +224,6 @@ export const settingsIcons = {
   showEditModeHint: MessageSquareText,
   textNodeEditModeOutlineOpacity: SquareDashed,
   colorPanelMouseEnterPreview: Mouse,
+  maxFps: Timer,
+  maxFpsUnfocused: Timer,
 };

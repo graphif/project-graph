@@ -1,34 +1,34 @@
+import { AssetsRepository } from "@/core/service/AssetsRepository";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
-import { Tutorials } from "@/core/service/Tourials";
 import { onNewDraft, onOpenFile } from "@/core/service/GlobalMenu";
+import { Tutorials } from "@/core/service/Tourials";
+import RecentFilesWindow from "@/sub/RecentFilesWindow";
+import { cn } from "@/utils/cn";
 import { Path } from "@/utils/path";
+import { isMac } from "@/utils/platform";
 import { getVersion } from "@tauri-apps/api/app";
-import { open as shellOpen } from "@tauri-apps/plugin-shell";
+import { join, tempDir } from "@tauri-apps/api/path";
 import { writeFile } from "@tauri-apps/plugin-fs";
+import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import {
+  AlertTriangle,
   Earth,
   FilePlus,
   FolderOpen,
   Info,
   LoaderCircle,
   Map as MapIcon,
+  RefreshCw,
   Settings as SettingsIcon,
   TableProperties,
-  AlertTriangle,
-  RefreshCw,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import SettingsWindow from "../sub/SettingsWindow";
 import { toast } from "sonner";
-import { cn } from "@/utils/cn";
-import { AssetsRepository } from "@/core/service/AssetsRepository";
-import { join, tempDir } from "@tauri-apps/api/path";
-import { URI } from "vscode-uri";
-import RecentFilesWindow from "@/sub/RecentFilesWindow";
-import { isMac } from "@/utils/platform";
 import { cpuInfo } from "tauri-plugin-system-info-api";
+import { URI } from "vscode-uri";
+import SettingsWindow from "../sub/SettingsWindow";
 
 export default function WelcomePage() {
   const [recentFiles, setRecentFiles] = useState<RecentFileManager.RecentFile[]>([]);
@@ -137,7 +137,7 @@ export default function WelcomePage() {
                   e.stopPropagation();
                   randomizeSlogan();
                 }}
-                className="hover:bg-muted absolute right-0 top-0 ml-2 inline-flex cursor-pointer items-center justify-center rounded p-1 transition-all active:scale-90"
+                className="hover:bg-muted absolute top-0 right-0 ml-2 inline-flex cursor-pointer items-center justify-center rounded p-1 transition-all active:scale-90"
                 title="换一条小技巧"
               >
                 <RefreshCw size={14} />
@@ -182,7 +182,7 @@ export default function WelcomePage() {
                     },
                     {
                       loading: "正在下载功能说明书",
-                      error: (err) => {
+                      error: async (err) => {
                         console.error("下载功能说明书失败:", err);
                         return (
                           `下载功能说明书失败，可以尝试访问${AssetsRepository.getGuideFileUrl("tutorials/tutorial-main-2.11.prg")}，请确保您能访问github。` +

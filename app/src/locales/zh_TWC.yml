@@ -454,6 +454,12 @@ settings:
     description: '開啟後，滑鼠操作(拖曳移動視野)會自動重新整理舞台
 
       防止出現開啟某個檔案後，圖片未載入成功還需手動重新整理的情況'
+  maxFps:
+    title: 最大幀率 (活躍)
+    description: 視窗處於活躍狀態時的最大幀率限制
+  maxFpsUnfocused:
+    title: 最大幀率 (背景)
+    description: 視窗失去焦點時的最大幀率限制
   autoNamerTemplate:
     title: 建立節點時自動命名範本
     description: '輸入`{{i}}` 代表節點名稱會自動替換為編號，雙擊建立時可以自動累加數字。

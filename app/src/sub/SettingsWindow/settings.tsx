@@ -334,7 +334,7 @@ export const categories = {
   },
   performance: {
     memory: ["historySize", "clearHistoryWhenManualSave", "historyManagerMode"],
-    cpu: ["autoRefreshStageByMouseAction"],
+    cpu: ["autoRefreshStageByMouseAction", "maxFps", "maxFpsUnfocused"],
     render: [
       "isPauseRenderWhenManipulateOvertime",
       "renderOverTimeWhenNoManipulateTime",

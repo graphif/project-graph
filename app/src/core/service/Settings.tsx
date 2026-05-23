@@ -471,7 +471,9 @@ export type Settings = z.infer<typeof settingsSchema>;
 const listeners: Partial<Record<string, ((value: any) => void)[]>> = {};
 
 const store = new LazyStore("settings.json");
+console.log("pre store.init");
 await store.init();
+console.log("post store.init");
 
 // store加载完成后，推送所有listeners初始值
 // for (const key in listeners) {

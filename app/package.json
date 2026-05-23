@@ -187,5 +187,8 @@
     "vscode-uri": "^3.1.0",
     "yaml": "^2.8.4",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/events": "^3.0.3"
   }
 }

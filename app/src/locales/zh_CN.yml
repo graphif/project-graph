@@ -434,6 +434,12 @@ settings:
     description: |
       开启后，鼠标操作(拖拽移动视野)会自动刷新舞台
       防止出现打开某个文件后，图片未加载成功还需手动刷新的情况
+  maxFps:
+    title: 最大帧率 (活跃)
+    description: 窗口处于活跃状态时的最大帧率限制
+  maxFpsUnfocused:
+    title: 最大帧率 (后台)
+    description: 窗口失去焦点时的最大帧率限制
   autoNamerTemplate:
     title: 创建节点时自动命名模板
     description: |

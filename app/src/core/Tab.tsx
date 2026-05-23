@@ -4,6 +4,7 @@ import React from "react";
 import { toast } from "sonner";
 import { getOriginalNameOf } from "virtual:original-class-name";
 import { FileSystemProvider, Service } from "./interfaces/Service";
+import { Settings } from "./service/Settings";
 import { Telemetry } from "./service/Telemetry";
 
 export abstract class Tab extends React.Component<Record<string, never>, Record<string, never>> {
@@ -13,6 +14,7 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
   protected readonly fileSystemProviders = new Map<string, FileSystemProvider>();
   protected readonly tickableServices: Service[] = [];
   protected rafHandle = -1;
+  protected lastTickTime = 0;
 
   abstract getComponent(): React.ComponentType;
 
@@ -41,16 +43,16 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
   }
 
   // EventEmitter proxy methods
-  on(event: string | symbol, listener: (...args: any[]) => void): this {
+  on(event: string | number, listener: (...args: any[]) => void): this {
     this.eventEmitter.on(event, listener);
     return this;
   }
 
-  emit(event: string | symbol, ...args: any[]): boolean {
+  emit(event: string | number, ...args: any[]): boolean {
     return this.eventEmitter.emit(event, ...args);
   }
 
-  removeAllListeners(event?: string | symbol): this {
+  removeAllListeners(event?: string | number): this {
     this.eventEmitter.removeAllListeners(event);
     return this;
   }
@@ -97,11 +99,30 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
 
   loop() {
     if (this.rafHandle !== -1) return;
-    const animationFrame = () => {
-      this.tick();
-      this.rafHandle = requestAnimationFrame(animationFrame.bind(this));
+
+    const startTime = performance.now();
+    let ticksExecuted = 0;
+
+    const animationFrame = (time: number) => {
+      const isFocused = document.hasFocus();
+      const maxFps = Math.max(1, isFocused ? Settings.maxFps : Settings.maxFpsUnfocused);
+      const timeStep = 1000 / maxFps;
+      const totalElapsed = time - startTime;
+      const expectedTicks = Math.floor(totalElapsed / timeStep);
+      let ticksNeeded = expectedTicks - ticksExecuted;
+      if (ticksNeeded > 10) {
+        ticksExecuted = expectedTicks;
+        ticksNeeded = 0;
+      }
+      while (ticksNeeded > 0) {
+        this.tick();
+        ticksExecuted++;
+        ticksNeeded--;
+      }
+      this.rafHandle = requestAnimationFrame(animationFrame);
     };
-    animationFrame();
+
+    this.rafHandle = requestAnimationFrame(animationFrame);
   }
 
   pause() {

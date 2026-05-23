@@ -434,6 +434,12 @@ settings:
     description: |
       開啟後，鼠標操作(拖拽移動視野)會自動刷新舞臺
       防止出現打開某個文件後，圖片未加載成功還需手動刷新的情況
+  maxFps:
+    title: 最大幀率 (活躍)
+    description: 窗口處於活躍狀態時的最大幀率限制
+  maxFpsUnfocused:
+    title: 最大幀率 (後臺)
+    description: 窗口失去焦點時的最大幀率限制
   autoNamerTemplate:
     title: 創建節點時自動命名模板
     description: |

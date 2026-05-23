@@ -734,6 +734,12 @@ settings:
       refresh the stage.\nThis prevents manual refreshes for images that fail to load
       when opening a file.\n"
     title: Auto-Refresh Stage After Mouse Actions
+  maxFps:
+    title: Max FPS (Active)
+    description: Maximum framerate limit when the window is active
+  maxFpsUnfocused:
+    title: Max FPS (Background)
+    description: Maximum framerate limit when the window is unfocused
   mouseWheelWithAltMode:
     description: "This feature was added on April 10, 2025.\nIssues discovered currently:
       In Windows, a screen tap is needed to control the stage after a mouse wheel

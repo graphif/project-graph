@@ -10,3 +10,7 @@ interface ImportMetaEnv {
   LR_VITEST?: "true";
   LR_TURNSTILE_SITE_KEY?: string;
 }
+
+interface Window {
+  ipc_bridge: any
+}

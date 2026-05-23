@@ -1,11 +1,11 @@
 /// <reference types="vitest/config" />
 
-import operatorOverload from "unplugin-operator-overload/vite";
-import originalClassName from "unplugin-original-class-name/vite";
 import ViteYaml from "@modyfi/vite-plugin-yaml";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-oxc";
 import path from "node:path";
+import operatorOverload from "unplugin-operator-overload/vite";
+import originalClassName from "unplugin-original-class-name/vite";
 import { createLogger, defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 import { i18nAutoTW } from "./vite-plugins/i18n-auto-tw";
@@ -67,5 +67,11 @@ export default defineConfig({
 
   build: {
     sourcemap: false,
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, "index.html"),
+        proxy: path.resolve(__dirname, "proxy.html"),
+      },
+    },
   },
 });

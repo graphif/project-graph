@@ -11,6 +11,7 @@ export namespace ExtensionManager {
   const runtimes: Map<string, ExtensionRuntime> = new Map();
 
   export async function getExtensionsDir() {
+    console.log(await appDataDir());
     return await join(await appDataDir(), "extensions");
   }
   export async function getExtensions() {

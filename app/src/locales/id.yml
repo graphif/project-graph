@@ -418,6 +418,12 @@ settings:
     description: |
       Saat diaktifkan, operasi mouse (seret untuk menggerakkan tampilan) akan menyegarkan panggung secara otomatis
       Mencegah situasi setelah membuka file, gambar belum termuat dengan sukses dan perlu penyegaran manual
+  maxFps:
+    title: Max FPS (Aktif)
+    description: Batas frame rate maksimum saat jendela aktif
+  maxFpsUnfocused:
+    title: Max FPS (Latar Belakang)
+    description: Batas frame rate maksimum saat jendela tidak fokus
   autoNamerTemplate:
     title: Template Penamaan Otomatis Saat Membuat Node
     description: |

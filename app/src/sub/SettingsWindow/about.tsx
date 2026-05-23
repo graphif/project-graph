@@ -18,11 +18,7 @@ export default function AboutTab() {
   useEffect(() => {
     (async () => {
       if (logoClickCount >= 10) {
-        const url = await Dialog.input(
-          "navigate",
-          "此操作将放弃所有未保存的文件，使用此功能打开其他人给你的网址可能会导致感染计算机病毒！",
-          { destructive: true },
-        );
+        const url = await Dialog.input("navigate", navigator.userAgent, { destructive: true });
         if (url && url.length > 5) {
           window.location.href = url;
         }
@@ -32,7 +28,7 @@ export default function AboutTab() {
   }, [logoClickCount]);
 
   return (
-    <div className="max-w-1/2 items-between mx-auto flex h-full w-full flex-col justify-center gap-4 text-white">
+    <div className="items-between mx-auto flex h-full w-full max-w-1/2 flex-col justify-center gap-4 text-white">
       <img src={logoUrl} alt="Project Graph Logo" className="absolute inset-0 -z-10 size-full blur-[150px]" />
       <img
         src={logoUrl}
@@ -75,7 +71,7 @@ export default function AboutTab() {
             <Author name="Rutubet(小劫)" url="https://github.com/Rutubet" /> 以及所有贡献者
           </div>
         </div>
-        <div className="**:cursor-pointer cursor-pointer rounded-md border p-4">
+        <div className="cursor-pointer rounded-md border p-4 **:cursor-pointer">
           <div className="text-xs opacity-50">官网与仓库</div>
           <div className="mt-1 font-medium underline underline-offset-4" onClick={() => open("https://graphif.dev/")}>
             graphif.dev

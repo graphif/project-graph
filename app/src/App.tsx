@@ -140,7 +140,9 @@ export default function App() {
     }
 
     // 加载完成了，显示窗口
-    getCurrentWindow().show();
+    if (!window.ipc_bridge) {
+      getCurrentWindow().show();
+    }
     // 关闭splash
     getAllWindows().then((windows) => {
       const splash = windows.find((w) => w.label === "splash");

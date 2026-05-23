@@ -15,11 +15,12 @@
       {
         "label": "main",
         "title": "Project Graph",
+        "url": "/index.html",
         "width": 1200,
         "height": 800,
         "decorations": false,
         "transparent": true,
-        "visible": true
+        "visible": false
       },
       {
         "label": "splash",
