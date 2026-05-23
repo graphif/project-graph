@@ -66,6 +66,18 @@ export class AutoSaveBackupService {
       return;
     }
 
+    const strategy = Settings.autoBackupStrategy;
+
+    // New strategies: backup near the original file
+    if (strategy === "sideBySide" || strategy === "subfolder") {
+      const ok = await this.localAutoBackup(strategy);
+      if (ok) {
+        this.lastBackupHash = currentHash;
+      }
+      return;
+    }
+
+    // Original default strategy with custom path fallback
     const primaryCustomPath = Settings.autoBackupCustomPath?.trim() ?? "";
     const secondaryCustomPath = Settings.autoBackupCustomPath2?.trim() ?? "";
 
@@ -92,6 +104,61 @@ export class AutoSaveBackupService {
     }
 
     toast.error("自动备份失败：所有备份路径均不可用");
+  }
+
+  /**
+   * Backup near the original file (sideBySide or subfolder strategy)
+   */
+  private async localAutoBackup(strategy: "sideBySide" | "subfolder"): Promise<boolean> {
+    if (!this.project.uri || this.project.isDraft) {
+      return false;
+    }
+
+    const uriStr = decodeURI(this.project.uri.toString());
+    const dir = PathString.dirPath(uriStr);
+    const fileName = PathString.getFileNameFromPath(uriStr);
+
+    let backupDir: string;
+    let backupFileName: string;
+
+    if (strategy === "sideBySide") {
+      // {filename}_backup_{timestamp}.prg in same folder
+      backupDir = dir;
+      backupFileName = `${fileName}_backup_${this.generateTimestamp()}.prg`;
+    } else {
+      // {filename}_backup/{timestamp}.prg
+      backupDir = await join(dir, `${fileName}_backup`);
+      backupFileName = `${this.generateTimestamp()}.prg`;
+    }
+
+    // Ensure backup dir exists (for subfolder)
+    if (strategy === "subfolder" && !(await exists(backupDir))) {
+      try {
+        await mkdir(backupDir, { recursive: true });
+      } catch (err) {
+        toast.error(`创建备份子目录失败: ${err}`);
+        return false;
+      }
+    }
+
+    const backupFilePath = await join(backupDir, backupFileName);
+
+    try {
+      const fileContent = await this.project.getFileContent({ includeThumbnail: false });
+      await writeFile(backupFilePath, fileContent);
+      toast.success(`备份成功：${backupFilePath}`);
+    } catch (err) {
+      toast.error(`备份失败: ${err}`);
+      return false;
+    }
+
+    // Manage old backup files with appropriate prefix filter
+    if (strategy === "sideBySide") {
+      await this.manageBackupFiles(backupDir, `${fileName}_backup_`);
+    } else {
+      await this.manageBackupFiles(backupDir);
+    }
+    return true;
   }
 
   public async manualBackup() {
@@ -150,13 +217,16 @@ export class AutoSaveBackupService {
    * 生成备份文件名
    */
   private generateBackupFileName(): string {
-    const now = new Date();
-    const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}-${String(now.getSeconds()).padStart(2, "0")}`;
-
-    // 获取原始文件名（不包含扩展名）
     const originalFileName = this.getOriginalFileName();
+    return `${originalFileName}-${this.generateTimestamp()}.prg`;
+  }
 
-    return `${originalFileName}-${timestamp}.prg`;
+  /**
+   * 生成时间戳字符串
+   */
+  private generateTimestamp(): string {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}-${String(now.getSeconds()).padStart(2, "0")}`;
   }
 
   /**
@@ -195,7 +265,7 @@ export class AutoSaveBackupService {
   /**
    * 管理备份文件数量，删除过旧的备份文件
    */
-  private async manageBackupFiles(backupDir: string): Promise<void> {
+  private async manageBackupFiles(backupDir: string, prefix?: string): Promise<void> {
     try {
       // 获取备份目录中的所有文件
       const files = await readDir(backupDir);
@@ -203,7 +273,7 @@ export class AutoSaveBackupService {
       // 过滤出.prg文件并获取文件信息
       const prgFiles = [];
       for (const file of files) {
-        if (file.name.endsWith(".prg")) {
+        if (file.name.endsWith(".prg") && (!prefix || file.name.startsWith(prefix))) {
           try {
             const fileStat = await stat(await join(backupDir, file.name));
             prgFiles.push({

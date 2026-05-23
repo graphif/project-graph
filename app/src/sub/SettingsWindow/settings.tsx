@@ -261,6 +261,7 @@ export const categories = {
       "autoBackup",
       "autoBackupInterval",
       "autoBackupLimitCount",
+      "autoBackupStrategy",
       "autoBackupCustomPath",
       "autoBackupCustomPath2",
     ],

@@ -69,6 +69,9 @@ export const settingsSchema = z.object({
   autoBackupLimitCount: z.number().int().min(1).max(500).default(10),
   autoBackupCustomPath: z.string().default(""),
   autoBackupCustomPath2: z.string().default(""),
+  autoBackupStrategy: z
+    .union([z.literal("default"), z.literal("sideBySide"), z.literal("subfolder")])
+    .default("default"),
   enableDragEdgeRotateStructure: z.boolean().default(true),
   enableCtrlWheelRotateStructure: z.boolean().default(false),
   aiApiBaseUrl: z.string().default("https://generativelanguage.googleapis.com/v1beta/openai/"),

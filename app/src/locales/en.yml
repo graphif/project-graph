@@ -829,6 +829,13 @@ settings:
   autoBackupCustomPath2:
     title: Custom Auto Backup Path (Second)
     description: "If the first backup path is empty or the backup fails, it will try the second path; if that also fails, it falls back to the default path."
+  autoBackupStrategy:
+    title: Auto Backup Strategy
+    description: "Choose how to save backup files: default (backup folder), side-by-side (same folder as original), or subfolder ({filename}_backup folder)."
+    options:
+      default: Default (backup folder)
+      sideBySide: Side-by-side (same folder)
+      subfolder: Subfolder ({filename}_backup)
   showTextNodeBorder:
     title: Show Text Node Border
     description: "Controls whether to show the text node border or not.\n"

@@ -504,6 +504,14 @@ settings:
     description: |
       Jika path pertama kosong atau pencadangan gagal, akan mencoba path kedua
       Jika path kedua juga gagal, akan kembali ke path default
+  autoBackupStrategy:
+    title: Strategi Pencadangan Otomatis
+    description: |
+      Pilih cara menyimpan file cadangan: default (folder cadangan), sideBySide (folder yang sama dengan file asli), atau subfolder (folder {filename}_backup)
+    options:
+      default: Default (folder cadangan)
+      sideBySide: Sejajar (folder yang sama)
+      subfolder: Subfolder ({filename}_backup)
   scaleExponent:
     title: Kecepatan Zoom Tampilan
     description: |

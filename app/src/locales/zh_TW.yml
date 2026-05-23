@@ -520,6 +520,14 @@ settings:
     description: |
       第一備份路徑為空或備份失敗時，將嘗試使用第二備份路徑
       第二備份路徑也不可用時，將回退到默認路徑
+  autoBackupStrategy:
+    title: 自動備份策略
+    description: |
+      選擇備份文件的保存方式：default（備份文件夾）、sideBySide（與原始文件同目錄）、subfolder（{filename}_backup 子文件夾）
+    options:
+      default: 默認（備份文件夾）
+      sideBySide: 同目錄備份
+      subfolder: 子文件夾備份（{filename}_backup）
   scaleExponent:
     title: 視角縮放速度
     description: |

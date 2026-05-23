@@ -103,6 +103,7 @@ export const settingsIcons = {
   autoBackupLimitCount: FileStack,
   autoBackupCustomPath: Folder,
   autoBackupCustomPath2: Folder,
+  autoBackupStrategy: ListTree,
   mouseRightDragBackground: MouseRight,
   mouseLeftMode: MouseLeft,
   enableDragAutoAlign: AlignStartVertical,

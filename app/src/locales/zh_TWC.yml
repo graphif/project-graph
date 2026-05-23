@@ -543,6 +543,13 @@ settings:
   autoBackupCustomPath2:
     title: 自訂自動備份路徑（第二路徑）
     description: 第一備份路徑為空或備份失敗時，將嘗試使用第二備份路徑；第二備份路徑也不可用時，將回退到預設路徑
+  autoBackupStrategy:
+    title: 自動備份策略
+    description: 選擇備份檔案的儲存方式：default（備份資料夾）、sideBySide（與原始檔案同目錄）、subfolder（{filename}_backup 子資料夾）
+    options:
+      default: 預設（備份資料夾）
+      sideBySide: 同目錄備份
+      subfolder: 子資料夾備份（{filename}_backup）
   scaleExponent:
     title: 視角縮放速度
     description: '《目前縮放倍數》會不斷地以一定倍率無限逼近《目標縮放倍數》
