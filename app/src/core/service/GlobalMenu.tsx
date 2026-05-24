@@ -23,6 +23,7 @@ import AIWindow from "@/sub/AIWindow";
 import AttachmentsWindow from "@/sub/AttachmentsWindow";
 import LogicNodePanel from "@/sub/AutoComputeWindow";
 import BackgroundManagerWindow from "@/sub/BackgroundManagerWindow";
+import { ColorManagerPanel } from "@/sub/ColorWindow";
 import ExportPngWindow from "@/sub/ExportPngWindow";
 import FindWindow from "@/sub/FindWindow";
 import GenerateNodeTree, {
@@ -686,7 +687,18 @@ export function GlobalMenu() {
             }}
           >
             <Link />
-            引用管理器
+            {t("window.refManager")}
+          </Item>
+
+          {/* 颜色管理 */}
+          <Item
+            disabled={!activeProject}
+            onClick={() => {
+              ColorManagerPanel.open();
+            }}
+          >
+            <Palette />
+            {t("window.colorManager")}
           </Item>
 
           {/* 背景管理器 */}
@@ -697,7 +709,7 @@ export function GlobalMenu() {
             }}
           >
             <Images />
-            背景管理器
+            {t("window.bgManager")}
           </Item>
         </Content>
       </Menu>

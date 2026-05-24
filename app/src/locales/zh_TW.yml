@@ -112,6 +112,9 @@ globalMenu:
     fullscreen: 全屏
     classroomMode: 專注模式
     classroomModeHint: 左上角菜單按鈕僅僅是透明瞭，並沒有消失
+    refManager: 引用管理器
+    colorManager: 顏色管理
+    bgManager: 背景管理器
   about:
     title: 關於
     guide: 功能說明書

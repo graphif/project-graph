@@ -111,6 +111,9 @@ globalMenu:
     fullscreen: Layar Penuh
     classroomMode: Mode Fokus
     classroomModeHint: Tombol menu kiri atas hanya transparan, tidak hilang
+    refManager: Manajer Referensi
+    colorManager: Manajer Warna
+    bgManager: Manajer Latar Belakang
   about:
     title: Tentang
     guide: Panduan Fitur

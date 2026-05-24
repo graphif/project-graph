@@ -1027,6 +1027,9 @@ globalMenu:
     fullscreen: Fullscreen
     classroomMode: Focus Mode
     classroomModeHint: The top-left menu button is just transparent, not disappeared
+    refManager: Reference Manager
+    colorManager: Color Manager
+    bgManager: Background Manager
   about:
     title: About
     guide: New User Guide

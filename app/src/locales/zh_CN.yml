@@ -112,6 +112,9 @@ globalMenu:
     fullscreen: 全屏
     classroomMode: 专注模式
     classroomModeHint: 左上角菜单按钮仅仅是透明了，并没有消失
+    refManager: 引用管理器
+    colorManager: 颜色管理
+    bgManager: 背景管理器
   about:
     title: 关于
     guide: 功能说明书

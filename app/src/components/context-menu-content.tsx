@@ -13,8 +13,10 @@ import { Settings } from "@/core/service/Settings";
 import { activeTabAtom } from "@/state";
 import ColorPaletteWindow from "@/sub/ColorPaletteWindow";
 import ColorWindow from "@/sub/ColorWindow";
+import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import { Color } from "@graphif/data-structures";
 import { useAtom } from "jotai";
+import { useEffect, useState } from "react";
 import type { LucideProps } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
@@ -93,6 +95,16 @@ export default function MyContextMenuContent() {
   const { t } = useTranslation("contextMenu");
   const { t: tKeyBind } = useTranslation("keyBinds");
   const [config] = Settings.use("contextMenuConfig");
+
+  // 加载用户自定义颜色
+  const [userColorList, setUserColorList] = useState<Color[]>([]);
+  useEffect(() => {
+    ColorManager.getUserEntityFillColors().then(setUserColorList);
+    const unsub = ColorManager.subscribe(() => {
+      ColorManager.getUserEntityFillColors().then(setUserColorList);
+    });
+    return unsub;
+  }, []);
 
   if (!p) return <></>;
 
@@ -188,6 +200,7 @@ export default function MyContextMenuContent() {
             {getIcon("resetSelectedStageObjectColor", "Slash")}
             {t("resetColor")}
           </Item>
+
           <Item className="grid w-fit grid-cols-4 gap-0 bg-transparent!">
             {SIMPLE_PALETTE.map((color, index) =>
               color ? (
@@ -332,6 +345,40 @@ export default function MyContextMenuContent() {
   const renderItems = (items: ContextMenuConfigItem[]) => {
     const rendered: ReactNode[] = [];
 
+    const renderUserColorBar = () => {
+      const hasColorableSelectedObject = p.stageManager.getSelectedStageObjects().some((it) => "color" in it);
+      if (!hasColorableSelectedObject || userColorList.length === 0) return;
+
+      rendered.push(
+        <Item key="user-color-bar" className="bg-transparent! p-0">
+          <div
+            className="flex w-54 flex-row gap-0 overflow-x-hidden whitespace-nowrap"
+            onWheelCapture={(e) => {
+              e.stopPropagation();
+              e.currentTarget.scrollLeft += e.deltaY;
+            }}
+          >
+            {userColorList.map((color) => (
+              <div
+                key={color.toString()}
+                className="hover:outline-accent-foreground size-3 shrink-0 -outline-offset-1 hover:outline-2"
+                style={{ backgroundColor: `rgba(${color.r},${color.g},${color.b},${color.a})` }}
+                onMouseEnter={() => {
+                  if (!Settings.colorPanelMouseEnterPreview) return;
+                  p.controller.resetCountdownTimer();
+                  p.stageObjectColorManager.setSelectedStageObjectColor(color, true);
+                }}
+                onClick={() => {
+                  p.controller.resetCountdownTimer();
+                  p.stageObjectColorManager.setSelectedStageObjectColor(color, false);
+                }}
+              />
+            ))}
+          </div>
+        </Item>,
+      );
+    };
+
     for (let index = 0; index < items.length; index++) {
       const item = items[index];
       if (!isConfigVisible(item)) continue;
@@ -356,6 +403,9 @@ export default function MyContextMenuContent() {
         continue;
       }
 
+      if (item.type === "setColorForSelected") {
+        renderUserColorBar();
+      }
       rendered.push(renderItem(item));
     }
 

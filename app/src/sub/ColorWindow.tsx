@@ -140,7 +140,7 @@ ColorWindow.open = () => {
  *
  *
  */
-function ColorManagerPanel() {
+export function ColorManagerPanel() {
   useEffect(() => {
     ColorManager.getUserEntityFillColors().then((colors) => {
       setCurrentColorList(colors);
@@ -265,7 +265,7 @@ function ColorDotElement({ color, onclick }: { color: Color; onclick: (e: any) =
         onClick={onclick}
       >
         <Button
-          className="absolute -right-2 -top-2 h-2 w-2 rounded-full text-xs"
+          className="absolute -top-2 -right-2 h-2 w-2 rounded-full text-xs"
           onClick={() => {
             ColorManager.removeUserEntityFillColor(color);
           }}
@@ -273,7 +273,7 @@ function ColorDotElement({ color, onclick }: { color: Color; onclick: (e: any) =
           x
         </Button>
       </div>
-      <span className="mx-0.5 cursor-text select-all rounded bg-black px-1 text-xs text-neutral-300">{`${r}, ${g}, ${b}`}</span>
+      <span className="mx-0.5 cursor-text rounded bg-black px-1 text-xs text-neutral-300 select-all">{`${r}, ${g}, ${b}`}</span>
     </div>
   );
 }

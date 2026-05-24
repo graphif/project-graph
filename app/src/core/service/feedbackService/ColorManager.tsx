@@ -2,8 +2,20 @@ import { Color } from "@graphif/data-structures";
 import { Store } from "@tauri-apps/plugin-store";
 import { createStore } from "@/utils/store";
 
+type ColorChangeListener = () => void;
+
 export namespace ColorManager {
   let store: Store;
+  const changeListeners = new Set<ColorChangeListener>();
+
+  export function subscribe(listener: ColorChangeListener): () => void {
+    changeListeners.add(listener);
+    return () => changeListeners.delete(listener);
+  }
+
+  function notifyChange() {
+    changeListeners.forEach((fn) => fn());
+  }
 
   export type ColorData = {
     r: number;
@@ -56,6 +68,7 @@ export namespace ColorManager {
     colorData.push(color);
     await store.set("entityFillColors", colorToColorData(colorData));
     store.save();
+    notifyChange();
     return true;
   }
 
@@ -80,6 +93,7 @@ export namespace ColorManager {
       colors.splice(index, 1);
       store.set("entityFillColors", colorToColorData(colors));
       store.save();
+      notifyChange();
       return true;
     }
     return false;
@@ -92,6 +106,7 @@ export namespace ColorManager {
     const sortedColors = sortColorsByHue(colors);
     await store.set("entityFillColors", colorToColorData(sortedColors));
     store.save();
+    notifyChange();
   }
 
   /**
