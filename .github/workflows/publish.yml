@@ -164,7 +164,8 @@ jobs:
             qt6-base-dev \
             qt6-declarative-dev \
             libxcb1-dev \
-            libudev-dev
+            libudev-dev \
+            qt6-webengine-dev
       - uses: pnpm/action-setup@v4
         id: pnpm
         name: Install pnpm
