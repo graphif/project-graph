@@ -40,11 +40,13 @@ fn exit(code: i32) {
     std::process::exit(code);
 }
 
+#[cfg(target_os = "linux")]
 #[tauri::command]
 fn qt_ipc_response(id: String, ok: bool, data: serde_json::Value) {
     do_qt_ipc_response(id, ok, data);
 }
 
+#[cfg(target_os = "linux")]
 pub fn do_qt_ipc_response(id: String, ok: bool, data: serde_json::Value) {
     let data_str = serde_json::to_string(&data).unwrap_or_else(|_| "null".to_string());
     // println!("Forwarding response to Qt: id={}, ok={}, data={}", id, ok, data_str);
@@ -175,8 +177,9 @@ pub fn run() {
             write_stdout,
             write_stderr,
             exit,
-            qt_ipc_response,
             take_pending_open_files,
+            #[cfg(target_os = "linux")]
+            qt_ipc_response,
         ]);
 
     #[cfg(target_os = "linux")]
