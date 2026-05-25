@@ -214,6 +214,7 @@ export const settingsSchema = z.object({
   clearHistoryWhenManualSave: z.boolean().default(true),
   soundPitchVariationRange: z.number().int().min(0).max(1200).default(150),
   autoImportTxtFileWhenOpenPrg: z.boolean().default(false),
+  imageImportOrder: z.union([z.literal("mtime"), z.literal("path")]).default("mtime"),
   enableAutoEdgeWidth: z.boolean().default(true),
   enableCollisionBoxAutoWidth: z.boolean().default(true),
   newNodeScaleByCamera: z.boolean().default(false),

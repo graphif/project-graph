@@ -214,6 +214,7 @@ export const settingsIcons = {
   textNodeAutoFormatTreeWhenExitEdit: ListTree,
   treeGenerateCameraBehavior: Fullscreen,
   autoImportTxtFileWhenOpenPrg: File,
+  imageImportOrder: ArrowDownNarrowWide,
   stealthModeMaskShape: Pentagon,
   themeMode: SunMoon,
   lightTheme: Sun,

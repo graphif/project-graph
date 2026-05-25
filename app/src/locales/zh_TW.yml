@@ -1023,6 +1023,12 @@ settings:
   autoImportTxtFileWhenOpenPrg:
     title: 打開PRG文件時自動導入同名TXT文件
     description: 啟用後，打開PRG文件時會自動導入同一文件夾下同名TXT文件的內容，並以文本節點形式添加到舞臺左下角。
+  imageImportOrder:
+    title: 圖片導入順序
+    description: 導入多張圖片時的排序方式
+    options:
+      mtime: 按文件修改時間排序
+      path: 按文件路徑字典序排序
   enableAutoEdgeWidth:
     title: 自動調整框之間連線的粗細
     description: |

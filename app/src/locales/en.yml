@@ -905,6 +905,12 @@ settings:
   autoImportTxtFileWhenOpenPrg:
     title: Auto Import TXT File When Opening PRG
     description: When enabled, automatically imports content from a TXT file with the same name as the PRG file when opening it. The content will be added as text nodes at the bottom left corner of the stage.
+  imageImportOrder:
+    title: Image Import Order
+    description: Sorting order when importing multiple images
+    options:
+      mtime: By File Modification Time
+      path: By File Path (Lexicographic)
   enableAutoEdgeWidth:
     title: Auto Adjust Edge Width Between Sections
     description: |

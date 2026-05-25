@@ -265,7 +265,7 @@ export const categories = {
       "autoBackupCustomPath",
       "autoBackupCustomPath2",
     ],
-    autoImport: ["autoImportTxtFileWhenOpenPrg"],
+    autoImport: ["autoImportTxtFileWhenOpenPrg", "imageImportOrder"],
   },
   control: {
     mouse: [

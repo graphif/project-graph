@@ -1007,6 +1007,12 @@ settings:
   autoImportTxtFileWhenOpenPrg:
     title: Impor File TXT dengan Nama Sama Otomatis Saat Buka File PRG
     description: Saat diaktifkan, saat membuka file PRG akan mengimpor konten file TXT dengan nama sama di folder yang sama secara otomatis, dan menambahkannya ke sudut kiri bawah panggung sebagai node teks.
+  imageImportOrder:
+    title: Urutan Impor Gambar
+    description: Urutan pengurutan saat mengimpor banyak gambar
+    options:
+      mtime: Berdasarkan Waktu Modifikasi File
+      path: Berdasarkan Jalur File (Leksikografis)
   enableCollisionBoxAutoWidth:
     title: Lebar Otomatis Kotak Tabrakan
     description: |

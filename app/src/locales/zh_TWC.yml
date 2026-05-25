@@ -1014,6 +1014,12 @@ settings:
   autoImportTxtFileWhenOpenPrg:
     title: 開啟 PRG 檔案時自動匯入同名 TXT 檔案
     description: 啟用後，開啟 PRG 檔案時會自動匯入同一資料夾下同名 TXT 檔案的內容，並以文字節點形式新增到舞台左下角。
+  imageImportOrder:
+    title: 圖片匯入順序
+    description: 匯入多張圖片時的排序方式
+    options:
+      mtime: 按檔案修改時間排序
+      path: 按檔案路徑字典序排序
   enableAutoEdgeWidth:
     title: 自動調整框之間連線的粗細
     description: |

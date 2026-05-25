@@ -1,4 +1,3 @@
-import { Random } from "@/core/algorithm/random";
 import { Project } from "@/core/Project";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
@@ -6,12 +5,13 @@ import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { readFile } from "@tauri-apps/plugin-fs";
+import { readFile, stat } from "@tauri-apps/plugin-fs";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import { onOpenFile } from "../../GlobalMenu";
 import { PathString } from "@/utils/pathString";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
+import { Settings } from "@/core/service/Settings";
 
 /**
  * 处理文件拖拽到舞台的引擎
@@ -21,18 +21,32 @@ export namespace DragFileIntoStageEngine {
    * 处理文件拖拽到舞台，对各种类型的文件分类讨论
    * @param project 当前活动的项目
    * @param pathList 拖拽的文件路径列表
-   * @param mouseLocation 拖拽到的位置（舞台坐标系）
    */
   export async function handleDrop(project: Project, pathList: string[]) {
     try {
+      const imageTypeSet = new Set(["png", "jpg", "jpeg", "webp"]);
+      const imagePaths: string[] = [];
+      for (const filePath of pathList) {
+        const extName = filePath.split(".").pop()?.toLowerCase() ?? "";
+        if (imageTypeSet.has(extName)) {
+          imagePaths.push(filePath);
+        }
+      }
+
+      const sortedImagePaths = await sortFileList(imagePaths);
+
+      let imageIndex = 0;
       for (const filePath of pathList) {
         const extName = filePath.split(".").pop()?.toLowerCase();
         if (extName === "png") {
-          handleDropImage(project, filePath, "image/png");
+          await handleDropImage(project, sortedImagePaths[imageIndex], "image/png", imageIndex);
+          imageIndex++;
         } else if (extName === "jpg" || extName === "jpeg") {
-          handleDropImage(project, filePath, "image/jpeg");
+          await handleDropImage(project, sortedImagePaths[imageIndex], "image/jpeg", imageIndex);
+          imageIndex++;
         } else if (extName === "webp") {
-          handleDropImage(project, filePath, "image/webp");
+          await handleDropImage(project, sortedImagePaths[imageIndex], "image/webp", imageIndex);
+          imageIndex++;
         } else if (extName === "txt") {
           handleDropTxt(project, filePath);
         } else if (extName === "svg") {
@@ -47,6 +61,22 @@ export namespace DragFileIntoStageEngine {
     } catch (error) {
       toast.error(`处理拖拽文件失败: ${error instanceof Error ? error.message : String(error)}`);
     }
+  }
+
+  /**
+   * 根据设置对文件列表排序
+   */
+  async function sortFileList(fileList: string[]): Promise<string[]> {
+    const order = Settings.imageImportOrder;
+    if (order === "path") {
+      return [...fileList].sort();
+    }
+    // order === "mtime", sort by file modification time ascending
+    const entries = await Promise.all(
+      fileList.map(async (p) => ({ path: p, mtime: (await stat(p)).mtime?.getTime() ?? 0 })),
+    );
+    entries.sort((a, b) => a.mtime - b.mtime);
+    return entries.map((e) => e.path);
   }
 
   /**
@@ -124,7 +154,7 @@ export namespace DragFileIntoStageEngine {
    * 利用浏览器 Canvas API 完成转换
    */
   async function convertToPngBlob(fileData: Uint8Array, sourceMime: string): Promise<Blob> {
-    const sourceBlob = new Blob([fileData], { type: sourceMime });
+    const sourceBlob = new Blob([fileData as BlobPart], { type: sourceMime });
     const url = URL.createObjectURL(sourceBlob);
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -155,8 +185,14 @@ export namespace DragFileIntoStageEngine {
 
   /**
    * 处理图片文件拖拽到舞台（支持 png/jpg/jpeg/webp，统一转换为 PNG 存储）
+   * 按 imageIndex 从左下阶梯排列：第1张在视野中心，之后每张相对前一张左移50px、下移50px
    */
-  export async function handleDropImage(project: Project, filePath: string, sourceMime: string) {
+  export async function handleDropImage(
+    project: Project,
+    filePath: string,
+    sourceMime: string,
+    imageIndex: number = 0,
+  ): Promise<void> {
     const fileData = await readFile(filePath);
 
     // 非 PNG 格式先转换为 PNG
@@ -167,14 +203,15 @@ export namespace DragFileIntoStageEngine {
 
     const attachmentId = project.addAttachment(blob);
 
+    // 第1张在视野中心，之后每张左移50px、下移50px（y轴向下）
+    // collisionBox 使用占位尺寸，ImageNode 构造后会异步加载 bitmap 并自动更新碰撞箱
     const addLocation = project.camera.location.clone();
-    // 添加位置向左下角随机偏移
-    addLocation.x += Random.randomInt(0, -500);
-    addLocation.y += Random.randomInt(0, 500);
+    addLocation.x += -imageIndex * 50;
+    addLocation.y += imageIndex * 50;
 
     const imageNode = new ImageNode(project, {
       attachmentId,
-      collisionBox: new CollisionBox([new Rectangle(addLocation, new Vector(300, 150))]),
+      collisionBox: new CollisionBox([new Rectangle(addLocation, new Vector(1, 1))]),
     });
 
     project.stageManager.add(imageNode);
