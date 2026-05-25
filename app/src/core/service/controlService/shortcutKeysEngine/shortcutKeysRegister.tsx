@@ -180,6 +180,10 @@ const whenHasSelectedEntities: KeyBindWhen = (project) =>
   !!project && project.stageManager.getSelectedEntities().length > 0;
 const whenHasMultipleSelectedEntities: KeyBindWhen = (project) =>
   !!project && project.stageManager.getSelectedEntities().length >= 2;
+const whenHasMultipleSelectedEntitiesOrOneSection: KeyBindWhen = (project) =>
+  !!project &&
+  (project.stageManager.getSelectedEntities().length >= 2 ||
+    project.stageManager.getSelectedEntities().some((entity) => entity instanceof Section));
 const whenHasSelectedConnectableEntities: KeyBindWhen = (project) =>
   !!project && project.stageManager.getSelectedEntities().some((entity) => entity instanceof ConnectableEntity);
 const whenHasMultipleSelectedConnectableEntities: KeyBindWhen = (project) =>
@@ -2051,7 +2055,7 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "layoutToTightSquareDeep",
     defaultKey: "5 5 5 5",
     icon: SquareSquare,
-    when: whenHasMultipleSelectedEntities,
+    when: whenHasMultipleSelectedEntitiesOrOneSection,
     onPress: (project) => project!.layoutManager.layoutBySelected(project!.layoutManager.layoutToTightSquare, true),
   },
 
