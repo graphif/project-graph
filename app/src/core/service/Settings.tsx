@@ -180,6 +180,7 @@ export const settingsSchema = z.object({
   mouseLeftMode: z
     .union([z.literal("selectAndMove"), z.literal("draw"), z.literal("connectAndCut")])
     .default("selectAndMove"),
+  doubleClickEmptySpaceAction: z.union([z.literal("createTextNode"), z.literal("none")]).default("createTextNode"),
   soundEnabled: z.boolean().default(true),
   cuttingLineStartSoundFile: z.string().default(""),
   connectLineStartSoundFile: z.string().default(""),

@@ -271,6 +271,7 @@ export const categories = {
     mouse: [
       "mouseRightDragBackground",
       "mouseLeftMode",
+      "doubleClickEmptySpaceAction",
       "enableSpaceKeyMouseLeftDrag",
       "enableDragAutoAlign",
       "reverseTreeMoveMode",

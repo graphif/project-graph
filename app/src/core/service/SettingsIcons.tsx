@@ -107,6 +107,7 @@ export const settingsIcons = {
   autoBackupStrategy: ListTree,
   mouseRightDragBackground: MouseRight,
   mouseLeftMode: MouseLeft,
+  doubleClickEmptySpaceAction: MousePointerClick,
   enableDragAutoAlign: AlignStartVertical,
   reverseTreeMoveMode: Move,
   mouseWheelMode: LoaderPinwheel,

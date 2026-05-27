@@ -504,6 +504,13 @@ settings:
     options:
       openUrl: Open Content URL/File
       none: No Operation
+  doubleClickEmptySpaceAction:
+    title: Double-Click Empty Space Action
+    description: |-
+      The action performed when double-clicking on empty space.
+    options:
+      createTextNode: Create Text Node
+      none: No Operation
   textNodeContentLineBreak:
     title: Text Node Line Break Scheme
     options:

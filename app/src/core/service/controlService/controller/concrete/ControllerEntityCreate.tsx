@@ -42,7 +42,7 @@ export class ControllerEntityCreateClass extends ControllerClass {
 
     if (this.project.controller.pressingKeySet.has("`") || this.project.controller.pressingKeySet.has("·")) {
       this.createConnectPoint(pressLocation, sections);
-    } else {
+    } else if (Settings.doubleClickEmptySpaceAction === "createTextNode") {
       // 双击创建节点
       this.project.controllerUtils.addTextNodeByLocation(pressLocation, true);
     }

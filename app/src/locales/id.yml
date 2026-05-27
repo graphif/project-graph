@@ -684,6 +684,13 @@ settings:
     options:
       openUrl: Buka Konten URL/File
       none: Tidak Ada Operasi
+  doubleClickEmptySpaceAction:
+    title: Tindakan Klik Ganda pada Area Kosong
+    description: |-
+      Tindakan yang dilakukan saat mengklik ganda pada area kosong.
+    options:
+      createTextNode: Buat Node Teks
+      none: Tidak Ada Tindakan
   textNodeContentLineBreak:
     title: Skema Pemisah Baris Node Teks
     options:

@@ -723,6 +723,13 @@ settings:
     options:
       openUrl: 開啟內容URL/檔案
       none: 無操作
+  doubleClickEmptySpaceAction:
+    title: 空白處雙擊操作
+    description: |-
+      在空白處雙擊時執行的操作。
+    options:
+      createTextNode: 建立文字節點
+      none: 無操作
   textNodeContentLineBreak:
     title: 文字節點換行方案
     options:
