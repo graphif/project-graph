@@ -25,7 +25,7 @@ export class CopyEngineImage {
           await this.processImageWindowsCompat();
         } catch (error) {
           console.error("Windows兼容模式粘贴图片处理失败:", error);
-          toast.error("Windows兼容模式粘贴图片处理失败，请关闭文件再打开重试、或重启软件");
+          toast.error("windows系统粘贴图片失败，请尝试使用其他截图软件 或 系统截图功能粘贴图片");
           Telemetry.event("粘贴图片处理失败（Windows兼容模式）", String(error));
         }
       } else {
