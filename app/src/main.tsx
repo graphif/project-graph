@@ -178,12 +178,7 @@ async function loadStartFile() {
       const path = event.payload;
       const isExists = await exists(path);
       if (isExists) {
-        // 非 macOS 平台：第二实例传过来的文件，呼出窗口并聚焦
-        const win = getCurrentWindow();
-        await win.show();
-        await win.unminimize();
-        await win.setFocus();
-        onOpenFile(URI.file(path), "双击文件打开");
+        onOpenFile(URI.file(path), "macOS双击文件");
       } else {
         toast.error("文件不存在");
       }

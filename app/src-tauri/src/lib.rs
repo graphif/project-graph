@@ -10,12 +10,6 @@ use tauri::{Emitter, Manager, State, Listener};
 use std::path::Path;
 
 pub static APP_HANDLE: OnceLock<tauri::AppHandle> = OnceLock::new();
-
-/// 非 macOS 平台：用于跨进程单实例检测的 TCP listener
-/// 在 run() 中 bind，在 setup() 中取出启动监听线程
-#[cfg(not(target_os = "macos"))]
-static IPC_LISTENER: Mutex<Option<std::net::TcpListener>> = Mutex::new(None);
-
 #[derive(Default)]
 struct PendingOpenFiles(Mutex<Vec<String>>);
 
@@ -69,31 +63,6 @@ pub fn run() {
         }
     }
 
-    // 非 macOS 平台：TCP 端口检测实现单实例
-    // 第二个实例将文件路径通过 TCP 传给第一个实例后自动退出
-    #[cfg(not(target_os = "macos"))]
-    {
-        const SINGLE_INSTANCE_PORT: u16 = 49152;
-        let addr =
-            std::net::SocketAddrV4::new(std::net::Ipv4Addr::LOCALHOST, SINGLE_INSTANCE_PORT);
-
-        match std::net::TcpListener::bind(addr) {
-            Ok(listener) => {
-                // 第一个实例：保存 listener，稍后在 setup 中启动监听线程
-                *IPC_LISTENER.lock().unwrap() = Some(listener);
-            }
-            Err(_) => {
-                // 端口被占用 → 第二个实例：发送文件路径后退出
-                if let Ok(mut stream) = std::net::TcpStream::connect(addr) {
-                    use std::io::Write;
-                    let path = std::env::args().nth(1).unwrap_or_default();
-                    let _ = stream.write_all(path.as_bytes());
-                }
-                std::process::exit(0);
-            }
-        }
-    }
-
     println!("Starting Tauri builder setup...");
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
@@ -130,31 +99,6 @@ pub fn run() {
                 #[cfg(not(target_os = "linux"))]
                 app.handle().plugin(tauri_plugin_devtools::init())?;
             }
-
-            // 非 macOS 平台：启动 IPC 监听线程，接收第二实例发送的文件路径
-            #[cfg(not(target_os = "macos"))]
-            {
-                if let Some(listener) = IPC_LISTENER.lock().unwrap().take() {
-                    let handle = app.handle().clone();
-                    std::thread::spawn(move || {
-                        for stream in listener.incoming().flatten() {
-                            use std::io::Read;
-                            let mut buf = Vec::new();
-                            if stream.take(65536).read_to_end(&mut buf).is_ok() {
-                                let path = String::from_utf8_lossy(&buf).trim().to_string();
-                                if !path.is_empty() {
-                                    if let Some(state) = handle.try_state::<PendingOpenFiles>() {
-                                        let mut guard = state.0.lock().unwrap();
-                                        guard.push(path.clone());
-                                    }
-                                    let _ = handle.emit("open-file-from-os", path);
-                                }
-                            }
-                        }
-                    });
-                }
-            }
-
             #[cfg(desktop)]
             {
                 app.handle().plugin(tauri_plugin_cli::init())?;
