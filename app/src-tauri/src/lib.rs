@@ -65,6 +65,7 @@ pub fn run() {
 
     println!("Starting Tauri builder setup...");
     let builder = tauri::Builder::default()
+        .manage(PendingOpenFiles::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_http::init())

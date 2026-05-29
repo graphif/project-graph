@@ -58,7 +58,6 @@ export class CopyEngine {
 
     // 深拷贝一下数据，只有在粘贴的时候才刷新uuid
     const serializedCopiedStageObjects = serialize(copiedStageObjects);
-    console.log(serializedCopiedStageObjects);
 
     // 将舞台对象和附件一起存储到虚拟粘贴板
     VirtualClipboard.copy({
@@ -99,7 +98,7 @@ export class CopyEngine {
     if (VirtualClipboard.hasData()) {
       this.virtualClipboardPaste();
     } else {
-      this.readSystemClipboardAndPaste();
+      void this.readSystemClipboardAndPaste();
     }
   }
 
@@ -248,51 +247,126 @@ export class CopyEngine {
   }
 
   async readSystemClipboardAndPaste() {
-    if (isMac) {
-      // macOS 专用：优先使用 Web API 读取文本剪贴板（主线程安全），
-      // 避免 Tauri clipboard plugin 在 tokio worker 线程读取 NSPasteboard 时
-      // 与 WKWebView 主线程的并发访问导致 SIGSEGV 崩溃。
-      // 参见: https://github.com/tauri-apps/plugins-workspace/issues/3205
+    const pasted = isMac ? await this.pasteFromWebClipboard() : await this.pasteFromTauriClipboard();
+
+    if (!pasted) {
+      toast.info("剪贴板没有可粘贴的文本或图片");
+    }
+  }
+
+  private async pasteFromWebClipboard(): Promise<boolean> {
+    try {
+      let readItemsFailed = false;
+      try {
+        const pasted = await this.pasteImageFromWebClipboard();
+        if (pasted) return true;
+      } catch {
+        readItemsFailed = true;
+      }
+
       try {
         const text = await navigator.clipboard.readText();
         if (text && text.length > 0) {
           this.copyEngineText.copyEnginePastePlainText(text);
+          return true;
+        }
+        return false;
+      } catch {
+        if (readItemsFailed) {
+          toast.error("无法读取系统剪贴板（权限或系统限制）");
         } else {
-          // 文本为空则尝试图片
-          await this.copyEngineImage.processClipboardImage();
+          toast.error("无法读取系统剪贴板");
         }
-        setTimeout(() => {
-          // 粘贴完成后清除按键状态，防止 Web API 弹出的 paste 按钮导致卡键
-          this.project.controller.pressingKeySet.clear();
-        });
-      } catch (err) {
-        // Web API 失败（权限拒绝等），清除按键状态后 fallback 到图片粘贴
+        return false;
+      }
+    } finally {
+      setTimeout(() => {
         this.project.controller.pressingKeySet.clear();
-        console.warn("macOS Web API readText 失败，尝试粘贴图片", err);
-        try {
-          await this.copyEngineImage.processClipboardImage();
-        } catch (err) {
-          console.error("粘贴图片时发生错误:", err);
-        }
+      });
+    }
+  }
+
+  private async pasteImageFromWebClipboard(): Promise<boolean> {
+    const clipboard = navigator.clipboard as any;
+    if (!clipboard || typeof clipboard.read !== "function") return false;
+
+    const items = (await clipboard.read()) as Array<{
+      types: readonly string[];
+      getType: (type: string) => Promise<Blob>;
+    }>;
+
+    for (const item of items) {
+      const imageType = item.types.find((t) => t.startsWith("image/"));
+      if (!imageType) continue;
+      const blob = await item.getType(imageType);
+      await this.copyEngineImage.pasteImageBlob(blob);
+      return true;
+    }
+
+    return false;
+  }
+
+  private async pasteFromTauriClipboard(): Promise<boolean> {
+    let readFailed = false;
+    let hadError = false;
+    let text = "";
+    try {
+      text = await readText();
+    } catch (err) {
+      readFailed = true;
+      hadError = hadError || !this.isProbablyEmptyClipboardError(err);
+    }
+
+    if (text && text.length > 0) {
+      this.copyEngineText.copyEnginePastePlainText(text);
+      return true;
+    }
+
+    try {
+      const webText = await navigator.clipboard.readText();
+      if (webText && webText.length > 0) {
+        this.copyEngineText.copyEnginePastePlainText(webText);
+        return true;
       }
-    } else {
-      // Linux / Windows：直接使用 Tauri 插件，没有 NSPasteboard 线程安全问题
+    } catch (err) {
+      hadError = hadError || !this.isProbablyEmptyClipboardError(err);
+    }
+
+    try {
+      return await this.copyEngineImage.processClipboardImage();
+    } catch (err) {
+      hadError = hadError || !this.isProbablyEmptyClipboardError(err);
       try {
-        const text = await readText();
-        this.copyEngineText.copyEnginePastePlainText(text);
+        const pasted = await this.pasteImageFromWebClipboard();
+        if (pasted) return true;
       } catch (err) {
-        console.warn("文本剪贴板是空的", err);
-        try {
-          await this.copyEngineImage.processClipboardImage();
-        } catch (err) {
-          console.error("粘贴图片时发生错误:", err);
-          console.error("错误详情:", {
-            name: err instanceof Error ? err.name : "Unknown",
-            message: err instanceof Error ? err.message : String(err),
-            stack: err instanceof Error ? err.stack : "No stack",
-          });
-        }
+        hadError = hadError || !this.isProbablyEmptyClipboardError(err);
       }
+      if (readFailed || hadError) {
+        toast.error("读取系统剪贴板失败");
+      }
+      return false;
+    }
+  }
+
+  private isProbablyEmptyClipboardError(error: unknown): boolean {
+    const message = this.getErrorMessage(error).toLowerCase();
+    return (
+      message.includes("clipboard") &&
+      (message.includes("empty") ||
+        message.includes("no image") ||
+        message.includes("not an image") ||
+        message.includes("no text"))
+    );
+  }
+
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    if (typeof error === "string") return error;
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return String(error);
     }
   }
 }
