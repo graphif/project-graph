@@ -11,6 +11,8 @@ fn main() {
             .qt_module("WebEngineWidgets")
             .qt_module("WebChannel")
             .cc_builder(|builder| {
+                #[cfg(not(debug_assertions))]
+                builder.define("NDEBUG", None);
                 builder.file("src/qt_app.cpp");
                 builder.include("src");
             })

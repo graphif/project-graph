@@ -8,21 +8,22 @@
   <body class="bg-transparent">
     <div id="root" class="h-screen"></div>
     <script type="module">
+      console.log("Project Graph");
+
+      import { getCurrentWindow } from "@tauri-apps/api/window";
+      console.log(navigator.userAgent);
+      if (navigator.userAgent.includes("Linux") && !window.ipc_bridge) {
+        console.log("Running on Linux, closing this WebKitGTK window to prevent potential issues.");
+        getCurrentWindow().close();
+      }
+
       // 此处configureSerializer必须在所有代码的最开头
       // 否则@serializable装饰器无法获取正确的类名
       import { configureSerializer } from "@graphif/serializer";
       import { getOriginalNameOf } from "virtual:original-class-name";
       configureSerializer(getOriginalNameOf);
       console.log("Serializer configured");
-
-      if (navigator.userAgent.includes("Linux") && !window.__IS_QT_RENDERER__) {
-        console.log("Running in proxy mode (native window), skipping application main script.");
-      } else {
-        const script = document.createElement("script");
-        script.type = "module";
-        script.src = "/src/main.tsx";
-        document.body.appendChild(script);
-      }
     </script>
+    <script src="/src/main.tsx" type="module"></script>
   </body>
 </html>

@@ -334,7 +334,7 @@ export default function App() {
     [closeTab],
   );
 
-  const zoomStyle = uiScalePercent !== 100 ? { zoom: `${uiScalePercent / 100}` } as React.CSSProperties : undefined;
+  const zoomStyle = uiScalePercent !== 100 ? ({ zoom: `${uiScalePercent / 100}` } as React.CSSProperties) : undefined;
   const zoomClass = "relative z-10 flex h-full w-full flex-col gap-2 pointer-events-none [&>*]:pointer-events-auto";
 
   return (

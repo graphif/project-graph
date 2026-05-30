@@ -17,11 +17,71 @@
 #include <QDir>
 #include <vector>
 #include <string>
+#include <QWebEngineUrlScheme>
+#include <QWebEngineUrlSchemeHandler>
+#include <QWebEngineUrlRequestJob>
+#include <QBuffer>
+#include <QMimeDatabase>
 // Includes the generated CXX-Qt header for TauriIpcBridge
 #include "project-graph/src/ipc_bridge.cxxqt.h"
 
 QApplication *g_app = nullptr;
 QWebEngineView *g_view = nullptr;
+
+class TauriSchemeHandler : public QWebEngineUrlSchemeHandler
+{
+public:
+    explicit TauriSchemeHandler(TauriIpcBridge *bridge, QObject *parent = nullptr)
+        : QWebEngineUrlSchemeHandler(parent), m_bridge(bridge) {}
+
+    void requestStarted(QWebEngineUrlRequestJob *job) override
+    {
+        QUrl url = job->requestUrl();
+        QString path = url.path();
+
+        printf("DEBUG: TauriSchemeHandler requestStarted for URL: %s, path: %s\n",
+               url.toString().toUtf8().constData(), path.toUtf8().constData());
+
+        if (path.isEmpty() || path == "/")
+        {
+            path = "index.html";
+        }
+
+        QByteArray data = m_bridge->get_tauri_asset(path);
+        printf("DEBUG: TauriSchemeHandler loaded %d bytes for path: %s\n", data.size(), path.toUtf8().constData());
+
+        if (data.isEmpty() && path != "index.html" && path != "index.html/")
+        {
+            printf("DEBUG: TauriSchemeHandler failing job for: %s\n", path.toUtf8().constData());
+            job->fail(QWebEngineUrlRequestJob::UrlNotFound);
+            return;
+        }
+
+        QMimeDatabase db;
+        QString mime = db.mimeTypeForFile(path).name();
+        // Fallbacks for common web types
+        if (path.endsWith(QStringLiteral(".js")))
+            mime = QStringLiteral("application/javascript");
+        else if (path.endsWith(QStringLiteral(".css")))
+            mime = QStringLiteral("text/css");
+        else if (path.endsWith(QStringLiteral(".wasm")))
+            mime = QStringLiteral("application/wasm");
+        else if (path.endsWith(QStringLiteral(".html")))
+            mime = QStringLiteral("text/html");
+        else if (path.endsWith(QStringLiteral(".svg")))
+            mime = QStringLiteral("image/svg+xml");
+
+        QBuffer *buffer = new QBuffer(job);
+        buffer->setData(data);
+        buffer->open(QIODevice::ReadOnly);
+
+        printf("DEBUG: TauriSchemeHandler replying with MIME type: %s\n", mime.toUtf8().constData());
+        job->reply(mime.toUtf8(), buffer);
+    }
+
+private:
+    TauriIpcBridge *m_bridge;
+};
 
 extern "C"
 {
@@ -160,6 +220,12 @@ extern "C"
             // Force Shared Contexts - WebEngine needs this
             QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 
+            QWebEngineUrlScheme tauriScheme("tauri");
+            tauriScheme.setFlags(QWebEngineUrlScheme::SecureScheme | QWebEngineUrlScheme::LocalAccessAllowed | QWebEngineUrlScheme::ContentSecurityPolicyIgnored);
+            tauriScheme.setSyntax(QWebEngineUrlScheme::Syntax::Host);
+            tauriScheme.setDefaultPort(80); // Just in case
+            QWebEngineUrlScheme::registerScheme(tauriScheme);
+
             printf("DEBUG: About to create QApplication\n");
             g_app = new QApplication(argc, argv.data());
             printf("DEBUG: QApplication created successfully\n");
@@ -182,6 +248,9 @@ extern "C"
 
             // Create the CxxQt object
             TauriIpcBridge *ipc_bridge = new TauriIpcBridge(g_view);
+
+            // Install custom url scheme handler for tauri://
+            g_view->page()->profile()->installUrlSchemeHandler(QByteArrayLiteral("tauri"), new TauriSchemeHandler(ipc_bridge, g_view->page()->profile()));
 
             // Register it to the web channel so JS can access it over qt.webChannelTransport
             channel->registerObject(QStringLiteral("ipc_bridge"), ipc_bridge);
@@ -304,8 +373,10 @@ extern "C"
 
             printf("DEBUG: Loading URL...\n");
 #ifdef NDEBUG
+            printf("DEBUG: Loading tauri://localhost\n");
             g_view->load(QUrl(QStringLiteral("tauri://localhost")));
 #else
+            printf("DEBUG: Loading http://localhost:1420\n");
             g_view->load(QUrl(QStringLiteral("http://localhost:1420")));
 #endif
             g_view->resize(1024, 768);
