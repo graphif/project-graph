@@ -157,6 +157,7 @@ export const settingsSchema = z.object({
   textNodePasteSizeAdjustMode: z
     .union([z.literal("auto"), z.literal("manual"), z.literal("autoByLength")])
     .default("autoByLength"),
+  clipboardPasteMode: z.union([z.literal("auto"), z.literal("webview"), z.literal("tauri")]).default("auto"),
   textNodeManualDefaultCharWidth: z.number().int().min(3).max(60).default(10),
   allowAddCycleEdge: z.boolean().default(false),
   enableDragNodeShakeDetachFromEdge: z.boolean().default(false),

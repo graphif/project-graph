@@ -1,5 +1,6 @@
 import { Project, service } from "@/core/Project";
-import { isMac } from "@/utils/platform";
+import { Settings } from "@/core/service/Settings";
+import { isLinux, isMac, isWindows } from "@/utils/platform";
 import { ConnectableAssociation } from "@/core/stage/stageObject/abstract/Association";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
@@ -247,7 +248,32 @@ export class CopyEngine {
   }
 
   async readSystemClipboardAndPaste() {
-    const pasted = isMac ? await this.pasteFromWebClipboard() : await this.pasteFromTauriClipboard();
+    let pasted: boolean;
+
+    const mode = Settings.clipboardPasteMode;
+    if (mode === "webview") {
+      console.log("webview");
+      pasted = await this.pasteFromWebClipboard();
+    } else if (mode === "tauri") {
+      console.log("tauri");
+      pasted = await this.pasteFromTauriClipboard();
+    } else {
+      console.log("auto");
+      // AUTO模式
+      if (isMac) {
+        // mac优先用web模式，比较安全不容易崩溃
+        pasted = await this.pasteFromWebClipboard();
+      } else if (isWindows) {
+        // windows优先用tauri，因为不需要申请权限
+        pasted = await this.pasteFromTauriClipboard();
+      } else if (isLinux) {
+        // 待排查
+        pasted = await this.pasteFromTauriClipboard();
+      } else {
+        // 未知系统，先随便了
+        pasted = await this.pasteFromTauriClipboard();
+      }
+    }
 
     if (!pasted) {
       toast.info("剪贴板没有可粘贴的文本或图片");

@@ -317,6 +317,7 @@ export const categories = {
       "textNodeBackspaceDeleteWhenEmpty",
       "textNodeBigContentThresholdWhenPaste",
       "textNodePasteSizeAdjustMode",
+      "clipboardPasteMode",
       "textNodeManualDefaultCharWidth",
       "newNodeScaleByCamera",
       "newNodeScaleByCameraOffset",

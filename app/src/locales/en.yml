@@ -844,6 +844,17 @@ settings:
       width or height is limited to this size.\nMeanwhile, it keeps the aspect ratio,
       but only takes effect when “Compress Pasted Images” is enabled.\n"
     title: Max Pasted Image Size (In Pixels)
+  clipboardPasteMode:
+    title: Clipboard Paste Mode
+    description: |
+      Select the technology used when pasting content from the system clipboard.
+      "Auto" mode automatically selects the best method based on the OS (macOS uses Web Clipboard API, others use Tauri native API).
+      "WebView" mode always uses the Web Clipboard API.
+      "Tauri" mode always uses the Tauri native API.
+    options:
+      auto: Auto
+      webview: WebView
+      tauri: Tauri
   autoBackupLimitCount:
     title: Max Auto Backup Count
     description: "The maximum number of auto-backups, beyond which old backup files

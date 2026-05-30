@@ -430,6 +430,17 @@ settings:
     description: '長或寬超過此尺寸的圖片，其長或寬的最大值將會被限制為此大小
 
       同時保持長寬比不變，僅在開啟“壓縮貼上到舞台的圖片”時生效'
+  clipboardPasteMode:
+    title: 系統剪貼板粘貼模式
+    description: |
+      選擇從系統剪貼板粘貼內容時使用的技術方案。
+      「自動」模式會根據操作系統自動選擇最佳方式（macOS 使用 Web Clipboard API，其他系統使用 Tauri 原生 API）。
+      「WebView」模式始終使用 Web Clipboard API。
+      「Tauri」模式始終使用 Tauri 原生 API。
+    options:
+      auto: 自動
+      webview: WebView
+      tauri: Tauri
   isPauseRenderWhenManipulateOvertime:
     title: 超過一定時間未操作舞台，暫停渲染
     description: 開啟後，超過若干秒未做出舞台操作，舞台渲染會暫停，以節省CPU/GPU資源。

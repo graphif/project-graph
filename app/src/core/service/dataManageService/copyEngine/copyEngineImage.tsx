@@ -10,6 +10,7 @@ export class CopyEngineImage {
   constructor(private project: Project) {}
 
   public async processClipboardImage(): Promise<boolean> {
+    // 从系统粘贴板里读取图片
     const image = await readImage();
     const { width, height } = await image.size();
 
