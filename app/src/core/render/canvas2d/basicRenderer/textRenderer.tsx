@@ -167,6 +167,7 @@ export class TextRenderer {
     if (Settings.textIntegerLocationAndSizeRender) {
       location = location.toInteger();
       size = Math.round(size);
+      if (size === 0) return;
     }
     this.project.canvas.ctx.textBaseline = "middle";
     this.project.canvas.ctx.textAlign = "left";
@@ -190,6 +191,7 @@ export class TextRenderer {
     if (Settings.textIntegerLocationAndSizeRender) {
       centerLocation = centerLocation.toInteger();
       size = Math.round(size);
+      if (size === 0) return;
     }
     const textSize = getTextSize(text, size, fontFamily, fontWeight);
     this.renderText(text, centerLocation.subtract(textSize.divide(2)), size, color, fontFamily, fontWeight);
@@ -206,6 +208,7 @@ export class TextRenderer {
     if (Settings.textIntegerLocationAndSizeRender) {
       centerLocation = centerLocation.toInteger();
       size = Math.round(size);
+      if (size === 0) return;
     }
     const textSize = getTextSize(text, size, fontFamily, fontWeight);
     this.renderTempText(text, centerLocation.subtract(textSize.divide(2)), size, color, fontFamily, fontWeight);
@@ -354,6 +357,7 @@ export class TextRenderer {
     if (Settings.textIntegerLocationAndSizeRender) {
       centerLocation = centerLocation.toInteger();
       size = Math.round(size);
+      if (size === 0) return;
     }
     text = Settings.protectingPrivacy ? replaceTextWhenProtect(text) : text;
     const textLineArray = this.textToTextArrayWrapCache(text, size, limitWidth, fontFamily, fontWeight);
@@ -392,6 +396,7 @@ export class TextRenderer {
     if (Settings.textIntegerLocationAndSizeRender) {
       centerLocation = centerLocation.toInteger();
       size = Math.round(size);
+      if (size === 0) return;
       limitWidth = Math.round(limitWidth);
     }
     text = Settings.protectingPrivacy ? replaceTextWhenProtect(text) : text;
@@ -429,6 +434,7 @@ export class TextRenderer {
     if (Settings.textIntegerLocationAndSizeRender) {
       centerLocation = centerLocation.toInteger();
       size = Math.round(size);
+      if (size === 0) return;
       limitWidth = Math.round(limitWidth);
     }
     text = Settings.protectingPrivacy ? replaceTextWhenProtect(text) : text;
