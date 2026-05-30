@@ -32,6 +32,7 @@ import {
   Mouse,
   MoveUpRight,
   Network,
+  Pen,
   PictureInPicture,
   Proportions,
   RectangleHorizontal,
@@ -292,6 +293,7 @@ export const categories = {
       "enableCtrlWheelRotateStructure",
     ],
     touchpad: ["enableWindowsTouchPad", "macTrackpadAndMouseWheelDifference", "macTrackpadScaleSensitivity"],
+    pen: ["hideCursorInPenMode", "penPressureCurve"],
     cameraMove: ["moveAmplitude", "moveFriction"],
     cameraZoom: [
       "scaleExponent",
@@ -374,6 +376,7 @@ export const categoryIcons = {
   },
   control: {
     icon: Wrench,
+    pen: Pen,
     mouse: Mouse,
     touchpad: Touchpad,
     cameraMove: Scan,

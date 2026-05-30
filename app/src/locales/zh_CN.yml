@@ -157,6 +157,7 @@ settings:
     control:
       title: 控制
       mouse: 鼠标
+      pen: 画笔
       touchpad: 触摸板
       cameraMove: 视野移动
       cameraZoom: 视野缩放
@@ -212,6 +213,19 @@ settings:
     description: |
       用于教学、培训等场景。
       开启后窗口顶部按钮会透明，鼠标悬浮上去会恢复，可以修改进入退出专注模式的快捷键
+  hideCursorInPenMode:
+    title: 画笔模式下隐藏鼠标
+    description: "开启后，在使用画笔绘制时会隐藏鼠标指针"
+  penPressureCurve:
+    title: 压感曲线
+    description: 调整笔压输入的映射曲线，改变压力与笔画宽度的关系
+    options:
+      fixed: 固定值（无压感）
+      linear: 线性（原始值）
+      sqrt: 平方根（中低压力更敏感）
+      cbrt: 立方根（低压力最敏感）
+      quadratic: 二次抛物线（中高压力更敏感）
+      cubic: 三次抛物线（高压力最敏感）
   showQuickSettingsToolbar:
     title: 显示快捷设置栏
     description: |

@@ -259,6 +259,19 @@ settings:
     description: '用於教學、培訓等場景。
 
       開啟後視窗頂部按鈕會透明，滑鼠懸浮上去會恢復，可以修改進入退出專注模式的快捷鍵'
+  hideCursorInPenMode:
+    title: 畫筆模式下隱藏游標
+    description: "開啟後，在使用畫筆繪製時會隱藏滑鼠游標"
+  penPressureCurve:
+    title: 筆壓曲線
+    description: 調整筆壓輸入的映射曲線，改變壓力與筆畫寬度的關係
+    options:
+      fixed: 固定值（無壓感）
+      linear: 線性（原始值）
+      sqrt: 平方根（中低壓力更敏感）
+      cbrt: 立方根（低壓力最敏感）
+      quadratic: 二次拋物線（中高壓力更敏感）
+      cubic: 三次拋物線（高壓力最敏感）
   showQuickSettingsToolbar:
     title: 顯示快捷設置欄
     description: '控制是否在介面右側顯示快捷操作欄（快捷設置欄）。

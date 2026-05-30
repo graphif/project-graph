@@ -155,6 +155,19 @@ settings:
     description: |
       For teaching, training.
       When enabled, the buttons at the top of the window will become transparent, and they will revert when the mouse hovers over them. You can customize the shortcut keys to enter and exit focus mode.
+  hideCursorInPenMode:
+    title: Hide Cursor in Brush Mode
+    description: "When enabled, hides the mouse cursor while drawing with the brush tool"
+  penPressureCurve:
+    title: Pen Pressure Curve
+    description: Adjust the mapping curve of pen pressure input, changing the relationship between pressure and stroke width
+    options:
+      fixed: Fixed (No pressure sensitivity)
+      linear: Linear (Raw value)
+      sqrt: Square Root (More sensitive at low/medium pressure)
+      cbrt: Cube Root (Most sensitive at low pressure)
+      quadratic: Quadratic (More sensitive at medium/high pressure)
+      cubic: Cubic (Most sensitive at high pressure)
   showQuickSettingsToolbar:
     title: Show Quick Settings Toolbar
     description: |

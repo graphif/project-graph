@@ -3,6 +3,7 @@ import { ControllerClass } from "@/core/service/controlService/controller/Contro
 import { Settings } from "@/core/service/Settings";
 import { PenStroke, PenStrokeSegment } from "@/core/stage/stageObject/entity/PenStroke";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { CursorNameEnum } from "@/types/cursors";
 import { isMac } from "@/utils/platform";
 import { Color, mixColors, Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
@@ -38,7 +39,9 @@ export class ControllerPenStrokeDrawingClass extends ControllerClass {
       return;
     }
     this._isUsing = true;
-
+    if (Settings.hideCursorInPenMode) {
+      this.project.controller.setCursorName(CursorNameEnum.None);
+    }
     const pressWorldLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
     if (this.project.controller.pressingKeySet.has("shift")) {
       this.isDrawingLine = true;
@@ -54,7 +57,30 @@ export class ControllerPenStrokeDrawingClass extends ControllerClass {
     for (const e of events) {
       const isPen = e.pointerType === "pen";
       const worldLocation = this.project.renderer.transformView2World(new Vector(e.clientX, e.clientY));
-      this.currentSegments.push(new PenStrokeSegment(worldLocation, isPen ? e.pressure : 1));
+      let finalPressure = isPen ? e.pressure : 1;
+      if (isPen) {
+        switch (Settings.penPressureCurve) {
+          case "fixed":
+            finalPressure = 1;
+            break;
+          case "linear":
+            finalPressure = e.pressure;
+            break;
+          case "sqrt":
+            finalPressure = Math.sqrt(e.pressure);
+            break;
+          case "cbrt":
+            finalPressure = Math.cbrt(e.pressure);
+            break;
+          case "quadratic":
+            finalPressure = Math.pow(e.pressure, 2);
+            break;
+          case "cubic":
+            finalPressure = Math.pow(e.pressure, 3);
+            break;
+        }
+      }
+      this.currentSegments.push(new PenStrokeSegment(worldLocation, finalPressure));
     }
   };
 

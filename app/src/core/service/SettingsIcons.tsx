@@ -48,6 +48,7 @@ import {
   Moon,
   Mouse,
   MouseLeft,
+  MouseOff,
   MousePointerClick,
   MouseRight,
   Move,
@@ -94,6 +95,8 @@ import {
 } from "lucide-react";
 
 export const settingsIcons = {
+  hideCursorInPenMode: MouseOff,
+  penPressureCurve: Spline,
   autoNamerTemplate: Tag,
   autoNamerSectionTemplate: Tag,
   autoNamerDetailsTemplate: Tag,

@@ -472,6 +472,17 @@ export const settingsSchema = z.object({
         ? "PingFang SC, PingFang TC, -apple-system"
         : "-apple-system, BlinkMacSystemFont, MiSans, system-ui, sans-serif",
     ),
+  hideCursorInPenMode: z.boolean().default(false),
+  penPressureCurve: z
+    .union([
+      z.literal("fixed"),
+      z.literal("linear"),
+      z.literal("sqrt"),
+      z.literal("cbrt"),
+      z.literal("quadratic"),
+      z.literal("cubic"),
+    ])
+    .default("linear"),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

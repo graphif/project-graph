@@ -93,7 +93,7 @@ export class ControllerAssociationReshapeClass extends ControllerClass {
       // F
       clickedAssociation.isSelected = true;
     }
-    this.project.controller.setCursorNameHook(CursorNameEnum.Move);
+    this.project.controller.setCursorName(CursorNameEnum.Move);
   };
 
   public mousemove: (event: MouseEvent) => void = (event: MouseEvent) => {
@@ -146,7 +146,7 @@ export class ControllerAssociationReshapeClass extends ControllerClass {
     // 如果是空格键拖拽视野，不要记录历史
     if (this.project.controller.camera.isPreGrabbingWhenSpace || this.project.controller.pressingKeySet.has(" ")) {
       this.project.controller.isMovingEdge = false;
-      this.project.controller.setCursorNameHook(CursorNameEnum.Default);
+      this.project.controller.setCursorName(CursorNameEnum.Default);
       return;
     }
 
@@ -154,6 +154,6 @@ export class ControllerAssociationReshapeClass extends ControllerClass {
       this.project.historyManager.recordStep(); // 鼠标抬起了，移动结束，记录历史过程
       this.project.controller.isMovingEdge = false;
     }
-    this.project.controller.setCursorNameHook(CursorNameEnum.Default);
+    this.project.controller.setCursorName(CursorNameEnum.Default);
   };
 }

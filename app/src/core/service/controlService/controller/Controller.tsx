@@ -29,11 +29,9 @@ import { Settings } from "../../Settings";
  */
 @service("controller")
 export class Controller {
-  /**
-   * 在上层接收React提供的state修改函数
-   */
-
-  setCursorNameHook: (_: CursorNameEnum) => void = () => {};
+  setCursorName(name: CursorNameEnum) {
+    this.project.canvas.element.style.cursor = name;
+  }
 
   // 检测正在按下的键
   readonly pressingKeySet: Set<string> = new Set();

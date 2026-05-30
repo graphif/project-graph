@@ -37,7 +37,7 @@ export class ControllerCameraClass extends ControllerClass {
     if (key === " " && Settings.enableSpaceKeyMouseLeftDrag) {
       if (!this.isPreGrabbingWhenSpace) {
         this.isPreGrabbingWhenSpace = true;
-        this.project.controller.setCursorNameHook(CursorNameEnum.Grab);
+        this.project.controller.setCursorName(CursorNameEnum.Grab);
       }
     }
   };
@@ -55,7 +55,7 @@ export class ControllerCameraClass extends ControllerClass {
     if (key === " ") {
       if (this.isPreGrabbingWhenSpace) {
         this.isPreGrabbingWhenSpace = false;
-        this.project.controller.setCursorNameHook(CursorNameEnum.Default);
+        this.project.controller.setCursorName(CursorNameEnum.Default);
       }
     }
   };
@@ -65,7 +65,7 @@ export class ControllerCameraClass extends ControllerClass {
       return;
     }
     if (event.button === 0 && this.project.controller.pressingKeySet.has(" ") && Settings.enableSpaceKeyMouseLeftDrag) {
-      this.project.controller.setCursorNameHook(CursorNameEnum.Grabbing);
+      this.project.controller.setCursorName(CursorNameEnum.Grabbing);
       this.isUsingMouseGrabMove = true;
     }
     if (event.button === 1 && Settings.mouseRightDragBackground !== "moveCamera") {
@@ -122,12 +122,12 @@ export class ControllerCameraClass extends ControllerClass {
         return;
       }
       this.moveCameraByMouseMove(event.clientX, event.clientY, 1);
-      this.project.controller.setCursorNameHook(CursorNameEnum.Grabbing);
+      this.project.controller.setCursorName(CursorNameEnum.Grabbing);
     }
     // 侧键按下拖动视野
     if (this.project.controller.isMouseDown[4]) {
       this.moveCameraByMouseMove(event.clientX, event.clientY, 4);
-      this.project.controller.setCursorNameHook(CursorNameEnum.Grabbing);
+      this.project.controller.setCursorName(CursorNameEnum.Grabbing);
     }
     if (Settings.mouseRightDragBackground === "moveCamera" && this.project.controller.isMouseDown[2]) {
       // 还要保证这个鼠标位置没有悬浮在什么东西上
@@ -141,14 +141,14 @@ export class ControllerCameraClass extends ControllerClass {
         return;
       }
       this.moveCameraByMouseMove(event.clientX, event.clientY, 2);
-      this.project.controller.setCursorNameHook(CursorNameEnum.Grabbing);
+      this.project.controller.setCursorName(CursorNameEnum.Grabbing);
     }
   };
 
   public mouseMoveOutWindowForcedShutdown(vectorObject: Vector) {
     super.mouseMoveOutWindowForcedShutdown(vectorObject);
     this.isUsingMouseGrabMove = false;
-    this.project.controller.setCursorNameHook(CursorNameEnum.Default);
+    this.project.controller.setCursorName(CursorNameEnum.Default);
   }
 
   /**
@@ -169,18 +169,18 @@ export class ControllerCameraClass extends ControllerClass {
     }
     if (event.button === 0 && this.project.controller.pressingKeySet.has(" ")) {
       if (this.isPreGrabbingWhenSpace) {
-        this.project.controller.setCursorNameHook(CursorNameEnum.Grab);
+        this.project.controller.setCursorName(CursorNameEnum.Grab);
       }
     }
     if (event.button === 1) {
       // 中键松开
-      this.project.controller.setCursorNameHook(CursorNameEnum.Default);
+      this.project.controller.setCursorName(CursorNameEnum.Default);
     }
     if (event.button === 4) {
-      this.project.controller.setCursorNameHook(CursorNameEnum.Default);
+      this.project.controller.setCursorName(CursorNameEnum.Default);
     }
     if (event.button === 2) {
-      this.project.controller.setCursorNameHook(CursorNameEnum.Default);
+      this.project.controller.setCursorName(CursorNameEnum.Default);
     }
     this.isUsingMouseGrabMove = false;
   };
@@ -233,13 +233,7 @@ export class ControllerCameraClass extends ControllerClass {
   private dealStealthMode(event: WheelEvent) {
     if (Settings.isStealthModeEnabled && this.project.controller.pressingKeySet.has("shift")) {
       console.log(event);
-      let delta = 0;
-
-      if (isMac) {
-        delta = event.deltaX > 0 ? -10 : 10;
-      } else {
-        delta = event.deltaY > 0 ? -10 : 10;
-      }
+      const delta = isMac ? (event.deltaX > 0 ? -10 : 10) : event.deltaY > 0 ? -10 : 10;
       const newRadius = Math.max(10, Math.min(500, Settings.stealthModeScopeRadius + delta));
       Settings.stealthModeScopeRadius = newRadius;
       this.project.effects.addEffect(MouseTipFeedbackEffect.default(delta > 0 ? "expand" : "shrink"));

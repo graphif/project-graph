@@ -202,6 +202,19 @@ settings:
     description: |
       Untuk skenario pengajaran, pelatihan, dll.
       Saat diaktifkan, tombol atas jendela akan transparan, akan pulih saat mouse diarahkan, dapat mengubah pintasan keyboard untuk masuk/keluar mode fokus
+  hideCursorInPenMode:
+    title: Sembunyikan Kursor dalam Mode Kuas
+    description: "Saat diaktifkan, kursor mouse akan disembunyikan saat menggambar dengan kuas"
+  penPressureCurve:
+    title: Kurva Tekanan Pena
+    description: Sesuaikan kurva pemetaan input tekanan pena, mengubah hubungan antara tekanan dan lebar goresan
+    options:
+      fixed: Tetap (Tanpa sensitivitas tekanan)
+      linear: Linear (Nilai mentah)
+      sqrt: Akar Kuadrat (Lebih sensitif pada tekanan rendah/menengah)
+      cbrt: Akar Pangkat Tiga (Paling sensitif pada tekanan rendah)
+      quadratic: Kuadrat (Lebih sensitif pada tekanan menengah/tinggi)
+      cubic: Kubik (Paling sensitif pada tekanan tinggi)
   showQuickSettingsToolbar:
     title: Tampilkan Bilah Pengaturan Cepat
     description: |

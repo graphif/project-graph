@@ -262,7 +262,7 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     // 播放音效
     SoundService.play.connectLineStart();
     this._isUsing = true;
-    this.project.controller.setCursorNameHook(CursorNameEnum.Crosshair);
+    this.project.controller.setCursorName(CursorNameEnum.Crosshair);
     this.updatePreviewDirections();
   }
 
@@ -351,7 +351,7 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     // 检查释放的实体是否是背景图片
     if (releaseTargetEntity instanceof ImageNode && (releaseTargetEntity as ImageNode).isBackground) {
       this.clear();
-      this.project.controller.setCursorNameHook(CursorNameEnum.Default);
+      this.project.controller.setCursorName(CursorNameEnum.Default);
       return;
     }
 
@@ -425,7 +425,7 @@ export class ControllerNodeConnectionClass extends ControllerClass {
       });
     }
     this.clear();
-    this.project.controller.setCursorNameHook(CursorNameEnum.Default);
+    this.project.controller.setCursorName(CursorNameEnum.Default);
   }
 
   /**

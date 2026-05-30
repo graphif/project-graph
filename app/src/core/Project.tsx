@@ -12,11 +12,11 @@ import type { VerticalPolyEdgeRenderer } from "@/core/render/canvas2d/entityRend
 import type { EdgeRenderer } from "@/core/render/canvas2d/entityRenderer/edge/EdgeRenderer";
 import type { EntityDetailsButtonRenderer } from "@/core/render/canvas2d/entityRenderer/EntityDetailsButtonRenderer";
 import type { EntityRenderer } from "@/core/render/canvas2d/entityRenderer/EntityRenderer";
+import type { LatexNodeRenderer } from "@/core/render/canvas2d/entityRenderer/latexNode/LatexNodeRenderer";
 import type { MultiTargetUndirectedEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/multiTargetUndirectedEdge/MultiTargetUndirectedEdgeRenderer";
 import type { ReferenceBlockRenderer } from "@/core/render/canvas2d/entityRenderer/ReferenceBlockRenderer";
 import type { SectionRenderer } from "@/core/render/canvas2d/entityRenderer/section/SectionRenderer";
 import type { SvgNodeRenderer } from "@/core/render/canvas2d/entityRenderer/svgNode/SvgNodeRenderer";
-import type { LatexNodeRenderer } from "@/core/render/canvas2d/entityRenderer/latexNode/LatexNodeRenderer";
 import type { TextNodeRenderer } from "@/core/render/canvas2d/entityRenderer/textNode/TextNodeRenderer";
 import type { UrlNodeRenderer } from "@/core/render/canvas2d/entityRenderer/urlNode/urlNodeRenderer";
 import type { Renderer } from "@/core/render/canvas2d/renderer";
@@ -253,39 +253,41 @@ export class Project extends Tab {
     let readme: string | undefined = undefined;
 
     for (const entry of entries) {
-      if (entry.filename === "stage.msgpack") {
-        const stageRawData = await entry.getData!(new Uint8ArrayWriter());
-        serializedStageObjects = this.decoder.decode(stageRawData) as any[];
-      } else if (entry.filename === "tags.msgpack") {
-        const tagsRawData = await entry.getData!(new Uint8ArrayWriter());
-        tags = this.decoder.decode(tagsRawData) as string[];
-      } else if (entry.filename === "reference.msgpack") {
-        const referenceRawData = await entry.getData!(new Uint8ArrayWriter());
-        references = this.decoder.decode(referenceRawData) as { sections: Record<string, string[]>; files: string[] };
-      } else if (entry.filename === "metadata.msgpack") {
-        const metadataRawData = await entry.getData!(new Uint8ArrayWriter());
-        const decodedMetadata = this.decoder.decode(metadataRawData) as any;
-        // 验证并规范化 metadata
-        if (isValidMetadata(decodedMetadata)) {
-          metadata = decodedMetadata;
-        } else {
-          // 如果格式不正确，使用默认值
-          metadata = createDefaultMetadata("2.0.0");
+      if (!entry.directory) {
+        if (entry.filename === "stage.msgpack") {
+          const stageRawData = await entry.getData!(new Uint8ArrayWriter());
+          serializedStageObjects = this.decoder.decode(stageRawData) as any[];
+        } else if (entry.filename === "tags.msgpack") {
+          const tagsRawData = await entry.getData!(new Uint8ArrayWriter());
+          tags = this.decoder.decode(tagsRawData) as string[];
+        } else if (entry.filename === "reference.msgpack") {
+          const referenceRawData = await entry.getData!(new Uint8ArrayWriter());
+          references = this.decoder.decode(referenceRawData) as { sections: Record<string, string[]>; files: string[] };
+        } else if (entry.filename === "metadata.msgpack") {
+          const metadataRawData = await entry.getData!(new Uint8ArrayWriter());
+          const decodedMetadata = this.decoder.decode(metadataRawData) as any;
+          // 验证并规范化 metadata
+          if (isValidMetadata(decodedMetadata)) {
+            metadata = decodedMetadata;
+          } else {
+            // 如果格式不正确，使用默认值
+            metadata = createDefaultMetadata("2.0.0");
+          }
+        } else if (entry.filename === "README.md") {
+          const readmeRawData = await entry.getData!(new Uint8ArrayWriter());
+          readme = new TextDecoder().decode(readmeRawData);
+        } else if (entry.filename.startsWith("attachments/")) {
+          const match = entry.filename.trim().match(/^attachments\/([a-zA-Z0-9-]+)\.([a-zA-Z0-9]+)$/);
+          if (!match) {
+            console.warn("[Project] 附件文件名不符合规范: %s", entry.filename);
+            continue;
+          }
+          const uuid = match[1];
+          const ext = match[2];
+          const type = mime.getType(ext) || "application/octet-stream";
+          const attachment = await entry.getData!(new BlobWriter(type));
+          this.attachments.set(uuid, attachment);
         }
-      } else if (entry.filename === "README.md") {
-        const readmeRawData = await entry.getData!(new Uint8ArrayWriter());
-        readme = new TextDecoder().decode(readmeRawData);
-      } else if (entry.filename.startsWith("attachments/")) {
-        const match = entry.filename.trim().match(/^attachments\/([a-zA-Z0-9-]+)\.([a-zA-Z0-9]+)$/);
-        if (!match) {
-          console.warn("[Project] 附件文件名不符合规范: %s", entry.filename);
-          continue;
-        }
-        const uuid = match[1];
-        const ext = match[2];
-        const type = mime.getType(ext) || "application/octet-stream";
-        const attachment = await entry.getData!(new BlobWriter(type));
-        this.attachments.set(uuid, attachment);
       }
     }
 

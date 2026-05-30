@@ -134,7 +134,7 @@ export class ControllerCuttingClass extends ControllerClass {
       // 添加音效提示
       SoundService.play.cuttingLineStart();
       // 鼠标提示
-      this.project.controller.setCursorNameHook(CursorNameEnum.Crosshair);
+      this.project.controller.setCursorName(CursorNameEnum.Crosshair);
     } else {
       this.isUsing = false;
     }
@@ -194,7 +194,7 @@ export class ControllerCuttingClass extends ControllerClass {
     );
     this.updateWarningObjectByCuttingLine();
     // 鼠标提示解除
-    this.project.controller.setCursorNameHook(CursorNameEnum.Default);
+    this.project.controller.setCursorName(CursorNameEnum.Default);
     // 删除连线
     for (const edge of this.warningAssociations) {
       this.project.stageManager.deleteAssociation(edge);
