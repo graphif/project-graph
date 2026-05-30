@@ -248,62 +248,40 @@ export class CopyEngine {
   }
 
   async readSystemClipboardAndPaste() {
-    let pasted: boolean;
-
     const mode = Settings.clipboardPasteMode;
     if (mode === "webview") {
-      console.log("webview");
-      pasted = await this.pasteFromWebClipboard();
+      await this.pasteFromWebClipboard();
     } else if (mode === "tauri") {
-      console.log("tauri");
-      pasted = await this.pasteFromTauriClipboard();
+      await this.pasteFromTauriClipboard();
     } else {
-      console.log("auto");
       // AUTO模式
       if (isMac) {
         // mac优先用web模式，比较安全不容易崩溃
-        pasted = await this.pasteFromWebClipboard();
+        await this.pasteFromWebClipboard();
       } else if (isWindows) {
         // windows优先用tauri，因为不需要申请权限
-        pasted = await this.pasteFromTauriClipboard();
+        await this.pasteFromTauriClipboard();
       } else if (isLinux) {
         // 待排查
-        pasted = await this.pasteFromTauriClipboard();
+        await this.pasteFromTauriClipboard();
       } else {
         // 未知系统，先随便了
-        pasted = await this.pasteFromTauriClipboard();
+        await this.pasteFromTauriClipboard();
       }
-    }
-
-    if (!pasted) {
-      toast.info("剪贴板没有可粘贴的文本或图片");
     }
   }
 
-  private async pasteFromWebClipboard(): Promise<boolean> {
+  private async pasteFromWebClipboard() {
     try {
-      let readItemsFailed = false;
-      try {
-        const pasted = await this.pasteImageFromWebClipboard();
-        if (pasted) return true;
-      } catch {
-        readItemsFailed = true;
-      }
+      await this.copyEngineImage.pasteImageFromWebClipboard();
 
       try {
         const text = await navigator.clipboard.readText();
         if (text && text.length > 0) {
           this.copyEngineText.copyEnginePastePlainText(text);
-          return true;
         }
-        return false;
       } catch {
-        if (readItemsFailed) {
-          toast.error("无法读取系统剪贴板（权限或系统限制）");
-        } else {
-          toast.error("无法读取系统剪贴板");
-        }
-        return false;
+        toast.error("无法读取系统剪贴板");
       }
     } finally {
       setTimeout(() => {
@@ -312,87 +290,31 @@ export class CopyEngine {
     }
   }
 
-  private async pasteImageFromWebClipboard(): Promise<boolean> {
-    const clipboard = navigator.clipboard as any;
-    if (!clipboard || typeof clipboard.read !== "function") return false;
-
-    const items = (await clipboard.read()) as Array<{
-      types: readonly string[];
-      getType: (type: string) => Promise<Blob>;
-    }>;
-
-    for (const item of items) {
-      const imageType = item.types.find((t) => t.startsWith("image/"));
-      if (!imageType) continue;
-      const blob = await item.getType(imageType);
-      await this.copyEngineImage.pasteImageBlob(blob);
-      return true;
-    }
-
-    return false;
-  }
-
-  private async pasteFromTauriClipboard(): Promise<boolean> {
-    let readFailed = false;
-    let hadError = false;
+  private async pasteFromTauriClipboard() {
+    // 处理粘贴文字
     let text = "";
     try {
       text = await readText();
     } catch (err) {
-      readFailed = true;
-      hadError = hadError || !this.isProbablyEmptyClipboardError(err);
+      if (err instanceof Error) toast.error(`Tauri文字粘贴板出错 ${err}`);
     }
 
     if (text && text.length > 0) {
       this.copyEngineText.copyEnginePastePlainText(text);
-      return true;
-    }
-
-    try {
-      const webText = await navigator.clipboard.readText();
-      if (webText && webText.length > 0) {
-        this.copyEngineText.copyEnginePastePlainText(webText);
-        return true;
-      }
-    } catch (err) {
-      hadError = hadError || !this.isProbablyEmptyClipboardError(err);
-    }
-
-    try {
-      return await this.copyEngineImage.processClipboardImage();
-    } catch (err) {
-      hadError = hadError || !this.isProbablyEmptyClipboardError(err);
+    } else {
+      // 没有文字，应该是有图片，处理粘贴图片
       try {
-        const pasted = await this.pasteImageFromWebClipboard();
-        if (pasted) return true;
+        await this.copyEngineImage.pasteImageFromTauriClipboard();
       } catch (err) {
-        hadError = hadError || !this.isProbablyEmptyClipboardError(err);
+        if (err instanceof Error) {
+          toast.error(`Tauri模式粘贴图片失败，可尝试在设置中换用webview粘贴模式。报错信息：${err.message}`);
+        } else if (typeof err === "string") {
+          // tauri 给的报错信息是个string
+          toast.error(`Tauri模式粘贴图片失败，可尝试在设置中换用webview粘贴模式。报错信息：${err}`);
+        } else {
+          toast.error(`Tauri模式粘贴图片失败，可尝试在设置中换用webview粘贴模式。报错信息：${err}, ${typeof err}`);
+        }
       }
-      if (readFailed || hadError) {
-        toast.error("读取系统剪贴板失败");
-      }
-      return false;
-    }
-  }
-
-  private isProbablyEmptyClipboardError(error: unknown): boolean {
-    const message = this.getErrorMessage(error).toLowerCase();
-    return (
-      message.includes("clipboard") &&
-      (message.includes("empty") ||
-        message.includes("no image") ||
-        message.includes("not an image") ||
-        message.includes("no text"))
-    );
-  }
-
-  private getErrorMessage(error: unknown): string {
-    if (error instanceof Error) return error.message;
-    if (typeof error === "string") return error;
-    try {
-      return JSON.stringify(error);
-    } catch {
-      return String(error);
     }
   }
 }

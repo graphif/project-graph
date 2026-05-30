@@ -9,12 +9,12 @@ import { MouseLocation } from "../../controlService/MouseLocation";
 export class CopyEngineImage {
   constructor(private project: Project) {}
 
-  public async processClipboardImage(): Promise<boolean> {
+  public async pasteImageFromTauriClipboard() {
     // 从系统粘贴板里读取图片
     const image = await readImage();
     const { width, height } = await image.size();
 
-    if (width <= 0 || height <= 0) return false;
+    if (width <= 0 || height <= 0) return;
 
     const rgba = await image.rgba();
     const expectedLength = width * height * 4;
@@ -42,10 +42,9 @@ export class CopyEngineImage {
     });
 
     await this.pasteImageBlob(blob);
-    return true;
   }
 
-  public async pasteImageBlob(blob: Blob) {
+  private async pasteImageBlob(blob: Blob) {
     const attachmentId = this.project.addAttachment(blob);
     const location = this.project.renderer.transformView2World(MouseLocation.vector());
 
@@ -55,5 +54,22 @@ export class CopyEngineImage {
     });
 
     this.project.stageManager.add(imageNode);
+  }
+
+  public async pasteImageFromWebClipboard() {
+    const clipboard = navigator.clipboard as any;
+    if (!clipboard || typeof clipboard.read !== "function") return false;
+
+    const items = (await clipboard.read()) as Array<{
+      types: readonly string[];
+      getType: (type: string) => Promise<Blob>;
+    }>;
+
+    for (const item of items) {
+      const imageType = item.types.find((t) => t.startsWith("image/"));
+      if (!imageType) continue;
+      const blob = await item.getType(imageType);
+      await this.pasteImageBlob(blob);
+    }
   }
 }
