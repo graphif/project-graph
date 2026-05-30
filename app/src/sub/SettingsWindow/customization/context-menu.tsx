@@ -341,37 +341,41 @@ export default function ContextMenuPage() {
 
   const selectedItem = selectedPath ? getItemByPath(selectedPath) : null;
 
-  const renderMenuItems = (items: any[], path: number[] = []) => {
-    const itemIds = items.map((item) => item.id);
+  const flattenMenuItems = (items: any[], path: number[] = [], depth = 0) => {
+    const rows: { item: any; path: number[]; depth: number }[] = [];
+    items.forEach((item, index) => {
+      const currentPath = [...path, index];
+      rows.push({ item, path: currentPath, depth });
+      if (item.children && item.children.length > 0) {
+        rows.push(...flattenMenuItems(item.children, currentPath, depth + 1));
+      }
+    });
+    return rows;
+  };
+
+  const flatRows = useMemo(() => flattenMenuItems(config), [config]);
+
+  const renderMenuItems = () => {
+    const itemIds = flatRows.map((row) => row.item.id);
     return (
       <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
         <div className="flex flex-col gap-1.5 p-1">
-          {items.map((item, index) => {
-            const currentPath = [...path, index];
-            const isSelected = selectedPath && JSON.stringify(selectedPath) === JSON.stringify(currentPath);
+          {flatRows.map((row) => {
+            const { item, path, depth } = row;
+            const isSelected = selectedPath && JSON.stringify(selectedPath) === JSON.stringify(path);
             return (
               <MenuEditorItem
                 key={item.id}
                 item={item}
-                path={currentPath}
+                path={path}
+                depth={depth}
                 isSelected={isSelected}
                 getKeyBindTitle={getKeyBindTitle}
                 onMove={moveItem}
                 onDelete={deleteItem}
-                onSelect={() => setSelectedPath(currentPath)}
-                onToggleVisible={() => updateItemProperty(currentPath, { visible: !item.visible })}
-              >
-                {item.type === "group" || item.type === "sub" ? (
-                  <div className="border-primary/20 bg-muted/20 mt-1.5 ml-6 rounded-md border-l-2 pb-1 pl-3">
-                    {renderMenuItems(item.children || [], currentPath)}
-                    {(!item.children || item.children.length === 0) && (
-                      <div className="border-muted-foreground/30 text-muted-foreground mt-1 rounded border border-dashed py-2 text-center text-[10px] italic">
-                        拖拽功能到此层级
-                      </div>
-                    )}
-                  </div>
-                ) : null}
-              </MenuEditorItem>
+                onSelect={() => setSelectedPath(path)}
+                onToggleVisible={() => updateItemProperty(path, { visible: !item.visible })}
+              />
             );
           })}
         </div>
@@ -461,7 +465,7 @@ export default function ContextMenuPage() {
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
               >
-                {renderMenuItems(config)}
+                {renderMenuItems()}
                 <DragOverlay dropAnimation={null}>
                   {activeId ? (
                     <MenuEditorItemOverlay
@@ -594,16 +598,7 @@ export default function ContextMenuPage() {
   );
 }
 
-function MenuEditorItem({
-  item,
-  path,
-  isSelected,
-  getKeyBindTitle,
-  onDelete,
-  onSelect,
-  onToggleVisible,
-  children,
-}: any) {
+function MenuEditorItem({ item, path, depth, isSelected, getKeyBindTitle, onDelete, onSelect, onToggleVisible }: any) {
   const isSeparator = item.type === "separator";
   const isGroup = item.type === "group";
   const isSub = item.type === "sub";
@@ -625,6 +620,7 @@ function MenuEditorItem({
           e.stopPropagation();
           onSelect();
         }}
+        style={{ paddingLeft: 8 + depth * 18 }}
         className={`group flex cursor-pointer items-center gap-2 rounded-md border border-transparent px-2 py-1.5 transition-all ${
           isDragging
             ? "bg-accent ring-primary/50 scale-[1.02] shadow-xl ring-2"
@@ -693,7 +689,6 @@ function MenuEditorItem({
           </Button>
         </div>
       </div>
-      {children}
     </div>
   );
 }
