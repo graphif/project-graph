@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SubWindow } from "@/core/service/SubWindow";
 import { activeTabAtom, store } from "@/state";
+import { isLinux } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Blocks, Brush, Command, HandHeart, Info, Keyboard, Palette, Settings, User } from "lucide-react";
@@ -13,10 +14,11 @@ import QuickSettingsTab from "./customization/quick-settings";
 import ExtensionsTab from "./extensions";
 import KeyBindsPage from "./keybinds";
 import KeyBindsGlobalPage from "./keybindsGlobal";
+import LinuxRuntimeTab from "./linuxRuntime";
 import SettingsTab from "./settings";
 import ThemesTab from "./themes";
 
-type TabName = "settings" | "keybinds" | "customization" | "about" | "extensions" | "account";
+type TabName = "settings" | "linuxRuntime" | "keybinds" | "customization" | "about" | "extensions" | "account";
 
 export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab?: TabName }) {
   const [currentTab, setCurrentTab] = useState<TabName>(defaultTab);
@@ -29,6 +31,12 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
             <Settings />
             设置
           </TabsTrigger>
+          {isLinux && (
+            <TabsTrigger value="linuxRuntime">
+              <Settings />
+              Linux 运行时设置
+            </TabsTrigger>
+          )}
           <TabsTrigger value="keybinds">
             <Keyboard />
             快捷键
@@ -66,6 +74,9 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
       </div>
       <TabsContent value="settings" className="overflow-auto">
         <SettingsTab />
+      </TabsContent>
+      <TabsContent value="linuxRuntime" className="overflow-auto">
+        <LinuxRuntimeTab />
       </TabsContent>
       <TabsContent value="keybinds" className="overflow-auto">
         <KeyBindsPage />
