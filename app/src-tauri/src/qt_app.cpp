@@ -360,7 +360,21 @@ extern "C"
                 let pendingInvokes = [];
                 let reqIdCounter = 0;
                 let promiseMap = new Map();
-                const decoder = new TextDecoder("latin1");
+                const encodeUint8ArrayToJsExpr = (arr) => new Promise((resolve, reject) => {
+                    try {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            const result = String(reader.result || "");
+                            const parts = result.split(",");
+                            const base64 = parts[1] || "";
+                            resolve(`Uint8Array.from(atob('${base64}'), c => c.charCodeAt(0))`);
+                        };
+                        reader.onerror = () => reject(reader.error || new Error("Failed to read Uint8Array"));
+                        reader.readAsDataURL(new Blob([arr]));
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
 
                 window.__TAURI_INTERNALS__.invoke = function(cmd, args, headers) {
                     console.log('Invoke called:', cmd, args, headers);
@@ -369,11 +383,32 @@ extern "C"
                         promiseMap.set(reqId, { resolve, reject });
                         
                         if (channelReady) {
-                            try {
-                                window.ipc_bridge.invoke_tauri(reqId, cmd, args instanceof Uint8Array ? `Uint8Array.from(atob('${btoa(decoder.decode(args))}'), c => c.charCodeAt(0))` : JSON.stringify(args || {}), JSON.stringify(headers || {}));
-                            } catch (e) {
-                                promiseMap.delete(reqId);
-                                reject(e);
+                            if (args instanceof Uint8Array) {
+                                encodeUint8ArrayToJsExpr(args)
+                                    .then((jsExpr) => {
+                                        window.ipc_bridge.invoke_tauri(
+                                            reqId,
+                                            cmd,
+                                            jsExpr,
+                                            JSON.stringify(headers || {})
+                                        );
+                                    })
+                                    .catch((e) => {
+                                        promiseMap.delete(reqId);
+                                        reject(e);
+                                    });
+                            } else {
+                                try {
+                                    window.ipc_bridge.invoke_tauri(
+                                        reqId,
+                                        cmd,
+                                        JSON.stringify(args || {}),
+                                        JSON.stringify(headers || {})
+                                    );
+                                } catch (e) {
+                                    promiseMap.delete(reqId);
+                                    reject(e);
+                                }
                             }
                         } else {
                             pendingInvokes.push({ reqId, cmd, args, headers });
@@ -402,10 +437,30 @@ extern "C"
                     channelReady = true;
                     
                     pendingInvokes.forEach(req => {
-                        try {
-                            window.ipc_bridge.invoke_tauri(req.reqId, req.cmd, req.args instanceof Uint8Array ? `Uint8Array.from(atob('${btoa(decoder.decode(args))}'), c => c.charCodeAt(0))` : JSON.stringify(req.args || {}), JSON.stringify(req.headers || {}));
-                        } catch (e) {
-                            window.__TAURI_IPC_RESOLVE__(req.reqId, false, e.toString());
+                        if (req.args instanceof Uint8Array) {
+                            encodeUint8ArrayToJsExpr(req.args)
+                                .then((jsExpr) => {
+                                    window.ipc_bridge.invoke_tauri(
+                                        req.reqId,
+                                        req.cmd,
+                                        jsExpr,
+                                        JSON.stringify(req.headers || {})
+                                    );
+                                })
+                                .catch((e) => {
+                                    window.__TAURI_IPC_RESOLVE__(req.reqId, false, e.toString());
+                                });
+                        } else {
+                            try {
+                                window.ipc_bridge.invoke_tauri(
+                                    req.reqId,
+                                    req.cmd,
+                                    JSON.stringify(req.args || {}),
+                                    JSON.stringify(req.headers || {})
+                                );
+                            } catch (e) {
+                                window.__TAURI_IPC_RESOLVE__(req.reqId, false, e.toString());
+                            }
                         }
                     });
                     pendingInvokes = [];
