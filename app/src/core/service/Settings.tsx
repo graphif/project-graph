@@ -158,9 +158,9 @@ export const settingsSchema = z.object({
     .union([z.literal("auto"), z.literal("manual"), z.literal("autoByLength")])
     .default("autoByLength"),
   clipboardPasteMode: z.union([z.literal("auto"), z.literal("webview"), z.literal("tauri")]).default("auto"),
-  resizePastedImages: z.boolean().default(false),
-  maxPastedImageSize: z.number().int().min(256).max(8192).default(2048),
-  compressImageToWebp: z.boolean().default(false),
+  resizePastedImages: z.boolean().default(true),
+  maxPastedImageSize: z.number().int().min(256).max(8192).default(1920),
+  compressImageToWebp: z.boolean().default(true),
   webpQuality: z.number().min(0.01).max(1).default(0.85),
   textNodeManualDefaultCharWidth: z.number().int().min(3).max(60).default(10),
   allowAddCycleEdge: z.boolean().default(false),
