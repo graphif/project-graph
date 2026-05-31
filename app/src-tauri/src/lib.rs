@@ -137,7 +137,7 @@ pub fn run() {
         // Initialize Qt on the main thread
         unsafe {
             let app_data_path = handle.path().app_data_dir().unwrap_or_else(|_| std::env::current_dir().unwrap());
-            let qpa_file_path = app_data_path.join("QT_QPA_PLATFORM");
+            let qpa_file_path = app_data_path.join("QT_QPA_PLATFORM.txt");
 
             let qpa_platform = if qpa_file_path.exists() {
                 std::fs::read_to_string(&qpa_file_path)
@@ -193,13 +193,22 @@ pub fn run() {
             
             if let Ok(req) = serde_json::from_str::<QtIpcRequest>(payload) {
                 if let Some(window) = handle.get_webview_window("proxy") {
-                    // println!("Forwarding IPC request to proxy window: cmd={}, args={}, headers={}", req.cmd, req.args, req.headers);
+                    println!("Forwarding IPC request to proxy window: cmd={}, args={}, headers={}", req.cmd, req.args, req.headers);
                     let js = format!(r#"
                         (async () => {{
                             try {{
                                 if (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.invoke) {{
-                                    const res = await window.__TAURI_INTERNALS__.invoke("{}", {}, {});
-                                    await window.__TAURI_INTERNALS__.invoke('qt_ipc_response', {{ id: "{}", ok: true, data: res }});
+                                    if ("{}" === "__qt_os_internals_snapshot") {{
+                                        const data = window.__TAURI_OS_PLUGIN_INTERNALS__ || {{}};
+                                        const snapshot = {{}};
+                                        for (const key of Object.getOwnPropertyNames(data)) {{
+                                            snapshot[key] = data[key];
+                                        }}
+                                        await window.__TAURI_INTERNALS__.invoke('qt_ipc_response', {{ id: "{}", ok: true, data: snapshot }});
+                                    }} else {{
+                                        const res = await window.__TAURI_INTERNALS__.invoke("{}", {}, {});
+                                        await window.__TAURI_INTERNALS__.invoke('qt_ipc_response', {{ id: "{}", ok: true, data: res }});
+                                    }}
                                 }} else {{
                                     console.error("Tauri internals not ready in proxy window");
                                 }}
@@ -215,7 +224,7 @@ pub fn run() {
                                 }}
                             }}
                         }})();
-                    "#, req.cmd, req.args, req.headers, req.req_id, req.req_id);
+                    "#, req.cmd, req.req_id, req.cmd, req.args, req.headers, req.req_id, req.req_id);
                     
                     window.eval(&js).ok();
                 } else {

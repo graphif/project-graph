@@ -244,6 +244,33 @@ extern "C"
 
             printf("DEBUG: QWebEngineView created and settings configured\n");
 
+            QString zoomPath = QDir(app_data_path).filePath("zoomFactor.txt");
+            QFile zoomFile(zoomPath);
+            if (!zoomFile.exists())
+            {
+                QDir().mkpath(app_data_path);
+                if (zoomFile.open(QIODevice::WriteOnly))
+                {
+                    zoomFile.write("1.0\n");
+                    zoomFile.close();
+                }
+            }
+            if (zoomFile.open(QIODevice::ReadOnly))
+            {
+                QByteArray zoomBytes = zoomFile.readAll();
+                bool ok = false;
+                double zoomFactor = QString::fromUtf8(zoomBytes).trimmed().toDouble(&ok);
+                if (ok && zoomFactor > 0.0)
+                {
+                    g_view->setZoomFactor(zoomFactor);
+                }
+                else
+                {
+                    printf("DEBUG: Invalid zoomFactor.txt value, using default 1.0\n");
+                    g_view->setZoomFactor(1.0);
+                }
+            }
+
             QWebChannel *channel = new QWebChannel(g_view->page());
 
             // Create the CxxQt object
@@ -285,6 +312,16 @@ extern "C"
                 window.__TAURI_FS_PLUGIN_INTERNALS__ = {};
                 window.__TAURI_DIALOG_PLUGIN_INTERNALS__ = {};
                 window.__TAURI_SHELL_PLUGIN_INTERNALS__ = {};
+
+                const proxyOsInternals = window.opener?.__TAURI_OS_PLUGIN_INTERNALS__
+                    ?? window.parent?.__TAURI_OS_PLUGIN_INTERNALS__
+                    ?? window.top?.__TAURI_OS_PLUGIN_INTERNALS__;
+                if (proxyOsInternals && Object.keys(window.__TAURI_OS_PLUGIN_INTERNALS__).length === 0) {
+                    window.__TAURI_OS_PLUGIN_INTERNALS__ =
+                        typeof structuredClone === "function"
+                            ? structuredClone(proxyOsInternals)
+                            : JSON.parse(JSON.stringify(proxyOsInternals));
+                }
                 
                 // v2 needs metadata and plugins
                 window.__TAURI_INTERNALS__.plugins = window.__TAURI_INTERNALS__.plugins || {};
@@ -310,6 +347,13 @@ extern "C"
                         callback(data);
                     };
                     return identifier;
+                };
+
+                const syncOsInternalsFromProxy = async () => {
+                    const snapshot = await window.__TAURI_INTERNALS__.invoke("__qt_os_internals_snapshot");
+                    if (snapshot && typeof snapshot === "object") {
+                        window.__TAURI_OS_PLUGIN_INTERNALS__ = snapshot;
+                    }
                 };
 
                 let channelReady = false;
@@ -367,6 +411,7 @@ extern "C"
                     pendingInvokes = [];
 
                     window.dispatchEvent(new Event('tauri-ipc-ready'));
+                    syncOsInternalsFromProxy();
                 });
                 console.log('Tauri IPC init finished');
             )");

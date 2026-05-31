@@ -10,8 +10,8 @@ import { cn } from "@/utils/cn";
 import _ from "lodash";
 import { ChevronRight, RotateCw } from "lucide-react";
 import React, { CSSProperties, Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof Settings; extra?: React.ReactNode }) {
   const [value, setValue] = React.useState<any>(Settings[settingKey]);
