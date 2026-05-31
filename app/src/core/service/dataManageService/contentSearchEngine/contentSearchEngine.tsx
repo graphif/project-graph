@@ -8,7 +8,6 @@ import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { toast } from "sonner";
 
 /**
  * 搜索范围枚举
@@ -127,7 +126,7 @@ export class ContentSearch {
     }
 
     // 获取要搜索的对象列表
-    let objectsToSearch: StageObject[] = [];
+    let objectsToSearch: StageObject[];
 
     switch (this.searchScope) {
       case SearchScope.SELECTED:
@@ -169,12 +168,11 @@ export class ContentSearch {
         }
       }
     }
-    this.currentSearchResultIndex = 0;
+    this.currentSearchResultIndex = -1;
 
     if (this.searchResultNodes.length > 0) {
       if (autoFocus) {
-        // 选择第一个搜索结果节点
-        const currentNode = this.searchResultNodes[this.currentSearchResultIndex];
+        const currentNode = this.searchResultNodes[0];
         // currentNode.isSelected = true;
         this.project.effects.addEffect(
           new RectangleNoteEffect(new ProgressNumber(0, 50), currentNode.collisionBox.getRectangle(), Color.Green),
@@ -192,12 +190,8 @@ export class ContentSearch {
    * 切换下一个
    */
   public nextSearchResult() {
-    if (this.currentSearchResultIndex < this.searchResultNodes.length - 1) {
-      this.currentSearchResultIndex++;
-    } else {
-      toast("已经到底了");
-      return;
-    }
+    if (this.searchResultNodes.length === 0) return;
+    this.currentSearchResultIndex = (this.currentSearchResultIndex + 1) % this.searchResultNodes.length;
     // 取消选择所有节点
     for (const node of this.project.stageManager.getTextNodes()) {
       node.isSelected = false;
@@ -217,11 +211,9 @@ export class ContentSearch {
    * 切换上一个
    */
   public previousSearchResult() {
-    if (this.currentSearchResultIndex > 0) {
-      this.currentSearchResultIndex--;
-    } else {
-      toast("已经到头了");
-    }
+    if (this.searchResultNodes.length === 0) return;
+    this.currentSearchResultIndex =
+      (this.currentSearchResultIndex - 1 + this.searchResultNodes.length) % this.searchResultNodes.length;
     // 取消选择所有节点
     for (const node of this.project.stageManager.getTextNodes()) {
       node.isSelected = false;

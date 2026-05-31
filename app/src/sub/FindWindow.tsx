@@ -9,6 +9,7 @@ import { SubWindow } from "@/core/service/SubWindow";
 import { activeTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
+import { cn } from "@/utils/cn";
 import { useAtom } from "jotai";
 import {
   CaseSensitive,
@@ -24,10 +25,11 @@ import { toast } from "sonner";
 /**
  * 搜索内容的面板
  */
-export default function FindWindow() {
+export default function FindWindow({ windowId }: { windowId?: string }) {
   const [isCaseSensitive, setIsCaseSensitive] = useState(false);
   const [searchString, setSearchString] = useState("");
   const [searchResults, setSearchResults] = useState<{ title: string; uuid: string }[]>([]);
+  const [, setTick] = useState(0);
   // 是否开启快速瞭望模式
   const [isMouseEnterCameraMovable, setIsMouseEnterCameraMovable] = useState(false);
   // 搜索范围
@@ -87,9 +89,17 @@ export default function FindWindow() {
         }}
         onKeyDown={(e) => {
           if (e.key === "Escape") {
-            if (searchString !== "") {
-              clearSearch();
+            if (windowId) {
+              SubWindow.close(windowId);
             }
+          } else if (e.key === "Enter") {
+            e.preventDefault();
+            if (e.shiftKey) {
+              project.contentSearch.previousSearchResult();
+            } else {
+              project.contentSearch.nextSearchResult();
+            }
+            setTick((t) => t + 1);
           }
         }}
         value={searchString}
@@ -210,7 +220,11 @@ export default function FindWindow() {
         {searchResults.map((result, index) => (
           <div
             key={result.uuid}
-            className="hover:text-panel-success-text flex cursor-pointer truncate text-xs hover:underline"
+            className={cn(
+              "hover:text-panel-success-text flex cursor-pointer truncate text-xs hover:underline",
+              index === project.contentSearch.currentSearchResultIndex &&
+                "bg-accent/60 ring-accent rounded-sm ring-2 ring-inset",
+            )}
             onMouseEnter={() => {
               project.controller.resetCountdownTimer();
               if (isMouseEnterCameraMovable) {
@@ -240,9 +254,12 @@ export default function FindWindow() {
 }
 
 FindWindow.open = () => {
-  SubWindow.create({
+  const win = SubWindow.create({
     title: "搜索",
-    children: <FindWindow />,
+    children: <FindWindow windowId="" />,
     rect: new Rectangle(new Vector(100, 100), new Vector(300, 600)),
+  });
+  SubWindow.update(win.id, {
+    children: <FindWindow windowId={win.id} />,
   });
 };
