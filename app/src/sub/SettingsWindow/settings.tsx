@@ -26,6 +26,7 @@ import {
   FolderSync,
   Gamepad2,
   Gpu,
+  Image,
   Import,
   Layers,
   MemoryStick,
@@ -319,7 +320,6 @@ export const categories = {
       "textNodeBackspaceDeleteWhenEmpty",
       "textNodeBigContentThresholdWhenPaste",
       "textNodePasteSizeAdjustMode",
-      "clipboardPasteMode",
       "textNodeManualDefaultCharWidth",
       "newNodeScaleByCamera",
       "newNodeScaleByCameraOffset",
@@ -340,6 +340,7 @@ export const categories = {
       "treeGenerateCameraBehavior",
     ],
     gamepad: ["gamepadDeadzone"],
+    image: ["resizePastedImages", "maxPastedImageSize", "compressImageToWebp", "webpQuality", "clipboardPasteMode"],
   },
   performance: {
     memory: ["historySize", "clearHistoryWhenManualSave", "historyManagerMode"],
@@ -386,6 +387,7 @@ export const categoryIcons = {
     section: SquareDashedTopSolid,
     edge: SplinePointer,
     generateNode: Network,
+    image: Image,
     gamepad: Gamepad2,
   },
   performance: {

@@ -848,14 +848,20 @@ settings:
       click the software logo in the "About" interface seven times to enter the 
       "Test Interface", then scroll the wheel and trackpad to view the data 
       feedback
-  compressPastedImages:
-    title: Compress Pasted Images
-    description: "When enabled, images pasted on the stage are compressed to save
-      memory and disk space when loading files.\n"
+  resizePastedImages:
+    title: Resize Pasted Images
+    description: "When enabled, images exceeding the maximum dimension will be proportionally
+      scaled down.\n"
+  compressImageToWebp:
+    title: Compress Image Colors
+    description: "Convert images to WebP format to reduce file size.\n"
+  webpQuality:
+    title: WebP Quality
+    description: "Quality level for WebP encoding. 1.0 is lossless, lower values produce smaller files. Only takes effect when \"Compress Image Colors\" is enabled.\n"
   maxPastedImageSize:
     description: "For images whose width or height exceeds this size, their maximum
       width or height is limited to this size.\nMeanwhile, it keeps the aspect ratio,
-      but only takes effect when “Compress Pasted Images” is enabled.\n"
+      but only takes effect when “Resize Pasted Images” is enabled.\n"
     title: Max Pasted Image Size (In Pixels)
   clipboardPasteMode:
     title: Clipboard Paste Mode

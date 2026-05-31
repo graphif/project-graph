@@ -5,6 +5,8 @@ import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { readImage } from "@tauri-apps/plugin-clipboard-manager";
 import { MouseLocation } from "../../controlService/MouseLocation";
+import { Settings } from "@/core/service/Settings";
+import { toast } from "sonner";
 
 export class CopyEngineImage {
   constructor(private project: Project) {}
@@ -12,12 +14,12 @@ export class CopyEngineImage {
   public async pasteImageFromTauriClipboard() {
     // 从系统粘贴板里读取图片
     const image = await readImage();
-    const { width, height } = await image.size();
+    const { width: origW, height: origH } = await image.size();
 
-    if (width <= 0 || height <= 0) return;
+    if (origW <= 0 || origH <= 0) return;
 
     const rgba = await image.rgba();
-    const expectedLength = width * height * 4;
+    const expectedLength = origW * origH * 4;
     const clamped = rgba instanceof Uint8ClampedArray ? rgba : new Uint8ClampedArray(rgba);
     const data =
       clamped.length === expectedLength
@@ -28,17 +30,44 @@ export class CopyEngineImage {
             return fixed;
           })();
 
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext("2d")!;
-    ctx.putImageData(new ImageData(data, width, height), 0, 0);
+    const origCanvas = document.createElement("canvas");
+    origCanvas.width = origW;
+    origCanvas.height = origH;
+    const origCtx = origCanvas.getContext("2d")!;
+    origCtx.putImageData(new ImageData(data, origW, origH), 0, 0);
 
+    let w = origW;
+    let h = origH;
+    if (Settings.resizePastedImages) {
+      const maxSize = Settings.maxPastedImageSize;
+      const maxDim = Math.max(w, h);
+      if (maxDim > maxSize) {
+        const scale = maxSize / maxDim;
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+      }
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(origCanvas, 0, 0, w, h);
+
+    const outputType = Settings.compressImageToWebp ? "image/webp" : "image/png";
     const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob((b) => {
-        if (b) resolve(b);
-        else reject(new Error("canvas.toBlob returned null"));
-      }, "image/png");
+      canvas.toBlob(
+        (b) => {
+          if (b) {
+            if (outputType === "image/webp" && !b.type.includes("webp")) {
+              toast.warning("当前系统 webview 不支持 WebP 编码，已回退为 PNG");
+            }
+            resolve(b);
+          } else reject(new Error("canvas.toBlob returned null"));
+        },
+        outputType,
+        Settings.compressImageToWebp ? Settings.webpQuality : undefined,
+      );
     });
 
     await this.pasteImageBlob(blob);
@@ -56,6 +85,53 @@ export class CopyEngineImage {
     this.project.stageManager.add(imageNode);
   }
 
+  private async compressImageBlob(blob: Blob): Promise<Blob> {
+    if (!Settings.resizePastedImages && !Settings.compressImageToWebp) return blob;
+    const url = URL.createObjectURL(blob);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.naturalWidth;
+        let h = img.naturalHeight;
+        const maxSize = Settings.maxPastedImageSize;
+        const needResize = Settings.resizePastedImages && Math.max(w, h) > maxSize;
+        if (needResize) {
+          const scale = maxSize / Math.max(w, h);
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+        } else if (!Settings.compressImageToWebp) {
+          URL.revokeObjectURL(url);
+          resolve(blob);
+          return;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        const outputType = Settings.compressImageToWebp ? "image/webp" : "image/png";
+        canvas.toBlob(
+          (b) => {
+            if (b) {
+              if (outputType === "image/webp" && !b.type.includes("webp")) {
+                toast.warning("当前系统 webview 不支持 WebP 编码，已回退为 PNG");
+              }
+              resolve(b);
+            } else reject(new Error("canvas.toBlob returned null"));
+          },
+          outputType,
+          Settings.compressImageToWebp ? Settings.webpQuality : undefined,
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Failed to load image for compression"));
+      };
+      img.src = url;
+    });
+  }
+
   public async pasteImageFromWebClipboard() {
     const clipboard = navigator.clipboard as any;
     if (!clipboard || typeof clipboard.read !== "function") return false;
@@ -69,7 +145,8 @@ export class CopyEngineImage {
       const imageType = item.types.find((t) => t.startsWith("image/"));
       if (!imageType) continue;
       const blob = await item.getType(imageType);
-      await this.pasteImageBlob(blob);
+      const compressed = await this.compressImageBlob(blob);
+      await this.pasteImageBlob(compressed);
     }
   }
 }

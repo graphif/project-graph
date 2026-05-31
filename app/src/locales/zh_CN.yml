@@ -166,6 +166,7 @@ settings:
       section: 框
       edge: 连线
       generateNode: 通过键盘生长节点
+      image: 图片
       gamepad: 游戏手柄
     visual:
       title: 视觉
@@ -414,15 +415,23 @@ settings:
     description: |
       这个数值决定了您最多ctrl+z撤销的次数
       如果您的电脑内存非常少，可以适当调小这个值
-  compressPastedImages:
-    title: 是否压缩粘贴到舞台的图片
+  resizePastedImages:
+    title: 图片尺寸压缩
     description: |
-      开启后，粘贴到舞台的图片会被压缩，以节省加载文件时的内存压力和磁盘压力
+      开启后，长或宽超过尺寸限制的图片将被等比缩放
+  compressImageToWebp:
+    title: 图片颜色压缩
+    description: |
+      将图片转换为 WebP 格式以减小文件体积
+  webpQuality:
+    title: WebP 质量
+    description: |
+      WebP 编码质量，1.0 为无损，数值越低文件体积越小。仅在开启「图片颜色压缩」时生效
   maxPastedImageSize:
     title: 粘贴到舞台的图片的尺寸限制（像素）
     description: |
       长或宽超过此尺寸的图片，其长或宽的最大值将会被限制为此大小
-      同时保持长宽比不变，仅在开启“压缩粘贴到舞台的图片”时生效
+      同时保持长宽比不变，仅在开启“图片尺寸压缩”时生效
   clipboardPasteMode:
     title: 系统剪贴板粘贴模式
     description: |

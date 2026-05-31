@@ -164,6 +164,7 @@ settings:
       section: Bagian
       edge: Garis
       generateNode: Pertumbuhan Node via Keyboard
+      image: Gambar
       gamepad: Gamepad
     visual:
       title: Visual
@@ -397,15 +398,23 @@ settings:
     description: |
       Nilai ini menentukan berapa kali maksimum Anda dapat membatalkan dengan ctrl+z
       Jika memori komputer Anda sangat sedikit, dapat mengurangi nilai ini
-  compressPastedImages:
-    title: Kompres Gambar yang Ditempel ke Panggung
+  resizePastedImages:
+    title: Ubah Ukuran Gambar
     description: |
-      Saat diaktifkan, gambar yang ditempel ke panggung akan dikompres untuk menghemat tekanan memori saat memuat file dan tekanan disk
+      Saat diaktifkan, gambar yang melebihi dimensi maksimum akan diskalakan secara proporsional
+  compressImageToWebp:
+    title: Kompres Warna Gambar
+    description: |
+      Konversi gambar ke format WebP untuk mengurangi ukuran file
+  webpQuality:
+    title: Kualitas WebP
+    description: |
+      Tingkat kualitas untuk encoding WebP. 1.0 adalah lossless, nilai lebih rendah menghasilkan file lebih kecil. Hanya berlaku saat "Kompres Warna Gambar" diaktifkan
   maxPastedImageSize:
     title: Batas Ukuran Gambar yang Ditempel (piksel)
     description: |
       Gambar yang panjang atau lebarnya melebihi ukuran ini, nilai maksimum panjang atau lebarnya akan dibatasi ke ukuran ini
-      Sambil mempertahankan rasio aspek, hanya berlaku saat "Kompres Gambar yang Ditempel" diaktifkan
+      Sambil mempertahankan rasio aspek, hanya berlaku saat "Ubah Ukuran Gambar" diaktifkan
   clipboardPasteMode:
     title: Mode Tempel Clipboard
     description: |

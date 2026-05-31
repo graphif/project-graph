@@ -212,6 +212,7 @@ settings:
       section: 框
       edge: 連線
       generateNode: 透過鍵盤生長節點
+      image: 圖片
       gamepad: 遊戲手把
     visual:
       title: 視覺
@@ -435,14 +436,20 @@ settings:
     description: '這個數值決定了您最多ctrl+z復原的次數
 
       如果您的電腦記憶體非常少，可以適當調小這個值'
-  compressPastedImages:
-    title: 是否壓縮貼上到舞台的圖片
-    description: 開啟後，貼上到舞台的圖片會被壓縮，以節省載入檔案時的記憶體壓力和磁碟壓力
+  resizePastedImages:
+    title: 圖片尺寸壓縮
+    description: 開啟後，長或寬超過尺寸限制的圖片將被等比縮放
+  compressImageToWebp:
+    title: 圖片顏色壓縮
+    description: 將圖片轉換為 WebP 格式以減小檔案體積
+  webpQuality:
+    title: WebP 品質
+    description: 'WebP 編碼品質，1.0 為無損，數值越低檔案體積越小。僅在開啟「圖片顏色壓縮」時生效'
   maxPastedImageSize:
     title: 貼上到舞台的圖片的尺寸限制（像素）
     description: '長或寬超過此尺寸的圖片，其長或寬的最大值將會被限制為此大小
 
-      同時保持長寬比不變，僅在開啟“壓縮貼上到舞台的圖片”時生效'
+      同時保持長寬比不變，僅在開啟“圖片尺寸壓縮”時生效'
   clipboardPasteMode:
     title: 系統剪貼板粘貼模式
     description: |
