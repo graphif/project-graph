@@ -89,9 +89,6 @@ pub fn run() {
                     println!("Tauri setup: Hiding main window");
                     let _ = window.hide();
                 }
-                if let Some(window) = app.get_webview_window("proxy") {
-                    let _ = window.hide();
-                }
             }
 
             #[cfg(debug_assertions)]
@@ -191,16 +188,17 @@ pub fn run() {
                 req_id: String,
                 cmd: String,
                 args: String,
+                headers: String,
             }
             
             if let Ok(req) = serde_json::from_str::<QtIpcRequest>(payload) {
                 if let Some(window) = handle.get_webview_window("proxy") {
+                    // println!("Forwarding IPC request to proxy window: cmd={}, args={}, headers={}", req.cmd, req.args, req.headers);
                     let js = format!(r#"
                         (async () => {{
                             try {{
                                 if (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.invoke) {{
-                                    const res = await window.__TAURI_INTERNALS__.invoke("{}", {});
-                                    console.log(res);
+                                    const res = await window.__TAURI_INTERNALS__.invoke("{}", {}, {});
                                     await window.__TAURI_INTERNALS__.invoke('qt_ipc_response', {{ id: "{}", ok: true, data: res }});
                                 }} else {{
                                     console.error("Tauri internals not ready in proxy window");
@@ -217,7 +215,7 @@ pub fn run() {
                                 }}
                             }}
                         }})();
-                    "#, req.cmd, req.args, req.req_id, req.req_id);
+                    "#, req.cmd, req.args, req.headers, req.req_id, req.req_id);
                     
                     window.eval(&js).ok();
                 } else {

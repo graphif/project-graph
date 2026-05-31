@@ -23,6 +23,7 @@ pub mod qobject {
             req_id: QString,
             command: QString,
             args: QString,
+            headers: QString,
         );
 
         #[qinvokable]
@@ -43,10 +44,12 @@ impl qobject::TauriIpcBridge {
         req_id: QString,
         command: QString,
         args: QString,
+        headers: QString,
     ) {
         let req_id_str = req_id.to_string();
         let cmd = command.to_string();
         let args_str = args.to_string();
+        let headers_str = headers.to_string();
 
         if let Some(app) = crate::APP_HANDLE.get() {
             use tauri::{Emitter, Manager};
@@ -56,6 +59,7 @@ impl qobject::TauriIpcBridge {
                 req_id: String,
                 cmd: String,
                 args: String,
+                headers: String,
             }
 
             app.emit(
@@ -64,6 +68,7 @@ impl qobject::TauriIpcBridge {
                     req_id: req_id_str,
                     cmd,
                     args: args_str,
+                    headers: headers_str,
                 },
             )
             .ok();

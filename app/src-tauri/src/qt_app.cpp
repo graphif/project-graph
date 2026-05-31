@@ -316,22 +316,23 @@ extern "C"
                 let pendingInvokes = [];
                 let reqIdCounter = 0;
                 let promiseMap = new Map();
+                const decoder = new TextDecoder("latin1");
 
-                window.__TAURI_INTERNALS__.invoke = function(cmd, args) {
-                    console.log('Invoke called:', cmd, args);
+                window.__TAURI_INTERNALS__.invoke = function(cmd, args, headers) {
+                    console.log('Invoke called:', cmd, args, headers);
                     return new Promise((resolve, reject) => {
                         const reqId = String(++reqIdCounter);
                         promiseMap.set(reqId, { resolve, reject });
                         
                         if (channelReady) {
                             try {
-                                window.ipc_bridge.invoke_tauri(reqId, cmd, JSON.stringify(args || {}));
+                                window.ipc_bridge.invoke_tauri(reqId, cmd, args instanceof Uint8Array ? `Uint8Array.from(atob('${btoa(decoder.decode(args))}'), c => c.charCodeAt(0))` : JSON.stringify(args || {}), JSON.stringify(headers || {}));
                             } catch (e) {
                                 promiseMap.delete(reqId);
                                 reject(e);
                             }
                         } else {
-                            pendingInvokes.push({ reqId, cmd, args });
+                            pendingInvokes.push({ reqId, cmd, args, headers });
                         }
                     });
                 };
@@ -358,7 +359,7 @@ extern "C"
                     
                     pendingInvokes.forEach(req => {
                         try {
-                            window.ipc_bridge.invoke_tauri(req.reqId, req.cmd, JSON.stringify(req.args || {}));
+                            window.ipc_bridge.invoke_tauri(req.reqId, req.cmd, req.args instanceof Uint8Array ? `Uint8Array.from(atob('${btoa(decoder.decode(args))}'), c => c.charCodeAt(0))` : JSON.stringify(req.args || {}), JSON.stringify(req.headers || {}));
                         } catch (e) {
                             window.__TAURI_IPC_RESOLVE__(req.reqId, false, e.toString());
                         }
