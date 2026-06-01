@@ -12,6 +12,7 @@ import { onOpenFile } from "../../GlobalMenu";
 import { PathString } from "@/utils/pathString";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
 import { Settings } from "@/core/service/Settings";
+import { applyBlackAndWhite } from "../imageUtils";
 
 /**
  * 处理文件拖拽到舞台的引擎
@@ -183,7 +184,16 @@ export namespace DragFileIntoStageEngine {
         }
         ctx.drawImage(img, 0, 0, w, h);
         URL.revokeObjectURL(url);
-        const outputType = Settings.compressImageToWebp ? "image/webp" : "image/png";
+
+        if (Settings.compressImageToBlackAndWhite) {
+          applyBlackAndWhite(canvas);
+        }
+
+        const outputType = Settings.compressImageToBlackAndWhite
+          ? "image/png"
+          : Settings.compressImageToWebp
+            ? "image/webp"
+            : "image/png";
         canvas.toBlob(
           (blob) => {
             if (blob) {
@@ -194,7 +204,11 @@ export namespace DragFileIntoStageEngine {
             } else reject(new Error("Canvas toBlob 失败"));
           },
           outputType,
-          Settings.compressImageToWebp ? Settings.webpQuality : undefined,
+          Settings.compressImageToBlackAndWhite
+            ? undefined
+            : Settings.compressImageToWebp
+              ? Settings.webpQuality
+              : undefined,
         );
       };
       img.onerror = () => {
@@ -219,7 +233,10 @@ export namespace DragFileIntoStageEngine {
 
     // 转为 PNG（非 PNG 格式必然转换；PNG 格式仅在开启压缩时经过 canvas 以缩放尺寸）
     const blob =
-      sourceMime === "image/png" && !Settings.resizePastedImages && !Settings.compressImageToWebp
+      sourceMime === "image/png" &&
+      !Settings.resizePastedImages &&
+      !Settings.compressImageToWebp &&
+      !Settings.compressImageToBlackAndWhite
         ? new Blob([new Uint8Array(fileData)], { type: "image/png" })
         : await convertToPngBlob(new Uint8Array(fileData), sourceMime);
 

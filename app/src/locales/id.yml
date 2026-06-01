@@ -410,6 +410,16 @@ settings:
     title: Kualitas WebP
     description: |
       Tingkat kualitas untuk encoding WebP. 1.0 adalah lossless, nilai lebih rendah menghasilkan file lebih kecil. Hanya berlaku saat "Kompres Warna Gambar" diaktifkan
+  compressImageToBlackAndWhite:
+    title: Kompres Hitam Putih
+    description: |
+      Konversi gambar menjadi hitam putih untuk mengurangi ukuran file.
+      Saat diaktifkan, kompres ukuran dan kompres warna dinonaktifkan
+  blackAndWhiteThreshold:
+    title: Ambang Hitam Putih
+    description: |
+      0 adalah skala abu-abu penuh, 1 adalah hitam putih murni (hanya warna hitam dan putih).
+      Hanya berlaku saat "Kompres Hitam Putih" diaktifkan
   maxPastedImageSize:
     title: Batas Ukuran Gambar yang Ditempel (piksel)
     description: |

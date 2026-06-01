@@ -6,6 +6,7 @@ import { Rectangle } from "@graphif/shapes";
 import { readImage } from "@tauri-apps/plugin-clipboard-manager";
 import { MouseLocation } from "../../controlService/MouseLocation";
 import { Settings } from "@/core/service/Settings";
+import { applyBlackAndWhite } from "../imageUtils";
 import { toast } from "sonner";
 
 export class CopyEngineImage {
@@ -54,7 +55,15 @@ export class CopyEngineImage {
     const ctx = canvas.getContext("2d")!;
     ctx.drawImage(origCanvas, 0, 0, w, h);
 
-    const outputType = Settings.compressImageToWebp ? "image/webp" : "image/png";
+    if (Settings.compressImageToBlackAndWhite) {
+      applyBlackAndWhite(canvas);
+    }
+
+    const outputType = Settings.compressImageToBlackAndWhite
+      ? "image/png"
+      : Settings.compressImageToWebp
+        ? "image/webp"
+        : "image/png";
     const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
         (b) => {
@@ -66,7 +75,11 @@ export class CopyEngineImage {
           } else reject(new Error("canvas.toBlob returned null"));
         },
         outputType,
-        Settings.compressImageToWebp ? Settings.webpQuality : undefined,
+        Settings.compressImageToBlackAndWhite
+          ? undefined
+          : Settings.compressImageToWebp
+            ? Settings.webpQuality
+            : undefined,
       );
     });
 
@@ -86,31 +99,53 @@ export class CopyEngineImage {
   }
 
   private async compressImageBlob(blob: Blob): Promise<Blob> {
-    if (!Settings.resizePastedImages && !Settings.compressImageToWebp) return blob;
+    if (!Settings.compressImageToBlackAndWhite && !Settings.resizePastedImages && !Settings.compressImageToWebp)
+      return blob;
     const url = URL.createObjectURL(blob);
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
         let w = img.naturalWidth;
         let h = img.naturalHeight;
-        const maxSize = Settings.maxPastedImageSize;
-        const needResize = Settings.resizePastedImages && Math.max(w, h) > maxSize;
-        if (needResize) {
-          const scale = maxSize / Math.max(w, h);
-          w = Math.round(w * scale);
-          h = Math.round(h * scale);
-        } else if (!Settings.compressImageToWebp) {
+
+        let needCanvas = Settings.compressImageToBlackAndWhite;
+        if (Settings.resizePastedImages) {
+          const maxSize = Settings.maxPastedImageSize;
+          const maxDim = Math.max(w, h);
+          if (maxDim > maxSize) {
+            const scale = maxSize / maxDim;
+            w = Math.round(w * scale);
+            h = Math.round(h * scale);
+            needCanvas = true;
+          }
+        } else if (!Settings.compressImageToWebp && !Settings.compressImageToBlackAndWhite) {
           URL.revokeObjectURL(url);
           resolve(blob);
           return;
         }
+
+        if (!needCanvas && !Settings.compressImageToWebp) {
+          URL.revokeObjectURL(url);
+          resolve(blob);
+          return;
+        }
+
         const canvas = document.createElement("canvas");
         canvas.width = w;
         canvas.height = h;
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(img, 0, 0, w, h);
         URL.revokeObjectURL(url);
-        const outputType = Settings.compressImageToWebp ? "image/webp" : "image/png";
+
+        if (Settings.compressImageToBlackAndWhite) {
+          applyBlackAndWhite(canvas);
+        }
+
+        const outputType = Settings.compressImageToBlackAndWhite
+          ? "image/png"
+          : Settings.compressImageToWebp
+            ? "image/webp"
+            : "image/png";
         canvas.toBlob(
           (b) => {
             if (b) {
@@ -121,7 +156,11 @@ export class CopyEngineImage {
             } else reject(new Error("canvas.toBlob returned null"));
           },
           outputType,
-          Settings.compressImageToWebp ? Settings.webpQuality : undefined,
+          Settings.compressImageToBlackAndWhite
+            ? undefined
+            : Settings.compressImageToWebp
+              ? Settings.webpQuality
+              : undefined,
         );
       };
       img.onerror = () => {

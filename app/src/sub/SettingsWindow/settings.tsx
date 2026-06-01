@@ -340,7 +340,15 @@ export const categories = {
       "treeGenerateCameraBehavior",
     ],
     gamepad: ["gamepadDeadzone"],
-    image: ["resizePastedImages", "maxPastedImageSize", "compressImageToWebp", "webpQuality", "clipboardPasteMode"],
+    image: [
+      "resizePastedImages",
+      "maxPastedImageSize",
+      "compressImageToWebp",
+      "webpQuality",
+      "compressImageToBlackAndWhite",
+      "blackAndWhiteThreshold",
+      "clipboardPasteMode",
+    ],
   },
   performance: {
     memory: ["historySize", "clearHistoryWhenManualSave", "historyManagerMode"],

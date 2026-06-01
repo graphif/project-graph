@@ -427,6 +427,16 @@ settings:
     title: WebP 质量
     description: |
       WebP 编码质量，1.0 为无损，数值越低文件体积越小。仅在开启「图片颜色压缩」时生效
+  compressImageToBlackAndWhite:
+    title: 黑白压缩
+    description: |
+      将图片转换为黑白图像以减小文件体积。
+      开启后，尺寸压缩和颜色压缩将失效
+  blackAndWhiteThreshold:
+    title: 黑白阈值
+    description: |
+      0 为完整灰度，1 为纯黑白（仅黑和纯白两种颜色）。
+      仅在开启「黑白压缩」时生效
   maxPastedImageSize:
     title: 粘贴到舞台的图片的尺寸限制（像素）
     description: |

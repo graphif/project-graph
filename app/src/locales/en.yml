@@ -858,6 +858,12 @@ settings:
   webpQuality:
     title: WebP Quality
     description: "Quality level for WebP encoding. 1.0 is lossless, lower values produce smaller files. Only takes effect when \"Compress Image Colors\" is enabled.\n"
+  compressImageToBlackAndWhite:
+    title: Black & White Compression
+    description: "Convert images to black and white to reduce file size.\nWhen enabled, size compression and color compression are disabled.\n"
+  blackAndWhiteThreshold:
+    title: Black & White Threshold
+    description: "0 is full grayscale, 1 is pure black and white (only black and pure white colors).\nOnly takes effect when \"Black & White Compression\" is enabled.\n"
   maxPastedImageSize:
     description: "For images whose width or height exceeds this size, their maximum
       width or height is limited to this size.\nMeanwhile, it keeps the aspect ratio,
