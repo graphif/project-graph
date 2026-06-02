@@ -1388,6 +1388,12 @@ keyBinds:
   resetCameraScale:
     title: Atur Ulang Zoom
     description: Atur ulang zoom tampilan ke ukuran standar
+  cameraCenterOnSelection:
+    title: Tengahkan ke Pilihan
+    description: |
+      Pindahkan kamera ke pusat objek yang dipilih.
+      Jika beberapa objek dipilih, tengahkan ke pusat persegi panjang luar dari semua objek yang dipilih.
+      Jika tidak ada objek yang dipilih, pindahkan ke titik asal dunia.
   folderSection:
     title: Lipat atau Buka Kotak Section
     description: Setelah ditekan, kotak Section yang dipilih akan beralih status lipat atau buka

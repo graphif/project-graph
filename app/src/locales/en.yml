@@ -1336,6 +1336,12 @@ keyBinds:
   resetCameraScale:
     title: Reset Zoom
     description: Reset the viewport zoom to the standard size
+  cameraCenterOnSelection:
+    title: Center on Selection
+    description: |
+      Move the camera to the center of the selected objects.
+      If multiple objects are selected, center on the bounding rectangle of all selected objects.
+      If no objects are selected, move to the world origin.
   folderSection:
     title: Fold/Unfold Section Box
     description: Pressing this will toggle the fold/unfold state of the selected

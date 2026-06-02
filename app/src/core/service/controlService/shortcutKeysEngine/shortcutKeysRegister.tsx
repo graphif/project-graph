@@ -32,6 +32,7 @@ import { openBrowserOrFile } from "@/utils/externalOpen";
 import { exportImagesToProjectDirectory } from "@/utils/imageExport";
 import { isMac } from "@/utils/platform";
 import { Color, Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 import {
   AlignCenterHorizontal,
   AlignCenterVertical,
@@ -375,6 +376,22 @@ export const allKeyBinds: KeyBindItem[] = [
     icon: Aperture,
     when: whenHasProject,
     onPress: (project) => project!.camera.resetScale(),
+  },
+  {
+    id: "cameraCenterOnSelection",
+    defaultKey: "q f",
+    icon: Focus,
+    when: whenHasProject,
+    onPress: (project) => {
+      const entities = project!.stageManager.getSelectedEntities();
+      if (entities.length === 0) {
+        project!.camera.bombMove(Vector.getZero());
+      } else {
+        const rects = entities.map((e) => e.collisionBox.getRectangle());
+        const boundingRect = Rectangle.getBoundingRectangle(rects);
+        project!.camera.bombMove(boundingRect.center);
+      }
+    },
   },
   {
     id: "CameraScaleZoomIn",

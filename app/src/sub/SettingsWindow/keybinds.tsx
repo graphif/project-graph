@@ -601,6 +601,7 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "resetView",
       "restoreCameraState",
       "resetCameraScale",
+      "cameraCenterOnSelection",
       "masterBrakeCheckout",
       "masterBrakeControl",
       "CameraScaleZoomIn",

@@ -1404,6 +1404,12 @@ keyBinds:
   resetCameraScale:
     title: 重置縮放
     description: 將視野縮放重置為標準大小
+  cameraCenterOnSelection:
+    title: 對準選中物體中心
+    description: |
+      將攝像機位置移動到選中物體的中心。
+      如果同時選中了多個物體，那麼就對準多個選中物體的外接矩形的中心；
+      如果沒有選中物體，則會到世界座標原點。
   folderSection:
     title: 摺疊或展開分組框
     description: 按下後選中的分組框會切換摺疊或展開狀態
