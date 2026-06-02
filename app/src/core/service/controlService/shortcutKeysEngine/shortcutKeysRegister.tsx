@@ -233,10 +233,7 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "C-A-S-t",
     icon: FlaskConical,
     when: whenAlways,
-    onPress: () =>
-      Dialog.buttons("测试快捷键", "您按下了自定义的测试快捷键，这一功能是测试开发所用，可在设置中更改触发方式", [
-        { id: "close", label: "关闭" },
-      ]),
+    onPress: () => toast("您按下了自定义的测试快捷键，这一功能是测试开发所用，可在设置中更改触发方式"),
   },
 
   /*------- 窗口管理 -------*/

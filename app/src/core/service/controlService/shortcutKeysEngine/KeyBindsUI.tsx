@@ -400,12 +400,17 @@ export namespace KeyBindsUI {
     // 按序列长度降序排列，优先尝试最长匹配
     matched.sort((a, b) => b.seqLength - a.seqLength);
 
-    for (const { uiKeyBind } of matched) {
+    let maxExecutedLength = -1;
+    for (const { uiKeyBind, seqLength } of matched) {
+      if (maxExecutedLength >= 0 && seqLength < maxExecutedLength) break;
       if (!(await uiKeyBind.when(activeProject))) continue;
       uiKeyBind.onPress(uiKeyBind.id.startsWith("ext:") && activeProject ? proxy(activeProject) : activeProject);
       if (uiKeyBind.onRelease && uiKeyBind.key.length === 1) {
         pressedSingleKeyBinds.add(uiKeyBind.key);
       }
+      maxExecutedLength = seqLength;
+    }
+    if (maxExecutedLength >= 0) {
       userEventQueue.clear();
       return true;
     }
