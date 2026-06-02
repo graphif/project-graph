@@ -386,33 +386,30 @@ export namespace KeyBindsUI {
     }
     const tab = store.get(activeTabAtom);
     const activeProject = tab instanceof Project ? tab : undefined;
-    let executed = false;
+
+    // 收集所有匹配的快捷键，按序列长度降序尝试执行，只执行最长匹配
+    const matched: { uiKeyBind: (typeof allUIKeyBinds)[number]; seqLength: number }[] = [];
     for (const uiKeyBind of allUIKeyBinds) {
-      // 如果快捷键未启用，跳过
-      if (!uiKeyBind.isEnabled) {
-        continue;
-      }
-      // 持续型快捷键不走序列匹配
-      if (uiKeyBind.isContinuous) {
-        continue;
-      }
+      if (!uiKeyBind.isEnabled) continue;
+      if (uiKeyBind.isContinuous) continue;
       if (matchEmacsKeyPress(uiKeyBind.key, userEventQueue.arrayList)) {
-        if (!(await uiKeyBind.when(activeProject))) {
-          continue;
-        }
-        uiKeyBind.onPress(uiKeyBind.id.startsWith("ext:") && activeProject ? proxy(activeProject) : activeProject);
-        // 如果是单键快捷键且有onRelease回调，记录为已按下状态
-        if (uiKeyBind.onRelease && uiKeyBind.key.length === 1) {
-          pressedSingleKeyBinds.add(uiKeyBind.key);
-        }
-        executed = true;
+        const seqLength = uiKeyBind.key.trim().split(/\s+/).length;
+        matched.push({ uiKeyBind, seqLength });
       }
     }
-    // 执行了快捷键之后，清空队列
-    if (executed) {
+    // 按序列长度降序排列，优先尝试最长匹配
+    matched.sort((a, b) => b.seqLength - a.seqLength);
+
+    for (const { uiKeyBind } of matched) {
+      if (!(await uiKeyBind.when(activeProject))) continue;
+      uiKeyBind.onPress(uiKeyBind.id.startsWith("ext:") && activeProject ? proxy(activeProject) : activeProject);
+      if (uiKeyBind.onRelease && uiKeyBind.key.length === 1) {
+        pressedSingleKeyBinds.add(uiKeyBind.key);
+      }
       userEventQueue.clear();
+      return true;
     }
-    return executed;
+    return false;
   }
 
   async function onMouseDown(event: MouseEvent) {
