@@ -1,6 +1,7 @@
 import { Project, service } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
+import { Settings } from "@/core/service/Settings";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { colorInvert, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -28,40 +29,46 @@ export class UrlNodeRenderer {
       2 * this.project.camera.currentScale,
       Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
     );
-    // 绘制标题
-    if (!urlNode.isEditingTitle) {
+    const titleFontSize = Renderer.FONT_SIZE * this.project.camera.currentScale;
+    // 视野缩放过小就不渲染内部文字和分界线
+    if (titleFontSize > Settings.ignoreTextNodeTextRenderLessThanFontSize) {
+      // 绘制标题
+      if (!urlNode.isEditingTitle) {
+        this.project.textRenderer.renderText(
+          urlNode.title,
+          this.project.renderer.transformWorld2View(urlNode.rectangle.location.add(Vector.same(Renderer.NODE_PADDING))),
+          titleFontSize,
+          urlNode.color.a === 1
+            ? colorInvert(urlNode.color)
+            : colorInvert(this.project.stageStyleManager.currentStyle.Background),
+        );
+      }
+      // 绘制分界线
+      this.project.curveRenderer.renderDashedLine(
+        this.project.renderer.transformWorld2View(urlNode.rectangle.location.add(new Vector(0, UrlNode.titleHeight))),
+        this.project.renderer.transformWorld2View(
+          urlNode.rectangle.location.add(new Vector(urlNode.rectangle.size.x, UrlNode.titleHeight)),
+        ),
+        urlNode.color.a === 1
+          ? colorInvert(urlNode.color)
+          : colorInvert(this.project.stageStyleManager.currentStyle.Background),
+        1 * this.project.camera.currentScale,
+        4 * this.project.camera.currentScale,
+      );
+      // 绘制url
       this.project.textRenderer.renderText(
-        urlNode.title,
-        this.project.renderer.transformWorld2View(urlNode.rectangle.location.add(Vector.same(Renderer.NODE_PADDING))),
-        Renderer.FONT_SIZE * this.project.camera.currentScale,
+        urlNode.url.length > 35 ? urlNode.url.slice(0, 35) + "..." : urlNode.url,
+        this.project.renderer.transformWorld2View(
+          urlNode.rectangle.location.add(
+            new Vector(Renderer.NODE_PADDING, UrlNode.titleHeight + Renderer.NODE_PADDING),
+          ),
+        ),
+        Renderer.FONT_SIZE * 0.5 * this.project.camera.currentScale,
         urlNode.color.a === 1
           ? colorInvert(urlNode.color)
           : colorInvert(this.project.stageStyleManager.currentStyle.Background),
       );
     }
-    // 绘制分界线
-    this.project.curveRenderer.renderDashedLine(
-      this.project.renderer.transformWorld2View(urlNode.rectangle.location.add(new Vector(0, UrlNode.titleHeight))),
-      this.project.renderer.transformWorld2View(
-        urlNode.rectangle.location.add(new Vector(urlNode.rectangle.size.x, UrlNode.titleHeight)),
-      ),
-      urlNode.color.a === 1
-        ? colorInvert(urlNode.color)
-        : colorInvert(this.project.stageStyleManager.currentStyle.Background),
-      1 * this.project.camera.currentScale,
-      4 * this.project.camera.currentScale,
-    );
-    // 绘制url
-    this.project.textRenderer.renderText(
-      urlNode.url.length > 35 ? urlNode.url.slice(0, 35) + "..." : urlNode.url,
-      this.project.renderer.transformWorld2View(
-        urlNode.rectangle.location.add(new Vector(Renderer.NODE_PADDING, UrlNode.titleHeight + Renderer.NODE_PADDING)),
-      ),
-      Renderer.FONT_SIZE * 0.5 * this.project.camera.currentScale,
-      urlNode.color.a === 1
-        ? colorInvert(urlNode.color)
-        : colorInvert(this.project.stageStyleManager.currentStyle.Background),
-    );
     // 绘制特效
     this.renderHoverState(urlNode);
   }
