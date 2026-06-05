@@ -33,7 +33,7 @@ import { URI } from "vscode-uri";
 import App from "./App";
 import { ExtensionManager } from "./core/extension/ExtensionManager";
 import { onOpenFile } from "./core/service/GlobalMenu";
-import { handleDeepLink } from "./core/service/dataFileService/DeepLinkHandler";
+import { handleDeepLink, isProjectGraphDeepLink } from "./core/service/dataFileService/DeepLinkHandler";
 import "./css/index.css";
 import Fallback from "./Fallback";
 
@@ -154,13 +154,25 @@ async function renderApp(cli: boolean = false) {
 
 async function loadStartFile() {
   const cliMatches = await getMatches();
-  if (cliMatches.args.path.value) {
-    const path = cliMatches.args.path.value as string;
-    const isExists = await exists(path);
-    if (isExists) {
-      onOpenFile(URI.file(path), "CLI或双击文件");
+  const argPath = cliMatches.args.path.value as string | undefined;
+  if (argPath) {
+    if (isProjectGraphDeepLink(argPath)) {
+      try {
+        await handleDeepLink([argPath]);
+      } catch (e) {
+        toast.error("处理 Deep Link 失败: " + String(e));
+      }
     } else {
-      toast.error("文件不存在");
+      try {
+        const isExists = await exists(argPath);
+        if (isExists) {
+          onOpenFile(URI.file(argPath), "CLI或双击文件");
+        } else {
+          toast.error("文件不存在");
+        }
+      } catch (e) {
+        toast.error("打开文件失败: " + String(e));
+      }
     }
   }
 
@@ -193,7 +205,9 @@ async function loadStartFile() {
           handleDeepLink(urls);
         }
       })
-      .catch(() => {});
+      .catch((e) => {
+        toast.error("处理 Deep Link 失败: " + String(e));
+      });
 
     // Deep link: 热启动（应用已运行时收到 URL）
     onOpenUrl((urls) => {

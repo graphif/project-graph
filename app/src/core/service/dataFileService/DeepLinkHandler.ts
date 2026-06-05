@@ -12,6 +12,12 @@ interface DeepLinkParams {
   target?: string;
 }
 
+const handledUrls = new Set<string>();
+
+export function isProjectGraphDeepLink(input: string) {
+  return /^project-graph:(\/\/)?/i.test(input);
+}
+
 async function normalizeFilePath(rawPath: string): Promise<string | null> {
   let path = rawPath;
   try {
@@ -19,6 +25,8 @@ async function normalizeFilePath(rawPath: string): Promise<string | null> {
   } catch {
     // keep raw
   }
+
+  path = path.replace(/[\\/]+$/, "");
 
   // Windows: /D:/path → D:/path
   if (/^\/[A-Za-z]:/.test(path)) {
@@ -45,7 +53,8 @@ async function normalizeFilePath(rawPath: string): Promise<string | null> {
   const recentFiles = await RecentFileManager.getRecentFiles();
   const fileName = path.toLowerCase().endsWith(".prg") ? path : path + ".prg";
   for (const file of recentFiles) {
-    if (file.uri.fsPath.toLowerCase().endsWith("/" + fileName.toLowerCase())) {
+    const normalizedFsPath = file.uri.fsPath.toLowerCase().replaceAll("\\", "/");
+    if (normalizedFsPath.endsWith("/" + fileName.toLowerCase())) {
       return file.uri.fsPath;
     }
   }
@@ -53,20 +62,30 @@ async function normalizeFilePath(rawPath: string): Promise<string | null> {
 }
 
 function parseProjectGraphUrl(url: string): DeepLinkParams | null {
-  if (!url.startsWith("project-graph://")) return null;
+  if (!isProjectGraphDeepLink(url)) return null;
 
-  const withoutScheme = url.slice("project-graph://".length);
-  const qIndex = withoutScheme.indexOf("?");
-  const rawPath = qIndex === -1 ? withoutScheme : withoutScheme.slice(0, qIndex);
-  const queryString = qIndex === -1 ? "" : withoutScheme.slice(qIndex + 1);
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    const normalized = url.replace(/^project-graph:(?!\/\/)/i, "project-graph://");
+    parsed = new URL(normalized);
+  }
 
-  const params = new URLSearchParams(queryString);
+  const params = new URLSearchParams(parsed.search);
+  const queryPath = params.get("path");
+  const rawPath =
+    queryPath ??
+    (parsed.host
+      ? parsed.pathname === "/" || parsed.pathname === ""
+        ? parsed.host
+        : parsed.host + parsed.pathname
+      : parsed.pathname);
   const result: DeepLinkParams = { path: rawPath };
 
   const target = params.get("target");
   if (target) {
     result.target = target;
-    return result;
   }
 
   const locationStr = params.get("location");
@@ -122,7 +141,9 @@ function applyCameraParams(project: Project, params: DeepLinkParams) {
 
 export async function handleDeepLink(urls: string[]) {
   for (const url of urls) {
-    if (!url.startsWith("project-graph://")) continue;
+    if (!isProjectGraphDeepLink(url)) continue;
+    if (handledUrls.has(url)) continue;
+    handledUrls.add(url);
 
     const params = parseProjectGraphUrl(url);
     if (!params) continue;
