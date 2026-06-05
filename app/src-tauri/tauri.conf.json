@@ -83,6 +83,11 @@
     ]
   },
   "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["project-graph"]
+      }
+    },
     "cli": {
       "description": "A simple tool to create topology diagrams.",
       "args": [

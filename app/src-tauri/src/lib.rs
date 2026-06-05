@@ -74,6 +74,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_system_info::init())
+        .plugin(tauri_plugin_deep_link::init())
         .setup(|app| {
             println!("Tauri setup closure started");
             let _ = APP_HANDLE.set(app.handle().clone());

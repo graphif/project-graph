@@ -18,6 +18,7 @@ import { isDesktop, isMobile, isWeb } from "@/utils/platform";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { getMatches } from "@tauri-apps/plugin-cli";
+import { getCurrent, onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { listen } from "@tauri-apps/api/event";
 import { exists } from "@tauri-apps/plugin-fs";
 import "driver.js/dist/driver.css";
@@ -32,6 +33,7 @@ import { URI } from "vscode-uri";
 import App from "./App";
 import { ExtensionManager } from "./core/extension/ExtensionManager";
 import { onOpenFile } from "./core/service/GlobalMenu";
+import { handleDeepLink } from "./core/service/dataFileService/DeepLinkHandler";
 import "./css/index.css";
 import Fallback from "./Fallback";
 
@@ -181,6 +183,22 @@ async function loadStartFile() {
         onOpenFile(URI.file(path), "macOS双击文件");
       } else {
         toast.error("文件不存在");
+      }
+    });
+
+    // Deep link: 冷启动（应用通过 URL 唤起）
+    getCurrent()
+      .then((urls) => {
+        if (urls && urls.length > 0) {
+          handleDeepLink(urls);
+        }
+      })
+      .catch(() => {});
+
+    // Deep link: 热启动（应用已运行时收到 URL）
+    onOpenUrl((urls) => {
+      if (urls.length > 0) {
+        handleDeepLink(urls);
       }
     });
   }
