@@ -15,7 +15,7 @@ interface DeepLinkParams {
 const handledUrls = new Set<string>();
 
 export function isProjectGraphDeepLink(input: string) {
-  return /^project-graph:(\/\/)?/i.test(input);
+  return /^prg:(\/\/)?/i.test(input);
 }
 
 async function normalizeFilePath(rawPath: string): Promise<string | null> {
@@ -68,7 +68,7 @@ function parseProjectGraphUrl(url: string): DeepLinkParams | null {
   try {
     parsed = new URL(url);
   } catch {
-    const normalized = url.replace(/^project-graph:(?!\/\/)/i, "project-graph://");
+    const normalized = url.replace(/^prg:(?!\/\/)/i, "prg://");
     parsed = new URL(normalized);
   }
 

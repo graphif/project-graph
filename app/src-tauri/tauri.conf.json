@@ -85,7 +85,7 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": ["project-graph"]
+        "schemes": ["prg"]
       }
     },
     "cli": {
