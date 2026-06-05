@@ -190,11 +190,18 @@ pub fn run() {
                 cmd: String,
                 args: String,
                 headers: String,
+                is_binary_args: bool,
             }
             
             if let Ok(req) = serde_json::from_str::<QtIpcRequest>(payload) {
                 if let Some(window) = handle.get_webview_window("proxy") {
                     println!("Forwarding IPC request to proxy window: cmd={}, args={}, headers={}", req.cmd, req.args, req.headers);
+                    // Binary args (JSON array of bytes) get wrapped in new Uint8Array()
+                    let args_expr = if req.is_binary_args {
+                        format!("new Uint8Array({})", req.args)
+                    } else {
+                        req.args.clone()
+                    };
                     let js = format!(r#"
                         (async () => {{
                             try {{
@@ -225,7 +232,7 @@ pub fn run() {
                                 }}
                             }}
                         }})();
-                    "#, req.cmd, req.req_id, req.cmd, req.args, req.headers, req.req_id, req.req_id);
+                    "#, req.cmd, req.req_id, req.cmd, args_expr, req.headers, req.req_id, req.req_id);
                     
                     window.eval(&js).ok();
                 } else {

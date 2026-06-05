@@ -28,6 +28,32 @@
 QApplication *g_app = nullptr;
 QWebEngineView *g_view = nullptr;
 
+// Convert a QString to QByteArray preserving all byte values (Latin-1, not UTF-8).
+// This is used for binary args transfer: JS encodes binary as Latin-1 string
+// via String.fromCharCode(), QWebChannel passes it as QString, and this function
+// recovers the exact bytes without UTF-8 multi-byte corruption.
+QByteArray qt_qstring_to_latin1(const QString &s)
+{
+    return s.toLatin1();
+}
+
+// Convert a QByteArray to a compact JSON array string, e.g. "[0,1,255,127]".
+// Used to forward binary data through Tauri's JSON-based event system.
+QString qt_qbytearray_to_json_array(const QByteArray &data)
+{
+    QString result;
+    result.reserve(2 + data.size() * 4);
+    result += u'[';
+    for (int i = 0; i < data.size(); ++i)
+    {
+        if (i > 0)
+            result += u',';
+        result += QString::number(static_cast<unsigned char>(data[i]));
+    }
+    result += u']';
+    return result;
+}
+
 class TauriSchemeHandler : public QWebEngineUrlSchemeHandler
 {
 public:
@@ -360,21 +386,20 @@ extern "C"
                 let pendingInvokes = [];
                 let reqIdCounter = 0;
                 let promiseMap = new Map();
-                const encodeUint8ArrayToJsExpr = (arr) => new Promise((resolve, reject) => {
-                    try {
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                            const result = String(reader.result || "");
-                            const parts = result.split(",");
-                            const base64 = parts[1] || "";
-                            resolve(`Uint8Array.from(atob('${base64}'), c => c.charCodeAt(0))`);
-                        };
-                        reader.onerror = () => reject(reader.error || new Error("Failed to read Uint8Array"));
-                        reader.readAsDataURL(new Blob([arr]));
-                    } catch (e) {
-                        reject(e);
+
+                // Convert a Uint8Array to a Latin-1 string preserving all byte values.
+                // This gives TRUE binary transfer through QWebChannel: each byte becomes
+                // one code point, and the C++ side recovers via toLatin1().
+                function uint8ToLatin1(arr) {
+                    // Use chunking to avoid stack overflow with large arrays
+                    const chunkSize = 16384;
+                    let result = '';
+                    for (let i = 0; i < arr.length; i += chunkSize) {
+                        const chunk = arr.subarray(i, Math.min(i + chunkSize, arr.length));
+                        result += String.fromCharCode.apply(null, chunk);
                     }
-                });
+                    return result;
+                }
 
                 window.__TAURI_INTERNALS__.invoke = function(cmd, args, headers) {
                     console.log('Invoke called:', cmd, args, headers);
@@ -382,36 +407,23 @@ extern "C"
                         const reqId = String(++reqIdCounter);
                         promiseMap.set(reqId, { resolve, reject });
                         
+                        const isBinary = args instanceof Uint8Array;
+                        const sendArgs = isBinary ? uint8ToLatin1(args) : JSON.stringify(args || {});
+                        const sendHeaders = JSON.stringify(headers || {});
+                        
                         if (channelReady) {
-                            if (args instanceof Uint8Array) {
-                                encodeUint8ArrayToJsExpr(args)
-                                    .then((jsExpr) => {
-                                        window.ipc_bridge.invoke_tauri(
-                                            reqId,
-                                            cmd,
-                                            jsExpr,
-                                            JSON.stringify(headers || {})
-                                        );
-                                    })
-                                    .catch((e) => {
-                                        promiseMap.delete(reqId);
-                                        reject(e);
-                                    });
-                            } else {
-                                try {
-                                    window.ipc_bridge.invoke_tauri(
-                                        reqId,
-                                        cmd,
-                                        JSON.stringify(args || {}),
-                                        JSON.stringify(headers || {})
-                                    );
-                                } catch (e) {
-                                    promiseMap.delete(reqId);
-                                    reject(e);
+                            try {
+                                if (isBinary) {
+                                    window.ipc_bridge.invoke_tauri_binary(reqId, cmd, sendArgs, sendHeaders);
+                                } else {
+                                    window.ipc_bridge.invoke_tauri(reqId, cmd, sendArgs, sendHeaders);
                                 }
+                            } catch (e) {
+                                promiseMap.delete(reqId);
+                                reject(e);
                             }
                         } else {
-                            pendingInvokes.push({ reqId, cmd, args, headers });
+                            pendingInvokes.push({ reqId, cmd, args: sendArgs, headers: sendHeaders, isBinary });
                         }
                     });
                 };
@@ -437,30 +449,14 @@ extern "C"
                     channelReady = true;
                     
                     pendingInvokes.forEach(req => {
-                        if (req.args instanceof Uint8Array) {
-                            encodeUint8ArrayToJsExpr(req.args)
-                                .then((jsExpr) => {
-                                    window.ipc_bridge.invoke_tauri(
-                                        req.reqId,
-                                        req.cmd,
-                                        jsExpr,
-                                        JSON.stringify(req.headers || {})
-                                    );
-                                })
-                                .catch((e) => {
-                                    window.__TAURI_IPC_RESOLVE__(req.reqId, false, e.toString());
-                                });
-                        } else {
-                            try {
-                                window.ipc_bridge.invoke_tauri(
-                                    req.reqId,
-                                    req.cmd,
-                                    JSON.stringify(req.args || {}),
-                                    JSON.stringify(req.headers || {})
-                                );
-                            } catch (e) {
-                                window.__TAURI_IPC_RESOLVE__(req.reqId, false, e.toString());
+                        try {
+                            if (req.isBinary) {
+                                window.ipc_bridge.invoke_tauri_binary(req.reqId, req.cmd, req.args, req.headers);
+                            } else {
+                                window.ipc_bridge.invoke_tauri(req.reqId, req.cmd, req.args, req.headers);
                             }
+                        } catch (e) {
+                            window.__TAURI_IPC_RESOLVE__(req.reqId, false, e.toString());
                         }
                     });
                     pendingInvokes = [];

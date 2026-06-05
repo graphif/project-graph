@@ -11,6 +11,11 @@ pub mod qobject {
         fn qt_evaluate_js(js: &QString);
         fn init_qt_app(app_data_path: &QString);
         unsafe fn tick_qt_app() -> bool;
+        // Convert a QString to QByteArray preserving all byte values (Latin-1).
+        // Used to recover binary data sent from JS via String.fromCharCode().
+        fn qt_qstring_to_latin1(s: &QString) -> QByteArray;
+        // Convert a QByteArray to compact JSON array string "[0,1,255,…]".
+        fn qt_qbytearray_to_json_array(data: &QByteArray) -> QString;
     }
 
     unsafe extern "RustQt" {
@@ -19,6 +24,17 @@ pub mod qobject {
 
         #[qinvokable]
         fn invoke_tauri(
+            self: Pin<&mut TauriIpcBridge>,
+            req_id: QString,
+            command: QString,
+            args: QString,
+            headers: QString,
+        );
+
+        // Same as invoke_tauri but args is a Latin-1 encoded QString containing
+        // raw binary bytes. Use qt_qstring_to_latin1 to recover the bytes.
+        #[qinvokable]
+        fn invoke_tauri_binary(
             self: Pin<&mut TauriIpcBridge>,
             req_id: QString,
             command: QString,
@@ -38,6 +54,39 @@ use tauri::Manager;
 #[derive(Default)]
 pub struct TauriIpcBridgeRust {}
 
+fn emit_tauri_request(
+    req_id_str: String,
+    cmd: String,
+    args_str: String,
+    headers_str: String,
+    is_binary_args: bool,
+) {
+    if let Some(app) = crate::APP_HANDLE.get() {
+        use tauri::{Emitter, Manager};
+
+        #[derive(serde::Serialize, Clone)]
+        struct QtIpcRequest {
+            req_id: String,
+            cmd: String,
+            args: String,
+            headers: String,
+            is_binary_args: bool,
+        }
+
+        app.emit(
+            "qt-ipc-request",
+            QtIpcRequest {
+                req_id: req_id_str,
+                cmd,
+                args: args_str,
+                headers: headers_str,
+                is_binary_args,
+            },
+        )
+        .ok();
+    }
+}
+
 impl qobject::TauriIpcBridge {
     pub fn invoke_tauri(
         mut self: Pin<&mut Self>,
@@ -51,28 +100,28 @@ impl qobject::TauriIpcBridge {
         let args_str = args.to_string();
         let headers_str = headers.to_string();
 
-        if let Some(app) = crate::APP_HANDLE.get() {
-            use tauri::{Emitter, Manager};
+        emit_tauri_request(req_id_str, cmd, args_str, headers_str, false);
+    }
 
-            #[derive(serde::Serialize, Clone)]
-            struct QtIpcRequest {
-                req_id: String,
-                cmd: String,
-                args: String,
-                headers: String,
-            }
+    /// Binary variant: args is a Latin-1 encoded QString containing raw binary bytes.
+    /// Recover bytes via qt_qstring_to_latin1 and serialize as JSON array for the event.
+    pub fn invoke_tauri_binary(
+        self: Pin<&mut Self>,
+        req_id: QString,
+        command: QString,
+        args: QString,
+        headers: QString,
+    ) {
+        let req_id_str = req_id.to_string();
+        let cmd = command.to_string();
+        let headers_str = headers.to_string();
 
-            app.emit(
-                "qt-ipc-request",
-                QtIpcRequest {
-                    req_id: req_id_str,
-                    cmd,
-                    args: args_str,
-                    headers: headers_str,
-                },
-            )
-            .ok();
-        }
+        // Convert the Latin-1 QString back to raw bytes
+        let bytes = qobject::qt_qstring_to_latin1(&args);
+        // Serialize as JSON array via C++ for the Tauri event
+        let args_json = qobject::qt_qbytearray_to_json_array(&bytes).to_string();
+
+        emit_tauri_request(req_id_str, cmd, args_json, headers_str, true);
     }
 
     pub fn get_tauri_asset(self: Pin<&mut Self>, path: QString) -> QByteArray {
