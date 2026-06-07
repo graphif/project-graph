@@ -31,3 +31,5 @@ allowBuilds:
   esbuild: true
   msw: true
   nx: true
+
+resolutionMode: time-based
