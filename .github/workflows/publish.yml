@@ -148,38 +148,18 @@ jobs:
       - uses: actions/checkout@v4
 
       #region Prepare environment
-      - name: Install CUDA 13.3 on Ubuntu
-        if: runner.os == 'Linux'
-        run: |
-          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
-          sudo dpkg -i cuda-keyring_1.1-1_all.deb
-          sudo apt-get update
-          sudo apt-get install -y cuda-toolkit-12-9
-          echo "/usr/local/cuda-12.9/bin" >> $GITHUB_PATH
-          echo "CUDA_HOME=/usr/local/cuda-12.9" >> $GITHUB_ENV
-
-      - name: Install CUDA 13.3 on Windows
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          curl -L --output cuda_installer.exe https://developer.download.nvidia.com/compute/cuda/12.9.0/local_installers/cuda_12.9.0_windows.exe
-          Start-Process -Wait -FilePath .\cuda_installer.exe -ArgumentList "-s nvcc_12.9"
-          $cudaPath = "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.9\bin"
-          echo "$cudaPath" | Out-File -FilePath $env:GITHUB_PATH -Append
-          echo "CUDA_HOME=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.9" | Out-File -FilePath $env:GITHUB_ENV -Append
-
-      - name: Install CUDA 13.3 on macOS
-        if: runner.os == 'macOS'
-        run: |
-          curl -L --output cuda_mac_installer.dmg https://developer.download.nvidia.com/compute/cuda/12.9.0/local_installers/cuda_12.9.0_mac.dmg
-          hdiutil attach cuda_mac_installer.dmg
-          sudo installer -pkg /Volumes/CUDAMacOSXInstaller/CUDAMacOSXInstaller.pkg -target /
-          hdiutil detach /Volumes/CUDAMacOSXInstaller
-          echo "/usr/local/cuda/bin" >> $GITHUB_PATH
-          echo "CUDA_HOME=/usr/local/cuda" >> $GITHUB_ENV
-
+      - name: Setup CUDA Toolkit
+        uses: Jimver/cuda-toolkit@v0.2.35
+        if: matrix.platform != 'macos-latest'
+        with:
+          cuda: "12.9.0"
       - name: Verify CUDA installation
+        if: matrix.platform != 'macos-latest'
         run: nvcc --version
+      - name: Disable CUDA on macOS
+        if: matrix.platform == 'macos-latest'
+        run: |
+          node ./.github/scripts/set-aha-features.mjs
       - name: Linux - Install dependencies
         if: matrix.platform == 'ubuntu-22.04'
         run: |
