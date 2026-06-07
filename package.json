@@ -58,8 +58,5 @@
       "typescript": "patches/typescript.patch"
     }
   },
-  "packageManager": "pnpm@10.6.5",
-  "dependencies": {
-    "react-error-boundary": "^6.1.1"
-  }
+  "packageManager": "pnpm@10.6.5"
 }
