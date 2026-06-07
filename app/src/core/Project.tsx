@@ -331,11 +331,14 @@ export class Project extends Tab {
       }
     } catch (e) {
       console.warn(e);
-      await Dialog.buttons(
-        "文件解析失败",
-        `打开文件时发生错误，文件内容可能已损坏或与当前软件版本不兼容。\n\n错误信息：${e}`,
-        [{ id: "ok", label: "确定" }],
-      );
+      const errorMessage = `打开文件时发生错误，文件内容可能已损坏或与当前软件版本不兼容。\n\n错误信息：${e}`;
+      const result = await Dialog.buttons("文件解析失败", errorMessage, [
+        { id: "ok", label: "确定" },
+        { id: "copy", label: "复制错误信息" },
+      ]);
+      if (result === "copy") {
+        navigator.clipboard.writeText(errorMessage);
+      }
       return;
     }
     this.projectState = ProjectState.Saved;
