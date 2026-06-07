@@ -31,11 +31,6 @@ Project Graph is a desktop application designed to visualize and manage complex 
 - Frontend Vite project: `/app`
 - Rust Project: `/app/src-tauri`
 
-### Fumadocs
-
-- Next.js Project: `/docs`
-- Content: `/docs/content/docs`
-
 ### Open-source Libraries
 
 They are all in `/packages` directory, and are used in the frontend.

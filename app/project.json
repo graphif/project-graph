@@ -1,0 +1,32 @@
+{
+  "name": "@graphif/project-graph",
+  "targets": {
+    "build": {
+      "dependsOn": ["^build"],
+      "cache": true,
+      "outputs": ["{projectRoot}/dist/**"]
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "continuous": true
+    },
+    "type-check": {
+      "cache": true,
+      "inputs": ["{projectRoot}/src/**/*.{ts,tsx}"]
+    },
+    "tauri:dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "continuous": true
+    },
+    "tauri:build": {
+      "dependsOn": ["build", "^build"],
+      "outputs": ["{projectRoot}/src-tauri/target/release/bundle/**"],
+      "cache": true
+    },
+    "sync-locales": {
+      "cache": false
+    }
+  }
+}

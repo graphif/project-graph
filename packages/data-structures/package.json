@@ -30,6 +30,6 @@
   },
   "dependencies": {
     "@graphif/serializer": "workspace:*",
-    "unplugin-original-class-name": "^1.0.1"
+    "unplugin-original-class-name": "catalog:"
   }
 }

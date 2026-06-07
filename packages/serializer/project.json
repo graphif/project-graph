@@ -1,0 +1,17 @@
+{
+  "name": "@graphif/serializer",
+  "targets": {
+    "build": {
+      "cache": true,
+      "outputs": ["{projectRoot}/dist/**"]
+    },
+    "type-check": {
+      "cache": true,
+      "inputs": ["{projectRoot}/src/**/*.ts"]
+    },
+    "publish": {
+      "dependsOn": ["build"],
+      "cache": false
+    }
+  }
+}
