@@ -40,23 +40,5 @@
     "typescript-eslint": "^8.59.1",
     "vitest": "4.1.5"
   },
-  "pnpm": {
-    "peerDependencyRules": {
-      "ignoreMissing": [
-        "@algolia/client-search",
-        "search-insights"
-      ]
-    },
-    "onlyBuiltDependencies": [
-      "@swc/core",
-      "bcrypt",
-      "esbuild",
-      "msw",
-      "sharp"
-    ],
-    "patchedDependencies": {
-      "typescript": "patches/typescript.patch"
-    }
-  },
-  "packageManager": "pnpm@10.6.5"
+  "packageManager": "pnpm@11.3.0"
 }

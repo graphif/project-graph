@@ -14,3 +14,20 @@ catalog:
   typescript: 5.9.2
   tsdown: ^0.21.10
   jotai: ^2.12.5
+
+onlyBuiltDependencies:
+  - "@swc/core"
+  - bcrypt
+  - esbuild
+  - msw
+  - sharp
+
+patchedDependencies:
+  typescript: "patches/typescript.patch"
+
+allowBuilds:
+  bcrypt: true
+  core-js: true
+  esbuild: true
+  msw: true
+  nx: true
