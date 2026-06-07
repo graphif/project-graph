@@ -2,6 +2,12 @@ packages:
   - "app"
   - "packages/*"
 
+allowBuilds:
+  bcrypt: true
+  core-js: true
+  esbuild: true
+  nx: true
+
 catalog:
   react: ^19.1.0
   "@types/react": ^19.1.0
@@ -11,14 +17,6 @@ catalog:
   jotai: ^2.12.5
   vitest: 4.1.5
   unplugin-original-class-name: ^1.0.1
-
-allowBuilds:
-  - "@swc/core"
-  - bcrypt
-  - esbuild
-  - msw
-  - nx
-  - sharp
 
 patchedDependencies:
   typescript: "patches/typescript.patch"
