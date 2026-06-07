@@ -65,6 +65,7 @@ export class ControllerAssociationReshapeClass extends ControllerClass {
       return;
     }
     const isHaveLineEdgeSelected = this.project.stageManager.getLineEdges().some((edge) => edge.isSelected);
+    const isHaveArcEdgeSelected = this.project.stageManager.getArcEdges().some((edge) => edge.isSelected);
     const isHaveMultiTargetEdgeSelected = this.project.stageManager
       .getSelectedAssociations()
       .some((association) => association instanceof MultiTargetUndirectedEdge);
@@ -85,6 +86,12 @@ export class ControllerAssociationReshapeClass extends ControllerClass {
           edge.isSelected = false;
         });
       }
+      clickedAssociation.isSelected = true;
+    } else if (isHaveArcEdgeSelected) {
+      this.project.controller.isMovingEdge = true;
+      this.project.stageManager.getArcEdges().forEach((edge) => {
+        edge.isSelected = false;
+      });
       clickedAssociation.isSelected = true;
     } else if (isHaveMultiTargetEdgeSelected) {
       // 点击了多源无向边
@@ -128,7 +135,24 @@ export class ControllerAssociationReshapeClass extends ControllerClass {
         const diffLocation = worldLocation.subtract(this.lastMoveLocation);
         // 拖拽Edge
         this.project.controller.isMovingEdge = true;
-        this.project.stageNodeRotate.moveEdges(this.lastMoveLocation, diffLocation);
+
+        // 检查是否有 ArcEdge 被选中
+        const selectedArcEdges = this.project.stageManager.getArcEdges().filter((edge) => edge.isSelected);
+        if (selectedArcEdges.length > 0) {
+          // ArcEdge 拖拽：改变 offset 而非旋转结构
+          // 将鼠标移动投影到 AB 连线的垂直方向
+          for (const arcEdge of selectedArcEdges) {
+            const srcCenter = arcEdge.source.collisionBox.getRectangle().center;
+            const tarCenter = arcEdge.target.collisionBox.getRectangle().center;
+            const ab = tarCenter.subtract(srcCenter);
+            const perp = ab.normalize().rotateDegrees(90);
+            // diffLocation 在 perp 方向上的投影
+            const delta = diffLocation.dot(perp);
+            arcEdge.offset += delta;
+          }
+        } else {
+          this.project.stageNodeRotate.moveEdges(this.lastMoveLocation, diffLocation);
+        }
         this.project.multiTargetEdgeMove.moveMultiTargetEdge(diffLocation);
       }
       this.lastMoveLocation = worldLocation.clone();

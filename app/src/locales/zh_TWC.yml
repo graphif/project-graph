@@ -1357,6 +1357,12 @@ keyBinds:
   setSelectedEdgesToSolid:
     title: 將選中的邊切換為實線
     description: 將當前選中的連線的線型設置為實線
+  switchEdgeToUndirectedEdge:
+    title: 將有向連線轉化為無向連線
+  switchEdgeToArcEdge:
+    title: 將有向連線轉化為弧形連線
+  switchUndirectedEdgeToEdge:
+    title: 將無向連線轉化為有向連線
   createUndirectedEdgeFromEntities:
     title: 選取的實體之間建立無向連線
     description: 按下後，選取的兩個或多個實體之間會建立一條無向連線

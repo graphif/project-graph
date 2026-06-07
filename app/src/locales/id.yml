@@ -1413,6 +1413,12 @@ keyBinds:
   setSelectedEdgesToSolid:
     title: Ubah Garis yang Dipilih Menjadi Solid
     description: Mengatur tipe garis yang dipilih menjadi solid
+  switchEdgeToUndirectedEdge:
+    title: Ubah Garis Berarah Menjadi Garis Tak Berarah
+  switchEdgeToArcEdge:
+    title: Ubah Garis Berarah Menjadi Garis Lengkung
+  switchUndirectedEdgeToEdge:
+    title: Ubah Garis Tak Berarah Menjadi Garis Berarah
   createUndirectedEdgeFromEntities:
     title: Buat Garis Tak Berarah antar Entitas yang Dipilih
     description: |

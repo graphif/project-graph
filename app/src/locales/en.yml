@@ -1362,6 +1362,12 @@ keyBinds:
   setSelectedEdgesToSolid:
     title: Set Selected Edges to Solid
     description: Set the line type of selected edges to solid
+  switchEdgeToUndirectedEdge:
+    title: Convert Directed Edge to Undirected Edge
+  switchEdgeToArcEdge:
+    title: Convert Directed Edge to Arc Edge
+  switchUndirectedEdgeToEdge:
+    title: Convert Undirected Edge to Directed Edge
   packEntityToSection:
     title: Pack Selected Entities into Section Box
     description: |

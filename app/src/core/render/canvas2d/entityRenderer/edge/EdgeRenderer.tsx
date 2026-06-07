@@ -1,16 +1,17 @@
-import { Color } from "@graphif/data-structures";
+import { Color, Vector } from "@graphif/data-structures";
 
+import { ArcEdge } from "@/core/stage/stageObject/association/ArcEdge";
 import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/CubicCatmullRomSplineEdge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
-import { Vector } from "@graphif/data-structures";
 
 import { Project, service } from "@/core/Project";
 import { StraightEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/edge/concrete/StraightEdgeRenderer";
 import { SymmetryCurveEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/edge/concrete/SymmetryCurveEdgeRenderer";
 import { VerticalPolyEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/edge/concrete/VerticalPolyEdgeRenderer";
 import { EdgeRendererClass } from "@/core/render/canvas2d/entityRenderer/edge/EdgeRendererClass";
-import { Renderer } from "@/core/render/canvas2d/renderer";
+import { renderArcEdge } from "@/core/render/canvas2d/entityRenderer/edge/renderArcEdge";
+import { renderCrEdge } from "@/core/render/canvas2d/entityRenderer/edge/renderCrEdge";
 import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
@@ -62,7 +63,7 @@ export class EdgeRenderer {
     const source = edge.source;
     const target = edge.target;
 
-    if (source.uuid == target.uuid) {
+    if (source.uuid === target.uuid) {
       this.currentRenderer.renderCycleState(edge);
     } else {
       if (edge.shiftingIndex !== 0) {
@@ -105,49 +106,11 @@ export class EdgeRenderer {
   }
 
   renderCrEdge(edge: CubicCatmullRomSplineEdge) {
-    if (edge.source.isHiddenBySectionCollapse && edge.target.isHiddenBySectionCollapse) {
-      return;
-    }
-    const crShape = edge.getShape();
-    const edgeColor = edge.color.a === 0 ? this.project.stageStyleManager.currentStyle.StageObjectBorder : edge.color;
-    // 画曲线
-    this.project.worldRenderUtils.renderCubicCatmullRomSpline(crShape, edgeColor, 2);
-    if (edge.isSelected) {
-      this.project.collisionBoxRenderer.render(
-        edge.collisionBox,
-        this.project.stageStyleManager.currentStyle.CollideBoxSelected,
-      );
-    }
-    // 画控制点们
-    for (const point of crShape.controlPoints) {
-      this.project.shapeRenderer.renderCircle(
-        this.project.renderer.transformWorld2View(point),
-        5 * this.project.camera.currentScale,
-        Color.Transparent,
-        edgeColor,
-        2 * this.project.camera.currentScale,
-      );
-    }
-    // 画文字
-    if (edge.text !== "") {
-      const textRect = edge.textRectangle;
-      this.project.shapeRenderer.renderRect(
-        this.project.renderer.transformWorld2View(textRect),
-        this.project.stageStyleManager.currentStyle.Background,
-        Color.Transparent,
-        0,
-      );
-      this.project.textRenderer.renderMultiLineTextFromCenter(
-        edge.text,
-        this.project.renderer.transformWorld2View(textRect.center),
-        Renderer.FONT_SIZE * this.project.camera.currentScale,
-        Infinity,
-        edgeColor,
-      );
-    }
-    // 画箭头
-    const { location, direction } = edge.getArrowHead();
-    this.renderArrowHead(location, direction.normalize(), 15, edgeColor);
+    renderCrEdge(this.project, edge, this.renderArrowHead.bind(this));
+  }
+
+  renderArcEdge(edge: ArcEdge) {
+    renderArcEdge(this.project, edge, this.renderArrowHead.bind(this));
   }
 
   /**
@@ -199,7 +162,7 @@ export class EdgeRenderer {
       return <></>;
     }
 
-    if (edge.source.uuid == edge.target.uuid) {
+    if (edge.source.uuid === edge.target.uuid) {
       return this.currentRenderer.getCycleStageSvg(edge);
     } else {
       if (edge.shiftingIndex !== 0) {

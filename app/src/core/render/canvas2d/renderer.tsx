@@ -3,6 +3,7 @@ import { Settings } from "@/core/service/Settings";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import { ArcEdge } from "@/core/stage/stageObject/association/ArcEdge";
 import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/CubicCatmullRomSplineEdge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
@@ -646,6 +647,9 @@ export class Renderer {
       }
       if (association instanceof CubicCatmullRomSplineEdge) {
         this.project.edgeRenderer.renderCrEdge(association);
+      }
+      if (association instanceof ArcEdge) {
+        this.project.edgeRenderer.renderArcEdge(association);
       }
       this.renderedEdges++;
     }

@@ -7,6 +7,7 @@ import { Association } from "@/core/stage/stageObject/abstract/Association";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import { ArcEdge } from "@/core/stage/stageObject/association/ArcEdge";
 import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/CubicCatmullRomSplineEdge";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
@@ -144,6 +145,9 @@ export class StageManager {
   }
   getCrEdges(): CubicCatmullRomSplineEdge[] {
     return this.project.stage.filter((node) => node instanceof CubicCatmullRomSplineEdge);
+  }
+  getArcEdges(): ArcEdge[] {
+    return this.project.stage.filter((node) => node instanceof ArcEdge);
   }
 
   add(stageObject: StageObject) {
@@ -822,6 +826,33 @@ export class StageManager {
     }
   }
   /**
+   * 有向边转弧形边
+   */
+  switchEdgeToArcEdge() {
+    const prepareConvert: LineEdge[] = [];
+    for (const edge of this.getLineEdges()) {
+      if (edge.isSelected) {
+        prepareConvert.push(edge);
+      }
+    }
+    for (const edge of prepareConvert) {
+      if (edge.target === edge.source) {
+        continue;
+      }
+      this.deleteEdge(edge);
+      const arcEdge = new ArcEdge(this.project, {
+        associationList: [edge.source, edge.target],
+        text: edge.text,
+        color: edge.color.clone(),
+        sourceRectangleRate: edge.sourceRectangleRate.clone(),
+        targetRectangleRate: edge.targetRectangleRate.clone(),
+        lineType: edge.lineType,
+        offset: 10,
+      });
+      this.add(arcEdge);
+    }
+  }
+  /**
    * 无向边转有向边
    */
   switchUndirectedEdgeToEdge() {
@@ -876,7 +907,9 @@ export class StageManager {
    * 设置选中Edge的线条类型
    */
   setSelectedEdgeLineType(lineType: string) {
-    const selectedEdges = this.getSelectedAssociations().filter((edge) => edge instanceof LineEdge);
+    const selectedEdges = this.getSelectedAssociations().filter(
+      (edge) => edge instanceof LineEdge || edge instanceof ArcEdge,
+    );
     for (const edge of selectedEdges) {
       edge.lineType = lineType;
     }

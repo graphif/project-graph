@@ -398,6 +398,7 @@ export const settingsSchema = z.object({
       { type: "item", id: "refreshReferenceBlockNode", label: "刷新引用块", icon: "RefreshCcwDot" },
       { type: "item", id: "goToReferenceBlockSource", label: "进入该引用块所在的源头位置", icon: "CornerUpRight" },
       { type: "item", id: "switchEdgeToUndirectedEdge", label: "转换为无向边", icon: "Spline" },
+      { type: "item", id: "switchEdgeToArcEdge", label: "转换为弧形边", icon: "Radius" },
       {
         type: "sub",
         id: "edge-line-type",

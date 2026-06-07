@@ -2036,6 +2036,8 @@ keyBinds:
     title: 設置選中連線為雙線
   switchEdgeToUndirectedEdge:
     title: 將有向連線轉化為無向連線
+  switchEdgeToArcEdge:
+    title: 將有向連線轉化為弧形連線
   switchUndirectedEdgeToEdge:
     title: 將無向連線轉化為有向連線
   setSelectedEdgeSourceConnectLocationUp:

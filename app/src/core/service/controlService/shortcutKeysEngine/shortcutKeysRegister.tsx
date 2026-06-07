@@ -129,6 +129,7 @@ import {
   Slash,
   Sparkle,
   Spline,
+  Radius,
   Split,
   SquareDashedBottomCode,
   SquareDot,
@@ -200,6 +201,10 @@ const whenHasSelectedImageNodes: KeyBindWhen = (project) =>
   !!project && project.stageManager.getSelectedEntities().some((entity) => entity instanceof ImageNode);
 const whenHasSelectedLineEdges: KeyBindWhen = (project) =>
   !!project && project.stageManager.getLineEdges().some((edge) => edge.isSelected);
+const whenHasSelectedEdgeWithLineType: KeyBindWhen = (project) =>
+  !!project &&
+  (project.stageManager.getLineEdges().some((edge) => edge.isSelected) ||
+    project.stageManager.getArcEdges().some((edge) => edge.isSelected));
 const whenHasSelectedMTUEdges: KeyBindWhen = (project) =>
   !!project &&
   project.stageManager
@@ -2126,13 +2131,17 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "setSelectedEdgesToDashed",
     defaultKey: "S-t e d",
     icon: CircleSlash,
-    when: whenHasSelectedLineEdges,
+    when: whenHasSelectedEdgeWithLineType,
     onPress: (project) => {
       const selectedEdges = project!.stageManager.getLineEdges().filter((edge) => edge.isSelected);
-      if (selectedEdges.length === 0) {
+      const selectedArcEdges = project!.stageManager.getArcEdges().filter((edge) => edge.isSelected);
+      if (selectedEdges.length === 0 && selectedArcEdges.length === 0) {
         return;
       }
       for (const edge of selectedEdges) {
+        edge.lineType = "dashed";
+      }
+      for (const edge of selectedArcEdges) {
         edge.lineType = "dashed";
       }
       project!.historyManager.recordStep();
@@ -2143,13 +2152,17 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "setSelectedEdgesToSolid",
     defaultKey: "S-t e s",
     icon: Link,
-    when: whenHasSelectedLineEdges,
+    when: whenHasSelectedEdgeWithLineType,
     onPress: (project) => {
       const selectedEdges = project!.stageManager.getLineEdges().filter((edge) => edge.isSelected);
-      if (selectedEdges.length === 0) {
+      const selectedArcEdges = project!.stageManager.getArcEdges().filter((edge) => edge.isSelected);
+      if (selectedEdges.length === 0 && selectedArcEdges.length === 0) {
         return;
       }
       for (const edge of selectedEdges) {
+        edge.lineType = "solid";
+      }
+      for (const edge of selectedArcEdges) {
         edge.lineType = "solid";
       }
       project!.historyManager.recordStep();
@@ -2159,7 +2172,7 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "setSelectedEdgesToDouble",
     defaultKey: "S-t e b",
     icon: Equal,
-    when: whenHasSelectedLineEdges,
+    when: whenHasSelectedEdgeWithLineType,
     onPress: (project) => {
       project!.stageManager.setSelectedEdgeLineType("double");
       project!.historyManager.recordStep();
@@ -2172,6 +2185,16 @@ export const allKeyBinds: KeyBindItem[] = [
     when: whenHasSelectedLineEdges,
     onPress: (project) => {
       project!.stageManager.switchEdgeToUndirectedEdge();
+      project!.historyManager.recordStep();
+    },
+  },
+  {
+    id: "switchEdgeToArcEdge",
+    defaultKey: "e t a",
+    icon: Radius,
+    when: whenHasSelectedLineEdges,
+    onPress: (project) => {
+      project!.stageManager.switchEdgeToArcEdge();
       project!.historyManager.recordStep();
     },
   },
