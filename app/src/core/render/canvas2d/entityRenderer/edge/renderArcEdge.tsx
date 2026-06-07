@@ -35,12 +35,6 @@ export function renderArcEdge(
     if (edge.text.trim() !== "") {
       const mid = { x: (startPoint.x + endPoint.x) / 2, y: (startPoint.y + endPoint.y) / 2 };
       const textRect = new Rectangle(new Vector(mid.x - 50, mid.y - 10), new Vector(100, 20));
-      project.shapeRenderer.renderRect(
-        project.renderer.transformWorld2View(textRect),
-        project.stageStyleManager.currentStyle.Background,
-        Color.Transparent,
-        0,
-      );
       project.textRenderer.renderMultiLineTextFromCenterWithStroke(
         edge.text,
         project.renderer.transformWorld2View(textRect.center),
@@ -141,15 +135,9 @@ export function renderArcEdge(
     renderArc(startAngle, adjustedEndAngle);
   }
 
-  // 画文字
+  // 画文字（已有描边，无需背景矩形）
   if (edge.text.trim() !== "") {
     const textRect = edge.textRectangle;
-    project.shapeRenderer.renderRect(
-      project.renderer.transformWorld2View(textRect),
-      project.stageStyleManager.currentStyle.Background,
-      Color.Transparent,
-      0,
-    );
     project.textRenderer.renderMultiLineTextFromCenterWithStroke(
       edge.text,
       project.renderer.transformWorld2View(textRect.center),

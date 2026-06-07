@@ -130,6 +130,22 @@ export class ControllerAssociationReshapeClass extends ControllerClass {
         if (entity !== null) {
           // 找到目标，更改目标
           this.project.nodeConnector.changeSelectedEdgeTarget(entity);
+        } else {
+          // 没有目标实体时，如果选中的是 ArcEdge，改变文字位置
+          const dragDelta = worldLocation.subtract(this.lastMoveLocation);
+          const selectedArcEdges = this.project.stageManager.getArcEdges().filter((edge) => edge.isSelected);
+          for (const arcEdge of selectedArcEdges) {
+            const srcCenter = arcEdge.source.collisionBox.getRectangle().center;
+            const tarCenter = arcEdge.target.collisionBox.getRectangle().center;
+            const ab = tarCenter.subtract(srcCenter);
+            const abLen = ab.magnitude();
+            if (abLen > 0) {
+              const abDir = ab.divide(abLen);
+              // 将鼠标移动投影到 AB 方向
+              const delta = dragDelta.dot(abDir);
+              arcEdge.textPosition = Math.max(0, Math.min(1, arcEdge.textPosition + delta / abLen));
+            }
+          }
         }
       } else {
         const diffLocation = worldLocation.subtract(this.lastMoveLocation);

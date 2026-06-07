@@ -209,6 +209,13 @@ export class ArcEdge extends Edge {
   public offset: number = 0;
 
   /**
+   * 弧线上文字的位置比例。
+   * 0.0 = 靠近源节点，0.5 = 中间，1.0 = 靠近目标节点
+   */
+  @serializable
+  public textPosition: number = 0.5;
+
+  /**
    * 获取或计算圆弧几何参数（每次实时计算，不缓存）
    */
   get arcGeometry(): ArcGeometry {
@@ -357,8 +364,9 @@ export class ArcEdge extends Edge {
       adjustedEnd = startAngle >= endAngle ? endAngle : endAngle - 2 * Math.PI;
     }
 
-    const midAngle = (startAngle + adjustedEnd) / 2;
-    return new Vector(geo.center.x + geo.radius * Math.cos(midAngle), geo.center.y + geo.radius * Math.sin(midAngle));
+    // 使用 textPosition 在弧线上插值（0=起点方向，1=终点方向）
+    const textAngle = startAngle + (adjustedEnd - startAngle) * this.textPosition;
+    return new Vector(geo.center.x + geo.radius * Math.cos(textAngle), geo.center.y + geo.radius * Math.sin(textAngle));
   }
 
   constructor(
@@ -372,6 +380,7 @@ export class ArcEdge extends Edge {
       targetRectangleRate = Vector.same(0.5),
       lineType = "solid",
       offset = 0,
+      textPosition = 0.5,
     },
     public unknown = false,
   ) {
@@ -384,6 +393,7 @@ export class ArcEdge extends Edge {
     this.targetRectangleRate = targetRectangleRate;
     this.lineType = lineType;
     this.offset = offset;
+    this.textPosition = textPosition;
 
     this.adjustSizeByText();
   }
