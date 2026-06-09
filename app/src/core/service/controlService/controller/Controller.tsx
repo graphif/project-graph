@@ -118,6 +118,7 @@ export class Controller {
     this.project.canvas.element.addEventListener("touchmove", this.touchmove.bind(this), false);
     this.project.canvas.element.addEventListener("touchend", this.touchend.bind(this), false);
     this.project.canvas.element.addEventListener("wheel", this.mousewheel.bind(this), false);
+    this.project.canvas.element.addEventListener("pointerleave", this.pointerleave.bind(this));
     // 所有的具体的功能逻辑封装成控制器对象
     // 当有新功能时新建控制器对象，并在这里初始化
     Object.values(import.meta.glob("./concrete/*.tsx", { eager: true }))
@@ -144,6 +145,7 @@ export class Controller {
     this.project.canvas.element.removeEventListener("touchmove", this.touchmove.bind(this), false);
     this.project.canvas.element.removeEventListener("touchend", this.touchend.bind(this), false);
     this.project.canvas.element.removeEventListener("wheel", this.mousewheel.bind(this), false);
+    this.project.canvas.element.removeEventListener("pointerleave", this.pointerleave.bind(this));
   }
 
   // 以下事件处理函数仅为Controller总控制器修改重要属性使用。不涉及具体的功能逻辑。
@@ -164,6 +166,20 @@ export class Controller {
     event.preventDefault();
     // 禁用鼠标滚轮缩放
     this.resetCountdownTimer();
+  }
+
+  private pointerleave(_event: PointerEvent) {
+    if (!this.isMouseDown.some(Boolean)) return;
+    for (let i = 0; i < this.isMouseDown.length; i++) {
+      this.isMouseDown[i] = false;
+    }
+    this.isMovingEdge = false;
+    const mouseLocation = new Vector(_event.clientX, _event.clientY);
+    for (const v of Object.values(this)) {
+      if (v && typeof (v as Record<string, unknown>).mouseMoveOutWindowForcedShutdown === "function") {
+        (v as Record<string, (p: Vector) => void>)["mouseMoveOutWindowForcedShutdown"](mouseLocation);
+      }
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

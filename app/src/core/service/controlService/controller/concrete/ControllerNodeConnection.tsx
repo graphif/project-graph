@@ -344,6 +344,14 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     }
   };
 
+  public mouseMoveOutWindowForcedShutdown(_outsideLocation: Vector) {
+    super.mouseMoveOutWindowForcedShutdown(_outsideLocation);
+    if (this._isUsing) {
+      this.clear();
+      this.project.controller.setCursorName(CursorNameEnum.Default);
+    }
+  }
+
   private mouseUp(event: MouseEvent) {
     const releaseWorldLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
     const releaseTargetEntity = this.project.stageManager.findConnectableEntityByLocation(releaseWorldLocation);

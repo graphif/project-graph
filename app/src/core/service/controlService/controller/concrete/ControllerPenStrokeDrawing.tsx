@@ -322,6 +322,13 @@ export class ControllerPenStrokeDrawingClass extends ControllerClass {
     this.isDrawingLine = false;
   }
 
+  public mouseMoveOutWindowForcedShutdown(_outsideLocation: Vector) {
+    super.mouseMoveOutWindowForcedShutdown(_outsideLocation);
+    if (this._isUsing) {
+      this.releaseMouseAndClear();
+    }
+  }
+
   public mousewheel: (event: WheelEvent) => void = (event: WheelEvent) => {
     if (!this.project.controller.pressingKeySet.has("shift")) {
       return;

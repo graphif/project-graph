@@ -187,6 +187,7 @@ export class ControllerCuttingClass extends ControllerClass {
   }
 
   public mouseUpFunction(mouseUpWindowLocation: Vector) {
+    if (!this.isUsing) return;
     this.isUsing = false;
     // 最后再更新一下鼠标位置
     this.lastMoveLocation = this.project.renderer.transformView2World(

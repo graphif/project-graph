@@ -74,4 +74,9 @@ export class ControllerEntityResizeClass extends ControllerClass {
     this.changeSizeEntity = null;
     // const pressWorldLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
   };
+
+  public mouseMoveOutWindowForcedShutdown(_outsideLocation: Vector) {
+    super.mouseMoveOutWindowForcedShutdown(_outsideLocation);
+    this.changeSizeEntity = null;
+  }
 }
