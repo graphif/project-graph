@@ -87,8 +87,8 @@ export const ProjectTabs = memo(function ProjectTabs({
         <Button
           key={tab instanceof Project ? tab.uri.toString() : tab.constructor.name}
           className={cn(
-            "hover:bg-primary/20 outline-inset h-full cursor-pointer rounded-none px-2 hover:opacity-100 sm:rounded-sm",
-            activeTab === tab ? "bg-primary/70" : "bg-accent opacity-70",
+            "hover:bg-primary/20 outline-inset text-foreground h-full cursor-pointer rounded-none px-2 hover:opacity-100 sm:rounded-sm",
+            activeTab === tab ? "bg-primary/70" : "bg-card opacity-70",
             tab instanceof Project && tab.isSaving && "animate-pulse",
           )}
           onMouseDown={(e) => {

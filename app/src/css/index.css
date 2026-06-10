@@ -147,3 +147,7 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(87, 95, 107, 0.6);
 }
+
+.debug {
+  outline: solid 1px red !important;
+}
