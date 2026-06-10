@@ -1735,6 +1735,9 @@ keyBinds:
   paste:
     title: 粘贴
     description: 按下后，粘贴剪贴板内容
+  changeTagBySelected:
+    title: 添加或删除标签
+    description: 按下后，为所有选中的实体添加或移除标签
   pasteWithOriginLocation:
     title: 原位粘贴
     description: 按下后，粘贴的内容会与原位置重叠

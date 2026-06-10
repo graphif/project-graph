@@ -1721,6 +1721,9 @@ keyBinds:
   paste:
     title: Tempel
     description: Setelah ditekan, tempel konten clipboard
+  changeTagBySelected:
+    title: Tambah atau Hapus Tag
+    description: Setelah ditekan, tambah atau hapus tag untuk semua entitas yang dipilih
   pasteWithOriginLocation:
     title: Tempel dengan Posisi Asli
     description: Setelah ditekan, konten yang ditempel akan tumpang tindih dengan posisi asli

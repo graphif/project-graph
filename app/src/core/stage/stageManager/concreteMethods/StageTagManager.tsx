@@ -91,8 +91,6 @@ export class TagManager {
 
   /**
    * 将所有选择的实体添加或移除标签
-   *
-   * 目前先仅支持TextNode
    */
   changeTagBySelected() {
     for (const selectedEntities of this.project.stageManager.getSelectedStageObjects()) {
@@ -116,7 +114,7 @@ export class TagManager {
       .filter((stageObject): stageObject is StageObject => stageObject !== undefined);
 
     for (const tagObject of tagObjectList) {
-      let title = "";
+      let title: string;
       let colorItem: [number, number, number, number] = [0, 0, 0, 0];
       if (tagObject instanceof TextNode) {
         title = tagObject.text;

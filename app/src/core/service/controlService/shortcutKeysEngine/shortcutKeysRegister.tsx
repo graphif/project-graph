@@ -1347,6 +1347,13 @@ export const allKeyBinds: KeyBindItem[] = [
     when: whenAlways,
     onPress: () => toast("todo"),
   },
+  {
+    id: "changeTagBySelected",
+    defaultKey: "t a g g",
+    icon: Tag,
+    when: whenHasSelectedStageObjectsOrSelectionRectangle,
+    onPress: (project) => project!.tagManager.changeTagBySelected(),
+  },
 
   /*------- 鼠标模式切换 -------*/
   {

@@ -1588,6 +1588,9 @@ keyBinds:
   paste:
     title: Paste
     description: Paste the clipboard content when pressed
+  changeTagBySelected:
+    title: Add or Remove Tag
+    description: Add or remove tag for all selected entities when pressed
   pasteWithOriginLocation:
     title: Paste at Original Location
     description: When pressed, the pasted content will overlap with the original

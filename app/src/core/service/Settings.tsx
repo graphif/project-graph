@@ -266,6 +266,7 @@ export const settingsSchema = z.object({
           { type: "item", id: "paste", icon: "Clipboard" },
           { type: "item", id: "deleteSelectedStageObjects", icon: "Trash" },
           { type: "item", id: "undo", icon: "Undo" },
+          { type: "item", id: "changeTagBySelected", icon: "Tag" },
         ],
       },
       {
