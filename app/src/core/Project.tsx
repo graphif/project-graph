@@ -76,6 +76,7 @@ import { nextProjectIdAtom, store, tabsAtom } from "@/state";
 import { createDefaultMetadata, isValidMetadata, PrgMetadata } from "@/types/metadata";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Decoder, Encoder } from "@msgpack/msgpack";
+import { invoke } from "@tauri-apps/api/core";
 import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, ZipWriter } from "@zip.js/zip.js";
 import { File } from "lucide-react";
 import md5 from "md5";
@@ -382,11 +383,56 @@ export class Project extends Tab {
   async save(options: { includeThumbnail?: boolean } = {}) {
     try {
       this.isSaving = true;
-      await this.fs.write(this.uri, await this.getFileContent(options));
+      await this.saveViaRust(options);
       this.projectState = ProjectState.Saved;
     } finally {
       this.isSaving = false;
     }
+  }
+
+  private async saveViaRust(options: { includeThumbnail?: boolean } = {}) {
+    const includeThumbnail = options.includeThumbnail !== false;
+    const serializedStage = serialize(this.stage);
+
+    const toBase64 = (data: Uint8Array): string => {
+      let binary = "";
+      for (let i = 0; i < data.length; i++) {
+        binary += String.fromCharCode(data[i]);
+      }
+      return btoa(binary);
+    };
+
+    let thumbnailBase64: string | null = null;
+    if (includeThumbnail) {
+      try {
+        const thumbnailBlob = await generateThumbnail(this);
+        if (thumbnailBlob) {
+          thumbnailBase64 = toBase64(new Uint8Array(await thumbnailBlob.arrayBuffer()));
+        }
+      } catch {
+        // 缩略图生成失败不阻止保存
+      }
+    }
+
+    const attachments: { filename: string; data_base64: string }[] = [];
+    for (const [uuid, attachment] of this.attachments.entries()) {
+      const buffer = await attachment.arrayBuffer();
+      attachments.push({
+        filename: `${uuid}.${mime.getExtension(attachment.type)}`,
+        data_base64: toBase64(new Uint8Array(buffer)),
+      });
+    }
+
+    await invoke("save_prg", {
+      path: this.uri.fsPath,
+      stageMsgpack: toBase64(this.encoder.encode(serializedStage)),
+      tagsMsgpack: toBase64(this.encoder.encode(this.tags)),
+      referenceMsgpack: toBase64(this.encoder.encode(this.references)),
+      metadataMsgpack: toBase64(this.encoder.encode(this.metadata)),
+      readme: this.readme ?? null,
+      attachments,
+      thumbnailBase64,
+    });
   }
 
   // 反向引用数据
