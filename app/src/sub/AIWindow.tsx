@@ -414,6 +414,7 @@ AIWindow.open = () => {
     title: "",
     closable: false,
     titleBarOverlay: true,
+    closeOnEscape: false,
     children: <AIWindow />,
     rect: new Rectangle(new Vector(8, 88), new Vector(380, window.innerHeight - 96)),
   });

@@ -34,6 +34,8 @@ export namespace SubWindow {
     /** @private */
     _closeWhenClickOutsideListener?: (e: PointerEvent) => void;
     closeWhenClickInside: boolean;
+    /** 设为 false 时，closeAll() 不会关闭此窗口 */
+    closeOnEscape: boolean;
   }
   const subWindowsAtom = atom<Window[]>([]);
   export const use = () => useAtomValue(subWindowsAtom);
@@ -56,6 +58,7 @@ export namespace SubWindow {
       closing: false,
       closeWhenClickOutside: false,
       closeWhenClickInside: false,
+      closeOnEscape: true,
       ...options,
     };
     //检测如果窗口到屏幕外面了，自动调整位置
@@ -133,9 +136,8 @@ export namespace SubWindow {
    */
   export function closeAll() {
     const windows = store.get(subWindowsAtom);
-    // 遍历所有窗口并调用 close 方法
-    // close 方法会自动处理事件监听器的清理
     windows.forEach((window) => {
+      if (window.closeOnEscape === false) return;
       close(window.id);
     });
   }
