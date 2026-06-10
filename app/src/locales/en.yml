@@ -834,6 +834,9 @@ settings:
     options:
       full: Full Fill
       titleOnly: Title Only
+  autoEnterSectionEditMode:
+    title: Auto Enter Edit Mode When Creating Section
+    description: When enabled, creating a section with Ctrl+G will automatically pop up the title input box for quick naming. When disabled, the new section will only be selected without entering edit mode.
   macTrackpadAndMouseWheelDifference:
     options:
       tarckpadFloatAndWheelInt: The value of the trackpad is a decimal, while 

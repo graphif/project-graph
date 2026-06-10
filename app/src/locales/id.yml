@@ -340,6 +340,9 @@ settings:
     options:
       full: Isi Penuh
       titleOnly: Hanya Bilah Judul
+  autoEnterSectionEditMode:
+    title: Otomatis Masuk Mode Edit Saat Membuat Kotak
+    description: Saat diaktifkan, membuat kotak dengan Ctrl+G akan otomatis menampilkan kotak input judul untuk penamaan cepat. Saat dinonaktifkan, kotak baru hanya akan dipilih tanpa masuk mode edit.
   alwaysShowDetails:
     title: Selalu Tampilkan Detail Node
     description: |

@@ -575,7 +575,9 @@ export const allKeyBinds: KeyBindItem[] = [
             edge.isSelected = false;
           }
           section.isSelected = true;
-          project!.controllerUtils.editSectionTitle(section);
+          if (Settings.autoEnterSectionEditMode) {
+            project!.controllerUtils.editSectionTitle(section);
+          }
         }
       }
     },

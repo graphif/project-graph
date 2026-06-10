@@ -357,6 +357,9 @@ settings:
     options:
       full: 完整填充
       titleOnly: 仅标题条
+  autoEnterSectionEditMode:
+    title: 创建分组框后自动进入编辑状态
+    description: 开启后，使用 Ctrl+G 创建分组框时会自动弹出标题输入框，方便快速命名。关闭则只选中新分组框，不进入编辑。
   alwaysShowDetails:
     title: 始终显示节点详细信息
     description: |

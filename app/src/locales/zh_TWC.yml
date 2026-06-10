@@ -386,6 +386,9 @@ settings:
     options:
       full: 完整填充
       titleOnly: 僅標題條
+  autoEnterSectionEditMode:
+    title: 建立分組框後自動進入編輯狀態
+    description: 開啟後，使用 Ctrl+G 建立分組框時會自動彈出標題輸入框，方便快速命名。關閉則只選中新分組框，不進入編輯。
   alwaysShowDetails:
     title: 始終顯示節點詳細資訊
     description: 開啟後，無需滑鼠移動到節點上時，才顯示節點的詳細資訊。
