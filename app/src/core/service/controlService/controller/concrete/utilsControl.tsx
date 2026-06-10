@@ -12,10 +12,11 @@ import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlo
 import NodeDetailsWindow from "@/sub/NodeDetailsWindow";
 import type { Direction } from "@/types/directions";
 import { isDesktop } from "@/utils/platform";
-import { colorInvert, type Vector } from "@graphif/data-structures";
+import { colorInvert, Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
 import { Settings } from "@/core/service/Settings";
 import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
+import { Renderer } from "@/core/render/canvas2d/renderer";
 import {
   autoChangeTextNodeToLatexNode,
   autoChangeTextNodeToReferenceBlock,
@@ -302,5 +303,40 @@ export class ControllerUtils {
         }
       }
     }
+  }
+
+  editSectionTitle(section: Section) {
+    if (this.project.sectionMethods.isObjectBeLockedBySection(section)) {
+      toast.error("无法编辑已锁定的section");
+      return;
+    }
+    this.project.controller.isCameraLocked = true;
+    this.project.camera.stopImmediately();
+    section.isEditingTitle = true;
+    this.project.inputElement
+      .input(
+        this.project.renderer
+          .transformWorld2View(section.rectangle.location.subtract(new Vector(0, section.text === "" ? 50 : 0)))
+          .add(Vector.same(Renderer.NODE_PADDING).multiply(this.project.camera.currentScale)),
+        section.text,
+        (text) => {
+          section.rename(text);
+        },
+        {
+          position: "fixed",
+          resize: "none",
+          boxSizing: "border-box",
+          fontSize: `${Renderer.FONT_SIZE * this.project.camera.currentScale}px`,
+          backgroundColor: "transparent",
+          color: this.project.stageStyleManager.currentStyle.StageObjectBorder.toString(),
+          outline: `solid ${2 * this.project.camera.currentScale}px ${this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.25).toString()}`,
+          marginTop: `${-8 * this.project.camera.currentScale}px`,
+        },
+      )
+      .then(() => {
+        section.isEditingTitle = false;
+        this.project.controller.isCameraLocked = false;
+        this.project.historyManager.recordStep();
+      });
   }
 }

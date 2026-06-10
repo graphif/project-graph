@@ -275,7 +275,7 @@ export class SectionPackManager {
   }
 
   /** 将多个实体打包成一个section，并添加到舞台中 */
-  async packEntityToSection(addEntities: Entity[]) {
+  async packEntityToSection(addEntities: Entity[]): Promise<Section | undefined> {
     if (addEntities.length === 0) {
       return;
     }
@@ -328,17 +328,19 @@ export class SectionPackManager {
     for (const fatherSection of firstParents) {
       this.project.stageManager.goInSection([section], fatherSection);
     }
+
+    return section;
   }
 
   /**
    * 从框选区域创建Section，并在左上角和右下角添加质点
    */
-  createSectionFromSelectionRectangle(): void {
+  createSectionFromSelectionRectangle(): Section | undefined {
     const rectangleSelect = this.project.rectangleSelect;
     const selectionRectangle = rectangleSelect.getRectangle();
 
     if (!selectionRectangle) {
-      return;
+      return undefined;
     }
 
     // 创建空的Section
@@ -390,17 +392,21 @@ export class SectionPackManager {
 
     // 记录历史步骤
     this.project.historyManager.recordStep();
+
+    return section;
   }
 
   /**
    * 将选中的实体打包成Section
    */
-  packSelectedEntitiesToSection(): void {
+  async packSelectedEntitiesToSection(): Promise<Section | undefined> {
     const selectedEntities = this.project.stageManager.getEntities().filter((entity) => entity.isSelected);
     if (selectedEntities.length > 0) {
-      this.packEntityToSection(selectedEntities);
+      const section = await this.packEntityToSection(selectedEntities);
       SoundService.play.packEntityToSectionSoundFile();
+      return section;
     }
+    return undefined;
   }
 
   /**

@@ -263,13 +263,14 @@ export class SectionRenderer {
     }
 
     if (section.isSelected) {
-      // 在外面增加一个框
+      // 在外面增加一个框，编辑标题时以虚线渲染
       this.project.collisionBoxRenderer.render(
         section.collisionBox,
         this.project.stageStyleManager.currentStyle.CollideBoxSelected,
+        section.isEditingTitle,
       );
       // 锁定且选中时：在碰撞箱矩形右上角画半透明绿色三角形（右上角点、右边上四分之一点、上边右四分之一点）
-      if (section.locked) {
+      if (section.locked && !section.isEditingTitle) {
         const rect = section.collisionBox.getRectangle();
         const p1 = rect.rightTop; // 最右上角
         const p2 = new Vector(rect.right, rect.top + rect.size.y / 4); // 右边上四分之一

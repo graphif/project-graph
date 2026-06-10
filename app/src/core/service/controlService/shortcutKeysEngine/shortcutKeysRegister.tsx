@@ -557,7 +557,7 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "C-g",
     icon: Package,
     when: whenHasSelectedStageObjectsOrSelectionRectangle,
-    onPress: (project) => {
+    onPress: async (project) => {
       // 检查是否有框选框并且舞台上没有选中任何物体
       const rectangleSelect = project!.rectangleSelect;
       const hasActiveRectangle = rectangleSelect.getRectangle() !== null;
@@ -567,8 +567,16 @@ export const allKeyBinds: KeyBindItem[] = [
         // 如果有框选框且没有选中任何物体，则在框选区域创建Section
         project!.sectionPackManager.createSectionFromSelectionRectangle();
       } else {
-        // 否则执行原来的打包功能
-        project!.sectionPackManager.packSelectedEntitiesToSection();
+        // 否则执行原来的打包功能，并自动进入编辑状态
+        const section = await project!.sectionPackManager.packSelectedEntitiesToSection();
+        if (section) {
+          project!.stageManager.clearSelectAll();
+          for (const edge of project!.stageManager.getAssociations()) {
+            edge.isSelected = false;
+          }
+          section.isSelected = true;
+          project!.controllerUtils.editSectionTitle(section);
+        }
       }
     },
   },
