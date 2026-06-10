@@ -1703,6 +1703,9 @@ keyBinds:
   toggleFullscreen:
     title: Toggle Fullscreen
     description: Toggle the application window between fullscreen and windowed mode.
+  toggleWindowMaximize:
+    title: Toggle Window Maximize
+    description: Toggle the window between maximized and restored state, just like double-clicking the title bar drag area.
   setWindowToMiniSize:
     title: Set Window to Mini Size
     description: Set the window size to the mini window width and height configured in settings.

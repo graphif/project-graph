@@ -1899,6 +1899,9 @@ keyBinds:
   toggleFullscreen:
     title: 切換全屏
     description: 在全屏和窗口模式之間切換應用窗口。
+  toggleWindowMaximize:
+    title: 自適應視窗大小
+    description: 切換視窗的最大化和還原狀態，就像雙擊標題欄拖拽區域一樣。
   setWindowToMiniSize:
     title: 設置窗口為迷你大小
     description: 將窗口大小設置為設置中配置的迷你窗口寬度和高度。

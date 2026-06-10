@@ -1947,6 +1947,9 @@ keyBinds:
   toggleFullscreen:
     title: Alihkan Layar Penuh
     description: Beralih antara mode layar penuh dan mode jendela aplikasi.
+  toggleWindowMaximize:
+    title: Alihkan Maksimalkan Jendela
+    description: Beralih antara jendela yang dimaksimalkan dan dipulihkan, seperti mengklik dua kali area seret bilah judul.
   setWindowToMiniSize:
     title: Atur Jendela ke Ukuran Mini
     description: Atur ukuran jendela ke lebar dan tinggi jendela mini yang dikonfigurasi dalam pengaturan.

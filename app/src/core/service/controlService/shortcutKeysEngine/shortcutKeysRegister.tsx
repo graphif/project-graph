@@ -269,6 +269,17 @@ export const allKeyBinds: KeyBindItem[] = [
     },
   },
   {
+    id: "toggleWindowMaximize",
+    defaultKey: "C-S-F11",
+    icon: Maximize2,
+    when: whenAlways,
+    onPress: async () => {
+      const window = getCurrentWindow();
+      await window.toggleMaximize();
+      store.set(isWindowMaxsizedAtom, await window.isMaximized());
+    },
+  },
+  {
     id: "setWindowToMiniSize",
     defaultKey: "A-S-m",
     icon: Minimize,
