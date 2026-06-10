@@ -64,9 +64,10 @@ export namespace Themes {
   }
   /** 将主题CSS挂载到网页上 */
   export async function applyThemeById(themeId: string) {
-    await applyTheme((await getThemeById(themeId))?.content);
+    const theme = await getThemeById(themeId);
+    await applyTheme(theme?.content, theme?.metadata.type);
   }
-  export async function applyTheme(themeContent: any) {
+  export async function applyTheme(themeContent: any, type?: "light" | "dark") {
     let styleEl = document.querySelector("#pg-theme");
     if (!styleEl) {
       styleEl = document.createElement("style");
@@ -75,6 +76,7 @@ export namespace Themes {
     }
     styleEl.innerHTML = `
       :root {
+        color-scheme: ${type || "light"};
         ${convertThemeToCSS(themeContent)}
       }
     `;
