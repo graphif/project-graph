@@ -832,7 +832,7 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "alignTopToBottomNoSpace",
     ],
   },
-  { title: "image", icon: <Image />, keys: ["reverseImageColors"] },
+  { title: "image", icon: <Image />, keys: ["reverseImageColors", "compressImage"] },
   {
     title: "export",
     icon: <FileOutput />,

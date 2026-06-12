@@ -1697,6 +1697,9 @@ keyBinds:
   reverseImageColors:
     title: Reverse Image Colors
     description: Reverse the colors of selected images (makes white background black and vice versa)
+  compressImage:
+    title: Compress Image
+    description: Compress selected images based on settings (resize, WebP conversion, black & white compression)
   closeCurrentProjectTab:
     title: Close Current Project Tab
     description: Close the currently active project tab. If there are unsaved changes, you will be prompted to save. Disabled by default; can be enabled in settings.

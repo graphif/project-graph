@@ -468,6 +468,7 @@ export const settingsSchema = z.object({
       },
       { type: "item", id: "copySelectedImageToClipboard", label: "复制图片到系统剪贴板", icon: "Clipboard" },
       { type: "item", id: "swapSelectedImageRedBlueChannels", label: "对调图片红蓝通道", icon: "ArrowLeftRight" },
+      { type: "item", id: "compressImage", label: "压缩图片", icon: "Shrink" },
       { type: "item", id: "setSelectedImageAsBackground", label: "转化为背景图片", icon: "Images" },
       { type: "item", id: "unsetSelectedImageAsBackground", label: "取消背景化", icon: "SquareSquare" },
       { type: "item", id: "saveSelectedImagesToProjectDirectory", label: "另存图片到当前prg所在目录下", icon: "Save" },

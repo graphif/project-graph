@@ -2,6 +2,9 @@ import { Project } from "@/core/Project";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { ResizeAble } from "@/core/stage/stageObject/abstract/StageObjectInterface";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Settings } from "@/core/service/Settings";
+import { applyBlackAndWhite } from "@/core/service/dataManageService/imageUtils";
+import { toast } from "sonner";
 import { Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
@@ -231,6 +234,82 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
         }
       }, "image/png");
     });
+  }
+
+  compressImage() {
+    const blob = this.project.attachments.get(this.attachmentId);
+    if (!blob) {
+      toast.error("无法获取图片数据");
+      return;
+    }
+
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      let w = img.naturalWidth;
+      let h = img.naturalHeight;
+
+      if (Settings.resizePastedImages) {
+        const maxSize = Settings.maxPastedImageSize;
+        const maxDim = Math.max(w, h);
+        if (maxDim > maxSize) {
+          const scale = maxSize / maxDim;
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        URL.revokeObjectURL(url);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+
+      if (Settings.compressImageToBlackAndWhite) {
+        applyBlackAndWhite(canvas);
+      }
+
+      const sourceIsPng = blob.type === "image/png";
+      const outputType = Settings.compressImageToBlackAndWhite
+        ? "image/png"
+        : sourceIsPng && Settings.compressImageToWebp
+          ? "image/webp"
+          : blob.type;
+
+      canvas.toBlob(
+        (newBlob) => {
+          if (!newBlob) {
+            toast.error("图片压缩失败");
+            return;
+          }
+          if (outputType === "image/webp" && !newBlob.type.includes("webp")) {
+            toast.warning("当前系统 webview 不支持 WebP 编码，已回退为 PNG");
+          }
+          const newAttachmentId = this.project.addAttachment(newBlob);
+          this.attachmentId = newAttachmentId;
+          createImageBitmap(newBlob).then((bmp) => {
+            this.bitmap = bmp;
+            this.scaleUpdate(0);
+          });
+        },
+        outputType,
+        Settings.compressImageToBlackAndWhite
+          ? undefined
+          : Settings.compressImageToWebp && sourceIsPng
+            ? Settings.webpQuality
+            : undefined,
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      toast.error("图片加载失败");
+    };
+    img.src = url;
   }
 
   /**

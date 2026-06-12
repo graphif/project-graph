@@ -1925,6 +1925,9 @@ keyBinds:
   reverseImageColors:
     title: Balikkan Warna Gambar
     description: Balikkan warna gambar yang dipilih (ubah latar belakang putih menjadi hitam, atau sebaliknya)
+  compressImage:
+    title: Kompres Gambar
+    description: Kompres gambar yang dipilih berdasarkan pengaturan (ubah ukuran, konversi WebP, kompresi hitam putih)
   treeReverseY:
     title: Balikkan Struktur Pohon Secara Vertikal
     description: Pilih node akar struktur pohon, balikkan secara vertikal

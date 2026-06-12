@@ -1878,6 +1878,9 @@ keyBinds:
   reverseImageColors:
     title: 反轉圖片顏色
     description: 反轉選取圖片的顏色（將白色背景變為黑色，反之亦然）
+  compressImage:
+    title: 壓縮圖片
+    description: 根據設定項目壓縮選取的圖片（尺寸壓縮、WebP 轉換、黑白壓縮）
   treeReverseY:
     title: 縱向反轉樹狀結構
     description: 選取樹狀結構的根節點，將其縱向反轉

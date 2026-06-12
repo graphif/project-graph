@@ -1893,6 +1893,30 @@ export const allKeyBinds: KeyBindItem[] = [
       }
     },
   },
+  {
+    id: "compressImage",
+    defaultKey: "i S-c",
+    icon: Shrink,
+    when: whenHasSelectedImageNodes,
+    onPress: (project) => {
+      const selectedImageNodes = project!.stageManager
+        .getSelectedEntities()
+        .filter((entity) => entity instanceof ImageNode) as ImageNode[];
+      if (selectedImageNodes.length === 0) {
+        toast.error("请选中图片节点");
+        return;
+      }
+      for (const imageNode of selectedImageNodes) {
+        imageNode.compressImage();
+      }
+      project!.historyManager.recordStep();
+      toast.success(
+        selectedImageNodes.length === 1
+          ? "已压缩图片"
+          : `已压缩 ${selectedImageNodes.length} 张图片`,
+      );
+    },
+  },
 
   /*------- 主题切换 -------*/
   {
