@@ -196,6 +196,9 @@ settings:
     title: Show Center Crosshair
     description: |
       When enabled, a crosshair will be displayed at the center of the screen to indicate the position for creating nodes using shortcuts.
+  centerCrosshairColor:
+    title: Crosshair Color
+    description: Set the color of the center crosshair
   showGrid:
     title: Show Grid
   showBackgroundHorizontalLines:

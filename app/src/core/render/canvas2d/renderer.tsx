@@ -164,11 +164,13 @@ export class Renderer {
     if (!Settings.isRenderCenterPointer) {
       return;
     }
+    const [r, g, b] = Settings.centerCrosshairColor;
+    const color = new Color(r, g, b);
     const viewCenterLocation = this.transformWorld2View(this.project.camera.location);
     this.project.shapeRenderer.renderCircle(
       viewCenterLocation,
       1,
-      this.project.stageStyleManager.currentStyle.GridHeavy,
+      color,
       Color.Transparent,
       0,
     );
@@ -179,7 +181,7 @@ export class Renderer {
       this.project.curveRenderer.renderSolidLine(
         shortLineStart,
         shortLineEnd,
-        this.project.stageStyleManager.currentStyle.GridHeavy,
+        color,
         1,
       );
     }

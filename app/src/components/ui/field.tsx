@@ -112,6 +112,16 @@ export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof 
             })}
           </SelectContent>
         </Select>
+      ) : innerTypeName === "tuple" ? (
+        <input
+          type="color"
+          value={`#${(value[0] as number).toString(16).padStart(2, "0")}${(value[1] as number).toString(16).padStart(2, "0")}${(value[2] as number).toString(16).padStart(2, "0")}`}
+          onChange={(e) => {
+            const hex = e.target.value;
+            setValue([parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)]);
+          }}
+          className="w-10 h-8 rounded border cursor-pointer"
+        />
       ) : (
         <>unknown type</>
       )}

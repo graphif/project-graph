@@ -15,6 +15,7 @@ export const settingsSchema = z.object({
   windowBackgroundOpacityAfterOpenClickThrough: z.number().min(0).max(1).default(0),
   windowBackgroundOpacityAfterCloseClickThrough: z.number().min(0).max(1).default(0.5),
   isRenderCenterPointer: z.boolean().default(false),
+  centerCrosshairColor: z.tuple([z.number(), z.number(), z.number()]).default([255, 255, 255]),
   showBackgroundHorizontalLines: z.boolean().default(true),
   showBackgroundVerticalLines: z.boolean().default(true),
   showBackgroundDots: z.boolean().default(false),

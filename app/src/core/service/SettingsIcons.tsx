@@ -198,6 +198,7 @@ export const settingsIcons = {
   windowBackgroundOpacityAfterOpenClickThrough: PictureInPicture2,
   windowBackgroundOpacityAfterCloseClickThrough: PictureInPicture2,
   isRenderCenterPointer: Crosshair,
+  centerCrosshairColor: Palette,
   showBackgroundHorizontalLines: AlignJustify,
   showBackgroundVerticalLines: Tally4,
   showBackgroundDots: Grip,

@@ -250,6 +250,9 @@ settings:
     title: Tampilkan Penanda Silang Pusat
     description: |
       Saat diaktifkan, penanda silang akan ditampilkan di tengah layar, digunakan untuk menunjukkan posisi pembuatan node via pintasan keyboard
+  centerCrosshairColor:
+    title: Warna Penanda Silang
+    description: Atur warna penanda silang pusat
   showGrid:
     title: Tampilkan Grid
   showBackgroundHorizontalLines:

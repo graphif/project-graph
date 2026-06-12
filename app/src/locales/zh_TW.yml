@@ -262,6 +262,9 @@ settings:
     title: 顯示中心十字準星
     description: |
       開啟後，屏幕中心中心會顯示一個十字準星，用於用於指示快捷鍵創建節點的位置
+  centerCrosshairColor:
+    title: 十字準星顏色
+    description: 設定中心十字準星的顏色
   showGrid:
     title: 顯示網格
   showBackgroundHorizontalLines:
