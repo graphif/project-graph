@@ -165,17 +165,11 @@ export class Renderer {
       return;
     }
     const [r, g, b] = Settings.centerCrosshairColor;
-    const color = new Color(r, g, b);
+    const color = new Color(r, g, b, Settings.centerCrosshairAlpha);
     const viewCenterLocation = this.transformWorld2View(this.project.camera.location);
     const shape = Settings.centerCrosshairShape;
 
-    this.project.shapeRenderer.renderCircle(
-      viewCenterLocation,
-      1,
-      color,
-      Color.Transparent,
-      0,
-    );
+    this.project.shapeRenderer.renderCircle(viewCenterLocation, 1, color, Color.Transparent, 0);
 
     if (shape === "crossDot") {
       for (let i = 0; i < 4; i++) {
@@ -198,13 +192,7 @@ export class Renderer {
         this.project.curveRenderer.renderSolidLine(shortLineStart, shortLineEnd, color, 1);
       }
     } else if (shape === "circleDot") {
-      this.project.shapeRenderer.renderCircle(
-        viewCenterLocation,
-        15,
-        Color.Transparent,
-        color,
-        1,
-      );
+      this.project.shapeRenderer.renderCircle(viewCenterLocation, 15, Color.Transparent, color, 1);
     }
   }
 

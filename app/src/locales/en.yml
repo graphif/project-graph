@@ -207,6 +207,9 @@ settings:
       tightCross: Tight Cross
       xShape: X Shape
       circleDot: Circle + Center Dot
+  centerCrosshairAlpha:
+    title: Crosshair Opacity
+    description: Set the opacity of the center crosshair
   showGrid:
     title: Show Grid
   showBackgroundHorizontalLines:

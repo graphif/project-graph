@@ -273,6 +273,9 @@ settings:
       tightCross: 紧密十字
       xShape: X形
       circleDot: 圆形中心点
+  centerCrosshairAlpha:
+    title: 十字准星不透明度
+    description: 设置中心十字准星的不透明度
   showGrid:
     title: 显示网格
   showBackgroundHorizontalLines:

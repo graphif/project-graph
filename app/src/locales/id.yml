@@ -261,6 +261,9 @@ settings:
       tightCross: Salib Rapat
       xShape: Bentuk X
       circleDot: Lingkaran + Titik Tengah
+  centerCrosshairAlpha:
+    title: Opasitas Penanda Silang
+    description: Atur opasitas penanda silang pusat
   showGrid:
     title: Tampilkan Grid
   showBackgroundHorizontalLines:

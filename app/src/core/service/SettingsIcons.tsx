@@ -201,6 +201,7 @@ export const settingsIcons = {
   isRenderCenterPointer: Crosshair,
   centerCrosshairColor: Palette,
   centerCrosshairShape: Shapes,
+  centerCrosshairAlpha: Blend,
   showBackgroundHorizontalLines: AlignJustify,
   showBackgroundVerticalLines: Tally4,
   showBackgroundDots: Grip,
