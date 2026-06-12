@@ -199,6 +199,14 @@ settings:
   centerCrosshairColor:
     title: Crosshair Color
     description: Set the color of the center crosshair
+  centerCrosshairShape:
+    title: Crosshair Shape
+    description: Select the shape style of the center crosshair
+    options:
+      crossDot: Cross + Center Dot
+      tightCross: Tight Cross
+      xShape: X Shape
+      circleDot: Circle + Center Dot
   showGrid:
     title: Show Grid
   showBackgroundHorizontalLines:

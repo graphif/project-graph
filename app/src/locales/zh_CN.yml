@@ -265,6 +265,14 @@ settings:
   centerCrosshairColor:
     title: 十字准星颜色
     description: 设置中心十字准星的颜色
+  centerCrosshairShape:
+    title: 十字准星形状
+    description: 选择中心十字准星的形状样式
+    options:
+      crossDot: 十字+中心点
+      tightCross: 紧密十字
+      xShape: X形
+      circleDot: 圆形中心点
   showGrid:
     title: 显示网格
   showBackgroundHorizontalLines:

@@ -167,6 +167,8 @@ export class Renderer {
     const [r, g, b] = Settings.centerCrosshairColor;
     const color = new Color(r, g, b);
     const viewCenterLocation = this.transformWorld2View(this.project.camera.location);
+    const shape = Settings.centerCrosshairShape;
+
     this.project.shapeRenderer.renderCircle(
       viewCenterLocation,
       1,
@@ -174,13 +176,32 @@ export class Renderer {
       Color.Transparent,
       0,
     );
-    for (let i = 0; i < 4; i++) {
-      const degrees = i * 90;
-      const shortLineStart = viewCenterLocation.add(new Vector(10, 0).rotateDegrees(degrees));
-      const shortLineEnd = viewCenterLocation.add(new Vector(20, 0).rotateDegrees(degrees));
-      this.project.curveRenderer.renderSolidLine(
-        shortLineStart,
-        shortLineEnd,
+
+    if (shape === "crossDot") {
+      for (let i = 0; i < 4; i++) {
+        const degrees = i * 90;
+        const shortLineStart = viewCenterLocation.add(new Vector(10, 0).rotateDegrees(degrees));
+        const shortLineEnd = viewCenterLocation.add(new Vector(20, 0).rotateDegrees(degrees));
+        this.project.curveRenderer.renderSolidLine(shortLineStart, shortLineEnd, color, 1);
+      }
+    } else if (shape === "tightCross") {
+      for (let i = 0; i < 4; i++) {
+        const degrees = i * 90;
+        const lineEnd = viewCenterLocation.add(new Vector(20, 0).rotateDegrees(degrees));
+        this.project.curveRenderer.renderSolidLine(viewCenterLocation, lineEnd, color, 1);
+      }
+    } else if (shape === "xShape") {
+      for (let i = 0; i < 4; i++) {
+        const degrees = i * 90 + 45;
+        const shortLineStart = viewCenterLocation.add(new Vector(10, 0).rotateDegrees(degrees));
+        const shortLineEnd = viewCenterLocation.add(new Vector(20, 0).rotateDegrees(degrees));
+        this.project.curveRenderer.renderSolidLine(shortLineStart, shortLineEnd, color, 1);
+      }
+    } else if (shape === "circleDot") {
+      this.project.shapeRenderer.renderCircle(
+        viewCenterLocation,
+        15,
+        Color.Transparent,
         color,
         1,
       );

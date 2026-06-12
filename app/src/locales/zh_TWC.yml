@@ -310,6 +310,14 @@ settings:
   centerCrosshairColor:
     title: 十字準星顏色
     description: 設定中心十字準星的顏色
+  centerCrosshairShape:
+    title: 十字準星形狀
+    description: 選擇中心十字準星的形狀樣式
+    options:
+      crossDot: 十字+中心點
+      tightCross: 緊密十字
+      xShape: X形
+      circleDot: 圓形中心點
   showGrid:
     title: 顯示網格
   showBackgroundHorizontalLines:

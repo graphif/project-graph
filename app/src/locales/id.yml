@@ -253,6 +253,14 @@ settings:
   centerCrosshairColor:
     title: Warna Penanda Silang
     description: Atur warna penanda silang pusat
+  centerCrosshairShape:
+    title: Bentuk Penanda Silang
+    description: Pilih bentuk penanda silang pusat
+    options:
+      crossDot: Salib + Titik Tengah
+      tightCross: Salib Rapat
+      xShape: Bentuk X
+      circleDot: Lingkaran + Titik Tengah
   showGrid:
     title: Tampilkan Grid
   showBackgroundHorizontalLines:

@@ -216,6 +216,7 @@ export const categories = {
     background: [
       "isRenderCenterPointer",
       "centerCrosshairColor",
+      "centerCrosshairShape",
       "showBackgroundHorizontalLines",
       "showBackgroundVerticalLines",
       "showBackgroundDots",
