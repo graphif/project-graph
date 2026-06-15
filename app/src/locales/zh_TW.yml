@@ -454,6 +454,10 @@ settings:
     description: |
       0 為完整灰度，1 為純黑白（僅黑和純白兩種顏色）。
       僅在開啟「黑白壓縮」時生效
+  wrapImageInGroup:
+    title: 粘貼/拖入圖片時自動套框
+    description: |
+      開啟後，從剪貼板粘貼或從外部拖入的圖片將被自動包裹在一個分組框（Section）中。
   maxPastedImageSize:
     title: 粘貼到舞臺的圖片的尺寸限制（像素）
     description: |

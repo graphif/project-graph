@@ -176,6 +176,7 @@ export const settingsIcons = {
   webpQuality: Percent,
   compressImageToBlackAndWhite: Contrast,
   blackAndWhiteThreshold: Gauge,
+  wrapImageInGroup: SquareDashed,
   maxPastedImageSize: ImageUpscale,
   autoRefreshStageByMouseAction: RefreshCcwDot,
   isPauseRenderWhenManipulateOvertime: Hourglass,

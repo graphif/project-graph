@@ -437,6 +437,10 @@ settings:
     description: |
       0 adalah skala abu-abu penuh, 1 adalah hitam putih murni (hanya warna hitam dan putih).
       Hanya berlaku saat "Kompres Hitam Putih" diaktifkan
+  wrapImageInGroup:
+    title: Bungkus Gambar yang Ditempel/Diseret ke dalam Seksi
+    description: |
+      Saat diaktifkan, gambar yang ditempel dari clipboard atau diseret dari luar akan otomatis dibungkus dalam bingkai seksi.
   maxPastedImageSize:
     title: Batas Ukuran Gambar yang Ditempel (piksel)
     description: |

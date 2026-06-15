@@ -170,6 +170,7 @@ export const settingsSchema = z.object({
   webpQuality: z.number().min(0.01).max(1).default(0.85),
   compressImageToBlackAndWhite: z.boolean().default(false),
   blackAndWhiteThreshold: z.number().min(0).max(1).default(0.5),
+  wrapImageInGroup: z.boolean().default(false),
   textNodeManualDefaultCharWidth: z.number().int().min(3).max(60).default(10),
   allowAddCycleEdge: z.boolean().default(false),
   enableDragNodeShakeDetachFromEdge: z.boolean().default(false),

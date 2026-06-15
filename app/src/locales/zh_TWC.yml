@@ -468,6 +468,9 @@ settings:
   blackAndWhiteThreshold:
     title: 黑白閾值
     description: '0 為完整灰度，1 為純黑白（只有黑和純白兩種顏色）。僅在開啟「黑白壓縮」時生效'
+  wrapImageInGroup:
+    title: 貼上/拖入圖片時自動加上外框
+    description: '開啟後，從剪貼簿貼上或從外部拖入的圖片將被自動包裹在一個分組框（Section）中。'
   maxPastedImageSize:
     title: 貼上到舞台的圖片的尺寸限制（像素）
     description: '長或寬超過此尺寸的圖片，其長或寬的最大值將會被限制為此大小

@@ -13,6 +13,7 @@ import { PathString } from "@/utils/pathString";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
 import { Settings } from "@/core/service/Settings";
 import { applyBlackAndWhite } from "../imageUtils";
+import { Section } from "@/core/stage/stageObject/entity/Section";
 
 /**
  * 处理文件拖拽到舞台的引擎
@@ -248,10 +249,21 @@ export namespace DragFileIntoStageEngine {
     addLocation.x += -imageIndex * 50;
     addLocation.y += imageIndex * 50;
 
-    const imageNode = new ImageNode(project, {
-      attachmentId,
-      collisionBox: new CollisionBox([new Rectangle(addLocation, new Vector(1, 1))]),
-    });
+    const imageNode = new ImageNode(
+      project,
+      {
+        attachmentId,
+        collisionBox: new CollisionBox([new Rectangle(addLocation, new Vector(1, 1))]),
+      },
+      false,
+      Settings.wrapImageInGroup
+        ? () => {
+            const section = Section.fromEntities(project, [imageNode]);
+            section.text = "";
+            project.stageManager.add(section);
+          }
+        : undefined,
+    );
 
     project.stageManager.add(imageNode);
   }

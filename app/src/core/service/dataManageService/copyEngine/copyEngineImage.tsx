@@ -8,6 +8,7 @@ import { MouseLocation } from "../../controlService/MouseLocation";
 import { Settings } from "@/core/service/Settings";
 import { applyBlackAndWhite } from "../imageUtils";
 import { toast } from "sonner";
+import { Section } from "@/core/stage/stageObject/entity/Section";
 
 export class CopyEngineImage {
   constructor(private project: Project) {}
@@ -90,10 +91,21 @@ export class CopyEngineImage {
     const attachmentId = this.project.addAttachment(blob);
     const location = this.project.renderer.transformView2World(MouseLocation.vector());
 
-    const imageNode = new ImageNode(this.project, {
-      attachmentId,
-      collisionBox: new CollisionBox([new Rectangle(location, new Vector(300, 150))]),
-    });
+    const imageNode = new ImageNode(
+      this.project,
+      {
+        attachmentId,
+        collisionBox: new CollisionBox([new Rectangle(location, new Vector(300, 150))]),
+      },
+      false,
+      Settings.wrapImageInGroup
+        ? () => {
+            const section = Section.fromEntities(this.project, [imageNode]);
+            section.text = "";
+            this.project.stageManager.add(section);
+          }
+        : undefined,
+    );
 
     this.project.stageManager.add(imageNode);
   }

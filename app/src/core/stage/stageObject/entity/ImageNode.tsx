@@ -71,6 +71,7 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
       isBackground = false,
     },
     public unknown = false,
+    public onReady?: () => void,
   ) {
     super();
     this.uuid = uuid;
@@ -90,6 +91,7 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
       this.state = "success";
       // 设置碰撞箱
       this.scaleUpdate(0);
+      this.onReady?.();
     });
   }
 
