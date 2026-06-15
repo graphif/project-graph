@@ -9,6 +9,7 @@ import { Settings } from "@/core/service/Settings";
 import { applyBlackAndWhite } from "../imageUtils";
 import { toast } from "sonner";
 import { Section } from "@/core/stage/stageObject/entity/Section";
+import { RectanglePushInEffect } from "../../feedbackService/effectEngine/concrete/RectanglePushInEffect";
 
 export class CopyEngineImage {
   constructor(private project: Project) {}
@@ -108,6 +109,17 @@ export class CopyEngineImage {
     );
 
     this.project.stageManager.add(imageNode);
+
+    const mouseSections = this.project.sectionMethods.getSectionsByInnerLocation(location);
+    if (mouseSections.length > 0) {
+      this.project.stageManager.goInSection([imageNode], mouseSections[0]);
+      this.project.effects.addEffect(
+        RectanglePushInEffect.sectionGoInGoOut(
+          imageNode.collisionBox.getRectangle(),
+          mouseSections[0].collisionBox.getRectangle(),
+        ),
+      );
+    }
   }
 
   private async compressImageBlob(blob: Blob): Promise<Blob> {

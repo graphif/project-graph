@@ -14,6 +14,7 @@ import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsMana
 import { Settings } from "@/core/service/Settings";
 import { applyBlackAndWhite } from "../imageUtils";
 import { Section } from "@/core/stage/stageObject/entity/Section";
+import { RectanglePushInEffect } from "../../feedbackService/effectEngine/concrete/RectanglePushInEffect";
 
 /**
  * 处理文件拖拽到舞台的引擎
@@ -266,6 +267,17 @@ export namespace DragFileIntoStageEngine {
     );
 
     project.stageManager.add(imageNode);
+
+    const mouseSections = project.sectionMethods.getSectionsByInnerLocation(addLocation);
+    if (mouseSections.length > 0) {
+      project.stageManager.goInSection([imageNode], mouseSections[0]);
+      project.effects.addEffect(
+        RectanglePushInEffect.sectionGoInGoOut(
+          imageNode.collisionBox.getRectangle(),
+          mouseSections[0].collisionBox.getRectangle(),
+        ),
+      );
+    }
   }
 
   /** @deprecated 请使用 handleDropImage */
