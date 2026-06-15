@@ -1436,6 +1436,12 @@ keyBinds:
       When pressed, instantly grow a node and place it to the right of the currently selected node.
       Automatically arrange the entire node tree structure to ensure it forms a rightward tree structure.
       Before using this feature, ensure a node is selected and that the structure is tree-like.
+  generateNodeTreeWithDeepModeEditEdge:
+    title: Grow Node with Edge Text Editing
+    description: |
+      Press e then tab to instantly grow a node and place it to the right of the currently selected node.
+      First enters the edge text editing mode, then automatically enters the new node's text editing mode.
+      If connected to an existing node (thread needle), only creates the edge and enters edge text editing mode.
   generateNodeTreeWithBroadMode:
     title: Grow Node in Brother Mode
     description: |

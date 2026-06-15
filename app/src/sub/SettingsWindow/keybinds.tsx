@@ -694,6 +694,7 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
     icon: <Network className="-rotate-90" />,
     keys: [
       "generateNodeTreeWithDeepMode",
+      "generateNodeTreeWithDeepModeEditEdge",
       "generateNodeTreeWithBroadMode",
       "generateNodeGraph",
       "generateNodeGraphMoveUp",

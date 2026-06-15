@@ -1455,6 +1455,16 @@ export const allKeyBinds: KeyBindItem[] = [
     },
   },
   {
+    id: "generateNodeTreeWithDeepModeEditEdge",
+    defaultKey: "e tab",
+    icon: GitBranch,
+    when: whenKeyboardOnlyOpen,
+    onPress: async (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.keyboardOnlyTreeEngine.onDeepGenerateNode("", true, true);
+    },
+  },
+  {
     id: "generateNodeTreeWithBroadMode",
     defaultKey: "\\",
     icon: GitBranch,
@@ -1910,11 +1920,7 @@ export const allKeyBinds: KeyBindItem[] = [
         imageNode.compressImage();
       }
       project!.historyManager.recordStep();
-      toast.success(
-        selectedImageNodes.length === 1
-          ? "已压缩图片"
-          : `已压缩 ${selectedImageNodes.length} 张图片`,
-      );
+      toast.success(selectedImageNodes.length === 1 ? "已压缩图片" : `已压缩 ${selectedImageNodes.length} 张图片`);
     },
   },
 

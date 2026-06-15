@@ -1487,6 +1487,12 @@ keyBinds:
       Jika arah tumbuh diatur pada node, maka akan tumbuh ke arah yang ditentukan (jika tidak diatur default ke kanan)
       Sambil otomatis melayout struktur seluruh pohon node, memastikannya adalah struktur pohon ke kanan
       Sebelum menggunakan fungsi ini pastikan telah memilih satu node, dan struktur tempat node tersebut berada adalah struktur pohon
+  generateNodeTreeWithDeepModeEditEdge:
+    title: Tumbuhkan Node Anak dengan Edit Teks Edge
+    description: |
+      Tekan e lalu tab untuk menumbuhkan node secara instan dan letakkan di kanan node yang dipilih.
+      Pertama masuk ke mode edit teks edge, lalu otomatis masuk ke mode edit teks node baru.
+      Jika terhubung ke node yang sudah ada (jarum benang), hanya buat edge dan masuk ke mode edit teks edge.
   generateNodeTreeWithBroadMode:
     title: Tumbuhkan Node Selevel
     description: |

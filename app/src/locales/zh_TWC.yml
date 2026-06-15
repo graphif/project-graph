@@ -1432,6 +1432,11 @@ keyBinds:
       同時自動排版整個節點樹的結構，確保其是一個向右的樹狀結構
 
       使用此功能前先確保已選取一個節點、且該節點所在結構為樹狀結構'
+  generateNodeTreeWithDeepModeEditEdge:
+    title: 生長子層節點並編輯連線文字
+    description: '按下後，先按e再按tab，瞬間生長一個節點並放置在當前選取節點的右側
+      先進入連線文字的編輯狀態，編輯完成後自動進入新節點的文字編輯狀態
+      如果是穿針連接已有節點，則只建立連線並進入連線文字編輯狀態'
   generateNodeTreeWithBroadMode:
     title: 生長同級節點
     description: '按下後，瞬間生長一個同級節點並放置在目前選取節點的下方

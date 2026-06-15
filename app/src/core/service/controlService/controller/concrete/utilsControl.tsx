@@ -3,6 +3,8 @@ import { EntityCreateFlashEffect } from "@/core/service/feedbackService/effectEn
 import { SubWindow } from "@/core/service/SubWindow";
 import type { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import type { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import type { Edge } from "@/core/stage/stageObject/association/Edge";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
@@ -159,6 +161,40 @@ export class ControllerUtils {
           // 格式化树形结构
           this.project.keyboardOnlyTreeEngine.adjustTreeNode(clickedNode, false);
         }
+      });
+  }
+
+  editEdgeText(edge: Edge | MultiTargetUndirectedEdge, selectAll = true): Promise<void> {
+    this.project.controller.isCameraLocked = true;
+    this.project.camera.stopImmediately();
+    const textAreaLocation = this.project.renderer
+      .transformWorld2View(edge.textRectangle.location)
+      .add(Vector.same(Renderer.NODE_PADDING).multiply(this.project.camera.currentScale));
+    return this.project.inputElement
+      .textarea(
+        edge.text,
+        (text) => {
+          edge.rename(text);
+        },
+        {
+          position: "fixed",
+          resize: "none",
+          boxSizing: "border-box",
+          overflow: "hidden",
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-all",
+          left: `${textAreaLocation.x.toFixed(2)}px`,
+          top: `${textAreaLocation.y.toFixed(2)}px`,
+          fontSize: `${Renderer.FONT_SIZE * this.project.camera.currentScale}px`,
+          backgroundColor: this.project.stageStyleManager.currentStyle.Background.toString(),
+          color: this.project.stageStyleManager.currentStyle.StageObjectBorder.toString(),
+          outline: "solid 1px rgba(255,255,255,0.1)",
+        },
+        selectAll,
+      )
+      .then(() => {
+        this.project.controller.isCameraLocked = false;
+        this.project.historyManager.recordStep();
       });
   }
 

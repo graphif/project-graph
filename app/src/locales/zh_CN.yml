@@ -1491,6 +1491,12 @@ keyBinds:
       如果对节点设置了生长方向，则会按照生长方向生长子节点（若无设置则默认向右生长）
       同时自动排版整个节点树的结构，确保其是一个向右的树型结构
       使用此功能前先确保已选中一个节点、且该节点所在结构为树形结构
+  generateNodeTreeWithDeepModeEditEdge:
+    title: 生长子级节点并编辑连线文字
+    description: |
+      按下后，先按e再按tab，瞬间生长一个节点并放置在当前选中节点的右侧
+      先进入连线文字的编辑状态，编辑完成后自动进入新节点的文字编辑状态
+      如果是穿针连接已有节点，则只创建连线并进入连线文字编辑状态
   generateNodeTreeWithBroadMode:
     title: 生长同级节点
     description: |

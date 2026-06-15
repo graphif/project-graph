@@ -202,7 +202,7 @@ export class KeyboardOnlyTreeEngine {
    * 树形深度生长节点
    * @returns
    */
-  onDeepGenerateNode(defaultText = "", selectAll = true) {
+  onDeepGenerateNode(defaultText = "", selectAll = true, editEdgeFirst = false) {
     if (!this.project.keyboardOnlyEngine.isOpenning()) {
       return;
     }
@@ -259,6 +259,9 @@ export class KeyboardOnlyTreeEngine {
           if (Settings.autoLayoutWhenTreeGenerate) {
             toast.warning("当前结构不符合树形结构：无法确定唯一的根节点");
           }
+        }
+        if (editEdgeFirst && newEdges.length > 0) {
+          this.project.controllerUtils.editEdgeText(newEdges[0]);
         }
         return;
       }
@@ -414,7 +417,11 @@ export class KeyboardOnlyTreeEngine {
     setTimeout(
       () => {
         // 防止把反引号给输入进去
-        this.project.controllerUtils.editTextNode(newNode, selectAll);
+        if (editEdgeFirst && newEdges.length > 0) {
+          this.editEdgeTextAndThenNode(newEdges[0], newNode, selectAll);
+        } else {
+          this.project.controllerUtils.editTextNode(newNode, selectAll);
+        }
       },
       (1000 / 60) * 6,
     );
@@ -694,6 +701,17 @@ export class KeyboardOnlyTreeEngine {
     }
 
     return newFontScaleLevel;
+  }
+
+  private editEdgeTextAndThenNode(edge: Edge, newNode: TextNode, selectAll = true) {
+    this.project.controllerUtils.editEdgeText(edge, selectAll).then(() => {
+      setTimeout(
+        () => {
+          this.project.controllerUtils.editTextNode(newNode, selectAll);
+        },
+        (1000 / 60) * 6,
+      );
+    });
   }
 }
 
