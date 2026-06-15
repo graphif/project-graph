@@ -157,9 +157,19 @@ jobs:
           df -h
       - name: Setup CUDA Toolkit
         uses: Jimver/cuda-toolkit@v0.2.35
+        id: cuda-toolkit
         if: matrix.platform != 'macos-latest'
         with:
           cuda: "12.9.0"
+          log-file-suffix: "${{ matrix.platform }}"
+      - name: Linux - Export CUDA environment
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          echo "CUDA_ROOT=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}" >> "$GITHUB_ENV"
+          echo "CUDA_HOME=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}" >> "$GITHUB_ENV"
+          echo "CUDA_PATH=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}" >> "$GITHUB_ENV"
+          echo "CUDA_NVCC_EXECUTABLE=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}/bin/nvcc" >> "$GITHUB_ENV"
+          echo "${{ steps.cuda-toolkit.outputs.CUDA_PATH }}/bin" >> "$GITHUB_PATH"
       - name: Verify CUDA installation
         if: matrix.platform != 'macos-latest'
         run: nvcc --version
