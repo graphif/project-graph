@@ -254,6 +254,10 @@ jobs:
         run: |
           (Get-Content ./app/src-tauri/tauri.conf.json).Replace('downloadBootstrapper', 'embedBootstrapper') | Set-Content ./app/src-tauri/tauri.conf.json
           cat ./app/src-tauri/tauri.conf.json
+      - name: Windows - Use static CRT
+        if: matrix.platform == 'windows-latest'
+        run: |
+          echo "RUSTFLAGS=-C target-feature=+crt-static" >> $env:GITHUB_ENV
       #endregion
       #region Build
       - name: Write BUILD_ENV to .env file
