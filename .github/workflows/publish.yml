@@ -169,6 +169,7 @@ jobs:
           echo "CUDA_HOME=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}" >> "$GITHUB_ENV"
           echo "CUDA_PATH=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}" >> "$GITHUB_ENV"
           echo "CUDA_NVCC_EXECUTABLE=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}/bin/nvcc" >> "$GITHUB_ENV"
+          echo "CUDA_COMPUTE_CAP=80" >> "$GITHUB_ENV"
           echo "${{ steps.cuda-toolkit.outputs.CUDA_PATH }}/bin" >> "$GITHUB_PATH"
       - name: Verify CUDA installation
         if: matrix.platform != 'macos-latest'
