@@ -11,7 +11,7 @@ import { DetailsManager } from "./stageObject/tools/entityDetailsManager";
 
 export namespace ProjectUpgrader {
   /** N系列的最新版本 */
-  export const NLatestVersion = "2.3.0";
+  export const NLatestVersion = "2.4.0";
 
   /**
    * 比较两个版本号字符串（格式：x.y.z）
@@ -379,6 +379,11 @@ export namespace ProjectUpgrader {
       [data, metadata] = convertN3toN4(data, metadata);
     }
 
+    // 如果版本小于 2.4.0，需要升级
+    if (compareVersion(currentVersion, "2.4.0") < 0) {
+      [data, metadata] = convertN4toN5(data, metadata);
+    }
+
     return [data, metadata];
   }
 
@@ -431,6 +436,17 @@ export namespace ProjectUpgrader {
    */
   function convertN3toN4(data: any[], metadata: any): [any[], PrgMetadata] {
     return [data, { ...metadata, version: "2.3.0" }];
+  }
+
+  /**
+   * 将 2.3.0 版本升级到 2.4.0 版本
+   * 新增 ArcEdge 弧形连线类型，旧版本无法识别。
+   * @param data 2.3.0版本数据
+   * @param metadata 2.3.0版本metadata
+   * @returns 2.4.0版本数据和metadata
+   */
+  function convertN4toN5(data: any[], metadata: any): [any[], PrgMetadata] {
+    return [data, { ...metadata, version: "2.4.0" }];
   }
 
   /**
