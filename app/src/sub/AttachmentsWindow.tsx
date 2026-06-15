@@ -1,4 +1,4 @@
-import { Project } from "@/core/Project";
+import { Project, ProjectState } from "@/core/Project";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
@@ -83,6 +83,9 @@ export default function AttachmentsWindow() {
                 project.attachments.delete(id);
                 deletedCount++;
               }
+            }
+            if (deletedCount > 0) {
+              project.projectState = ProjectState.Unsaved;
             }
             toast.success(`已清理 ${deletedCount} 个未被引用的附件`);
             setTimeout(() => {
