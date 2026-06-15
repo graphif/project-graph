@@ -149,6 +149,7 @@ jobs:
 
       #region Prepare environment
       - name: Free disk space
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /usr/local/lib/android
