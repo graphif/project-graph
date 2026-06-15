@@ -125,7 +125,18 @@ pub fn run() {
             take_pending_open_files,
             cmd::paddle::get_aha_directory,
             cmd::paddle::paddleocr_vl_1_6_model_exists,
-            cmd::paddle::paddleocr_vl_1_6_generate
+            cmd::paddle::paddleocr_vl_1_6_generate,
+            cmd::fs::read_folder_structure,
+            cmd::fs::exists,
+            cmd::fs::read_folder,
+            cmd::fs::read_folder_recursive,
+            cmd::fs::delete_file,
+            cmd::fs::read_text_file,
+            cmd::fs::read_file_base64,
+            cmd::fs::write_text_file,
+            cmd::fs::write_file_base64,
+            cmd::fs::create_folder,
+            cmd::shell::run_command
         ]);
 
     #[cfg(target_os = "linux")]
