@@ -36,7 +36,7 @@ export class GenerateFromFolder {
         });
         this.project.stageManager.add(textNode);
         if (currentSection) {
-          this.project.stageManager.goInSection([textNode], currentSection);
+          this.project.sectionInOutManager.attachEntityToSection(textNode, currentSection);
         }
         return textNode;
       } else {
@@ -48,7 +48,7 @@ export class GenerateFromFolder {
         });
         this.project.stageManager.add(section);
         if (currentSection) {
-          this.project.stageManager.goInSection([section], currentSection);
+          this.project.sectionInOutManager.attachEntityToSection(section, currentSection);
         }
         // 然后递归处理子文件夹
         if (fEntry.children) {
@@ -60,6 +60,7 @@ export class GenerateFromFolder {
       }
     };
     const rootEntity = dfs(folderStructure);
+    this.project.stageManager.updateReferences();
     this.project.stageManager.clearSelectAll();
     rootEntity.isSelected = true;
   }
