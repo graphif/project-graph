@@ -354,9 +354,7 @@ export class KeyboardOnlyTreeEngine {
 
     // 如果是在框里，则把新生长的节点也纳入到框里
     const fatherSections = this.project.sectionMethods.getFatherSections(rootNode);
-    for (const section of fatherSections) {
-      section.children.push(newNode);
-    }
+    this.project.sectionInOutManager.goInSections([newNode], fatherSections);
 
     // 连接节点
     this.project.stageManager.connectEntity(rootNode, newNode);
@@ -506,9 +504,7 @@ export class KeyboardOnlyTreeEngine {
     this.project.stageManager.add(newNode);
     // 如果是在框里，则把新生长的节点也纳入到框里
     const fatherSections = this.project.sectionMethods.getFatherSections(parent);
-    for (const section of fatherSections) {
-      section.children.push(newNode);
-    }
+    this.project.sectionInOutManager.goInSections([newNode], fatherSections);
     // 连接节点
     this.project.stageManager.connectEntity(parent, newNode);
 

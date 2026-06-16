@@ -77,7 +77,7 @@ export class MermaidImporter extends BaseImporter {
         childList.push(child);
       }
       if (!section.children.includes(child)) {
-        section.children.push(child);
+        this.project.sectionInOutManager.attachEntityToSection(child, section);
       }
       entityParentMap.set(child, section);
     };

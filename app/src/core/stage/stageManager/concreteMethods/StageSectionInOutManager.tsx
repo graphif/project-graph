@@ -14,18 +14,13 @@ export class SectionInOutManager {
   constructor(private readonly project: Project) {}
 
   goInSection(entities: Entity[], section: Section) {
+    let changed = false;
     for (const entity of entities) {
-      if (section.children.includes(entity)) {
-        // 已经在section里面了，不用再次进入
-        continue;
-      }
-      if (entity === section) {
-        // 自己不能包自己
-        continue;
-      }
-      section.children.push(entity);
+      changed = this.attachEntityToSection(entity, section) || changed;
     }
-    this.project.stageManager.updateReferences();
+    if (changed) {
+      this.project.stageManager.updateReferences();
+    }
   }
 
   /**
@@ -35,29 +30,71 @@ export class SectionInOutManager {
    * @param sections
    */
   goInSections(entities: Entity[], sections: Section[]) {
-    // 先解除所有实体与Section的关联
+    const targetSection = this.pickPreferredSection(sections);
+    let changed = false;
     for (const entity of entities) {
-      this.entityDropParent(entity);
+      if (targetSection) {
+        changed = this.attachEntityToSection(entity, targetSection) || changed;
+      } else {
+        changed = this.entityDropParent(entity) || changed;
+      }
     }
-    // 再重新关联
-    for (const section of sections) {
-      this.goInSection(entities, section);
+    if (changed) {
+      this.project.stageManager.updateReferences();
     }
   }
 
   goOutSection(entities: Entity[], section: Section) {
+    let changed = false;
     for (const entity of entities) {
-      this.sectionDropChild(section, entity);
+      changed = this.sectionDropChild(section, entity) || changed;
     }
-    this.project.stageManager.updateReferences();
+    if (changed) {
+      this.project.stageManager.updateReferences();
+    }
   }
 
-  private entityDropParent(entity: Entity) {
+  /**
+   * 将实体挂入某个 Section，但暂不刷新运行时索引。
+   * 如果实体已经有父 Section，会先从旧父级中摘除，保证单父结构。
+   */
+  public attachEntityToSection(entity: Entity, section: Section): boolean {
+    if (entity === section) {
+      return false;
+    }
+    let changed = false;
+    changed = this.entityDropParent(entity, false, section) || changed;
+    if (!section.children.includes(entity)) {
+      section.children.push(entity);
+      entity.parentSection = section;
+      changed = true;
+    }
+    return changed;
+  }
+
+  /**
+   * 将实体从当前父 Section 中摘除，但暂不刷新运行时索引。
+   */
+  public entityDropParent(
+    entity: Entity,
+    convertEmptySectionToTextNode: boolean = false,
+    excludeSection: Section | null = null,
+  ): boolean {
+    const currentParent = entity.parentSection;
+    if (currentParent && currentParent !== excludeSection) {
+      return this.sectionDropChild(currentParent, entity, convertEmptySectionToTextNode);
+    }
+
+    let changed = false;
     for (const section of this.project.stageManager.getSections()) {
+      if (section === excludeSection) {
+        continue;
+      }
       if (section.children.includes(entity)) {
-        this.sectionDropChild(section, entity);
+        changed = this.sectionDropChild(section, entity, convertEmptySectionToTextNode) || changed;
       }
     }
+    return changed;
   }
 
   /**
@@ -65,23 +102,54 @@ export class SectionInOutManager {
    * @param section
    * @param entity
    */
-  private sectionDropChild(section: Section, entity: Entity) {
-    const newChildrenUUID: string[] = [];
+  private sectionDropChild(section: Section, entity: Entity, convertEmptySectionToTextNode: boolean = true): boolean {
     const newChildren: Entity[] = [];
     for (const child of section.children) {
       if (entity.uuid !== child.uuid) {
-        newChildrenUUID.push(child.uuid);
         newChildren.push(child);
       }
     }
-    section.children = newChildren;
+    const changed = newChildren.length !== section.children.length;
+    if (!changed) {
+      return false;
+    }
 
-    // 当section的最后一个子元素被移除时，将section转换为TextNode
-    if (section.children.length === 0) {
+    section.children = newChildren;
+    if (entity.parentSection === section) {
+      entity.parentSection = null;
+    }
+    if (convertEmptySectionToTextNode && section.children.length === 0) {
       this.convertSectionToTextNode(section);
     }
+    return true;
   }
 
+  private pickPreferredSection(sections: Section[]): Section | null {
+    if (sections.length === 0) {
+      return null;
+    }
+    const sortedSections = [...sections].sort((a, b) => {
+      const areaDiff = this.getSectionArea(a) - this.getSectionArea(b);
+      if (areaDiff !== 0) {
+        return areaDiff;
+      }
+      const rectA = a.collisionBox.getRectangle();
+      const rectB = b.collisionBox.getRectangle();
+      if (rectA.top !== rectB.top) {
+        return rectA.top - rectB.top;
+      }
+      if (rectA.left !== rectB.left) {
+        return rectA.left - rectB.left;
+      }
+      return a.uuid.localeCompare(b.uuid);
+    });
+    return sortedSections[0];
+  }
+
+  private getSectionArea(section: Section): number {
+    const rect = section.collisionBox.getRectangle();
+    return rect.size.x * rect.size.y;
+  }
   /**
    * 将section转换为TextNode，保持UUID、详细信息和连线关系不变
    * @param section 要转换的section
@@ -90,9 +158,9 @@ export class SectionInOutManager {
     // 获取section的父级section
     const fatherSections = this.project.sectionMethods.getFatherSections(section);
 
-    // 先从父 section 的 children 中移除旧的 section 引用（直接操作数组，避免触发 sectionDropChild 的连锁反应）
+    // 先从父 section 的 children 中移除旧的 section 引用，避免空 Section 的连锁转换。
     for (const fatherSection of fatherSections) {
-      fatherSection.children = fatherSection.children.filter((child) => child.uuid !== section.uuid);
+      this.sectionDropChild(fatherSection, section, false);
     }
 
     // 创建新的TextNode，保持UUID不变
@@ -109,7 +177,7 @@ export class SectionInOutManager {
 
     // 将新的TextNode添加到父section中
     for (const fatherSection of fatherSections) {
-      this.project.sectionInOutManager.goInSection([textNode], fatherSection);
+      this.attachEntityToSection(textNode, fatherSection);
     }
 
     // 处理所有连向section的边
@@ -134,8 +202,5 @@ export class SectionInOutManager {
 
     // 从舞台中删除原section
     this.project.stageManager.deleteEntities([section]);
-
-    // 更新引用
-    this.project.stageManager.updateReferences();
   }
 }

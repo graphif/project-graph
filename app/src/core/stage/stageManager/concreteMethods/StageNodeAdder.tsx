@@ -64,12 +64,16 @@ export class NodeAdder {
     // 将node本身向左上角移动，使其居中
     node.moveTo(node.rectangle.location.subtract(node.rectangle.size.divide(2)));
     this.project.stageManager.add(node);
+    this.project.sectionInOutManager.goInSections([node], addToSections);
 
-    for (const section of addToSections) {
-      section.children.push(node);
-      section.adjustLocationAndSize();
+    if (node.parentSection) {
+      node.parentSection.adjustLocationAndSize();
       this.project.effects.addEffect(
-        new RectanglePushInEffect(node.rectangle.clone(), section.rectangle.clone(), new ProgressNumber(0, 100)),
+        new RectanglePushInEffect(
+          node.rectangle.clone(),
+          node.parentSection.rectangle.clone(),
+          new ProgressNumber(0, 100),
+        ),
       );
     }
     // 处理选中问题
@@ -188,15 +192,14 @@ export class NodeAdder {
     });
     this.project.stageManager.add(connectPoint);
 
-    // 把质点加入到每一个section中，并调整section大小
-    for (const section of addToSections) {
-      section.children.push(connectPoint);
-      section.adjustLocationAndSize();
-      // 特效
+    this.project.sectionInOutManager.goInSections([connectPoint], addToSections);
+
+    if (connectPoint.parentSection) {
+      connectPoint.parentSection.adjustLocationAndSize();
       this.project.effects.addEffect(
         new RectanglePushInEffect(
           connectPoint.collisionBox.getRectangle(),
-          section.rectangle.clone(),
+          connectPoint.parentSection.rectangle.clone(),
           new ProgressNumber(0, 100),
         ),
       );
