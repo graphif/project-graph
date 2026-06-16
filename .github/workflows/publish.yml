@@ -186,6 +186,7 @@ jobs:
             build-essential \
             pkg-config \
             libssl-dev \
+            libfuse2 \
             libgtk-3-dev \
             libwebkit2gtk-4.1-dev \
             libappindicator3-dev \
@@ -279,6 +280,8 @@ jobs:
         run: |
           pnpm run ${{ matrix.android && inputs.task_build_android || inputs.task_build }}
         env:
+          APPIMAGE_EXTRACT_AND_RUN: ${{ matrix.platform == 'ubuntu-22.04' && '1' || '' }}
+          NO_STRIP: ${{ matrix.platform == 'ubuntu-22.04' && 'true' || '' }}
           TAURI_BUILD_ARGS: ${{ matrix.args }}
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.11902837
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
