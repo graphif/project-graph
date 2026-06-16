@@ -120,12 +120,9 @@ export class SectionMethods {
 
   /**
    * 如果某个实体被处于大标题形态的祖先 Section 覆盖，返回这个最近的祖先。
-   * 该判断只用于渲染层，不会改变实体本身的可见性数据。
+   * 该判断只用于交互与渲染层，不会改变实体本身的可见性数据。
    */
   getBigTitleCoveringAncestorSection(entity: Entity): Section | null {
-    if (!Settings.hideSectionContentsWhenBigTitleActive) {
-      return null;
-    }
     let current = entity.parentSection;
     while (current) {
       if (this.isSectionBigTitleActive(current)) {
@@ -137,6 +134,13 @@ export class SectionMethods {
   }
 
   isEntityHiddenByBigTitleSection(entity: Entity): boolean {
+    if (!Settings.hideSectionContentsWhenBigTitleActive) {
+      return false;
+    }
+    return this.getBigTitleCoveringAncestorSection(entity) !== null;
+  }
+
+  isEntityCoveredByBigTitleSection(entity: Entity): boolean {
     return this.getBigTitleCoveringAncestorSection(entity) !== null;
   }
 
@@ -146,6 +150,12 @@ export class SectionMethods {
     }
     return association.associationList.some((stageObject) => {
       return stageObject instanceof Entity && this.isEntityHiddenByBigTitleSection(stageObject);
+    });
+  }
+
+  isAssociationCoveredByBigTitleSection(association: Association): boolean {
+    return association.associationList.some((stageObject) => {
+      return stageObject instanceof Entity && this.isEntityCoveredByBigTitleSection(stageObject);
     });
   }
 

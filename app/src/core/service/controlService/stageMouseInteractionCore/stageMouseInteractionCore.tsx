@@ -65,6 +65,9 @@ export class MouseInteraction {
       if (edge.isHiddenBySectionCollapse) {
         continue;
       }
+      if (this.project.sectionMethods.isAssociationCoveredByBigTitleSection(edge)) {
+        continue;
+      }
       if (edge.collisionBox.isContainsPoint(mouseWorldLocation)) {
         this._hoverEdges.push(edge);
       }
@@ -74,6 +77,9 @@ export class MouseInteraction {
     for (const edge of this.project.stageManager
       .getAssociations()
       .filter((association) => association instanceof MultiTargetUndirectedEdge)) {
+      if (this.project.sectionMethods.isAssociationCoveredByBigTitleSection(edge)) {
+        continue;
+      }
       if (edge.collisionBox.isContainsPoint(mouseWorldLocation)) {
         this._hoverMultiTargetEdges.push(edge);
       }
@@ -87,6 +93,9 @@ export class MouseInteraction {
       if (section.isHiddenBySectionCollapse) {
         continue;
       }
+      if (this.project.sectionMethods.isEntityCoveredByBigTitleSection(section)) {
+        continue;
+      }
       if (section.collisionBox.isContainsPoint(mouseWorldLocation)) {
         this._hoverSections.push(section);
       }
@@ -95,6 +104,9 @@ export class MouseInteraction {
     // 更新质点的状态
     this._hoverConnectPoints = [];
     for (const connectPoint of this.project.stageManager.getConnectPoints()) {
+      if (this.project.sectionMethods.isEntityCoveredByBigTitleSection(connectPoint)) {
+        continue;
+      }
       if (connectPoint.collisionBox.isContainsPoint(mouseWorldLocation)) {
         this._hoverConnectPoints.push(connectPoint);
       }

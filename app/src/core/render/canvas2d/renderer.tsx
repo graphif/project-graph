@@ -199,24 +199,36 @@ export class Renderer {
   /** 鼠标hover的边 */
   private renderHoverCollisionBox() {
     for (const edge of this.project.mouseInteraction.hoverEdges) {
+      if (this.project.sectionMethods.isAssociationCoveredByBigTitleSection(edge)) {
+        continue;
+      }
       this.project.collisionBoxRenderer.render(
         edge.collisionBox,
         this.project.stageStyleManager.currentStyle.CollideBoxPreSelected,
       );
     }
     for (const section of this.project.mouseInteraction.hoverSections) {
+      if (this.project.sectionMethods.isEntityCoveredByBigTitleSection(section)) {
+        continue;
+      }
       this.project.collisionBoxRenderer.render(
         section.collisionBox,
         this.project.stageStyleManager.currentStyle.CollideBoxPreSelected,
       );
     }
     for (const multiTargetUndirectedEdge of this.project.mouseInteraction.hoverMultiTargetEdges) {
+      if (this.project.sectionMethods.isAssociationCoveredByBigTitleSection(multiTargetUndirectedEdge)) {
+        continue;
+      }
       this.project.collisionBoxRenderer.render(
         multiTargetUndirectedEdge.collisionBox,
         this.project.stageStyleManager.currentStyle.CollideBoxPreSelected,
       );
     }
     for (const connectPoint of this.project.mouseInteraction.hoverConnectPoints) {
+      if (this.project.sectionMethods.isEntityCoveredByBigTitleSection(connectPoint)) {
+        continue;
+      }
       this.project.collisionBoxRenderer.render(
         connectPoint.collisionBox,
         this.project.stageStyleManager.currentStyle.StageObjectBorder,
