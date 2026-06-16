@@ -790,6 +790,10 @@ settings:
       shiftEnter: shift + Enter
     description: |
       Sebenarnya menekan tombol Esc juga dapat keluar, di sini dapat menambah satu lagi
+  textNodeExitEditModeOnWheel:
+    title: Keluar Mode Edit Node Teks dengan Roda Mouse
+    description: |
+      Saat diaktifkan, menggulir roda mouse ketika sedang mengedit node teks akan langsung keluar dari mode edit.
   textNodeSelectAllWhenStartEditByMouseClick:
     title: Pilih Semua Otomatis Saat Mulai Edit dengan Klik Ganda
     description: |

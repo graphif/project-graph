@@ -807,6 +807,10 @@ settings:
       shiftEnter: shift + Enter
     description: |
       实际上按Esc键也可以退出，这里还可以再加选一种
+  textNodeExitEditModeOnWheel:
+    title: 文本节点编辑时滚动滚轮退出编辑
+    description: |
+      开启后，在文本节点编辑状态下滚动鼠标滚轮时，会立即退出编辑状态
   textNodeSelectAllWhenStartEditByMouseClick:
     title: 文本节点通过双击开始编辑时自动全选内容
     description: |

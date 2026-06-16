@@ -567,6 +567,10 @@ settings:
       shiftEnter: Shift + Enter
     description: |
       You can also exit by pressing the Esc key. Another option can be selected here.
+  textNodeExitEditModeOnWheel:
+    title: Exit Text Node Editing on Mouse Wheel
+    description: |
+      When enabled, scrolling the mouse wheel while editing a text node immediately exits edit mode.
   textNodeSelectAllWhenStartEditByMouseClick:
     title: Select All Text When Starting Edit by Mouse Click
     description: |

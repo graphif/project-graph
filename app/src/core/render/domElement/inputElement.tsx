@@ -131,6 +131,7 @@ export class InputElement {
     onChange: (value: string, element: HTMLTextAreaElement) => void = () => {},
     style: Partial<CSSStyleDeclaration> = {},
     selectAllWhenCreated = true,
+    exitOnWheel = false,
     // limitWidth = 100,
   ): Promise<string> {
     return new Promise((resolve) => {
@@ -166,6 +167,20 @@ export class InputElement {
           }
         }
       };
+      let isFinished = false;
+      const cleanup = () => {
+        document.body.removeEventListener("wheel", onOutsideWheel);
+      };
+      const finish = (value = textareaElement.value) => {
+        if (isFinished) {
+          return;
+        }
+        isFinished = true;
+        resolve(value);
+        onChange(value, textareaElement);
+        cleanup();
+        removeElement();
+      };
 
       // 自动调整textarea的高度和宽度
       const adjustSize = () => {
@@ -174,13 +189,17 @@ export class InputElement {
         textareaElement.style.height = `${textareaElement.scrollHeight}px`;
         // textareaElement.style.width = `${textareaElement.scrollWidth + 2}px`;
       };
+      const onOutsideWheel = () => {
+        finish();
+      };
       setTimeout(() => {
+        if (exitOnWheel) {
+          document.body.addEventListener("wheel", onOutsideWheel);
+        }
         adjustSize(); // 初始化时调整大小
       }, 20);
       textareaElement.addEventListener("blur", () => {
-        resolve(textareaElement.value);
-        onChange(textareaElement.value, textareaElement);
-        removeElement();
+        finish();
       });
       textareaElement.addEventListener("input", () => {
         this.project.controller.resetCountdownTimer();
@@ -235,9 +254,7 @@ export class InputElement {
                 // 删除结尾 防止把顿号写进去
                 currentValue = currentValue.slice(0, -1);
               }
-              resolve(currentValue);
-              onChange(currentValue, textareaElement);
-              removeElement();
+              finish(currentValue);
               this.project.keyboardOnlyTreeEngine.onBroadGenerateNode();
             }
           }
@@ -246,9 +263,7 @@ export class InputElement {
           if (textareaElement.value === "") {
             if (Settings.textNodeBackspaceDeleteWhenEmpty) {
               // 已经要删空了。
-              resolve("");
-              onChange("", textareaElement);
-              removeElement();
+              finish("");
               this.project.stageManager.deleteSelectedStageObjects();
             } else {
               // 整一个特效
@@ -276,24 +291,18 @@ export class InputElement {
             selectAllTextWhenCreated = false;
           }
 
-          resolve(textareaElement.value);
-          onChange(textareaElement.value, textareaElement);
-          removeElement();
+          finish();
           // xmind用户
           this.project.keyboardOnlyTreeEngine.onDeepGenerateNode(afterText, selectAllTextWhenCreated);
         } else if (event.key === "Escape") {
           event.preventDefault(); // 这里可以阻止mac退出全屏
           // Escape 是通用的取消编辑的快捷键
-          resolve(textareaElement.value);
-          onChange(textareaElement.value, textareaElement);
-          removeElement();
+          finish();
         } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
           // 如果按下了撤销键但没撤销，则textarea撤销栈已空，认为用户的想法是退出编辑
           setTimeout(() => {
             if (!hasTextareaUndone) {
-              resolve(textareaElement.value);
-              onChange(textareaElement.value, textareaElement);
-              removeElement();
+              finish();
             }
           }, 10); // 延迟10ms再检测撤销操作是否完成
           hasTextareaUndone = false; // 重置标志
@@ -312,9 +321,7 @@ export class InputElement {
         };
 
         const exitEditMode = () => {
-          resolve(textareaElement.value);
-          onChange(textareaElement.value, textareaElement);
-          removeElement();
+          finish();
         };
 
         if (event.key === "Enter") {

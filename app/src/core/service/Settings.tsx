@@ -157,6 +157,7 @@ export const settingsSchema = z.object({
   textNodeExitEditMode: z
     .union([z.literal("enter"), z.literal("ctrlEnter"), z.literal("altEnter"), z.literal("shiftEnter")])
     .default("enter"),
+  textNodeExitEditModeOnWheel: z.boolean().default(true),
   textNodeSelectAllWhenStartEditByMouseClick: z.boolean().default(true),
   textNodeSelectAllWhenStartEditByKeyboard: z.boolean().default(false),
   textNodeBackspaceDeleteWhenEmpty: z.boolean().default(false),

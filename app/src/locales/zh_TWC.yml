@@ -820,6 +820,9 @@ settings:
       altEnter: alt + Enter
       shiftEnter: shift + Enter
     description: 實際上按Esc鍵也可以退出，這裡還可以再加選一種
+  textNodeExitEditModeOnWheel:
+    title: 文字節點編輯時滾動滾輪退出編輯
+    description: 開啟後，在文字節點編輯狀態下滾動滑鼠滾輪時，會立即退出編輯狀態
   textNodeSelectAllWhenStartEditByMouseClick:
     title: 文字節點透過按兩下開始編輯時自動全選內容
     description: '開啟後，在文字節點開始編輯時，會全選文字內容

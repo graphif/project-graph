@@ -319,6 +319,7 @@ export const categories = {
       "textNodeStartEditMode",
       "textNodeContentLineBreak",
       "textNodeExitEditMode",
+      "textNodeExitEditModeOnWheel",
       "textNodeSelectAllWhenStartEditByMouseClick",
       "textNodeSelectAllWhenStartEditByKeyboard",
       "textNodeBackspaceDeleteWhenEmpty",

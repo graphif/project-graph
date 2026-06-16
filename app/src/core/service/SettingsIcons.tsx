@@ -155,6 +155,7 @@ export const settingsIcons = {
   textNodeStartEditMode: ListRestart,
   textNodeContentLineBreak: ListEnd,
   textNodeExitEditMode: ListCheck,
+  textNodeExitEditModeOnWheel: LoaderPinwheel,
   textNodeSelectAllWhenStartEditByMouseClick: TextCursorInput,
   textNodeSelectAllWhenStartEditByKeyboard: TextCursorInput,
   textNodeBackspaceDeleteWhenEmpty: Delete,

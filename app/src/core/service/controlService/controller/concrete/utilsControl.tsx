@@ -141,6 +141,7 @@ export class ControllerUtils {
           borderRadius: `${clickedNode.getBorderRadius() * this.project.camera.currentScale}px`,
         },
         selectAll,
+        Settings.textNodeExitEditModeOnWheel,
         // rectWorld.width * this.project.camera.currentScale, // limit width
       )
       .then(async () => {
