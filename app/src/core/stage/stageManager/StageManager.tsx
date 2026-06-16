@@ -573,19 +573,22 @@ export class StageManager {
 
       if (entity instanceof Section) {
         if (entity.rectangle.isPointIn(location)) {
-          const nextSectionOnlyMode = sectionOnlyMode || this.project.sectionMethods.isSectionBigTitleActive(entity);
-          const childEntities = nextSectionOnlyMode
-            ? entity.children.filter((child) => child instanceof Section)
-            : entity.children;
-          const childHit = this.findEntityInHierarchyByLocation(
-            childEntities,
-            location,
-            accept,
-            prioritizePenStroke,
-            nextSectionOnlyMode,
-          );
-          if (childHit) {
-            return childHit;
+          const isBigTitleActive = this.project.sectionMethods.isSectionBigTitleActive(entity);
+          if (isBigTitleActive && accept(entity)) {
+            return entity;
+          }
+          const nextSectionOnlyMode = sectionOnlyMode || isBigTitleActive;
+          if (!nextSectionOnlyMode) {
+            const childHit = this.findEntityInHierarchyByLocation(
+              entity.children,
+              location,
+              accept,
+              prioritizePenStroke,
+              false,
+            );
+            if (childHit) {
+              return childHit;
+            }
           }
         }
         if (accept(entity) && entity.collisionBox.isContainsPoint(location)) {
