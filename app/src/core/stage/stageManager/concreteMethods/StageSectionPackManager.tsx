@@ -328,6 +328,10 @@ export class SectionPackManager {
     for (const fatherSection of firstParents) {
       this.project.stageManager.goInSection([section], fatherSection);
     }
+    if (firstParents.length === 0) {
+      // 顶层打包时不会经过 goInSection，需要手动重建运行时 Section 树。
+      this.project.stageManager.updateReferences();
+    }
 
     return section;
   }
