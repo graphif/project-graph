@@ -156,10 +156,10 @@ export class SectionInOutManager {
    */
   private convertSectionToTextNode(section: Section) {
     // 获取section的父级section
-    const fatherSections = this.project.sectionMethods.getFatherSections(section);
+    const fatherSection = section.parentSection;
 
     // 先从父 section 的 children 中移除旧的 section 引用，避免空 Section 的连锁转换。
-    for (const fatherSection of fatherSections) {
+    if (fatherSection) {
       this.sectionDropChild(fatherSection, section, false);
     }
 
@@ -176,7 +176,7 @@ export class SectionInOutManager {
     this.project.stageManager.add(textNode);
 
     // 将新的TextNode添加到父section中
-    for (const fatherSection of fatherSections) {
+    if (fatherSection) {
       this.attachEntityToSection(textNode, fatherSection);
     }
 

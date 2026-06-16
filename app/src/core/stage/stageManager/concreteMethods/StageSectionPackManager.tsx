@@ -146,9 +146,9 @@ export class SectionPackManager {
       }
     }
     const section = this.targetTextNodeToSection(rootNode, true);
-    const rootNodeFatherSection = this.project.sectionMethods.getFatherSections(rootNode);
-    for (const fatherSection of rootNodeFatherSection) {
-      this.project.sectionInOutManager.goOutSection(childSets, fatherSection);
+    const rootNodeFatherSection = rootNode.parentSection;
+    if (rootNodeFatherSection) {
+      this.project.sectionInOutManager.goOutSection(childSets, rootNodeFatherSection);
     }
     this.project.sectionInOutManager.goInSection(childSets, section);
     this.project.historyManager.recordStep();
@@ -166,7 +166,7 @@ export class SectionPackManager {
     addConnectPoints: boolean = false,
   ): Section {
     // 获取这个节点的父级Section
-    const fatherSections = this.project.sectionMethods.getFatherSections(textNode);
+    const fatherSection = textNode.parentSection;
     const newSection = new Section(this.project, {
       text: textNode.text,
       collisionBox: textNode.collisionBox,
@@ -206,7 +206,7 @@ export class SectionPackManager {
 
     // 将新的Section加入舞台
     this.project.stageManager.add(newSection);
-    for (const fatherSection of fatherSections) {
+    if (fatherSection) {
       this.project.sectionInOutManager.goInSection([newSection], fatherSection);
     }
 
@@ -253,7 +253,7 @@ export class SectionPackManager {
       return;
     }
     for (const section of sections) {
-      const currentSectionFathers = this.project.sectionMethods.getFatherSections(section);
+      const currentSectionFather = section.parentSection;
       // 生成一个textnode
       const sectionLocation = section.collisionBox.getRectangle().location;
       const textNode = new TextNode(this.project, {
@@ -266,9 +266,15 @@ export class SectionPackManager {
       // 将textNode添加到舞台
       this.project.stageManager.add(textNode);
       // 将新的textnode添加到父section中
-      this.project.sectionInOutManager.goInSections([textNode], currentSectionFathers);
+      if (currentSectionFather) {
+        this.project.sectionInOutManager.goInSection([textNode], currentSectionFather);
+      }
       // 将section的子节点添加到父section中
-      this.project.sectionInOutManager.goInSections(section.children, currentSectionFathers);
+      if (currentSectionFather) {
+        this.project.sectionInOutManager.goInSection(section.children, currentSectionFather);
+      } else {
+        this.project.sectionInOutManager.goInSections(section.children, []);
+      }
       // 将section从舞台中删除
       this.project.stageManager.deleteEntities([section]);
     }
@@ -281,26 +287,12 @@ export class SectionPackManager {
     }
     addEntities = this.project.sectionMethods.shallowerNotSectionEntities(addEntities);
     // 检测父亲section是否是等同
-    const firstParents = this.project.sectionMethods.getFatherSections(addEntities[0]);
+    const firstParent = addEntities[0].parentSection;
     if (addEntities.length > 1) {
       let isAllSameFather = true;
 
       for (let i = 1; i < addEntities.length; i++) {
-        const secondParents = this.project.sectionMethods.getFatherSections(addEntities[i]);
-        if (firstParents.length !== secondParents.length) {
-          isAllSameFather = false;
-          break;
-        }
-        // 检查父亲数组是否相同
-        const firstParentsString = firstParents
-          .map((section: any) => section.uuid)
-          .sort()
-          .join();
-        const secondParentsString = secondParents
-          .map((section: any) => section.uuid)
-          .sort()
-          .join();
-        if (firstParentsString !== secondParentsString) {
+        if (addEntities[i].parentSection !== firstParent) {
           isAllSameFather = false;
           break;
         }
@@ -312,8 +304,8 @@ export class SectionPackManager {
         return;
       }
     }
-    for (const fatherSection of firstParents) {
-      this.project.stageManager.goOutSection(addEntities, fatherSection);
+    if (firstParent) {
+      this.project.stageManager.goOutSection(addEntities, firstParent);
     }
     const section = Section.fromEntities(this.project, addEntities);
     let smartTitle = this.getSmartSectionTitle(addEntities);
@@ -325,10 +317,10 @@ export class SectionPackManager {
         ? smartTitle
         : this.project.stageUtils.replaceAutoNameTemplate(Settings.autoNamerSectionTemplate, section);
     this.project.stageManager.add(section);
-    for (const fatherSection of firstParents) {
-      this.project.stageManager.goInSection([section], fatherSection);
+    if (firstParent) {
+      this.project.stageManager.goInSection([section], firstParent);
     }
-    if (firstParents.length === 0) {
+    if (!firstParent) {
       // 顶层打包时不会经过 goInSection，需要手动重建运行时 Section 树。
       this.project.stageManager.updateReferences();
     }

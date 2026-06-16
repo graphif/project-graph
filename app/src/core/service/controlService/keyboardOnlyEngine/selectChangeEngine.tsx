@@ -124,8 +124,7 @@ export class SelectChangeEngine {
     // 这样可以穿透任意深度的嵌套（如 b3 在 B 在 A，顶层有 C 时能直接跳到 C）。
     let pivot: ConnectableEntity = parentSection;
     while (true) {
-      const pivotParents = this.project.sectionMethods.getFatherSections(pivot);
-      const pivotParent = pivotParents.length > 0 ? pivotParents[0] : null;
+      const pivotParent = pivot.parentSection;
       const outerCandidates = pivotParent
         ? this.getSameLevelCandidates(pivotParent, pivot)
         : this.getTopLevelCandidates(pivot);

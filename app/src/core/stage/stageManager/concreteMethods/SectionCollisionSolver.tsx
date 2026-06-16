@@ -60,12 +60,12 @@ export class SectionCollisionSolver {
    * 并对每个扩大的父框再次检测同级碰撞（递归向上传播）。
    */
   private updateAncestorsAfterShift(entity: Entity, visited: Set<string>): void {
-    const fathers = this.project.sectionMethods.getFatherSections(entity);
-    for (const father of fathers) {
-      father.adjustLocationAndSize();
+    let current = entity.parentSection;
+    while (current) {
+      current.adjustLocationAndSize();
       // 父框扩大后可能与其自身的同级 Section 碰撞，继续向上求解
-      this.solveOverlaps(father, visited);
-      this.updateAncestorsAfterShift(father, visited);
+      this.solveOverlaps(current, visited);
+      current = current.parentSection;
     }
   }
 
@@ -74,28 +74,13 @@ export class SectionCollisionSolver {
    * 若 section 处于根层级（无父框），则返回所有其他根层级 Section。
    */
   private getSiblingsSections(section: Section): Section[] {
-    const parents = this.project.sectionMethods.getFatherSections(section);
-
-    if (parents.length === 0) {
+    const parent = section.parentSection;
+    if (!parent) {
       // 根层级：所有无父框的其他 Section 都是同级
-      return this.project.stageManager.getSections().filter((s) => {
-        if (s === section) return false;
-        return this.project.sectionMethods.getFatherSections(s).length === 0;
-      });
+      return this.project.stageManager.getRootSections().filter((s) => s !== section);
     }
 
-    // 从各个父框的直接子节点中收集同级 Section（去重）
-    const seen = new Set<string>();
-    const siblings: Section[] = [];
-    for (const parent of parents) {
-      for (const child of parent.children) {
-        if (child instanceof Section && child !== section && !seen.has(child.uuid)) {
-          seen.add(child.uuid);
-          siblings.push(child);
-        }
-      }
-    }
-    return siblings;
+    return parent.children.filter((child) => child instanceof Section && child !== section) as Section[];
   }
 
   /**

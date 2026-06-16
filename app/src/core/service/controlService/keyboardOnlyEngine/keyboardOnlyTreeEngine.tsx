@@ -353,8 +353,10 @@ export class KeyboardOnlyTreeEngine {
     this.project.stageManager.add(newNode);
 
     // 如果是在框里，则把新生长的节点也纳入到框里
-    const fatherSections = this.project.sectionMethods.getFatherSections(rootNode);
-    this.project.sectionInOutManager.goInSections([newNode], fatherSections);
+    const fatherSection = rootNode.parentSection;
+    if (fatherSection) {
+      this.project.sectionInOutManager.goInSection([newNode], fatherSection);
+    }
 
     // 连接节点
     this.project.stageManager.connectEntity(rootNode, newNode);
@@ -503,8 +505,10 @@ export class KeyboardOnlyTreeEngine {
     newNode.setFontScaleLevel(newFontScaleLevel);
     this.project.stageManager.add(newNode);
     // 如果是在框里，则把新生长的节点也纳入到框里
-    const fatherSections = this.project.sectionMethods.getFatherSections(parent);
-    this.project.sectionInOutManager.goInSections([newNode], fatherSections);
+    const fatherSection = parent.parentSection;
+    if (fatherSection) {
+      this.project.sectionInOutManager.goInSection([newNode], fatherSection);
+    }
     // 连接节点
     this.project.stageManager.connectEntity(parent, newNode);
 

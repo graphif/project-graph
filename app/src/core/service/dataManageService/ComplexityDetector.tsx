@@ -232,12 +232,7 @@ export class ComplexityDetector {
     }
     countResultObject.edgeColorTypeCount = edgeColorStringSet.size;
     // 集合论相关
-    for (const entity of entities) {
-      const fatherSections = this.project.sectionMethods.getFatherSections(entity);
-      if (fatherSections.length > 1) {
-        countResultObject.crossEntityCount++;
-      }
-    }
+    countResultObject.crossEntityCount = 0;
     for (const section of this.project.stageManager.getSections()) {
       // this.project.sectionMethods.isTreePack(section);
       countResultObject.maxSectionDepth = Math.max(

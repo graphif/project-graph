@@ -112,8 +112,12 @@ export class DeleteManager {
     this.project.stageManager.delete(entity);
     this.deleteEntityAfterClearAssociation(entity);
     // 将自己所有的父级Section的children添加自己的children
-    const fatherSections = this.project.sectionMethods.getFatherSections(entity);
-    this.project.sectionInOutManager.goInSections(entity.children, fatherSections);
+    const fatherSection = entity.parentSection;
+    if (fatherSection) {
+      this.project.sectionInOutManager.goInSection(entity.children, fatherSection);
+    } else {
+      this.project.sectionInOutManager.goInSections(entity.children, []);
+    }
   }
   private deleteImageNode(entity: ImageNode) {
     if (this.project.stageManager.getImageNodes().includes(entity)) {

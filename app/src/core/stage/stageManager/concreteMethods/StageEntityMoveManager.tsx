@@ -97,12 +97,7 @@ export class EntityMoveManager {
    * @returns 如果实体可以移动返回 true，否则返回 false
    */
   private canMoveEntity(entity: Entity): boolean {
-    // 检查实体是否有锁定的祖先section（递归检查）
-    const ancestorSections = this.project.sectionMethods.getFatherSectionsList(entity);
-    if (ancestorSections.some((section) => section.locked)) {
-      return false;
-    }
-    return true;
+    return entity.nearestLockedAncestorSection === null;
   }
 
   /**
@@ -119,22 +114,11 @@ export class EntityMoveManager {
     // 让自己移动
     entity.move(delta);
 
-    const nodeUUID = entity.uuid;
-
-    // if (this.project.stageManager.isSectionByUUID(nodeUUID)) {
-    //   // 如果是Section，则需要带动孩子一起移动
-    //   const section = this.project.stageManager.getSectionByUUID(nodeUUID);
-    //   if (section) {
-    //     for (const child of section.children) {
-    //       moveEntityUtils(child, delta);
-    //     }
-    //   }
-    // }
     if (isAutoAdjustSection) {
-      for (const section of this.project.stageManager.getSections()) {
-        if (section.children.find((it) => it.uuid === nodeUUID)) {
-          section.adjustLocationAndSize();
-        }
+      let current = entity.parentSection;
+      while (current) {
+        current.adjustLocationAndSize();
+        current = current.parentSection;
       }
     }
   }
@@ -157,28 +141,27 @@ export class EntityMoveManager {
     this.project.effects.addEffect(new EntityJumpMoveEffect(15, beforeMoveRect, delta));
 
     // 即将跳入的sections区域
-    const targetSections = this.project.sectionMethods.getSectionsByInnerLocation(beforeMoveRect.center.add(delta));
+    const targetSection = this.project.sectionMethods.getInnermostSectionByLocation(beforeMoveRect.center.add(delta));
 
     // 检查目标位置是否在锁定的 section 内（包括祖先section的锁定状态）
-    if (targetSections.some((section) => this.project.sectionMethods.isObjectBeLockedBySection(section))) {
+    if (
+      targetSection &&
+      (targetSection.locked || this.project.sectionMethods.isObjectBeLockedBySection(targetSection))
+    ) {
       return;
     }
     // 改变层级
-    if (targetSections.length === 0) {
+    if (targetSection === null) {
       // 代表想要走出当前section
-      const currentFatherSections = this.project.sectionMethods.getFatherSections(entity);
-      if (currentFatherSections.length !== 0) {
-        this.project.stageManager.goOutSection([entity], currentFatherSections[0]);
+      if (entity.parentSection) {
+        this.project.stageManager.goOutSection([entity], entity.parentSection);
       }
     } else {
-      this.project.sectionInOutManager.goInSections([entity], targetSections);
-      for (const section of targetSections) {
-        // 特效
-        this.project.effects.addEffect(
-          new RectanglePushInEffect(entity.collisionBox.getRectangle(), section.collisionBox.getRectangle()),
-        );
-        SoundService.play.entityJumpSoundFile();
-      }
+      this.project.sectionInOutManager.goInSection([entity], targetSection);
+      this.project.effects.addEffect(
+        new RectanglePushInEffect(entity.collisionBox.getRectangle(), targetSection.collisionBox.getRectangle()),
+      );
+      SoundService.play.entityJumpSoundFile();
     }
 
     // 让自己移动
@@ -197,11 +180,10 @@ export class EntityMoveManager {
       return;
     }
     entity.moveTo(location);
-    const nodeUUID = entity.uuid;
-    for (const section of this.project.stageManager.getSections()) {
-      if (section.children.find((it) => it.uuid === nodeUUID)) {
-        section.adjustLocationAndSize();
-      }
+    let current = entity.parentSection;
+    while (current) {
+      current.adjustLocationAndSize();
+      current = current.parentSection;
     }
   }
 

@@ -120,17 +120,17 @@ export class EdgeRenderer {
    * @param innerEntity
    */
   getMinNonCollapseParentSection(innerEntity: ConnectableEntity): Section {
-    const father = this.project.sectionMethods.getFatherSections(innerEntity);
-    if (father.length === 0) {
-      // 直接抛出错误
+    let current = innerEntity.parentSection;
+    if (!current) {
       throw new Error("Can't find parent section");
     }
-    const minSection = father[0];
-    if (minSection.isHiddenBySectionCollapse) {
-      return this.getMinNonCollapseParentSection(minSection);
-    } else {
-      return minSection;
+    while (current.isHiddenBySectionCollapse) {
+      if (!current.parentSection) {
+        return current;
+      }
+      current = current.parentSection;
     }
+    return current;
   }
 
   getEdgeView(edge: LineEdge): LineEdge {

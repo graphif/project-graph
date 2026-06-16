@@ -127,7 +127,7 @@ export class NodeAdder {
     } else if (direction === Direction.Right) {
       createLocation = entityRectangle.rightCenter.add(new Vector(distanceLength, 0));
     }
-    addToSections = this.project.sectionMethods.getFatherSections(selectedEntity);
+    addToSections = selectedEntity.parentSection ? [selectedEntity.parentSection] : [];
     const uuid = await this.addTextNodeByClick(createLocation, addToSections, selectCurrent, false, {
       overrideFontScaleLevel: selectedEntity instanceof TextNode ? selectedEntity.fontScaleLevel : 0,
     });
