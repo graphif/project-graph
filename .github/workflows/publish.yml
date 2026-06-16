@@ -270,6 +270,9 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: |
           echo "RUSTFLAGS=-C target-feature=+crt-static" >> $env:GITHUB_ENV
+          echo "NX_DAEMON=false" >> $env:GITHUB_ENV
+          echo "NX_ISOLATE_PLUGINS=false" >> $env:GITHUB_ENV
+          echo "NX_PLUGIN_NO_TIMEOUTS=true" >> $env:GITHUB_ENV
       #endregion
       #region Build
       - name: Write BUILD_ENV to .env file
