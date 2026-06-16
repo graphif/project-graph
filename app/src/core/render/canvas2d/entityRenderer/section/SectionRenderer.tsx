@@ -64,9 +64,10 @@ export class SectionRenderer {
 
   // 非折叠状态
   private renderNoCollapse(section: Section) {
+    const isBigTitleActive = this.project.sectionMethods.isSectionBigTitleActive(section);
     let borderWidth = 2 * this.project.camera.currentScale;
-    if (Settings.sectionBitTitleRenderType !== "none") {
-      borderWidth = this.project.camera.currentScale > 0.065 ? 2 * this.project.camera.currentScale : 2;
+    if (isBigTitleActive) {
+      borderWidth = 2;
     }
     // 注意：这里只能画边框
     this.project.shapeRenderer.renderRect(
@@ -80,7 +81,7 @@ export class SectionRenderer {
       Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
     );
 
-    if (this.project.camera.currentScale > 0.065 && !section.isEditingTitle) {
+    if (!isBigTitleActive && !section.isEditingTitle) {
       // 正常显示标题
       this.project.textRenderer.renderText(
         section.text,
@@ -133,18 +134,7 @@ export class SectionRenderer {
    * @returns
    */
   renderBigCoveredTitle(section: Section) {
-    // TODO: 性能有待优化
-    // 计算视野范围矩形
-    const viewRect = this.project.renderer.getCoverWorldRectangle();
-    // 计算分组框的最长边
-    const sectionMaxSide = Math.max(section.rectangle.size.x, section.rectangle.size.y);
-    // 计算视野范围矩形的最长边
-    const viewMaxSide = Math.max(viewRect.size.x, viewRect.size.y);
-    // 判断是否需要渲染大标题形态
-    if (
-      sectionMaxSide >= viewMaxSide * Settings.sectionBigTitleThresholdRatio ||
-      this.project.camera.currentScale > Settings.sectionBigTitleCameraScaleThreshold
-    ) {
+    if (!this.project.sectionMethods.isSectionBigTitleActive(section)) {
       return;
     }
     this.project.shapeRenderer.renderRect(
@@ -177,18 +167,7 @@ export class SectionRenderer {
    * @returns
    */
   renderTopTitle(section: Section) {
-    // TODO: 性能有待优化
-    // 计算视野范围矩形
-    const viewRect = this.project.renderer.getCoverWorldRectangle();
-    // 计算分组框的最长边
-    const sectionMaxSide = Math.max(section.rectangle.size.x, section.rectangle.size.y);
-    // 计算视野范围矩形的最长边
-    const viewMaxSide = Math.max(viewRect.size.x, viewRect.size.y);
-    // 判断是否需要渲染大标题形态
-    if (
-      sectionMaxSide >= viewMaxSide * Settings.sectionBigTitleThresholdRatio ||
-      this.project.camera.currentScale > Settings.sectionBigTitleCameraScaleThreshold
-    ) {
+    if (!this.project.sectionMethods.isSectionBigTitleActive(section)) {
       return;
     }
     const fontSize = 20 * (0.5 * this.project.camera.currentScale + 0.5);

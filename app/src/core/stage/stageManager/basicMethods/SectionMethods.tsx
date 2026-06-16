@@ -1,5 +1,6 @@
 import { Vector } from "@graphif/data-structures";
 import { Project, service } from "@/core/Project";
+import { Settings } from "@/core/service/Settings";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
@@ -94,6 +95,26 @@ export class SectionMethods {
    */
   getInnermostSectionByLocation(location: Vector): Section | null {
     return this.getSectionsByInnerLocation(location)[0] ?? null;
+  }
+
+  /**
+   * 当前视野下，这个 Section 是否进入了大标题覆盖形态。
+   * 进入该形态后，交互应优先命中 Section 本身，而不是内部普通实体。
+   */
+  isSectionBigTitleActive(section: Section): boolean {
+    if (section.isCollapsed || section.isHiddenBySectionCollapse) {
+      return false;
+    }
+    if (Settings.sectionBitTitleRenderType === "none") {
+      return false;
+    }
+    const viewRect = this.project.renderer.getCoverWorldRectangle();
+    const sectionMaxSide = Math.max(section.rectangle.size.x, section.rectangle.size.y);
+    const viewMaxSide = Math.max(viewRect.size.x, viewRect.size.y);
+    return (
+      sectionMaxSide < viewMaxSide * Settings.sectionBigTitleThresholdRatio &&
+      this.project.camera.currentScale <= Settings.sectionBigTitleCameraScaleThreshold
+    );
   }
 
   /**

@@ -514,6 +514,7 @@ export class StageManager {
       location,
       (entity): entity is ConnectableEntity => entity instanceof ConnectableEntity,
       false,
+      false,
     );
   }
 
@@ -529,6 +530,7 @@ export class StageManager {
       location,
       (entity): entity is Entity => entity instanceof Entity,
       true,
+      false,
     );
   }
 
@@ -537,8 +539,9 @@ export class StageManager {
     location: Vector,
     accept: (entity: Entity) => entity is T,
     prioritizePenStroke: boolean,
+    sectionOnlyMode: boolean,
   ): T | null {
-    if (prioritizePenStroke) {
+    if (prioritizePenStroke && !sectionOnlyMode) {
       for (let i = entities.length - 1; i >= 0; i--) {
         const entity = entities[i];
         if (!(entity instanceof PenStroke)) {
@@ -561,13 +564,26 @@ export class StageManager {
       if (entity instanceof ImageNode && entity.isBackground) {
         continue;
       }
+      if (sectionOnlyMode && !(entity instanceof Section)) {
+        continue;
+      }
       if (prioritizePenStroke && entity instanceof PenStroke) {
         continue;
       }
 
       if (entity instanceof Section) {
         if (entity.rectangle.isPointIn(location)) {
-          const childHit = this.findEntityInHierarchyByLocation(entity.children, location, accept, prioritizePenStroke);
+          const nextSectionOnlyMode = sectionOnlyMode || this.project.sectionMethods.isSectionBigTitleActive(entity);
+          const childEntities = nextSectionOnlyMode
+            ? entity.children.filter((child) => child instanceof Section)
+            : entity.children;
+          const childHit = this.findEntityInHierarchyByLocation(
+            childEntities,
+            location,
+            accept,
+            prioritizePenStroke,
+            nextSectionOnlyMode,
+          );
           if (childHit) {
             return childHit;
           }

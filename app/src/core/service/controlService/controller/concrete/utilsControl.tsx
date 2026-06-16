@@ -262,12 +262,11 @@ export class ControllerUtils {
    */
   getClickedStageObject(clickedLocation: Vector) {
     let clickedStageObject: StageObject | null = this.project.stageManager.findEntityByLocation(clickedLocation);
-    // 补充：在宏观视野下，框应该被很轻松的点击
-    if (clickedStageObject === null && this.project.camera.currentScale < Section.bigTitleCameraScale) {
+    // 补充：在大标题覆盖形态下，空白区域也应该稳定命中对应的 Section。
+    if (clickedStageObject === null) {
       const clickedSections = this.project.sectionMethods.getSectionsByInnerLocation(clickedLocation);
-      if (clickedSections.length > 0) {
-        clickedStageObject = clickedSections[0];
-      }
+      clickedStageObject =
+        clickedSections.find((section) => this.project.sectionMethods.isSectionBigTitleActive(section)) ?? null;
     }
     if (clickedStageObject === null) {
       for (const association of this.project.stageManager.getAssociations()) {
