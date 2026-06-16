@@ -44,6 +44,10 @@ export interface CountResultObject {
   entityDensity: number;
   entityOverlapCount: number;
 
+  /**
+   * 当前运行时树化时被归一化丢弃的交叉父关系数量。
+   * 运行时已不再保留交叉嵌套，这个值用于反映旧数据残留。
+   */
   crossEntityCount: number;
   maxSectionDepth: number;
   emptySetCount: number;
@@ -112,7 +116,7 @@ export class ComplexityDetector {
       // 集合论相关
       // 空集数量
       emptySetCount: 0,
-      // 交叉元素数量
+      // 被归一化清理掉的交叉父关系数量
       crossEntityCount: 0,
       // 最大深度
       maxSectionDepth: 0,
@@ -232,7 +236,7 @@ export class ComplexityDetector {
     }
     countResultObject.edgeColorTypeCount = edgeColorStringSet.size;
     // 集合论相关
-    countResultObject.crossEntityCount = 0;
+    countResultObject.crossEntityCount = this.project.stageManager.getNormalizedCrossParentRelationCount();
     for (const section of this.project.stageManager.getSections()) {
       // this.project.sectionMethods.isTreePack(section);
       countResultObject.maxSectionDepth = Math.max(

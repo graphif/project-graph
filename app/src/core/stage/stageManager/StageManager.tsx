@@ -68,6 +68,12 @@ export class StageManager {
    */
   public topLevelEntities: Entity[] = [];
 
+  /**
+   * 最近一次运行时 Section 树重建时，被归一化丢弃的交叉父关系数量。
+   * 该值不参与序列化，用于提示旧数据中曾存在多父嵌套。
+   */
+  public normalizedCrossParentRelationCount: number = 0;
+
   constructor(private readonly project: Project) {}
 
   public getRootSections(): Section[] {
@@ -76,6 +82,10 @@ export class StageManager {
 
   public getTopLevelEntities(): Entity[] {
     return [...this.topLevelEntities];
+  }
+
+  public getNormalizedCrossParentRelationCount(): number {
+    return this.normalizedCrossParentRelationCount;
   }
 
   /**
@@ -258,6 +268,7 @@ export class StageManager {
 
     this.rootSections = [];
     this.topLevelEntities = [];
+    this.normalizedCrossParentRelationCount = 0;
 
     for (const entity of entities) {
       entityMap.set(entity.uuid, entity);
@@ -290,7 +301,9 @@ export class StageManager {
 
     for (const entity of entities) {
       const candidates = parentCandidates.get(entity.uuid) ?? [];
-      entity.parentSection = this.pickDirectParentSection(entity, candidates);
+      const directParent = this.pickDirectParentSection(entity, candidates);
+      entity.parentSection = directParent;
+      this.normalizedCrossParentRelationCount += candidates.filter((section) => section !== directParent).length;
     }
 
     for (const section of sections) {
