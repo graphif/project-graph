@@ -9,7 +9,21 @@ const lastRelease = execSync(
   .trim();
 
 // 获取 Git 提交记录
-const commits = execSync(`git log ${lastRelease}.. --pretty=format:"%s" --reverse`).toString().trim();
+const rawCommits = execSync(`git log ${lastRelease}.. --pretty=format:"%s" --reverse`)
+  .toString()
+  .trim();
+
+function filterCommitTitles(titles) {
+  if (!titles || titles.trim() === "") return "";
+  return titles
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line !== "")
+    .filter((line) => !/^chore(\(.+\))?!?:/i.test(line) && !/^chore\b/i.test(line))
+    .join("\n");
+}
+
+const commits = filterCommitTitles(rawCommits);
 
 /**
  * 生成降级版本的changelog（直接使用commit标题）
@@ -96,6 +110,11 @@ alt跳入框时，显示框会变大多少的虚线边缘
 
 // 发送请求到 API
 try {
+  if (!commits || commits.trim() === "") {
+    console.log(generateFallbackChangelog(commits));
+    process.exit(0);
+  }
+
   const response = await fetch(
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=" +
       process.env.GEMINI_API_KEY,
