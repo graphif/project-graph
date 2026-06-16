@@ -215,6 +215,8 @@ export class CopyEngine {
     shouldSelectedEntities.forEach((it) => (it.isSelected = true));
     // 粘贴到舞台上（必须先粘贴到舞台上，再运行选择标准化、移动函数）
     this.project.stage.push(...pasteData);
+    // 粘贴出的 Section / Edge 需要先重建运行时引用和层级树，否则后续点选与拖拽会失效。
+    this.project.stageManager.updateReferences();
     // 选中标准化
     this.project.controllerUtils.selectedEntityNormalizing();
 
