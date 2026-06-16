@@ -94,8 +94,7 @@ export class SelectChangeEngine {
    */
   private navigateInDirection(selectedNode: ConnectableEntity, direction: Direction): ConnectableEntity | null {
     const nodeRect = selectedNode.collisionBox.getRectangle();
-    const fatherSections = this.project.sectionMethods.getFatherSections(selectedNode);
-    const parentSection = fatherSections.length > 0 ? fatherSections[0] : null;
+    const parentSection = selectedNode.parentSection;
 
     const candidates = parentSection
       ? this.getSameLevelCandidates(parentSection, selectedNode)
@@ -165,8 +164,10 @@ export class SelectChangeEngine {
    */
   private getTopLevelCandidates(excludeNode: ConnectableEntity): ConnectableEntity[] {
     return this.project.stageManager
-      .getConnectableEntity()
-      .filter((n) => n.uuid !== excludeNode.uuid && this.project.sectionMethods.getFatherSections(n).length === 0);
+      .getTopLevelEntities()
+      .filter(
+        (entity) => entity instanceof ConnectableEntity && entity.uuid !== excludeNode.uuid,
+      ) as ConnectableEntity[];
   }
 
   /**
@@ -252,26 +253,23 @@ export class SelectChangeEngine {
     const selectedEntities = this.project.stageManager
       .getSelectedEntities()
       .filter((entity) => entity instanceof ConnectableEntity);
-    let selectedNode: ConnectableEntity | null = null;
     if (selectedEntities.length === 0) {
       const nearestNode = this.selectMostNearLocationNode(this.project.camera.location);
       if (nearestNode) {
         nearestNode.isSelected = true;
       }
       return null;
-    } else if (selectedEntities.length === 1) {
-      selectedNode = selectedEntities[0];
-    } else {
-      const lastSelectNodeArr = this.project.stageManager
-        .getEntitiesByUUIDs([this.lastSelectNodeByKeyboardUUID])
-        .filter((entity) => entity instanceof ConnectableEntity);
-      if (lastSelectNodeArr.length !== 0) {
-        selectedNode = lastSelectNodeArr[0];
-      } else {
-        selectedNode = selectedEntities[0];
-      }
     }
-    return selectedNode;
+    if (selectedEntities.length === 1) {
+      return selectedEntities[0];
+    }
+    const lastSelectNodeArr = this.project.stageManager
+      .getEntitiesByUUIDs([this.lastSelectNodeByKeyboardUUID])
+      .filter((entity) => entity instanceof ConnectableEntity);
+    if (lastSelectNodeArr.length !== 0) {
+      return lastSelectNodeArr[0];
+    }
+    return selectedEntities[0];
   }
 
   private addEffect(selectedNodeRect: Rectangle, newSelectNodeRect: Rectangle) {

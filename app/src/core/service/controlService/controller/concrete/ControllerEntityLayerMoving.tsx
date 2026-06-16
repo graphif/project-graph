@@ -83,15 +83,14 @@ export class ControllerLayerMovingClass extends ControllerClass {
       return; // 这个return必须写
     }
 
-    // 即将跳入的sections区域
-    const targetSections = this.project.sectionMethods.getSectionsByInnerLocation(mouseLocation);
+    const targetSection = this.project.sectionMethods.getInnermostSectionByLocation(mouseLocation);
     const selectedEntities = this.project.stageManager.getSelectedEntities();
 
     // 检查目标位置是否在锁定的 section 内（包括祖先section的锁定状态）
-    const hasLockedTargetSection = targetSections.some((section) =>
-      this.project.sectionMethods.isObjectBeLockedBySection(section),
-    );
-    if (hasLockedTargetSection) {
+    if (
+      targetSection &&
+      (targetSection.locked || this.project.sectionMethods.isObjectBeLockedBySection(targetSection))
+    ) {
       toast.error("不能跳入已锁定的 Section");
       return;
     }
@@ -119,12 +118,10 @@ export class ControllerLayerMovingClass extends ControllerClass {
     // 防止无限循环嵌套：当跳入的实体是选中的所有内容当中任意一个Section的内部时，禁止触发该操作
     for (const selectedEntity of selectedEntities) {
       if (selectedEntity instanceof Section) {
-        for (const targetSection of targetSections) {
-          if (this.project.sectionMethods.isEntityInSection(targetSection, selectedEntity)) {
-            this.project.effects.addEffect(EntityShakeEffect.fromEntity(targetSection));
-            toast.error("禁止将框套入自身内部");
-            return;
-          }
+        if (targetSection && this.project.sectionMethods.isEntityInSection(targetSection, selectedEntity)) {
+          this.project.effects.addEffect(EntityShakeEffect.fromEntity(targetSection));
+          toast.error("禁止将框套入自身内部");
+          return;
         }
       }
     }
@@ -147,45 +144,41 @@ export class ControllerLayerMovingClass extends ControllerClass {
     }
 
     // 改变层级
-    if (targetSections.length === 0) {
+    if (targetSection === null) {
       // 代表想要走到最外层空白位置
       for (const entity of selectedEntities) {
-        const currentFatherSections = this.project.sectionMethods.getFatherSections(entity);
-        for (const currentFatherSection of currentFatherSections) {
-          this.project.stageManager.goOutSection([entity], currentFatherSection);
-
-          // 特效
-          setTimeout(() => {
-            this.project.effects.addEffect(
-              RectanglePushInEffect.sectionGoInGoOut(
-                entity.collisionBox.getRectangle(),
-                currentFatherSection.collisionBox.getRectangle(),
-                true,
-              ),
-            );
-          });
+        const currentFatherSection = entity.parentSection;
+        if (!currentFatherSection) {
+          continue;
         }
+        this.project.stageManager.goOutSection([entity], currentFatherSection);
+
+        // 特效
+        setTimeout(() => {
+          this.project.effects.addEffect(
+            RectanglePushInEffect.sectionGoInGoOut(
+              entity.collisionBox.getRectangle(),
+              currentFatherSection.collisionBox.getRectangle(),
+              true,
+            ),
+          );
+        });
       }
     } else {
       // 跑到了别的层级之中
 
-      this.project.sectionInOutManager.goInSections(selectedEntities, targetSections);
+      this.project.sectionInOutManager.goInSection(selectedEntities, targetSection);
 
-      for (const section of targetSections) {
-        // this.project.stageManager.goInSection(selectedEntities, section);
-
-        // 特效
-        setTimeout(() => {
-          for (const entity of selectedEntities) {
-            this.project.effects.addEffect(
-              RectanglePushInEffect.sectionGoInGoOut(
-                entity.collisionBox.getRectangle(),
-                section.collisionBox.getRectangle(),
-              ),
-            );
-          }
-        });
-      }
+      setTimeout(() => {
+        for (const entity of selectedEntities) {
+          this.project.effects.addEffect(
+            RectanglePushInEffect.sectionGoInGoOut(
+              entity.collisionBox.getRectangle(),
+              targetSection.collisionBox.getRectangle(),
+            ),
+          );
+        }
+      });
     }
 
     // 3 移动所有选中的实体 的位置

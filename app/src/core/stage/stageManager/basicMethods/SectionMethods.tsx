@@ -89,6 +89,23 @@ export class SectionMethods {
   }
 
   /**
+   * 获取某个位置所在的最内层 Section。
+   * 在单父树结构下，命中结果只会有一个优先目标。
+   */
+  getInnermostSectionByLocation(location: Vector): Section | null {
+    return this.getSectionsByInnerLocation(location)[0] ?? null;
+  }
+
+  /**
+   * 获取实体最外层的锁定祖先 Section。
+   * 返回值用于交互层决定应该把选中/拖拽重定向到哪个锁定框。
+   */
+  getOutermostLockedAncestorSection(entity: Entity): Section | null {
+    const ancestors = this.getFatherSectionsList(entity).filter((section) => section.locked);
+    return ancestors.length > 0 ? ancestors[ancestors.length - 1] : null;
+  }
+
+  /**
    * 通过多个Section，获取最外层的Section（即没有父亲的Section）
    * @param sections
    * @returns

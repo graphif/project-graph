@@ -500,15 +500,12 @@ export class StageManager {
   }
 
   findConnectableEntityByLocation(location: Vector): ConnectableEntity | null {
-    for (const entity of this.getConnectableEntity()) {
-      if (entity.isHiddenBySectionCollapse) {
-        continue;
-      }
-      if (entity.collisionBox.isContainsPoint(location)) {
-        return entity;
-      }
-    }
-    return null;
+    return this.findEntityInHierarchyByLocation(
+      this.topLevelEntities,
+      location,
+      (entity): entity is ConnectableEntity => entity instanceof ConnectableEntity,
+      false,
+    );
   }
 
   /**
@@ -518,20 +515,61 @@ export class StageManager {
    * @returns
    */
   findEntityByLocation(location: Vector): Entity | null {
-    for (const penStroke of this.getPenStrokes()) {
-      if (penStroke.isHiddenBySectionCollapse) continue;
-      if (penStroke.collisionBox.isContainsPoint(location)) {
-        return penStroke;
+    return this.findEntityInHierarchyByLocation(
+      this.topLevelEntities,
+      location,
+      (entity): entity is Entity => entity instanceof Entity,
+      true,
+    );
+  }
+
+  private findEntityInHierarchyByLocation<T extends Entity>(
+    entities: Entity[],
+    location: Vector,
+    accept: (entity: Entity) => entity is T,
+    prioritizePenStroke: boolean,
+  ): T | null {
+    if (prioritizePenStroke) {
+      for (let i = entities.length - 1; i >= 0; i--) {
+        const entity = entities[i];
+        if (!(entity instanceof PenStroke)) {
+          continue;
+        }
+        if (entity.isHiddenBySectionCollapse) {
+          continue;
+        }
+        if (entity.collisionBox.isContainsPoint(location)) {
+          return accept(entity) ? entity : null;
+        }
       }
     }
-    for (const entity of this.getEntities()) {
+
+    for (let i = entities.length - 1; i >= 0; i--) {
+      const entity = entities[i];
       if (entity.isHiddenBySectionCollapse) {
         continue;
       }
       if (entity instanceof ImageNode && entity.isBackground) {
         continue;
       }
-      if (entity.collisionBox.isContainsPoint(location)) {
+      if (prioritizePenStroke && entity instanceof PenStroke) {
+        continue;
+      }
+
+      if (entity instanceof Section) {
+        if (entity.rectangle.isPointIn(location)) {
+          const childHit = this.findEntityInHierarchyByLocation(entity.children, location, accept, prioritizePenStroke);
+          if (childHit) {
+            return childHit;
+          }
+        }
+        if (accept(entity) && entity.collisionBox.isContainsPoint(location)) {
+          return entity;
+        }
+        continue;
+      }
+
+      if (accept(entity) && entity.collisionBox.isContainsPoint(location)) {
         return entity;
       }
     }

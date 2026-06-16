@@ -48,15 +48,8 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
     // 检查点击的物体是否在锁定的 section 内
     if (clickedStageObject && clickedStageObject instanceof Entity) {
       if (clickedStageObject instanceof Section) {
-        // 不管section本身是否锁定，只要有锁定的祖先section，就重定向到最外层锁定祖先（支持任意深度嵌套）
-        const ancestorSections = this.project.sectionMethods.getFatherSectionsList(clickedStageObject);
-        const lockedAncestors = ancestorSections.filter((s) => s.locked);
-        const outermostLockedAncestor = lockedAncestors.find(
-          (candidate) =>
-            !lockedAncestors.some(
-              (other) => other !== candidate && this.project.sectionMethods.isEntityInSection(candidate, other),
-            ),
-        );
+        const outermostLockedAncestor =
+          this.project.sectionMethods.getOutermostLockedAncestorSection(clickedStageObject);
         if (outermostLockedAncestor) {
           this.project.stageManager.getStageObjects().forEach((obj) => {
             obj.isSelected = false;
@@ -68,14 +61,8 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
       } else {
         // 对于其他实体：如果有锁定的祖先section，转而选中并拖动最外层锁定section
         if (this.project.sectionMethods.isObjectBeLockedBySection(clickedStageObject)) {
-          const ancestorSections = this.project.sectionMethods.getFatherSectionsList(clickedStageObject);
-          const lockedAncestors = ancestorSections.filter((s) => s.locked);
-          const outermostLockedSection = lockedAncestors.find(
-            (candidate) =>
-              !lockedAncestors.some(
-                (other) => other !== candidate && this.project.sectionMethods.isEntityInSection(candidate, other),
-              ),
-          );
+          const outermostLockedSection =
+            this.project.sectionMethods.getOutermostLockedAncestorSection(clickedStageObject);
           if (outermostLockedSection) {
             this.project.stageManager.getStageObjects().forEach((obj) => {
               obj.isSelected = false;

@@ -46,13 +46,7 @@ export class RectangleSelect {
       .some((association) => association.isSelected);
     const isHaveEntitySelected = this.project.stageManager.getEntities().some((entity) => entity.isSelected);
 
-    const sections = this.project.sectionMethods.getSectionsByInnerLocation(worldLocation);
-    if (sections.length === 0) {
-      // 没有在任何section里按下
-      this.limitSection = null;
-    } else {
-      this.limitSection = sections[0];
-    }
+    this.limitSection = this.project.sectionMethods.getInnermostSectionByLocation(worldLocation);
 
     if (isHaveEntitySelected || isHaveEdgeSelected) {
       // A
