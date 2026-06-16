@@ -135,7 +135,8 @@ jobs:
       matrix:
         include:
           - platform: "ubuntu-22.04"
-            dist: "src-tauri/target/release/bundle/**/*.{deb,AppImage,rpm,sig}"
+            args: "--bundles deb,rpm"
+            dist: "src-tauri/target/release/bundle/**/*.{deb,rpm,sig}"
           - platform: "windows-latest"
             dist: "src-tauri/target/release/bundle/nsis"
           - platform: "macos-latest"
