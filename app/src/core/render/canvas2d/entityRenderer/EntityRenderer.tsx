@@ -55,6 +55,9 @@ export class EntityRenderer {
       if (this.project.renderer.isOverView(viewRectangle, section)) {
         continue;
       }
+      if (this.project.sectionMethods.isEntityHiddenByBigTitleSection(section)) {
+        continue;
+      }
       this.project.sectionRenderer.renderBackgroundColor(section);
     }
     // 最后更新帧
@@ -82,6 +85,9 @@ export class EntityRenderer {
       if (section.isHiddenBySectionCollapse) {
         continue;
       }
+      if (this.project.sectionMethods.isEntityHiddenByBigTitleSection(section)) {
+        continue;
+      }
       if (Settings.sectionBitTitleRenderType === "cover") {
         this.project.sectionRenderer.renderBigCoveredTitle(section);
       } else if (Settings.sectionBitTitleRenderType === "top") {
@@ -97,6 +103,7 @@ export class EntityRenderer {
     return (
       entity instanceof Section ||
       entity instanceof PenStroke ||
+      this.project.sectionMethods.isEntityHiddenByBigTitleSection(entity) ||
       this.project.renderer.isOverView(viewRectangle, entity)
     );
   }
@@ -130,6 +137,9 @@ export class EntityRenderer {
       if (this.project.renderer.isOverView(viewRectangle, section)) {
         continue;
       }
+      if (this.project.sectionMethods.isEntityHiddenByBigTitleSection(section)) {
+        continue;
+      }
       this.project.sectionRenderer.render(section);
       // details右上角小按钮
       if (this.project.camera.currentScale > 0.065 && !section.isHiddenBySectionCollapse) {
@@ -143,6 +153,9 @@ export class EntityRenderer {
       if (this.project.renderer.isOverView(viewRectangle, penStroke)) {
         continue;
       }
+      if (this.project.sectionMethods.isEntityHiddenByBigTitleSection(penStroke)) {
+        continue;
+      }
       this.renderEntity(penStroke);
     }
   }
@@ -154,6 +167,9 @@ export class EntityRenderer {
   renderEntity(entity: Entity) {
     // section 折叠不画
     if (entity.isHiddenBySectionCollapse) {
+      return;
+    }
+    if (this.project.sectionMethods.isEntityHiddenByBigTitleSection(entity)) {
       return;
     }
     if (entity instanceof TextNode) {

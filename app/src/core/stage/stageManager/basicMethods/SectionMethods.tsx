@@ -1,6 +1,7 @@
 import { Vector } from "@graphif/data-structures";
 import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
+import { Association } from "@/core/stage/stageObject/abstract/Association";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
@@ -115,6 +116,37 @@ export class SectionMethods {
       sectionMaxSide < viewMaxSide * Settings.sectionBigTitleThresholdRatio &&
       this.project.camera.currentScale <= Settings.sectionBigTitleCameraScaleThreshold
     );
+  }
+
+  /**
+   * 如果某个实体被处于大标题形态的祖先 Section 覆盖，返回这个最近的祖先。
+   * 该判断只用于渲染层，不会改变实体本身的可见性数据。
+   */
+  getBigTitleCoveringAncestorSection(entity: Entity): Section | null {
+    if (!Settings.hideSectionContentsWhenBigTitleActive) {
+      return null;
+    }
+    let current = entity.parentSection;
+    while (current) {
+      if (this.isSectionBigTitleActive(current)) {
+        return current;
+      }
+      current = current.parentSection;
+    }
+    return null;
+  }
+
+  isEntityHiddenByBigTitleSection(entity: Entity): boolean {
+    return this.getBigTitleCoveringAncestorSection(entity) !== null;
+  }
+
+  isAssociationHiddenByBigTitleSection(association: Association): boolean {
+    if (!Settings.hideSectionContentsWhenBigTitleActive) {
+      return false;
+    }
+    return association.associationList.some((stageObject) => {
+      return stageObject instanceof Entity && this.isEntityHiddenByBigTitleSection(stageObject);
+    });
   }
 
   /**

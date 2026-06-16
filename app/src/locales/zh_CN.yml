@@ -362,6 +362,12 @@ settings:
     title: 框的缩略大标题透明度
     description: |
       控制半透明覆盖大标题的透明度，取值范围0-1
+  hideSectionContentsWhenBigTitleActive:
+    title: 大标题形态时隐藏框内物体
+    description: |
+      开启后，当分组框进入大标题渲染形态时，不再渲染其内部的任何物体。
+      包括内部节点、图片、子分组框、涂鸦和相关连线。
+      此选项默认关闭。
   sectionBackgroundFillMode:
     title: 框的背景颜色填充方式
     description: |

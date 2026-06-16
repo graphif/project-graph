@@ -241,6 +241,7 @@ export const categories = {
       "sectionBigTitleThresholdRatio",
       "sectionBigTitleCameraScaleThreshold",
       "sectionBigTitleOpacity",
+      "hideSectionContentsWhenBigTitleActive",
       "sectionBackgroundFillMode",
     ],
     edge: ["lineStyle", "hideArrowWhenPointingToConnectPoint", "enableAutoEdgeWidth"],

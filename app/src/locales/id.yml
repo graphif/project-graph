@@ -345,6 +345,12 @@ settings:
     title: Opasitas Judul Besar Ringkasan Kotak
     description: |
       Mengontrol opasitas tutupan judul besar transparan, rentang nilai 0-1
+  hideSectionContentsWhenBigTitleActive:
+    title: Sembunyikan Isi Saat Mode Judul Besar
+    description: |
+      Saat diaktifkan, ketika section masuk ke mode render judul besar, semua objek di dalamnya tidak akan dirender.
+      Ini mencakup node internal, gambar, child section, coretan pena, dan garis terkait.
+      Dinonaktifkan secara default.
   sectionBackgroundFillMode:
     title: Mode Pengisian Warna Latar Kotak
     description: |

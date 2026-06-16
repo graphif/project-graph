@@ -49,6 +49,7 @@ export const settingsSchema = z.object({
   sectionBigTitleThresholdRatio: z.number().min(0).max(1).default(0.15),
   sectionBigTitleCameraScaleThreshold: z.number().min(0.01).max(1).default(0.25),
   sectionBigTitleOpacity: z.number().min(0).max(1).default(0.5),
+  hideSectionContentsWhenBigTitleActive: z.boolean().default(false),
   sectionBackgroundFillMode: z.union([z.literal("full"), z.literal("titleOnly")]).default("titleOnly"),
   autoEnterSectionEditMode: z.boolean().default(true),
   cacheTextAsBitmap: z.boolean().default(false),

@@ -391,6 +391,12 @@ settings:
   sectionBigTitleOpacity:
     title: 框的縮略大標題透明度
     description: 控制半透明覆蓋大標題的透明度，取值範圍0-1
+  hideSectionContentsWhenBigTitleActive:
+    title: 大標題形態時隱藏框內物體
+    description: |
+      開啟後，當分組框進入大標題渲染形態時，不再渲染它裡面的任何物體。
+      包括裡面的節點、圖片、子分組框、塗鴉和相關連線。
+      這個選項預設是關閉的。
   sectionBackgroundFillMode:
     title: 框的背景顏色填充方式
     description: |

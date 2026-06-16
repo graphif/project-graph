@@ -650,6 +650,9 @@ export class Renderer {
       if (this.isOverView(viewRectangle, association)) {
         continue;
       }
+      if (this.project.sectionMethods.isAssociationHiddenByBigTitleSection(association)) {
+        continue;
+      }
       if (association instanceof MultiTargetUndirectedEdge) {
         this.project.multiTargetUndirectedEdgeRenderer.render(association);
       }

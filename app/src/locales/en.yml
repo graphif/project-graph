@@ -839,6 +839,12 @@ settings:
     title: Section Big Title Opacity
     description: |
       Control the opacity of the semi-transparent cover big title, range 0-1
+  hideSectionContentsWhenBigTitleActive:
+    title: Hide Contents in Big Title Mode
+    description: |
+      When enabled, once a section enters the big title rendering mode, none of its inner objects are rendered.
+      This includes inner nodes, images, child sections, pen strokes, and related edges.
+      Disabled by default.
   sectionBackgroundFillMode:
     title: Section Background Fill Mode
     description: |
