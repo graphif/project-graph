@@ -340,13 +340,9 @@ export class StageManager {
     if (candidates.length === 0) {
       return null;
     }
-    const childArea = this.getEntityArea(entity);
     const validCandidates = candidates.filter((section) => {
       if (section === entity) {
         return false;
-      }
-      if (entity instanceof Section) {
-        return this.getEntityArea(section) > childArea;
       }
       return true;
     });
