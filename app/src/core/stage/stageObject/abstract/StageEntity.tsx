@@ -1,5 +1,6 @@
 import { Settings } from "@/core/service/Settings";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import type { Section } from "@/core/stage/stageObject/entity/Section";
 import { Vector } from "@graphif/data-structures";
 import { serializable } from "@graphif/serializer";
 import { Circle, Rectangle } from "@graphif/shapes";
@@ -36,6 +37,24 @@ export abstract class Entity extends StageObject {
    */
   @serializable
   public details: Value = [];
+
+  /**
+   * 运行时直接父级 Section。
+   * 不参与序列化，打开文件后由 `StageManager.updateReferences()` 重建。
+   */
+  public parentSection: Section | null = null;
+
+  /**
+   * 运行时层级深度。
+   * 顶层实体和根 Section 都为 0，嵌套越深数值越大。
+   */
+  public sectionDepth: number = 0;
+
+  /**
+   * 运行时最近的锁定祖先 Section。
+   * 用于后续把锁定判断从全局扫描收敛到沿父链查询。
+   */
+  public nearestLockedAncestorSection: Section | null = null;
 
   /** 用于交互使用，比如鼠标悬浮显示details */
   public isMouseHover: boolean = false;

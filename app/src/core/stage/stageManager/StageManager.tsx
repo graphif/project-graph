@@ -56,7 +56,27 @@ export type ChildCameraData = {
  */
 @service("stageManager")
 export class StageManager {
+  /**
+   * 运行时缓存的根 Section 列表。
+   * 它们没有直接父级 Section，会在 `updateReferences()` 中重建。
+   */
+  public rootSections: Section[] = [];
+
+  /**
+   * 运行时缓存的顶层实体列表。
+   * 不在任何 Section 内的实体会出现在这里，会在 `updateReferences()` 中重建。
+   */
+  public topLevelEntities: Entity[] = [];
+
   constructor(private readonly project: Project) {}
+
+  public getRootSections(): Section[] {
+    return [...this.rootSections];
+  }
+
+  public getTopLevelEntities(): Entity[] {
+    return [...this.topLevelEntities];
+  }
 
   /**
    * TODO: 这个get方法在2.0从O(1)变成O(N)了，可能是引起卡顿的原因，后面待排查
@@ -177,27 +197,7 @@ export class StageManager {
         }
       }
     }
-    // 以下是分组框的更新，y值降序排序，从下往上排序，因为下面的往往是内层的Section
-    for (const section of this.getSections().sort(
-      (a, b) => b.collisionBox.getRectangle().location.y - a.collisionBox.getRectangle().location.y,
-    )) {
-      // 更新孩子数组，并调整位置和大小
-      const newChildList = [];
-
-      for (const child of section.children) {
-        if (this.project.stage.find((node) => node.uuid === child.uuid)) {
-          const childObject = this.project.stage.find(
-            (node) => node.uuid === child.uuid && node instanceof Entity,
-          ) as Entity;
-          if (childObject) {
-            newChildList.push(childObject);
-          }
-        }
-      }
-      section.children = newChildList;
-      section.adjustLocationAndSize();
-      section.adjustChildrenStateByCollapse();
-    }
+    this.rebuildSectionRuntimeTree();
 
     // 以下是LineEdge几何组偏移索引的更新
     // 几何组 key：无向，(minNodeId, maxNodeId, epAtMin, epAtMax)
@@ -247,6 +247,132 @@ export class StageManager {
         edges[i].shiftingIndex = idx;
       }
     }
+  }
+
+  private rebuildSectionRuntimeTree() {
+    const entities = this.getEntities();
+    const sections = this.getSections();
+    const entityMap = new Map<string, Entity>();
+    const originalChildrenMap = new Map<string, Entity[]>();
+    const parentCandidates = new Map<string, Section[]>();
+
+    this.rootSections = [];
+    this.topLevelEntities = [];
+
+    for (const entity of entities) {
+      entityMap.set(entity.uuid, entity);
+      entity.parentSection = null;
+      entity.sectionDepth = 0;
+      entity.nearestLockedAncestorSection = null;
+      if (entity instanceof Section) {
+        originalChildrenMap.set(entity.uuid, [...entity.children]);
+      }
+    }
+
+    for (const section of sections) {
+      const uniqueChildren: Entity[] = [];
+      const seenChildUUIDs = new Set<string>();
+      const rawChildren = originalChildrenMap.get(section.uuid) ?? [];
+      for (const child of rawChildren) {
+        const childObject = entityMap.get(child.uuid);
+        if (!childObject || childObject === section || seenChildUUIDs.has(childObject.uuid)) {
+          continue;
+        }
+        seenChildUUIDs.add(childObject.uuid);
+        uniqueChildren.push(childObject);
+        if (!parentCandidates.has(childObject.uuid)) {
+          parentCandidates.set(childObject.uuid, []);
+        }
+        parentCandidates.get(childObject.uuid)!.push(section);
+      }
+      section.children = uniqueChildren;
+    }
+
+    for (const entity of entities) {
+      const candidates = parentCandidates.get(entity.uuid) ?? [];
+      entity.parentSection = this.pickDirectParentSection(entity, candidates);
+    }
+
+    for (const section of sections) {
+      section.children = section.children.filter((child) => child.parentSection === section);
+    }
+
+    for (const entity of entities) {
+      if (entity.parentSection === null) {
+        this.topLevelEntities.push(entity);
+        if (entity instanceof Section) {
+          this.rootSections.push(entity);
+        }
+      }
+    }
+
+    for (const entity of this.topLevelEntities) {
+      this.assignSectionRuntimeInfo(entity, 0, null);
+    }
+
+    for (const entity of entities) {
+      entity.isHiddenBySectionCollapse = false;
+    }
+
+    for (const section of sections.sort((a, b) => b.sectionDepth - a.sectionDepth)) {
+      section.adjustLocationAndSize();
+    }
+
+    for (const rootSection of this.rootSections) {
+      rootSection.adjustChildrenStateByCollapse(false);
+    }
+  }
+
+  private pickDirectParentSection(entity: Entity, candidates: Section[]): Section | null {
+    if (candidates.length === 0) {
+      return null;
+    }
+    const childArea = this.getEntityArea(entity);
+    const validCandidates = candidates.filter((section) => {
+      if (section === entity) {
+        return false;
+      }
+      if (entity instanceof Section) {
+        return this.getEntityArea(section) > childArea;
+      }
+      return true;
+    });
+    if (validCandidates.length === 0) {
+      return null;
+    }
+    validCandidates.sort((a, b) => {
+      const areaDiff = this.getEntityArea(a) - this.getEntityArea(b);
+      if (areaDiff !== 0) {
+        return areaDiff;
+      }
+      const rectA = a.collisionBox.getRectangle();
+      const rectB = b.collisionBox.getRectangle();
+      if (rectA.top !== rectB.top) {
+        return rectA.top - rectB.top;
+      }
+      if (rectA.left !== rectB.left) {
+        return rectA.left - rectB.left;
+      }
+      return a.uuid.localeCompare(b.uuid);
+    });
+    return validCandidates[0];
+  }
+
+  private assignSectionRuntimeInfo(entity: Entity, depth: number, lockedAncestor: Section | null) {
+    entity.sectionDepth = depth;
+    entity.nearestLockedAncestorSection = lockedAncestor;
+    if (!(entity instanceof Section)) {
+      return;
+    }
+    const nextLockedAncestor = entity.locked ? entity : lockedAncestor;
+    for (const child of entity.children) {
+      this.assignSectionRuntimeInfo(child, depth + 1, nextLockedAncestor);
+    }
+  }
+
+  private getEntityArea(entity: Entity): number {
+    const rect = entity.collisionBox.getRectangle();
+    return rect.size.x * rect.size.y;
   }
 
   getTextNodeByUUID(uuid: string): TextNode | null {
