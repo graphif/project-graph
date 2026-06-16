@@ -23,6 +23,12 @@ export class ControllerSectionEditClass extends ControllerClass {
     if (this.project.controller.camera.isPreGrabbingWhenSpace) {
       return;
     }
+    const worldLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
+    const clickedEntity = this.project.stageManager.findEntityByLocation(worldLocation);
+    if (clickedEntity instanceof Section && this.project.sectionMethods.isSectionBigTitleActive(clickedEntity)) {
+      this.editSectionTitle(clickedEntity);
+      return;
+    }
     const firstHoverSection = this.project.mouseInteraction.firstHoverSection;
     if (!firstHoverSection) {
       return;

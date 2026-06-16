@@ -28,6 +28,10 @@ export class ControllerEntityCreateClass extends ControllerClass {
     this.project.rectangleSelect.shutDown();
 
     const pressLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
+    const clickedEntity = this.project.stageManager.findEntityByLocation(pressLocation);
+    if (clickedEntity instanceof Section && this.project.sectionMethods.isSectionBigTitleActive(clickedEntity)) {
+      return;
+    }
 
     // 排除：在实体上双击或者在线上双击
     if (

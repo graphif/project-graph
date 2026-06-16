@@ -122,6 +122,16 @@ export class ControllerCuttingClass extends ControllerClass {
   private mouseDownEvent(event: MouseEvent) {
     const pressWorldLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
     this.lastMoveLocation = pressWorldLocation.clone();
+    const clickedEntity = this.project.stageManager.findEntityByLocation(pressWorldLocation);
+
+    if (
+      event.button === 2 &&
+      clickedEntity instanceof Section &&
+      this.project.sectionMethods.isSectionBigTitleActive(clickedEntity)
+    ) {
+      this.isUsing = false;
+      return;
+    }
 
     const isClickedEntity = this.project.stageManager.isEntityOnLocation(pressWorldLocation);
     const isClickedAssociation = this.project.stageManager.isAssociationOnLocation(pressWorldLocation);
