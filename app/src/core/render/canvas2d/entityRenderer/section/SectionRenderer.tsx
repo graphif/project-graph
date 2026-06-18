@@ -137,6 +137,10 @@ export class SectionRenderer {
     if (!this.project.sectionMethods.isSectionBigTitleActive(section)) {
       return;
     }
+    // === 优化性能
+    const sectionViewSize = section.rectangle.size.multiply(this.project.camera.currentScale);
+    if (Math.max(sectionViewSize.x, sectionViewSize.y) < 20) return;
+    // ===
     this.project.shapeRenderer.renderRect(
       new Rectangle(
         this.project.renderer.transformWorld2View(section.rectangle.location),
@@ -170,6 +174,10 @@ export class SectionRenderer {
     if (!this.project.sectionMethods.isSectionBigTitleActive(section)) {
       return;
     }
+    // === 优化性能
+    const sectionViewSize = section.rectangle.size.multiply(this.project.camera.currentScale);
+    if (Math.max(sectionViewSize.x, sectionViewSize.y) < 20) return;
+    // ===
     const fontSize = 20 * (0.5 * this.project.camera.currentScale + 0.5);
     const leftTopLocation = section.collisionBox.getRectangle().leftTop;
     const leftTopViewLocation = this.project.renderer.transformWorld2View(leftTopLocation);
