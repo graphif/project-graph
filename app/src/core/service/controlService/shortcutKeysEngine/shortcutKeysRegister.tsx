@@ -575,8 +575,17 @@ export const allKeyBinds: KeyBindItem[] = [
       const hasSelectedEntities = project!.stageManager.getEntities().some((entity) => entity.isSelected);
       const hasSelectedEdges = project!.stageManager.getAssociations().some((edge) => edge.isSelected);
       if (hasActiveRectangle && !hasSelectedEntities && !hasSelectedEdges) {
-        // 如果有框选框且没有选中任何物体，则在框选区域创建Section
-        project!.sectionPackManager.createSectionFromSelectionRectangle();
+        const section = project!.sectionPackManager.createSectionFromSelectionRectangle();
+        if (section) {
+          project!.stageManager.clearSelectAll();
+          for (const edge of project!.stageManager.getAssociations()) {
+            edge.isSelected = false;
+          }
+          section.isSelected = true;
+          if (Settings.autoEnterSectionEditMode) {
+            project!.controllerUtils.editSectionTitle(section);
+          }
+        }
       } else {
         // 否则执行原来的打包功能，并自动进入编辑状态
         const section = await project!.sectionPackManager.packSelectedEntitiesToSection();
