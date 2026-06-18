@@ -216,6 +216,9 @@ settings:
       cbrt: Akar Pangkat Tiga (Paling sensitif pada tekanan rendah)
       quadratic: Kuadrat (Lebih sensitif pada tekanan menengah/tinggi)
       cubic: Kubik (Paling sensitif pada tekanan tinggi)
+  pin:
+    tooltipPin: Sematkan ke bilah pengaturan cepat
+    tooltipUnpin: Lepas dari bilah pengaturan cepat
   showQuickSettingsToolbar:
     title: Tampilkan Bilah Pengaturan Cepat
     description: |

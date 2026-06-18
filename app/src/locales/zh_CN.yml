@@ -227,6 +227,9 @@ settings:
       cbrt: 立方根（低压力最敏感）
       quadratic: 二次抛物线（中高压力更敏感）
       cubic: 三次抛物线（高压力最敏感）
+  pin:
+    tooltipPin: 固定到右侧快捷栏
+    tooltipUnpin: 从右侧快捷栏取消固定
   showQuickSettingsToolbar:
     title: 显示快捷设置栏
     description: |

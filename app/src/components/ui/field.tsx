@@ -5,18 +5,45 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Settings, settingsSchema } from "@/core/service/Settings";
 import { settingsIcons } from "@/core/service/SettingsIcons";
+import { QuickSettingsManager } from "@/core/service/QuickSettingsManager";
 import { Telemetry } from "@/core/service/Telemetry";
 import { cn } from "@/utils/cn";
 import _ from "lodash";
-import { ChevronRight, RotateCw } from "lucide-react";
-import React, { CSSProperties, Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { ChevronRight, Pin, PinOff, RotateCw } from "lucide-react";
+import React, { CSSProperties, Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof Settings; extra?: React.ReactNode }) {
   const [value, setValue] = React.useState<any>(Settings[settingKey]);
   const { t, i18n } = useTranslation("settings");
   const schema = settingsSchema.shape[settingKey];
+  const [isPinned, setIsPinned] = useState(false);
+
+  const loadPinnedState = useCallback(async () => {
+    const items = await QuickSettingsManager.getQuickSettings();
+    setIsPinned(items.some((it) => it.settingKey === settingKey));
+  }, [settingKey]);
+
+  useEffect(() => {
+    if (QuickSettingsManager.isValidQuickSetting(settingKey as string)) {
+      loadPinnedState();
+    }
+  }, [settingKey, loadPinnedState]);
+
+  const handlePinToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isPinned) {
+      await QuickSettingsManager.removeQuickSetting(settingKey);
+      setIsPinned(false);
+    } else {
+      await QuickSettingsManager.addQuickSetting({ settingKey });
+      setIsPinned(true);
+    }
+  };
+
+  const showPin = QuickSettingsManager.isValidQuickSetting(settingKey as string);
 
   React.useEffect(() => {
     if (value !== Settings[settingKey]) {
@@ -53,6 +80,20 @@ export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof 
       description={t(`${settingKey}.description`, { defaultValue: "" })}
       icon={<Icon />}
       className="border-accent hover:bg-accent border-b transition not-hover:rounded-none"
+      titleExtra={
+        showPin && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {isPinned ? (
+                <Pin className="h-4 w-4 cursor-pointer" onClick={handlePinToggle} />
+              ) : (
+                <PinOff className="h-4 w-4 cursor-pointer opacity-30 hover:opacity-70" onClick={handlePinToggle} />
+              )}
+            </TooltipTrigger>
+            <TooltipContent>{t(isPinned ? "pin.tooltipUnpin" : "pin.tooltipPin")}</TooltipContent>
+          </Tooltip>
+        )
+      }
     >
       <RotateCw
         className="text-panel-details-text h-4 w-4 cursor-pointer opacity-0 group-hover/field:opacity-100 hover:rotate-180"
@@ -120,7 +161,7 @@ export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof 
             const hex = e.target.value;
             setValue([parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)]);
           }}
-          className="w-10 h-8 rounded border cursor-pointer"
+          className="h-8 w-10 cursor-pointer rounded border"
         />
       ) : (
         <>unknown type</>
@@ -176,6 +217,7 @@ export function Field({
   className = "",
   style = {},
   onClick = () => {},
+  titleExtra,
 }: {
   title?: string;
   description?: string;
@@ -186,6 +228,7 @@ export function Field({
   className?: string;
   style?: CSSProperties;
   onClick?: () => void;
+  titleExtra?: React.ReactNode;
 }) {
   return (
     <div
@@ -197,7 +240,10 @@ export function Field({
         <div className="flex items-center gap-2">
           <span>{icon}</span>
           <div className="flex flex-col">
-            <span>{title}</span>
+            <span className="inline-flex items-center gap-1">
+              {title}
+              {titleExtra}
+            </span>
             <span className="text-panel-details-text text-xs font-light opacity-60">
               {description.split("\n").map((dd, ii) => (
                 <p key={ii} className="text-xs">

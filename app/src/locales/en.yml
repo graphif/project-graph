@@ -168,6 +168,9 @@ settings:
       cbrt: Cube Root (Most sensitive at low pressure)
       quadratic: Quadratic (More sensitive at medium/high pressure)
       cubic: Cubic (Most sensitive at high pressure)
+  pin:
+    tooltipPin: Pin to quick settings toolbar
+    tooltipUnpin: Unpin from quick settings toolbar
   showQuickSettingsToolbar:
     title: Show Quick Settings Toolbar
     description: |
