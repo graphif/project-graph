@@ -220,6 +220,12 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       if (anchorRate) {
         this._adjustLocationToKeepAnchor(oldRect, anchorRate);
       }
+    } else if (this.sizeAdjust === "manual") {
+      this.resizeHandle(Vector.getZero());
+      if (anchorRate) {
+        const oldRect = this.rectangle.clone();
+        this._adjustLocationToKeepAnchor(oldRect, new Vector(anchorRate.x, 0));
+      }
     }
   }
 
@@ -235,6 +241,12 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       this.adjustSizeByText();
       if (anchorRate) {
         this._adjustLocationToKeepAnchor(oldRect, anchorRate);
+      }
+    } else if (this.sizeAdjust === "manual") {
+      this.resizeHandle(Vector.getZero());
+      if (anchorRate) {
+        const oldRect = this.rectangle.clone();
+        this._adjustLocationToKeepAnchor(oldRect, new Vector(anchorRate.x, 0));
       }
     }
   }
