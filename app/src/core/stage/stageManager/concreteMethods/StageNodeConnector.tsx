@@ -1,5 +1,6 @@
 import { Project, service } from "@/core/Project";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { ArcEdge } from "@/core/stage/stageObject/association/ArcEdge";
 import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/CubicCatmullRomSplineEdge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
@@ -81,6 +82,18 @@ export class NodeConnector {
       return;
     }
     const newEdge = CubicCatmullRomSplineEdge.fromTwoEntity(this.project, fromNode, toNode);
+    this.project.stageManager.add(newEdge);
+    this.project.stageManager.updateReferences();
+  }
+
+  addArcEdge(fromNode: ConnectableEntity, toNode: ConnectableEntity): void {
+    if (!this.isConnectable(fromNode, toNode)) {
+      return;
+    }
+    const newEdge = new ArcEdge(this.project, {
+      associationList: [fromNode, toNode],
+      offset: 10,
+    });
     this.project.stageManager.add(newEdge);
     this.project.stageManager.updateReferences();
   }

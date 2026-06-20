@@ -233,6 +233,7 @@ export const settingsIcons = {
   windowCollapsingHeight: MoveVertical,
   autoAdjustLineEndpointsByMouseTrack: LineSquiggle,
   enableRightClickConnect: MousePointerClick,
+  rightClickConnectEdgeType: Spline,
   isStealthModeEnabled: Crosshair,
   stealthModeScopeRadius: ScanEye,
   stealthModeReverseMask: CircleDot,

@@ -573,7 +573,15 @@ export class ControllerNodeConnectionClass extends ControllerClass {
     const selectedEntities = this.project.stageManager.getConnectableEntity().filter((entity) => entity.isSelected);
     // 还要保证当前舞台有节点被选中
     // 连线
-    this.project.stageManager.connectMultipleEntities(selectedEntities, releaseTargetEntity);
+    const isArcEdge = Settings.rightClickConnectEdgeType === "arc";
+    this.project.stageManager.connectMultipleEntities(
+      selectedEntities,
+      releaseTargetEntity,
+      false,
+      undefined,
+      undefined,
+      isArcEdge,
+    );
 
     for (const selectedEntity of selectedEntities) {
       this.addConnectEffect(selectedEntity, releaseTargetEntity);

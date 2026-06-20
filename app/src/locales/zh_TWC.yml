@@ -296,6 +296,12 @@ settings:
     description: '開啟後，選取實體並右鍵點擊其他實體時會自動建立連線，且右鍵選單僅在空白處顯示
 
       關閉後，可以在實體上右鍵直接開啟選單，不會自動建立連線'
+  rightClickConnectEdgeType:
+    title: 右鍵連線預設類型
+    description: 右鍵點擊式連線時預設建立的連線類型
+    options:
+      normal: 普通連線
+      arc: 圓弧線
   lineStyle:
     title: 連線樣式
     options:

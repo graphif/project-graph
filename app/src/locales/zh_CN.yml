@@ -250,6 +250,12 @@ settings:
     description: |
       开启后，选中实体并右键点击其他实体时会自动创建连线，且右键菜单仅在空白处显示
       关闭后，可以在实体上右键直接打开菜单，不会自动创建连线
+  rightClickConnectEdgeType:
+    title: 右键连线默认类型
+    description: 右键点击式连线时默认创建的连线类型
+    options:
+      normal: 普通连线
+      arc: 圆弧线
   lineStyle:
     title: 连线样式
     options:

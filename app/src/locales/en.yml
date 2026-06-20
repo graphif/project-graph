@@ -190,6 +190,12 @@ settings:
       straight: Straight Line
       bezier: Bezier Curve
       vertical: Vertical Zigzag Line
+  rightClickConnectEdgeType:
+    title: Right-Click Connection Edge Type
+    description: Default edge type created when using right-click connection
+    options:
+      normal: Normal Edge
+      arc: Arc Curve
   hideArrowWhenPointingToConnectPoint:
     title: Hide Arrow When Pointing to Connect Point
     description: |

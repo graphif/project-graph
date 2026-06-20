@@ -142,6 +142,7 @@ export const settingsSchema = z.object({
   rectangleSelectWhenRight: z.union([z.literal("intersect"), z.literal("contain")]).default("intersect"),
   rectangleSelectWhenLeft: z.union([z.literal("intersect"), z.literal("contain")]).default("contain"),
   enableRightClickConnect: z.boolean().default(true),
+  rightClickConnectEdgeType: z.union([z.literal("normal"), z.literal("arc")]).default("arc"),
   textNodeStartEditMode: z
     .union([
       z.literal("enter"),

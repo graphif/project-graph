@@ -800,6 +800,7 @@ export class StageManager {
     isCrEdge: boolean = false,
     sourceRectRate?: [number, number],
     targetRectRate?: [number, number],
+    isArcEdge: boolean = false,
   ) {
     if (fromNodes.length === 0) {
       return false;
@@ -814,7 +815,9 @@ export class StageManager {
         );
         continue;
       }
-      if (isCrEdge) {
+      if (isArcEdge) {
+        this.project.nodeConnector.addArcEdge(fromNode, toNode);
+      } else if (isCrEdge) {
         this.project.nodeConnector.addCrEdge(fromNode, toNode);
       } else {
         this.project.nodeConnector.connectConnectableEntity(fromNode, toNode, "", targetRectRate, sourceRectRate);

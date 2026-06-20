@@ -238,6 +238,12 @@ settings:
     description: |
       Saat diaktifkan, klik kanan entitas lain saat entitas dipilih akan membuat garis secara otomatis, dan menu konteks hanya muncul di area kosong
       Saat dimatikan, menu dapat dibuka langsung di entitas dengan klik kanan, tidak akan membuat garis otomatis
+  rightClickConnectEdgeType:
+    title: Jenis Garis Klik Kanan
+    description: Jenis garis default yang dibuat saat menggunakan koneksi klik kanan
+    options:
+      normal: Garis Normal
+      arc: Garis Kurva
   lineStyle:
     title: Gaya Garis
     options:

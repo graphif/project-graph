@@ -335,6 +335,7 @@ export const categories = {
       "enableDragNodeShakeDetachFromEdge",
       "autoAdjustLineEndpointsByMouseTrack",
       "enableRightClickConnect",
+      "rightClickConnectEdgeType",
       "enableDragEdgeRotateStructure",
     ],
     generateNode: [

@@ -250,6 +250,12 @@ settings:
     description: |
       開啟後，選中實體並右鍵點擊其他實體時會自動創建連線，且右鍵菜單僅在空白處顯示
       關閉後，可以在實體上右鍵直接打開菜單，不會自動創建連線
+  rightClickConnectEdgeType:
+    title: 右鍵連線默認類型
+    description: 右鍵點擊式連線時默認創建的連線類型
+    options:
+      normal: 普通連線
+      arc: 圓弧線
   lineStyle:
     title: 連線樣式
     options:
