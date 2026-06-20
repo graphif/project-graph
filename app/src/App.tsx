@@ -377,7 +377,9 @@ export default function App() {
               className="hover:bg-primary/25 h-full flex-1 cursor-grab transition-colors hover:*:opacity-100 active:cursor-grabbing sm:rounded-sm sm:hover:border"
               data-tauri-drag-region
             />
-            <ThemeModeSwitch />
+            <div className="hidden sm:block">
+              <ThemeModeSwitch />
+            </div>
             {!isMac && <WindowButtons />}
           </div>
 
