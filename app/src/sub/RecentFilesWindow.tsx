@@ -164,6 +164,7 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
   const [isLocalPrivacyMode, setIsLocalPrivacyMode] = React.useState<boolean>(false);
   const [thumbnailRefreshVersion, setThumbnailRefreshVersion] = React.useState(0);
   const [isRefreshingThumbnails, setIsRefreshingThumbnails] = React.useState(false);
+  const hasMouseMovedRef = React.useRef(false);
 
   useEffect(() => {
     if (!showThumbnails) {
@@ -519,7 +520,12 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
   };
 
   return (
-    <div className={cn("flex h-full flex-col items-center gap-2")}>
+    <div
+      className={cn("flex h-full flex-col items-center gap-2")}
+      onMouseMove={() => {
+        hasMouseMovedRef.current = true;
+      }}
+    >
       <div className="flex w-full flex-wrap items-center gap-2 p-1">
         <Input
           placeholder="请输入要筛选的文件"
@@ -538,17 +544,23 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
                 e.stopPropagation();
                 return;
               }
+              if (recentFilesFiltered.length > 0) {
+                checkoutFile(recentFilesFiltered[currentPreselect]);
+              }
             }
-            if (e.key === "Enter" && recentFilesFiltered.length === 1) {
-              checkoutFile(recentFilesFiltered[0]);
+            if (e.key === "ArrowDown") {
+              e.preventDefault();
+              setCurrentPreselect((prev) => Math.min(prev + 1, recentFilesFiltered.length - 1));
+            }
+            if (e.key === "ArrowUp") {
+              e.preventDefault();
+              setCurrentPreselect((prev) => Math.max(prev - 1, 0));
             }
           }}
           value={searchString}
           autoFocus
           // 搜索结果只有一条的时候，在页面下方文字中提示一下用户说按下回车键直接能够打开这个文件
-          className={cn("max-w-96 min-w-32 flex-1", {
-            "border-green-500 bg-green-500/10": recentFilesFiltered.length === 1,
-          })}
+          className="max-w-96 min-w-32 flex-1"
         />
 
         <button
@@ -691,12 +703,14 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
               className={cn(
                 "bg-muted/50 relative flex max-w-64 origin-left cursor-pointer flex-col items-center gap-2 rounded-lg border p-1 px-2 py-1 opacity-75",
                 {
-                  "opacity-100": index === currentPreselect,
+                  "ring-primary opacity-100 ring-2": index === currentPreselect,
                 },
               )}
               onMouseEnter={() => {
-                setCurrentPreselect(index);
-                SoundService.play.mouseEnterButton();
+                if (hasMouseMovedRef.current) {
+                  setCurrentPreselect(index);
+                  SoundService.play.mouseEnterButton();
+                }
               }}
               onClick={() => {
                 if (isShowDeleteEveryItem) {
