@@ -340,7 +340,10 @@ export default function App() {
   return (
     <>
       {/* 这是一个底层的 div，用于在拖拽改变窗口大小时填充背景，防止窗口出现透明闪烁 */}
-      <div className="fixed inset-0 z-[-1] bg-[var(--stage-background)]" style={{ opacity: windowBackgroundAlpha }} />
+      <div
+        className="absolute inset-0 z-[-1] bg-[var(--stage-background)]"
+        style={{ opacity: windowBackgroundAlpha }}
+      />
       <div
         className="relative flex h-full w-full flex-col overflow-clip rounded-lg sm:gap-2 sm:p-2"
         onContextMenu={(e) => e.preventDefault()}
