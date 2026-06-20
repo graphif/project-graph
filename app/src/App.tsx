@@ -454,13 +454,13 @@ function WindowButtons() {
             <X strokeWidth={3} size={10} />
           </div>
           <div
-            className="hidden cursor-pointer items-center justify-center rounded-full bg-yellow-400 text-yellow-800 hover:scale-110 sm:block"
+            className="hidden cursor-pointer items-center justify-center rounded-full bg-yellow-400 text-yellow-800 hover:scale-110"
             onClick={() => getCurrentWindow().minimize()}
           >
             <Minus strokeWidth={3} size={10} />
           </div>
           <div
-            className="hidden cursor-pointer items-center justify-center rounded-full bg-green-400 text-green-800 hover:scale-110 sm:block"
+            className="hidden cursor-pointer items-center justify-center rounded-full bg-green-400 text-green-800 hover:scale-110"
             onClick={() => {
               getCurrentWindow()
                 .isFullscreen()
