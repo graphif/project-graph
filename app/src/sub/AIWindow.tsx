@@ -118,6 +118,7 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
+      e.stopPropagation();
       handleUserSend();
     }
   }
