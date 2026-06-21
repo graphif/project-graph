@@ -32,7 +32,13 @@ export default function Markdown({
   }, [source, components]);
 
   return (
-    <div className={cn(className, "prose prose-neutral dark:prose-invert cursor-text text-sm select-text")}>
+    <div
+      className={cn(
+        className,
+        "prose max-w-none cursor-text text-sm select-text",
+        "[--tw-prose-body:var(--card-foreground)] [--tw-prose-bold:var(--card-foreground)] [--tw-prose-bullets:var(--muted-foreground)] [--tw-prose-captions:var(--muted-foreground)] [--tw-prose-code:var(--card-foreground)] [--tw-prose-counters:var(--muted-foreground)] [--tw-prose-headings:var(--card-foreground)] [--tw-prose-hr:var(--border)] [--tw-prose-lead:var(--card-foreground)] [--tw-prose-links:var(--primary)] [--tw-prose-pre-bg:var(--muted)] [--tw-prose-pre-code:var(--card-foreground)] [--tw-prose-quote-borders:var(--border)] [--tw-prose-quotes:var(--muted-foreground)] [--tw-prose-td-borders:var(--border)] [--tw-prose-th-borders:var(--border)]",
+      )}
+    >
       {content}
     </div>
   );
