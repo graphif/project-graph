@@ -54,6 +54,9 @@ tauri-plugin-updater = "2"
 tauri-plugin-window-state = "2"
 tokio = { version = "1", features = ["rt"] }
 
+[patch.crates-io]
+esaxx-rs = { path = "vendor/esaxx-rs" }
+
 [profile.release]
 codegen-units = 1 # Allows LLVM to perform better optimization.
 lto = true        # Enables link-time-optimizations.
