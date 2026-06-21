@@ -26,3 +26,41 @@ export function applyBlackAndWhite(canvas: HTMLCanvasElement): void {
 
   ctx.putImageData(imageData, 0, 0);
 }
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("图片加载失败"));
+    img.src = src;
+  });
+}
+
+export async function blobToCompressedDataUrl(blob: Blob, maxSize: number): Promise<string> {
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await loadImage(url);
+    let width = img.naturalWidth;
+    let height = img.naturalHeight;
+    if (width === 0 || height === 0) {
+      throw new Error("图片尺寸无效（可能为无内禀尺寸的 SVG）");
+    }
+    const maxDim = Math.max(width, height);
+    if (maxDim > maxSize) {
+      const scale = maxSize / maxDim;
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("无法获取 canvas 2d 上下文");
+    }
+    ctx.drawImage(img, 0, 0, width, height);
+    return canvas.toDataURL("image/png");
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}

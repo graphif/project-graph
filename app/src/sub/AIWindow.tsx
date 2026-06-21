@@ -14,7 +14,11 @@ import { Rectangle } from "@graphif/shapes";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import type { UIMessage } from "ai";
 import { useAtom } from "jotai";
-import { Bot, Check, ChevronRight, FolderOpen, Paperclip, Send, Sparkles, Square, User, X } from "lucide-react";
+import { Bot, Check, ChevronRight, FolderOpen, Paperclip, Plus, Send, Sparkles, Square, User, X } from "lucide-react";
+import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Section } from "@/core/stage/stageObject/entity/Section";
+import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { getOriginalNameOf } from "virtual:original-class-name";
@@ -57,6 +61,40 @@ function isEntity(
   obj: unknown,
 ): obj is { isSelected: boolean; collisionBox: { getRectangle(): Rectangle }; color?: Color } {
   return typeof obj === "object" && obj !== null && "isSelected" in obj && "collisionBox" in obj;
+}
+
+function createAnswerNode(message: UIMessage, project: Project) {
+  const answerText = (Array.isArray(message.parts) ? message.parts : [])
+    .filter((p: any) => p.type === "text")
+    .map((p: any) => p.text ?? "")
+    .join("\n")
+    .trim();
+  if (!answerText) {
+    toast.error("该消息没有可落盘的文本");
+    return;
+  }
+  const selected = project.stageManager.getSelectedEntities();
+  const source = selected.find((e) => e instanceof Section) ?? selected.find((e) => e instanceof ConnectableEntity);
+  if (!source) {
+    toast.error("请先选中要指向的分组框或节点");
+    return;
+  }
+  const sourceRect = source.collisionBox.getRectangle();
+  const node = new TextNode(project, {
+    text: answerText,
+    color: new Color(0, 0, 0, 0),
+    collisionBox: new CollisionBox([
+      new Rectangle(
+        new Vector(sourceRect.location.x + sourceRect.size.x + 100, sourceRect.location.y),
+        new Vector(100, 50),
+      ),
+    ]),
+    sizeAdjust: "auto",
+  });
+  project.stageManager.add(node);
+  project.nodeConnector.connectConnectableEntity(source, node);
+  project.historyManager.recordStep();
+  project.camera.bombMove(node.geometryCenter);
 }
 
 function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
@@ -198,8 +236,16 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            {messages.map((message) => (
-              <MessageBubble key={message.id} message={message as any} components={markdownComponents} />
+            {messages.map((message, index) => (
+              <MessageBubble
+                key={message.id}
+                message={message as any}
+                components={markdownComponents}
+                project={project}
+                selectedCount={selectedCount}
+                isLast={index === messages.length - 1}
+                requesting={requesting}
+              />
             ))}
           </div>
         )}
@@ -271,9 +317,17 @@ function formatTokenCount(value: number) {
 function MessageBubble({
   message,
   components,
+  project,
+  selectedCount,
+  isLast,
+  requesting,
 }: {
   message: any;
   components?: Record<string, React.ComponentType<any>>;
+  project: Project;
+  selectedCount: number;
+  isLast: boolean;
+  requesting: boolean;
 }) {
   const isUser = message.role === "user";
   const parts = Array.isArray(message.parts) ? message.parts : [];
@@ -322,6 +376,14 @@ function MessageBubble({
           >
             <Markdown source={String(message.content ?? "")} components={components} />
           </div>
+        )}
+        {!isUser && selectedCount === 1 && parts.some((p: any) => p.type === "text") && (!isLast || !requesting) && (
+          <button
+            className="text-muted-foreground hover:text-foreground mt-1 flex cursor-pointer items-center self-end text-xs"
+            onClick={() => createAnswerNode(message, project)}
+          >
+            <Plus className="size-3.5" />
+          </button>
         )}
       </div>
       {isUser && (

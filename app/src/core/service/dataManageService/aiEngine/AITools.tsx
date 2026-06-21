@@ -5,8 +5,15 @@ import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { Color, Vector } from "@graphif/data-structures";
 import { serialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
-import { tool, type ToolSet } from "ai";
+import { generateText, tool, type ToolSet } from "ai";
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { fetch } from "@tauri-apps/plugin-http";
 import z from "zod/v4";
+import { Settings } from "@/core/service/Settings";
+import { blobToCompressedDataUrl } from "@/core/service/dataManageService/imageUtils";
+import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { Section } from "@/core/stage/stageObject/entity/Section";
+import { findFirstImageInChildren } from "./imageNodeFinder";
 
 export namespace AITools {
   export type ToolDefinition = {
@@ -17,6 +24,7 @@ export namespace AITools {
 
   type InternalToolDefinition = ToolDefinition & {
     fn: (project: Project, data: any) => any;
+    toModelOutput?: (output: any) => { type: "content"; value: any[] };
   };
 
   const toolDefinitions: InternalToolDefinition[] = [];
@@ -27,8 +35,15 @@ export namespace AITools {
     description: string,
     parameters: A,
     fn: (project: Project, data: z.infer<A>) => any,
+    toModelOutput?: (output: any) => { type: "content"; value: any[] },
   ) {
-    toolDefinitions.push({ name, description, parameters, fn: fn as (project: Project, data: any) => any });
+    toolDefinitions.push({
+      name,
+      description,
+      parameters,
+      fn: fn as (project: Project, data: any) => any,
+      toModelOutput,
+    });
   }
 
   export function createTools(project: Project): ToolSet {
@@ -42,6 +57,11 @@ export namespace AITools {
             const result = await definition.fn(project, data as any);
             return result ?? { success: true };
           },
+          ...(definition.toModelOutput
+            ? {
+                toModelOutput: ({ output }: { output: any }) => definition.toModelOutput!(output),
+              }
+            : {}),
         }),
       ]),
     ) as ToolSet;
@@ -761,4 +781,72 @@ export namespace AITools {
       return { success: true, movedCount: desired_order.length };
     },
   );
+  addTool(
+    "recognize_image_by_uuid",
+    "识别指定节点中的图片内容并返回文字描述。传入 ImageNode 的 uuid（或包含图片的 Section 的 uuid，会自动取其内部第一张图片），并用 prompt 描述你想识别什么。工具会用多模态模型独立识别图片（不依赖主对话上下文），返回识别结果的文字描述。",
+    z.object({
+      uuid: z.string().describe("ImageNode 的 uuid，或包含图片的 Section 的 uuid"),
+      prompt: z
+        .string()
+        .describe('向图像识别模型提问的提示词，例如"这张图片里有哪些文字？"或"描述图片中的主要物体和场景"。'),
+    }),
+    async (project, { uuid, prompt }) => {
+      const obj = project.stageManager.get(uuid);
+      if (!obj) {
+        return { success: false, error: "未找到该 uuid 对应的节点" };
+      }
+      const imageNode = (
+        obj instanceof ImageNode
+          ? obj
+          : findFirstImageInChildren(
+              obj instanceof Section ? obj.children : [],
+              (n) => n instanceof ImageNode,
+              (n) => (n instanceof Section ? n.children : undefined),
+            )
+      ) as ImageNode | undefined;
+      if (!imageNode) {
+        return { success: false, error: "该节点不是 ImageNode，且其内部未找到图片" };
+      }
+      const blob = project.attachments.get(imageNode.attachmentId);
+      if (!blob) {
+        return { success: false, error: "图片数据未找到（附件可能已丢失）" };
+      }
+      try {
+        const dataUrl = await blobToCompressedDataUrl(blob, Settings.maxPastedImageSize);
+        const description = await recognizeImage(dataUrl, prompt);
+        return { success: true, description };
+      } catch (e) {
+        return { success: false, error: e instanceof Error ? e.message : "图片识别失败" };
+      }
+    },
+  );
+}
+
+async function recognizeImage(dataUrl: string, prompt: string): Promise<string> {
+  const provider = createOpenAICompatible({
+    name: "project-graph",
+    baseURL: Settings.aiApiBaseUrl,
+    apiKey: Settings.aiApiKey || undefined,
+    fetch: async (url: any, init: any) => {
+      const response = await fetch(url.toString(), { ...init, mode: "cors" });
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => "unknown error");
+        throw new Error(`图像识别请求失败 (${response.status}): ${errorText}`);
+      }
+      return response;
+    },
+  });
+  const result = await generateText({
+    model: provider.chatModel(Settings.aiModel),
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: prompt },
+          { type: "image", image: dataUrl },
+        ],
+      },
+    ],
+  });
+  return result.text;
 }
