@@ -59,3 +59,20 @@ pub fn get_device_id() -> Result<String, String> {
 pub fn get_device_id() -> Result<String, String> {
     Err("Unsupported platform".to_string())
 }
+
+#[tauri::command]
+#[cfg(target_os = "linux")]
+pub fn get_distribution() -> Result<String, String> {
+    let mut file = std::fs::File::open("/etc/os-release")
+        .map_err(|e| format!("Failed to open /etc/os-release: {e}"))?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)
+        .map_err(|e| format!("Failed to read /etc/os-release: {e}"))?;
+    for line in contents.lines() {
+        if line.starts_with("ID=") {
+            let distro = line.trim_start_matches("ID=").trim_matches('"');
+            return Ok(distro.to_string());
+        }
+    }
+    Err("Failed to get distribution".to_string())
+}

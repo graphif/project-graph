@@ -21,6 +21,7 @@ import {
   tabsAtom,
 } from "@/state";
 import { getVersion } from "@tauri-apps/api/app";
+import { invoke } from "@tauri-apps/api/core";
 import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
 import { arch, platform, version } from "@tauri-apps/plugin-os";
 import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
@@ -36,7 +37,7 @@ import ToolbarContent from "./components/toolbar-content";
 import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { checkAndFixShortcutStorage } from "./core/service/controlService/shortcutKeysEngine/ShortcutKeyFixer";
 import { cn } from "./utils/cn";
-import { isMac, isWindows } from "./utils/platform";
+import { isLinux, isMac, isWindows } from "./utils/platform";
 
 export default function App() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -139,7 +140,7 @@ export default function App() {
           version: await getVersion(),
           os: platform(),
           arch: arch(),
-          osVersion: version(),
+          osVersion: isLinux ? `${await invoke("get_distribution")} ${version()}` : version(),
           cpu: cpu.cpus[0].brand,
           cpuCount: cpu.cpu_count,
         });

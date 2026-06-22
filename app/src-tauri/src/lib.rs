@@ -136,7 +136,8 @@ pub fn run() {
             cmd::fs::write_text_file,
             cmd::fs::write_file_base64,
             cmd::fs::create_folder,
-            cmd::shell::run_command
+            cmd::shell::run_command,
+            cmd::device::get_distribution,
         ]);
 
     #[cfg(target_os = "linux")]
