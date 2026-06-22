@@ -1399,7 +1399,7 @@ export function GlobalMenu() {
                 onClick={async () => {
                   toast.promise(
                     async () => {
-                      const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-main-3.1.prg");
+                      const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-main-3.2.prg");
                       const dir = await tempDir();
                       const path = await join(dir, `tutorial-${crypto.randomUUID()}.prg`);
                       await writeFile(path, u8a);
@@ -1420,7 +1420,7 @@ export function GlobalMenu() {
                 onClick={async () => {
                   toast.promise(
                     async () => {
-                      const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-shortcut-keys-3.1.prg");
+                      const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-shortcut-keys-3.2.prg");
                       const dir = await tempDir();
                       const path = await join(dir, `tutorial-${crypto.randomUUID()}.prg`);
                       await writeFile(path, u8a);
