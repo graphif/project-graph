@@ -76,3 +76,43 @@ pub fn get_distribution() -> Result<String, String> {
     }
     Err("Failed to get distribution".to_string())
 }
+
+#[tauri::command]
+#[cfg(target_os = "macos")]
+pub fn get_distribution() -> Result<String, String> {
+    let output = Command::new("sw_vers")
+        .arg("-productName")
+        .output()
+        .map_err(|e| format!("Failed to execute sw_vers: {e}"))?;
+    if !output.status.success() {
+        return Err("Failed to get distribution".to_string());
+    }
+    let name = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    Ok(name)
+}
+
+#[tauri::command]
+#[cfg(target_os = "windows")]
+pub fn get_distribution() -> Result<String, String> {
+    let output = Command::new("wmic")
+        .arg("os")
+        .arg("get")
+        .arg("Caption")
+        .creation_flags(0x08000000)
+        .output()
+        .map_err(|e| format!("Failed to execute wmic: {e}"))?;
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let caption = stdout
+        .lines()
+        .nth(1)
+        .unwrap_or("Windows")
+        .trim()
+        .to_string();
+    Ok(caption)
+}
+
+#[tauri::command]
+#[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+pub fn get_distribution() -> Result<String, String> {
+    Err("Unsupported platform".to_string())
+}
