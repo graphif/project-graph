@@ -804,6 +804,7 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "connectTopToBottom",
       "connectLeftToRight",
       "connectAllSelectedEntities",
+      "editUrlNodeLink",
     ],
   },
   {

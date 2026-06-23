@@ -13,6 +13,7 @@ import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { activeTabAtom, isWindowMaxsizedAtom, store, tabsAtom } from "@/state";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { Image as TauriImage } from "@tauri-apps/api/image";
@@ -20,6 +21,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { writeImage, writeText } from "@tauri-apps/plugin-clipboard-manager";
 // import ColorWindow from "@/sub/ColorWindow";
 import FindWindow from "@/sub/FindWindow";
+import EditUrlNodeLinkWindow from "@/sub/EditUrlNodeLinkWindow";
 // import KeyboardRecentFilesWindow from "@/sub/KeyboardRecentFilesWindow";
 import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
 import ColorPaletteWindow from "@/sub/ColorPaletteWindow";
@@ -199,6 +201,8 @@ const whenHasSelectedSections: KeyBindWhen = (project) =>
   !!project && project.stageManager.getSelectedEntities().some((entity) => entity instanceof Section);
 const whenHasSelectedImageNodes: KeyBindWhen = (project) =>
   !!project && project.stageManager.getSelectedEntities().some((entity) => entity instanceof ImageNode);
+const whenHasSelectedUrlNodes: KeyBindWhen = (project) =>
+  !!project && project.stageManager.getSelectedEntities().some((entity) => entity instanceof UrlNode);
 const whenHasSelectedLineEdges: KeyBindWhen = (project) =>
   !!project && project.stageManager.getLineEdges().some((edge) => edge.isSelected);
 const whenHasSelectedEdgeWithLineType: KeyBindWhen = (project) =>
@@ -945,6 +949,22 @@ export const allKeyBinds: KeyBindItem[] = [
     onPress: (project) => {
       if (!project!.keyboardOnlyEngine.isOpenning()) return;
       project!.controllerUtils.editNodeDetailsByKeyboard();
+    },
+  },
+  {
+    id: "editUrlNodeLink",
+    defaultKey: "",
+    icon: Link,
+    when: whenHasSelectedUrlNodes,
+    onPress: (project) => {
+      if (!project) return;
+      const urlNodes = project.stageManager
+        .getSelectedEntities()
+        .filter((entity): entity is UrlNode => entity instanceof UrlNode);
+      if (urlNodes.length === 0) return;
+      EditUrlNodeLinkWindow.open(urlNodes[0].url, (newUrl) => {
+        urlNodes[0].url = newUrl;
+      });
     },
   },
 

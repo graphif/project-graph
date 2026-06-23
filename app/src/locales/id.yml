@@ -140,6 +140,9 @@ contextMenu:
   mtuEdgeArrowNone: Matikan Tampilan Panah
   switchMTUEdgeRenderType: Alihkan Jenis Render
   convertToDirectedEdge: Konversi ke Garis Berarah
+  editUrlNodeLink: Edit Tautan Node URL
+  confirm: OK
+  cancel: Batal
 
 settings:
   title: Pengaturan
@@ -1488,6 +1491,10 @@ keyBinds:
     description: |
       Setelah ditekan, detail entitas yang dipilih akan dibuka untuk diedit
       Hanya berlaku saat jumlah objek yang dipilih adalah 1
+  editUrlNodeLink:
+    title: Edit Tautan Node URL
+    description: |-
+      Setelah ditekan, dialog akan terbuka untuk mengedit URL dari node URL yang dipilih.
   openColorPanel:
     title: Pintasan Buka Panel Warna
     description: |

@@ -141,6 +141,9 @@ contextMenu:
   mtuEdgeArrowNone: 关闭箭头显示
   switchMTUEdgeRenderType: 切换渲染形态
   convertToDirectedEdge: 转换为有向边
+  editUrlNodeLink: 编辑URL节点的链接
+  confirm: 确定
+  cancel: 取消
 
 settings:
   title: 设置
@@ -1492,6 +1495,10 @@ keyBinds:
     description: |
       按下后，选中的实体的详细信息会被打开编辑
       只有选中的物体数量为1时才有效
+  editUrlNodeLink:
+    title: 编辑URL节点的链接
+    description: |
+      按下后，会弹出一个对话框来编辑选中的URL节点的链接地址。
   openColorPanel:
     title: 打开颜色面板快捷键
     description: |

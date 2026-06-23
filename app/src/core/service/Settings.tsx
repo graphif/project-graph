@@ -404,6 +404,7 @@ export const settingsSchema = z.object({
         ],
       },
       { type: "item", id: "openTextNodeByContentExternal", label: "将内容视为路径并打开", icon: "ExternalLink" },
+      { type: "item", id: "editUrlNodeLink", label: "编辑URL节点的链接", icon: "Link" },
       { type: "item", id: "folderSection", icon: "Package" },
       { type: "item", id: "toggleSectionLock", label: "锁定/解锁 section 框", icon: "Lock" },
       { type: "item", id: "refreshReferenceBlockNode", label: "刷新引用块", icon: "RefreshCcwDot" },

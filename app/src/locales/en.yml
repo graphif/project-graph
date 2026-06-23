@@ -1157,6 +1157,9 @@ contextMenu:
   mtuEdgeArrowNone: Disable Arrow Display
   switchMTUEdgeRenderType: Switch Render Type
   convertToDirectedEdge: Convert to Directed Edge
+  editUrlNodeLink: Edit URL Node Link
+  confirm: OK
+  cancel: Cancel
 
 appMenu:
   file:
@@ -1433,6 +1436,10 @@ keyBinds:
     description: |
       When pressed, the details of the selected entity will be opened for editing.
       This is only effective when a single object is selected.
+  editUrlNodeLink:
+    title: Edit URL Node Link
+    description: |
+      When pressed, a dialog will open to edit the URL of the selected URL node.
   openColorPanel:
     title: Open Color Panel Shortcut
     description: |
