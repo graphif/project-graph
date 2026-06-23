@@ -82,14 +82,8 @@ export class ControllerUtils {
           const rectWorld = clickedNode.collisionBox.getRectangle();
           const rectView = this.project.renderer.transformWorld2View(rectWorld);
           ele.style.height = "auto";
-          ele.style.height = `${rectView.height.toFixed(2) + 8}px`;
-          // 自动改变宽度
-          if (clickedNode.sizeAdjust === "manual") {
-            ele.style.width = "auto";
-            ele.style.width = `${rectView.width.toFixed(2) + 8}px`;
-          } else if (clickedNode.sizeAdjust === "auto") {
-            ele.style.width = "100vw";
-          }
+          ele.style.height = `${(rectView.height + 8).toFixed(2)}px`;
+          // 宽度由 inputElement.tsx 的 adjustSize（镜像 div 测量）负责，此处不再重复设置
           // 自动调整它的外层框的大小
           const fatherSections = this.project.sectionMethods.getFatherSectionsList(clickedNode);
           for (const section of fatherSections) {
@@ -125,8 +119,9 @@ export class ControllerUtils {
           left: `${rectView.left.toFixed(2)}px`,
           top: `${rectView.top.toFixed(2)}px`,
           // ====
-          width: clickedNode.sizeAdjust === "manual" ? `${rectView.width.toFixed(2)}px` : "100vw",
-          // maxWidth: `${rectView.width.toFixed(2)}px`,
+          // auto 模式：初始给节点宽度+8作为起始值，adjustSize 会用镜像 div 立即修正
+          // manual 模式：宽度固定为节点当前宽度，不扩展
+          width: `${(clickedNode.sizeAdjust === "manual" ? rectView.width : rectView.width + 8).toFixed(2)}px`,
           minWidth: `${rectView.width.toFixed(2)}px`,
           minHeight: `${rectView.height.toFixed(2)}px`,
           // height: `${rectView.height.toFixed(2)}px`,
@@ -142,7 +137,8 @@ export class ControllerUtils {
         },
         selectAll,
         Settings.textNodeExitEditModeOnWheel,
-        // rectWorld.width * this.project.camera.currentScale, // limit width
+        // fixedWidth：manual 模式宽度固定为节点当前视图宽度，auto 模式不传（自动扩展）
+        clickedNode.sizeAdjust === "manual" ? rectView.width : undefined,
       )
       .then(async () => {
         SubWindow.close(lastAutoCompleteWindowId);

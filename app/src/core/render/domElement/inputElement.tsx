@@ -132,7 +132,12 @@ export class InputElement {
     style: Partial<CSSStyleDeclaration> = {},
     selectAllWhenCreated = true,
     exitOnWheel = false,
-    // limitWidth = 100,
+    /**
+     * 固定宽度模式（manual 节点使用）：传入节点视图宽度（px 数值），
+     * textarea 宽度将锁定为该值，不随内容扩展；高度仍自动增长。
+     * 不传（undefined）则为自动宽度模式（auto 节点使用）。
+     */
+    fixedWidth?: number,
   ): Promise<string> {
     return new Promise((resolve) => {
       const textareaElement = document.createElement("textarea");
@@ -148,6 +153,65 @@ export class InputElement {
       // );
       Object.assign(textareaElement.style, style);
       document.body.appendChild(textareaElement);
+
+      // 创建隐藏镜像 div，用于精确测量文本内容的真实宽度
+      // textarea 的 scrollWidth 在 width:auto 时不会收缩到内容宽度，
+      // 而 div 的 scrollWidth 会精确反映内容宽度，是业界标准做法
+      const mirrorDiv = document.createElement("div");
+      mirrorDiv.style.position = "absolute";
+      mirrorDiv.style.visibility = "hidden";
+      mirrorDiv.style.whiteSpace = "pre"; // 保持空格和换行，不自动折行
+      mirrorDiv.style.pointerEvents = "none";
+      // 从 textarea 继承字体相关样式，确保测量结果一致
+      const taStyle = window.getComputedStyle(textareaElement);
+      mirrorDiv.style.font = taStyle.font;
+      mirrorDiv.style.letterSpacing = taStyle.letterSpacing;
+      mirrorDiv.style.padding = taStyle.padding;
+      mirrorDiv.style.boxSizing = taStyle.boxSizing;
+      document.body.appendChild(mirrorDiv);
+
+      /**
+       * 用镜像 div 测量文本各行中最长一行的真实渲染宽度
+       * 对每一行单独测量取最大值，避免 pre-wrap 折行干扰
+       */
+      const measureTextWidth = (text: string): number => {
+        const lines = text.split("\n");
+        let maxWidth = 0;
+        for (const line of lines) {
+          // 空行用零宽空格占位，防止 div 高度塌陷导致 padding 计算错误
+          mirrorDiv.textContent = line || "\u200b";
+          maxWidth = Math.max(maxWidth, mirrorDiv.scrollWidth);
+        }
+        return maxWidth;
+      };
+
+      // 自动调整 textarea 的高度和宽度
+      // fixedWidth 有值 → manual 模式：宽度固定，只调整高度
+      // fixedWidth 无值 → auto 模式：用镜像 div 测量真实内容宽度并扩展
+      const adjustSize = (composingText?: string) => {
+        if (fixedWidth === undefined) {
+          // auto 模式：宽度随内容扩展，用镜像 div 测量（包含 composing 中的拼音字母）
+          const fullText = composingText !== undefined ? textareaElement.value + composingText : textareaElement.value;
+          const measuredWidth = measureTextWidth(fullText);
+          textareaElement.style.width = `${measuredWidth + 2}px`;
+        }
+        // 高度：auto → scrollHeight（两种模式都需要）
+        textareaElement.style.height = "auto";
+        textareaElement.style.height = `${textareaElement.scrollHeight}px`;
+      };
+
+      // 初始化时立即调整一次，防止初始渲染就换行
+      adjustSize();
+
+      const onOutsideWheel = () => {
+        finish();
+      };
+      setTimeout(() => {
+        if (exitOnWheel) {
+          document.body.addEventListener("wheel", onOutsideWheel);
+        }
+        adjustSize(); // setTimeout 后再调整一次，确保字体已完全加载
+      }, 20);
 
       // web版在右键连线直接练到空白部分触发节点生成并编辑出现此元素时，防止触发右键菜单
       textareaElement.addEventListener("contextmenu", (event) => {
@@ -166,6 +230,9 @@ export class InputElement {
             console.error(error);
           }
         }
+        if (document.body.contains(mirrorDiv)) {
+          document.body.removeChild(mirrorDiv);
+        }
       };
       let isFinished = false;
       const cleanup = () => {
@@ -182,28 +249,17 @@ export class InputElement {
         removeElement();
       };
 
-      // 自动调整textarea的高度和宽度
-      const adjustSize = () => {
-        // 重置高度和宽度以获取正确的scrollHeight和scrollWidth
-        textareaElement.style.height = "auto";
-        textareaElement.style.height = `${textareaElement.scrollHeight}px`;
-        // textareaElement.style.width = `${textareaElement.scrollWidth + 2}px`;
-      };
-      const onOutsideWheel = () => {
-        finish();
-      };
-      setTimeout(() => {
-        if (exitOnWheel) {
-          document.body.addEventListener("wheel", onOutsideWheel);
-        }
-        adjustSize(); // 初始化时调整大小
-      }, 20);
       textareaElement.addEventListener("blur", () => {
         finish();
       });
       textareaElement.addEventListener("input", () => {
         this.project.controller.resetCountdownTimer();
         onChange(textareaElement.value, textareaElement);
+        adjustSize();
+      });
+      // compositionupdate：拼音输入过程中实时调整宽度，防止拼音字母撑破布局
+      textareaElement.addEventListener("compositionupdate", (event: CompositionEvent) => {
+        adjustSize(event.data);
       });
 
       // 在输入之前判断是否进行了撤销操作，此监听器在keydown之后触发
