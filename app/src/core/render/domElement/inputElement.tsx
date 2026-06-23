@@ -159,6 +159,9 @@ export class InputElement {
       // 而 div 的 scrollWidth 会精确反映内容宽度，是业界标准做法
       const mirrorDiv = document.createElement("div");
       mirrorDiv.style.position = "absolute";
+      mirrorDiv.style.left = "-9999px"; // 移到屏幕外，防止撑出滚动条导致页面抖动
+      mirrorDiv.style.top = "-9999px";
+      mirrorDiv.style.overflow = "hidden";
       mirrorDiv.style.visibility = "hidden";
       mirrorDiv.style.whiteSpace = "pre"; // 保持空格和换行，不自动折行
       mirrorDiv.style.pointerEvents = "none";
