@@ -1,11 +1,9 @@
 import { Project } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { EdgeCollisionBoxGetter } from "@/core/stage/stageObject/association/EdgeCollisionBoxGetter";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { getMultiLineTextSize } from "@/utils/font";
 import { Color, Vector } from "@graphif/data-structures";
@@ -84,11 +82,7 @@ export class LineEdge extends Edge {
 
   /** 与渲染器保持一致的线宽，用于字号等比缩放 */
   get edgeWidth(): number {
-    if (Settings.enableAutoEdgeWidth && this.target instanceof Section && this.source instanceof Section) {
-      const rect1 = this.source.collisionBox.getRectangle();
-      const rect2 = this.target.collisionBox.getRectangle();
-      return Math.min(Math.min(Math.max(rect1.width, rect1.height), Math.max(rect2.width, rect2.height)) / 100, 100);
-    } else if (this.source instanceof TextNode) {
+    if (this.source instanceof TextNode) {
       return this.source.getBorderWidth();
     }
     return 2;

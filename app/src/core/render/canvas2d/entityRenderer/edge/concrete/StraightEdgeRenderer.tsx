@@ -10,7 +10,6 @@ import { ConnectableEntity } from "@/core/stage/stageObject/abstract/Connectable
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
-import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { SvgUtils } from "@/core/render/svg/SvgUtils";
 import { EdgeRendererClass } from "@/core/render/canvas2d/entityRenderer/edge/EdgeRendererClass";
@@ -110,14 +109,7 @@ export class StraightEdgeRenderer extends EdgeRendererClass {
       : edge.color;
 
     let edgeWidth = 2;
-    if (Settings.enableAutoEdgeWidth && edge.target instanceof Section && edge.source instanceof Section) {
-      const rect1 = edge.source.collisionBox.getRectangle();
-      const rect2 = edge.target.collisionBox.getRectangle();
-      edgeWidth = Math.min(
-        Math.min(Math.max(rect1.width, rect1.height), Math.max(rect2.width, rect2.height)) / 100,
-        100,
-      );
-    } else if (edge.source instanceof TextNode) {
+    if (edge.source instanceof TextNode) {
       edgeWidth = edge.source.getBorderWidth();
     }
     const straightBodyLine = edge.bodyLine;
@@ -151,13 +143,12 @@ export class StraightEdgeRenderer extends EdgeRendererClass {
   }
 
   public getNormalStageSvg(edge: LineEdge): React.ReactNode {
-    let lineBody: React.ReactNode = <></>;
-    let textNode: React.ReactNode = <></>;
     const edgeColor = edge.color.equals(Color.Transparent)
       ? this.project.stageStyleManager.currentStyle.StageObjectBorder
       : edge.color;
-    lineBody = SvgUtils.line(edge.bodyLine.start, edge.bodyLine.end, edgeColor, 2);
+    const lineBody = SvgUtils.line(edge.bodyLine.start, edge.bodyLine.end, edgeColor, 2);
 
+    let textNode: React.ReactNode = <></>;
     if (edge.text.trim() !== "") {
       textNode = SvgUtils.textFromCenterWithStroke(
         edge.text,
