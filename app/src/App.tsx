@@ -65,16 +65,17 @@ export default function App() {
     KeyBindsUI.registerAllUIKeyBinds();
     KeyBindsUI.uiStartListen();
 
-    // 修复鼠标拖出窗口后触发上下文菜单的问题
-    window.addEventListener("contextmenu", (event) => {
-      if (
-        event.clientX < 0 ||
-        event.clientX > window.innerWidth ||
-        event.clientY < 0 ||
-        event.clientY > window.innerHeight
-      )
+    // 在捕获阶段无条件禁止浏览器/WebView 原生右键菜单弹出。
+    // 使用 capture:true 确保在任何子元素（包括 Radix UI Portal）处理事件之前就拦截，
+    // 防止快速连续右键或右键双击时浏览器菜单与应用自定义菜单混合弹出。
+    // 应用自定义菜单由 mouseup 事件驱动，不依赖 contextmenu 事件，不受影响。
+    window.addEventListener(
+      "contextmenu",
+      (event) => {
         event.preventDefault();
-    });
+      },
+      true, // capture 阶段，优先于所有子元素
+    );
 
     // 全局错误处理
     window.addEventListener("error", (event) => {
