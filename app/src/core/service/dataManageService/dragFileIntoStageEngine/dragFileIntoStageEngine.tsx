@@ -109,6 +109,7 @@ export namespace DragFileIntoStageEngine {
 
       project.stageManager.add(textNode);
     }
+    project.stageManager.updateReferences();
   }
 
   /**
@@ -150,6 +151,7 @@ export namespace DragFileIntoStageEngine {
 
       project.stageManager.add(textNode);
     }
+    project.stageManager.updateReferences();
   }
 
   /**
@@ -277,6 +279,8 @@ export namespace DragFileIntoStageEngine {
           mouseSections[0].collisionBox.getRectangle(),
         ),
       );
+    } else {
+      project.stageManager.updateReferences();
     }
   }
 
@@ -295,6 +299,7 @@ export namespace DragFileIntoStageEngine {
     });
 
     project.stageManager.add(textNode);
+    project.stageManager.updateReferences();
   }
 
   export async function handleDropSvg(project: Project, filePath: string) {
@@ -307,5 +312,6 @@ export namespace DragFileIntoStageEngine {
       attachmentId,
     });
     project.stageManager.add(entity);
+    project.stageManager.updateReferences();
   }
 }
