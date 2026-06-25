@@ -119,6 +119,8 @@ export class CopyEngineImage {
           mouseSections[0].collisionBox.getRectangle(),
         ),
       );
+    } else {
+      this.project.stageManager.updateReferences();
     }
   }
 
