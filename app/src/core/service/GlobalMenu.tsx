@@ -883,7 +883,11 @@ export function GlobalMenu() {
             {t("actions.search")}
             {searchTextKey && <MenubarShortcut>{searchTextKey}</MenubarShortcut>}
           </Item>
-          <Item>
+          <Item
+            onClick={() => {
+              activeProject?.stageManager.updateReferences();
+            }}
+          >
             <RefreshCcwDot />
             {t("actions.refresh")}
           </Item>
