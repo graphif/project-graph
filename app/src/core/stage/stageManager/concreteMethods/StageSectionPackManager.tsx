@@ -197,8 +197,8 @@ export class SectionPackManager {
       });
 
       // 将质点添加到舞台
-      this.project.stageManager.add(topLeftPoint);
-      this.project.stageManager.add(bottomRightPoint);
+      this.project.stageManager.add(topLeftPoint, true);
+      this.project.stageManager.add(bottomRightPoint, true);
 
       // 将质点放入Section
       this.project.sectionInOutManager.goInSection([topLeftPoint, bottomRightPoint], newSection);
@@ -320,10 +320,6 @@ export class SectionPackManager {
     if (firstParent) {
       this.project.stageManager.goInSection([section], firstParent);
     }
-    if (!firstParent) {
-      // 顶层打包时不会经过 goInSection，需要手动重建运行时 Section 树。
-      this.project.stageManager.updateReferences();
-    }
 
     return section;
   }
@@ -369,8 +365,8 @@ export class SectionPackManager {
     });
 
     // 将质点添加到舞台
-    this.project.stageManager.add(topLeftPoint);
-    this.project.stageManager.add(bottomRightPoint);
+    this.project.stageManager.add(topLeftPoint, true);
+    this.project.stageManager.add(bottomRightPoint, true);
 
     // 将Section添加到舞台
     this.project.stageManager.add(section);

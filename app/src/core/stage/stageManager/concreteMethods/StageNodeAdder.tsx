@@ -65,10 +65,6 @@ export class NodeAdder {
     node.moveTo(node.rectangle.location.subtract(node.rectangle.size.divide(2)));
     this.project.stageManager.add(node);
     this.project.sectionInOutManager.goInSections([node], addToSections);
-    if (!node.parentSection) {
-      // 顶层新建节点不会经过 goInSection，需要手动重建运行时引用。
-      this.project.stageManager.updateReferences();
-    }
 
     if (node.parentSection) {
       node.parentSection.adjustLocationAndSize();
@@ -197,10 +193,6 @@ export class NodeAdder {
     this.project.stageManager.add(connectPoint);
 
     this.project.sectionInOutManager.goInSections([connectPoint], addToSections);
-    if (!connectPoint.parentSection) {
-      // 顶层新建质点同样需要刷新运行时树，否则后续点击与拖拽会失效。
-      this.project.stageManager.updateReferences();
-    }
 
     if (connectPoint.parentSection) {
       connectPoint.parentSection.adjustLocationAndSize();

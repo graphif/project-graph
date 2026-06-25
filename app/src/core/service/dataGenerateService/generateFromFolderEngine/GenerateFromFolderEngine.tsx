@@ -34,7 +34,7 @@ export class GenerateFromFolder {
           collisionBox: new CollisionBox([new Rectangle(currentLocation.clone(), Vector.getZero())]),
           color: this.getColorByPath(fEntry.path),
         });
-        this.project.stageManager.add(textNode);
+        this.project.stageManager.add(textNode, true);
         if (currentSection) {
           this.project.sectionInOutManager.attachEntityToSection(textNode, currentSection);
         }
@@ -46,7 +46,7 @@ export class GenerateFromFolder {
           details: DetailsManager.markdownToDetails(fEntry.path),
           collisionBox: new CollisionBox([new Rectangle(currentLocation.clone(), Vector.getZero())]),
         });
-        this.project.stageManager.add(section);
+        this.project.stageManager.add(section, true);
         if (currentSection) {
           this.project.sectionInOutManager.attachEntityToSection(section, currentSection);
         }
@@ -86,7 +86,7 @@ export class GenerateFromFolder {
       // 如果是文件夹，且没有颜色（getColorByPath返回透明），可以给个默认颜色区分？
       // 暂时保持一致，文件夹透明，文件有颜色
 
-      this.project.stageManager.add(node);
+      this.project.stageManager.add(node, true);
       // 自动调整大小
       node.forceAdjustSizeByText();
 
@@ -97,7 +97,7 @@ export class GenerateFromFolder {
           sourceRectangleRate: new Vector(0.99, 0.5), // 父节点右侧
           targetRectangleRate: new Vector(0.01, 0.5), // 子节点左侧
         });
-        this.project.stageManager.add(edge);
+        this.project.stageManager.add(edge, true);
       }
 
       if (fEntry.children) {
@@ -109,6 +109,7 @@ export class GenerateFromFolder {
     };
 
     dfs(folderStructure, 0, null);
+    this.project.stageManager.updateReferences();
     this.project.historyManager.recordStep();
   }
 
@@ -284,7 +285,7 @@ export async function generateKeyboardLayout(project: Project): Promise<void> {
       collisionBox: new CollisionBox([new Rectangle(new Vector(x, y), new Vector(width, height))]),
       color: Color.Transparent,
     });
-    project.stageManager.add(keyNode);
+    project.stageManager.add(keyNode, true);
 
     // 使用唯一标识符：row-col-key 来避免重复键名的问题
     const uniqueKey = `${keyInfo.row}-${keyInfo.col}-${key.toLowerCase()}`;
@@ -448,7 +449,7 @@ export async function generateKeyboardLayout(project: Project): Promise<void> {
       const actualSize = annotationNode.collisionBox.getRectangle().size;
       maxRowHeight = Math.max(maxRowHeight, actualSize.y);
 
-      project.stageManager.add(annotationNode);
+      project.stageManager.add(annotationNode, true);
       sectionNodes.push(annotationNode);
       annotationNodes.push({ node: annotationNode, keyNode });
 
@@ -479,7 +480,7 @@ export async function generateKeyboardLayout(project: Project): Promise<void> {
       ]),
       children: [],
     });
-    project.stageManager.add(section);
+    project.stageManager.add(section, true);
 
     // 将节点添加到Section中
     project.stageManager.goInSection(sectionNodes, section);
@@ -505,8 +506,10 @@ export async function generateKeyboardLayout(project: Project): Promise<void> {
       targetRectangleRate: new Vector(0.01, 0.5), // 到标注节点左侧中心
       color: edgeColor,
     });
-    project.stageManager.add(edge);
+    project.stageManager.add(edge, true);
   }
+
+  project.stageManager.updateReferences();
 
   // 记录历史步骤
   project.historyManager.recordStep();

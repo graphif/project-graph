@@ -180,8 +180,11 @@ export class StageManager {
     return this.project.stage.filter((node) => node instanceof ArcEdge);
   }
 
-  add(stageObject: StageObject) {
+  add(stageObject: StageObject, skipUpdateReferences = false) {
     this.project.stage.push(stageObject);
+    if (!skipUpdateReferences) {
+      this.updateReferences();
+    }
   }
 
   /**
