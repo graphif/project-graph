@@ -1,5 +1,6 @@
 import { Project, service } from "@/core/Project";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle, Line } from "@graphif/shapes";
@@ -531,6 +532,22 @@ export class AutoLayoutFastTree {
     return false;
   }
   /**
+   * 获取一组连线中文字外接矩形的最大尺寸
+   * @param edges 连线列表
+   * @param direction "horizontal" 取宽度，"vertical" 取高度
+   */
+  private getMaxEdgeTextDimension(edges: Edge[], direction: "horizontal" | "vertical"): number {
+    let maxDim = 0;
+    for (const edge of edges) {
+      if (edge.text.trim() === "") continue;
+      const rect = edge.textRectangle;
+      const dim = direction === "horizontal" ? rect.width : rect.height;
+      if (dim > maxDim) maxDim = dim;
+    }
+    return maxDim;
+  }
+
+  /**
    * 快速树形布局
    * @param rootNode
    */
@@ -595,21 +612,38 @@ export class AutoLayoutFastTree {
       }
       const fatherChildNormalGap = fatherChildNearGap * 3;
 
+      // 根据连线文字尺寸增加父子间距
+      const rightEdgeTextWidth = this.getMaxEdgeTextDimension(outRightEdges, "horizontal");
+      const leftEdgeTextWidth = this.getMaxEdgeTextDimension(outLeftEdges, "horizontal");
+      const topEdgeTextHeight = this.getMaxEdgeTextDimension(outTopEdges, "vertical");
+      const bottomEdgeTextHeight = this.getMaxEdgeTextDimension(outBottomEdges, "vertical");
+
       this.alignTrees(rightChildList, "right", treesGap, true);
-      this.adjustChildrenTreesByRootNodeLocation(node, rightChildList, fatherChildNormalGap, "rightCenter", true);
+      this.adjustChildrenTreesByRootNodeLocation(
+        node,
+        rightChildList,
+        fatherChildNormalGap + rightEdgeTextWidth,
+        "rightCenter",
+        true,
+      );
 
       this.alignTrees(topChildList, "top", treesGap, true);
-      // 如果是向上生长且只有一个子节点（唯一子节点），使用较短距离，否则使用150像素
-      const topGap = topChildList.length === 1 ? fatherChildNearGap : fatherChildNormalGap;
+      const topGap = (topChildList.length === 1 ? fatherChildNearGap : fatherChildNormalGap) + topEdgeTextHeight;
       this.adjustChildrenTreesByRootNodeLocation(node, topChildList, topGap, "topCenter", true);
 
       this.alignTrees(bottomChildList, "bottom", treesGap, true);
-      // 如果是向下生长且只有一个子节点（唯一子节点），使用较短距离，否则使用150像素
-      const bottomGap = bottomChildList.length === 1 ? fatherChildNearGap : fatherChildNormalGap;
+      const bottomGap =
+        (bottomChildList.length === 1 ? fatherChildNearGap : fatherChildNormalGap) + bottomEdgeTextHeight;
       this.adjustChildrenTreesByRootNodeLocation(node, bottomChildList, bottomGap, "bottomCenter", true);
 
       this.alignTrees(leftChildList, "left", treesGap, true);
-      this.adjustChildrenTreesByRootNodeLocation(node, leftChildList, fatherChildNormalGap, "leftCenter", true);
+      this.adjustChildrenTreesByRootNodeLocation(
+        node,
+        leftChildList,
+        fatherChildNormalGap + leftEdgeTextWidth,
+        "leftCenter",
+        true,
+      );
 
       // 检测并解决不同方向子树群之间的重叠问题
       this.resolveSubtreeOverlaps(
