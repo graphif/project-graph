@@ -3,7 +3,7 @@
 
 /**
  * Auto-generated. Do not edit manually.
- * 2026-06-07T04:06:06.019Z
+ * 2026-06-26T03:56:21.535Z
  */
 
 // ── 第三方类型导入 ──
@@ -103,6 +103,7 @@ import type {
   Palette,
   PenTool,
   Plus,
+  Radius,
   Redo,
   RefreshCcw,
   RefreshCcwDot,
@@ -143,6 +144,40 @@ declare class AIEngine {
   createChatFetch(project: Project | { _: "Project" | (string & {}) }): Promise<typeof fetch>;
   getModels(): Promise<void>;
   readRequestBody(body: BodyInit | null | undefined): Promise<any>;
+}
+
+declare class ArcEdge extends Edge {
+  uuid: Promise<string>;
+  text: Promise<string>;
+  color: Promise<Color>;
+  lineType: Promise<string>;
+  offset: Promise<number>;
+  textPosition: Promise<number>;
+  get arcGeometry(): Promise<ArcGeometry>;
+  get clippedStart(): Promise<Vector>;
+  get clippedEnd(): Promise<Vector>;
+  getArrowDirection(): Promise<Vector>;
+  get collisionBox(): Promise<CollisionBox>;
+  get edgeWidth(): Promise<number>;
+  get textFontSize(): Promise<number>;
+  get textRectangle(): Promise<Rectangle>;
+  getArcMidPoint(): Promise<Vector>;
+  constructor(
+    project: Project | { _: "Project" | (string & {}) },
+    {
+      associationList = [] as ConnectableEntity[],
+      text = "",
+      uuid = crypto.randomUUID() as string,
+      color = Color.Transparent,
+      sourceRectangleRate = Vector.same(0.5),
+      targetRectangleRate = Vector.same(0.5),
+      lineType = "solid",
+      offset = 0,
+      textPosition = 0.5,
+    },
+    unknown = false,
+  );
+  adjustSizeByText(): void;
 }
 
 declare class Association extends StageObject {
@@ -255,8 +290,8 @@ declare class AutoComputeUtils {
   getParentEntities(node: TextNode | { _: "TextNode" | (string & {}) }): Promise<ConnectableEntity>[];
   getChildTextNodes(node: TextNode | { _: "TextNode" | (string & {}) }): Promise<TextNode>[];
   getNodeOneResult(node: TextNode | { _: "TextNode" | (string & {}) }, resultText: string): Promise<void>;
-  getSectionOneResult(section: Section, resultText: string): Promise<void>;
-  getSectionMultiResult(section: Section, resultTextList: string[]): Promise<void>;
+  getSectionOneResult(section: Section | { _: "Section" | (string & {}) }, resultText: string): Promise<void>;
+  getSectionMultiResult(section: Section | { _: "Section" | (string & {}) }, resultTextList: string[]): Promise<void>;
   generateMultiResult(node: TextNode | { _: "TextNode" | (string & {}) }, resultTextList: string[]): Promise<void>;
   stringToNumber(str: string): Promise<void>;
   isNodeConnectedWithLogicNode(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<boolean>;
@@ -327,6 +362,7 @@ declare class AutoLayoutFastTree {
     dir2: "left" | "right" | "top" | "bottom",
     skipDashed = false,
   ): Promise<boolean>;
+  getMaxEdgeTextDimension(edges: Edge[], direction: "horizontal" | "vertical"): Promise<number>;
   autoLayoutFastTreeMode(rootNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<void>;
   treeReverseX(selectedRootEntity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<void>;
   treeReverseY(selectedRootEntity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<void>;
@@ -556,6 +592,7 @@ declare class Controller {
   mousedown(event: MouseEvent): Promise<void>;
   mouseup(event: MouseEvent): Promise<void>;
   mousewheel(event: WheelEvent): Promise<void>;
+  pointerleave(_event: PointerEvent): Promise<void>;
   handleMousedown(button: number, _x: number, _y: number): Promise<void>;
   handleMouseup(button: number, x: number, y: number): Promise<void>;
   keydown(event: KeyboardEvent): Promise<void>;
@@ -705,6 +742,7 @@ declare class ControllerEntityResizeClass extends ControllerClass {
   mousedown: Promise<(event: MouseEvent) => void>;
   mousemove: Promise<(event: MouseEvent) => void>;
   mouseup: Promise<(event: MouseEvent) => void>;
+  mouseMoveOutWindowForcedShutdown(_outsideLocation: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
 }
 
 declare class ControllerExtensionEntityClickClass extends ControllerClass {
@@ -752,6 +790,7 @@ declare class ControllerNodeConnectionClass extends ControllerClass {
   mousemove: Promise<(event: MouseEvent) => void>;
   mouseMove(event: MouseEvent): Promise<void>;
   mouseup: Promise<(event: MouseEvent) => void>;
+  mouseMoveOutWindowForcedShutdown(_outsideLocation: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
   mouseUp(event: MouseEvent): Promise<void>;
   getConnectDirectionByMouseTrack(): Promise<[Direction | null, Direction | null]>;
   _hasSourceSparkTriggered;
@@ -809,6 +848,7 @@ declare class ControllerPenStrokeDrawingClass extends ControllerClass {
   mouseup;
   triggerOCR;
   releaseMouseAndClear(): Promise<void>;
+  mouseMoveOutWindowForcedShutdown(_outsideLocation: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
   mousewheel: Promise<(event: WheelEvent) => void>;
   getCurrentStrokeColor(): Promise<void>;
   changeCurrentStrokeColorAlpha(dAlpha: number): Promise<void>;
@@ -839,6 +879,7 @@ declare class ControllerUtils {
   autoComplete: Promise<AutoCompleteManager>;
   constructor(project: Project | { _: "Project" | (string & {}) });
   editTextNode(clickedNode: TextNode, selectAll = true): Promise<void>;
+  editEdgeText(edge: Edge | MultiTargetUndirectedEdge, selectAll = true): Promise<void>;
   editNodeDetailsByKeyboard(): Promise<void>;
   editNodeDetails(clickedNode: Entity): Promise<void>;
   addTextNodeByLocation(
@@ -852,6 +893,7 @@ declare class ControllerUtils {
   getClickedStageObject(clickedLocation: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
   isClickedResizeRect(clickedLocation: Vector | { _: "Vector" | (string & {}) }): Promise<boolean>;
   selectedEntityNormalizing(): Promise<void>;
+  editSectionTitle(section: Section): Promise<void>;
 }
 
 declare class CopyEngine {
@@ -1145,6 +1187,7 @@ declare class EdgeRenderer {
   updateRenderer(style: Settings["lineStyle"]): Promise<void>;
   renderLineEdge(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<void>;
   renderCrEdge(edge: CubicCatmullRomSplineEdge | { _: "CubicCatmullRomSplineEdge" | (string & {}) }): Promise<void>;
+  renderArcEdge(edge: ArcEdge | { _: "ArcEdge" | (string & {}) }): Promise<void>;
   getMinNonCollapseParentSection(
     innerEntity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
   ): Promise<Section>;
@@ -1233,6 +1276,9 @@ declare class Entity extends StageObject {
   isAlignExcluded;
   moveTo(location: Vector | { _: "Vector" | (string & {}) }): void;
   details: Promise<Value>;
+  parentSection: Promise<Section | null>;
+  sectionDepth: Promise<number>;
+  nearestLockedAncestorSection: Promise<Section | null>;
   isMouseHover: Promise<boolean>;
   detailsButtonRectangle(): Promise<Rectangle>;
   isMouseInDetailsButton(mouseWorldLocation: Vector | { _: "Vector" | (string & {}) }): Promise<boolean>;
@@ -1524,6 +1570,7 @@ declare class ImageNode extends ConnectableEntity implements ResizeAble {
       isBackground = false,
     },
     unknown = false,
+    onReady?: () => void,
   );
   scaleUpdate(scaleDiff: number): Promise<void>;
   get rectangle(): Promise<Rectangle>;
@@ -1532,6 +1579,7 @@ declare class ImageNode extends ConnectableEntity implements ResizeAble {
   moveTo(location: Vector | { _: "Vector" | (string & {}) }): void;
   reverseColors(): Promise<void>;
   swapRedBlueChannels(): Promise<void>;
+  compressImage(): Promise<void>;
   resizeHandle(delta: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
   getResizeHandleRect(): Promise<Rectangle>;
 }
@@ -1562,6 +1610,8 @@ declare class InputElement {
     onChange: (value: string, element: HTMLTextAreaElement) => void = () => {},
     style: Partial<CSSStyleDeclaration> = {},
     selectAllWhenCreated = true,
+    exitOnWheel = false,
+    fixedWidth?: number,
   ): Promise<string>;
   addSuccessEffect(): Promise<void>;
   addFailEffect(withToast = true): Promise<void>;
@@ -1660,7 +1710,7 @@ declare class KeyboardOnlyTreeEngine {
   ): Promise<ConnectableEntity | null>;
   changePreDirection(nodes: ConnectableEntity[], direction: "right" | "left" | "down" | "up"): void;
   addNodeEffectByPreDirection(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): void;
-  onDeepGenerateNode(defaultText = "", selectAll = true): Promise<void>;
+  onDeepGenerateNode(defaultText = "", selectAll = true, editEdgeFirst = false): Promise<void>;
   onBroadGenerateNode(): Promise<void>;
   adjustTreeNode(
     entity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
@@ -1671,6 +1721,11 @@ declare class KeyboardOnlyTreeEngine {
     parentNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
     preDirection: "right" | "left" | "down" | "up",
   ): Promise<number>;
+  editEdgeTextAndThenNode(
+    edge: Edge | { _: "Edge" | (string & {}) },
+    newNode: TextNode | { _: "TextNode" | (string & {}) },
+    selectAll = true,
+  ): Promise<void>;
 }
 
 declare class LatexNode extends ConnectableEntity {
@@ -2047,6 +2102,10 @@ declare class NodeConnector {
     fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
     toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
   ): void;
+  addArcEdge(
+    fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
+    toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
+  ): void;
   reverseEdges(edges: LineEdge[]): Promise<void>;
   changeEdgeTarget(
     edge: LineEdge | { _: "LineEdge" | (string & {}) },
@@ -2128,7 +2187,7 @@ declare class Project extends Tab {
   readme?: Promise<string>;
   getFileContent(options: { includeThumbnail?: boolean } = {}): Promise<void>;
   get stageHash(): Promise<any>;
-  addAttachment(data: Blob): Promise<void>;
+  addAttachment(data: Blob): Promise<string>;
   set projectState(state: ProjectState);
   get projectState(): Promise<ProjectState>;
   set isSaving(isSaving: boolean);
@@ -2471,11 +2530,22 @@ declare class SectionInOutManager {
   goInSection(entities: Entity[], section: Section | { _: "Section" | (string & {}) }): Promise<void>;
   goInSections(entities: Entity[], sections: Section[]): Promise<void>;
   goOutSection(entities: Entity[], section: Section | { _: "Section" | (string & {}) }): Promise<void>;
-  entityDropParent(entity: Entity | { _: "Entity" | (string & {}) }): Promise<void>;
+  attachEntityToSection(
+    entity: Entity | { _: "Entity" | (string & {}) },
+    section: Section | { _: "Section" | (string & {}) },
+  ): Promise<boolean>;
+  entityDropParent(
+    entity: Entity | { _: "Entity" | (string & {}) },
+    convertEmptySectionToTextNode: boolean = false,
+    excludeSection: Section | null = null,
+  ): Promise<boolean>;
   sectionDropChild(
     section: Section | { _: "Section" | (string & {}) },
     entity: Entity | { _: "Entity" | (string & {}) },
-  ): Promise<void>;
+    convertEmptySectionToTextNode: boolean = true,
+  ): Promise<boolean>;
+  pickPreferredSection(sections: Section[]): Promise<Section | null>;
+  getSectionArea(section: Section | { _: "Section" | (string & {}) }): Promise<number>;
   convertSectionToTextNode(section: Section | { _: "Section" | (string & {}) }): Promise<void>;
 }
 
@@ -2485,26 +2555,32 @@ declare class SectionMethods {
   isObjectBeLockedBySection(object: StageObject | { _: "StageObject" | (string & {}) }): Promise<boolean>;
   getFatherSectionsList(entity: Entity | { _: "Entity" | (string & {}) }): Promise<Section>[];
   getSectionsByInnerLocation(location: Vector | { _: "Vector" | (string & {}) }): Promise<Section>[];
-  deeperSections(sections: Section[]): Promise<Section>[];
+  getInnermostSectionByLocation(location: Vector | { _: "Vector" | (string & {}) }): Promise<Section | null>;
+  isSectionBigTitleActive(section: Section | { _: "Section" | (string & {}) }): Promise<boolean>;
+  getBigTitleCoveringAncestorSection(entity: Entity | { _: "Entity" | (string & {}) }): Promise<Section | null>;
+  isEntityHiddenByBigTitleSection(entity: Entity | { _: "Entity" | (string & {}) }): Promise<boolean>;
+  isEntityCoveredByBigTitleSection(entity: Entity | { _: "Entity" | (string & {}) }): Promise<boolean>;
+  isAssociationHiddenByBigTitleSection(
+    association: Association | { _: "Association" | (string & {}) },
+  ): Promise<boolean>;
+  isAssociationCoveredByBigTitleSection(
+    association: Association | { _: "Association" | (string & {}) },
+  ): Promise<boolean>;
+  getOutermostLockedAncestorSection(entity: Entity | { _: "Entity" | (string & {}) }): Promise<Section | null>;
   shallowerSection(sections: Section[]): Promise<Section>[];
   shallowerNotSectionEntities(entities: Entity[]): Promise<Entity>[];
   isEntityInSection(
     entity: Entity | { _: "Entity" | (string & {}) },
     section: Section | { _: "Section" | (string & {}) },
   ): Promise<boolean>;
-  isEntityInSection_fake(
-    entity: Entity | { _: "Entity" | (string & {}) },
-    section: Section | { _: "Section" | (string & {}) },
-  ): Promise<boolean>;
-  _isEntityInSection(
-    entity: Entity | { _: "Entity" | (string & {}) },
-    section: Section | { _: "Section" | (string & {}) },
-    deep = 0,
-  ): Promise<boolean>;
   isTreePack(rootNode: Section | { _: "Section" | (string & {}) }): Promise<void>;
   getSectionMaxDeep(section: Section | { _: "Section" | (string & {}) }): Promise<number>;
   getAllEntitiesInSelectedSectionsOrEntities(selectedEntities: Entity[]): Promise<Entity>[];
   getSortedSectionsByZ(sections: Section[]): Promise<Section>[];
+  getDeepestSectionsAtLocation(
+    section: Section | { _: "Section" | (string & {}) },
+    location: Vector | { _: "Vector" | (string & {}) },
+  ): Promise<Section>[];
 }
 
 declare class SectionPackManager {
@@ -2523,9 +2599,9 @@ declare class SectionPackManager {
   ): Promise<Section>;
   unpackSelectedSections(): Promise<void>;
   unpackSections(entities: Entity[]): Promise<void>;
-  packEntityToSection(addEntities: Entity[]): Promise<void>;
-  createSectionFromSelectionRectangle(): void;
-  packSelectedEntitiesToSection(): void;
+  packEntityToSection(addEntities: Entity[]): Promise<Section | undefined>;
+  createSectionFromSelectionRectangle(): Promise<Section | undefined>;
+  packSelectedEntitiesToSection(): Promise<Section | undefined>;
   getSmartSectionTitle(addEntities: Entity[]): Promise<string>;
 }
 
@@ -2913,7 +2989,13 @@ declare class StageImport {
 }
 
 declare class StageManager {
+  rootSections: Promise<Section>[];
+  topLevelEntities: Promise<Entity>[];
+  normalizedCrossParentRelationCount: Promise<number>;
   constructor(project: Project | { _: "Project" | (string & {}) });
+  getRootSections(): Promise<Section>[];
+  getTopLevelEntities(): Promise<Entity>[];
+  getNormalizedCrossParentRelationCount(): Promise<number>;
   get(uuid: string): Promise<void>;
   isEmpty(): Promise<boolean>;
   getTextNodes(): Promise<TextNode>[];
@@ -2935,8 +3017,20 @@ declare class StageManager {
   getEdges(): Promise<Edge>[];
   getLineEdges(): Promise<LineEdge>[];
   getCrEdges(): Promise<CubicCatmullRomSplineEdge>[];
-  add(stageObject: StageObject | { _: "StageObject" | (string & {}) }): Promise<void>;
+  getArcEdges(): Promise<ArcEdge>[];
+  add(stageObject: StageObject | { _: "StageObject" | (string & {}) }, skipUpdateReferences = false): Promise<void>;
   updateReferences(): Promise<void>;
+  rebuildSectionRuntimeTree(): Promise<void>;
+  pickDirectParentSection(
+    entity: Entity | { _: "Entity" | (string & {}) },
+    candidates: Section[],
+  ): Promise<Section | null>;
+  assignSectionRuntimeInfo(
+    entity: Entity | { _: "Entity" | (string & {}) },
+    depth: number,
+    lockedAncestor: Section | null,
+  ): Promise<void>;
+  getEntityArea(entity: Entity | { _: "Entity" | (string & {}) }): Promise<number>;
   getTextNodeByUUID(uuid: string): Promise<TextNode | null>;
   getConnectableEntityByUUID(uuid: string): Promise<ConnectableEntity | null>;
   isSectionByUUID(uuid: string): Promise<boolean>;
@@ -2953,6 +3047,13 @@ declare class StageManager {
     location: Vector | { _: "Vector" | (string & {}) },
   ): Promise<ConnectableEntity | null>;
   findEntityByLocation(location: Vector | { _: "Vector" | (string & {}) }): Promise<Entity | null>;
+  findEntityInHierarchyByLocation<T extends Entity>(
+    entities: Entity[],
+    location: Vector | { _: "Vector" | (string & {}) },
+    accept: (entity: Entity) => entity is T,
+    prioritizePenStroke: boolean,
+    sectionOnlyMode: boolean,
+  ): Promise<T | null>;
   findConnectPointByLocation(location: Vector | { _: "Vector" | (string & {}) }): Promise<ConnectPoint | null>;
   isHaveEntitySelected(): Promise<boolean>;
   getSelectedEntities(): Promise<Entity>[];
@@ -2964,7 +3065,7 @@ declare class StageManager {
   deleteEntities(deleteNodes: Entity[]): Promise<void>;
   deleteSelectedStageObjects(): Promise<void>;
   deleteAssociation(deleteAssociation: Association): Promise<boolean>;
-  deleteEdge(deleteEdge: Edge): Promise<boolean>;
+  deleteEdge(deleteEdge: Edge | { _: "Edge" | (string & {}) }): Promise<boolean>;
   w;
   connectEntity(
     fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
@@ -2977,6 +3078,7 @@ declare class StageManager {
     isCrEdge: boolean = false,
     sourceRectRate?: [number, number],
     targetRectRate?: [number, number],
+    isArcEdge: boolean = false,
   ): Promise<void>;
   reverseSelectedEdges(): Promise<void>;
   generateNodeTreeByText(text: string, indention: number = 4, location = this.project.camera.location): Promise<void>;
@@ -3000,6 +3102,7 @@ declare class StageManager {
   changeEdgesConnectLocation(edges: Edge[], direction: Direction | null, isSource: boolean = false): Promise<void>;
   switchLineEdgeToCrEdge(): Promise<void>;
   switchEdgeToUndirectedEdge(): Promise<void>;
+  switchEdgeToArcEdge(): Promise<void>;
   switchUndirectedEdgeToEdge(): Promise<void>;
   addSelectedCREdgeControlPoint(): Promise<void>;
   addSelectedCREdgeTension(): Promise<void>;
