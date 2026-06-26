@@ -193,6 +193,28 @@ export class Renderer {
       }
     } else if (shape === "circleDot") {
       this.project.shapeRenderer.renderCircle(viewCenterLocation, 15, Color.Transparent, color, 1);
+    } else if (shape === "iBeam") {
+      const cameraScale = this.project.camera.currentScale;
+      let autoLevel = 0;
+      if (Settings.newNodeScaleByCamera) {
+        autoLevel = Math.round(-2 * Math.log2(cameraScale)) + Settings.newNodeScaleByCameraOffset;
+      }
+      const fontSize = Renderer.FONT_SIZE * 2 ** (autoLevel / 2);
+      const padding = (fontSize / Renderer.FONT_SIZE) * Renderer.NODE_PADDING;
+      const textNodeHeight = fontSize * 1.5 + padding * 2;
+      const viewHalfHeight = (textNodeHeight * cameraScale) / 2;
+
+      const top = viewCenterLocation.add(new Vector(0, -viewHalfHeight));
+      const bottom = viewCenterLocation.add(new Vector(0, viewHalfHeight));
+      this.project.curveRenderer.renderSolidLine(top, bottom, color, 1);
+
+      const topLeft = top.add(new Vector(-8, 0));
+      const topRight = top.add(new Vector(8, 0));
+      this.project.curveRenderer.renderSolidLine(topLeft, topRight, color, 1);
+
+      const bottomLeft = bottom.add(new Vector(-8, 0));
+      const bottomRight = bottom.add(new Vector(8, 0));
+      this.project.curveRenderer.renderSolidLine(bottomLeft, bottomRight, color, 1);
     }
   }
 

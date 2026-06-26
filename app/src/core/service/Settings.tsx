@@ -17,7 +17,13 @@ export const settingsSchema = z.object({
   isRenderCenterPointer: z.boolean().default(false),
   centerCrosshairColor: z.tuple([z.number(), z.number(), z.number()]).default([255, 255, 255]),
   centerCrosshairShape: z
-    .union([z.literal("crossDot"), z.literal("tightCross"), z.literal("xShape"), z.literal("circleDot")])
+    .union([
+      z.literal("crossDot"),
+      z.literal("tightCross"),
+      z.literal("xShape"),
+      z.literal("circleDot"),
+      z.literal("iBeam"),
+    ])
     .default("crossDot"),
   centerCrosshairAlpha: z.number().min(0).max(1).default(0.5),
   showBackgroundHorizontalLines: z.boolean().default(true),

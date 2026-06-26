@@ -216,6 +216,7 @@ settings:
       tightCross: Tight Cross
       xShape: X Shape
       circleDot: Circle + Center Dot
+      iBeam: Dynamic I-Beam
   centerCrosshairAlpha:
     title: Crosshair Opacity
     description: Set the opacity of the center crosshair

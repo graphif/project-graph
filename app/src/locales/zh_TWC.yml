@@ -330,6 +330,7 @@ settings:
       tightCross: 緊密十字
       xShape: X形
       circleDot: 圓形中心點
+      iBeam: 動態工字型
   centerCrosshairAlpha:
     title: 十字準星不透明度
     description: 設定中心十字準星的不透明度

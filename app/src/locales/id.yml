@@ -273,6 +273,7 @@ settings:
       tightCross: Salib Rapat
       xShape: Bentuk X
       circleDot: Lingkaran + Titik Tengah
+      iBeam: I-Beam Dinamis
   centerCrosshairAlpha:
     title: Opasitas Penanda Silang
     description: Atur opasitas penanda silang pusat
