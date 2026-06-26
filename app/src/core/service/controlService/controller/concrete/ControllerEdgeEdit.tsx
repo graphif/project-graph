@@ -42,7 +42,10 @@ export class ControllerEdgeEditClass extends ControllerClass {
 
   keydown = (event: KeyboardEvent) => {
     if (event.key === "Enter") {
-      const selectedEdges = this.project.stageManager.getLineEdges().filter((edge) => edge.isSelected);
+      const selectedEdges = [
+        ...this.project.stageManager.getLineEdges(),
+        ...this.project.stageManager.getArcEdges(),
+      ].filter((edge) => edge.isSelected);
       if (selectedEdges.length === 1) {
         setTimeout(() => {
           this.editEdgeText(selectedEdges[0]);
