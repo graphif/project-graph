@@ -1739,6 +1739,18 @@ keyBinds:
   expandSelectEntityReversedKeepLastSelected:
     title: 反向擴散選擇節點（保留目前節點的選擇狀態）
     description: 按下後，實體的選取狀態會轉移到父節點上，同時保留目前節點的選取狀態
+  expandSelectEntityWithEdge:
+    title: 擴散選擇節點與連線
+    description: 按下後，選取狀態會沿著連線逐步擴散。正向擴散時，會在「節點 -> 出邊 -> 子節點」之間交替前進。
+  expandSelectEntityReversedWithEdge:
+    title: 反向擴散選擇節點與連線
+    description: 按下後，選取狀態會沿著連線逐步反向擴散。反向擴散時，會在「節點 -> 入邊 -> 父節點」之間交替前進。
+  expandSelectEntityKeepLastSelectedWithEdge:
+    title: 擴散選擇節點與連線（保留目前選擇）
+    description: 按下後，選取狀態會沿著連線逐步擴散。正向擴散時，會在「節點 -> 出邊 -> 子節點」之間交替前進，同時保留目前選擇。
+  expandSelectEntityReversedKeepLastSelectedWithEdge:
+    title: 反向擴散選擇節點與連線（保留目前選擇）
+    description: 按下後，選取狀態會沿著連線逐步反向擴散。反向擴散時，會在「節點 -> 入邊 -> 父節點」之間交替前進，同時保留目前選擇。
   CameraMoveUp:
     title: 向上移動視野
     description: 按下後，視野向上移動

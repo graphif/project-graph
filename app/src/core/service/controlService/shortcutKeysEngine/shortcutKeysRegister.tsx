@@ -1471,6 +1471,46 @@ export const allKeyBinds: KeyBindItem[] = [
       project!.selectChangeEngine.expandSelect(true, true);
     },
   },
+  {
+    id: "expandSelectEntityWithEdge",
+    defaultKey: "e C-w",
+    icon: Link,
+    when: whenKeyboardOnlyOpenWithSelectedStageObjects,
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.selectChangeEngine.expandSelectWithEdge(false, false);
+    },
+  },
+  {
+    id: "expandSelectEntityReversedWithEdge",
+    defaultKey: "e C-S-w",
+    icon: Link,
+    when: whenKeyboardOnlyOpenWithSelectedStageObjects,
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.selectChangeEngine.expandSelectWithEdge(false, true);
+    },
+  },
+  {
+    id: "expandSelectEntityKeepLastSelectedWithEdge",
+    defaultKey: "e C-A-w",
+    icon: Link,
+    when: whenKeyboardOnlyOpenWithSelectedStageObjects,
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.selectChangeEngine.expandSelectWithEdge(true, false);
+    },
+  },
+  {
+    id: "expandSelectEntityReversedKeepLastSelectedWithEdge",
+    defaultKey: "e C-A-S-w",
+    icon: Link,
+    when: whenKeyboardOnlyOpenWithSelectedStageObjects,
+    onPress: (project) => {
+      if (!project!.keyboardOnlyEngine.isOpenning()) return;
+      project!.selectChangeEngine.expandSelectWithEdge(true, true);
+    },
+  },
 
   /*------- 树/图 生成 -------*/
   {

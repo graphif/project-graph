@@ -1815,6 +1815,26 @@ keyBinds:
     title: 反向扩散选择节点（保留当前节点的选择状态）
     description: |
       按下后，实体的选择状态会转移到父级节点上，同时保留当前节点的选择状态
+  expandSelectEntityWithEdge:
+    title: 扩散选择节点与连线
+    description: |
+      按下后，选择状态会沿着连线逐步扩散。
+      正向扩散时，会在“节点 -> 出边 -> 子节点”之间交替前进。
+  expandSelectEntityReversedWithEdge:
+    title: 反向扩散选择节点与连线
+    description: |
+      按下后，选择状态会沿着连线逐步反向扩散。
+      反向扩散时，会在“节点 -> 入边 -> 父节点”之间交替前进。
+  expandSelectEntityKeepLastSelectedWithEdge:
+    title: 扩散选择节点与连线（保留当前选择）
+    description: |
+      按下后，选择状态会沿着连线逐步扩散。
+      正向扩散时，会在“节点 -> 出边 -> 子节点”之间交替前进，同时保留当前选择。
+  expandSelectEntityReversedKeepLastSelectedWithEdge:
+    title: 反向扩散选择节点与连线（保留当前选择）
+    description: |
+      按下后，选择状态会沿着连线逐步反向扩散。
+      反向扩散时，会在“节点 -> 入边 -> 父节点”之间交替前进，同时保留当前选择。
   CameraMoveUp:
     title: 向上移动视野
     description: 按下后，视野向上移动

@@ -1653,6 +1653,26 @@ keyBinds:
       If the current selection is graffiti, it will select entities touched by the graffiti.
       If the current selection is an entity, it will select all graffiti that touch it.
       Pressing multiple times will alternate the diffusion selection
+  expandSelectEntityWithEdge:
+    title: Expand Selection Across Nodes and Edges
+    description: |
+      Expands the selection step by step along graph connections.
+      In forward mode, each press alternates through "node -> outgoing edge -> child node".
+  expandSelectEntityReversedWithEdge:
+    title: Reverse Expand Selection Across Nodes and Edges
+    description: |
+      Expands the selection backward step by step along graph connections.
+      In reverse mode, each press alternates through "node -> incoming edge -> parent node".
+  expandSelectEntityKeepLastSelectedWithEdge:
+    title: Expand Selection Across Nodes and Edges (Keep Current Selection)
+    description: |
+      Expands the selection step by step along graph connections.
+      In forward mode, each press alternates through "node -> outgoing edge -> child node" while keeping the current selection.
+  expandSelectEntityReversedKeepLastSelectedWithEdge:
+    title: Reverse Expand Selection Across Nodes and Edges (Keep Current Selection)
+    description: |
+      Expands the selection backward step by step along graph connections.
+      In reverse mode, each press alternates through "node -> incoming edge -> parent node" while keeping the current selection.
   clickAppMenuSettingsButton:
     title: Open settings page
     description: "When this key is pressed, the settings page opens without mouse\n"

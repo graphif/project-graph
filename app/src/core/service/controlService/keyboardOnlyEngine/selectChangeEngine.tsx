@@ -1,6 +1,7 @@
 import { Project, service } from "@/core/Project";
 import { RectangleTransformEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleTransformEffect";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { Direction } from "@/types/directions";
 import { Vector } from "@graphif/data-structures";
@@ -222,6 +223,63 @@ export class SelectChangeEngine {
           oldEntity.isSelected = false;
         }
       }
+    }
+  }
+
+  /**
+   * 扩散选择（节点和连线交替）
+   * 正向：节点 -> 出边 -> 子节点
+   * 反向：节点 -> 入边 -> 父节点
+   */
+  expandSelectWithEdge(isKeepExpand = false, reversed: boolean = false) {
+    if (!this.project.keyboardOnlyEngine.isOpenning()) {
+      return;
+    }
+
+    const selectedEntities = this.project.stageManager
+      .getSelectedEntities()
+      .filter((entity) => entity instanceof ConnectableEntity);
+    const selectedEdges = this.project.stageManager
+      .getSelectedAssociations()
+      .filter((association) => association instanceof Edge);
+
+    if (selectedEntities.length === 0 && selectedEdges.length === 0) {
+      return;
+    }
+
+    const nextEntities = new Set<ConnectableEntity>();
+    const nextEdges = new Set<Edge>();
+
+    if (reversed) {
+      for (const selectedEntity of selectedEntities) {
+        this.project.graphMethods.edgeParentArray(selectedEntity).map((edge) => nextEdges.add(edge));
+      }
+      for (const selectedEdge of selectedEdges) {
+        nextEntities.add(selectedEdge.source);
+      }
+    } else {
+      for (const selectedEntity of selectedEntities) {
+        this.project.graphMethods.edgeChildrenArray(selectedEntity).map((edge) => nextEdges.add(edge));
+      }
+      for (const selectedEdge of selectedEdges) {
+        nextEntities.add(selectedEdge.target);
+      }
+    }
+
+    if (!isKeepExpand) {
+      for (const selectedEntity of selectedEntities) {
+        selectedEntity.isSelected = false;
+      }
+      for (const selectedEdge of selectedEdges) {
+        selectedEdge.isSelected = false;
+      }
+    }
+
+    for (const nextEntity of nextEntities) {
+      nextEntity.isSelected = true;
+    }
+    for (const nextEdge of nextEdges) {
+      nextEdge.isSelected = true;
     }
   }
 

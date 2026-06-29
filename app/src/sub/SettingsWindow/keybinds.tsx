@@ -673,6 +673,10 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "expandSelectEntityReversed",
       "expandSelectEntityKeepLastSelected",
       "expandSelectEntityReversedKeepLastSelected",
+      "expandSelectEntityWithEdge",
+      "expandSelectEntityReversedWithEdge",
+      "expandSelectEntityKeepLastSelectedWithEdge",
+      "expandSelectEntityReversedKeepLastSelectedWithEdge",
     ],
   },
   {
