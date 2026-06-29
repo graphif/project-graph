@@ -8,7 +8,7 @@ import Welcome from "@/components/welcome-page";
 import { Project, ProjectState } from "@/core/Project";
 import { Tab } from "@/core/Tab";
 import { GlobalMenu } from "@/core/service/GlobalMenu";
-import { Settings } from "@/core/service/Settings";
+import { flushSettingsLoadErrors, Settings } from "@/core/service/Settings";
 import { Telemetry } from "@/core/service/Telemetry";
 import { Themes } from "@/core/service/Themes";
 import { globalShortcutManager } from "@/core/service/controlService/shortcutKeysEngine/GlobalShortcutManager";
@@ -57,6 +57,9 @@ export default function App() {
   // const { t } = useTranslation("app");
 
   useEffect(() => {
+    // 设置兼容性提示依赖 Dialog UI，必须在应用挂载后再触发。
+    void flushSettingsLoadErrors();
+
     // 先修复老用户的快捷键缓存问题（F11快捷键）
     (async () => {
       await checkAndFixShortcutStorage();

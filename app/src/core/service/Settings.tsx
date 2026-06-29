@@ -1,8 +1,9 @@
 import { isMac } from "@/utils/platform";
 import { LazyStore } from "@tauri-apps/plugin-store";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { Dialog } from "@/components/ui/dialog";
 import z from "zod";
+import i18next from "i18next";
 
 export const settingsSchema = z.object({
   language: z
@@ -531,15 +532,56 @@ console.log("post store.init");
 //     listeners[key]?.forEach((cb) => cb(value));
 //   }
 // }
-let savedSettings = settingsSchema.parse({});
-try {
-  console.log(Object.fromEntries(await store.entries()));
-  savedSettings = settingsSchema.parse(Object.fromEntries(await store.entries()));
-} catch (e) {
-  if (e instanceof z.ZodError) {
-    console.error(e);
-    toast.error(`设置文件格式错误\n${JSON.stringify(e.issues)}`);
+const defaultSettings = settingsSchema.parse({});
+const savedSettings: Settings = { ...defaultSettings };
+const pendingSettingsLoadErrorKeys = new Set<string>();
+const pendingSettingsLoadErrorValues = new Map<string, unknown>();
+let hasFlushedSettingsLoadErrors = false;
+
+const rawSettings = Object.fromEntries(await store.entries());
+// console.log(rawSettings);
+for (const [rawKey, rawValue] of Object.entries(rawSettings)) {
+  if (!(rawKey in settingsSchema.shape)) {
+    continue;
   }
+  const settingSchema = settingsSchema.shape[rawKey as keyof typeof settingsSchema.shape];
+  const result = settingSchema.safeParse(rawValue);
+  if (result.success) {
+    (savedSettings as Record<string, unknown>)[rawKey] = result.data;
+    continue;
+  }
+  console.error(`设置项 ${rawKey} 格式错误，将使用默认值`, result.error);
+  pendingSettingsLoadErrorKeys.add(rawKey);
+  pendingSettingsLoadErrorValues.set(rawKey, rawValue);
+}
+
+export async function flushSettingsLoadErrors() {
+  if (hasFlushedSettingsLoadErrors || pendingSettingsLoadErrorKeys.size === 0) {
+    return;
+  }
+  hasFlushedSettingsLoadErrors = true;
+  const invalidKeys = Array.from(pendingSettingsLoadErrorKeys);
+  const invalidSettingTitles = invalidKeys.map((key) => {
+    const title = i18next.t(`${key}.title`, { ns: "settings", defaultValue: key });
+    const displayTitle = title === `${key}.title` ? key : title;
+    const invalidValue = JSON.stringify(pendingSettingsLoadErrorValues.get(key));
+    return `"${displayTitle}"\n当前值：${invalidValue ?? String(pendingSettingsLoadErrorValues.get(key))}`;
+  });
+  if (invalidKeys.length === 1) {
+    await Dialog.confirm("设置项不兼容", `设置项 ${invalidSettingTitles[0]} 与当前版本不兼容，已使用默认值。`);
+  } else {
+    await Dialog.confirm(
+      "部分设置项不兼容",
+      `有 ${invalidKeys.length} 个设置项与当前版本不兼容，已使用默认值：\n${invalidSettingTitles.join("\n")}`,
+    );
+  }
+
+  for (const key of invalidKeys) {
+    await store.set(key, defaultSettings[key as keyof Settings]);
+  }
+  await store.save();
+  pendingSettingsLoadErrorKeys.clear();
+  pendingSettingsLoadErrorValues.clear();
 }
 
 export const Settings = new Proxy<
