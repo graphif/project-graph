@@ -100,24 +100,50 @@ export class AutoLayoutFastTree {
       trees.sort((a, b) => a.collisionBox.getRectangle().left - b.collisionBox.getRectangle().left);
     }
 
+    // 记录前一棵子树所属的分组框，用于检测分组框切换，避免重叠
+    let prevParentSection = trees[0].parentSection;
+
     for (let i = 1; i < trees.length; i++) {
       const tree = trees[i];
 
       // 根据方向更新下一个位置
       const treeRect = this.getTreeBoundingRectangle(tree, skipDashed);
+
+      // ==== 如果当前子树进入了新的分组框（与前一棵子树不在同一个分组框内），
+      // 需要额外留出分组框标题栏和 padding 的高度，避免重叠
+      const currParentSection = tree.parentSection;
+      const sectionTopOverhead = 80; // 30 padding + 50 title bar
+      const sectionBottomOverhead = 30; // bottom padding
+      let extraGap = 0;
+      if (currParentSection !== prevParentSection) {
+        if (currParentSection && currParentSection.text !== "") {
+          extraGap += sectionTopOverhead;
+        }
+        if (prevParentSection && prevParentSection.text !== "") {
+          extraGap += sectionBottomOverhead;
+        }
+      }
+      // ====
+
       if (direction === "right") {
+        currentPosition.y += extraGap;
         this.moveTreeRectTo(tree, currentPosition, skipDashed);
         currentPosition.y += treeRect.height + gap;
       } else if (direction === "bottom") {
+        currentPosition.x += extraGap;
         this.moveTreeRectTo(tree, currentPosition, skipDashed);
         currentPosition.x += treeRect.width + gap;
       } else if (direction === "left") {
+        currentPosition.y += extraGap;
         this.moveTreeRectTo(tree, currentPosition.subtract(new Vector(treeRect.width, 0)), skipDashed);
         currentPosition.y += treeRect.height + gap;
       } else if (direction === "top") {
+        currentPosition.x += extraGap;
         this.moveTreeRectTo(tree, currentPosition.subtract(new Vector(0, treeRect.height)), skipDashed);
         currentPosition.x += treeRect.width + gap;
       }
+
+      prevParentSection = currParentSection;
     }
   }
 
@@ -142,8 +168,16 @@ export class AutoLayoutFastTree {
 
     const parentRectangle = rootNode.collisionBox.getRectangle();
 
-    // 计算子树的外接矩形
-    const childsRectangle = Rectangle.getBoundingRectangle(childList.map((child) => child.collisionBox.getRectangle()));
+    // 计算子树的外接矩形，考虑分组框标题栏和 padding
+    const childRects = childList.map((child) => {
+      const rect = child.collisionBox.getRectangle();
+      const ps = child.parentSection;
+      if (ps && ps.text !== "") {
+        return new Rectangle(new Vector(rect.left, rect.top - 80), new Vector(rect.width, rect.height + 80));
+      }
+      return rect;
+    });
+    const childsRectangle = Rectangle.getBoundingRectangle(childRects);
 
     // 计算子树应该移动到的目标位置（使用边缘距离而不是中心位置）
     let targetLocation: Vector;
