@@ -728,7 +728,24 @@ export class StageManager {
         this.project.effects.addEffect(EntityShrinkEffect.fromEntity(entity));
       }
     }
+
+    const parentSet = new Set<ConnectableEntity>();
+    for (const entity of filteredEntities) {
+      if (entity instanceof ConnectableEntity) {
+        for (const parent of this.project.graphMethods.nodeParentArray(entity)) {
+          parentSet.add(parent);
+        }
+      }
+    }
+
     this.deleteEntities(filteredEntities);
+    // feature：delete键删除的时候，如果有父节点，让选中状态移动到父节点上
+    if (parentSet.size > 0) {
+      const firstParent = parentSet.values().next().value;
+      if (firstParent) {
+        firstParent.isSelected = true;
+      }
+    }
 
     // 处理所有类型的边，包括普通边和多目标无向边
     for (const association of this.getAssociations()) {
