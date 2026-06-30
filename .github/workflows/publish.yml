@@ -137,12 +137,19 @@ jobs:
           - platform: "ubuntu-22.04"
             args: "--bundles deb,rpm"
             dist: "src-tauri/target/release/bundle/**/*.{deb,rpm,sig}"
+            gpu: true
+          - platform: "ubuntu-22.04"
+            args: "--bundles deb,rpm"
+            dist: "src-tauri/target/release/bundle/**/*.{deb,rpm,sig}"
+            gpu: false
           - platform: "windows-latest"
             dist: "src-tauri/target/release/bundle/nsis"
+            gpu: true
           - platform: "macos-latest"
             args: "--target universal-apple-darwin"
             rust_targets: "aarch64-apple-darwin,x86_64-apple-darwin"
             dist: "src-tauri/target/universal-apple-darwin/release/bundle/**/*.{dmg,tar.gz,sig}"
+            gpu: false
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -175,8 +182,8 @@ jobs:
       - name: Verify CUDA installation
         if: matrix.platform != 'macos-latest'
         run: nvcc --version
-      - name: Disable CUDA on macOS
-        if: matrix.platform == 'macos-latest'
+      - name: Disable GPU features
+        if: ${{ !matrix.gpu }}
         run: |
           node ./.github/scripts/set-aha-features.mjs
       - name: Linux - Install dependencies
@@ -296,22 +303,36 @@ jobs:
         if: matrix.platform == 'macos-latest'
         run: |
           cd app/src-tauri/target/*/release/bundle/macos
-          mv *.app.tar.gz "Project Graph_${{ inputs.app_version }}_universal.app.tar.gz"
-          mv *.app.tar.gz.sig "Project Graph_${{ inputs.app_version }}_universal.app.tar.gz.sig"
+          suffix="${{ matrix.gpu && '-gpu' || '' }}"
+          mv *.app.tar.gz "Project Graph_${{ inputs.app_version }}_universal${suffix}.app.tar.gz"
+          mv *.app.tar.gz.sig "Project Graph_${{ inputs.app_version }}_universal${suffix}.app.tar.gz.sig"
       - name: Linux - Rename rpm
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           cd app/src-tauri/target/release/bundle/rpm
-          mv *.rpm "Project Graph_${{ inputs.app_version }}_amd64.rpm"
+          suffix="${{ matrix.gpu && '-gpu' || '' }}"
+          mv *.rpm "Project Graph_${{ inputs.app_version }}_amd64${suffix}.rpm"
+      - name: Linux - Rename deb
+        if: matrix.platform == 'ubuntu-22.04' && matrix.gpu
+        run: |
+          cd app/src-tauri/target/release/bundle/deb
+          for f in *.deb; do
+            mv "$f" "${f%.deb}-gpu.deb"
+          done
       - name: Linux / MacOS - Upload
         if: matrix.platform != 'windows-latest'
         run: |
           gh release upload ${{ inputs.release_tag }} app/${{ matrix.dist }} --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Windows - Upload
+      - name: Windows - Rename and upload
         if: matrix.platform == 'windows-latest'
         run: |
+          $suffix = "${{ matrix.gpu && '-gpu' || '' }}"
+          if ($suffix) {
+            Get-Item .\app\${{ matrix.dist }}\*.exe | Rename-Item -NewName { $_.BaseName + $suffix + $_.Extension }
+            Get-Item .\app\${{ matrix.dist }}\*.sig | Rename-Item -NewName { $_.BaseName + $suffix + $_.Extension }
+          }
           gh release upload ${{ inputs.release_tag }} (Get-Item .\app\${{ matrix.dist }}\*.exe).FullName --clobber
           gh release upload ${{ inputs.release_tag }} (Get-Item .\app\${{ matrix.dist }}\*.sig).FullName --clobber
         env:
