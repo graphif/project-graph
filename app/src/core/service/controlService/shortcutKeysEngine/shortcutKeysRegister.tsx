@@ -1,5 +1,6 @@
 import { Dialog } from "@/components/ui/dialog";
 import { Project, ProjectState } from "@/core/Project";
+import { AssetsRepository } from "@/core/service/AssetsRepository";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { ViewFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewFlashEffect";
 import { ViewOutlineFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewOutlineFlashEffect";
@@ -8,33 +9,62 @@ import { SubWindow } from "@/core/service/SubWindow";
 import { Themes } from "@/core/service/Themes";
 import { PenStrokeMethods } from "@/core/stage/stageManager/basicMethods/PenStrokeMethods";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
+import { TestTab } from "@/core/TestTab";
 import { activeTabAtom, isWindowMaxsizedAtom, store, tabsAtom } from "@/state";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { Image as TauriImage } from "@tauri-apps/api/image";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { writeImage, writeText } from "@tauri-apps/plugin-clipboard-manager";
 // import ColorWindow from "@/sub/ColorWindow";
-import FindWindow from "@/sub/FindWindow";
 import EditUrlNodeLinkWindow from "@/sub/EditUrlNodeLinkWindow";
+import FindWindow from "@/sub/FindWindow";
 // import KeyboardRecentFilesWindow from "@/sub/KeyboardRecentFilesWindow";
 import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
+import AIToolsWindow from "@/sub/AIToolsWindow";
+import AIWindow from "@/sub/AIWindow";
+import AttachmentsWindow from "@/sub/AttachmentsWindow";
+import LogicNodePanel from "@/sub/AutoComputeWindow";
+import BackgroundManagerWindow from "@/sub/BackgroundManagerWindow";
 import ColorPaletteWindow from "@/sub/ColorPaletteWindow";
-import ColorWindow from "@/sub/ColorWindow";
+import ColorWindow, { ColorManagerPanel } from "@/sub/ColorWindow";
+import ExportPngWindow from "@/sub/ExportPngWindow";
+import GenerateNodeTree, {
+  GenerateNodeGraph,
+  GenerateNodeMermaid,
+  GenerateNodeTreeByMarkdown,
+} from "@/sub/GenerateNodeWindow";
+import NewExportPngWindow from "@/sub/NewExportPngWindow";
+import NodeDetailsWindow from "@/sub/NodeDetailsWindow";
+import OnboardingWindow from "@/sub/OnboardingWindow";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
+import ReferencesWindow from "@/sub/ReferencesWindow";
 import SettingsWindow from "@/sub/SettingsWindow";
 import TagWindow from "@/sub/TagWindow";
+import TestWindow from "@/sub/TestWindow";
+import { openTextImportWindow } from "@/sub/TextImportWindow";
 import { Direction } from "@/types/directions";
 import { openBrowserOrFile } from "@/utils/externalOpen";
 import { exportImagesToProjectDirectory } from "@/utils/imageExport";
+import { getDeviceId } from "@/utils/otherApi";
 import { isMac } from "@/utils/platform";
 import { Color, Vector } from "@graphif/data-structures";
+import { serialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
+import { Encoder } from "@msgpack/msgpack";
+import { appCacheDir, dataDir, join, tempDir } from "@tauri-apps/api/path";
+import { open, save } from "@tauri-apps/plugin-dialog";
+import { exists, mkdir, writeFile } from "@tauri-apps/plugin-fs";
+import { open as shellOpen } from "@tauri-apps/plugin-shell";
+import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
+import i18next from "i18next";
 import {
   AlignCenterHorizontal,
   AlignCenterVertical,
@@ -48,6 +78,8 @@ import {
   AlignVerticalJustifyStart,
   AlignVerticalSpaceBetween,
   Aperture,
+  AppWindow,
+  Archive,
   ArrowDown,
   ArrowDownFromLine,
   ArrowDownToLine,
@@ -62,51 +94,89 @@ import {
   ArrowUp,
   ArrowUpFromLine,
   ArrowUpToLine,
+  Axe,
+  BookOpen,
+  BookOpenText,
+  Bot,
   Box,
   Brush,
+  Bug,
   Camera,
   ChevronFirst,
   ChevronLast,
   ChevronsDown,
   ChevronsRightLeft,
   ChevronsUp,
+  CircleAlert,
   CircleCheck,
+  CircleDot,
+  CircleMinus,
+  CirclePlus,
   CircleSlash,
   Clipboard,
   Code,
+  Columns4,
   Copy,
   CornerUpRight,
+  Dices,
   Dot,
+  Dumbbell,
   Equal,
   Expand,
   ExternalLink,
   Eye,
   EyeOff,
+  FileBadge,
+  FileBox,
+  FileClock,
+  FileCode,
+  FileDigit,
+  FileDown,
+  File as FileIcon,
+  FileImage,
+  FileInput,
+  FileOutput,
   FilePlus,
+  FileSpreadsheet,
+  FileText,
   FileUp,
+  Fingerprint,
+  Flag,
   FlaskConical,
   Focus,
   Folder,
+  FolderClock,
+  FolderCog,
+  FolderOpen,
   FolderPlus,
+  FolderTree,
   Ghost,
   GitBranch,
+  GitCompareArrows,
+  Globe,
   GraduationCap,
   Grip,
   History,
   Images,
+  Keyboard,
   Layers,
   LayoutDashboard,
+  LayoutGrid,
   LayoutPanelTop,
   Link,
   Lock,
   LucideProps,
+  MapPin,
   Maximize,
   Maximize2,
   Merge,
+  MessageCircleWarning,
   Minimize,
   Minimize2,
   Moon,
   MousePointer,
+  MousePointer2,
+  Move3d,
   MoveDown,
   MoveHorizontal,
   MoveLeft,
@@ -114,24 +184,30 @@ import {
   MoveUp,
   MoveUpRight,
   Network,
+  OctagonX,
   Package,
   Palette,
+  Paperclip,
   PenTool,
+  PictureInPicture2,
   Plus,
+  Rabbit,
+  Radiation,
+  Radius,
   Redo,
   RefreshCcw,
   RefreshCcwDot,
   RefreshCw,
   Repeat,
+  Rows4,
   Save,
   Scissors,
   Search,
   Settings as SettingsIcon,
   Shrink,
   Slash,
-  Sparkle,
+  Sparkles,
   Spline,
-  Radius,
   Split,
   SquareDashedBottomCode,
   SquareDot,
@@ -139,11 +215,17 @@ import {
   SquareSquare,
   Sun,
   Tag,
+  Terminal,
+  TextQuote,
   Trash2,
   TreePine,
+  Tv,
   Type,
   Undo,
+  View,
   Wand2,
+  Workflow,
+  Wrench,
   X,
   Zap,
   ZoomIn,
@@ -151,11 +233,21 @@ import {
 } from "lucide-react";
 import { ForwardRefExoticComponent, RefAttributes } from "react";
 import { toast } from "sonner";
+import { URI } from "vscode-uri";
 import { RecentFileManager } from "../../dataFileService/RecentFileManager";
+import { generateKeyboardLayout } from "../../dataGenerateService/generateFromFolderEngine/GenerateFromFolderEngine";
 import { ColorSmartTools } from "../../dataManageService/colorSmartTools";
 import { ConnectNodeSmartTools } from "../../dataManageService/connectNodeSmartTools";
+import { DragFileIntoStageEngine } from "../../dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { TextNodeSmartTools } from "../../dataManageService/textNodeSmartTools";
-import { createFileAtCurrentProjectDir, onNewDraft, onOpenFile, openCurrentProjectFolder } from "../../GlobalMenu";
+import {
+  createFileAtCurrentProjectDir,
+  onNewDraft,
+  onOpenFile,
+  onUpgradeOldJson,
+  openCurrentProjectFolder,
+} from "../../GlobalMenu";
+import { KeyBindsUI } from "./KeyBindsUI";
 
 export type KeyBindWhen = (project?: Project) => boolean | Promise<boolean>;
 
@@ -176,6 +268,7 @@ interface KeyBindItem {
 
 const whenAlways: KeyBindWhen = () => true;
 const whenHasProject: KeyBindWhen = (project) => !!project;
+const whenHasNonDraftProject: KeyBindWhen = (project) => !!project && !project.isDraft;
 const whenKeyboardOnlyOpen: KeyBindWhen = (project) => !!project && project.keyboardOnlyEngine.isOpenning();
 const whenHasSelectedStageObjectsOrSelectionRectangle: KeyBindWhen = (project) =>
   !!project &&
@@ -2839,7 +2932,7 @@ export const allKeyBinds: KeyBindItem[] = [
   {
     id: "generateTreeBySelectedTextNodeTextWithAI",
     defaultKey: "g e n t t",
-    icon: Sparkle,
+    icon: Sparkles,
     when: whenHasSelectedTextNodes,
     onPress: (project) => {
       if (project) TextNodeSmartTools.generateTreeBySelectedTextNodeTextWithAI(project);
@@ -2848,7 +2941,7 @@ export const allKeyBinds: KeyBindItem[] = [
   {
     id: "generateNetBySelectedTextNodeTextWithAI",
     defaultKey: "g e n n t",
-    icon: Sparkle,
+    icon: Sparkles,
     when: whenHasSelectedTextNodes,
     onPress: (project) => {
       if (project) TextNodeSmartTools.generateNetBySelectedTextNodeTextWithAI(project);
@@ -2857,7 +2950,7 @@ export const allKeyBinds: KeyBindItem[] = [
   {
     id: "generateSummaryBySelectedTextNodeTextWithAI",
     defaultKey: "g e n s t",
-    icon: Sparkle,
+    icon: Sparkles,
     when: whenHasSelectedTextNodes,
     onPress: (project) => {
       if (project) TextNodeSmartTools.generateSummaryBySelectedTextNodeTextWithAI(project);
@@ -2920,6 +3013,1105 @@ export const allKeyBinds: KeyBindItem[] = [
         project!.textNodeRenderer.renderTextNode(node);
       }
       project!.historyManager.recordStep();
+    },
+  },
+
+  {
+    id: "newPrgAtCurrentDir",
+    defaultKey: "",
+    icon: FilePlus,
+    when: whenHasNonDraftProject,
+    onPress: (project) => createFileAtCurrentProjectDir(project, async () => {}),
+  },
+  {
+    id: "upgradeOldJson",
+    defaultKey: "",
+    icon: FileInput,
+    when: whenAlways,
+    onPress: () => onUpgradeOldJson(),
+  },
+  {
+    id: "saveAs",
+    defaultKey: "",
+    icon: FileDown,
+    when: whenHasProject,
+    onPress: async (project) => {
+      const p = project!;
+      const path = await save({
+        title: i18next.t("file.saveAs", { ns: "globalMenu" }),
+        filters: [{ name: "Project Graph", extensions: ["prg"] }],
+      });
+      if (!path) return;
+      p.uri = URI.file(path);
+      await RecentFileManager.addRecentFileByUri(p.uri);
+      await p.save();
+    },
+  },
+  {
+    id: "manualBackup",
+    defaultKey: "",
+    icon: Archive,
+    when: whenHasProject,
+    onPress: async (project) => {
+      await project!.autoSaveBackup.manualBackup();
+    },
+  },
+  {
+    id: "openCustomBackupFolder",
+    defaultKey: "",
+    icon: FolderClock,
+    when: whenAlways,
+    onPress: async () => {
+      if (Settings.autoBackupCustomPath && Settings.autoBackupCustomPath.trim()) {
+        await shellOpen(Settings.autoBackupCustomPath.trim());
+      } else {
+        toast.error("未设置自定义备份路径");
+      }
+    },
+  },
+  {
+    id: "openDefaultBackupFolder",
+    defaultKey: "",
+    icon: FolderClock,
+    when: whenAlways,
+    onPress: async () => {
+      shellOpen(await appCacheDir());
+    },
+  },
+  {
+    id: "importFromFolder",
+    defaultKey: "",
+    icon: FolderTree,
+    when: whenHasProject,
+    onPress: async (project) => {
+      const path = await open({ title: "打开文件夹", directory: true, multiple: false, filters: [] });
+      if (!path) return;
+      project!.generateFromFolder.generateFromFolder(path);
+    },
+  },
+  {
+    id: "importTreeFromFolder",
+    defaultKey: "",
+    icon: FolderTree,
+    when: whenHasProject,
+    onPress: async (project) => {
+      const path = await open({ title: "打开文件夹", directory: true, multiple: false, filters: [] });
+      if (!path || typeof path !== "string") return;
+      project!.generateFromFolder.generateTreeFromFolder(path);
+    },
+  },
+  {
+    id: "generateKeyboardLayout",
+    defaultKey: "",
+    icon: Keyboard,
+    when: whenHasProject,
+    onPress: async (project) => {
+      await generateKeyboardLayout(project!);
+      toast.success("键盘布局图已生成");
+    },
+  },
+  {
+    id: "importImages",
+    defaultKey: "",
+    icon: Images,
+    when: whenHasProject,
+    onPress: async (project) => {
+      const pathList = await open({
+        title: "打开文件",
+        directory: false,
+        multiple: true,
+        filters: [{ name: "图片文件", extensions: ["png", "jpg", "jpeg", "webp"] }],
+      });
+      if (!pathList) return;
+      const mimeMap: Record<string, string> = {
+        png: "image/png",
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        webp: "image/webp",
+      };
+      for (const path of pathList) {
+        const ext = path.split(".").pop()?.toLowerCase() ?? "png";
+        DragFileIntoStageEngine.handleDropImage(project!, path, mimeMap[ext] ?? "image/png");
+      }
+    },
+  },
+  {
+    id: "importSvg",
+    defaultKey: "",
+    icon: Images,
+    when: whenHasProject,
+    onPress: async (project) => {
+      const pathList = await open({
+        title: "打开文件",
+        directory: false,
+        multiple: true,
+        filters: [{ name: "*", extensions: ["svg"] }],
+      });
+      if (!pathList) return;
+      for (const path of pathList) DragFileIntoStageEngine.handleDropSvg(project!, path);
+    },
+  },
+  {
+    id: "importTextFile",
+    defaultKey: "",
+    icon: FileText,
+    when: whenHasProject,
+    onPress: () => {
+      openTextImportWindow();
+    },
+  },
+  {
+    id: "exportSvgAll",
+    defaultKey: "",
+    icon: FileDigit,
+    when: whenHasProject,
+    onPress: async (project) => {
+      const path = await save({
+        title: i18next.t("file.exportAsSVG", { ns: "globalMenu" }),
+        filters: [{ name: "Scalable Vector Graphics", extensions: ["svg"] }],
+      });
+      if (!path) return;
+      await project!.stageExportSvg.exportStageToSVGFile(path);
+    },
+  },
+  {
+    id: "exportSvgSelected",
+    defaultKey: "",
+    icon: MousePointer2,
+    when: whenHasProject,
+    onPress: async (project) => {
+      const path = await save({
+        title: i18next.t("file.exportAsSVG", { ns: "globalMenu" }),
+        filters: [{ name: "Scalable Vector Graphics", extensions: ["svg"] }],
+      });
+      if (!path) return;
+      await project!.stageExportSvg.exportSelectedToSVGFile(path);
+    },
+  },
+  {
+    id: "exportPngLegacy",
+    defaultKey: "",
+    icon: FileImage,
+    when: whenAlways,
+    onPress: () => {
+      ExportPngWindow.open();
+    },
+  },
+  {
+    id: "exportPngSelected",
+    defaultKey: "",
+    icon: MousePointer2,
+    when: whenHasProject,
+    onPress: (project) => {
+      if (project!.stageManager.getSelectedEntities().length === 0) {
+        toast.warning("没有选中任何内容");
+        return;
+      }
+      NewExportPngWindow.open("selected");
+    },
+  },
+  {
+    id: "openAttachmentsWindow",
+    defaultKey: "",
+    icon: Paperclip,
+    when: whenHasProject,
+    onPress: () => {
+      AttachmentsWindow.open();
+    },
+  },
+  {
+    id: "openReferencesWindow",
+    defaultKey: "",
+    icon: Link,
+    when: whenHasNonDraftProject,
+    onPress: (project) => {
+      if (!project || project.isDraft) return;
+      ReferencesWindow.open(project.uri);
+    },
+  },
+  {
+    id: "openColorManagerWindow",
+    defaultKey: "",
+    icon: Palette,
+    when: whenHasProject,
+    onPress: () => {
+      ColorManagerPanel.open();
+    },
+  },
+  {
+    id: "openBackgroundManagerWindow",
+    defaultKey: "",
+    icon: Images,
+    when: whenHasProject,
+    onPress: () => {
+      BackgroundManagerWindow.open();
+    },
+  },
+  // ===================== 仅作为 sub 菜单的「触发器」存在 =====================
+  {
+    id: "recentFilesSub",
+    defaultKey: "",
+    icon: FileClock,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  {
+    id: "importSub",
+    defaultKey: "",
+    icon: FileInput,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  {
+    id: "exportSub",
+    defaultKey: "",
+    icon: FileOutput,
+    when: whenHasProject,
+    onPress: () => {},
+  },
+  {
+    id: "exportSvgSub",
+    defaultKey: "",
+    icon: FileCode,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  {
+    id: "exportPngSub",
+    defaultKey: "",
+    icon: FileImage,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  {
+    id: "exportPlainTextSub",
+    defaultKey: "",
+    icon: TextQuote,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  // ===================== 顶层 topMenu 触发器 =====================
+  {
+    id: "file",
+    defaultKey: "",
+    icon: FileIcon,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  {
+    id: "view",
+    defaultKey: "",
+    icon: View,
+    when: whenHasProject,
+    onPress: () => {},
+  },
+  {
+    id: "actions",
+    defaultKey: "",
+    icon: Axe,
+    when: whenHasProject,
+    onPress: () => {},
+  },
+  {
+    id: "settings",
+    defaultKey: "",
+    icon: SettingsIcon,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  {
+    id: "ai",
+    defaultKey: "",
+    icon: Bot,
+    when: whenHasProject,
+    onPress: () => {},
+  },
+  {
+    id: "window",
+    defaultKey: "",
+    icon: AppWindow,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  {
+    id: "about",
+    defaultKey: "",
+    icon: CircleAlert,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  {
+    id: "unstable",
+    defaultKey: "",
+    icon: MessageCircleWarning,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  // ===================== View 菜单 =====================
+  {
+    id: "resetViewAll",
+    defaultKey: "",
+    icon: View,
+    when: whenHasProject,
+    onPress: (project) => {
+      project!.camera.reset();
+    },
+  },
+  {
+    id: "moveViewToOrigin",
+    defaultKey: "",
+    icon: MapPin,
+    when: whenHasProject,
+    onPress: (project) => {
+      project!.camera.resetLocationToZero();
+    },
+  },
+  {
+    id: "stopDrifting",
+    defaultKey: "",
+    icon: OctagonX,
+    when: whenHasProject,
+    onPress: (project) => {
+      project!.camera.clearMoveCommander();
+      project!.camera.speed = Vector.getZero();
+    },
+  },
+  {
+    id: "focusRandomEntity",
+    defaultKey: "",
+    icon: Dices,
+    when: whenHasProject,
+    onPress: (project) => {
+      const entities = project!.stage.filter((e) => e instanceof Entity);
+      if (entities.length === 0) return;
+      const randomEntity = entities[Math.floor(Math.random() * entities.length)];
+      project!.stageManager.clearSelectAll();
+      randomEntity.isSelected = true;
+      project!.camera.resetBySelected();
+    },
+  },
+  // ===================== Actions 菜单 =====================
+  {
+    id: "updateReferences",
+    defaultKey: "",
+    icon: RefreshCcwDot,
+    when: whenHasProject,
+    onPress: (project) => {
+      project!.stageManager.updateReferences();
+    },
+  },
+  {
+    id: "releaseKeys",
+    defaultKey: "",
+    icon: Keyboard,
+    when: whenHasProject,
+    onPress: (project) => {
+      project!.controller.pressingKeySet.clear();
+    },
+  },
+  {
+    id: "generateNodeTreeByText",
+    defaultKey: "",
+    icon: Network,
+    when: whenHasProject,
+    onPress: () => {
+      GenerateNodeTree.open();
+    },
+  },
+  {
+    id: "generateNodeTreeByMarkdown",
+    defaultKey: "",
+    icon: Network,
+    when: whenHasProject,
+    onPress: () => {
+      GenerateNodeTreeByMarkdown.open();
+    },
+  },
+  {
+    id: "generateNodeGraphByText",
+    defaultKey: "",
+    icon: GitCompareArrows,
+    when: whenHasProject,
+    onPress: () => {
+      GenerateNodeGraph.open();
+    },
+  },
+  {
+    id: "generateNodeMermaidByText",
+    defaultKey: "",
+    icon: GitCompareArrows,
+    when: whenHasProject,
+    onPress: () => {
+      GenerateNodeMermaid.open();
+    },
+  },
+  {
+    id: "openLogicNodePanel",
+    defaultKey: "",
+    icon: Workflow,
+    when: whenHasProject,
+    onPress: () => {
+      LogicNodePanel.open();
+    },
+  },
+  {
+    id: "openLogicNodeDocs",
+    defaultKey: "",
+    icon: BookOpen,
+    when: whenAlways,
+    onPress: async () => {
+      const result = await Dialog.confirm("详见官网文档：自动计算引擎 部分 即将打开网页，是否继续");
+      if (result) {
+        shellOpen("https://graphif.dev/docs/app/features/feature/compute-engine");
+      }
+    },
+  },
+  {
+    id: "clearStage",
+    defaultKey: "",
+    icon: Radiation,
+    when: whenHasProject,
+    onPress: async (project) => {
+      if (
+        await Dialog.confirm(
+          i18next.t("actions.confirmClearStage", { ns: "globalMenu" }),
+          i18next.t("actions.irreversible", { ns: "globalMenu" }),
+          { destructive: true },
+        )
+      ) {
+        project!.stage = [];
+      }
+    },
+  },
+  // ===================== Actions 菜单 — 生成子菜单触发器 =====================
+  {
+    id: "generateSub",
+    defaultKey: "",
+    icon: Sparkles,
+    when: whenHasProject,
+    onPress: () => {},
+  },
+  // ===================== Settings 菜单 =====================
+  {
+    id: "openAppearanceSettings",
+    defaultKey: "",
+    icon: Palette,
+    when: whenAlways,
+    onPress: () => SettingsWindow.open("customization"),
+  },
+  {
+    id: "resetAllKeyBinds",
+    defaultKey: "",
+    icon: Radiation,
+    when: whenAlways,
+    onPress: async () => {
+      if (
+        await Dialog.confirm("确认重置全部快捷键", "此操作会将所有快捷键恢复为默认值，无法撤销。\n\n是否继续？", {
+          destructive: true,
+        })
+      ) {
+        try {
+          await KeyBindsUI.resetAllKeyBinds();
+          toast.success("所有快捷键已重置为默认值");
+        } catch (error) {
+          toast.error("重置快捷键失败");
+          console.error("重置快捷键失败:", error);
+        }
+      }
+    },
+  },
+  {
+    id: "openConfigFolder",
+    defaultKey: "",
+    icon: FolderCog,
+    when: whenAlways,
+    onPress: async () => {
+      shellOpen(await join(await dataDir(), "liren.project-graph"));
+    },
+  },
+  {
+    id: "openCacheFolder",
+    defaultKey: "",
+    icon: FolderOpen,
+    when: whenAlways,
+    onPress: async () => {
+      const path = await join(await appCacheDir());
+      if (!(await exists(path))) {
+        await mkdir(path, { recursive: true });
+      }
+      shellOpen(path);
+    },
+  },
+  // ===================== Settings — 自动化操作子菜单 =====================
+  {
+    id: "autoSettingsSub",
+    defaultKey: "",
+    icon: Rabbit,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  // ===================== AI 菜单 =====================
+  {
+    id: "openAIPanel",
+    defaultKey: "",
+    icon: ExternalLink,
+    when: whenHasProject,
+    onPress: () => {
+      AIWindow.open();
+    },
+  },
+  {
+    id: "openAITools",
+    defaultKey: "",
+    icon: Wrench,
+    when: whenHasProject,
+    onPress: () => {
+      AIToolsWindow.open();
+    },
+  },
+  // ===================== Window 菜单 =====================
+  {
+    id: "toggleBackgroundHorizontalLines",
+    defaultKey: "",
+    icon: Rows4,
+    when: whenHasProject,
+    onPress: () => {
+      Settings.showBackgroundHorizontalLines = !Settings.showBackgroundHorizontalLines;
+    },
+  },
+  {
+    id: "toggleBackgroundVerticalLines",
+    defaultKey: "",
+    icon: Columns4,
+    when: whenHasProject,
+    onPress: () => {
+      Settings.showBackgroundVerticalLines = !Settings.showBackgroundVerticalLines;
+    },
+  },
+  {
+    id: "toggleBackgroundDots",
+    defaultKey: "",
+    icon: Grip,
+    when: whenHasProject,
+    onPress: () => {
+      Settings.showBackgroundDots = !Settings.showBackgroundDots;
+    },
+  },
+  {
+    id: "toggleBackgroundCartesian",
+    defaultKey: "",
+    icon: Move3d,
+    when: whenHasProject,
+    onPress: () => {
+      Settings.showBackgroundCartesian = !Settings.showBackgroundCartesian;
+    },
+  },
+  {
+    id: "toggleStealthModeReverseMask",
+    defaultKey: "",
+    icon: CircleDot,
+    when: whenHasProject,
+    onPress: () => {
+      Settings.stealthModeReverseMask = !Settings.stealthModeReverseMask;
+    },
+  },
+  {
+    id: "stealthModeScopeRadiusIncrease",
+    defaultKey: "",
+    icon: CirclePlus,
+    when: whenHasProject,
+    onPress: () => {
+      Settings.stealthModeScopeRadius = Math.max(10, Math.min(500, Settings.stealthModeScopeRadius + 50));
+    },
+  },
+  {
+    id: "stealthModeScopeRadiusDecrease",
+    defaultKey: "",
+    icon: CircleMinus,
+    when: whenHasProject,
+    onPress: () => {
+      Settings.stealthModeScopeRadius = Math.max(10, Math.min(500, Settings.stealthModeScopeRadius - 50));
+    },
+  },
+  // ===================== Window — 背景设置子菜单触发器 =====================
+  {
+    id: "backgroundGridSub",
+    defaultKey: "",
+    icon: LayoutGrid,
+    when: whenHasProject,
+    onPress: () => {},
+  },
+  // ===================== Window — 窗口透明度子菜单触发器 =====================
+  {
+    id: "windowOpacitySub",
+    defaultKey: "",
+    icon: PictureInPicture2,
+    when: whenHasProject,
+    onPress: () => {},
+  },
+  // ===================== Window — 狙击镜子菜单触发器 =====================
+  {
+    id: "stealthModeSub",
+    defaultKey: "",
+    icon: CircleDot,
+    when: whenHasProject,
+    onPress: () => {},
+  },
+  // ===================== About 菜单 =====================
+  {
+    id: "openAboutWindow",
+    defaultKey: "",
+    icon: MessageCircleWarning,
+    when: whenAlways,
+    onPress: () => SettingsWindow.open("about"),
+  },
+  {
+    id: "openOfficialDocs",
+    defaultKey: "",
+    icon: Globe,
+    when: whenAlways,
+    onPress: () => {
+      shellOpen("https://project-graph.top/docs/app/features/feature/camera");
+    },
+  },
+  // ===================== About — 图文教程子菜单触发器 =====================
+  {
+    id: "tutorialSub",
+    defaultKey: "",
+    icon: BookOpenText,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  // ===================== About — 视频教程子菜单触发器 =====================
+  {
+    id: "videoTutorialSub",
+    defaultKey: "",
+    icon: Tv,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  // ===================== Settings — AI自动计算配置子菜单触发器 =====================
+  {
+    id: "autoSettingsSub",
+    defaultKey: "",
+    icon: Wand2,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  // ===================== Settings — 自动命名模板 =====================
+  {
+    id: "autoNamerTemplate",
+    defaultKey: "",
+    icon: Type,
+    when: whenAlways,
+    onPress: () => {
+      Dialog.input("设置自动命名", "填入参数写法详见设置页面", {
+        defaultValue: Settings.autoNamerTemplate,
+      }).then((result) => {
+        if (!result) return;
+        Settings.autoNamerTemplate = result;
+      });
+    },
+  },
+  {
+    id: "autoNamerSectionTemplate",
+    defaultKey: "",
+    icon: Type,
+    when: whenAlways,
+    onPress: () => {
+      Dialog.input("设置自动框命名", "填入参数写法详见设置页面", {
+        defaultValue: Settings.autoNamerSectionTemplate,
+      }).then((result) => {
+        if (!result) return;
+        Settings.autoNamerSectionTemplate = result;
+      });
+    },
+  },
+  {
+    id: "autoNamerDetailsTemplate",
+    defaultKey: "",
+    icon: Type,
+    when: whenAlways,
+    onPress: () => {
+      Dialog.input("设置创建节点时自动填入的详细信息", "留空则不填入任何内容", {
+        defaultValue: Settings.autoNamerDetailsTemplate,
+      }).then((result) => {
+        if (result === undefined) return;
+        Settings.autoNamerDetailsTemplate = result;
+      });
+    },
+  },
+  {
+    id: "autoNamerTreeNodeTemplate",
+    defaultKey: "",
+    icon: Type,
+    when: whenAlways,
+    onPress: () => {
+      Dialog.input("设置Tab键生长节点时的初始名称", "填入参数写法详见设置页面", {
+        defaultValue: Settings.autoNamerTreeNodeTemplate,
+      }).then((result) => {
+        if (!result) return;
+        Settings.autoNamerTreeNodeTemplate = result;
+      });
+    },
+  },
+  // ===================== Settings — 自动填色 =====================
+  {
+    id: "autoFillNodeColorToggle",
+    defaultKey: "",
+    icon: Palette,
+    when: whenAlways,
+    onPress: () => {
+      Dialog.confirm("确认改变？", Settings.autoFillNodeColorEnable ? "即将关闭" : "即将开启").then(() => {
+        Settings.autoFillNodeColorEnable = !Settings.autoFillNodeColorEnable;
+      });
+    },
+  },
+  {
+    id: "autoFillNodeColorSet",
+    defaultKey: "",
+    icon: Palette,
+    when: whenAlways,
+    onPress: () => {
+      Dialog.input(
+        "设置自动上色",
+        "填入颜色数组式代码[r, g, b, a]，其中a为不透明度，取之范围在0-1之间，例如纯红色[255, 0, 0, 1]",
+        {
+          defaultValue: JSON.stringify(new Color(...Settings.autoFillNodeColor).toArray()),
+        },
+      ).then((result) => {
+        if (!result) return;
+        const colorArray: [number, number, number, number] = JSON.parse(result);
+        if (colorArray.length !== 4) {
+          toast.error("颜色数组长度必须为4");
+          return;
+        }
+        const color = new Color(...colorArray);
+        if (color.a < 0 || color.a > 1) {
+          toast.error("颜色不透明度必须在0-1之间");
+          return;
+        }
+        Settings.autoFillNodeColor = colorArray;
+      });
+    },
+  },
+  // ===================== About — 图文教程下载 =====================
+  {
+    id: "downloadTutorialMain",
+    defaultKey: "",
+    icon: FileBadge,
+    when: whenAlways,
+    onPress: () => {
+      toast.promise(
+        async () => {
+          const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-main-3.2.prg");
+          const dir = await tempDir();
+          const path = await join(dir, `tutorial-${crypto.randomUUID()}.prg`);
+          await writeFile(path, u8a);
+          await onOpenFile(URI.file(path), "功能说明书");
+        },
+        {
+          loading: "正在下载功能说明书文件",
+          success: "下载完成",
+          error: "下载失败，请检查网络或联系开发者",
+        },
+      );
+    },
+  },
+  {
+    id: "downloadTutorialShortcutKeys",
+    defaultKey: "",
+    icon: FileSpreadsheet,
+    when: whenAlways,
+    onPress: () => {
+      toast.promise(
+        async () => {
+          const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-shortcut-keys-3.2.prg");
+          const dir = await tempDir();
+          const path = await join(dir, `tutorial-${crypto.randomUUID()}.prg`);
+          await writeFile(path, u8a);
+          await onOpenFile(URI.file(path), "快捷键文档");
+        },
+        {
+          loading: "正在下载快捷键文档",
+          success: "下载完成",
+          error: "下载失败，请检查网络或联系开发者",
+        },
+      );
+    },
+  },
+  {
+    id: "downloadTutorialLogicNodes",
+    defaultKey: "",
+    icon: FileBox,
+    when: whenAlways,
+    onPress: () => {
+      toast.promise(
+        async () => {
+          const u8a = await AssetsRepository.fetchFile("tutorials/tutorial-logic-nodes-2.9.prg");
+          const dir = await tempDir();
+          const path = await join(dir, `tutorial-${crypto.randomUUID()}.prg`);
+          await writeFile(path, u8a);
+          await onOpenFile(URI.file(path), "逻辑节点文档");
+        },
+        {
+          loading: "正在下载逻辑节点文档",
+          success: "下载完成",
+          error: "下载失败，请检查网络或联系开发者",
+        },
+      );
+    },
+  },
+  // ===================== About — 升级指南 =====================
+  {
+    id: "showUpgradeGuide",
+    defaultKey: "",
+    icon: Dumbbell,
+    when: whenAlways,
+    onPress: () => {
+      Dialog.confirm(
+        "2.0使用提示",
+        [
+          "1. 底部工具栏移动至右键菜单（在空白处右键，因为在节点上右键是点击式连线）",
+          "2. 文件从json升级为了prg文件，能够内置图片了，打开旧版本json文件时会自动转为prg文件",
+          "3. 快捷键与秘籍键合并了",
+          "4. 节点详细信息不是markdown格式了",
+          "5. 标签面板暂时关闭了，后续会用更高级的功能代替",
+        ].join("\n"),
+      );
+    },
+  },
+  // ===================== About — 视频教程（Bilibili） =====================
+  {
+    id: "watchBilibiliVideo2",
+    defaultKey: "",
+    icon: Tv,
+    when: whenAlways,
+    onPress: () => {
+      shellOpen("https://www.bilibili.com/video/BV1y2xdzUEXa");
+    },
+  },
+  {
+    id: "watchBilibiliVideo1_6Basic",
+    defaultKey: "",
+    icon: Tv,
+    when: whenAlways,
+    onPress: () => {
+      shellOpen("https://www.bilibili.com/video/BV19B5WzyEiZ");
+    },
+  },
+  {
+    id: "watchBilibiliVideo1_6Advanced",
+    defaultKey: "",
+    icon: Tv,
+    when: whenAlways,
+    onPress: () => {
+      shellOpen("https://www.bilibili.com/video/BV1MM5WzKESm");
+    },
+  },
+  {
+    id: "watchBilibiliVideo1_0",
+    defaultKey: "",
+    icon: Tv,
+    when: whenAlways,
+    onPress: () => {
+      shellOpen("https://www.bilibili.com/video/BV1W4k7YqEgU");
+    },
+  },
+  {
+    id: "watchBilibiliVideoPyQtUpdated",
+    defaultKey: "",
+    icon: Tv,
+    when: whenAlways,
+    onPress: () => {
+      shellOpen("https://www.bilibili.com/video/BV1VVpEe4EXG");
+    },
+  },
+  {
+    id: "watchBilibiliVideoPyQt",
+    defaultKey: "",
+    icon: Tv,
+    when: whenAlways,
+    onPress: () => {
+      shellOpen("https://www.bilibili.com/video/BV1hmHKeDE9D");
+    },
+  },
+  // ===================== Unstable — 开发者工具 =====================
+  {
+    id: "devOpenTestWindow",
+    defaultKey: "",
+    icon: FlaskConical,
+    when: whenAlways,
+    onPress: () => {
+      TestWindow.open();
+    },
+  },
+  {
+    id: "devSerializeTest",
+    defaultKey: "",
+    icon: Code,
+    when: whenHasProject,
+    onPress: (project) => {
+      const tn1 = new TextNode(project!, { text: "tn1" });
+      const tn2 = new TextNode(project!, { text: "tn2" });
+      const le = LineEdge.fromTwoEntity(project!, tn1, tn2);
+      console.log(serialize([tn1, tn2, le]));
+    },
+  },
+  {
+    id: "devTriggerBug",
+    defaultKey: "",
+    icon: Bug,
+    when: whenHasProject,
+    onPress: (project) => {
+      project!.renderer.tick = function () {
+        throw new Error("test");
+      };
+    },
+  },
+  {
+    id: "devReload",
+    defaultKey: "",
+    icon: RefreshCw,
+    when: whenAlways,
+    onPress: () => {
+      window.location.reload();
+    },
+  },
+  {
+    id: "devGetDeviceId",
+    defaultKey: "",
+    icon: Fingerprint,
+    when: whenAlways,
+    onPress: async () => {
+      toast(await getDeviceId());
+    },
+  },
+  {
+    id: "devFeatureFlags",
+    defaultKey: "",
+    icon: Flag,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  {
+    id: "devNodeDetails",
+    defaultKey: "",
+    icon: LayoutPanelTop,
+    when: whenAlways,
+    onPress: () => {
+      NodeDetailsWindow.open();
+    },
+  },
+  {
+    id: "devCreateTestTab",
+    defaultKey: "",
+    icon: FilePlus,
+    when: whenAlways,
+    onPress: async () => {
+      const testTab = new TestTab();
+      await testTab.init();
+      store.set(tabsAtom, [...store.get(tabsAtom), testTab]);
+      store.set(activeTabAtom, testTab);
+    },
+  },
+  {
+    id: "devLogStage",
+    defaultKey: "",
+    icon: Terminal,
+    when: whenHasProject,
+    onPress: (project) => {
+      console.log(project!.stage);
+    },
+  },
+  {
+    id: "devLogSelectedDetails",
+    defaultKey: "",
+    icon: FileText,
+    when: whenHasProject,
+    onPress: (project) => {
+      const selectedEntity = project!.stageManager.getSelectedEntities();
+      for (const entity of selectedEntity) {
+        console.log(entity.details);
+      }
+    },
+  },
+  {
+    id: "devCreateExampleExtension",
+    defaultKey: "",
+    icon: Package,
+    when: whenAlways,
+    onPress: async () => {
+      const metadata = {
+        version: "2.0.0",
+        extension: {
+          id: "com.example.hello-world",
+          name: "示例扩展",
+          description: "这是一个用于演示的示例扩展包",
+          version: "1.0.0",
+          author: "Author <author@example.com>",
+        },
+      };
+      const encoder = new Encoder();
+      const uwriter = new Uint8ArrayWriter();
+      const writer = new ZipWriter(uwriter);
+      await writer.add("metadata.msgpack", new Uint8ArrayReader(encoder.encode(metadata)));
+      await writer.add(
+        "extension.js",
+        new Uint8ArrayReader(new TextEncoder().encode("console.log('Hello from extension!');")),
+      );
+      await writer.add(
+        "README.md",
+        new Uint8ArrayReader(
+          new TextEncoder().encode("# 示例扩展\n\n这是一个示例扩展，用于演示 .prg 文件的扩展识别功能。"),
+        ),
+      );
+      await writer.close();
+      const content = await uwriter.getData();
+      const path = await save({
+        filters: [{ name: "Project Graph Extension", extensions: ["prg"] }],
+        defaultPath: "example-extension.prg",
+      });
+      if (path) {
+        await writeFile(path, content);
+        toast.success("示例扩展已创建");
+      }
+    },
+  },
+  {
+    id: "devOutputMarkdown",
+    defaultKey: "",
+    icon: FileText,
+    when: whenHasProject,
+    onPress: (project) => {
+      const selectedEntity = project!.stageManager.getSelectedEntities();
+      for (const entity of selectedEntity) {
+        console.log(entity.detailsManager.getBeSearchingText());
+      }
+    },
+  },
+  {
+    id: "devOnboarding",
+    defaultKey: "",
+    icon: BookOpen,
+    when: whenAlways,
+    onPress: () => {
+      OnboardingWindow.open();
+    },
+  },
+  {
+    id: "devCreate100Nodes",
+    defaultKey: "",
+    icon: Plus,
+    when: whenHasProject,
+    onPress: (project) => {
+      for (let i = 0; i < 100; i++) {
+        const x = Math.random() * 200 - 100;
+        const y = Math.random() * 200 - 100;
+        const node = new TextNode(project!, { text: `节点${i + 1}` });
+        node.moveTo(new Vector(x, y));
+        project!.stage.push(node);
+      }
     },
   },
 ];

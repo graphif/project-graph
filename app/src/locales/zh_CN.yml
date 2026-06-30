@@ -2192,6 +2192,306 @@ keyBinds:
   swapTwoSelectedEntitiesPositions:
     title: 交换位置
     description: 交换两个选中实体的位置
+  about:
+    title: 关于
+    description: 关于Project Graph的信息
+  actions:
+    title: 操作
+    description: 各种编辑和生成操作
+  ai:
+    title: AI
+    description: AI相关功能
+  autoFillNodeColorSet:
+    title: 设置自动填色
+    description: 设置创建节点时自动填充的颜色值
+  autoFillNodeColorToggle:
+    title: 切换自动填色
+    description: 开启或关闭自动填色功能
+  autoNamerDetailsTemplate:
+    title: 设置详细信息模板
+    description: 设置创建节点时自动填入的详细信息模板
+  autoNamerSectionTemplate:
+    title: 设置框命名模板
+    description: 设置创建框时的默认名称模板
+  autoNamerTemplate:
+    title: 设置自动命名模板
+    description: 设置自动命名时的模板格式
+  autoNamerTreeNodeTemplate:
+    title: 设置Tab生长节点名称
+    description: 设置使用Tab键生长节点时的初始名称
+  autoSettingsSub:
+    title: 自动设置
+    description: 自动计算相关的设置项
+  backgroundGridSub:
+    title: 背景网格
+    description: 背景网格相关的显示设置
+  clearStage:
+    title: 清空舞台
+    description: 清空舞台上的所有内容（此操作无法撤销）
+  com.example.hello-world:
+    title: 示例扩展
+    description: 用于演示的示例扩展包
+  devCreate100Nodes:
+    title: 创建100个节点
+    description: 在舞台上随机位置创建100个测试节点
+  devCreateExampleExtension:
+    title: 创建示例扩展
+    description: 创建一个示例扩展.prg文件
+  devCreateTestTab:
+    title: 创建测试标签页
+    description: 创建一个测试用的标签页
+  devFeatureFlags:
+    title: 功能开关
+    description: 查看和切换开发中的功能开关
+  devGetDeviceId:
+    title: 获取设备ID
+    description: 显示当前设备的唯一标识符
+  devLogSelectedDetails:
+    title: 输出选中节点详情
+    description: 在控制台输出选中节点的详细信息
+  devLogStage:
+    title: 输出舞台日志
+    description: 在控制台输出当前舞台状态
+  devNodeDetails:
+    title: 节点详情
+    description: 打开节点详情面板
+  devOnboarding:
+    title: 新手引导
+    description: 重新打开新手引导窗口
+  devOpenTestWindow:
+    title: 打开测试窗口
+    description: 打开开发者测试窗口
+  devOutputMarkdown:
+    title: 输出Markdown
+    description: 在控制台输出选中节点的Markdown文本
+  devReload:
+    title: 重载应用
+    description: 重新加载整个应用（危险操作，未保存的进度将丢失）
+  devSerializeTest:
+    title: 序列化测试
+    description: 运行序列化测试并输出结果
+  devTriggerBug:
+    title: 触发错误
+    description: 触发一个测试错误以验证错误处理机制
+  downloadTutorialLogicNodes:
+    title: 下载逻辑节点教程
+    description: 下载逻辑节点使用教程
+  downloadTutorialMain:
+    title: 下载功能说明书
+    description: 下载功能说明书教程文件
+  downloadTutorialShortcutKeys:
+    title: 下载快捷键教程
+    description: 下载快捷键使用教程
+  exportPlainTextSub:
+    title: 导出纯文本
+    description: 以纯文本格式导出内容
+  exportPngLegacy:
+    title: 导出PNG（旧版）
+    description: 使用旧版引擎将舞台导出为PNG图片
+  exportPngSelected:
+    title: 导出选中内容为PNG
+    description: 将选中的内容导出为PNG图片
+  exportPngSub:
+    title: 导出PNG
+    description: 将内容导出为PNG图片格式
+  exportSub:
+    title: 导出
+    description: 导出相关操作
+  exportSvgAll:
+    title: 导出全部为SVG
+    description: 将舞台上的全部内容导出为SVG矢量图
+  exportSvgSelected:
+    title: 导出选中内容为SVG
+    description: 将选中的内容导出为SVG矢量图
+  exportSvgSub:
+    title: 导出SVG
+    description: 将内容导出为SVG矢量格式
+  file:
+    title: 文件
+    description: 文件相关操作
+  focusRandomEntity:
+    title: 随机聚焦实体
+    description: 随机选择一个实体并将视野聚焦到它
+  generateKeyboardLayout:
+    title: 生成键盘布局图
+    description: 根据当前快捷键配置生成键盘布局图片
+  generateNodeGraphByText:
+    title: 根据文本生成网状结构
+    description: 根据纯文本格式的关系描述自动生成网状节点结构
+  generateNodeMermaidByText:
+    title: 根据Mermaid生成嵌套结构
+    description: 根据Mermaid格式文本自动生成嵌套框结构
+  generateNodeTreeByMarkdown:
+    title: 根据Markdown生成树状结构
+    description: 根据Markdown标题层级自动生成树状节点结构
+  generateNodeTreeByText:
+    title: 根据文本生成树状结构
+    description: 根据缩进格式的纯文本自动生成树状节点结构
+  generateSub:
+    title: 生成
+    description: 根据文本内容自动生成各种节点结构
+  importFromFolder:
+    title: 从文件夹导入
+    description: 根据文件夹结构生成框框嵌套图
+  importImages:
+    title: 导入图片
+    description: 将图片文件导入到舞台中
+  importSub:
+    title: 导入
+    description: 导入相关操作
+  importSvg:
+    title: 导入SVG
+    description: 导入SVG矢量文件到舞台中
+  importTextFile:
+    title: 导入文本文件
+    description: 导入文本文件并根据内容创建节点
+  importTreeFromFolder:
+    title: 从文件夹导入树状图
+    description: 根据文件夹结构生成树状节点图
+  manualBackup:
+    title: 手动备份
+    description: 手动创建当前工程的备份文件
+  moveViewToOrigin:
+    title: 移到坐标原点
+    description: 将视野位置移动到坐标轴原点
+  newPrgAtCurrentDir:
+    title: 在当前目录新建文件
+    description: 在当前项目目录下新建一个工程文件并切换到该文件
+  openAIPanel:
+    title: 打开AI面板
+    description: 打开AI助手面板
+  openAITools:
+    title: 打开AI工具
+    description: 打开AI工具窗口
+  openAboutWindow:
+    title: 关于窗口
+    description: 打开关于Project Graph的窗口
+  openAppearanceSettings:
+    title: 打开外观设置
+    description: 打开外观与主题设置页面
+  openAttachmentsWindow:
+    title: 打开附件管理器
+    description: 打开附件管理器窗口
+  openBackgroundManagerWindow:
+    title: 打开背景管理器
+    description: 打开背景管理器窗口
+  openCacheFolder:
+    title: 打开缓存文件夹
+    description: 在文件管理器中打开应用缓存文件夹
+  openColorManagerWindow:
+    title: 打开颜色管理器
+    description: 打开颜色管理器窗口
+  openConfigFolder:
+    title: 打开配置文件夹
+    description: 在文件管理器中打开应用配置文件夹
+  openCustomBackupFolder:
+    title: 打开自定义备份文件夹
+    description: 在文件管理器中打开自定义备份文件夹
+  openDefaultBackupFolder:
+    title: 打开默认备份文件夹
+    description: 在文件管理器中打开默认备份文件夹
+  openLogicNodeDocs:
+    title: 打开逻辑节点文档
+    description: 打开逻辑节点的使用文档
+  openLogicNodePanel:
+    title: 打开逻辑节点面板
+    description: 打开逻辑节点编辑面板
+  openOfficialDocs:
+    title: 官方文档
+    description: 在浏览器中打开Project Graph官方文档
+  openReferencesWindow:
+    title: 打开引用管理器
+    description: 打开引用管理器窗口
+  recentFilesSub:
+    title: 最近文件
+    description: 最近打开的文件列表
+  releaseKeys:
+    title: 释放按键
+    description: 释放所有当前按下的快捷键状态
+  resetAllKeyBinds:
+    title: 重置所有快捷键
+    description: 将所有快捷键恢复为默认设置
+  resetViewAll:
+    title: 根据全部内容重置视野
+    description: 根据舞台上所有内容调整视野位置和缩放大小
+  saveAs:
+    title: 另存为
+    description: 将当前工程另存为新的文件
+  settings:
+    title: 设置
+    description: 应用设置相关的功能
+  showUpgradeGuide:
+    title: 升级指南
+    description: 显示从旧版本升级到新版本的使用提示
+  stealthModeScopeRadiusDecrease:
+    title: 缩小狙击镜范围
+    description: 缩小狙击镜模式的可见范围半径
+  stealthModeScopeRadiusIncrease:
+    title: 放大狙击镜范围
+    description: 放大狙击镜模式的可见范围半径
+  stealthModeSub:
+    title: 狙击镜
+    description: 狙击镜模式的相关设置
+  stopDrifting:
+    title: 停止漂移
+    description: 停止当前视野的漂移动画效果
+  toggleBackgroundCartesian:
+    title: 切换笛卡尔网格
+    description: 切换是否显示笛卡尔坐标系网格
+  toggleBackgroundDots:
+    title: 切换点状背景
+    description: 切换是否显示点阵背景
+  toggleBackgroundHorizontalLines:
+    title: 切换水平线背景
+    description: 切换是否显示水平线背景
+  toggleBackgroundVerticalLines:
+    title: 切换垂直线背景
+    description: 切换是否显示垂直线背景
+  toggleStealthModeReverseMask:
+    title: 切换反转遮罩
+    description: 切换狙击镜遮罩模式为内部可见或外部可见
+  tutorialSub:
+    title: 图文教程
+    description: 图文教程相关的文档说明
+  unstable:
+    title: 测试版
+    description: 测试版功能（可能包含Bug和未完善的功能）
+  updateReferences:
+    title: 更新引用
+    description: 更新所有引用块节点的内容使其与来源同步
+  upgradeOldJson:
+    title: 升级旧版文件
+    description: 将旧版本的JSON文件升级为新版prg格式
+  videoTutorialSub:
+    title: 视频教程
+    description: Bilibili视频教程列表
+  view:
+    title: 视野
+    description: 视野控制和显示相关的操作
+  watchBilibiliVideo1_0:
+    title: 观看1.0教程
+    description: 观看Project Graph 1.0版本的教程视频
+  watchBilibiliVideo1_6Advanced:
+    title: 观看1.6进阶教程
+    description: 观看Project Graph 1.6版本的进阶教程视频
+  watchBilibiliVideo1_6Basic:
+    title: 观看1.6基础教程
+    description: 观看Project Graph 1.6版本的基础教程视频
+  watchBilibiliVideo2:
+    title: 观看2.0教程
+    description: 观看Project Graph 2.0版本的教程视频
+  watchBilibiliVideoPyQt:
+    title: 观看PyQt教程
+    description: 观看PyQt版本的教程视频
+  watchBilibiliVideoPyQtUpdated:
+    title: 观看PyQt新版教程
+    description: 观看PyQt新版教程视频
+  window:
+    title: 窗口
+    description: 窗口显示相关的设置
+  windowOpacitySub:
+    title: 窗口透明度
+    description: 窗口透明度的控制设置
 
 sounds:
   soundEnabled: 音效开关

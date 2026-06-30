@@ -510,6 +510,303 @@ export const settingsSchema = z.object({
       z.literal("cubic"),
     ])
     .default("linear"),
+  globalMenuConfig: z
+    .array(
+      z.object({
+        type: z.union([
+          z.literal("topMenu"),
+          z.literal("item"),
+          z.literal("separator"),
+          z.literal("sub"),
+          z.literal("recentFiles"),
+          z.literal("versionInfo"),
+          z.literal("unstableVersionBanner"),
+          z.literal("devMenu"),
+          z.literal("featureFlagsList"),
+        ]),
+        id: z.string(),
+        label: z.string().optional(),
+        icon: z.string().optional(),
+        visible: z.boolean().optional(),
+        children: z.array(z.any()).optional(),
+      }),
+    )
+    .default([
+      // ===================== 文件 =====================
+      {
+        type: "topMenu",
+        id: "file",
+        icon: "File",
+        children: [
+          { type: "item", id: "newDraft", icon: "FilePlus" },
+          { type: "item", id: "newPrgAtCurrentDir", icon: "FilePlus" },
+          { type: "item", id: "openFile", icon: "FolderOpen" },
+          { type: "item", id: "upgradeOldJson", icon: "FileInput" },
+          { type: "item", id: "openCurrentProjectFileFolder", icon: "FolderOpen" },
+          {
+            type: "sub",
+            id: "recentFilesSub",
+            icon: "FileClock",
+            children: [{ type: "recentFiles", id: "recentFilesEntries" }],
+          },
+          { type: "item", id: "clickAppMenuRecentFileButton", icon: "LayoutGrid" },
+          { type: "separator", id: "sep-file-1" },
+          { type: "item", id: "saveFile", icon: "Save" },
+          { type: "item", id: "saveAs", icon: "FileDown" },
+          { type: "item", id: "manualBackup", icon: "Archive" },
+          { type: "item", id: "openCustomBackupFolder", icon: "FolderClock" },
+          { type: "item", id: "openDefaultBackupFolder", icon: "FolderClock" },
+          { type: "separator", id: "sep-file-2" },
+          {
+            type: "sub",
+            id: "importSub",
+            icon: "FileInput",
+            children: [
+              { type: "item", id: "importFromFolder", icon: "FolderTree" },
+              { type: "item", id: "importTreeFromFolder", icon: "FolderTree" },
+              { type: "item", id: "generateKeyboardLayout", icon: "Keyboard" },
+              { type: "item", id: "importImages", icon: "Images" },
+              { type: "item", id: "importSvg", icon: "Images" },
+              { type: "item", id: "importTextFile", icon: "FileText" },
+            ],
+          },
+          {
+            type: "sub",
+            id: "exportSub",
+            icon: "FileOutput",
+            children: [
+              {
+                type: "sub",
+                id: "exportSvgSub",
+                icon: "FileCode",
+                children: [
+                  { type: "item", id: "exportSvgAll", icon: "FileDigit" },
+                  { type: "item", id: "exportSvgSelected", icon: "MousePointer2" },
+                ],
+              },
+              {
+                type: "sub",
+                id: "exportPngSub",
+                icon: "FileImage",
+                children: [
+                  { type: "item", id: "exportPngLegacy", icon: "FileImage" },
+                  { type: "item", id: "exportPngSelected", icon: "MousePointer2" },
+                ],
+              },
+              {
+                type: "sub",
+                id: "exportPlainTextSub",
+                icon: "TextQuote",
+                children: [
+                  { type: "item", id: "exportSelectedNetStructureToPlainText", icon: "VectorSquare" },
+                  { type: "item", id: "exportSelectedTreeStructureToPlainText", icon: "Network" },
+                  { type: "item", id: "exportSelectedTreeStructureToMarkdown", icon: "Network" },
+                  { type: "item", id: "exportSelectedNetStructureToMermaid", icon: "SquareSquare" },
+                ],
+              },
+            ],
+          },
+          { type: "separator", id: "sep-file-3" },
+          { type: "item", id: "openAttachmentsWindow", icon: "Paperclip" },
+          { type: "item", id: "clickTagPanelButton", icon: "Tag" },
+          { type: "item", id: "openReferencesWindow", icon: "Link" },
+          { type: "item", id: "openColorManagerWindow", icon: "Palette" },
+          { type: "item", id: "openBackgroundManagerWindow", icon: "Images" },
+        ],
+      },
+      // ===================== 视野 =====================
+      {
+        type: "topMenu",
+        id: "view",
+        icon: "View",
+        children: [
+          { type: "item", id: "resetViewAll", icon: "View" },
+          { type: "item", id: "resetView", icon: "SquareDashedMousePointer" },
+          { type: "item", id: "resetCameraScale", icon: "Scaling" },
+          { type: "item", id: "moveViewToOrigin", icon: "MapPin" },
+          { type: "separator", id: "sep-view-1" },
+          { type: "item", id: "stopDrifting", icon: "OctagonX" },
+          { type: "item", id: "focusRandomEntity", icon: "Dices" },
+        ],
+      },
+      // ===================== 操作 =====================
+      {
+        type: "topMenu",
+        id: "actions",
+        icon: "Axe",
+        children: [
+          { type: "item", id: "searchText", icon: "Search" },
+          { type: "item", id: "updateReferences", icon: "RefreshCcwDot" },
+          { type: "separator", id: "sep-actions-0" },
+          { type: "item", id: "undo", icon: "Undo" },
+          { type: "item", id: "redo", icon: "Redo" },
+          { type: "item", id: "releaseKeys", icon: "Keyboard" },
+          { type: "item", id: "closeAllSubWindows", icon: "X" },
+          { type: "separator", id: "sep-actions-1" },
+          {
+            type: "sub",
+            id: "generateSub",
+            icon: "Sparkles",
+            children: [
+              { type: "item", id: "generateNodeTreeByText", icon: "Network" },
+              { type: "item", id: "generateNodeTreeByMarkdown", icon: "Network" },
+              { type: "item", id: "generateNodeGraphByText", icon: "GitCompareArrows" },
+              { type: "item", id: "generateNodeMermaidByText", icon: "GitCompareArrows" },
+            ],
+          },
+          { type: "item", id: "openLogicNodePanel", icon: "Workflow" },
+          { type: "item", id: "openLogicNodeDocs", icon: "BookOpen" },
+          { type: "separator", id: "sep-actions-2" },
+          { type: "item", id: "clearStage", icon: "Radiation" },
+        ],
+      },
+      // ===================== 设置 =====================
+      {
+        type: "topMenu",
+        id: "settings",
+        icon: "Settings",
+        children: [
+          { type: "item", id: "clickAppMenuSettingsButton", icon: "Settings" },
+          {
+            type: "sub",
+            id: "autoSettingsSub",
+            icon: "Rabbit",
+            children: [
+              { type: "item", id: "autoNamerTemplate", icon: "Type" },
+              { type: "item", id: "autoNamerSectionTemplate", icon: "Type" },
+              { type: "item", id: "autoNamerDetailsTemplate", icon: "Type" },
+              { type: "item", id: "autoNamerTreeNodeTemplate", icon: "Type" },
+              { type: "item", id: "autoFillNodeColorToggle", icon: "Palette" },
+              { type: "item", id: "autoFillNodeColorSet", icon: "Palette" },
+            ],
+          },
+          { type: "item", id: "openAppearanceSettings", icon: "Palette" },
+          { type: "item", id: "resetAllKeyBinds", icon: "Radiation" },
+          { type: "item", id: "openConfigFolder", icon: "FolderCog" },
+          { type: "item", id: "openCacheFolder", icon: "FolderOpen" },
+        ],
+      },
+      // ===================== AI =====================
+      {
+        type: "topMenu",
+        id: "ai",
+        icon: "Bot",
+        children: [
+          { type: "item", id: "openAIPanel", icon: "ExternalLink" },
+          { type: "item", id: "openAITools", icon: "Wrench" },
+        ],
+      },
+      // ===================== 窗口 =====================
+      {
+        type: "topMenu",
+        id: "window",
+        icon: "AppWindow",
+        children: [
+          { type: "item", id: "toggleFullscreen", icon: "Fullscreen" },
+          { type: "item", id: "checkoutClassroomMode", icon: "Airplay" },
+          { type: "item", id: "checkoutProtectPrivacy", icon: "VenetianMask" },
+          {
+            type: "sub",
+            id: "backgroundGridSub",
+            icon: "LayoutGrid",
+            children: [
+              { type: "item", id: "toggleBackgroundHorizontalLines", icon: "Rows4" },
+              { type: "item", id: "toggleBackgroundVerticalLines", icon: "Columns4" },
+              { type: "item", id: "toggleBackgroundDots", icon: "Grip" },
+              { type: "item", id: "toggleBackgroundCartesian", icon: "Move3d" },
+            ],
+          },
+          {
+            type: "sub",
+            id: "windowOpacitySub",
+            icon: "PictureInPicture2",
+            children: [
+              { type: "item", id: "checkoutWindowOpacityMode", icon: "PictureInPicture2" },
+              { type: "item", id: "windowOpacityAlphaDecrease", icon: "PictureInPicture2" },
+              { type: "item", id: "windowOpacityAlphaIncrease", icon: "PictureInPicture2" },
+            ],
+          },
+          { type: "item", id: "switchDebugShow", icon: "Bug" },
+          {
+            type: "sub",
+            id: "stealthModeSub",
+            icon: "CircleDot",
+            children: [
+              { type: "item", id: "switchStealthMode", icon: "CircleDot" },
+              { type: "item", id: "toggleStealthModeReverseMask", icon: "CircleDot" },
+              { type: "item", id: "stealthModeScopeRadiusIncrease", icon: "CirclePlus" },
+              { type: "item", id: "stealthModeScopeRadiusDecrease", icon: "CircleMinus" },
+            ],
+          },
+        ],
+      },
+      // ===================== 关于 =====================
+      {
+        type: "topMenu",
+        id: "about",
+        icon: "CircleAlert",
+        children: [
+          { type: "item", id: "openAboutWindow", icon: "MessageCircleWarning" },
+          {
+            type: "sub",
+            id: "tutorialSub",
+            icon: "BookOpenText",
+            children: [
+              { type: "item", id: "downloadTutorialMain", icon: "FileBadge" },
+              { type: "item", id: "downloadTutorialShortcutKeys", icon: "FileSpreadsheet" },
+              { type: "item", id: "downloadTutorialLogicNodes", icon: "FileBox" },
+              { type: "item", id: "openOfficialDocs", icon: "Globe" },
+            ],
+          },
+          {
+            type: "sub",
+            id: "videoTutorialSub",
+            icon: "Tv",
+            children: [
+              { type: "item", id: "watchBilibiliVideo2", icon: "Tv" },
+              { type: "item", id: "watchBilibiliVideo1_6Basic", icon: "Tv" },
+              { type: "item", id: "watchBilibiliVideo1_6Advanced", icon: "Tv" },
+              { type: "item", id: "watchBilibiliVideo1_0", icon: "Tv" },
+              { type: "item", id: "watchBilibiliVideoPyQtUpdated", icon: "Tv" },
+              { type: "item", id: "watchBilibiliVideoPyQt", icon: "Tv" },
+            ],
+          },
+          { type: "item", id: "showUpgradeGuide", icon: "Dumbbell" },
+        ],
+      },
+      // ===================== 不稳定版本 (运行时动态显示/隐藏) =====================
+      {
+        type: "topMenu",
+        id: "unstable",
+        icon: "MessageCircleWarning",
+        visible: false,
+        children: [
+          { type: "versionInfo", id: "versionInfoText" },
+          { type: "separator", id: "sep-unstable-1" },
+          {
+            type: "sub",
+            id: "devSub",
+            icon: "TestTube2",
+            children: [
+              { type: "item", id: "devOpenTestWindow", icon: "FlaskConical" },
+              { type: "item", id: "devSerializeTest", icon: "Code" },
+              { type: "item", id: "devTriggerBug", icon: "Bug" },
+              { type: "item", id: "devReload", icon: "RefreshCw" },
+              { type: "item", id: "devGetDeviceId", icon: "Fingerprint" },
+              { type: "item", id: "devFeatureFlags", icon: "Flag" },
+              { type: "item", id: "devNodeDetails", icon: "LayoutPanelTop" },
+              { type: "item", id: "devCreateTestTab", icon: "FilePlus" },
+              { type: "item", id: "devLogStage", icon: "Terminal" },
+              { type: "item", id: "devLogSelectedDetails", icon: "FileText" },
+              { type: "item", id: "devCreateExampleExtension", icon: "Package" },
+              { type: "item", id: "devOutputMarkdown", icon: "FileText" },
+              { type: "item", id: "devOnboarding", icon: "BookOpen" },
+              { type: "item", id: "devCreate100Nodes", icon: "Plus" },
+            ],
+          },
+        ],
+      },
+    ]),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

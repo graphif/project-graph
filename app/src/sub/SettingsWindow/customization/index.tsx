@@ -7,10 +7,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Menu as MenuIcon, SlidersHorizontal, Sparkles, Volume2 } from "lucide-react";
+import { Menu as MenuIcon, PanelTop, SlidersHorizontal, Sparkles, Volume2 } from "lucide-react";
 import { Fragment, useState } from "react";
 import ContextMenuPage from "./context-menu";
 import EffectsPage from "./effects";
+import GlobalMenuPage from "./global-menu";
 import QuickSettingsTab from "./quick-settings";
 import SoundEffectsPage from "./sounds";
 
@@ -63,6 +64,11 @@ const categories = {
     name: "右键菜单",
     icon: MenuIcon,
     component: ContextMenuPage,
+  },
+  globalMenu: {
+    name: "菜单栏",
+    icon: PanelTop,
+    component: GlobalMenuPage,
   },
   quickSettings: {
     name: "快捷设置",

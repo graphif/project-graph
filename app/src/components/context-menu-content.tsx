@@ -9,17 +9,17 @@ import {
 import { Project } from "@/core/Project";
 import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { allKeyBinds } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
+import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import { Settings } from "@/core/service/Settings";
 import { activeTabAtom } from "@/state";
 import ColorPaletteWindow from "@/sub/ColorPaletteWindow";
 import ColorWindow from "@/sub/ColorWindow";
-import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import { Color } from "@graphif/data-structures";
 import { useAtom } from "jotai";
-import { useEffect, useState } from "react";
 import type { LucideProps } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import KeyTooltip from "./key-tooltip";
 import { Button } from "./ui/button";
@@ -150,7 +150,8 @@ export default function MyContextMenuContent() {
     if (!isConfigVisible(it)) return null;
     if (it.type === "separator") return <div key={it.id} />;
 
-    const keyBind = KeyBindsUI.getUIKeyBind(it.id);
+    const uiKb = KeyBindsUI.getUIKeyBind(it.id);
+    const keyBind = uiKb ?? allKeyBinds.find((k) => k.id === it.id);
 
     return (
       <KeyTooltip key={`tooltip-${it.id}`} keyId={it.id}>
@@ -318,11 +319,12 @@ export default function MyContextMenuContent() {
 
     // Standard item
     if (!checkVisible(itemConfig.id)) return null;
-    const keyBind = KeyBindsUI.getUIKeyBind(itemConfig.id);
+    const uiKb = KeyBindsUI.getUIKeyBind(itemConfig.id);
+    const keyBind = uiKb ?? allKeyBinds.find((k) => k.id === itemConfig.id);
     const action = keyBind?.onPress;
     const release = keyBind?.onRelease;
     const isContinuous = keyBind?.isContinuous;
-    const shortcut = keyBind?.key;
+    const shortcut = uiKb?.key;
 
     const handleClick = () => {
       action?.(p);

@@ -1371,6 +1371,306 @@ controlSettingsGroup:
     title: Pengaturan Node Teks
   gamepad:
     title: Pengaturan Gamepad
+  about:
+    title: About
+    description: Information about Project Graph
+  actions:
+    title: Actions
+    description: Various editing and generation actions
+  ai:
+    title: AI
+    description: AI related features
+  autoFillNodeColorSet:
+    title: Set Auto Fill Color
+    description: Set the color value for auto-fill when creating nodes
+  autoFillNodeColorToggle:
+    title: Toggle Auto Fill Color
+    description: Enable or disable auto-fill color
+  autoNamerDetailsTemplate:
+    title: Set Details Template
+    description: Set the default details template for new nodes
+  autoNamerSectionTemplate:
+    title: Set Section Naming Template
+    description: Set the default naming template for sections
+  autoNamerTemplate:
+    title: Set Auto Naming Template
+    description: Set the template format for auto-naming
+  autoNamerTreeNodeTemplate:
+    title: Set Tab Growth Node Name
+    description: Set the initial name when growing nodes with Tab key
+  autoSettingsSub:
+    title: Auto Settings
+    description: Settings related to auto-computation
+  backgroundGridSub:
+    title: Background Grid
+    description: Background grid display settings
+  clearStage:
+    title: Clear Stage
+    description: Clear all content on the stage (irreversible)
+  com.example.hello-world:
+    title: Example Extension
+    description: Example extension package for demonstration
+  devCreate100Nodes:
+    title: Create 100 Nodes
+    description: Create 100 test nodes at random positions on the stage
+  devCreateExampleExtension:
+    title: Create Example Extension
+    description: Create an example extension .prg file
+  devCreateTestTab:
+    title: Create Test Tab
+    description: Create a test tab
+  devFeatureFlags:
+    title: Feature Flags
+    description: View and toggle development feature flags
+  devGetDeviceId:
+    title: Get Device ID
+    description: Display the unique identifier of the current device
+  devLogSelectedDetails:
+    title: Log Selected Details
+    description: Output details of selected nodes to console
+  devLogStage:
+    title: Log Stage
+    description: Output current stage state to console
+  devNodeDetails:
+    title: Node Details
+    description: Open the node details panel
+  devOnboarding:
+    title: Onboarding
+    description: Reopen the onboarding wizard
+  devOpenTestWindow:
+    title: Open Test Window
+    description: Open the developer test window
+  devOutputMarkdown:
+    title: Output Markdown
+    description: Output Markdown text of selected nodes to console
+  devReload:
+    title: Reload App
+    description: Reload the entire application (dangerous, unsaved progress will be lost)
+  devSerializeTest:
+    title: Serialize Test
+    description: Run serialization test and output results
+  devTriggerBug:
+    title: Trigger Bug
+    description: Trigger a test error to verify error handling
+  downloadTutorialLogicNodes:
+    title: Download Logic Nodes Tutorial
+    description: Download the logic nodes tutorial file
+  downloadTutorialMain:
+    title: Download Feature Guide
+    description: Download the feature guide tutorial file
+  downloadTutorialShortcutKeys:
+    title: Download Shortcut Keys Tutorial
+    description: Download the shortcut keys tutorial file
+  exportPlainTextSub:
+    title: Export Plain Text
+    description: Export content in plain text format
+  exportPngLegacy:
+    title: Export PNG (Legacy)
+    description: Export the stage to PNG using the legacy engine
+  exportPngSelected:
+    title: Export Selected as PNG
+    description: Export selected content as PNG
+  exportPngSub:
+    title: Export PNG
+    description: Export content as PNG image format
+  exportSub:
+    title: Export
+    description: Export related operations
+  exportSvgAll:
+    title: Export All as SVG
+    description: Export all content on the stage as SVG
+  exportSvgSelected:
+    title: Export Selected as SVG
+    description: Export selected content as SVG
+  exportSvgSub:
+    title: Export SVG
+    description: Export content as SVG vector format
+  file:
+    title: File
+    description: File related operations
+  focusRandomEntity:
+    title: Focus Random Entity
+    description: Randomly select an entity and focus the view on it
+  generateKeyboardLayout:
+    title: Generate Keyboard Layout
+    description: Generate a keyboard layout image based on current shortcut keys
+  generateNodeGraphByText:
+    title: Generate Graph from Text
+    description: Automatically generate a graph structure from plain text relationship descriptions
+  generateNodeMermaidByText:
+    title: Generate from Mermaid
+    description: Generate nested structure from Mermaid format text
+  generateNodeTreeByMarkdown:
+    title: Generate Tree from Markdown
+    description: Generate tree structure from Markdown heading hierarchy
+  generateNodeTreeByText:
+    title: Generate Tree from Text
+    description: Generate tree structure from indented plain text
+  generateSub:
+    title: Generate
+    description: Auto-generate node structures from text content
+  importFromFolder:
+    title: Import from Folder
+    description: Generate nested box diagram from folder structure
+  importImages:
+    title: Import Images
+    description: Import image files to the stage
+  importSub:
+    title: Import
+    description: Import related operations
+  importSvg:
+    title: Import SVG
+    description: Import SVG vector files to the stage
+  importTextFile:
+    title: Import Text File
+    description: Import text file and create nodes from content
+  importTreeFromFolder:
+    title: Import Tree from Folder
+    description: Generate tree diagram from folder structure
+  manualBackup:
+    title: Manual Backup
+    description: Manually create a backup of the current project
+  moveViewToOrigin:
+    title: Move View to Origin
+    description: Move the view position to the coordinate origin
+  newPrgAtCurrentDir:
+    title: New File in Current Directory
+    description: Create a new project file in the current project directory
+  openAIPanel:
+    title: Open AI Panel
+    description: Open the AI assistant panel
+  openAITools:
+    title: Open AI Tools
+    description: Open the AI tools window
+  openAboutWindow:
+    title: About Window
+    description: Open the About Project Graph window
+  openAppearanceSettings:
+    title: Open Appearance Settings
+    description: Open the appearance and theme settings page
+  openAttachmentsWindow:
+    title: Open Attachments Manager
+    description: Open the attachments manager window
+  openBackgroundManagerWindow:
+    title: Open Background Manager
+    description: Open the background manager window
+  openCacheFolder:
+    title: Open Cache Folder
+    description: Open the application cache folder in the file manager
+  openColorManagerWindow:
+    title: Open Color Manager
+    description: Open the color manager window
+  openConfigFolder:
+    title: Open Config Folder
+    description: Open the application config folder in the file manager
+  openCustomBackupFolder:
+    title: Open Custom Backup Folder
+    description: Open the user custom backup folder in the file manager
+  openDefaultBackupFolder:
+    title: Open Default Backup Folder
+    description: Open the default backup folder in the file manager
+  openLogicNodeDocs:
+    title: Open Logic Node Docs
+    description: Open the documentation for logic nodes
+  openLogicNodePanel:
+    title: Open Logic Node Panel
+    description: Open the logic node editing panel
+  openOfficialDocs:
+    title: Official Docs
+    description: Open Project Graph official documentation in the browser
+  openReferencesWindow:
+    title: Open References Manager
+    description: Open the references manager window
+  recentFilesSub:
+    title: Recent Files
+    description: List of recently opened files
+  releaseKeys:
+    title: Release Keys
+    description: Release all currently pressed shortcut key states
+  resetAllKeyBinds:
+    title: Reset All Shortcuts
+    description: Reset all shortcuts to default settings
+  resetViewAll:
+    title: Reset View to All Content
+    description: Adjust view position and zoom based on all content on the stage
+  saveAs:
+    title: Save As
+    description: Save the current project as a new file
+  settings:
+    title: Settings
+    description: Application settings related functions
+  showUpgradeGuide:
+    title: Upgrade Guide
+    description: Show usage tips for upgrading from an old version
+  stealthModeScopeRadiusDecrease:
+    title: Decrease Scope Radius
+    description: Decrease the visible radius of stealth mode scope
+  stealthModeScopeRadiusIncrease:
+    title: Increase Scope Radius
+    description: Increase the visible radius of stealth mode scope
+  stealthModeSub:
+    title: Stealth Mode
+    description: Settings related to stealth mode (scope view)
+  stopDrifting:
+    title: Stop Drifting
+    description: Stop the current view drift animation effect
+  toggleBackgroundCartesian:
+    title: Toggle Cartesian Grid
+    description: Toggle the display of Cartesian coordinate grid
+  toggleBackgroundDots:
+    title: Toggle Dot Grid
+    description: Toggle the display of dot grid background
+  toggleBackgroundHorizontalLines:
+    title: Toggle Horizontal Lines
+    description: Toggle the display of horizontal line background
+  toggleBackgroundVerticalLines:
+    title: Toggle Vertical Lines
+    description: Toggle the display of vertical line background
+  toggleStealthModeReverseMask:
+    title: Toggle Reverse Mask
+    description: Toggle stealth mode mask between inside-visible and outside-visible
+  tutorialSub:
+    title: Tutorials
+    description: Tutorial documentation guides
+  unstable:
+    title: Unstable
+    description: Unstable features (may contain bugs and incomplete features)
+  updateReferences:
+    title: Update References
+    description: Update all reference block node content to sync with sources
+  upgradeOldJson:
+    title: Upgrade Old JSON
+    description: Upgrade old version JSON files to the new prg format
+  videoTutorialSub:
+    title: Video Tutorials
+    description: Bilibili video tutorial list
+  view:
+    title: View
+    description: View control and display related operations
+  watchBilibiliVideo1_0:
+    title: Watch v1.0 Tutorial
+    description: Watch the Project Graph v1.0 tutorial video
+  watchBilibiliVideo1_6Advanced:
+    title: Watch v1.6 Advanced
+    description: Watch the Project Graph v1.6 advanced tutorial video
+  watchBilibiliVideo1_6Basic:
+    title: Watch v1.6 Basic
+    description: Watch the Project Graph v1.6 basic tutorial video
+  watchBilibiliVideo2:
+    title: Watch v2.0 Tutorial
+    description: Watch the Project Graph v2.0 tutorial video
+  watchBilibiliVideoPyQt:
+    title: Watch PyQt Tutorial
+    description: Watch the PyQt version tutorial video
+  watchBilibiliVideoPyQtUpdated:
+    title: Watch New PyQt Tutorial
+    description: Watch the new PyQt tutorial video
+  window:
+    title: Window
+    description: Window display related settings
+  windowOpacitySub:
+    title: Window Opacity
+    description: Window opacity control settings
 
 visualSettingsGroup:
   basic:
