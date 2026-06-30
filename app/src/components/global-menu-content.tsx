@@ -17,6 +17,7 @@ import { RecentFileManager } from "@/core/service/dataFileService/RecentFileMana
 import { onOpenFile } from "@/core/service/GlobalMenu";
 import { Settings } from "@/core/service/Settings";
 import { activeTabAtom } from "@/state";
+import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
 import { PathString } from "@/utils/pathString";
 import { useAtom } from "jotai";
 import type { LucideProps } from "lucide-react";
@@ -129,7 +130,7 @@ export default function GlobalMenuContent() {
       const uiKb = KeyBindsUI.getUIKeyBind(item.id);
       const staticKb = allKeyBinds.find((k) => k.id === item.id);
       const onClick = uiKb?.onPress ?? staticKb?.onPress;
-      const shortcut = uiKb?.key;
+      const shortcut = uiKb?.key ? formatKeyBindSequenceToString(uiKb.key, "+", ",") : undefined;
       const whenFn = uiKb?.when ?? staticKb?.when;
       // when 异步时简单处理：true 为可用，Promise 视为可用
       const whenOk = whenFn ? whenFn(activeProject) : true;
