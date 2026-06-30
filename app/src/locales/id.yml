@@ -1476,6 +1476,18 @@ controlSettingsGroup:
   exportSub:
     title: Export
     description: Export related operations
+  exportPrgDeepLinkSub:
+    title: Tautan Protokol prg
+    description: Ekspor tautan protokol prg
+  exportCurrentViewPrgDeepLink:
+    title: Ekspor Tautan prg Tampilan Saat Ini
+    description: Ekspor tautan protokol prg dengan posisi dan zoom tampilan saat ini
+  exportSelectedEntityPrgDeepLink:
+    title: Ekspor Tautan prg Objek Terpilih
+    description: Ekspor tautan protokol prg yang menargetkan objek yang sedang dipilih
+  exportCurrentFilePrgDeepLink:
+    title: Ekspor Tautan prg File Saat Ini
+    description: Ekspor tautan protokol prg untuk file saat ini
   exportSvgAll:
     title: Export All as SVG
     description: Export all content on the stage as SVG

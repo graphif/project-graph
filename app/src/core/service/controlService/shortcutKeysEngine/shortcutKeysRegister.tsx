@@ -234,6 +234,11 @@ import {
 import { ForwardRefExoticComponent, RefAttributes } from "react";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
+import {
+  createCurrentFileDeepLink,
+  createCurrentViewDeepLink,
+  createSelectedEntityDeepLink,
+} from "../../dataFileService/DeepLinkHandler";
 import { RecentFileManager } from "../../dataFileService/RecentFileManager";
 import { generateKeyboardLayout } from "../../dataGenerateService/generateFromFolderEngine/GenerateFromFolderEngine";
 import { ColorSmartTools } from "../../dataManageService/colorSmartTools";
@@ -328,6 +333,32 @@ const whenKeyboardOnlyOpenWithSelectedSections: KeyBindWhen = (project) =>
 
 const whenGraphEngineCreating: KeyBindWhen = (project) =>
   !!project && project.keyboardOnlyEngine.isOpenning() && project.keyboardOnlyGraphEngine.isCreating();
+
+function showDraftCannotExportDeepLinkDialog() {
+  return Dialog.buttons(
+    "草稿不能保存",
+    "当前项目还是草稿，没有绝对路径，不能导出 prg 协议链接。请先保存为 .prg 文件。",
+    [{ id: "ok", label: "确定" }] as const,
+  );
+}
+
+async function exportDeepLinkWithDialog(
+  project: Project | undefined,
+  description: string,
+  urlFactory: (project: Project) => string | null,
+) {
+  if (!project) {
+    toast.warning("请先打开工程文件");
+    return;
+  }
+  if (project.isDraft) {
+    await showDraftCannotExportDeepLinkDialog();
+    return;
+  }
+  const url = urlFactory(project);
+  if (!url) return;
+  await Dialog.copy("导出 prg 协议链接", description, url);
+}
 
 export const allKeyBinds: KeyBindItem[] = [
   {
@@ -1327,6 +1358,52 @@ export const allKeyBinds: KeyBindItem[] = [
       const result = activeProject.stageExport.getMermaidTextByEntities(selectedEntities);
       writeText(result);
       toast.success("已将选中的网状结构mermaid格式复制到粘贴板");
+    },
+  },
+  {
+    id: "exportCurrentViewPrgDeepLink",
+    defaultKey: "",
+    icon: View,
+    when: whenHasProject,
+    onPress: async (project) => {
+      await exportDeepLinkWithDialog(project, "当前视野位置的 prg 协议链接如下。", (activeProject) =>
+        createCurrentViewDeepLink(activeProject),
+      );
+    },
+  },
+  {
+    id: "exportSelectedEntityPrgDeepLink",
+    defaultKey: "",
+    icon: MousePointer2,
+    when: whenHasProject,
+    onPress: async (project) => {
+      if (!project) {
+        toast.warning("请先打开工程文件");
+        return;
+      }
+      const selectedEntities = project.stageManager.getSelectedEntities();
+      if (selectedEntities.length === 0) {
+        toast.warning("请先选中一个物体");
+        return;
+      }
+      if (selectedEntities.length > 1) {
+        toast.warning("只能导出一个选中物体的链接，请只选中一个物体");
+        return;
+      }
+      await exportDeepLinkWithDialog(project, "当前选中物体的 prg 协议链接如下。", (activeProject) =>
+        createSelectedEntityDeepLink(activeProject),
+      );
+    },
+  },
+  {
+    id: "exportCurrentFilePrgDeepLink",
+    defaultKey: "",
+    icon: Link,
+    when: whenHasProject,
+    onPress: async (project) => {
+      await exportDeepLinkWithDialog(project, "当前文件的 prg 协议链接如下。", (activeProject) =>
+        createCurrentFileDeepLink(activeProject),
+      );
     },
   },
   /*------- 文件操作 -------*/

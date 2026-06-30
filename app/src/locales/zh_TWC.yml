@@ -1423,6 +1423,18 @@ controlSettingsGroup:
   exportSub:
     title: 導出
     description: 導出相關操作
+  exportPrgDeepLinkSub:
+    title: prg 協議連結
+    description: 導出 prg 協議連結
+  exportCurrentViewPrgDeepLink:
+    title: 導出目前視野位置的 prg 協議連結（有bug）
+    description: 導出帶有目前視野位置與縮放的 prg 協議連結，目前有已知問題
+  exportSelectedEntityPrgDeepLink:
+    title: 導出目前選中物體的 prg 協議連結（有bug）
+    description: 導出帶有目前選中物體定位資訊的 prg 協議連結，目前有已知問題
+  exportCurrentFilePrgDeepLink:
+    title: 導出目前檔案的 prg 協議連結
+    description: 導出目前檔案的 prg 協議連結
   exportSvgAll:
     title: 導出全部為SVG
     description: 將舞台上的全部內容導出為SVG矢量圖

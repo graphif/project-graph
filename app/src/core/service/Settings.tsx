@@ -5,6 +5,34 @@ import { Dialog } from "@/components/ui/dialog";
 import z from "zod";
 import i18next from "i18next";
 
+type GlobalMenuNode = {
+  type: string;
+  id: string;
+  label?: string;
+  icon?: string;
+  visible?: boolean;
+  children?: GlobalMenuNode[];
+};
+
+function cloneGlobalMenuNode<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function mergeGlobalMenuConfig(current: GlobalMenuNode[], defaults: GlobalMenuNode[]): GlobalMenuNode[] {
+  const merged = cloneGlobalMenuNode(current);
+  for (const defaultItem of defaults) {
+    const currentItem = merged.find((item) => item.id === defaultItem.id);
+    if (!currentItem) {
+      merged.push(cloneGlobalMenuNode(defaultItem));
+      continue;
+    }
+    if (currentItem.children && defaultItem.children) {
+      currentItem.children = mergeGlobalMenuConfig(currentItem.children, defaultItem.children);
+    }
+  }
+  return merged;
+}
+
 export const settingsSchema = z.object({
   language: z
     .union([z.literal("en"), z.literal("zh_CN"), z.literal("zh_TW"), z.literal("zh_TWC"), z.literal("id")])
@@ -604,6 +632,16 @@ export const settingsSchema = z.object({
                   { type: "item", id: "exportSelectedNetStructureToMermaid", icon: "SquareSquare" },
                 ],
               },
+              {
+                type: "sub",
+                id: "exportPrgDeepLinkSub",
+                icon: "Link",
+                children: [
+                  { type: "item", id: "exportCurrentViewPrgDeepLink", icon: "View" },
+                  { type: "item", id: "exportSelectedEntityPrgDeepLink", icon: "MousePointer2" },
+                  { type: "item", id: "exportCurrentFilePrgDeepLink", icon: "Link" },
+                ],
+              },
             ],
           },
           { type: "separator", id: "sep-file-3" },
@@ -850,6 +888,16 @@ for (const [rawKey, rawValue] of Object.entries(rawSettings)) {
   console.error(`设置项 ${rawKey} 格式错误，将使用默认值`, result.error);
   pendingSettingsLoadErrorKeys.add(rawKey);
   pendingSettingsLoadErrorValues.set(rawKey, rawValue);
+}
+
+const mergedGlobalMenuConfig = mergeGlobalMenuConfig(
+  savedSettings.globalMenuConfig as GlobalMenuNode[],
+  defaultSettings.globalMenuConfig as GlobalMenuNode[],
+);
+if (JSON.stringify(mergedGlobalMenuConfig) !== JSON.stringify(savedSettings.globalMenuConfig)) {
+  savedSettings.globalMenuConfig = mergedGlobalMenuConfig as Settings["globalMenuConfig"];
+  await store.set("globalMenuConfig", mergedGlobalMenuConfig);
+  await store.save();
 }
 
 export async function flushSettingsLoadErrors() {

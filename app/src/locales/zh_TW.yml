@@ -2297,6 +2297,18 @@ keyBinds:
   exportSub:
     title: 導出
     description: 導出相關操作
+  exportPrgDeepLinkSub:
+    title: prg協議鏈接
+    description: 導出 prg 協議鏈接
+  exportCurrentViewPrgDeepLink:
+    title: 導出當前視野位置的prg協議鏈接（有bug）
+    description: 導出帶有當前視野位置和縮放的 prg 協議鏈接，目前有已知問題
+  exportSelectedEntityPrgDeepLink:
+    title: 導出當前選中物體的prg協議鏈接（有bug）
+    description: 導出帶有當前選中物體定位信息的 prg 協議鏈接，目前有已知問題
+  exportCurrentFilePrgDeepLink:
+    title: 導出當前文件的prg協議鏈接
+    description: 導出當前文件的 prg 協議鏈接
   exportSvgAll:
     title: 導出全部為SVG
     description: 將舞臺上的全部內容導出為SVG矢量圖

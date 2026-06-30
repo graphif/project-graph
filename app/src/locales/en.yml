@@ -2104,6 +2104,18 @@ controlSettingsGroup:
   exportSub:
     title: Export
     description: Export related operations
+  exportPrgDeepLinkSub:
+    title: prg Protocol Link
+    description: Export prg protocol links
+  exportCurrentViewPrgDeepLink:
+    title: Export Current View prg Link
+    description: Export a prg protocol link with the current view position and zoom
+  exportSelectedEntityPrgDeepLink:
+    title: Export Selected Object prg Link
+    description: Export a prg protocol link targeting the currently selected object
+  exportCurrentFilePrgDeepLink:
+    title: Export Current File prg Link
+    description: Export a prg protocol link for the current file
   exportSvgAll:
     title: Export All as SVG
     description: Export all content on the stage as SVG

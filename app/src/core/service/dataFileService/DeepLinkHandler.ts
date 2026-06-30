@@ -18,6 +18,63 @@ export function isProjectGraphDeepLink(input: string) {
   return /^prg:(\/\/)?/i.test(input);
 }
 
+function buildProjectGraphUrl(params: DeepLinkParams) {
+  const queryEntries: string[] = [];
+  queryEntries.push(`path=${encodeReadableQueryValue(params.path)}`);
+  if (params.target) {
+    queryEntries.push(`target=${encodeReadableQueryValue(params.target)}`);
+  }
+  if (params.location) {
+    queryEntries.push(`location=${encodeReadableQueryValue(`${params.location.x},${params.location.y}`)}`);
+  }
+  if (params.zoom !== undefined) {
+    queryEntries.push(`zoom=${encodeReadableQueryValue(String(params.zoom))}`);
+  }
+  return `prg://open?${queryEntries.join("&")}`;
+}
+
+function encodeReadableQueryValue(value: string) {
+  let result = "";
+  for (const char of value) {
+    if (shouldEncodeQueryChar(char)) {
+      result += encodeURIComponent(char);
+    } else {
+      result += char;
+    }
+  }
+  return result;
+}
+
+function shouldEncodeQueryChar(char: string) {
+  const charCode = char.charCodeAt(0);
+  if (charCode <= 0x1f || charCode === 0x7f) return true;
+  return /\s|[%&=+#?]/.test(char);
+}
+
+export function createCurrentFileDeepLink(project: Project) {
+  return buildProjectGraphUrl({ path: project.uri.fsPath });
+}
+
+export function createCurrentViewDeepLink(project: Project) {
+  return buildProjectGraphUrl({
+    path: project.uri.fsPath,
+    location: {
+      x: project.camera.location.x,
+      y: project.camera.location.y,
+    },
+    zoom: project.camera.currentScale,
+  });
+}
+
+export function createSelectedEntityDeepLink(project: Project) {
+  const selectedEntities = project.stageManager.getSelectedEntities();
+  if (selectedEntities.length !== 1) return null;
+  return buildProjectGraphUrl({
+    path: project.uri.fsPath,
+    target: selectedEntities[0].uuid,
+  });
+}
+
 async function normalizeFilePath(rawPath: string): Promise<string | null> {
   let path = rawPath;
   try {

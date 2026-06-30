@@ -2297,6 +2297,18 @@ keyBinds:
   exportSub:
     title: 导出
     description: 导出相关操作
+  exportPrgDeepLinkSub:
+    title: prg协议链接
+    description: 导出 prg 协议链接
+  exportCurrentViewPrgDeepLink:
+    title: 导出当前视野位置的prg协议链接（有bug）
+    description: 导出带有当前视野位置和缩放的 prg 协议链接，目前有已知问题
+  exportSelectedEntityPrgDeepLink:
+    title: 导出当前选中物体的prg协议链接（有bug）
+    description: 导出带有当前选中物体定位信息的 prg 协议链接，目前有已知问题
+  exportCurrentFilePrgDeepLink:
+    title: 导出当前文件的prg协议链接
+    description: 导出当前文件的 prg 协议链接
   exportSvgAll:
     title: 导出全部为SVG
     description: 将舞台上的全部内容导出为SVG矢量图
