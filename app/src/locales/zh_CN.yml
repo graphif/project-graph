@@ -1574,6 +1574,30 @@ keyBinds:
     description: |
       以当前选中的节点作为根节点进行树形结构格式化
       不会查找整个树的根节点，只格式化以选中节点为根的子树
+  treeGraphAdjustSelectedAsRootToLeft:
+    title: 以选中节点为根，将子树整体调整到左侧
+    description: |
+      将选中节点视为子树根节点。
+      把子树内部所有连线，以及指向该根节点的父连线都改成左连线，
+      然后自动格式化树形结构，让整个子树调整到左边。
+  treeGraphAdjustSelectedAsRootToRight:
+    title: 以选中节点为根，将子树整体调整到右侧
+    description: |
+      将选中节点视为子树根节点。
+      把子树内部所有连线，以及指向该根节点的父连线都改成右连线，
+      然后自动格式化树形结构，让整个子树调整到右边。
+  treeGraphAdjustSelectedAsRootToUp:
+    title: 以选中节点为根，将子树整体调整到上侧
+    description: |
+      将选中节点视为子树根节点。
+      把子树内部所有连线，以及指向该根节点的父连线都改成上连线，
+      然后自动格式化树形结构，让整个子树调整到上方。
+  treeGraphAdjustSelectedAsRootToDown:
+    title: 以选中节点为根，将子树整体调整到下侧
+    description: |
+      将选中节点视为子树根节点。
+      把子树内部所有连线，以及指向该根节点的父连线都改成下连线，
+      然后自动格式化树形结构，让整个子树调整到下方。
   dagGraphAdjust:
     title: 调整当前选中节点群的DAG布局
     description: |

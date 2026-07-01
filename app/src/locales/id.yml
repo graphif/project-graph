@@ -1882,6 +1882,30 @@ keyBinds:
     description: |
       Format struktur pohon dengan node yang dipilih saat ini sebagai node akar
       Tidak akan mencari akar seluruh pohon, hanya memformat subpohon dengan node yang dipilih sebagai akar
+  treeGraphAdjustSelectedAsRootToLeft:
+    title: Pindahkan Subpohon ke Kiri dengan Node Terpilih sebagai Akar
+    description: |
+      Perlakukan node yang dipilih sebagai akar subpohon.
+      Ubah semua edge di dalam subpohon, serta edge induk yang mengarah ke node akar itu, menjadi edge ke kiri.
+      Lalu format ulang struktur pohon secara otomatis agar seluruh subpohon berpindah ke sisi kiri.
+  treeGraphAdjustSelectedAsRootToRight:
+    title: Pindahkan Subpohon ke Kanan dengan Node Terpilih sebagai Akar
+    description: |
+      Perlakukan node yang dipilih sebagai akar subpohon.
+      Ubah semua edge di dalam subpohon, serta edge induk yang mengarah ke node akar itu, menjadi edge ke kanan.
+      Lalu format ulang struktur pohon secara otomatis agar seluruh subpohon berpindah ke sisi kanan.
+  treeGraphAdjustSelectedAsRootToUp:
+    title: Pindahkan Subpohon ke Atas dengan Node Terpilih sebagai Akar
+    description: |
+      Perlakukan node yang dipilih sebagai akar subpohon.
+      Ubah semua edge di dalam subpohon, serta edge induk yang mengarah ke node akar itu, menjadi edge ke atas.
+      Lalu format ulang struktur pohon secara otomatis agar seluruh subpohon berpindah ke atas.
+  treeGraphAdjustSelectedAsRootToDown:
+    title: Pindahkan Subpohon ke Bawah dengan Node Terpilih sebagai Akar
+    description: |
+      Perlakukan node yang dipilih sebagai akar subpohon.
+      Ubah semua edge di dalam subpohon, serta edge induk yang mengarah ke node akar itu, menjadi edge ke bawah.
+      Lalu format ulang struktur pohon secara otomatis agar seluruh subpohon berpindah ke bawah.
   dagGraphAdjust:
     title: Sesuaikan Layout DAG Node yang Dipilih Saat Ini
     description: |

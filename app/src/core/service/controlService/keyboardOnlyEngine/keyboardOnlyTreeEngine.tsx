@@ -22,6 +22,70 @@ export class KeyboardOnlyTreeEngine {
   constructor(private readonly project: Project) {}
 
   /**
+   * 方向取反
+   */
+  private getOppositeDirection(direction: Direction): Direction {
+    switch (direction) {
+      case Direction.Left:
+        return Direction.Right;
+      case Direction.Right:
+        return Direction.Left;
+      case Direction.Up:
+        return Direction.Down;
+      case Direction.Down:
+        return Direction.Up;
+    }
+  }
+
+  /**
+   * 将一条边整体设置为标准方向连线。
+   * 例如向左时，源端点贴左侧，目标端点贴右侧。
+   */
+  private changeEdgeToDirection(edge: Edge, direction: Direction) {
+    this.project.stageManager.changeEdgesConnectLocation([edge], direction, true);
+    this.project.stageManager.changeEdgesConnectLocation([edge], this.getOppositeDirection(direction));
+  }
+
+  /**
+   * 以指定节点为子树根，递归修改整棵子树的边方向，
+   * 并额外调整指向该根节点的父边，最后触发一次树形自动布局。
+   */
+  private adjustSubtreeDirection(root: ConnectableEntity, direction: Direction) {
+    const visitedNodeUUIDs = new Set<string>();
+
+    const dfs = (node: ConnectableEntity) => {
+      if (visitedNodeUUIDs.has(node.uuid)) return;
+      visitedNodeUUIDs.add(node.uuid);
+
+      const childEdges = this.project.graphMethods.edgeChildrenArray(node);
+      for (const edge of childEdges) {
+        this.changeEdgeToDirection(edge, direction);
+        dfs(edge.target);
+      }
+    };
+
+    const parentEdges = this.project.graphMethods.edgeParentArray(root);
+    for (const edge of parentEdges) {
+      this.changeEdgeToDirection(edge, direction);
+    }
+
+    dfs(root);
+    this.project.autoAlign.autoLayoutSelectedFastTreeMode(root);
+  }
+
+  /**
+   * 对当前选中的所有可连接节点分别执行“以自身为根调整子树方向”。
+   */
+  public adjustSelectedSubtreesDirection(direction: Direction) {
+    const selectedRoots = this.project.stageManager
+      .getSelectedEntities()
+      .filter((entity) => entity instanceof ConnectableEntity);
+    for (const root of selectedRoots) {
+      this.adjustSubtreeDirection(root, direction);
+    }
+  }
+
+  /**
    * 获取节点的“预方向”
    * 如果有缓存，则拿缓存中的值，没有缓存，根据节点的入度线的方向，来判断“预方向”
    * @param node

@@ -1369,6 +1369,30 @@ keyBinds:
     description: |
       Format the tree structure using the currently selected node as the root node.
       Does not search for the root of the entire tree, only formats the subtree rooted at the selected node.
+  treeGraphAdjustSelectedAsRootToLeft:
+    title: Move Subtree to the Left Using Selected Node as Root
+    description: |
+      Treat the selected node as the root of a subtree.
+      Change all edges inside the subtree, as well as the parent edge pointing to the root node, to leftward edges.
+      Then auto-format the tree structure so the whole subtree moves to the left side.
+  treeGraphAdjustSelectedAsRootToRight:
+    title: Move Subtree to the Right Using Selected Node as Root
+    description: |
+      Treat the selected node as the root of a subtree.
+      Change all edges inside the subtree, as well as the parent edge pointing to the root node, to rightward edges.
+      Then auto-format the tree structure so the whole subtree moves to the right side.
+  treeGraphAdjustSelectedAsRootToUp:
+    title: Move Subtree Up Using Selected Node as Root
+    description: |
+      Treat the selected node as the root of a subtree.
+      Change all edges inside the subtree, as well as the parent edge pointing to the root node, to upward edges.
+      Then auto-format the tree structure so the whole subtree moves upward.
+  treeGraphAdjustSelectedAsRootToDown:
+    title: Move Subtree Down Using Selected Node as Root
+    description: |
+      Treat the selected node as the root of a subtree.
+      Change all edges inside the subtree, as well as the parent edge pointing to the root node, to downward edges.
+      Then auto-format the tree structure so the whole subtree moves downward.
   undo:
     title: Undo
     description: Undo the last action

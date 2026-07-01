@@ -1827,6 +1827,46 @@ export const allKeyBinds: KeyBindItem[] = [
     },
   },
   {
+    id: "treeGraphAdjustSelectedAsRootToLeft",
+    defaultKey: "t 4 4",
+    icon: MoveLeft,
+    when: whenHasSelectedConnectableEntities,
+    onPress: (project) => {
+      project!.keyboardOnlyTreeEngine.adjustSelectedSubtreesDirection(Direction.Left);
+      project!.historyManager.recordStep();
+    },
+  },
+  {
+    id: "treeGraphAdjustSelectedAsRootToRight",
+    defaultKey: "t 6 6",
+    icon: MoveRight,
+    when: whenHasSelectedConnectableEntities,
+    onPress: (project) => {
+      project!.keyboardOnlyTreeEngine.adjustSelectedSubtreesDirection(Direction.Right);
+      project!.historyManager.recordStep();
+    },
+  },
+  {
+    id: "treeGraphAdjustSelectedAsRootToUp",
+    defaultKey: "t 8 8",
+    icon: MoveUp,
+    when: whenHasSelectedConnectableEntities,
+    onPress: (project) => {
+      project!.keyboardOnlyTreeEngine.adjustSelectedSubtreesDirection(Direction.Up);
+      project!.historyManager.recordStep();
+    },
+  },
+  {
+    id: "treeGraphAdjustSelectedAsRootToDown",
+    defaultKey: "t 2 2",
+    icon: MoveDown,
+    when: whenHasSelectedConnectableEntities,
+    onPress: (project) => {
+      project!.keyboardOnlyTreeEngine.adjustSelectedSubtreesDirection(Direction.Down);
+      project!.historyManager.recordStep();
+    },
+  },
+  {
     id: "treeReverseX",
     defaultKey: "t r x",
     icon: ArrowLeftRight,
