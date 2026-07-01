@@ -342,7 +342,7 @@ export const categories = {
       "autoLayoutWhenTreeGenerate",
       "treeGenerateInheritParentColor",
       "enableBackslashGenerateNodeInInput",
-      "textNodeAutoFormatTreeWhenExitEdit",
+      "textNodeAutoFormatTreeWhenInput",
       "treeGenerateCameraBehavior",
     ],
     gamepad: ["gamepadDeadzone"],

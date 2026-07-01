@@ -839,10 +839,11 @@ settings:
       Lebar default node teks saat beralih ke mode lebar manual menggunakan pintasan ttt.
       Satuannya adalah karakter Cina, misalnya mengatur ke 10 berarti lebar 10 karakter Cina.
       Lebar karakter Inggris adalah setengah dari karakter Cina.
-  textNodeAutoFormatTreeWhenExitEdit:
-    title: Format Struktur Pohon Otomatis Saat Keluar Mode Edit
+  textNodeAutoFormatTreeWhenInput:
+    title: Format Struktur Pohon Secara Realtime Saat Mengetik di Node Teks
     description: |
-      Saat node teks keluar mode edit, otomatis melakukan layout format pada struktur pohon tempatnya berada
+      Saat node teks sedang diedit dan isi teks berubah, struktur pohon akan diformat ulang secara realtime.
+      Textarea yang ditumpuk di atas canvas juga akan mengikuti pembaruan posisi node.
   treeGenerateCameraBehavior:
     title: Opsi Perilaku Kamera Setelah Node Pohon Tumbuh
     description: |

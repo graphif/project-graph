@@ -214,7 +214,7 @@ export const settingsSchema = z.object({
   enableDragNodeShakeDetachFromEdge: z.boolean().default(false),
   autoLayoutWhenTreeGenerate: z.boolean().default(true),
   treeGenerateInheritParentColor: z.boolean().default(false),
-  textNodeAutoFormatTreeWhenExitEdit: z.boolean().default(false),
+  textNodeAutoFormatTreeWhenInput: z.boolean().default(true),
   treeGenerateCameraBehavior: z
     .union([z.literal("none"), z.literal("moveToNewNode"), z.literal("resetToTree")])
     .default("moveToNewNode"),

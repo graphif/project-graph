@@ -613,10 +613,11 @@ settings:
       The default width of text nodes when switching to manual width mode using the ttt shortcut.
       Unit is Chinese characters, e.g. setting to 10 means width of 10 Chinese characters.
       English character width is half of Chinese character width.
-  textNodeAutoFormatTreeWhenExitEdit:
-    title: Auto Format Tree Structure When Exiting Edit Mode
+  textNodeAutoFormatTreeWhenInput:
+    title: Realtime Format Tree Structure While Typing in Text Nodes
     description: |
-      Automatically formats the tree structure when a text node exits edit mode.
+      While a text node is being edited, automatically formats the tree structure in real time as you type.
+      The textarea overlaid on the canvas also follows the node position updates.
   treeGenerateCameraBehavior:
     title: Camera Behavior After Tree Node Generation
     description: |

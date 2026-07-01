@@ -240,7 +240,7 @@ export const settingsIcons = {
   clearHistoryWhenManualSave: Undo,
   historyManagerMode: Undo,
   soundPitchVariationRange: ListMusic,
-  textNodeAutoFormatTreeWhenExitEdit: ListTree,
+  textNodeAutoFormatTreeWhenInput: ListTree,
   treeGenerateCameraBehavior: Fullscreen,
   autoImportTxtFileWhenOpenPrg: File,
   imageImportOrder: ArrowDownNarrowWide,

@@ -856,10 +856,11 @@ settings:
       當使用ttt快捷鍵切換到手動寬度模式時，文本節點的默認寬度。
       單位為中文字符數，例如設置為10表示寬度為10箇中文字符。
       英文字符寬度為中文字符的一半。
-  textNodeAutoFormatTreeWhenExitEdit:
-    title: 退出編輯模式時自動格式化樹形結構
+  textNodeAutoFormatTreeWhenInput:
+    title: 文本節點輸入時，實時格式化樹形結構
     description: |
-      當文本節點退出編輯模式時，自動對其所在的樹形結構進行格式化佈局
+      當文本節點處於編輯狀態並輸入內容時，實時對其所在的樹形結構進行格式化佈局。
+      疊放在畫布上的文本輸入框也會同步跟隨節點位置更新。
   treeGenerateCameraBehavior:
     title: 樹形生長節點後的鏡頭行為選項
     description: |

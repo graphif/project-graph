@@ -61,6 +61,32 @@ export class ControllerUtils {
         ),
       );
     }
+    const syncTextareaPositionWithNode = (ele: HTMLTextAreaElement) => {
+      const currentRectView = this.project.renderer.transformWorld2View(clickedNode.collisionBox.getRectangle());
+      ele.style.left = `${currentRectView.left.toFixed(2)}px`;
+      ele.style.top = `${currentRectView.top.toFixed(2)}px`;
+      ele.style.minWidth = `${currentRectView.width.toFixed(2)}px`;
+      ele.style.minHeight = `${currentRectView.height.toFixed(2)}px`;
+      ele.style.height = "auto";
+      ele.style.height = `${(currentRectView.height + 8).toFixed(2)}px`;
+      if (clickedNode.sizeAdjust === "manual") {
+        ele.style.width = `${currentRectView.width.toFixed(2)}px`;
+      }
+    };
+    const relayoutTreeWhileEditing = () => {
+      const rootNodes = this.project.graphMethods.getRoots(clickedNode, true);
+      if (rootNodes.length !== 1) {
+        return;
+      }
+      const rootNode = rootNodes[0];
+      const validationResult = this.project.graphMethods.validateTreeStructure(rootNode, true);
+      if (!validationResult.isValid) {
+        return;
+      }
+      this.project.autoLayoutFastTree.autoLayoutFastTreeMode(rootNode);
+      rootNode.isSelected = false;
+      clickedNode.isSelected = true;
+    };
     let lastAutoCompleteWindowId: string;
     // 实时 LaTeX 预览管理器（输入 $...$ 时在节点上方显示）
     const latexPreview = new LatexPreviewManager();
@@ -79,10 +105,10 @@ export class ControllerUtils {
           });
           // onChange
           clickedNode?.rename(text);
-          const rectWorld = clickedNode.collisionBox.getRectangle();
-          const rectView = this.project.renderer.transformWorld2View(rectWorld);
-          ele.style.height = "auto";
-          ele.style.height = `${(rectView.height + 8).toFixed(2)}px`;
+          if (Settings.textNodeAutoFormatTreeWhenInput) {
+            relayoutTreeWhileEditing();
+          }
+          syncTextareaPositionWithNode(ele);
           // 宽度由 inputElement.tsx 的 adjustSize（镜像 div 测量）负责，此处不再重复设置
           // 自动调整它的外层框的大小
           const fatherSections = this.project.sectionMethods.getFatherSectionsList(clickedNode);
@@ -153,11 +179,6 @@ export class ControllerUtils {
         await autoChangeTextNodeToReferenceBlock(this.project, clickedNode);
         // 检测 $...$ 格式，自动转换为 LaTeX 公式节点
         await autoChangeTextNodeToLatexNode(this.project, clickedNode);
-        // 文本节点退出编辑模式后，检查是否需要自动格式化树形结构
-        if (Settings.textNodeAutoFormatTreeWhenExitEdit) {
-          // 格式化树形结构
-          this.project.keyboardOnlyTreeEngine.adjustTreeNode(clickedNode, false);
-        }
       });
   }
 
