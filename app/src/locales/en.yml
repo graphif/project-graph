@@ -963,6 +963,12 @@ settings:
     description: "After it is turned on, the layout will be automatically updated
       when growing nodes\nThe growing nodes here refer to the tab and \\ key growing
       nodes\n"
+  enableTreeGenerateConnectByProbe:
+    title: Enable Tab probe connect to existing nodes
+    description: |
+      When enabled, pressing Tab will first probe along the current growth direction to detect an existing node.
+      If a target is hit, it connects directly to that node and renders the probe dashed line and preview connection.
+      When disabled, Tab always creates a new node and these probe hints are no longer rendered.
   treeGenerateInheritParentColor:
     title: Inherit parent color when growing nodes
     description: |

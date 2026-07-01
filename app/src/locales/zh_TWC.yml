@@ -738,6 +738,13 @@ settings:
     description: '開啟後，生長節點時自動更新佈局
 
       此處的生長節點指tab和\鍵生長節點'
+  enableTreeGenerateConnectByProbe:
+    title: 啟用 Tab 探針連接既有節點
+    description: '開啟後，按下 Tab 生長節點前會先沿目前生長方向探測是否命中既有節點。
+
+      命中時會直接連接到既有節點，並渲染探針虛線與預覽連線。
+
+      關閉後，Tab 將一律走新建節點流程，也不再渲染這些探針提示。'
   treeGenerateInheritParentColor:
     title: 生長節點時繼承父節點顏色
     description: '開啟後，透過 Tab 或 \ 生長出來的新節點會繼承父節點顏色

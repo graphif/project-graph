@@ -215,7 +215,9 @@ export class KeyboardOnlyTreeEngine {
 
     // 检测生长探测线上是否有可连接实体（线段相交检测，比点命中范围更大）
     {
-      const targetEntity = this.findConnectTargetByGrowthLine(rootNode, direction);
+      const targetEntity = Settings.enableTreeGenerateConnectByProbe
+        ? this.findConnectTargetByGrowthLine(rootNode, direction)
+        : null;
       if (targetEntity !== null) {
         // 有可连接实体且尚无连线：直接连线，不新建节点
         this.project.stageManager.connectEntity(rootNode, targetEntity);

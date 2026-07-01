@@ -176,25 +176,30 @@ export class TextNodeRenderer {
     const keyFontSizeInactive = 15;
     const GAP = 28;
 
+    const enableProbeConnect = Settings.enableTreeGenerateConnectByProbe;
     // 用生长探测线（线段相交）检测是否有可连接目标，比点命中范围更大
-    const connectTarget = this.project.keyboardOnlyTreeEngine.findConnectTargetByGrowthLine(node, direction);
+    const connectTarget = enableProbeConnect
+      ? this.project.keyboardOnlyTreeEngine.findConnectTargetByGrowthLine(node, direction)
+      : null;
     const hasConnectTarget = connectTarget !== null;
 
-    // 渲染生长探测虚线：从当前节点边缘中点 → 探测线终点
-    const growthLineStart = this.project.keyboardOnlyTreeEngine.getGrowthLineStart(node, direction);
-    const growthLineEnd = this.project.keyboardOnlyTreeEngine.getGrowthLineEnd(node, direction);
-    const probeLineColor = hasConnectTarget ? tabColor.clone() : hintColor.clone();
-    probeLineColor.a = hasConnectTarget ? 0.8 : 0.4;
-    this.project.curveRenderer.renderDashedLine(
-      this.project.renderer.transformWorld2View(growthLineStart),
-      this.project.renderer.transformWorld2View(growthLineEnd),
-      probeLineColor,
-      hasConnectTarget ? 2 : 1.5,
-      8,
-    );
+    if (enableProbeConnect) {
+      // 渲染生长探测虚线：从当前节点边缘中点 → 探测线终点
+      const growthLineStart = this.project.keyboardOnlyTreeEngine.getGrowthLineStart(node, direction);
+      const growthLineEnd = this.project.keyboardOnlyTreeEngine.getGrowthLineEnd(node, direction);
+      const probeLineColor = hasConnectTarget ? tabColor.clone() : hintColor.clone();
+      probeLineColor.a = hasConnectTarget ? 0.8 : 0.4;
+      this.project.curveRenderer.renderDashedLine(
+        this.project.renderer.transformWorld2View(growthLineStart),
+        this.project.renderer.transformWorld2View(growthLineEnd),
+        probeLineColor,
+        hasConnectTarget ? 2 : 1.5,
+        8,
+      );
+    }
 
     // 有可连接目标时：渲染从当前节点边缘 → 目标节点对应边缘的预览连线
-    if (hasConnectTarget) {
+    if (enableProbeConnect && hasConnectTarget) {
       const targetRect = connectTarget.collisionBox.getRectangle();
       let previewLineStart: Vector = rect.rightCenter;
       let previewLineEnd: Vector = targetRect.leftCenter;

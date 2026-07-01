@@ -340,6 +340,7 @@ export const categories = {
     ],
     generateNode: [
       "autoLayoutWhenTreeGenerate",
+      "enableTreeGenerateConnectByProbe",
       "treeGenerateInheritParentColor",
       "enableBackslashGenerateNodeInInput",
       "textNodeAutoFormatTreeWhenInput",

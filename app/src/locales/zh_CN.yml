@@ -724,6 +724,12 @@ settings:
     description: |
       开启后，生长节点时自动更新布局
       此处的生长节点指tab和\键生长节点
+  enableTreeGenerateConnectByProbe:
+    title: 启用 Tab 探针连接已有节点
+    description: |
+      开启后，按 Tab 生长节点前会先沿当前生长方向探测是否命中已有节点。
+      命中时会直接连接到已有节点，并渲染探针虚线与预览连线。
+      关闭后，Tab 将始终走新建节点流程，也不再渲染这些探针提示。
   treeGenerateInheritParentColor:
     title: 生长节点时继承父节点颜色
     description: |

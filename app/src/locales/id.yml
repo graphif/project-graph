@@ -707,6 +707,12 @@ settings:
     description: |
       Saat diaktifkan, layout akan diperbarui secara otomatis saat node tumbuh
       Pertumbuhan node di sini merujuk pada pertumbuhan node dengan tombol tab dan \
+  enableTreeGenerateConnectByProbe:
+    title: Aktifkan probe Tab untuk menghubungkan node yang sudah ada
+    description: |
+      Saat diaktifkan, menekan Tab akan lebih dulu memeriksa sepanjang arah pertumbuhan saat ini untuk mendeteksi node yang sudah ada.
+      Jika mengenai target, node akan langsung dihubungkan dan garis probe putus-putus serta koneksi pratinjau akan dirender.
+      Saat dimatikan, Tab akan selalu membuat node baru dan petunjuk probe ini tidak lagi dirender.
   treeGenerateInheritParentColor:
     title: Warna Node Baru Ikuti Warna Induk
     description: |
