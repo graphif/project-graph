@@ -2300,6 +2300,9 @@ keyBinds:
   textNodeTreeToSection:
     title: Konversi Pohon Node Teks ke Struktur Bersarang Kotak
     description: Konversi struktur pohon node teks yang dipilih ke struktur bersarang kotak
+  textNodeTreeToSectionNoDeep:
+    title: Konversi Node Teks ke Struktur Kotak Bersarang Satu Lapisan
+    description: Konversi pohon node teks yang dipilih ke struktur kotak bersarang yang hanya membungkus lapisan pertama anak tanpa bersarang secara rekursif
 
   switchActiveProject:
     title: Alihkan Proyek Saat Ini

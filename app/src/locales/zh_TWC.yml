@@ -2262,6 +2262,9 @@ keyBinds:
   textNodeTreeToSection:
     title: 將文字節點樹轉換為框巢狀結構
     description: 將選取的文字節點樹結構轉換為框巢狀結構
+  textNodeTreeToSectionNoDeep:
+    title: 將文字節點轉換為僅一層的框巢狀結構
+    description: 將選取的文字節點樹轉換為只包裹第一層子節點的框巢狀結構，不遞迴深入巢狀
   switchActiveProject:
     title: 切換目前專案
     description: 按下後，切換到下一個專案

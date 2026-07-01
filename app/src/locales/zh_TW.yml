@@ -2047,6 +2047,9 @@ keyBinds:
   textNodeTreeToSection:
     title: 將文本節點樹轉換為框嵌套結構
     description: 將選中的文本節點樹結構轉換為框嵌套結構
+  textNodeTreeToSectionNoDeep:
+    title: 將文本節點轉換為僅一層的框嵌套結構
+    description: 將選中的文本節點樹轉換為只包裹第一層子節點的框嵌套結構，不遞歸深入嵌套
 
   switchActiveProject:
     title: 切換當前項目

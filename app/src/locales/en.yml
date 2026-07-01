@@ -1426,6 +1426,12 @@ keyBinds:
     description: |
       When pressed, the selected text node will be converted into a Section box.
       This can be used for quick Section box creation.
+  textNodeTreeToSection:
+    title: Convert Text Node Tree to Box Nested Structure
+    description: Convert the selected text node tree structure into a box nested structure
+  textNodeTreeToSectionNoDeep:
+    title: Convert Text Node to Single-Layer Box Nested Structure
+    description: Convert the selected text node tree into a box nested structure that wraps only the first layer of child nodes without recursive nesting
   deleteSelectedStageObjects:
     title: Delete Selected Stage Objects
     description: |

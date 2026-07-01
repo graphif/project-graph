@@ -711,6 +711,8 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "setNodeTreeDirectionDown",
       "setNodeTreeDirectionLeft",
       "setNodeTreeDirectionRight",
+      "textNodeTreeToSection",
+      "textNodeTreeToSectionNoDeep",
     ],
   },
   {

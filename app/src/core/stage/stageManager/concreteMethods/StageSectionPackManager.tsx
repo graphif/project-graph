@@ -100,7 +100,7 @@ export class SectionPackManager {
       toast.error("请选择一个树状结构的节点作为根节点");
       return;
     }
-    const dfs = (node: TextNode): Section | TextNode => {
+    const dfs = (node: TextNode, isRoot: boolean = false): Section | TextNode => {
       const childNodes = this.project.graphMethods.nodeChildrenArray(node).filter((node) => node instanceof TextNode);
       if (childNodes.length === 0) {
         return node;
@@ -115,12 +115,12 @@ export class SectionPackManager {
           this.project.stageManager.deleteEdge(edge);
         }
       }
-      const section = this.targetTextNodeToSection(node, true);
+      const section = this.targetTextNodeToSection(node, !isRoot);
 
       this.project.sectionInOutManager.goInSection(childEntityList, section);
       return section;
     };
-    dfs(rootNode);
+    dfs(rootNode, true);
     this.project.historyManager.recordStep();
   }
 
@@ -145,7 +145,7 @@ export class SectionPackManager {
         this.project.stageManager.deleteEdge(edge);
       }
     }
-    const section = this.targetTextNodeToSection(rootNode, true);
+    const section = this.targetTextNodeToSection(rootNode, false);
     const rootNodeFatherSection = rootNode.parentSection;
     if (rootNodeFatherSection) {
       this.project.sectionInOutManager.goOutSection(childSets, rootNodeFatherSection);

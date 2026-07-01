@@ -1856,13 +1856,25 @@ export const allKeyBinds: KeyBindItem[] = [
   },
   {
     id: "textNodeTreeToSection",
-    defaultKey: "t r s",
+    defaultKey: "d t r s",
     icon: LayoutPanelTop,
     when: whenHasSelectedTextNodes,
     onPress: (project) => {
       const textNodes = project!.stageManager.getSelectedEntities().filter((node) => node instanceof TextNode);
       for (const textNode of textNodes) {
         project!.sectionPackManager.textNodeTreeToSection(textNode);
+      }
+    },
+  },
+  {
+    id: "textNodeTreeToSectionNoDeep",
+    defaultKey: "t r s",
+    icon: LayoutPanelTop,
+    when: whenHasSelectedTextNodes,
+    onPress: (project) => {
+      const textNodes = project!.stageManager.getSelectedEntities().filter((node) => node instanceof TextNode);
+      for (const textNode of textNodes) {
+        project!.sectionPackManager.textNodeTreeToSectionNoDeep(textNode);
       }
     },
   },
