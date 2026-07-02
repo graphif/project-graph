@@ -9,8 +9,8 @@ const CARGO_TOML_PATH = "app/src-tauri/Cargo.toml";
 const conf = readFileSync(CARGO_TOML_PATH);
 const updated = conf
   .toString()
-  .replace(
-    /aha = { version = "(.*)", features = \["(.*)"\] }/,
+  .replaceAll(
+    /^aha = { version = "(.*)", features = \["(.*)"\] }$/g,
     `aha = { version = "$1", features = ${JSON.stringify(features)} }`,
   );
 
