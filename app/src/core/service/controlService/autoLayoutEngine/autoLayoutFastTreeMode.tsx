@@ -222,6 +222,7 @@ export class AutoLayoutFastTree {
    * @param rootNode 根节点
    * @param directionGroups 不同方向的子树群
    * @param skipDashed 是否跳过虚线边
+   * @param minGap 两个子树群之间的最小间距，推开时保证至少留出此间距
    */
   private resolveSubtreeOverlaps(
     rootNode: ConnectableEntity,
@@ -232,6 +233,7 @@ export class AutoLayoutFastTree {
       top?: ConnectableEntity[];
     },
     skipDashed = false,
+    minGap = 0,
   ) {
     // 创建方向对进行检查
     const directionPairs = [
@@ -262,7 +264,7 @@ export class AutoLayoutFastTree {
 
       let pushCount = 0;
       // 检查是否重叠或连线相交
-      while (this.hasOverlapOrLineIntersection(rootNode, group1, group2, dir1, dir2, skipDashed)) {
+      while (this.hasOverlapOrLineIntersection(rootNode, group1, group2, dir1, dir2, skipDashed, minGap)) {
         pushCount++;
         if (pushCount > 1000) {
           break; // 防止无限循环
@@ -334,6 +336,7 @@ export class AutoLayoutFastTree {
    * @param group1 第一个子树群
    * @param group2 第二个子树群
    * @param skipDashed 是否跳过虚线边
+   * @param minGap 最小间距，矩形之间距离小于此值时也视为"重叠"需要推开
    */
   private hasOverlapOrLineIntersection(
     rootNode: ConnectableEntity,
@@ -342,8 +345,9 @@ export class AutoLayoutFastTree {
     dir1: "left" | "right" | "top" | "bottom",
     dir2: "left" | "right" | "top" | "bottom",
     skipDashed = false,
+    minGap = 0,
   ): boolean {
-    // 检查矩形重叠
+    // 检查矩形重叠（含最小间距）
     const rect1 = Rectangle.getBoundingRectangle(
       group1.map((child) => this.getTreeBoundingRectangle(child, skipDashed)),
     );
@@ -351,7 +355,14 @@ export class AutoLayoutFastTree {
       group2.map((child) => this.getTreeBoundingRectangle(child, skipDashed)),
     );
 
-    if (rect1.isCollideWith(rect2)) {
+    // 将 rect1 向外扩展 minGap，使得两矩形之间距离 < minGap 时也判定为碰撞
+    const expandedRect1 = Rectangle.fromEdges(
+      rect1.left - minGap,
+      rect1.top - minGap,
+      rect1.right + minGap,
+      rect1.bottom + minGap,
+    );
+    if (expandedRect1.isCollideWith(rect2)) {
       return true;
     }
 
@@ -680,6 +691,7 @@ export class AutoLayoutFastTree {
       );
 
       // 检测并解决不同方向子树群之间的重叠问题
+      // 传入 treesGap 作为最小间距，确保推开后子树群之间保留足够的空白
       this.resolveSubtreeOverlaps(
         node,
         {
@@ -689,6 +701,7 @@ export class AutoLayoutFastTree {
           top: topChildList.length > 0 ? topChildList : undefined,
         },
         true,
+        treesGap,
       );
     };
 
