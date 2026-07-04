@@ -168,16 +168,23 @@ export class AutoLayoutFastTree {
 
     const parentRectangle = rootNode.collisionBox.getRectangle();
 
-    // 计算子树的外接矩形，考虑分组框标题栏和 padding
-    const childRects = childList.map((child) => {
-      const rect = child.collisionBox.getRectangle();
-      const ps = child.parentSection;
-      if (ps && ps.text !== "") {
-        return new Rectangle(new Vector(rect.left, rect.top - 80), new Vector(rect.width, rect.height + 80));
-      }
-      return rect;
-    });
-    const childsRectangle = Rectangle.getBoundingRectangle(childRects);
+    // 计算子树的真实外接矩形（不膨胀，避免影响 center 计算）
+    const childsRectangle = Rectangle.getBoundingRectangle(childList.map((child) => child.collisionBox.getRectangle()));
+
+    // 检测子节点群是否整体被一个有标题的分组框包裹，
+    // 若是，则在垂直/水平方向额外留出分组框标题栏和 padding 的空间，避免标题栏遮挡节点。
+    // 注意：只在"第一个子节点"所在分组框与根节点不同时才需要额外偏移，
+    // 且仅当所有子节点都在同一个分组框内时才整体偏移（否则由 alignTrees 的 extraGap 处理）。
+    const sectionTopOverhead = 80; // 30 padding + 50 title bar
+    const firstChildSection = childList[0].parentSection;
+    const allInSameSection =
+      firstChildSection !== null &&
+      firstChildSection !== undefined &&
+      firstChildSection.text !== "" &&
+      childList.every((c) => c.parentSection === firstChildSection);
+    // 仅当子节点群整体在一个有标题的分组框内，且该分组框不是根节点自身所在的分组框时，才加偏移
+    const needSectionOffset = allInSameSection && firstChildSection !== rootNode.parentSection;
+    const sectionOffset = needSectionOffset ? sectionTopOverhead : 0;
 
     // 计算子树应该移动到的目标位置（使用边缘距离而不是中心位置）
     let targetLocation: Vector;
@@ -186,19 +193,27 @@ export class AutoLayoutFastTree {
     switch (position) {
       case "rightCenter":
         // 右侧：子树位于根节点的右侧，使用右边缘计算
-        targetLocation = new Vector(parentRectangle.right + gap + childsRectangle.width / 2, parentRectangle.center.y);
+        // 分组框标题栏在顶部，需要把子节点群整体下移，使标题栏有空间
+        targetLocation = new Vector(
+          parentRectangle.right + gap + childsRectangle.width / 2,
+          parentRectangle.center.y + sectionOffset / 2,
+        );
         break;
 
       case "leftCenter":
         // 左侧：子树位于根节点的左侧，使用左边缘计算
-        targetLocation = new Vector(parentRectangle.left - gap - childsRectangle.width / 2, parentRectangle.center.y);
+        targetLocation = new Vector(
+          parentRectangle.left - gap - childsRectangle.width / 2,
+          parentRectangle.center.y + sectionOffset / 2,
+        );
         break;
 
       case "bottomCenter":
         // 下方：子树位于根节点的下方，使用底边缘计算
+        // 分组框标题栏在顶部，需要在 gap 基础上额外加上 overhead
         targetLocation = new Vector(
           parentRectangle.center.x,
-          parentRectangle.bottom + gap + childsRectangle.height / 2,
+          parentRectangle.bottom + gap + sectionOffset + childsRectangle.height / 2,
         );
         break;
 
