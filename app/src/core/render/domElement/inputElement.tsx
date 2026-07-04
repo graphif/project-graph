@@ -84,6 +84,17 @@ export class InputElement {
         adjustSize();
       });
       inputElement.addEventListener("blur", () => {
+        // 如果是因为窗口失焦（切屏）导致的 blur，不退出编辑状态，等窗口重新获焦后恢复焦点
+        if (!document.hasFocus()) {
+          const onWindowFocus = () => {
+            window.removeEventListener("focus", onWindowFocus);
+            if (document.body.contains(inputElement)) {
+              inputElement.focus();
+            }
+          };
+          window.addEventListener("focus", onWindowFocus);
+          return;
+        }
         resolve(inputElement.value);
         onChange(inputElement.value);
         document.body.removeEventListener("mousedown", onOutsideClick);
@@ -253,6 +264,17 @@ export class InputElement {
       };
 
       textareaElement.addEventListener("blur", () => {
+        // 如果是因为窗口失焦（切屏）导致的 blur，不退出编辑状态，等窗口重新获焦后恢复焦点
+        if (!document.hasFocus()) {
+          const onWindowFocus = () => {
+            window.removeEventListener("focus", onWindowFocus);
+            if (document.body.contains(textareaElement)) {
+              textareaElement.focus();
+            }
+          };
+          window.addEventListener("focus", onWindowFocus);
+          return;
+        }
         finish();
       });
       textareaElement.addEventListener("input", () => {
