@@ -47,8 +47,28 @@ export class KeyboardOnlyTreeEngine {
   }
 
   /**
+   * 判断一条边是否与目标方向同轴（即属于"需要翻转"的那个轴）。
+   * 翻转到 Left/Right 时，只处理水平方向的边；
+   * 翻转到 Up/Down 时，只处理垂直方向的边。
+   * 其他轴向的边（如翻转到 Left 时遇到 Up/Down 边）保持不变。
+   */
+  private isEdgeOnSameAxis(edge: Edge, direction: Direction): boolean {
+    switch (direction) {
+      case Direction.Left:
+      case Direction.Right:
+        // 只处理水平方向的边（左→右 或 右→左）
+        return edge.isLeftToRight() || edge.isRightToLeft();
+      case Direction.Up:
+      case Direction.Down:
+        // 只处理垂直方向的边（上→下 或 下→上）
+        return edge.isTopToBottom() || edge.isBottomToTop();
+    }
+  }
+
+  /**
    * 以指定节点为子树根，递归修改整棵子树的边方向，
    * 并额外调整指向该根节点的父边，最后触发一次树形自动布局。
+   * 只翻转与目标方向同轴的边，其他轴向的边（如水平树中存在的上下边）保持不变。
    */
   private adjustSubtreeDirection(root: ConnectableEntity, direction: Direction) {
     const visitedNodeUUIDs = new Set<string>();
@@ -59,14 +79,18 @@ export class KeyboardOnlyTreeEngine {
 
       const childEdges = this.project.graphMethods.edgeChildrenArray(node);
       for (const edge of childEdges) {
-        this.changeEdgeToDirection(edge, direction);
+        if (this.isEdgeOnSameAxis(edge, direction)) {
+          this.changeEdgeToDirection(edge, direction);
+        }
         dfs(edge.target);
       }
     };
 
     const parentEdges = this.project.graphMethods.edgeParentArray(root);
     for (const edge of parentEdges) {
-      this.changeEdgeToDirection(edge, direction);
+      if (this.isEdgeOnSameAxis(edge, direction)) {
+        this.changeEdgeToDirection(edge, direction);
+      }
     }
 
     dfs(root);
