@@ -247,6 +247,22 @@ settings:
     options:
       normal: Garis Normal
       arc: Garis Kurva
+  defaultEdgeLineType:
+    title: Gaya Garis Default untuk Garis Baru
+    description: Gaya garis default saat membuat garis dengan menyeret
+    options:
+      solid: Solid
+      dashed: Putus-Putus
+      double: Garis Ganda
+  defaultEdgeArrowType:
+    title: Gaya Panah Default untuk Garis Baru
+    description: Gaya panah default saat membuat garis dengan menyeret
+    options:
+      default: Default (Ekor Walet)
+      hollow-triangle: Segitiga Kosong (Pewarisan)
+      filled-triangle: Segitiga Terisi
+      hollow-diamond: Berlian Kosong (Agregasi)
+      filled-diamond: Berlian Terisi (Komposisi)
   lineStyle:
     title: Gaya Garis
     options:

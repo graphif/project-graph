@@ -178,6 +178,16 @@ export const settingsSchema = z.object({
   rectangleSelectWhenLeft: z.union([z.literal("intersect"), z.literal("contain")]).default("contain"),
   enableRightClickConnect: z.boolean().default(true),
   rightClickConnectEdgeType: z.union([z.literal("normal"), z.literal("arc")]).default("arc"),
+  defaultEdgeLineType: z.union([z.literal("solid"), z.literal("dashed"), z.literal("double")]).default("solid"),
+  defaultEdgeArrowType: z
+    .union([
+      z.literal("default"),
+      z.literal("hollow-triangle"),
+      z.literal("filled-triangle"),
+      z.literal("hollow-diamond"),
+      z.literal("filled-diamond"),
+    ])
+    .default("default"),
   textNodeStartEditMode: z
     .union([
       z.literal("enter"),

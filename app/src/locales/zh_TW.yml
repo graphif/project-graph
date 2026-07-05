@@ -259,6 +259,22 @@ settings:
     options:
       normal: 普通連線
       arc: 圓弧線
+  defaultEdgeLineType:
+    title: 新建連線默認線體樣式
+    description: 拖拽創建連線時，連線的默認線體樣式
+    options:
+      solid: 實線
+      dashed: 虛線
+      double: 雙實線
+  defaultEdgeArrowType:
+    title: 新建連線默認箭頭樣式
+    description: 拖拽創建連線時，連線的默認箭頭樣式
+    options:
+      default: 默認燕尾箭頭
+      hollow-triangle: 空心三角（繼承）
+      filled-triangle: 實心三角
+      hollow-diamond: 空心菱形（聚合）
+      filled-diamond: 實心菱形（組合）
   lineStyle:
     title: 連線樣式
     options:

@@ -259,6 +259,22 @@ settings:
     options:
       normal: 普通连线
       arc: 圆弧线
+  defaultEdgeLineType:
+    title: 新建连线默认线体样式
+    description: 拖拽创建连线时，连线的默认线体样式
+    options:
+      solid: 实线
+      dashed: 虚线
+      double: 双实线
+  defaultEdgeArrowType:
+    title: 新建连线默认箭头样式
+    description: 拖拽创建连线时，连线的默认箭头样式
+    options:
+      default: 默认燕尾箭头
+      hollow-triangle: 空心三角（继承）
+      filled-triangle: 实心三角
+      hollow-diamond: 空心菱形（聚合）
+      filled-diamond: 实心菱形（组合）
   lineStyle:
     title: 连线样式
     options:

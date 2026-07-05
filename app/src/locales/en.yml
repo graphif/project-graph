@@ -196,6 +196,22 @@ settings:
     options:
       normal: Normal Edge
       arc: Arc Curve
+  defaultEdgeLineType:
+    title: Default Line Style for New Edges
+    description: The default line style when creating edges by dragging
+    options:
+      solid: Solid
+      dashed: Dashed
+      double: Double Line
+  defaultEdgeArrowType:
+    title: Default Arrow Style for New Edges
+    description: The default arrow style when creating edges by dragging
+    options:
+      default: Default (Swallow-tail)
+      hollow-triangle: Hollow Triangle (Inheritance)
+      filled-triangle: Filled Triangle
+      hollow-diamond: Hollow Diamond (Aggregation)
+      filled-diamond: Filled Diamond (Composition)
   hideArrowWhenPointingToConnectPoint:
     title: Hide Arrow When Pointing to Connect Point
     description: |

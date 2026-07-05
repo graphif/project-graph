@@ -4,6 +4,7 @@ import { ArcEdge } from "@/core/stage/stageObject/association/ArcEdge";
 import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/CubicCatmullRomSplineEdge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
+import { Settings } from "@/core/service/Settings";
 import { Vector } from "@graphif/data-structures";
 
 /**
@@ -59,6 +60,8 @@ export class NodeConnector {
       text,
       targetRectangleRate: new Vector(...(targetRectRate || [0.5, 0.5])),
       sourceRectangleRate: new Vector(...(sourceRectRate || [0.5, 0.5])),
+      lineType: Settings.defaultEdgeLineType,
+      arrowType: Settings.defaultEdgeArrowType,
     });
 
     this.project.stageManager.add(newEdge);
@@ -90,6 +93,8 @@ export class NodeConnector {
     const newEdge = new ArcEdge(this.project, {
       associationList: [fromNode, toNode],
       offset: 10,
+      lineType: Settings.defaultEdgeLineType,
+      arrowType: Settings.defaultEdgeArrowType,
     });
     this.project.stageManager.add(newEdge);
   }
