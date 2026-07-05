@@ -1062,6 +1062,7 @@ export class StageManager {
         sourceRectangleRate: edge.sourceRectangleRate.clone(),
         targetRectangleRate: edge.targetRectangleRate.clone(),
         lineType: edge.lineType,
+        arrowType: edge.arrowType,
         offset: 10,
       });
       this.add(arcEdge);
