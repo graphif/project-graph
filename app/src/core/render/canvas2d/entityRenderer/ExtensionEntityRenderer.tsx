@@ -1,5 +1,6 @@
 import { extensionObjectRegistry } from "@/core/extension/ExtensionObjectRegistry";
 import { Project } from "@/core/Project";
+import { Settings } from "@/core/service/Settings";
 import { ExtensionEntity } from "@/core/stage/stageObject/entity/ExtensionEntity";
 import { Vector } from "@graphif/data-structures";
 
@@ -27,10 +28,12 @@ export class ExtensionEntityRenderer {
       this.drawPendingBox(ctx, x, y, w, h);
     }
 
-    this.drawCollisionBox(ctx, entity, scale);
-
     if (entity.isSelected) {
       this.renderSelectionOutline(ctx, entity, scale);
+    }
+
+    if (Settings.showDebug) {
+      this.drawCollisionBox(ctx, entity, scale);
     }
 
     if (renderFn && entity._isDirty && !entity._isRendering) {
