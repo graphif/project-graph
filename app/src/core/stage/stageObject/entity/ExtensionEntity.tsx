@@ -39,6 +39,8 @@ export class ExtensionEntity extends ConnectableEntity {
   public _isDirty = true;
   public _isRendering = false;
   public _renderFailed = false;
+  /** 上次触发渲染时使用的 pixelRatio（scale × devicePixelRatio），用于检测是否需要重渲 */
+  public _lastRenderedPixelRatio = 0;
 
   constructor(
     protected readonly project: Project,

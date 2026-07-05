@@ -4,12 +4,18 @@ import { Settings } from "@/core/service/Settings";
 import { ExtensionEntity } from "@/core/stage/stageObject/entity/ExtensionEntity";
 import { Vector } from "@graphif/data-structures";
 
+/** scale 变化超过此比例时重新渲染（避免频繁重渲） */
+const SCALE_REDRAW_THRESHOLD = 0.25;
+
 export class ExtensionEntityRenderer {
   constructor(private readonly project: Project) {}
 
   public render(entity: ExtensionEntity) {
     const ctx = this.project.canvas.ctx;
     const scale = this.project.camera.currentScale;
+    const dpr = window.devicePixelRatio || 1;
+    const pixelRatio = scale * dpr;
+
     const { x, y } = this.project.renderer.transformWorld2View(entity.location);
     const rect = entity.collisionBox.getRectangle();
     const w = rect.size.x * scale;
@@ -18,8 +24,22 @@ export class ExtensionEntityRenderer {
 
     const renderFn = extensionObjectRegistry.getRenderFn(entity.extensionId, entity.typeName);
 
+    // 检测 scale 变化是否超过阈值，超过则重新渲染高分辨率版本
+    if (
+      !entity._isDirty &&
+      entity._bitmapCache &&
+      entity._lastRenderedPixelRatio > 0 &&
+      Math.abs(pixelRatio - entity._lastRenderedPixelRatio) / entity._lastRenderedPixelRatio > SCALE_REDRAW_THRESHOLD
+    ) {
+      entity._isDirty = true;
+    }
+
     if (entity._bitmapCache) {
-      ctx.drawImage(entity._bitmapCache, x, y, entity._bitmapCache.width * scale, entity._bitmapCache.height * scale);
+      ctx.save();
+      // 关闭双线性插值，保留清晰边缘（像素级渲染）
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(entity._bitmapCache, x, y, w, h);
+      ctx.restore();
     } else if (!renderFn) {
       this.drawErrorBox(ctx, x, y, w, h, "扩展未找到", entity.extensionId, "#ff9800");
     } else if (entity._renderFailed) {
@@ -37,7 +57,7 @@ export class ExtensionEntityRenderer {
     }
 
     if (renderFn && entity._isDirty && !entity._isRendering) {
-      this.triggerWorkerRender(entity);
+      this.triggerWorkerRender(entity, pixelRatio);
     }
   }
 
@@ -97,13 +117,14 @@ export class ExtensionEntityRenderer {
     ctx.restore();
   }
 
-  private async triggerWorkerRender(entity: ExtensionEntity) {
+  private async triggerWorkerRender(entity: ExtensionEntity, pixelRatio: number) {
     const renderFn = extensionObjectRegistry.getRenderFn(entity.extensionId, entity.typeName);
     if (!renderFn) return;
 
     entity._isRendering = true;
+    entity._lastRenderedPixelRatio = pixelRatio;
     try {
-      entity._bitmapCache = await renderFn(entity.customData);
+      entity._bitmapCache = await renderFn(entity.customData, pixelRatio);
       entity._renderFailed = false;
       entity._isDirty = false;
     } catch (e) {
