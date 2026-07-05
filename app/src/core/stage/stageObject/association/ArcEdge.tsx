@@ -298,20 +298,20 @@ export class ArcEdge extends Edge {
 
   /**
    * 获取圆弧在起点处离开 source 节点的切线方向（用于菱形方向）
-   * 与 getArrowDirection 对称，计算 source 端的切线
+   * 弧线在 source 端的行进方向（从 source 出发朝向 target）
    */
   getSourceDirection(): Vector {
     const geo = this.arcGeometry;
     const start = this.clippedStart;
     const radial = start.subtract(geo.center).normalize();
-    // source 端：弧线离开 source 的方向
-    // 顺时针弧（counterclockwise=false）：切线是 radial 顺时针旋转 90°
-    // 逆时针弧（counterclockwise=true）：切线是 radial 逆时针旋转 90°
-    // 但 source 端方向与 target 端相反，所以取反
+    // 与 getArrowDirection 逻辑相同：
+    // 顺时针弧（counterclockwise=false）：切线 = radial 顺时针旋转 90°
+    // 逆时针弧（counterclockwise=true）：切线 = radial 逆时针旋转 90°
+    // source 端和 target 端的行进方向相同（都是从 source 到 target 的方向）
     if (geo.counterclockwise) {
-      return radial.rotateDegrees(90);
-    } else {
       return radial.rotateDegrees(-90);
+    } else {
+      return radial.rotateDegrees(90);
     }
   }
 
