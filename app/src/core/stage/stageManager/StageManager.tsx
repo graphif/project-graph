@@ -1131,6 +1131,18 @@ export class StageManager {
   }
 
   /**
+   * 设置选中Edge的箭头类型
+   */
+  setSelectedEdgeArrowType(arrowType: string) {
+    const selectedEdges = this.getSelectedAssociations().filter(
+      (edge) => edge instanceof LineEdge || edge instanceof ArcEdge,
+    );
+    for (const edge of selectedEdges) {
+      (edge as LineEdge | ArcEdge).arrowType = arrowType;
+    }
+  }
+
+  /**
    * ctrl + A 全选
    */
   selectAll() {

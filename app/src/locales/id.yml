@@ -1776,6 +1776,21 @@ keyBinds:
   setSelectedEdgesToSolid:
     title: Ubah Garis yang Dipilih Menjadi Solid
     description: Mengatur tipe garis yang dipilih menjadi solid
+  setSelectedEdgesArrowDefault:
+    title: Atur Panah ke Gaya Default
+    description: Mengatur panah garis yang dipilih ke gaya ekor walet default
+  setSelectedEdgesArrowHollowTriangle:
+    title: Atur Panah ke Segitiga Kosong (Pewarisan/Realisasi UML)
+    description: Mengatur panah garis yang dipilih ke segitiga kosong, umum digunakan untuk pewarisan atau realisasi UML
+  setSelectedEdgesArrowFilledTriangle:
+    title: Atur Panah ke Segitiga Terisi
+    description: Mengatur panah garis yang dipilih ke segitiga terisi
+  setSelectedEdgesArrowHollowDiamond:
+    title: Atur Panah ke Berlian Kosong (Agregasi UML)
+    description: Mengatur ekor garis yang dipilih ke berlian kosong, umum digunakan untuk agregasi UML
+  setSelectedEdgesArrowFilledDiamond:
+    title: Atur Panah ke Berlian Terisi (Komposisi UML)
+    description: Mengatur ekor garis yang dipilih ke berlian terisi, umum digunakan untuk komposisi UML
   switchEdgeToUndirectedEdge:
     title: Ubah Garis Berarah Menjadi Garis Tak Berarah
   switchEdgeToArcEdge:

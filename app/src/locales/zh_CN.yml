@@ -2151,6 +2151,21 @@ keyBinds:
     title: 重置涂鸦颜色
   setSelectedEdgesToDouble:
     title: 设置选中连线为双线
+  setSelectedEdgesArrowDefault:
+    title: 设置箭头为默认样式
+    description: 将选中连线的箭头设置为默认的燕尾箭头
+  setSelectedEdgesArrowHollowTriangle:
+    title: 设置箭头为空心三角（UML 继承/实现）
+    description: 将选中连线的箭头设置为空心三角形，常用于 UML 继承或实现关系
+  setSelectedEdgesArrowFilledTriangle:
+    title: 设置箭头为实心三角
+    description: 将选中连线的箭头设置为实心三角形
+  setSelectedEdgesArrowHollowDiamond:
+    title: 设置箭头为空心菱形（UML 聚合）
+    description: 将选中连线的尾部设置为空心菱形，常用于 UML 聚合关系
+  setSelectedEdgesArrowFilledDiamond:
+    title: 设置箭头为实心菱形（UML 组合）
+    description: 将选中连线的尾部设置为实心菱形，常用于 UML 组合关系
   switchEdgeToUndirectedEdge:
     title: 将有向连线转化为无向连线
   switchEdgeToArcEdge:

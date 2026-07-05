@@ -114,10 +114,15 @@ export class StraightEdgeRenderer extends EdgeRendererClass {
     }
     const straightBodyLine = edge.bodyLine;
     const scaledWidth = edgeWidth * this.project.camera.currentScale;
+    const arrowType = edge.arrowType || "default";
+
+    // 对空心/实心三角形，线体终点缩进到三角形底边，避免线穿入三角形内部
+    const direction = straightBodyLine.end.subtract(straightBodyLine.start).normalize();
+    const lineEnd = this.getAdjustedLineEnd(straightBodyLine.end, direction, arrowType, edgeWidth);
 
     this.renderLine(
       this.project.renderer.transformWorld2View(straightBodyLine.start),
-      this.project.renderer.transformWorld2View(straightBodyLine.end),
+      this.project.renderer.transformWorld2View(lineEnd),
       edge,
       scaledWidth,
     );
@@ -133,12 +138,7 @@ export class StraightEdgeRenderer extends EdgeRendererClass {
     }
     if (this.shouldRenderTargetArrow(edge)) {
       // 画箭头
-      this.renderArrowHead(
-        edge,
-        straightBodyLine.end.subtract(straightBodyLine.start).normalize(),
-        straightBodyLine.end.clone(),
-        8 * edgeWidth,
-      );
+      this.renderArrowHead(edge, direction, straightBodyLine.end.clone(), 8 * edgeWidth);
     }
   }
 
@@ -190,7 +190,32 @@ export class StraightEdgeRenderer extends EdgeRendererClass {
     const edgeColor = edge.color.equals(Color.Transparent)
       ? this.project.stageStyleManager.currentStyle.StageObjectBorder
       : edge.color;
-    this.project.edgeRenderer.renderArrowHead(endPoint, direction, size, edgeColor);
+    const startPoint = edge.bodyLine.start.clone();
+    // edgeWidth = size / 8（size = 8 * edgeWidth）
+    const edgeWidth = size / 8;
+    this.project.edgeRenderer.renderArrowByType(
+      endPoint,
+      startPoint,
+      direction,
+      size,
+      edgeColor,
+      edge.arrowType || "default",
+      edgeWidth,
+    );
+  }
+
+  /**
+   * 对三角形箭头，将线体终点从节点边缘往回缩进到三角形底边，
+   * 避免线体穿入空心三角形内部。
+   * 缩进量 = triSize = size * 1.8，其中 size = 8 * edgeWidth（世界坐标）
+   */
+  private getAdjustedLineEnd(endPoint: Vector, direction: Vector, arrowType: string, edgeWidth: number): Vector {
+    if (arrowType === "hollow-triangle" || arrowType === "filled-triangle") {
+      const size = 8 * edgeWidth;
+      const triSize = size * 1.8;
+      return endPoint.subtract(direction.clone().multiply(triSize));
+    }
+    return endPoint;
   }
 
   private shouldRenderTargetArrow(edge: LineEdge): boolean {
@@ -211,6 +236,10 @@ export class StraightEdgeRenderer extends EdgeRendererClass {
     const endPoint = targetRectangle.getLineIntersectionPoint(endLine);
     const scaledWidth = 2 * this.project.camera.currentScale;
 
+    // 最后一段线体终点根据箭头类型缩进
+    const arrowDirection = edge.target.collisionBox.getRectangle().getCenter().subtract(shiftingMidPoint).normalize();
+    const adjustedEndPoint = this.getAdjustedLineEnd(endPoint, arrowDirection, edge.arrowType || "default", 2);
+
     this.renderLine(
       this.project.renderer.transformWorld2View(startPoint),
       this.project.renderer.transformWorld2View(shiftingMidPoint),
@@ -219,7 +248,7 @@ export class StraightEdgeRenderer extends EdgeRendererClass {
     );
     this.renderLine(
       this.project.renderer.transformWorld2View(shiftingMidPoint),
-      this.project.renderer.transformWorld2View(endPoint),
+      this.project.renderer.transformWorld2View(adjustedEndPoint),
       edge,
       scaledWidth,
     );
@@ -237,11 +266,7 @@ export class StraightEdgeRenderer extends EdgeRendererClass {
       );
     }
     if (this.shouldRenderTargetArrow(edge)) {
-      this.renderArrowHead(
-        edge,
-        edge.target.collisionBox.getRectangle().getCenter().subtract(shiftingMidPoint).normalize(),
-        endPoint,
-      );
+      this.renderArrowHead(edge, arrowDirection, endPoint);
     }
   }
 

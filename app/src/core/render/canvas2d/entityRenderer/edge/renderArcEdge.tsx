@@ -82,6 +82,18 @@ export function renderArcEdge(
 
   ctx.save();
 
+  // 菱形箭头时，弧线起点需要从节点边缘往外推到菱形 tip 处
+  // ds = size * 1.5，tip 在 ds*2 处，对应弧长角度 = ds*2 / radius
+  const arrowType = edge.arrowType || "default";
+  const arcSize = (15 * edge.edgeWidth) / 2; // 与 renderArrowHead 调用处一致
+  const ds = arcSize * 1.2;
+  let adjustedStartAngle = startAngle;
+  if ((arrowType === "hollow-diamond" || arrowType === "filled-diamond") && geo.radius < 1e6) {
+    const angleOffset = (ds * 2) / geo.radius; // 弧长 / 半径 = 弧度
+    // 顺时针弧角度递增，逆时针弧角度递减
+    adjustedStartAngle = arcCounterclockwise ? startAngle - angleOffset : startAngle + angleOffset;
+  }
+
   const renderArc = (startA: number, endA: number) => {
     ctx.beginPath();
     ctx.arc(
@@ -100,7 +112,7 @@ export function renderArcEdge(
   if (edge.lineType === "dashed") {
     const dashLen = 10 * project.camera.currentScale;
     ctx.setLineDash([dashLen, dashLen]);
-    renderArc(startAngle, adjustedEndAngle);
+    renderArc(adjustedStartAngle, adjustedEndAngle);
     ctx.setLineDash([]);
   } else if (edge.lineType === "double") {
     const gap = 5 * project.camera.currentScale;
@@ -111,7 +123,7 @@ export function renderArcEdge(
       project.renderer.transformWorld2View(geo.center).x,
       project.renderer.transformWorld2View(geo.center).y,
       (geo.radius - offsetDist / project.camera.currentScale) * project.camera.currentScale,
-      startAngle,
+      adjustedStartAngle,
       adjustedEndAngle,
       arcCounterclockwise,
     );
@@ -124,7 +136,7 @@ export function renderArcEdge(
       project.renderer.transformWorld2View(geo.center).x,
       project.renderer.transformWorld2View(geo.center).y,
       (geo.radius + offsetDist / project.camera.currentScale) * project.camera.currentScale,
-      startAngle,
+      adjustedStartAngle,
       adjustedEndAngle,
       arcCounterclockwise,
     );
@@ -132,7 +144,7 @@ export function renderArcEdge(
     ctx.lineWidth = scaledWidth;
     ctx.stroke();
   } else {
-    renderArc(startAngle, adjustedEndAngle);
+    renderArc(adjustedStartAngle, adjustedEndAngle);
   }
 
   // 画文字（已有描边，无需背景矩形）

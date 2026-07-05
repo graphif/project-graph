@@ -11,7 +11,7 @@ import { DetailsManager } from "./stageObject/tools/entityDetailsManager";
 
 export namespace ProjectUpgrader {
   /** N系列的最新版本 */
-  export const NLatestVersion = "2.4.0";
+  export const NLatestVersion = "2.5.0";
 
   /**
    * 比较两个版本号字符串（格式：x.y.z）
@@ -384,6 +384,11 @@ export namespace ProjectUpgrader {
       [data, metadata] = convertN4toN5(data, metadata);
     }
 
+    // 如果版本小于 2.5.0，需要升级
+    if (compareVersion(currentVersion, "2.5.0") < 0) {
+      [data, metadata] = convertN5toN6(data, metadata);
+    }
+
     return [data, metadata];
   }
 
@@ -447,6 +452,24 @@ export namespace ProjectUpgrader {
    */
   function convertN4toN5(data: any[], metadata: any): [any[], PrgMetadata] {
     return [data, { ...metadata, version: "2.4.0" }];
+  }
+
+  /**
+   * 将 2.4.0 版本升级到 2.5.0 版本
+   * LineEdge 和 ArcEdge 新增 arrowType 字段，默认值为 "default"。
+   * @param data 2.4.0版本数据
+   * @param metadata 2.4.0版本metadata
+   * @returns 2.5.0版本数据和metadata
+   */
+  function convertN5toN6(data: any[], metadata: any): [any[], PrgMetadata] {
+    for (const item of data) {
+      if (item._ === "LineEdge" || item._ === "ArcEdge") {
+        if (item.arrowType === undefined) {
+          item.arrowType = "default";
+        }
+      }
+    }
+    return [data, { ...metadata, version: "2.5.0" }];
   }
 
   /**

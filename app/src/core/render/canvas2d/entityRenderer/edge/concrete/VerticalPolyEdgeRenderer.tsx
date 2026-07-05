@@ -225,7 +225,15 @@ export class VerticalPolyEdgeRenderer extends EdgeRendererClass {
         );
 
         if (this.shouldRenderTargetArrow(edge)) {
-          this.project.edgeRenderer.renderArrowHead(p1, verticalDirection, 15, edge.color);
+          this.project.edgeRenderer.renderArrowByType(
+            p1,
+            edge.bodyLine.start.clone(),
+            verticalDirection,
+            15,
+            edge.color,
+            edge.arrowType || "default",
+            2,
+          );
         }
       } else if (verticalDirection.y === 0) {
         // 左右
@@ -274,7 +282,15 @@ export class VerticalPolyEdgeRenderer extends EdgeRendererClass {
         );
 
         if (this.shouldRenderTargetArrow(edge)) {
-          this.project.edgeRenderer.renderArrowHead(p1, verticalDirection, 15, edge.color);
+          this.project.edgeRenderer.renderArrowByType(
+            p1,
+            edge.bodyLine.start.clone(),
+            verticalDirection,
+            15,
+            edge.color,
+            edge.arrowType || "default",
+            2,
+          );
         }
       } else {
         // 不会出现的情况
@@ -320,7 +336,15 @@ export class VerticalPolyEdgeRenderer extends EdgeRendererClass {
           .subtract(edge.source.collisionBox.getRectangle().getCenter())
           .normalize();
         const endPoint = edge.bodyLine.end.clone();
-        this.project.edgeRenderer.renderArrowHead(endPoint, direction, size, edge.color);
+        this.project.edgeRenderer.renderArrowByType(
+          endPoint,
+          edge.bodyLine.start.clone(),
+          direction,
+          size,
+          edge.color,
+          edge.arrowType || "default",
+          2,
+        );
       }
     }
   }
@@ -382,7 +406,17 @@ export class VerticalPolyEdgeRenderer extends EdgeRendererClass {
   }
   private renderArrowHead(edge: LineEdge, direction: Vector, endPoint = edge.bodyLine.end.clone()) {
     const size = 15;
-    this.project.edgeRenderer.renderArrowHead(endPoint, direction, size, edge.color);
+    const edgeWidth = size / 8; // size = 8 * edgeWidth，此渲染器固定 edgeWidth=2 → size=16，但保持一致
+    const startPoint = edge.bodyLine.start.clone();
+    this.project.edgeRenderer.renderArrowByType(
+      endPoint,
+      startPoint,
+      direction,
+      size,
+      edge.color,
+      edge.arrowType || "default",
+      edgeWidth,
+    );
   }
 
   public renderCycleState(edge: LineEdge): void {
@@ -401,16 +435,25 @@ export class VerticalPolyEdgeRenderer extends EdgeRendererClass {
         const size = 15;
         const direction = new Vector(1, 0).rotateDegrees(15);
         const endPoint = edge.target.collisionBox.getRectangle().leftCenter;
-        this.project.edgeRenderer.renderArrowHead(endPoint, direction, size, edge.color);
+        this.project.edgeRenderer.renderArrowByType(
+          endPoint,
+          endPoint,
+          direction,
+          size,
+          edge.color,
+          edge.arrowType || "default",
+          2,
+        );
       }
     }
   }
   public getNormalStageSvg(edge: LineEdge): React.ReactNode {
-    let lineBody: React.ReactNode = <></>;
     let textNode: React.ReactNode = <></>;
     const edgeColor = edge.color.equals(Color.Transparent)
       ? this.project.stageStyleManager.currentStyle.StageObjectBorder
       : edge.color;
+
+    let lineBody: React.ReactNode;
     if (edge.text.trim() === "") {
       // 没有文字的边
       lineBody = SvgUtils.line(edge.bodyLine.start, edge.bodyLine.end, edgeColor, 2);

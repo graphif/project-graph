@@ -1718,6 +1718,21 @@ keyBinds:
   setSelectedEdgesToSolid:
     title: 將選中的邊切換為實線
     description: 將當前選中的連線的線型設置為實線
+  setSelectedEdgesArrowDefault:
+    title: 設置箭頭為預設樣式
+    description: 將選中連線的箭頭設置為預設的燕尾箭頭
+  setSelectedEdgesArrowHollowTriangle:
+    title: 設置箭頭為空心三角（UML 繼承/實現）
+    description: 將選中連線的箭頭設置為空心三角形，常用於 UML 繼承或實現關係
+  setSelectedEdgesArrowFilledTriangle:
+    title: 設置箭頭為實心三角
+    description: 將選中連線的箭頭設置為實心三角形
+  setSelectedEdgesArrowHollowDiamond:
+    title: 設置箭頭為空心菱形（UML 聚合）
+    description: 將選中連線的尾部設置為空心菱形，常用於 UML 聚合關係
+  setSelectedEdgesArrowFilledDiamond:
+    title: 設置箭頭為實心菱形（UML 組合）
+    description: 將選中連線的尾部設置為實心菱形，常用於 UML 組合關係
   switchEdgeToUndirectedEdge:
     title: 將有向連線轉化為無向連線
   switchEdgeToArcEdge:

@@ -460,6 +460,19 @@ export const settingsSchema = z.object({
         ],
       },
       {
+        type: "sub",
+        id: "edge-arrow-type",
+        label: "箭头类型",
+        icon: "ArrowRight",
+        children: [
+          { type: "item", id: "setSelectedEdgesArrowDefault", label: "默认箭头", icon: "ArrowRight" },
+          { type: "item", id: "setSelectedEdgesArrowHollowTriangle", label: "空心三角", icon: "Triangle" },
+          { type: "item", id: "setSelectedEdgesArrowFilledTriangle", label: "实心三角", icon: "Play" },
+          { type: "item", id: "setSelectedEdgesArrowHollowDiamond", label: "空心菱形", icon: "Diamond" },
+          { type: "item", id: "setSelectedEdgesArrowFilledDiamond", label: "实心菱形", icon: "Gem" },
+        ],
+      },
+      {
         type: "group",
         id: "edge-source-connect-location-group",
         layout: "grid",
@@ -899,6 +912,29 @@ const mergedGlobalMenuConfig = mergeGlobalMenuConfig(
 if (JSON.stringify(mergedGlobalMenuConfig) !== JSON.stringify(savedSettings.globalMenuConfig)) {
   savedSettings.globalMenuConfig = mergedGlobalMenuConfig as Settings["globalMenuConfig"];
   await store.set("globalMenuConfig", mergedGlobalMenuConfig);
+  await store.save();
+}
+
+const mergedContextMenuConfig = mergeGlobalMenuConfig(
+  savedSettings.contextMenuConfig as GlobalMenuNode[],
+  defaultSettings.contextMenuConfig as GlobalMenuNode[],
+);
+// 检查是否缺少 edge-arrow-type 子菜单（旧版本用户）
+// 若缺少，说明是旧配置，直接重置为默认值以保证顺序正确
+function hasMenuId(nodes: GlobalMenuNode[], id: string): boolean {
+  for (const node of nodes) {
+    if (node.id === id) return true;
+    if (node.children && hasMenuId(node.children, id)) return true;
+  }
+  return false;
+}
+const contextMenuNeedsReset = !hasMenuId(mergedContextMenuConfig, "edge-arrow-type");
+const finalContextMenuConfig = contextMenuNeedsReset
+  ? (defaultSettings.contextMenuConfig as GlobalMenuNode[])
+  : mergedContextMenuConfig;
+if (JSON.stringify(finalContextMenuConfig) !== JSON.stringify(savedSettings.contextMenuConfig)) {
+  savedSettings.contextMenuConfig = finalContextMenuConfig as Settings["contextMenuConfig"];
+  await store.set("contextMenuConfig", finalContextMenuConfig);
   await store.save();
 }
 

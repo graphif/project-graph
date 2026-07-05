@@ -241,7 +241,16 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       const size = 15;
       const direction = new Vector(1, 0).rotateDegrees(15);
       const endPoint = edge.target.collisionBox.getRectangle().leftCenter;
-      this.project.edgeRenderer.renderArrowHead(endPoint, direction, size, edgeColor);
+      const edgeWidth = edge.source instanceof TextNode ? edge.source.getBorderWidth() : 2;
+      this.project.edgeRenderer.renderArrowByType(
+        endPoint,
+        endPoint,
+        direction,
+        size,
+        edgeColor,
+        edge.arrowType || "default",
+        edgeWidth,
+      );
     }
     // 画文字
     if (edge.text.trim() === "") {
@@ -456,9 +465,35 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
   private renderArrowCurve(curve: SymmetryCurve, color: Color, width = 2, edge?: LineEdge): void {
     // 绘制曲线本体
     curve.endDirection = curve.endDirection.normalize();
+    curve.startDirection = curve.startDirection.normalize();
     const end = curve.end.clone();
+    const start = curve.start.clone();
+    const startDirection = curve.startDirection.clone(); // source 端离开节点的方向
     const size = 8 * width; // 箭头大小
-    curve.end = curve.end.subtract(curve.endDirection.multiply(size / -2));
+
+    // ── target 端偏移 ──
+    // curve.endDirection 是从节点指向曲线外侧（离开节点）的方向。
+    // subtract(endDirection * offset)：offset < 0 → 往外走，offset > 0 → 往内走
+    const arrowType = edge?.arrowType || "default";
+    let curveEndOffset: number;
+    if (arrowType === "hollow-triangle" || arrowType === "filled-triangle") {
+      const triSize = size * 1.8;
+      curveEndOffset = -triSize; // 往外走，让曲线终点停在三角形底边处
+    } else if (arrowType === "hollow-diamond" || arrowType === "filled-diamond") {
+      curveEndOffset = 0; // 菱形在 source 端，target 端无装饰，直接连到节点边缘
+    } else {
+      curveEndOffset = size / -2; // default（燕尾）：往外推 size/2
+    }
+    curve.end = curve.end.subtract(curve.endDirection.multiply(curveEndOffset));
+
+    // ── source 端偏移（仅菱形需要）──
+    // 菱形的 tip（外侧尖端）在节点边缘外面 ds*2 处（ds = size*1.5）
+    // 曲线起点需要延伸到 tip 处，与 renderDiamondAtSource 中的 ds 保持一致
+    const ds = size * 1.2; // 与 renderDiamondAtSource 中的 ds 一致
+    if (arrowType === "hollow-diamond" || arrowType === "filled-diamond") {
+      // 曲线起点从节点边缘往外推到菱形 tip 处（ds*2）
+      curve.start = curve.start.add(curve.startDirection.multiply(ds * 2));
+    }
     // 绘制碰撞箱
     // const segment = 40;
     // let lastPoint = curve.start;
@@ -493,7 +528,16 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
     }
     // 画箭头
     if (!edge || this.shouldRenderTargetArrow(edge)) {
-      this.project.edgeRenderer.renderArrowHead(end, curve.endDirection.multiply(-1), size, color);
+      this.project.edgeRenderer.renderArrowByType(
+        end,
+        start, // source 节点边缘坐标，菱形从此处往外绘制
+        curve.endDirection.multiply(-1),
+        size,
+        color,
+        edge?.arrowType || "default",
+        width,
+        startDirection, // source 端离开节点的方向，供菱形使用
+      );
     }
 
     if (Settings.showDebug) {

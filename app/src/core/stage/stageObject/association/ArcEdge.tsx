@@ -198,6 +198,8 @@ export class ArcEdge extends Edge {
   public color: Color = Color.Transparent;
   @serializable
   public lineType: string = "solid";
+  @serializable
+  public arrowType: string = "default";
 
   /**
    * 圆弧偏移量（世界坐标）
@@ -294,6 +296,25 @@ export class ArcEdge extends Edge {
     }
   }
 
+  /**
+   * 获取圆弧在起点处离开 source 节点的切线方向（用于菱形方向）
+   * 与 getArrowDirection 对称，计算 source 端的切线
+   */
+  getSourceDirection(): Vector {
+    const geo = this.arcGeometry;
+    const start = this.clippedStart;
+    const radial = start.subtract(geo.center).normalize();
+    // source 端：弧线离开 source 的方向
+    // 顺时针弧（counterclockwise=false）：切线是 radial 顺时针旋转 90°
+    // 逆时针弧（counterclockwise=true）：切线是 radial 逆时针旋转 90°
+    // 但 source 端方向与 target 端相反，所以取反
+    if (geo.counterclockwise) {
+      return radial.rotateDegrees(90);
+    } else {
+      return radial.rotateDegrees(-90);
+    }
+  }
+
   get collisionBox(): CollisionBox {
     const geo = this.arcGeometry;
     const start = this.clippedStart;
@@ -379,6 +400,7 @@ export class ArcEdge extends Edge {
       sourceRectangleRate = Vector.same(0.5),
       targetRectangleRate = Vector.same(0.5),
       lineType = "solid",
+      arrowType = "default",
       offset = 0,
       textPosition = 0.5,
     },
@@ -392,6 +414,7 @@ export class ArcEdge extends Edge {
     this.sourceRectangleRate = sourceRectangleRate;
     this.targetRectangleRate = targetRectangleRate;
     this.lineType = lineType;
+    this.arrowType = arrowType;
     this.offset = offset;
     this.textPosition = textPosition;
 

@@ -119,6 +119,7 @@ import {
   Copy,
   CornerUpRight,
   Dices,
+  Diamond,
   Dot,
   Dumbbell,
   Equal,
@@ -150,6 +151,7 @@ import {
   FolderOpen,
   FolderPlus,
   FolderTree,
+  Gem,
   Ghost,
   GitBranch,
   GitCompareArrows,
@@ -190,6 +192,7 @@ import {
   Paperclip,
   PenTool,
   PictureInPicture2,
+  Play,
   Plus,
   Rabbit,
   Radiation,
@@ -218,6 +221,7 @@ import {
   Terminal,
   TextQuote,
   Trash2,
+  Triangle,
   TreePine,
   Tv,
   Type,
@@ -2524,6 +2528,57 @@ export const allKeyBinds: KeyBindItem[] = [
     when: whenHasSelectedEdgeWithLineType,
     onPress: (project) => {
       project!.stageManager.setSelectedEdgeLineType("double");
+      project!.historyManager.recordStep();
+    },
+  },
+  /*------- 箭头类型 -------*/
+  {
+    id: "setSelectedEdgesArrowDefault",
+    defaultKey: "S-a e d",
+    icon: ArrowRight,
+    when: whenHasSelectedEdgeWithLineType,
+    onPress: (project) => {
+      project!.stageManager.setSelectedEdgeArrowType("default");
+      project!.historyManager.recordStep();
+    },
+  },
+  {
+    id: "setSelectedEdgesArrowHollowTriangle",
+    defaultKey: "S-a e h t",
+    icon: Triangle,
+    when: whenHasSelectedEdgeWithLineType,
+    onPress: (project) => {
+      project!.stageManager.setSelectedEdgeArrowType("hollow-triangle");
+      project!.historyManager.recordStep();
+    },
+  },
+  {
+    id: "setSelectedEdgesArrowFilledTriangle",
+    defaultKey: "S-a e f t",
+    icon: Play,
+    when: whenHasSelectedEdgeWithLineType,
+    onPress: (project) => {
+      project!.stageManager.setSelectedEdgeArrowType("filled-triangle");
+      project!.historyManager.recordStep();
+    },
+  },
+  {
+    id: "setSelectedEdgesArrowHollowDiamond",
+    defaultKey: "S-a e h d",
+    icon: Diamond,
+    when: whenHasSelectedEdgeWithLineType,
+    onPress: (project) => {
+      project!.stageManager.setSelectedEdgeArrowType("hollow-diamond");
+      project!.historyManager.recordStep();
+    },
+  },
+  {
+    id: "setSelectedEdgesArrowFilledDiamond",
+    defaultKey: "S-a e f d",
+    icon: Gem,
+    when: whenHasSelectedEdgeWithLineType,
+    onPress: (project) => {
+      project!.stageManager.setSelectedEdgeArrowType("filled-diamond");
       project!.historyManager.recordStep();
     },
   },

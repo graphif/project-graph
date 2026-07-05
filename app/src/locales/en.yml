@@ -1437,6 +1437,21 @@ keyBinds:
   setSelectedEdgesToSolid:
     title: Set Selected Edges to Solid
     description: Set the line type of selected edges to solid
+  setSelectedEdgesArrowDefault:
+    title: Set Arrow to Default Style
+    description: Set the arrow of selected edges to the default swallow-tail style
+  setSelectedEdgesArrowHollowTriangle:
+    title: Set Arrow to Hollow Triangle (UML Inheritance/Realization)
+    description: Set the arrow of selected edges to a hollow triangle, commonly used for UML inheritance or realization
+  setSelectedEdgesArrowFilledTriangle:
+    title: Set Arrow to Filled Triangle
+    description: Set the arrow of selected edges to a filled triangle
+  setSelectedEdgesArrowHollowDiamond:
+    title: Set Arrow to Hollow Diamond (UML Aggregation)
+    description: Set the tail of selected edges to a hollow diamond, commonly used for UML aggregation
+  setSelectedEdgesArrowFilledDiamond:
+    title: Set Arrow to Filled Diamond (UML Composition)
+    description: Set the tail of selected edges to a filled diamond, commonly used for UML composition
   switchEdgeToUndirectedEdge:
     title: Convert Directed Edge to Undirected Edge
   switchEdgeToArcEdge:
