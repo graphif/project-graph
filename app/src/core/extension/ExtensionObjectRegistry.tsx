@@ -10,7 +10,7 @@ export interface ClickEventPayload {
 }
 
 class ExtensionObjectRegistry {
-  private renderFns = new Map<string, (data: any) => Promise<ImageBitmap>>();
+  private renderFns = new Map<string, (data: any, pixelRatio?: number) => Promise<ImageBitmap>>();
   private clickHandlers = new Map<string, (payload: ClickEventPayload) => void>();
   private configs = new Map<string, ExtensionEntityConfig>();
 
@@ -22,7 +22,7 @@ class ExtensionObjectRegistry {
     extensionId: string,
     typeName: string,
     config: ExtensionEntityConfig,
-    renderFn: (data: any) => Promise<ImageBitmap>,
+    renderFn: (data: any, pixelRatio?: number) => Promise<ImageBitmap>,
   ) {
     const k = this.key(extensionId, typeName);
     this.configs.set(k, config);
