@@ -2,6 +2,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Project } from "@/core/Project";
 import { KeyBindIcon } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { Settings } from "@/core/service/Settings";
+import { Themes } from "@/core/service/Themes";
 import { activeTabAtom, store, tabsAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -161,6 +162,20 @@ export function extensionHostApiFactory(extension: Extension) {
     },
     async keybinds_unregisterAll(): Promise<void> {
       return ExtensionKeyBindManager.unregisterAll(extensionId);
+    },
+
+    //region 主题
+    async themes_register(
+      metadata: { id: string; name: string; description?: string; type: "light" | "dark" },
+      themeContent: any,
+    ): Promise<void> {
+      Themes.registerExtensionTheme(metadata.id, extensionId, {
+        metadata: {
+          ...metadata,
+          source: extension,
+        },
+        content: themeContent,
+      });
     },
 
     //region Tab,Project

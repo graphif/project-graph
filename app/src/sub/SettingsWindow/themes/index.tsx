@@ -1,7 +1,5 @@
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
@@ -10,214 +8,213 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings } from "@/core/service/Settings";
+import { Extension } from "@/core/extension/Extension";
 import { Themes } from "@/core/service/Themes";
-import { parseYamlWithFrontmatter } from "@/utils/yaml";
-import { open } from "@tauri-apps/plugin-dialog";
-import { readTextFile } from "@tauri-apps/plugin-fs";
-import _ from "lodash";
-import { Check, Copy, Delete, FileInput, Info, Moon, Palette, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import ThemeEditor from "./editor";
+import { Blocks, ChevronRight, Moon, Palette, Sun } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function ThemesTab() {
-  const [selectedThemeId, setSelectThemeId] = useState(Settings.theme);
   const [selectedTheme, setSelectedTheme] = useState<Themes.Theme | null>(null);
-  const { i18n } = useTranslation();
-  const [currentTab, setCurrentTab] = useState("preview");
-  const [themes, setThemes] = useState<Themes.Theme[]>([]);
-  const [currentTheme] = Settings.use("theme");
-  const [themeMode] = Settings.use("themeMode");
-  const [lightTheme] = Settings.use("lightTheme");
-  const [darkTheme] = Settings.use("darkTheme");
+  const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(["builtin"]));
+  const [extensionGroups, setExtensionGroups] = useState<{ extension: Extension; themes: Themes.Theme[] }[]>([]);
+  const [applying, setApplying] = useState(false);
+
+  const builtinThemes = useMemo(() => Themes.builtinThemes, []);
 
   useEffect(() => {
-    Themes.getThemeById(selectedThemeId).then(setSelectedTheme);
-  }, [selectedThemeId]);
-  useEffect(() => {
-    updateThemeIds();
+    const ids = Themes.getExtensionIdsWithThemes();
+    const groups = ids
+      .map((id) => {
+        const themes = Themes.getExtensionThemesByExtensionId(id);
+        const ext = themes[0]?.metadata.source;
+        return ext ? { extension: ext, themes } : null;
+      })
+      .filter((g): g is { extension: Extension; themes: Themes.Theme[] } => g !== null);
+    setExtensionGroups(groups);
+    // 自动展开扩展分类
+    setOpenCategories((prev) => {
+      const next = new Set(prev);
+      groups.forEach((g) => {
+        const extId = g.extension.metadata.extension?.id || "";
+        next.add(extId);
+      });
+      return next;
+    });
   }, []);
 
-  function updateThemeIds() {
-    Themes.list().then(setThemes);
-  }
+  const handleApply = async (themeId: string) => {
+    setApplying(true);
+    try {
+      await Themes.applyThemeById(themeId);
+    } finally {
+      setApplying(false);
+    }
+  };
 
   return (
-    <div className="flex h-full">
-      <Sidebar className="h-full overflow-auto">
+    <div className="flex h-full w-full">
+      <Sidebar className="h-full overflow-auto border-r">
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    onClick={async () => {
-                      const path = await open({
-                        multiple: false,
-                        title: "选择主题文件",
-                        filters: [{ name: "Project Graph 主题文件", extensions: ["pg-theme"] }],
-                      });
-                      if (!path) return;
-                      const fileContent = await readTextFile(path);
-                      const data = parseYamlWithFrontmatter<Themes.Metadata, any>(fileContent);
-                      Themes.writeCustomTheme({
-                        metadata: data.frontmatter,
-                        content: data.content,
-                      }).then(updateThemeIds);
-                    }}
-                  >
-                    <div>
-                      <FileInput />
-                      <span>导入主题</span>
-                    </div>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarSeparator />
-                {themes.map(({ metadata }) => (
-                  <SidebarMenuItem key={metadata.id}>
-                    <SidebarMenuButton
-                      asChild
-                      onClick={() => setSelectThemeId(metadata.id)}
-                      isActive={selectedThemeId === metadata.id}
-                    >
-                      <div>
-                        {currentTheme === metadata.id ? <Check /> : metadata.type === "dark" ? <Moon /> : <Sun />}
-                        <span>{metadata.name[i18n.language]}</span>
-                      </div>
+                {/* 内置主题 */}
+                <Collapsible
+                  open={openCategories.has("builtin")}
+                  onOpenChange={() =>
+                    setOpenCategories((prev) => {
+                      const next = new Set(prev);
+                      if (next.has("builtin")) {
+                        next.delete("builtin");
+                      } else {
+                        next.add("builtin");
+                      }
+                      return next;
+                    })
+                  }
+                  className="group/collapsible"
+                >
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <CollapsibleTrigger>
+                        <Palette />
+                        <span>内置主题</span>
+                        <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                      </CollapsibleTrigger>
                     </SidebarMenuButton>
+                    <SidebarMenuSub>
+                      <CollapsibleContent>
+                        {builtinThemes.length === 0 ? (
+                          <SidebarMenuSubItem>
+                            <span className="text-muted-foreground px-2 text-xs">无内置主题</span>
+                          </SidebarMenuSubItem>
+                        ) : (
+                          builtinThemes.map((theme) => (
+                            <SidebarMenuSubItem key={theme.metadata.id}>
+                              <SidebarMenuSubButton
+                                isActive={selectedTheme?.metadata.id === theme.metadata.id}
+                                onClick={() => setSelectedTheme(theme)}
+                              >
+                                {theme.metadata.type === "light" ? (
+                                  <Sun className="size-3 shrink-0" />
+                                ) : (
+                                  <Moon className="size-3 shrink-0" />
+                                )}
+                                <span className="truncate">{theme.metadata.name}</span>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))
+                        )}
+                      </CollapsibleContent>
+                    </SidebarMenuSub>
                   </SidebarMenuItem>
-                ))}
+                </Collapsible>
+
+                {/* 扩展主题 */}
+                {extensionGroups.map(({ extension, themes }) => {
+                  const extId = extension.metadata.extension?.id || "";
+                  return (
+                    <Collapsible
+                      key={extId}
+                      open={openCategories.has(extId)}
+                      onOpenChange={() =>
+                        setOpenCategories((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(extId)) {
+                            next.delete(extId);
+                          } else {
+                            next.add(extId);
+                          }
+                          return next;
+                        })
+                      }
+                      className="group/collapsible"
+                    >
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild>
+                          <CollapsibleTrigger>
+                            {extension.iconBlobUrl ? (
+                              <img src={extension.iconBlobUrl} className="size-4 shrink-0 object-contain" alt="" />
+                            ) : (
+                              <Blocks />
+                            )}
+                            <span className="truncate">{extension.metadata.extension?.name || "未知扩展"}</span>
+                            <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                          </CollapsibleTrigger>
+                        </SidebarMenuButton>
+                        <SidebarMenuSub>
+                          <CollapsibleContent>
+                            {themes.map((theme) => (
+                              <SidebarMenuSubItem key={theme.metadata.id}>
+                                <SidebarMenuSubButton
+                                  isActive={selectedTheme?.metadata.id === theme.metadata.id}
+                                  onClick={() => setSelectedTheme(theme)}
+                                >
+                                  {theme.metadata.type === "light" ? (
+                                    <Sun className="size-3 shrink-0" />
+                                  ) : (
+                                    <Moon className="size-3 shrink-0" />
+                                  )}
+                                  <span className="truncate">{theme.metadata.name}</span>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </CollapsibleContent>
+                        </SidebarMenuSub>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+
+          {builtinThemes.length === 0 && extensionGroups.length === 0 && (
+            <div className="text-muted-foreground p-4 text-center text-sm">没有可用的主题</div>
+          )}
         </SidebarContent>
       </Sidebar>
-      <div className="mx-auto flex w-2/3 flex-col gap-2 overflow-auto">
-        <div className="flex gap-2">
-          <Button
-            onClick={() => {
-              Settings.theme = selectedThemeId;
-            }}
-          >
-            <Palette />
-            应用
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              if (!selectedTheme) return;
-              Themes.writeCustomTheme(_.set(_.cloneDeep(selectedTheme), "metadata.id", crypto.randomUUID())).then(
-                updateThemeIds,
-              );
-            }}
-          >
-            <Copy />
-            复制
-          </Button>
-          <Button
-            variant="destructive"
-            disabled={Themes.builtinThemes.some((it) => it.metadata.id === selectedThemeId)}
-            onClick={() => {
-              if (!selectedTheme) return;
-              Themes.deleteCustomTheme(selectedThemeId).then(updateThemeIds);
-            }}
-          >
-            <Delete />
-            删除
-          </Button>
-        </div>
-        <div className="flex flex-col gap-4 rounded-lg border p-4">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">主题模式</label>
-            <div className="flex items-center gap-2">
-              <span className="text-sm">白天</span>
-              <Switch
-                checked={themeMode === "dark"}
-                onCheckedChange={(checked) => {
-                  Settings.themeMode = checked ? "dark" : "light";
-                }}
-              />
-              <span className="text-sm">黑夜</span>
+
+      {/* 右侧详情面板 */}
+      <div className="bg-background/50 flex flex-1 flex-col items-center justify-center gap-4 overflow-auto p-6">
+        {selectedTheme ? (
+          <div className="w-full max-w-md space-y-4">
+            <div className="flex items-center gap-3">
+              {selectedTheme.metadata.type === "light" ? (
+                <Sun className="size-6 shrink-0" />
+              ) : (
+                <Moon className="size-6 shrink-0" />
+              )}
+              <div>
+                <h2 className="text-lg font-semibold">{selectedTheme.metadata.name}</h2>
+                <span className="text-muted-foreground text-xs">
+                  {selectedTheme.metadata.type === "light" ? "浅色主题" : "深色主题"}
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">浅色主题</label>
-              <Select
-                value={lightTheme}
-                onValueChange={(value) => {
-                  Settings.lightTheme = value;
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="选择浅色主题" />
-                </SelectTrigger>
-                <SelectContent>
-                  {themes
-                    .filter((theme) => theme.metadata.type === "light")
-                    .map((theme) => (
-                      <SelectItem key={theme.metadata.id} value={theme.metadata.id}>
-                        {theme.metadata.name[i18n.language]}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">深色主题</label>
-              <Select
-                value={darkTheme}
-                onValueChange={(value) => {
-                  Settings.darkTheme = value;
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="选择深色主题" />
-                </SelectTrigger>
-                <SelectContent>
-                  {themes
-                    .filter((theme) => theme.metadata.type === "dark")
-                    .map((theme) => (
-                      <SelectItem key={theme.metadata.id} value={theme.metadata.id}>
-                        {theme.metadata.name[i18n.language]}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="text-muted-foreground text-xs">
-            当前主题模式为 {themeMode === "light" ? "白天" : "黑夜"}，使用{" "}
-            {themeMode === "light" ? lightTheme : darkTheme} 主题
-          </div>
-        </div>
-        <Tabs value={currentTab} onValueChange={setCurrentTab as any}>
-          <TabsList>
-            <TabsTrigger value="preview">预览</TabsTrigger>
-            <TabsTrigger value="edit">编辑</TabsTrigger>
-          </TabsList>
-          <TabsContent value="preview" className="mt-8 flex flex-col gap-2">
-            <span className="mb-2 text-4xl font-bold">{selectedTheme?.metadata.name[i18n.language]}</span>
-            <span>{selectedTheme?.metadata.description[i18n.language]}</span>
-            <span>作者: {selectedTheme?.metadata.author[i18n.language]}</span>
-          </TabsContent>
-          <TabsContent value="edit">
-            {Themes.builtinThemes.some((it) => it.metadata.id === selectedThemeId) ? (
-              <Alert>
-                <Info />
-                <AlertTitle>内置主题</AlertTitle>
-                <AlertDescription>这是一个内置的主题，需要复制后再编辑</AlertDescription>
-              </Alert>
-            ) : (
-              <ThemeEditor themeId={selectedThemeId} />
+            {selectedTheme.metadata.description && (
+              <p className="text-muted-foreground text-sm">{selectedTheme.metadata.description}</p>
             )}
-          </TabsContent>
-        </Tabs>
+            {selectedTheme.metadata.source && (
+              <p className="text-muted-foreground text-xs">
+                来自扩展：{selectedTheme.metadata.source.metadata.extension?.name || "未知扩展"}
+              </p>
+            )}
+            <Button onClick={() => handleApply(selectedTheme.metadata.id)} disabled={applying}>
+              <Palette />
+              {applying ? "应用中…" : "应用主题"}
+            </Button>
+          </div>
+        ) : (
+          <div className="text-muted-foreground flex flex-col items-center gap-2">
+            <Palette className="size-16 opacity-20" />
+            <p>请在侧边栏选择一个主题</p>
+          </div>
+        )}
       </div>
     </div>
   );

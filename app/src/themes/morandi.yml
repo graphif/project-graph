@@ -1,15 +1,8 @@
 ---
 id: morandi
 type: light
-author:
-  en: Official
-  zh_CN: 官方
-description:
-  en: Low-saturation theme with bright light in bright environments.
-  zh_CN: 低饱和度主题，光线明朗的环境下使用
-name:
-  en: Morandi
-  zh_CN: 莫兰迪
+name: 莫兰迪
+description: 低饱和度主题，光线明朗的环境下使用
 ---
 background: oklch(0.97 0.01 230)
 foreground: oklch(0.35 0.02 230)
@@ -58,7 +51,3 @@ stage:
 
 effects:
   flash: "#8b949d"
-  dash: "#6b7280"
-  windowFlash: "#eef1f0"
-  warningShadow: "rgba(248, 128, 112, 0.4)"
-  successShadow: "#7893af"

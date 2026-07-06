@@ -6,12 +6,22 @@ import KeyBind from "@/components/ui/key-bind";
 import Markdown from "@/components/ui/markdown";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Themes } from "@/core/service/Themes";
 import { PrgMetadata } from "@/types/metadata";
 import { Decoder, Encoder } from "@msgpack/msgpack";
 import { appDataDir, join } from "@tauri-apps/api/path";
 import { mkdir, writeFile } from "@tauri-apps/plugin-fs";
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipReader } from "@zip.js/zip.js";
-import { Blocks, Dot, Keyboard, KeyboardOff, SquareAsterisk, SquareRoundCorner, SquareStack } from "lucide-react";
+import {
+  Blocks,
+  Dot,
+  Keyboard,
+  KeyboardOff,
+  Palette,
+  SquareAsterisk,
+  SquareRoundCorner,
+  SquareStack,
+} from "lucide-react";
 import React, { useEffect, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
@@ -273,6 +283,10 @@ export class Extension extends Tab {
                 <>
                   <TabsTrigger value="settings">设置</TabsTrigger>
                   <TabsTrigger value="keybinds">快捷键</TabsTrigger>
+                  <TabsTrigger value="themes">
+                    <Palette />
+                    主题
+                  </TabsTrigger>
                 </>
               )}
             </TabsList>
@@ -331,6 +345,42 @@ export class Extension extends Tab {
                         ),
                       )
                     )}
+                  </div>
+                </TabsContent>
+                <TabsContent value="themes">
+                  <div className="space-y-2">
+                    {(() => {
+                      const extensionId = self.metadata.extension?.id || "";
+                      const themes = Themes.getExtensionThemesByExtensionId(extensionId);
+                      if (themes.length === 0) {
+                        return <p className="text-muted-foreground">该扩展没有注册主题</p>;
+                      }
+                      return themes.map((theme) => (
+                        <div
+                          key={theme.metadata.id}
+                          className="border-border flex items-center justify-between rounded-lg border p-3"
+                        >
+                          <div className="flex flex-col gap-1">
+                            <span className="font-medium">{theme.metadata.name}</span>
+                            {theme.metadata.description && (
+                              <span className="text-muted-foreground text-sm">{theme.metadata.description}</span>
+                            )}
+                            <span className="text-muted-foreground text-xs">
+                              {theme.metadata.type === "light" ? "浅色" : "深色"}
+                            </span>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              await Themes.applyThemeById(theme.metadata.id);
+                            }}
+                          >
+                            应用
+                          </Button>
+                        </div>
+                      ));
+                    })()}
                   </div>
                 </TabsContent>
                 <TabsContent value="keybinds">

@@ -1,23 +1,21 @@
+import type { Extension } from "@/core/extension/Extension";
 import { camelCaseToDashCase } from "@/utils/font";
 import { parseYamlWithFrontmatter } from "@/utils/yaml";
-import { appLocalDataDir, join } from "@tauri-apps/api/path";
-import { mkdir, readDir, readTextFile, remove, writeTextFile } from "@tauri-apps/plugin-fs";
-import YAML from "yaml";
 
 export namespace Themes {
   export type Metadata = {
     id: string;
     type: "light" | "dark";
-    author: Record<string, string>;
-    description: Record<string, string>;
-    name: Record<string, string>;
+    name: string;
+    description?: string;
+    source?: Extension;
   };
   export type Theme = {
     metadata: Metadata;
     content: any;
   };
   export const builtinThemes = Object.values(
-    import.meta.glob<string>("../../themes/*.pg-theme", {
+    import.meta.glob<string>("../../themes/*.yml", {
       eager: true,
       import: "default",
       query: "?raw",
@@ -30,18 +28,36 @@ export namespace Themes {
     };
   });
 
+  // 扩展注册的主题
+  const extensionThemes = new Map<string, Theme>();
+  const extensionThemeIndex = new Map<string, string[]>();
+
+  export function registerExtensionTheme(id: string, extensionId: string, theme: Theme) {
+    extensionThemes.set(id, theme);
+    const ids = extensionThemeIndex.get(extensionId) ?? [];
+    ids.push(id);
+    extensionThemeIndex.set(extensionId, ids);
+  }
+
+  /** 获取所有注册了主题的扩展 ID */
+  export function getExtensionIdsWithThemes(): string[] {
+    return Array.from(extensionThemeIndex.keys());
+  }
+
+  /** 获取指定扩展注册的所有主题（同步，因为扩展主题在运行时注册） */
+  export function getExtensionThemesByExtensionId(extensionId: string): Theme[] {
+    const ids = extensionThemeIndex.get(extensionId) ?? [];
+    return ids.map((id) => extensionThemes.get(id)).filter((t): t is Theme => t !== undefined);
+  }
+
   export async function getThemeById(id: string) {
     // 先尝试找内置主题
     const builtinTheme = builtinThemes.find((theme) => theme.metadata.id === id);
     if (builtinTheme) return builtinTheme;
-    // 找不到就尝试从外部加载
-    const path = await join(await appLocalDataDir(), "themes", `${id}.pg-theme`);
-    const fileContent = await readTextFile(path);
-    const data = parseYamlWithFrontmatter<Themes.Metadata, any>(fileContent);
-    return {
-      metadata: data.frontmatter,
-      content: data.content,
-    };
+    // 再尝试找扩展注册的主题
+    const extensionTheme = extensionThemes.get(id);
+    if (extensionTheme) return extensionTheme;
+    return undefined;
   }
   /**
    * 把theme.content转换成CSS样式
@@ -65,7 +81,8 @@ export namespace Themes {
   /** 将主题CSS挂载到网页上 */
   export async function applyThemeById(themeId: string) {
     const theme = await getThemeById(themeId);
-    await applyTheme(theme?.content, theme?.metadata.type);
+    if (!theme) return;
+    await applyTheme(theme.content, theme.metadata.type);
   }
   export async function applyTheme(themeContent: any, type?: "light" | "dark") {
     let styleEl = document.querySelector("#pg-theme");
@@ -82,27 +99,10 @@ export namespace Themes {
     `;
   }
 
-  export async function writeCustomTheme(theme: Theme) {
-    // 创建文件夹
-    await mkdir(await join(await appLocalDataDir(), "themes")).catch(() => {});
-    // 写入文件
-    const path = await join(await appLocalDataDir(), "themes", `${theme.metadata.id}.pg-theme`);
-    const yamlContent = `---\n${YAML.stringify(theme.metadata)}---\n${YAML.stringify(theme.content)}`;
-    await writeTextFile(path, yamlContent);
-  }
-  export async function deleteCustomTheme(themeId: string) {
-    const path = await join(await appLocalDataDir(), "themes", `${themeId}.pg-theme`);
-    await remove(path).catch(() => {});
-  }
-
   export async function ids() {
-    // 列出所有内置和自定义主题
-    const customThemesDir = await join(await appLocalDataDir(), "themes");
-    const customThemeFiles = await readDir(customThemesDir).catch(() => []);
-    const customThemeIds = customThemeFiles
-      .filter((file) => file.name?.endsWith(".pg-theme"))
-      .map((file) => file.name!.replace(/\.pg-theme$/, ""));
-    return [...builtinThemes.map((theme) => theme.metadata.id), ...customThemeIds];
+    const builtinIds = builtinThemes.map((theme) => theme.metadata.id);
+    const extensionIds = Array.from(extensionThemes.keys());
+    return [...builtinIds, ...extensionIds];
   }
   export async function list() {
     const ids_ = await ids();

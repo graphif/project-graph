@@ -1,15 +1,8 @@
 ---
 id: macaron
 type: light
-author:
-  en: Official
-  zh_CN: 官方
-description:
-  en: A dark and colorful theme with a hint of warmth.
-  zh_CN: 源于法国的小甜点，用于光线明朗的情况下使用。
-name:
-  en: Macaron
-  zh_CN: 马卡龙
+name: 马卡龙
+description: 源于法国的小甜点，用于光线明朗的情况下使用。
 ---
 background: oklch(0.985 0.02 340)
 foreground: oklch(0.269 0.05 340)
@@ -58,7 +51,3 @@ stage:
 
 effects:
   flash: "#8b5891"
-  dash: "#000000"
-  windowFlash: "#f9e9ea"
-  warningShadow: "rgba(226, 167, 31, 0.2)"
-  successShadow: "#7893af"
