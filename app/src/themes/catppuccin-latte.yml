@@ -1,0 +1,58 @@
+---
+id: catppuccin-latte
+type: light
+name: Catppuccin Latte
+description: 清新明亮的白天主题
+---
+background: "#eff1f5"
+foreground: "#4c4f69"
+card: "#e6e9ef"
+card-foreground: "#4c4f69"
+popover: "#ccd0da"
+popover-foreground: "#4c4f69"
+primary: "#1e66f5"
+primary-foreground: "#eff1f5"
+secondary: "#ccd0da"
+secondary-foreground: "#4c4f69"
+muted: "#ccd0da"
+muted-foreground: "#9ca0b0"
+accent: "#ccd0da"
+accent-foreground: "#4c4f69"
+destructive: "#d20f39"
+border: "#bcc0cc"
+input: "#bcc0cc"
+ring: "#1e66f5"
+chart-1: "#1e66f5"
+chart-2: "#40a02b"
+chart-3: "#df8e1d"
+chart-4: "#8839ef"
+chart-5: "#fe640b"
+sidebar: "#e6e9ef"
+sidebar-foreground: "#4c4f69"
+sidebar-primary: "#8839ef"
+sidebar-primary-foreground: "#eff1f5"
+sidebar-accent: "#ccd0da"
+sidebar-accent-foreground: "#4c4f69"
+sidebar-border: "#bcc0cc"
+sidebar-ring: "#8839ef"
+brand: "#8839ef"
+
+stage:
+  Background: "#eff1f5"
+  GridNormal: "rgba(124, 127, 147, 0.25)"
+  GridHeavy: "rgba(124, 127, 147, 0.45)"
+  DetailsDebugText: "rgba(156, 160, 176, 0.8)"
+  SelectRectangleBorder: "rgba(30, 102, 245, 0.5)"
+  SelectRectangleFill: "rgba(30, 102, 245, 0.1)"
+  StageObjectBorder: "#acb0be"
+  NodeDetailsText: "#4c4f69"
+  CollideBoxPreSelected: "rgba(64, 160, 43, 0.3)"
+  CollideBoxSelected: "rgba(64, 160, 43, 0.6)"
+  CollideBoxPreDelete: "rgba(254, 100, 11, 0.25)"
+
+effects:
+  flash: "#4c4f69"
+  dash: "#4c4f69"
+  windowFlash: "#4c4f69"
+  warningShadow: "#d20f39"
+  successShadow: "#40a02b"

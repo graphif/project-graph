@@ -1,0 +1,58 @@
+---
+id: catppuccin-mocha
+type: dark
+name: Catppuccin Mocha
+description: 经典深邃的夜间主题
+---
+background: "#1e1e2e"
+foreground: "#cdd6f4"
+card: "#181825"
+card-foreground: "#cdd6f4"
+popover: "#313244"
+popover-foreground: "#cdd6f4"
+primary: "#89b4fa"
+primary-foreground: "#1e1e2e"
+secondary: "#313244"
+secondary-foreground: "#cdd6f4"
+muted: "#313244"
+muted-foreground: "#6c7086"
+accent: "#313244"
+accent-foreground: "#cdd6f4"
+destructive: "#f38ba8"
+border: "#45475a"
+input: "#45475a"
+ring: "#89b4fa"
+chart-1: "#89b4fa"
+chart-2: "#a6e3a1"
+chart-3: "#f9e2af"
+chart-4: "#cba6f7"
+chart-5: "#fab387"
+sidebar: "#181825"
+sidebar-foreground: "#cdd6f4"
+sidebar-primary: "#cba6f7"
+sidebar-primary-foreground: "#1e1e2e"
+sidebar-accent: "#313244"
+sidebar-accent-foreground: "#cdd6f4"
+sidebar-border: "#45475a"
+sidebar-ring: "#cba6f7"
+brand: "#cba6f7"
+
+stage:
+  Background: "#1e1e2e"
+  GridNormal: "rgba(147, 153, 178, 0.2)"
+  GridHeavy: "rgba(147, 153, 178, 0.4)"
+  DetailsDebugText: "rgba(108, 112, 134, 0.8)"
+  SelectRectangleBorder: "rgba(137, 180, 250, 0.5)"
+  SelectRectangleFill: "rgba(137, 180, 250, 0.12)"
+  StageObjectBorder: "#585b70"
+  NodeDetailsText: "#cdd6f4"
+  CollideBoxPreSelected: "rgba(166, 227, 161, 0.3)"
+  CollideBoxSelected: "rgba(166, 227, 161, 0.55)"
+  CollideBoxPreDelete: "rgba(250, 179, 135, 0.25)"
+
+effects:
+  flash: "#cdd6f4"
+  dash: "#cdd6f4"
+  windowFlash: "#cdd6f4"
+  warningShadow: "#f38ba8"
+  successShadow: "#a6e3a1"

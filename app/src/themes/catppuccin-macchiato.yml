@@ -1,0 +1,58 @@
+---
+id: catppuccin-macchiato
+type: dark
+name: Catppuccin Macchiato
+description: 浓郁深沉的夜间主题
+---
+background: "#24273a"
+foreground: "#cad3f5"
+card: "#1e2030"
+card-foreground: "#cad3f5"
+popover: "#363a4f"
+popover-foreground: "#cad3f5"
+primary: "#8aadf4"
+primary-foreground: "#24273a"
+secondary: "#363a4f"
+secondary-foreground: "#cad3f5"
+muted: "#363a4f"
+muted-foreground: "#6e738d"
+accent: "#363a4f"
+accent-foreground: "#cad3f5"
+destructive: "#ed8796"
+border: "#494d64"
+input: "#494d64"
+ring: "#8aadf4"
+chart-1: "#8aadf4"
+chart-2: "#a6da95"
+chart-3: "#eed49f"
+chart-4: "#c6a0f6"
+chart-5: "#f5a97f"
+sidebar: "#1e2030"
+sidebar-foreground: "#cad3f5"
+sidebar-primary: "#c6a0f6"
+sidebar-primary-foreground: "#24273a"
+sidebar-accent: "#363a4f"
+sidebar-accent-foreground: "#cad3f5"
+sidebar-border: "#494d64"
+sidebar-ring: "#c6a0f6"
+brand: "#c6a0f6"
+
+stage:
+  Background: "#24273a"
+  GridNormal: "rgba(147, 154, 183, 0.2)"
+  GridHeavy: "rgba(147, 154, 183, 0.4)"
+  DetailsDebugText: "rgba(110, 115, 141, 0.8)"
+  SelectRectangleBorder: "rgba(138, 173, 244, 0.5)"
+  SelectRectangleFill: "rgba(138, 173, 244, 0.12)"
+  StageObjectBorder: "#5b6078"
+  NodeDetailsText: "#cad3f5"
+  CollideBoxPreSelected: "rgba(166, 218, 149, 0.3)"
+  CollideBoxSelected: "rgba(166, 218, 149, 0.55)"
+  CollideBoxPreDelete: "rgba(245, 169, 127, 0.25)"
+
+effects:
+  flash: "#cad3f5"
+  dash: "#cad3f5"
+  windowFlash: "#cad3f5"
+  warningShadow: "#ed8796"
+  successShadow: "#a6da95"

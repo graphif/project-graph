@@ -1,0 +1,58 @@
+---
+id: catppuccin-frappe
+type: dark
+name: Catppuccin Frappé
+description: 柔和舒适的夜间主题
+---
+background: "#303446"
+foreground: "#c6d0f5"
+card: "#292c3c"
+card-foreground: "#c6d0f5"
+popover: "#414559"
+popover-foreground: "#c6d0f5"
+primary: "#8caaee"
+primary-foreground: "#303446"
+secondary: "#414559"
+secondary-foreground: "#c6d0f5"
+muted: "#414559"
+muted-foreground: "#737994"
+accent: "#414559"
+accent-foreground: "#c6d0f5"
+destructive: "#e78284"
+border: "#51576d"
+input: "#51576d"
+ring: "#8caaee"
+chart-1: "#8caaee"
+chart-2: "#a6d189"
+chart-3: "#e5c890"
+chart-4: "#ca9ee6"
+chart-5: "#ef9f76"
+sidebar: "#292c3c"
+sidebar-foreground: "#c6d0f5"
+sidebar-primary: "#ca9ee6"
+sidebar-primary-foreground: "#303446"
+sidebar-accent: "#414559"
+sidebar-accent-foreground: "#c6d0f5"
+sidebar-border: "#51576d"
+sidebar-ring: "#ca9ee6"
+brand: "#ca9ee6"
+
+stage:
+  Background: "#303446"
+  GridNormal: "rgba(148, 156, 187, 0.2)"
+  GridHeavy: "rgba(148, 156, 187, 0.4)"
+  DetailsDebugText: "rgba(115, 121, 148, 0.8)"
+  SelectRectangleBorder: "rgba(140, 170, 238, 0.5)"
+  SelectRectangleFill: "rgba(140, 170, 238, 0.12)"
+  StageObjectBorder: "#626880"
+  NodeDetailsText: "#c6d0f5"
+  CollideBoxPreSelected: "rgba(166, 209, 137, 0.3)"
+  CollideBoxSelected: "rgba(166, 209, 137, 0.55)"
+  CollideBoxPreDelete: "rgba(239, 159, 118, 0.25)"
+
+effects:
+  flash: "#c6d0f5"
+  dash: "#c6d0f5"
+  windowFlash: "#c6d0f5"
+  warningShadow: "#e78284"
+  successShadow: "#a6d189"
