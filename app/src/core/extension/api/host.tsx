@@ -145,7 +145,7 @@ export function extensionHostApiFactory(extension: Extension) {
     //region 快捷键
     async keybinds_register(
       id: string,
-      icon: KeyBindIcon,
+      icon: KeyBindIcon | { $lucide: string },
       defaultKey: string,
       onPress: () => void,
       onRelease?: () => void,
@@ -153,7 +153,7 @@ export function extensionHostApiFactory(extension: Extension) {
     ): Promise<void> {
       return ExtensionKeyBindManager.register(extensionId, {
         id,
-        icon,
+        icon: icon as KeyBindIcon,
         defaultKey,
         onPress,
         onRelease,
