@@ -79,6 +79,11 @@ export class Section extends ConnectableEntity {
    */
   @serializable
   locked: boolean = false;
+  /**
+   * 边框样式：实线、虚线、无边框
+   */
+  @serializable
+  borderStyle: "solid" | "dashed" | "none" = "solid";
   isHiddenBySectionCollapse = false;
 
   constructor(
@@ -93,6 +98,7 @@ export class Section extends ConnectableEntity {
       isCollapsed = false,
       children = [] as Entity[],
       details = [] as Value,
+      borderStyle = "solid" as "solid" | "dashed" | "none",
     } = {},
     public unknown = false,
   ) {
@@ -116,6 +122,7 @@ export class Section extends ConnectableEntity {
     this.isCollapsed = isCollapsed;
     this.details = details;
     this.children = children;
+    this.borderStyle = borderStyle;
     // 一定要放在最后
     this.adjustLocationAndSize();
   }
@@ -128,6 +135,7 @@ export class Section extends ConnectableEntity {
     const section = new Section(project, {
       text: "section",
       children: entities,
+      borderStyle: Settings.sectionInitBorderStyle,
     });
 
     return section;

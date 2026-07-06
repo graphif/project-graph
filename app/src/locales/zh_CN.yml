@@ -406,6 +406,17 @@ settings:
     options:
       full: 完整填充
       titleOnly: 仅标题条
+  sectionInitBorderStyle:
+    title: 新建分组框的边框样式
+    description: |
+      创建新分组框时默认使用的边框样式。
+      实线：标准实线边框
+      虚线：虚线边框
+      无边框：不显示边框（仍可通过背景色区分范围）
+    options:
+      solid: 实线
+      dashed: 虚线
+      none: 无边框
   autoEnterSectionEditMode:
     title: 创建分组框后自动进入编辑状态
     description: 开启后，使用 Ctrl+G 创建分组框时会自动弹出标题输入框，方便快速命名。关闭则只选中新分组框，不进入编辑。
@@ -1483,6 +1494,15 @@ keyBinds:
   toggleSectionLock:
     title: 锁定/解锁分组框
     description: 切换选中分组框的锁定状态，锁定后内部物体不可移动
+  setSectionBorderSolid:
+    title: 设置分组框边框为实线
+    description: 将选中的分组框的边框样式设置为实线
+  setSectionBorderDashed:
+    title: 设置分组框边框为虚线
+    description: 将选中的分组框的边框样式设置为虚线
+  setSectionBorderNone:
+    title: 设置分组框边框为无边框
+    description: 将选中的分组框的边框样式设置为无边框
   reverseEdges:
     title: 反转连线的方向
     description: |

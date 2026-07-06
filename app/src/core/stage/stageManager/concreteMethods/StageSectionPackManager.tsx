@@ -172,6 +172,7 @@ export class SectionPackManager {
       collisionBox: textNode.collisionBox,
       color: textNode.color,
       details: textNode.details,
+      borderStyle: Settings.sectionInitBorderStyle,
     });
     newSection.adjustLocationAndSize();
 
@@ -343,6 +344,7 @@ export class SectionPackManager {
       children: [],
       isCollapsed: false,
       locked: false,
+      borderStyle: Settings.sectionInitBorderStyle,
     });
 
     // 创建左上角和右下角的质点

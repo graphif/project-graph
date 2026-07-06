@@ -243,6 +243,7 @@ export const categories = {
       "sectionBigTitleOpacity",
       "hideSectionContentsWhenBigTitleActive",
       "sectionBackgroundFillMode",
+      "sectionInitBorderStyle",
     ],
     edge: ["lineStyle", "hideArrowWhenPointingToConnectPoint", "enableAutoEdgeWidth"],
     selectedState: ["enableCollisionBoxAutoWidth"],

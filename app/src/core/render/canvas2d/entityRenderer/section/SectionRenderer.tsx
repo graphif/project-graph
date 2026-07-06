@@ -65,21 +65,39 @@ export class SectionRenderer {
   // 非折叠状态
   private renderNoCollapse(section: Section) {
     const isBigTitleActive = this.project.sectionMethods.isSectionBigTitleActive(section);
-    let borderWidth = 2 * this.project.camera.currentScale;
-    if (isBigTitleActive) {
-      borderWidth = 2;
+    // 大标题激活时线宽固定为屏幕像素，不随世界坐标缩放
+    const borderWidth = isBigTitleActive ? 2 : 2 * this.project.camera.currentScale;
+    const borderStyle = section.borderStyle;
+
+    if (borderStyle === "none") {
+      // 无边框：不绘制任何边框
+    } else if (borderStyle === "dashed") {
+      // 大标题激活时 dash/gap 固定为屏幕像素，普通视野下随缩放
+      const dashLength = isBigTitleActive ? 10 : 12 * this.project.camera.currentScale;
+      this.project.shapeRenderer.renderDashedRect(
+        new Rectangle(
+          this.project.renderer.transformWorld2View(section.rectangle.location),
+          section.rectangle.size.multiply(this.project.camera.currentScale),
+        ),
+        Color.Transparent,
+        this.project.stageStyleManager.currentStyle.StageObjectBorder,
+        borderWidth,
+        Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+        dashLength,
+      );
+    } else {
+      // 实线边框（默认）
+      this.project.shapeRenderer.renderRect(
+        new Rectangle(
+          this.project.renderer.transformWorld2View(section.rectangle.location),
+          section.rectangle.size.multiply(this.project.camera.currentScale),
+        ),
+        Color.Transparent,
+        this.project.stageStyleManager.currentStyle.StageObjectBorder,
+        borderWidth,
+        Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+      );
     }
-    // 注意：这里只能画边框
-    this.project.shapeRenderer.renderRect(
-      new Rectangle(
-        this.project.renderer.transformWorld2View(section.rectangle.location),
-        section.rectangle.size.multiply(this.project.camera.currentScale),
-      ),
-      Color.Transparent,
-      this.project.stageStyleManager.currentStyle.StageObjectBorder,
-      borderWidth,
-      Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
-    );
 
     if (!isBigTitleActive && !section.isEditingTitle) {
       // 正常显示标题
@@ -141,24 +159,22 @@ export class SectionRenderer {
     const sectionViewSize = section.rectangle.size.multiply(this.project.camera.currentScale);
     if (Math.max(sectionViewSize.x, sectionViewSize.y) < 20) return;
     // ===
-    this.project.shapeRenderer.renderRect(
-      new Rectangle(
-        this.project.renderer.transformWorld2View(section.rectangle.location),
-        section.rectangle.size.multiply(this.project.camera.currentScale),
-      ),
+    const bgColor =
       section.color.a === 0
         ? this.project.stageStyleManager.currentStyle.Background.toNewAlpha(Settings.sectionBigTitleOpacity)
-        : section.color.toNewAlpha(Settings.sectionBigTitleOpacity),
-      this.project.stageStyleManager.currentStyle.StageObjectBorder,
-      2 * this.project.camera.currentScale,
+        : section.color.toNewAlpha(Settings.sectionBigTitleOpacity);
+    const viewRect = new Rectangle(
+      this.project.renderer.transformWorld2View(section.rectangle.location),
+      section.rectangle.size.multiply(this.project.camera.currentScale),
     );
+
+    // 只画背景色，边框已由 renderNoCollapse 统一负责（固定屏幕像素，不会双层叠加）
+    this.project.shapeRenderer.renderRect(viewRect, bgColor, Color.Transparent, 0);
+
     // 缩放过小了，显示巨大化文字
     this.project.textRenderer.renderTextInRectangle(
       section.text,
-      new Rectangle(
-        this.project.renderer.transformWorld2View(section.rectangle.location),
-        section.rectangle.size.multiply(this.project.camera.currentScale),
-      ),
+      viewRect,
       section.color.a === 1
         ? colorInvert(section.color)
         : colorInvert(this.project.stageStyleManager.currentStyle.Background),

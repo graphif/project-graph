@@ -885,6 +885,17 @@ settings:
     options:
       full: Full Fill
       titleOnly: Title Only
+  sectionInitBorderStyle:
+    title: New Section Border Style
+    description: |
+      The default border style used when creating a new section.
+      Solid: Standard solid border
+      Dashed: Dashed border
+      None: No border (the section area can still be distinguished by background color)
+    options:
+      solid: Solid
+      dashed: Dashed
+      none: None
   autoEnterSectionEditMode:
     title: Auto Enter Edit Mode When Creating Section
     description: When enabled, creating a section with Ctrl+G will automatically pop up the title input box for quick naming. When disabled, the new section will only be selected without entering edit mode.

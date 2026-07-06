@@ -215,6 +215,8 @@ import {
   Split,
   Store,
   SquareDashedBottomCode,
+  SquareDashed,
+  Square,
   SquareDot,
   SquareRoundCorner,
   SquareSquare,
@@ -755,6 +757,49 @@ export const allKeyBinds: KeyBindItem[] = [
       project!.historyManager.recordStep();
     },
     defaultEnabled: false,
+  },
+  /*------- 分组框边框样式 -------*/
+  {
+    id: "setSectionBorderSolid",
+    defaultKey: "",
+    icon: Square,
+    when: whenHasSelectedSections,
+    onPress: (project) => {
+      const selectedSections = project!.stageManager.getSelectedEntities().filter((it) => it instanceof Section);
+      for (const section of selectedSections) {
+        section.borderStyle = "solid";
+        project!.sectionRenderer.render(section);
+      }
+      project!.historyManager.recordStep();
+    },
+  },
+  {
+    id: "setSectionBorderDashed",
+    defaultKey: "",
+    icon: SquareDashed,
+    when: whenHasSelectedSections,
+    onPress: (project) => {
+      const selectedSections = project!.stageManager.getSelectedEntities().filter((it) => it instanceof Section);
+      for (const section of selectedSections) {
+        section.borderStyle = "dashed";
+        project!.sectionRenderer.render(section);
+      }
+      project!.historyManager.recordStep();
+    },
+  },
+  {
+    id: "setSectionBorderNone",
+    defaultKey: "",
+    icon: Slash,
+    when: whenHasSelectedSections,
+    onPress: (project) => {
+      const selectedSections = project!.stageManager.getSelectedEntities().filter((it) => it instanceof Section);
+      for (const section of selectedSections) {
+        section.borderStyle = "none";
+        project!.sectionRenderer.render(section);
+      }
+      project!.historyManager.recordStep();
+    },
   },
 
   /*------- 边反向 -------*/

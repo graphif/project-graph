@@ -389,6 +389,17 @@ settings:
     options:
       full: Isi Penuh
       titleOnly: Hanya Bilah Judul
+  sectionInitBorderStyle:
+    title: Gaya Batas Section Baru
+    description: |
+      Gaya batas default yang digunakan saat membuat section baru.
+      Solid: Batas garis solid standar
+      Putus-putus: Batas garis putus-putus
+      Tidak ada: Tidak menampilkan batas (area section masih dapat dibedakan dengan warna latar)
+    options:
+      solid: Solid
+      dashed: Putus-putus
+      none: Tidak Ada
   autoEnterSectionEditMode:
     title: Otomatis Masuk Mode Edit Saat Membuat Kotak
     description: Saat diaktifkan, membuat kotak dengan Ctrl+G akan otomatis menampilkan kotak input judul untuk penamaan cepat. Saat dinonaktifkan, kotak baru hanya akan dipilih tanpa masuk mode edit.

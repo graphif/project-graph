@@ -224,6 +224,7 @@ export const settingsIcons = {
   sectionBigTitleOpacity: Blend,
   hideSectionContentsWhenBigTitleActive: Layers,
   sectionBackgroundFillMode: Layers,
+  sectionInitBorderStyle: SquareDashed,
   autoEnterSectionEditMode: SquarePen,
   nodeDetailsPanel: AppWindow,
   alwaysShowDetails: ListCollapse,

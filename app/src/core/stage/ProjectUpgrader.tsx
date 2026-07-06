@@ -480,6 +480,7 @@ export namespace ProjectUpgrader {
   /**
    * 将 2.5.0 版本升级到 2.6.0 版本
    * MultiTargetUndirectedEdge 新增 lineType 字段（默认 "solid"）和 arrowType 字段（默认 "default"）。
+   * Section 新增 borderStyle 字段（默认 "solid"）。
    * @param data 2.5.0版本数据
    * @param metadata 2.5.0版本metadata
    * @returns 2.6.0版本数据和metadata
@@ -492,6 +493,11 @@ export namespace ProjectUpgrader {
         }
         if (item.arrowType === undefined) {
           item.arrowType = "default";
+        }
+      }
+      if (item._ === "Section") {
+        if (item.borderStyle === undefined) {
+          item.borderStyle = "solid";
         }
       }
     }
