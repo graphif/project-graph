@@ -2479,8 +2479,8 @@ keyBinds:
     title: 打开扩展窗口
     description: 打开扩展管理窗口
   openPluginMarket:
-    title: 插件市场
-    description: 在浏览器中打开插件市场
+    title: 扩展市场
+    description: 在浏览器中打开扩展市场
   openExtensionFolder:
     title: 打开扩展文件夹
     description: 在文件管理器中打开扩展安装目录
