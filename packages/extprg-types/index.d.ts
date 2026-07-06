@@ -3,26 +3,19 @@
 
 /**
  * Auto-generated. Do not edit manually.
- * 2026-06-26T08:19:24.551Z
+ * 2026-07-06T13:15:56.006Z
  */
 
 // ── 第三方类型导入 ──
 import type { Color, LimitLengthQueue, LruCache, ProgressNumber, Vector } from "@graphif/data-structures";
-import type {
-  Circle,
-  CubicBezierCurve,
-  CubicCatmullRomSpline,
-  Line,
-  Rectangle,
-  Shape,
-  SymmetryCurve,
-} from "@graphif/shapes";
+import type { Circle, CubicBezierCurve, CubicCatmullRomSpline, Line, Rectangle, Shape, SymmetryCurve } from "@graphif/shapes";
 import type { DirEntry } from "@tauri-apps/plugin-fs";
 import type { fetch } from "@tauri-apps/plugin-http";
 import type { Store } from "@tauri-apps/plugin-store";
-import type { LucideProps } from "lucide-react";
+import type { AlignCenterHorizontal, AlignCenterVertical, AlignEndHorizontal, AlignEndVertical, AlignHorizontalJustifyStart, AlignHorizontalSpaceBetween, AlignLeft, AlignStartHorizontal, AlignStartVertical, AlignVerticalJustifyStart, AlignVerticalSpaceBetween, Aperture, AppWindow, Archive, ArrowDown, ArrowDownFromLine, ArrowDownToLine, ArrowDownUp, ArrowLeft, ArrowLeftFromLine, ArrowLeftRight, ArrowLeftToLine, ArrowRight, ArrowRightFromLine, ArrowRightToLine, ArrowUp, ArrowUpFromLine, ArrowUpToLine, Axe, BookOpen, BookOpenText, Bot, Box, Brush, Bug, Camera, ChevronFirst, ChevronLast, ChevronsDown, ChevronsRightLeft, ChevronsUp, CircleAlert, CircleCheck, CircleDot, CircleMinus, CirclePlus, CircleSlash, Clipboard, Code, Columns4, Copy, CornerUpRight, Diamond, Dices, Dot, Dumbbell, Equal, Expand, ExternalLink, Eye, EyeOff, File, FileBadge, FileBox, FileClock, FileCode, FileDigit, FileDown, FileImage, FileInput, FileOutput, FilePlus, FileSpreadsheet, FileText, FileUp, Fingerprint, Flag, FlaskConical, Focus, Folder, FolderClock, FolderCog, FolderOpen, FolderPlus, FolderTree, Gem, Ghost, GitBranch, GitCompareArrows, Globe, GraduationCap, Grip, History, Images, Keyboard, Layers, LayoutDashboard, LayoutGrid, LayoutPanelTop, Link, Lock, LucideProps, MapPin, Maximize, Maximize2, Merge, MessageCircleWarning, Minimize, Minimize2, Moon, MousePointer, MousePointer2, Move3d, MoveDown, MoveHorizontal, MoveLeft, MoveRight, MoveUp, MoveUpRight, Network, OctagonX, Package, Palette, Paperclip, PenTool, PictureInPicture2, Play, Plus, Rabbit, Radiation, Radius, Redo, RefreshCcw, RefreshCcwDot, RefreshCw, Repeat, Rows4, Save, Scissors, Search, Settings, Shrink, Slash, Sparkles, Spline, Split, SquareDashedBottomCode, SquareDot, SquareRoundCorner, SquareSquare, Sun, Tag, Terminal, TextQuote, Trash2, TreePine, Triangle, Tv, Type, Undo, View, Wand2, Workflow, Wrench, X, Zap, ZoomIn, ZoomOut } from "lucide-react";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 import type { URI } from "vscode-uri";
+import type * as react_dialog from "@radix-ui/react-dialog";
 
 // ── 本地类型定义 ──
 declare class AIEngine {
@@ -37,20 +30,20 @@ declare class ArcEdge extends Edge {
   text: Promise<string>;
   color: Promise<Color>;
   lineType: Promise<string>;
+  arrowType: Promise<string>;
   offset: Promise<number>;
   textPosition: Promise<number>;
   get arcGeometry(): Promise<ArcGeometry>;
   get clippedStart(): Promise<Vector>;
   get clippedEnd(): Promise<Vector>;
   getArrowDirection(): Promise<Vector>;
+  getSourceDirection(): Promise<Vector>;
   get collisionBox(): Promise<CollisionBox>;
   get edgeWidth(): Promise<number>;
   get textFontSize(): Promise<number>;
   get textRectangle(): Promise<Rectangle>;
   getArcMidPoint(): Promise<Vector>;
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    {
+  constructor(project: Project | { _: "Project" | (string & {}) }, {
       associationList = [] as ConnectableEntity[],
       text = "",
       uuid = crypto.randomUUID() as string,
@@ -58,11 +51,10 @@ declare class ArcEdge extends Edge {
       sourceRectangleRate = Vector.same(0.5),
       targetRectangleRate = Vector.same(0.5),
       lineType = "solid",
+      arrowType = "default",
       offset = 0,
       textPosition = 0.5,
-    },
-    unknown = false,
-  );
+    }, unknown = false);
   adjustSizeByText(): void;
 }
 
@@ -74,22 +66,10 @@ declare class Association extends StageObject {
 declare class AutoAlign {
   constructor(project: Project | { _: "Project" | (string & {}) });
   getSelectionOuterRectangle(entities: Entity[]): Promise<Rectangle | null>;
-  calculateDistanceByRectangle(
-    rectA: Rectangle | { _: "Rectangle" | (string & {}) },
-    rectB: Rectangle | { _: "Rectangle" | (string & {}) },
-  ): Promise<void>;
-  alignRectangleToTargetX(
-    selectedRect: Rectangle | { _: "Rectangle" | (string & {}) },
-    otherRect: Rectangle | { _: "Rectangle" | (string & {}) },
-  ): Promise<number>;
-  alignRectangleToTargetY(
-    selectedRect: Rectangle | { _: "Rectangle" | (string & {}) },
-    otherRect: Rectangle | { _: "Rectangle" | (string & {}) },
-  ): Promise<number>;
-  _addAlignEffectByRect(
-    selectedRect: Rectangle | { _: "Rectangle" | (string & {}) },
-    otherRect: Rectangle | { _: "Rectangle" | (string & {}) },
-  ): Promise<void>;
+  calculateDistanceByRectangle(rectA: Rectangle | { _: "Rectangle" | (string & {}) }, rectB: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<void>;
+  alignRectangleToTargetX(selectedRect: Rectangle | { _: "Rectangle" | (string & {}) }, otherRect: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<number>;
+  alignRectangleToTargetY(selectedRect: Rectangle | { _: "Rectangle" | (string & {}) }, otherRect: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<number>;
+  _addAlignEffectByRect(selectedRect: Rectangle | { _: "Rectangle" | (string & {}) }, otherRect: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<void>;
   getGridSnapDeltaX(rect: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<void>;
   getGridSnapDeltaY(rect: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<void>;
   alignAllSelectedToGrid(): Promise<void>;
@@ -98,58 +78,23 @@ declare class AutoAlign {
   onEntityMoveAlignToGrid(selectedEntity: Entity | { _: "Entity" | (string & {}) }): Promise<void>;
   onEntityMoveAlignToGridX(selectedEntity: Entity | { _: "Entity" | (string & {}) }): Promise<void>;
   onEntityMoveAlignToGridY(selectedEntity: Entity | { _: "Entity" | (string & {}) }): Promise<void>;
-  onEntityMoveAlignToOtherEntity(
-    selectedEntity: Entity | { _: "Entity" | (string & {}) },
-    otherEntities: Entity[],
-    isPreAlign = false,
-  ): Promise<void>;
-  _addAlignEffect(
-    selectedEntity: Entity | { _: "Entity" | (string & {}) },
-    otherEntity: Entity | { _: "Entity" | (string & {}) },
-  ): Promise<void>;
-  onEntityMoveAlignToTargetEntityX(
-    selectedEntity: Entity | { _: "Entity" | (string & {}) },
-    otherEntity: Entity | { _: "Entity" | (string & {}) },
-    isPreAlign = false,
-  ): Promise<number>;
-  onEntityMoveAlignToTargetEntityY(
-    selectedEntity: Entity | { _: "Entity" | (string & {}) },
-    otherEntity: Entity | { _: "Entity" | (string & {}) },
-    isPreAlign = false,
-  ): Promise<number>;
-  calculateDistance(
-    entityA: Entity | { _: "Entity" | (string & {}) },
-    entityB: Entity | { _: "Entity" | (string & {}) },
-  ): Promise<void>;
-  autoLayoutSelectedFastTreeMode(
-    selectedRootEntity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<void>;
+  onEntityMoveAlignToOtherEntity(selectedEntity: Entity | { _: "Entity" | (string & {}) }, otherEntities: Entity[], isPreAlign = false): Promise<void>;
+  _addAlignEffect(selectedEntity: Entity | { _: "Entity" | (string & {}) }, otherEntity: Entity | { _: "Entity" | (string & {}) }): Promise<void>;
+  onEntityMoveAlignToTargetEntityX(selectedEntity: Entity | { _: "Entity" | (string & {}) }, otherEntity: Entity | { _: "Entity" | (string & {}) }, isPreAlign = false): Promise<number>;
+  onEntityMoveAlignToTargetEntityY(selectedEntity: Entity | { _: "Entity" | (string & {}) }, otherEntity: Entity | { _: "Entity" | (string & {}) }, isPreAlign = false): Promise<number>;
+  calculateDistance(entityA: Entity | { _: "Entity" | (string & {}) }, entityB: Entity | { _: "Entity" | (string & {}) }): Promise<void>;
+  autoLayoutSelectedFastTreeMode(selectedRootEntity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<void>;
 }
 
 declare class AutoCompleteManager {
   currentWindowId: Promise<string | undefined>;
   constructor(project: Project | { _: "Project" | (string & {}) });
   handle;
-  openWindow(
-    node: TextNode,
-    entries: Record<string, string>,
-    onSelect: (value: string) => void,
-    setWindowId: (id: string) => void,
-  ): Promise<void>;
+  openWindow(node: TextNode, entries: Record<string, string>, onSelect: (value: string) => void, setWindowId: (id: string) => void): Promise<void>;
   handleLogic(text: string, node: TextNode, ele: HTMLTextAreaElement, setWindowId: (id: string) => void): Promise<void>;
   handleReference;
-  handleReferenceFile(
-    searchText: string,
-    node: TextNode,
-    ele: HTMLTextAreaElement,
-    setWindowId: (id: string) => void,
-  ): Promise<void>;
-  handleReferenceSection(
-    searchText: string,
-    node: TextNode,
-    ele: HTMLTextAreaElement,
-    setWindowId: (id: string) => void,
-  ): Promise<void>;
+  handleReferenceFile(searchText: string, node: TextNode, ele: HTMLTextAreaElement, setWindowId: (id: string) => void): Promise<void>;
+  handleReferenceSection(searchText: string, node: TextNode, ele: HTMLTextAreaElement, setWindowId: (id: string) => void): Promise<void>;
 }
 
 declare class AutoCompute {
@@ -194,68 +139,29 @@ declare class AutoLayout {
     nodes: Array<{ id: string; rectangle: Rectangle }>;
     edges: Array<{ from: string; to: string }>;
   }): Promise<{ [nodeId: string]: Vector }>;
-  topologicalSort(
-    nodes: Array<{ id: string; rectangle: Rectangle }>,
-    edges: Array<{ from: string; to: string }>,
-  ): Promise<{ order: string[]; levels: Map<string, number> }>;
+  topologicalSort(nodes: Array<{ id: string; rectangle: Rectangle }>, edges: Array<{ from: string; to: string }>): Promise<{ order: string[]; levels: Map<string, number> }>;
   autoLayoutDAG(entities: ConnectableEntity[]): Promise<void>;
 }
 
 declare class AutoLayoutFastTree {
   constructor(project: Project | { _: "Project" | (string & {}) });
-  getTreeBoundingRectangle(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    skipDashed = false,
-  ): Promise<Rectangle>;
-  moveTreeRectTo(
-    treeRoot: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    targetLocation: Vector | { _: "Vector" | (string & {}) },
-    skipDashed = false,
-  ): Promise<void>;
-  getSortedChildNodes(
-    _node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    childNodes: ConnectableEntity[],
-    direction: "col" | "row" = "col",
-  ): Promise<ConnectableEntity>[];
-  alignTrees(
-    trees: ConnectableEntity[],
-    direction: "top" | "bottom" | "left" | "right",
-    gap = 10,
-    skipDashed = false,
-  ): Promise<void>;
-  adjustChildrenTreesByRootNodeLocation(
-    rootNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    childList: ConnectableEntity[],
-    gap = 100,
-    position: "rightCenter" | "leftCenter" | "bottomCenter" | "topCenter" = "rightCenter",
-    skipDashed = false,
-  ): Promise<void>;
-  resolveSubtreeOverlaps(
-    rootNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    directionGroups: {
+  getTreeBoundingRectangle(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, skipDashed = false): Promise<Rectangle>;
+  moveTreeRectTo(treeRoot: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, targetLocation: Vector | { _: "Vector" | (string & {}) }, skipDashed = false): Promise<void>;
+  getSortedChildNodes(_node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, childNodes: ConnectableEntity[], direction: "col" | "row" = "col"): Promise<ConnectableEntity>[];
+  alignTrees(trees: ConnectableEntity[], direction: "top" | "bottom" | "left" | "right", gap = 10, skipDashed = false): Promise<void>;
+  adjustChildrenTreesByRootNodeLocation(rootNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, childList: ConnectableEntity[], gap = 100, position: "rightCenter" | "leftCenter" | "bottomCenter" | "topCenter" = "rightCenter", skipDashed = false): Promise<void>;
+  resolveSubtreeOverlaps(rootNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, directionGroups: {
       right?: ConnectableEntity[];
       left?: ConnectableEntity[];
       bottom?: ConnectableEntity[];
       top?: ConnectableEntity[];
-    },
-    skipDashed = false,
-  ): Promise<void>;
-  hasOverlapOrLineIntersection(
-    rootNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    group1: ConnectableEntity[],
-    group2: ConnectableEntity[],
-    dir1: "left" | "right" | "top" | "bottom",
-    dir2: "left" | "right" | "top" | "bottom",
-    skipDashed = false,
-  ): Promise<boolean>;
+    }, skipDashed = false, minGap = 0): Promise<void>;
+  hasOverlapOrLineIntersection(rootNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, group1: ConnectableEntity[], group2: ConnectableEntity[], dir1: "left" | "right" | "top" | "bottom", dir2: "left" | "right" | "top" | "bottom", skipDashed = false, minGap = 0): Promise<boolean>;
   getMaxEdgeTextDimension(edges: Edge[], direction: "horizontal" | "vertical"): Promise<number>;
   autoLayoutFastTreeMode(rootNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<void>;
   treeReverseX(selectedRootEntity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<void>;
   treeReverseY(selectedRootEntity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<void>;
-  treeReverse(
-    selectedRootEntity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    direction: "X" | "Y",
-  ): Promise<void>;
+  treeReverse(selectedRootEntity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, direction: "X" | "Y"): Promise<void>;
 }
 
 declare class AutoSaveBackupService {
@@ -285,22 +191,13 @@ declare class BackgroundRenderer {
   renderVerticalBackground(viewRect: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<void>;
   renderCartesianBackground(viewRect: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<void>;
   getCurrentGap(): Promise<number>;
-  getLocationXIterator(
-    viewRect: Rectangle | { _: "Rectangle" | (string & {}) },
-    currentGap: number,
-  ): Promise<IterableIterator<number>>;
-  getLocationYIterator(
-    viewRect: Rectangle | { _: "Rectangle" | (string & {}) },
-    currentGap: number,
-  ): Promise<IterableIterator<number>>;
+  getLocationXIterator(viewRect: Rectangle | { _: "Rectangle" | (string & {}) }, currentGap: number): Promise<IterableIterator<number>>;
+  getLocationYIterator(viewRect: Rectangle | { _: "Rectangle" | (string & {}) }, currentGap: number): Promise<IterableIterator<number>>;
 }
 
 declare class BaseExporter {
   constructor(project: Project | { _: "Project" | (string & {}) });
-  getTreeTypeString(
-    textNode: TextNode | { _: "TextNode" | (string & {}) },
-    nodeToStringFunc: (node: TextNode, level: number) => string,
-  ): Promise<void>;
+  getTreeTypeString(textNode: TextNode | { _: "TextNode" | (string & {}) }, nodeToStringFunc: (node: TextNode, level: number) => string): Promise<void>;
   getNodeChildrenArray(node: TextNode | { _: "TextNode" | (string & {}) }): Promise<ConnectableEntity>[];
 }
 
@@ -332,10 +229,7 @@ declare class Camera {
   addScaleFollowMouseLocationTime(sec: number): Promise<void>;
   isStartZoomIn: Promise<boolean>;
   isStartZoomOut: Promise<boolean>;
-  setLocationByOtherLocation(
-    otherWorldLocation: Vector | { _: "Vector" | (string & {}) },
-    viewLocation: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<void>;
+  setLocationByOtherLocation(otherWorldLocation: Vector | { _: "Vector" | (string & {}) }, viewLocation: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
   clearMoveCommander(): Promise<void>;
   stopImmediately(): Promise<void>;
   dealCameraScaleInTick(): Promise<void>;
@@ -352,10 +246,7 @@ declare class Camera {
 
 declare class Canvas {
   ctx: Promise<CanvasRenderingContext2D>;
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    element: HTMLCanvasElement = document.createElement("canvas"),
-  );
+  constructor(project: Project | { _: "Project" | (string & {}) }, element: HTMLCanvasElement = document.createElement("canvas"));
   mount(wrapper: HTMLDivElement): Promise<void>;
   dispose(): Promise<void>;
 }
@@ -384,11 +275,7 @@ declare class CollisionBoxRenderer {
   constructor(project: Project | { _: "Project" | (string & {}) });
   get dynamicScale(): Promise<any>;
   get reDynamicScale(): Promise<any>;
-  render(
-    collideBox: CollisionBox | { _: "CollisionBox" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    dashed: boolean = false,
-  ): Promise<void>;
+  render(collideBox: CollisionBox | { _: "CollisionBox" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, dashed: boolean = false): Promise<void>;
 }
 
 declare class ComplexityDetector {
@@ -421,17 +308,13 @@ declare class ConnectPoint extends ConnectableEntity {
   _isSelected: Promise<boolean>;
   get isSelected(): Promise<any>;
   set isSelected(value: boolean);
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    {
+  constructor(project: Project | { _: "Project" | (string & {}) }, {
       uuid = crypto.randomUUID() as string,
       collisionBox = new CollisionBox([
         new Rectangle(Vector.getZero(), Vector.same(ConnectPoint.CONNECT_POINT_SHRINK_RADIUS * 2)),
       ]),
       details = [],
-    },
-    unknown = false,
-  );
+    }, unknown = false);
   move(delta: Vector | { _: "Vector" | (string & {}) }): void;
   moveTo(location: Vector | { _: "Vector" | (string & {}) }): void;
 }
@@ -444,10 +327,7 @@ declare class ContentSearch {
   currentSearchResultIndex;
   getStageObjectText(stageObject: StageObject | { _: "StageObject" | (string & {}) }): Promise<string>;
   getSelectedObjectsBounds(): Promise<Rectangle | null>;
-  isObjectInBounds(
-    obj: StageObject | { _: "StageObject" | (string & {}) },
-    bounds: Rectangle | { _: "Rectangle" | (string & {}) },
-  ): Promise<boolean>;
+  isObjectInBounds(obj: StageObject | { _: "StageObject" | (string & {}) }, bounds: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<boolean>;
   startSearch(searchString: string, autoFocus = true): Promise<boolean>;
   nextSearchResult(): Promise<void>;
   previousSearchResult(): Promise<void>;
@@ -597,10 +477,7 @@ declare class ControllerCuttingClass extends ControllerClass {
 
 declare class ControllerEdgeEditClass extends ControllerClass {
   editEdgeText(clickedLineEdge: Edge | { _: "Edge" | (string & {}) }, selectAll = true): Promise<void>;
-  editMultiTargetEdgeText(
-    clickedEdge: MultiTargetUndirectedEdge | { _: "MultiTargetUndirectedEdge" | (string & {}) },
-    selectAll = true,
-  ): Promise<void>;
+  editMultiTargetEdgeText(clickedEdge: MultiTargetUndirectedEdge | { _: "MultiTargetUndirectedEdge" | (string & {}) }, selectAll = true): Promise<void>;
   mouseDoubleClick;
   keydown;
 }
@@ -688,18 +565,9 @@ declare class ControllerNodeConnectionClass extends ControllerClass {
   directionToRate(direction: Direction | null): Promise<Vector>;
   getPreviewSourceRectangleRate(): Promise<Vector>;
   getPreviewTargetRectangleRate(): Promise<Vector>;
-  dragMultiConnect(
-    connectToEntity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    sourceDirection: Direction | null = null,
-    targetDirection: Direction | null = null,
-  ): Promise<void>;
+  dragMultiConnect(connectToEntity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, sourceDirection: Direction | null = null, targetDirection: Direction | null = null): Promise<void>;
   isConnecting(): Promise<void>;
-  addConnectEffect(
-    from: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    to: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    sourceRectRate?: Vector | { _: "Vector" | (string & {}) },
-    targetRectRate?: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<void>;
+  addConnectEffect(from: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, to: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, sourceRectRate?: Vector | { _: "Vector" | (string & {}) }, targetRectRate?: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
 }
 
 declare class ControllerNodeEditClass extends ControllerClass {
@@ -768,11 +636,7 @@ declare class ControllerUtils {
   editEdgeText(edge: Edge | MultiTargetUndirectedEdge, selectAll = true): Promise<void>;
   editNodeDetailsByKeyboard(): Promise<void>;
   editNodeDetails(clickedNode: Entity): Promise<void>;
-  addTextNodeByLocation(
-    location: Vector | { _: "Vector" | (string & {}) },
-    selectCurrent: boolean = false,
-    autoEdit: boolean = false,
-  ): Promise<void>;
+  addTextNodeByLocation(location: Vector | { _: "Vector" | (string & {}) }, selectCurrent: boolean = false, autoEdit: boolean = false): Promise<void>;
   createConnectPoint(location: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
   addTextNodeFromCurrentSelectedNode(direction: Direction, selectCurrent = false): Promise<void>;
   textNodeInEditModeByUUID(uuid: string): Promise<void>;
@@ -821,14 +685,8 @@ declare class CubicCatmullRomSplineEdge extends Edge {
   addControlPoint(): Promise<void>;
   _collisionBox: Promise<CollisionBox>;
   get collisionBox(): Promise<CollisionBox>;
-  fromTwoEntity(
-    project: Project | { _: "Project" | (string & {}) },
-    source: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    target: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<CubicCatmullRomSplineEdge>;
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    {
+  fromTwoEntity(project: Project | { _: "Project" | (string & {}) }, source: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, target: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<CubicCatmullRomSplineEdge>;
+  constructor(project: Project | { _: "Project" | (string & {}) }, {
       uuid,
       source,
       target,
@@ -839,9 +697,7 @@ declare class CubicCatmullRomSplineEdge extends Edge {
       controlPoints,
       sourceRectRate,
       targetRectRate,
-    }: Serialized.CubicCatmullRomSplineEdge,
-    unknown = false,
-  );
+    }: Serialized.CubicCatmullRomSplineEdge, unknown = false);
   getShape(): Promise<CubicCatmullRomSpline>;
   get textRectangle(): Promise<Rectangle>;
   autoUpdateControlPoints(): Promise<void>;
@@ -886,81 +742,21 @@ declare enum CursorNameEnum {
 
 declare class CurveRenderer {
   constructor(project: Project | { _: "Project" | (string & {}) });
-  renderSolidLine(
-    start: Vector | { _: "Vector" | (string & {}) },
-    end: Vector | { _: "Vector" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    width: number,
-  ): void;
+  renderSolidLine(start: Vector | { _: "Vector" | (string & {}) }, end: Vector | { _: "Vector" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, width: number): void;
   renderSolidLineMultiple(locations: Vector[], color: Color | { _: "Color" | (string & {}) }, width: number): void;
   renderPenStroke(stroke: PenStrokeSegment[], color: Color | { _: "Color" | (string & {}) }): void;
-  renderSolidLineMultipleSmoothly(
-    locations: Vector[],
-    color: Color | { _: "Color" | (string & {}) },
-    width: number,
-  ): void;
+  renderSolidLineMultipleSmoothly(locations: Vector[], color: Color | { _: "Color" | (string & {}) }, width: number): void;
   smoothPoints(points: Vector[], tension = 0.5): Promise<void>;
-  renderSolidLineMultipleWithWidth(
-    locations: Vector[],
-    color: Color | { _: "Color" | (string & {}) },
-    widthList: number[],
-  ): void;
-  renderSolidLineMultipleWithShadow(
-    locations: Vector[],
-    color: Color | { _: "Color" | (string & {}) },
-    width: number,
-    shadowColor: Color | { _: "Color" | (string & {}) },
-    shadowBlur: number,
-  ): void;
-  renderDashedLine(
-    start: Vector | { _: "Vector" | (string & {}) },
-    end: Vector | { _: "Vector" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    width: number,
-    dashLength: number,
-  ): void;
-  renderDoubleLine(
-    start: Vector | { _: "Vector" | (string & {}) },
-    end: Vector | { _: "Vector" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    width: number,
-    gap: number,
-  ): void;
-  renderBezierCurve(
-    curve: CubicBezierCurve | { _: "CubicBezierCurve" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    width: number,
-  ): void;
-  renderDashedBezierCurve(
-    curve: CubicBezierCurve | { _: "CubicBezierCurve" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    width: number,
-    dashLength: number,
-  ): void;
-  renderDoubleBezierCurve(
-    curve: CubicBezierCurve | { _: "CubicBezierCurve" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    width: number,
-    gap: number,
-  ): void;
-  renderSymmetryCurve(
-    curve: SymmetryCurve | { _: "SymmetryCurve" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    width: number,
-  ): void;
-  renderGradientLine(
-    start: Vector | { _: "Vector" | (string & {}) },
-    end: Vector | { _: "Vector" | (string & {}) },
-    startColor: Color | { _: "Color" | (string & {}) },
-    endColor: Color | { _: "Color" | (string & {}) },
-    width: number,
-  ): void;
-  renderGradientBezierCurve(
-    curve: CubicBezierCurve | { _: "CubicBezierCurve" | (string & {}) },
-    startColor: Color | { _: "Color" | (string & {}) },
-    endColor: Color | { _: "Color" | (string & {}) },
-    width: number,
-  ): void;
+  renderSolidLineMultipleWithWidth(locations: Vector[], color: Color | { _: "Color" | (string & {}) }, widthList: number[]): void;
+  renderSolidLineMultipleWithShadow(locations: Vector[], color: Color | { _: "Color" | (string & {}) }, width: number, shadowColor: Color | { _: "Color" | (string & {}) }, shadowBlur: number): void;
+  renderDashedLine(start: Vector | { _: "Vector" | (string & {}) }, end: Vector | { _: "Vector" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, width: number, dashLength: number): void;
+  renderDoubleLine(start: Vector | { _: "Vector" | (string & {}) }, end: Vector | { _: "Vector" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, width: number, gap: number): void;
+  renderBezierCurve(curve: CubicBezierCurve | { _: "CubicBezierCurve" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, width: number): void;
+  renderDashedBezierCurve(curve: CubicBezierCurve | { _: "CubicBezierCurve" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, width: number, dashLength: number): void;
+  renderDoubleBezierCurve(curve: CubicBezierCurve | { _: "CubicBezierCurve" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, width: number, gap: number): void;
+  renderSymmetryCurve(curve: SymmetryCurve | { _: "SymmetryCurve" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, width: number): void;
+  renderGradientLine(start: Vector | { _: "Vector" | (string & {}) }, end: Vector | { _: "Vector" | (string & {}) }, startColor: Color | { _: "Color" | (string & {}) }, endColor: Color | { _: "Color" | (string & {}) }, width: number): void;
+  renderGradientBezierCurve(curve: CubicBezierCurve | { _: "CubicBezierCurve" | (string & {}) }, startColor: Color | { _: "Color" | (string & {}) }, endColor: Color | { _: "Color" | (string & {}) }, width: number): void;
 }
 
 declare class DeleteManager {
@@ -979,30 +775,20 @@ declare class DeleteManager {
   deleteUrlNode(entity: UrlNode | { _: "UrlNode" | (string & {}) }): Promise<void>;
   deleteConnectPoint(entity: ConnectPoint | { _: "ConnectPoint" | (string & {}) }): Promise<void>;
   deleteTextNode(entity: TextNode | { _: "TextNode" | (string & {}) }): Promise<void>;
-  deleteEntityAfterClearAssociation(
-    entity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<void>;
+  deleteEntityAfterClearAssociation(entity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<void>;
   deleteEdge(deleteEdge: Edge | { _: "Edge" | (string & {}) }): Promise<boolean>;
-  deleteMultiTargetUndirectedEdge(
-    edge: MultiTargetUndirectedEdge | { _: "MultiTargetUndirectedEdge" | (string & {}) },
-  ): Promise<void>;
+  deleteMultiTargetUndirectedEdge(edge: MultiTargetUndirectedEdge | { _: "MultiTargetUndirectedEdge" | (string & {}) }): Promise<void>;
 }
 
 declare function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>);
 declare namespace Dialog {
   function confirm(title = "你确定？", description = "", { destructive = false } = {}): Promise<boolean>;
-  function input(
-    title = "请输入文本",
-    description = "",
-    { defaultValue = "", placeholder = "...", destructive = false, multiline = false } = {},
-  ): Promise<string | undefined>;
-  function buttons<
-    Buttons extends readonly {
-      id: string;
-      label: string;
-      variant?: Parameters<typeof Button>[number]["variant"];
-    }[],
-  >(title: string, description: string, buttons: Buttons): Promise<Buttons[number]["id"]>;
+  function input(title = "请输入文本", description = "", { defaultValue = "", placeholder = "...", destructive = false, multiline = false } = {}): Promise<string | undefined>;
+  function buttons<Buttons extends readonly {
+    id: string;
+    label: string;
+    variant?: Parameters<typeof Button>[number]["variant"];
+  }[]>(title: string, description: string, buttons: Buttons): Promise<Buttons[number]["id"]>;
   function copy(title = "导出成功", description = "", value = ""): Promise<void>;
 }
 
@@ -1024,10 +810,7 @@ declare class DrawingControllerRenderer {
   rotateUpAngle(): Promise<void>;
   rotateDownAngle(): Promise<void>;
   renderAngleMouse(mouseLocation: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
-  renderLine(
-    lineStart: Vector | { _: "Vector" | (string & {}) },
-    lineEnd: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<void>;
+  renderLine(lineStart: Vector | { _: "Vector" | (string & {}) }, lineEnd: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
 }
 
 declare class Edge extends ConnectableAssociation {
@@ -1044,15 +827,9 @@ declare class Edge extends ConnectableAssociation {
   get targetLocation(): Promise<Vector>;
   targetRectangleRate: Promise<Vector>;
   sourceRectangleRate: Promise<Vector>;
-  getCenterLine(
-    source: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    target: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<Line>;
+  getCenterLine(source: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, target: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<Line>;
   getNormalVectorByRate(rate: Vector | { _: "Vector" | (string & {}) }): Promise<Vector | null>;
-  getExactEdgePositionByRate(
-    rect: Rectangle | { _: "Rectangle" | (string & {}) },
-    rate: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<Vector | null>;
+  getExactEdgePositionByRate(rect: Rectangle | { _: "Rectangle" | (string & {}) }, rate: Vector | { _: "Vector" | (string & {}) }): Promise<Vector | null>;
   adjustSizeByText(): void;
   rename(text: string): Promise<void>;
   isIntersectsWithRectangle(rectangle: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<boolean>;
@@ -1074,41 +851,19 @@ declare class EdgeRenderer {
   renderLineEdge(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<void>;
   renderCrEdge(edge: CubicCatmullRomSplineEdge | { _: "CubicCatmullRomSplineEdge" | (string & {}) }): Promise<void>;
   renderArcEdge(edge: ArcEdge | { _: "ArcEdge" | (string & {}) }): Promise<void>;
-  getMinNonCollapseParentSection(
-    innerEntity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<Section>;
+  getMinNonCollapseParentSection(innerEntity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<Section>;
   getEdgeView(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<LineEdge>;
   getEdgeSvg(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<React.ReactNode>;
-  renderVirtualEdge(
-    startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    mouseLocation: Vector | { _: "Vector" | (string & {}) },
-    sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<void>;
-  renderVirtualConfirmedEdge(
-    startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    endNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-    targetRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<void>;
+  renderVirtualEdge(startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, mouseLocation: Vector | { _: "Vector" | (string & {}) }, sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
+  renderVirtualConfirmedEdge(startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, endNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) }, targetRectangleRate?: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
   getCuttingEffects(edge: Edge | { _: "Edge" | (string & {}) }): Promise<void>;
-  getConnectedEffects(
-    startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-    targetRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<void>;
-  renderArrowHead(
-    endPoint: Vector | { _: "Vector" | (string & {}) },
-    direction: Vector | { _: "Vector" | (string & {}) },
-    size: number,
-    color: Color | { _: "Color" | (string & {}) },
-  ): Promise<void>;
-  generateArrowHeadSvg(
-    endPoint: Vector | { _: "Vector" | (string & {}) },
-    direction: Vector | { _: "Vector" | (string & {}) },
-    size: number,
-    edgeColor: Color | { _: "Color" | (string & {}) },
-  ): Promise<React.ReactNode>;
+  getConnectedEffects(startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) }, targetRectangleRate?: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
+  renderArrowHead(endPoint: Vector | { _: "Vector" | (string & {}) }, direction: Vector | { _: "Vector" | (string & {}) }, size: number, color: Color | { _: "Color" | (string & {}) }): Promise<void>;
+  renderArrowByType(endPoint: Vector | { _: "Vector" | (string & {}) }, startPoint: Vector | { _: "Vector" | (string & {}) }, direction: Vector | { _: "Vector" | (string & {}) }, size: number, color: Color | { _: "Color" | (string & {}) }, arrowType: string, edgeWidth: number = 2, sourceDirection?: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
+  renderHollowTriangleArrow(endPoint: Vector | { _: "Vector" | (string & {}) }, direction: Vector | { _: "Vector" | (string & {}) }, size: number, color: Color | { _: "Color" | (string & {}) }, edgeWidth: number): Promise<void>;
+  renderFilledTriangleArrow(endPoint: Vector | { _: "Vector" | (string & {}) }, direction: Vector | { _: "Vector" | (string & {}) }, size: number, color: Color | { _: "Color" | (string & {}) }): Promise<void>;
+  renderDiamondAtSource(sourceEdgePoint: Vector | { _: "Vector" | (string & {}) }, direction: Vector | { _: "Vector" | (string & {}) }, size: number, color: Color | { _: "Color" | (string & {}) }, filled: boolean, edgeWidth: number): Promise<void>;
+  generateArrowHeadSvg(endPoint: Vector | { _: "Vector" | (string & {}) }, direction: Vector | { _: "Vector" | (string & {}) }, size: number, edgeColor: Color | { _: "Color" | (string & {}) }): Promise<React.ReactNode>;
 }
 
 declare class EdgeRendererClass {
@@ -1121,24 +876,10 @@ declare class EdgeRendererClass {
   getNormalStageSvg(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<React.ReactNode>;
   getShiftingStageSvg(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<React.ReactNode>;
   getCycleStageSvg(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<React.ReactNode>;
-  renderVirtualEdge(
-    startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    mouseLocation: Vector | { _: "Vector" | (string & {}) },
-    sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-  ): void;
-  renderVirtualConfirmedEdge(
-    startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    endNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-    targetRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-  ): void;
+  renderVirtualEdge(startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, mouseLocation: Vector | { _: "Vector" | (string & {}) }, sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) }): void;
+  renderVirtualConfirmedEdge(startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, endNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) }, targetRectangleRate?: Vector | { _: "Vector" | (string & {}) }): void;
   getCuttingEffects(edge: Edge | { _: "Edge" | (string & {}) }): Promise<Effect>[];
-  getConnectedEffects(
-    startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-    targetRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<Effect>[];
+  getConnectedEffects(startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) }, targetRectangleRate?: Vector | { _: "Vector" | (string & {}) }): Promise<Effect>[];
 }
 
 declare class Effect {
@@ -1192,30 +933,13 @@ declare class EntityMoveManager {
   continuousMoveKeyRelease(direction: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
   stopImmediately(): Promise<void>;
   canMoveEntity(entity: Entity | { _: "Entity" | (string & {}) }): Promise<boolean>;
-  moveEntityUtils(
-    entity: Entity | { _: "Entity" | (string & {}) },
-    delta: Vector | { _: "Vector" | (string & {}) },
-    isAutoAdjustSection: boolean = true,
-  ): Promise<void>;
-  jumpMoveEntityUtils(
-    entity: Entity | { _: "Entity" | (string & {}) },
-    delta: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<void>;
-  moveEntityToUtils(
-    entity: Entity | { _: "Entity" | (string & {}) },
-    location: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<void>;
-  moveSelectedEntities(
-    delta: Vector | { _: "Vector" | (string & {}) },
-    isAutoAdjustSection: boolean = true,
-  ): Promise<void>;
+  moveEntityUtils(entity: Entity | { _: "Entity" | (string & {}) }, delta: Vector | { _: "Vector" | (string & {}) }, isAutoAdjustSection: boolean = true): Promise<void>;
+  jumpMoveEntityUtils(entity: Entity | { _: "Entity" | (string & {}) }, delta: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
+  moveEntityToUtils(entity: Entity | { _: "Entity" | (string & {}) }, location: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
+  moveSelectedEntities(delta: Vector | { _: "Vector" | (string & {}) }, isAutoAdjustSection: boolean = true): Promise<void>;
   jumpMoveSelectedConnectableEntities(delta: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
   moveEntitiesWithChildren(delta: Vector | { _: "Vector" | (string & {}) }, skipDashed = true): Promise<void>;
-  moveWithChildren(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    delta: Vector | { _: "Vector" | (string & {}) },
-    skipDashed = false,
-  ): Promise<void>;
+  moveWithChildren(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, delta: Vector | { _: "Vector" | (string & {}) }, skipDashed = false): Promise<void>;
 }
 
 declare class EntityRenderer {
@@ -1226,10 +950,7 @@ declare class EntityRenderer {
   tickNumber;
   renderAllSectionsBackground(viewRectangle: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<void>;
   renderAllSectionsBigTitle(viewRectangle: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<void>;
-  shouldSkipEntity(
-    entity: Entity | { _: "Entity" | (string & {}) },
-    viewRectangle: Rectangle | { _: "Rectangle" | (string & {}) },
-  ): Promise<boolean>;
+  shouldSkipEntity(entity: Entity | { _: "Entity" | (string & {}) }, viewRectangle: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<boolean>;
   isBackgroundImageNode(entity: Entity | { _: "Entity" | (string & {}) }): Promise<boolean>;
   renderAllEntities(viewRectangle: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<void>;
   renderEntity(entity: Entity | { _: "Entity" | (string & {}) }): Promise<void>;
@@ -1273,9 +994,8 @@ declare class ExtensionEntity extends ConnectableEntity {
   _isDirty;
   _isRendering;
   _renderFailed;
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    {
+  _lastRenderedPixelRatio;
+  constructor(project: Project | { _: "Project" | (string & {}) }, {
       uuid = crypto.randomUUID(),
       extensionId = "",
       typeName = "",
@@ -1287,8 +1007,7 @@ declare class ExtensionEntity extends ConnectableEntity {
       typeName?: string;
       customData?: any;
       collisionBox?: CollisionBox;
-    } = {},
-  );
+    } = {});
   get rectangle(): Promise<Rectangle>;
   get location(): Promise<Vector>;
   set location(v: Vector);
@@ -1307,27 +1026,10 @@ declare class ExtensionEntityRenderer {
   constructor(project: Project | { _: "Project" | (string & {}) });
   render(entity: ExtensionEntity | { _: "ExtensionEntity" | (string & {}) }): Promise<void>;
   drawPendingBox(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): Promise<void>;
-  drawErrorBox(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    text: string,
-    extensionId: string,
-    color: string,
-  ): Promise<void>;
-  drawCollisionBox(
-    ctx: CanvasRenderingContext2D,
-    entity: ExtensionEntity | { _: "ExtensionEntity" | (string & {}) },
-    scale: number,
-  ): Promise<void>;
-  renderSelectionOutline(
-    ctx: CanvasRenderingContext2D,
-    entity: ExtensionEntity | { _: "ExtensionEntity" | (string & {}) },
-    scale: number,
-  ): Promise<void>;
-  triggerWorkerRender(entity: ExtensionEntity | { _: "ExtensionEntity" | (string & {}) }): Promise<void>;
+  drawErrorBox(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, text: string, extensionId: string, color: string): Promise<void>;
+  drawCollisionBox(ctx: CanvasRenderingContext2D, entity: ExtensionEntity | { _: "ExtensionEntity" | (string & {}) }, scale: number): Promise<void>;
+  renderSelectionOutline(ctx: CanvasRenderingContext2D, entity: ExtensionEntity | { _: "ExtensionEntity" | (string & {}) }, scale: number): Promise<void>;
+  triggerWorkerRender(entity: ExtensionEntity | { _: "ExtensionEntity" | (string & {}) }, pixelRatio: number): Promise<void>;
 }
 
 declare interface FileSystemProvider {
@@ -1357,64 +1059,25 @@ declare class GraphMethods {
   constructor(project: Project | { _: "Project" | (string & {}) });
   isTree(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, skipDashed = false): Promise<boolean>;
   getNodeDisplayName(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<string>;
-  validateTreeStructure(
-    rootNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    skipDashed = false,
-  ): Promise<TreeValidationResult>;
-  nodeChildrenArray(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    skipDashed = false,
-  ): Promise<ConnectableEntity>[];
-  nodeParentArray(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    skipDashed = false,
-  ): Promise<ConnectableEntity>[];
+  validateTreeStructure(rootNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, skipDashed = false): Promise<TreeValidationResult>;
+  nodeChildrenArray(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, skipDashed = false): Promise<ConnectableEntity>[];
+  nodeParentArray(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, skipDashed = false): Promise<ConnectableEntity>[];
   edgeChildrenArray(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<Edge>[];
   edgeParentArray(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<Edge>[];
   getReversedEdgeDict(skipDashed = false): Promise<Record<string, string>>;
-  isCurrentNodeInTreeStructAndNotRoot(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<boolean>;
-  getRoots(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    skipDashed = false,
-  ): Promise<ConnectableEntity>[];
-  isConnected(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    target: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<boolean>;
-  getSuccessorSet(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    isHaveSelf: boolean = true,
-    skipDashed = false,
-  ): Promise<ConnectableEntity>[];
-  getOneStepSuccessorSet(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<ConnectableEntity>[];
-  getEdgesBetween(
-    node1: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    node2: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<Edge>[];
-  getEdgeFromTwoEntity(
-    fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<Edge | null>;
-  getHyperEdgesByNode(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<MultiTargetUndirectedEdge>[];
+  isCurrentNodeInTreeStructAndNotRoot(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<boolean>;
+  getRoots(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, skipDashed = false): Promise<ConnectableEntity>[];
+  isConnected(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, target: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<boolean>;
+  getSuccessorSet(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, isHaveSelf: boolean = true, skipDashed = false): Promise<ConnectableEntity>[];
+  getOneStepSuccessorSet(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<ConnectableEntity>[];
+  getEdgesBetween(node1: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, node2: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<Edge>[];
+  getEdgeFromTwoEntity(fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<Edge | null>;
+  getHyperEdgesByNode(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<MultiTargetUndirectedEdge>[];
   getOutgoingEdges(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<Edge>[];
   getIncomingEdges(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<Edge>[];
-  getNodesConnectedByHyperEdges(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<ConnectableEntity>[];
-  nodeChildrenArrayWithinSet(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    nodeSet: Set<string>,
-  ): Promise<ConnectableEntity>[];
-  nodeParentArrayWithinSet(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    nodeSet: Set<string>,
-  ): Promise<ConnectableEntity>[];
+  getNodesConnectedByHyperEdges(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<ConnectableEntity>[];
+  nodeChildrenArrayWithinSet(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, nodeSet: Set<string>): Promise<ConnectableEntity>[];
+  nodeParentArrayWithinSet(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, nodeSet: Set<string>): Promise<ConnectableEntity>[];
   getTreeRootByNodes(nodes: ConnectableEntity[]): Promise<ConnectableEntity | null>;
   isTreeByNodes(nodes: ConnectableEntity[]): Promise<boolean>;
   isDAGByNodes(nodes: ConnectableEntity[]): Promise<boolean>;
@@ -1445,19 +1108,14 @@ declare class ImageNode extends ConnectableEntity implements ResizeAble {
   set isSelected(value: boolean);
   bitmap: Promise<ImageBitmap | undefined>;
   state: Promise<"loading" | "success" | "notFound">;
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    {
+  constructor(project: Project | { _: "Project" | (string & {}) }, {
       uuid = crypto.randomUUID() as string,
       collisionBox = new CollisionBox([new Rectangle(Vector.getZero(), Vector.getZero())]),
       details = [],
       attachmentId = "",
       scale = 1,
       isBackground = false,
-    },
-    unknown = false,
-    onReady?: () => void,
-  );
+    }, unknown = false, onReady?: () => void);
   scaleUpdate(scaleDiff: number): Promise<void>;
   get rectangle(): Promise<Rectangle>;
   get geometryCenter(): Promise<any>;
@@ -1472,33 +1130,13 @@ declare class ImageNode extends ConnectableEntity implements ResizeAble {
 
 declare class ImageRenderer {
   constructor(project: Project | { _: "Project" | (string & {}) });
-  renderImageElement(
-    source: Exclude<CanvasImageSource, VideoFrame | SVGElement>,
-    location: Vector | { _: "Vector" | (string & {}) },
-    scale: number = 1 / (window.devicePixelRatio || 1),
-  ): Promise<void>;
-  renderImageBitmap(
-    bitmap: ImageBitmap | undefined,
-    location: Vector | { _: "Vector" | (string & {}) },
-    scale: number = 1 / (window.devicePixelRatio || 1),
-  ): Promise<void>;
+  renderImageElement(source: Exclude<CanvasImageSource, VideoFrame | SVGElement>, location: Vector | { _: "Vector" | (string & {}) }, scale: number = 1 / (window.devicePixelRatio || 1)): Promise<void>;
+  renderImageBitmap(bitmap: ImageBitmap | undefined, location: Vector | { _: "Vector" | (string & {}) }, scale: number = 1 / (window.devicePixelRatio || 1)): Promise<void>;
 }
 
 declare class InputElement {
-  input(
-    location: Vector | { _: "Vector" | (string & {}) },
-    defaultValue: string,
-    onChange: (value: string) => void = () => {},
-    style: Partial<CSSStyleDeclaration> = {},
-  ): Promise<string>;
-  textarea(
-    defaultValue: string,
-    onChange: (value: string, element: HTMLTextAreaElement) => void = () => {},
-    style: Partial<CSSStyleDeclaration> = {},
-    selectAllWhenCreated = true,
-    exitOnWheel = false,
-    fixedWidth?: number,
-  ): Promise<string>;
+  input(location: Vector | { _: "Vector" | (string & {}) }, defaultValue: string, onChange: (value: string) => void = () => {}, style: Partial<CSSStyleDeclaration> = {}): Promise<string>;
+  textarea(defaultValue: string, onChange: (value: string, element: HTMLTextAreaElement) => void = () => {}, style: Partial<CSSStyleDeclaration> = {}, selectAllWhenCreated = true, exitOnWheel = false, fixedWidth?: number): Promise<string>;
   addSuccessEffect(): Promise<void>;
   addFailEffect(withToast = true): Promise<void>;
   constructor(project: Project | { _: "Project" | (string & {}) });
@@ -1513,26 +1151,22 @@ declare class KeyBindHintEngine {
   isShowingHint;
   hasOtherKeyPressed;
   hasModifierReleased;
-  cachedKeyBinds: Promise<
-    Array<{
-      id: string;
-      key: string;
-      displayKey: string;
-      title: string;
-    }>
-  >;
+  cachedKeyBinds: Promise<Array<{
+    id: string;
+    key: string;
+    displayKey: string;
+    title: string;
+  }>>;
   getCurrentModifierCombo(): Promise<string>;
   isOnlyModifiersPressed(): Promise<boolean>;
   convertModifierComboForMatching(combo: string): Promise<string>;
   isKeyBindMatchModifier(key: string, modifierCombo: string): Promise<boolean>;
-  getMatchingKeyBinds(modifierCombo: string): Promise<
-    Array<{
-      id: string;
-      key: string;
-      displayKey: string;
-      title: string;
-    }>
-  >;
+  getMatchingKeyBinds(modifierCombo: string): Promise<Array<{
+    id: string;
+    key: string;
+    displayKey: string;
+    title: string;
+  }>>;
   getKeyBindTitle(id: string): Promise<string>;
   update(): Promise<void>;
   render(): Promise<void>;
@@ -1578,40 +1212,24 @@ declare class KeyboardOnlyGraphEngine {
 
 declare class KeyboardOnlyTreeEngine {
   constructor(project: Project | { _: "Project" | (string & {}) });
-  getNodePreDirection(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<"right" | "left" | "down" | "up">;
+  getOppositeDirection(direction: Direction): Promise<Direction>;
+  changeEdgeToDirection(edge: Edge | { _: "Edge" | (string & {}) }, direction: Direction): Promise<void>;
+  isEdgeOnSameAxis(edge: Edge | { _: "Edge" | (string & {}) }, direction: Direction): Promise<boolean>;
+  adjustSubtreeDirection(root: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, direction: Direction): Promise<void>;
+  adjustSelectedSubtreesDirection(direction: Direction): Promise<void>;
+  getNodePreDirection(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<"right" | "left" | "down" | "up">;
   preDirectionCacheMap: Promise<Map<string, "right" | "left" | "down" | "up">>;
-  getGrowthLineStart(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    direction: "right" | "left" | "down" | "up",
-  ): Promise<Vector>;
-  getGrowthLineEnd(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    direction: "right" | "left" | "down" | "up",
-  ): Promise<Vector>;
-  findConnectTargetByGrowthLine(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    direction: "right" | "left" | "down" | "up",
-  ): Promise<ConnectableEntity | null>;
+  getGrowthLineStart(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, direction: "right" | "left" | "down" | "up"): Promise<Vector>;
+  getGrowthLineEnd(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, direction: "right" | "left" | "down" | "up"): Promise<Vector>;
+  findConnectTargetByGrowthLine(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, direction: "right" | "left" | "down" | "up"): Promise<ConnectableEntity | null>;
   changePreDirection(nodes: ConnectableEntity[], direction: "right" | "left" | "down" | "up"): void;
   addNodeEffectByPreDirection(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): void;
   onDeepGenerateNode(defaultText = "", selectAll = true, editEdgeFirst = false): Promise<void>;
   onBroadGenerateNode(): Promise<void>;
-  adjustTreeNode(
-    entity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    withEffect = true,
-  ): Promise<void>;
+  adjustTreeNode(entity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, withEffect = true): Promise<void>;
   onDeleteCurrentNode(): Promise<void>;
-  calculateNewNodeFontScaleLevel(
-    parentNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    preDirection: "right" | "left" | "down" | "up",
-  ): Promise<number>;
-  editEdgeTextAndThenNode(
-    edge: Edge | { _: "Edge" | (string & {}) },
-    newNode: TextNode | { _: "TextNode" | (string & {}) },
-    selectAll = true,
-  ): Promise<void>;
+  calculateNewNodeFontScaleLevel(parentNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, preDirection: "right" | "left" | "down" | "up"): Promise<number>;
+  editEdgeTextAndThenNode(edge: Edge | { _: "Edge" | (string & {}) }, newNode: TextNode | { _: "TextNode" | (string & {}) }, selectAll = true): Promise<void>;
 }
 
 declare class LatexNode extends ConnectableEntity {
@@ -1630,9 +1248,7 @@ declare class LatexNode extends ConnectableEntity {
   set isSelected(value: boolean);
   get rectangle(): Promise<Rectangle>;
   get geometryCenter(): Promise<Vector>;
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    {
+  constructor(project: Project | { _: "Project" | (string & {}) }, {
       uuid = crypto.randomUUID(),
       details = [],
       latexSource = "",
@@ -1646,16 +1262,12 @@ declare class LatexNode extends ConnectableEntity {
       collisionBox?: CollisionBox;
       color?: Color;
       fontScaleLevel?: number;
-    },
-  );
+    });
   getScale(): Promise<number>;
   increaseFontSize(anchorRate?: Vector | { _: "Vector" | (string & {}) }): void;
   decreaseFontSize(anchorRate?: Vector | { _: "Vector" | (string & {}) }): void;
   updateCollisionBoxByScale(anchorRate?: Vector | { _: "Vector" | (string & {}) }): void;
-  _adjustLocationToKeepAnchor(
-    oldRect: Rectangle | { _: "Rectangle" | (string & {}) },
-    anchorRate: Vector | { _: "Vector" | (string & {}) },
-  ): void;
+  _adjustLocationToKeepAnchor(oldRect: Rectangle | { _: "Rectangle" | (string & {}) }, anchorRate: Vector | { _: "Vector" | (string & {}) }): void;
   updateLatex(newLatex: string, colorCss?: string): Promise<void>;
   reRenderWithColor(colorCss: string): Promise<void>;
   renderLatexToImage(latex: string, colorCss: string = "#000000"): Promise<void>;
@@ -1692,13 +1304,12 @@ declare class LineEdge extends Edge {
   text: Promise<string>;
   color: Promise<Color>;
   lineType: Promise<string>;
+  arrowType: Promise<string>;
   get collisionBox(): Promise<CollisionBox>;
   get shiftingIndex(): Promise<number>;
   set shiftingIndex(value: number);
   _shiftingIndex: Promise<number>;
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    {
+  constructor(project: Project | { _: "Project" | (string & {}) }, {
       associationList = [] as ConnectableEntity[],
       text = "",
       uuid = crypto.randomUUID() as string,
@@ -1706,14 +1317,9 @@ declare class LineEdge extends Edge {
       sourceRectangleRate = Vector.same(0.5),
       targetRectangleRate = Vector.same(0.5),
       lineType = "solid",
-    },
-    unknown = false,
-  );
-  fromTwoEntity(
-    project: Project | { _: "Project" | (string & {}) },
-    source: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    target: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<LineEdge>;
+      arrowType = "default",
+    }, unknown = false);
+  fromTwoEntity(project: Project | { _: "Project" | (string & {}) }, source: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, target: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<LineEdge>;
   rename(text: string): Promise<void>;
   get edgeWidth(): Promise<number>;
   get textFontSize(): Promise<number>;
@@ -1816,11 +1422,7 @@ declare class MarkdownExporter extends BaseExporter {
 
 declare class MarkdownImporter extends BaseImporter {
   constructor(project: Project | { _: "Project" | (string & {}) });
-  import(
-    markdownText: string,
-    diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero(),
-    autoLayout = true,
-  ): void;
+  import(markdownText: string, diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero(), autoLayout = true): void;
 }
 
 declare interface MarkdownNode {
@@ -1872,21 +1474,23 @@ declare class MultiTargetUndirectedEdge extends ConnectableAssociation {
   rectRates: Promise<Vector>[];
   centerRate: Promise<Vector>;
   arrow: Promise<UndirectedEdgeArrowType>;
+  arrowType: Promise<UndirectedEdgeArrowShape>;
   renderType: Promise<MultiTargetUndirectedEdgeRenderType>;
+  lineType: Promise<UndirectedEdgeLineType>;
   padding: Promise<number>;
   rename(text: string): Promise<void>;
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    {
+  constructor(project: Project | { _: "Project" | (string & {}) }, {
       associationList = [] as ConnectableEntity[],
       text = "",
       uuid = crypto.randomUUID() as string,
       color = Color.Transparent,
       rectRates = associationList.map(() => Vector.same(0.5)),
       arrow = "none" as UndirectedEdgeArrowType,
+      arrowType = "default" as UndirectedEdgeArrowShape,
       centerRate = Vector.same(0.5),
       padding = 10,
       renderType = "line" as MultiTargetUndirectedEdgeRenderType,
+      lineType = "solid" as UndirectedEdgeLineType,
     }: {
       associationList?: ConnectableEntity[];
       text?: string;
@@ -1894,18 +1498,15 @@ declare class MultiTargetUndirectedEdge extends ConnectableAssociation {
       color?: Color;
       rectRates?: Vector[];
       arrow?: UndirectedEdgeArrowType;
+      arrowType?: UndirectedEdgeArrowShape;
       centerRate?: Vector;
       padding?: number;
       renderType?: MultiTargetUndirectedEdgeRenderType;
-    },
-    unknown = false,
-  );
+      lineType?: UndirectedEdgeLineType;
+    }, unknown = false);
   get centerLocation(): Promise<Vector>;
   get textRectangle(): Promise<Rectangle>;
-  createFromSomeEntity(
-    project: Project | { _: "Project" | (string & {}) },
-    entities: ConnectableEntity[],
-  ): Promise<void>;
+  createFromSomeEntity(project: Project | { _: "Project" | (string & {}) }, entities: ConnectableEntity[]): Promise<void>;
   _isSelected: Promise<boolean>;
   get isSelected(): Promise<boolean>;
   set isSelected(value: boolean);
@@ -1914,93 +1515,37 @@ declare class MultiTargetUndirectedEdge extends ConnectableAssociation {
 declare class MultiTargetUndirectedEdgeRenderer {
   constructor(project: Project | { _: "Project" | (string & {}) });
   render(edge: MultiTargetUndirectedEdge | { _: "MultiTargetUndirectedEdge" | (string & {}) }): Promise<void>;
-  renderLineShape(
-    edge: MultiTargetUndirectedEdge | { _: "MultiTargetUndirectedEdge" | (string & {}) },
-    edgeColor: Color | { _: "Color" | (string & {}) },
-    centerLocation: Vector | { _: "Vector" | (string & {}) },
-  ): void;
-  renderConvexShape(
-    edge: MultiTargetUndirectedEdge | { _: "MultiTargetUndirectedEdge" | (string & {}) },
-    edgeColor: Color | { _: "Color" | (string & {}) },
-  ): void;
-  renderCircle(
-    edge: MultiTargetUndirectedEdge | { _: "MultiTargetUndirectedEdge" | (string & {}) },
-    edgeColor: Color | { _: "Color" | (string & {}) },
-  ): void;
+  renderLineShape(edge: MultiTargetUndirectedEdge | { _: "MultiTargetUndirectedEdge" | (string & {}) }, edgeColor: Color | { _: "Color" | (string & {}) }, centerLocation: Vector | { _: "Vector" | (string & {}) }): void;
+  renderConvexShape(edge: MultiTargetUndirectedEdge | { _: "MultiTargetUndirectedEdge" | (string & {}) }, edgeColor: Color | { _: "Color" | (string & {}) }): void;
+  renderCircle(edge: MultiTargetUndirectedEdge | { _: "MultiTargetUndirectedEdge" | (string & {}) }, edgeColor: Color | { _: "Color" | (string & {}) }): void;
 }
 
 declare class NodeAdder {
   constructor(project: Project | { _: "Project" | (string & {}) });
-  addTextNodeByClick(
-    clickWorldLocation: Vector | { _: "Vector" | (string & {}) },
-    addToSections: Section[],
-    selectCurrent = false,
-    shouldRecordHistory = true,
-    options?: {
+  addTextNodeByClick(clickWorldLocation: Vector | { _: "Vector" | (string & {}) }, addToSections: Section[], selectCurrent = false, shouldRecordHistory = true, options?: {
       overrideFontScaleLevel?: number;
-    },
-  ): Promise<string>;
-  addTextNodeFromCurrentSelectedNode(
-    direction: Direction,
-    addToSections: Section[],
-    selectCurrent = false,
-  ): Promise<string>;
+    }): Promise<string>;
+  addTextNodeFromCurrentSelectedNode(direction: Direction, addToSections: Section[], selectCurrent = false): Promise<string>;
   getAutoName(): Promise<string>;
   getAutoColor(): Promise<Color>;
-  addConnectPoint(
-    clickWorldLocation: Vector | { _: "Vector" | (string & {}) },
-    addToSections: Section[],
-  ): Promise<string>;
+  addConnectPoint(clickWorldLocation: Vector | { _: "Vector" | (string & {}) }, addToSections: Section[]): Promise<string>;
   addNodeGraphByText(text: string, diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero()): void;
-  addNodeTreeByText(
-    text: string,
-    indention: number,
-    diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero(),
-  ): void;
+  addNodeTreeByText(text: string, indention: number, diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero()): void;
   addNodeMermaidByText(text: string, diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero()): void;
-  addNodeByMarkdown(
-    markdownText: string,
-    diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero(),
-    autoLayout = true,
-  ): Promise<void>;
+  addNodeByMarkdown(markdownText: string, diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero(), autoLayout = true): Promise<void>;
   getIndentLevel(line: string, indention: number): Promise<number>;
 }
 
 declare class NodeConnector {
   constructor(project: Project | { _: "Project" | (string & {}) });
-  isConnectable(
-    fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<boolean>;
-  connectConnectableEntity(
-    fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    text: string = "",
-    targetRectRate?: [number, number],
-    sourceRectRate?: [number, number],
-  ): void;
-  connectEntityFast(
-    fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    text: string = "",
-  ): void;
-  addCrEdge(
-    fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): void;
-  addArcEdge(
-    fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): void;
+  isConnectable(fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<boolean>;
+  connectConnectableEntity(fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, text: string = "", targetRectRate?: [number, number], sourceRectRate?: [number, number]): void;
+  connectEntityFast(fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, text: string = ""): void;
+  addCrEdge(fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): void;
+  addArcEdge(fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): void;
   reverseEdges(edges: LineEdge[]): Promise<void>;
-  changeEdgeTarget(
-    edge: LineEdge | { _: "LineEdge" | (string & {}) },
-    newTarget: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<void>;
-  changeEdgeSource(
-    edge: LineEdge | { _: "LineEdge" | (string & {}) },
-    newSource: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<void>;
+  changeEdgeTarget(edge: LineEdge | { _: "LineEdge" | (string & {}) }, newTarget: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<void>;
+  changeEdgeSource(edge: LineEdge | { _: "LineEdge" | (string & {}) }, newSource: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<void>;
   changeSelectedEdgeTarget(newTarget: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<void>;
   changeSelectedEdgeSource(newSource: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<void>;
 }
@@ -2016,10 +1561,7 @@ declare class PenStroke extends Entity {
   segments: Promise<PenStrokeSegment>[];
   color: Promise<Color>;
   getPath(): Promise<Vector>[];
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    { uuid = crypto.randomUUID() as string, segments = [] as PenStrokeSegment[], color = Color.White },
-  );
+  constructor(project: Project | { _: "Project" | (string & {}) }, { uuid = crypto.randomUUID() as string, segments = [] as PenStrokeSegment[], color = Color.White });
   getCollisionBoxFromSegmentList(segmentList: PenStrokeSegment[]): Promise<CollisionBox>;
 }
 
@@ -2162,7 +1704,7 @@ declare class Project extends Tab {
 
 declare namespace RecentFileManager {
   const store: Promise<Store>;
-  declare type RecentFile = {
+declare type RecentFile = {
     uri: URI;
     /**
      * 上次保存或打开的时间戳
@@ -2212,9 +1754,7 @@ declare class ReferenceBlockNode extends ConnectableEntity implements ResizeAble
   _isSelected: Promise<boolean>;
   bitmap: Promise<ImageBitmap | undefined>;
   state: Promise<"loading" | "success" | "notFound">;
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    {
+  constructor(project: Project | { _: "Project" | (string & {}) }, {
       uuid = crypto.randomUUID() as string,
       collisionBox = new CollisionBox([new Rectangle(Vector.getZero(), new Vector(400, 200))]),
       fileName = "",
@@ -2222,9 +1762,7 @@ declare class ReferenceBlockNode extends ConnectableEntity implements ResizeAble
       scale = 1,
       attachmentId = "",
       details = [],
-    },
-    unknown = false,
-  );
+    }, unknown = false);
   get isSelected(): Promise<any>;
   set isSelected(value: boolean);
   loadImageFromAttachment(): Promise<void>;
@@ -2245,15 +1783,8 @@ declare class ReferenceBlockNode extends ConnectableEntity implements ResizeAble
 declare class ReferenceBlockRenderer {
   constructor(project: Project | { _: "Project" | (string & {}) });
   render(referenceBlockNode: ReferenceBlockNode | { _: "ReferenceBlockNode" | (string & {}) }): Promise<void>;
-  renderBrackets(
-    rect: Rectangle | { _: "Rectangle" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-  ): Promise<void>;
-  renderSourceSectionBorder(
-    section: Section | { _: "Section" | (string & {}) },
-    countNumber: number,
-    color: Color | { _: "Color" | (string & {}) } = new Color(118, 78, 209),
-  ): Promise<void>;
+  renderBrackets(rect: Rectangle | { _: "Rectangle" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }): Promise<void>;
+  renderSourceSectionBorder(section: Section | { _: "Section" | (string & {}) }, countNumber: number, color: Color | { _: "Color" | (string & {}) } = new Color(118, 78, 209)): Promise<void>;
 }
 
 declare class ReferenceManager {
@@ -2263,11 +1794,7 @@ declare class ReferenceManager {
   buildSectionName2SectionMap(sectionNames: string[]): Promise<Record<string, Section>>;
   updateOneSectionReferenceInfo(recentFiles: RecentFileManager.RecentFile[], sectionName: string): Promise<void>;
   updateCurrentProjectReference(): Promise<void>;
-  checkReferenceBlockInProject(
-    project: Project | { _: "Project" | (string & {}) },
-    fileName: string,
-    sectionName: string,
-  ): Promise<void>;
+  checkReferenceBlockInProject(project: Project | { _: "Project" | (string & {}) }, fileName: string, sectionName: string): Promise<void>;
   insertRefDataToSourcePrgFile(fileName: string, sectionName: string): Promise<void>;
   jumpToReferenceLocation(fileName: string, referenceBlockNodeSectionName: string): Promise<void>;
   openSectionReferencePanel(section: Section | { _: "Section" | (string & {}) }): Promise<void>;
@@ -2294,10 +1821,7 @@ declare class Renderer {
   renderZoomLevelStage(): Promise<void>;
   renderMainStageElements(viewRectangle: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<void>;
   renderStageElementsWithoutReactions(viewRectangle: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<void>;
-  isOverView(
-    viewRectangle: Rectangle | { _: "Rectangle" | (string & {}) },
-    entity: StageObject | { _: "StageObject" | (string & {}) },
-  ): Promise<boolean>;
+  isOverView(viewRectangle: Rectangle | { _: "Rectangle" | (string & {}) }, entity: StageObject | { _: "StageObject" | (string & {}) }): Promise<boolean>;
   renderCenterPointer(): Promise<void>;
   renderHoverCollisionBox(): Promise<void>;
   renderSelectingRectangle(): Promise<void>;
@@ -2306,10 +1830,7 @@ declare class Renderer {
   renderCrosshairOnHoverImage(): Promise<void>;
   renderKeyboardOnly(): Promise<void>;
   rendererLayerMovingLine(): Promise<void>;
-  renderJumpLine(
-    startLocation: Vector | { _: "Vector" | (string & {}) },
-    endLocation: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<void>;
+  renderJumpLine(startLocation: Vector | { _: "Vector" | (string & {}) }, endLocation: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
   renderWarningStageObjects(): Promise<void>;
   renderTags(): Promise<void>;
   renderEntities(viewRectangle: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<void>;
@@ -2329,16 +1850,8 @@ declare class Renderer {
 
 declare class RenderUtils {
   constructor(project: Project | { _: "Project" | (string & {}) });
-  renderPixel(
-    location: Vector | { _: "Vector" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-  ): Promise<void>;
-  renderArrow(
-    direction: Vector | { _: "Vector" | (string & {}) },
-    location: Vector | { _: "Vector" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    size: number,
-  ): Promise<void>;
+  renderPixel(location: Vector | { _: "Vector" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }): Promise<void>;
+  renderArrow(direction: Vector | { _: "Vector" | (string & {}) }, location: Vector | { _: "Vector" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, size: number): Promise<void>;
 }
 
 declare interface ResizeAble {
@@ -2368,9 +1881,7 @@ declare class Section extends ConnectableEntity {
   isCollapsed: Promise<boolean>;
   locked: Promise<boolean>;
   isHiddenBySectionCollapse;
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    {
+  constructor(project: Project | { _: "Project" | (string & {}) }, {
       uuid = crypto.randomUUID() as string,
       text = "",
       collisionBox = new CollisionBox([new Rectangle(new Vector(0, 0), new Vector(0, 0))]),
@@ -2380,9 +1891,7 @@ declare class Section extends ConnectableEntity {
       isCollapsed = false,
       children = [] as Entity[],
       details = [] as Value,
-    } = {},
-    unknown = false,
-  );
+    } = {}, unknown = false);
   fromEntities(project: Project | { _: "Project" | (string & {}) }, entities: Entity[]): Promise<Section>;
   rename(newName: string): Promise<void>;
   adjustLocationAndSize(): Promise<void>;
@@ -2401,14 +1910,8 @@ declare class SectionCollisionSolver {
   solveOverlaps(grownSection: Section | { _: "Section" | (string & {}) }, visited: Set<string> = new Set()): void;
   updateAncestorsAfterShift(entity: Entity | { _: "Entity" | (string & {}) }, visited: Set<string>): void;
   getSiblingsSections(section: Section | { _: "Section" | (string & {}) }): Promise<Section>[];
-  computePushDelta(
-    grownRect: Rectangle | { _: "Rectangle" | (string & {}) },
-    siblingRect: Rectangle | { _: "Rectangle" | (string & {}) },
-  ): Promise<Vector>;
-  rawShiftEntityTree(
-    entity: Entity | { _: "Entity" | (string & {}) },
-    delta: Vector | { _: "Vector" | (string & {}) },
-  ): void;
+  computePushDelta(grownRect: Rectangle | { _: "Rectangle" | (string & {}) }, siblingRect: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<Vector>;
+  rawShiftEntityTree(entity: Entity | { _: "Entity" | (string & {}) }, delta: Vector | { _: "Vector" | (string & {}) }): void;
 }
 
 declare class SectionInOutManager {
@@ -2416,20 +1919,9 @@ declare class SectionInOutManager {
   goInSection(entities: Entity[], section: Section | { _: "Section" | (string & {}) }): Promise<void>;
   goInSections(entities: Entity[], sections: Section[]): Promise<void>;
   goOutSection(entities: Entity[], section: Section | { _: "Section" | (string & {}) }): Promise<void>;
-  attachEntityToSection(
-    entity: Entity | { _: "Entity" | (string & {}) },
-    section: Section | { _: "Section" | (string & {}) },
-  ): Promise<boolean>;
-  entityDropParent(
-    entity: Entity | { _: "Entity" | (string & {}) },
-    convertEmptySectionToTextNode: boolean = false,
-    excludeSection: Section | null = null,
-  ): Promise<boolean>;
-  sectionDropChild(
-    section: Section | { _: "Section" | (string & {}) },
-    entity: Entity | { _: "Entity" | (string & {}) },
-    convertEmptySectionToTextNode: boolean = true,
-  ): Promise<boolean>;
+  attachEntityToSection(entity: Entity | { _: "Entity" | (string & {}) }, section: Section | { _: "Section" | (string & {}) }): Promise<boolean>;
+  entityDropParent(entity: Entity | { _: "Entity" | (string & {}) }, convertEmptySectionToTextNode: boolean = false, excludeSection: Section | null = null): Promise<boolean>;
+  sectionDropChild(section: Section | { _: "Section" | (string & {}) }, entity: Entity | { _: "Entity" | (string & {}) }, convertEmptySectionToTextNode: boolean = true): Promise<boolean>;
   pickPreferredSection(sections: Section[]): Promise<Section | null>;
   getSectionArea(section: Section | { _: "Section" | (string & {}) }): Promise<number>;
   convertSectionToTextNode(section: Section | { _: "Section" | (string & {}) }): Promise<void>;
@@ -2446,27 +1938,17 @@ declare class SectionMethods {
   getBigTitleCoveringAncestorSection(entity: Entity | { _: "Entity" | (string & {}) }): Promise<Section | null>;
   isEntityHiddenByBigTitleSection(entity: Entity | { _: "Entity" | (string & {}) }): Promise<boolean>;
   isEntityCoveredByBigTitleSection(entity: Entity | { _: "Entity" | (string & {}) }): Promise<boolean>;
-  isAssociationHiddenByBigTitleSection(
-    association: Association | { _: "Association" | (string & {}) },
-  ): Promise<boolean>;
-  isAssociationCoveredByBigTitleSection(
-    association: Association | { _: "Association" | (string & {}) },
-  ): Promise<boolean>;
+  isAssociationHiddenByBigTitleSection(association: Association | { _: "Association" | (string & {}) }): Promise<boolean>;
+  isAssociationCoveredByBigTitleSection(association: Association | { _: "Association" | (string & {}) }): Promise<boolean>;
   getOutermostLockedAncestorSection(entity: Entity | { _: "Entity" | (string & {}) }): Promise<Section | null>;
   shallowerSection(sections: Section[]): Promise<Section>[];
   shallowerNotSectionEntities(entities: Entity[]): Promise<Entity>[];
-  isEntityInSection(
-    entity: Entity | { _: "Entity" | (string & {}) },
-    section: Section | { _: "Section" | (string & {}) },
-  ): Promise<boolean>;
+  isEntityInSection(entity: Entity | { _: "Entity" | (string & {}) }, section: Section | { _: "Section" | (string & {}) }): Promise<boolean>;
   isTreePack(rootNode: Section | { _: "Section" | (string & {}) }): Promise<void>;
   getSectionMaxDeep(section: Section | { _: "Section" | (string & {}) }): Promise<number>;
   getAllEntitiesInSelectedSectionsOrEntities(selectedEntities: Entity[]): Promise<Entity>[];
   getSortedSectionsByZ(sections: Section[]): Promise<Section>[];
-  getDeepestSectionsAtLocation(
-    section: Section | { _: "Section" | (string & {}) },
-    location: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<Section>[];
+  getDeepestSectionsAtLocation(section: Section | { _: "Section" | (string & {}) }, location: Vector | { _: "Vector" | (string & {}) }): Promise<Section>[];
 }
 
 declare class SectionPackManager {
@@ -2478,11 +1960,7 @@ declare class SectionPackManager {
   textNodeToSection(): void;
   textNodeTreeToSection(rootNode: TextNode | { _: "TextNode" | (string & {}) }): void;
   textNodeTreeToSectionNoDeep(rootNode: TextNode | { _: "TextNode" | (string & {}) }): void;
-  targetTextNodeToSection(
-    textNode: TextNode | { _: "TextNode" | (string & {}) },
-    ignoreEdges: boolean = false,
-    addConnectPoints: boolean = false,
-  ): Promise<Section>;
+  targetTextNodeToSection(textNode: TextNode | { _: "TextNode" | (string & {}) }, ignoreEdges: boolean = false, addConnectPoints: boolean = false): Promise<Section>;
   unpackSelectedSections(): Promise<void>;
   unpackSections(entities: Entity[]): Promise<void>;
   packEntityToSection(addEntities: Entity[]): Promise<Section | undefined>;
@@ -2508,79 +1986,38 @@ declare class SelectChangeEngine {
   selectDown(addSelect = false): Promise<void>;
   selectLeft(addSelect = false): Promise<void>;
   selectRight(addSelect = false): Promise<void>;
-  navigateInDirection(
-    selectedNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    direction: Direction,
-  ): Promise<ConnectableEntity | null>;
-  getSameLevelCandidates(
-    parentSection: Section | { _: "Section" | (string & {}) },
-    excludeNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<ConnectableEntity>[];
-  getTopLevelCandidates(
-    excludeNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<ConnectableEntity>[];
+  navigateInDirection(selectedNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, direction: Direction): Promise<ConnectableEntity | null>;
+  getSameLevelCandidates(parentSection: Section | { _: "Section" | (string & {}) }, excludeNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<ConnectableEntity>[];
+  getTopLevelCandidates(excludeNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<ConnectableEntity>[];
   expandSelect(isKeepExpand = false, reversed: boolean = false): Promise<void>;
-  afterSelect(
-    selectedNodeRect: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    newSelectedConnectableEntity: ConnectableEntity | null,
-    clearOldSelect = true,
-  ): Promise<void>;
+  expandSelectWithEdge(isKeepExpand = false, reversed: boolean = false): Promise<void>;
+  afterSelect(selectedNodeRect: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, newSelectedConnectableEntity: ConnectableEntity | null, clearOldSelect = true): Promise<void>;
   getCurrentSelectedNode(): Promise<ConnectableEntity | null>;
-  addEffect(
-    selectedNodeRect: Rectangle | { _: "Rectangle" | (string & {}) },
-    newSelectNodeRect: Rectangle | { _: "Rectangle" | (string & {}) },
-  ): Promise<void>;
-  getMostNearConnectableEntity(
-    nodes: ConnectableEntity[],
-    location: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<ConnectableEntity | null>;
+  addEffect(selectedNodeRect: Rectangle | { _: "Rectangle" | (string & {}) }, newSelectNodeRect: Rectangle | { _: "Rectangle" | (string & {}) }): Promise<void>;
+  getMostNearConnectableEntity(nodes: ConnectableEntity[], location: Vector | { _: "Vector" | (string & {}) }): Promise<ConnectableEntity | null>;
   selectMostNearLocationNode(location: Vector | { _: "Vector" | (string & {}) }): Promise<ConnectableEntity | null>;
-  collectNodesInStrip(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    direction: Direction,
-    candidates: ConnectableEntity[],
-  ): Promise<ConnectableEntity>[];
-  getMostNearInStripByDh(
-    nodes: ConnectableEntity[],
-    nodeRect: Rectangle | { _: "Rectangle" | (string & {}) },
-    direction: Direction,
-  ): Promise<ConnectableEntity | null>;
-  collectFanNodes(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    direction: Direction,
-    candidates: ConnectableEntity[],
-  ): Promise<ConnectableEntity>[];
-  collectTopNodes(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    candidates?: ConnectableEntity[],
-  ): Promise<ConnectableEntity>[];
-  collectBottomNodes(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    candidates?: ConnectableEntity[],
-  ): Promise<ConnectableEntity>[];
-  collectLeftNodes(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    candidates?: ConnectableEntity[],
-  ): Promise<ConnectableEntity>[];
-  collectRightNodes(
-    node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    candidates?: ConnectableEntity[],
-  ): Promise<ConnectableEntity>[];
+  collectNodesInStrip(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, direction: Direction, candidates: ConnectableEntity[]): Promise<ConnectableEntity>[];
+  getMostNearInStripByDh(nodes: ConnectableEntity[], nodeRect: Rectangle | { _: "Rectangle" | (string & {}) }, direction: Direction): Promise<ConnectableEntity | null>;
+  collectFanNodes(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, direction: Direction, candidates: ConnectableEntity[]): Promise<ConnectableEntity>[];
+  collectTopNodes(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, candidates?: ConnectableEntity[]): Promise<ConnectableEntity>[];
+  collectBottomNodes(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, candidates?: ConnectableEntity[]): Promise<ConnectableEntity>[];
+  collectLeftNodes(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, candidates?: ConnectableEntity[]): Promise<ConnectableEntity>[];
+  collectRightNodes(node: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, candidates?: ConnectableEntity[]): Promise<ConnectableEntity>[];
 }
 
 declare namespace Serialized {
-  declare type Vector = [number, number];
-  declare type Color = [number, number, number, number];
-  declare type StageObject = {
+declare type Vector = [number, number];
+declare type Color = [number, number, number, number];
+declare type StageObject = {
     uuid: string;
     type: string;
   };
-  declare type Entity = StageObject & {
+declare type Entity = StageObject & {
     location: Vector;
     details: string;
   };
-  declare type TextNodeSizeAdjust = "auto" | "manual";
-  declare type TextNode = Entity & {
+declare type TextNodeSizeAdjust = "auto" | "manual";
+declare type TextNode = Entity & {
     type: "core:text_node";
     size: Vector;
     text: string;
@@ -2590,7 +2027,7 @@ declare namespace Serialized {
     fontWeight: string;
   };
   function isTextNode(obj: StageObject | { _: "StageObject" | (string & {}) }): obj is TextNode;
-  declare type Section = Entity & {
+declare type Section = Entity & {
     type: "core:section";
     size: Vector;
     text: string;
@@ -2601,18 +2038,18 @@ declare namespace Serialized {
     isCollapsed: boolean;
   };
   function isSection(obj: StageObject | { _: "StageObject" | (string & {}) }): obj is Section;
-  declare type ConnectPoint = Entity & {
+declare type ConnectPoint = Entity & {
     type: "core:connect_point";
   };
   function isConnectPoint(obj: StageObject | { _: "StageObject" | (string & {}) }): obj is ConnectPoint;
-  declare type ImageNode = Entity & {
+declare type ImageNode = Entity & {
     path: string;
     size: Vector;
     scale: number;
     type: "core:image_node";
   };
   function isImageNode(obj: StageObject | { _: "StageObject" | (string & {}) }): obj is ImageNode;
-  declare type UrlNode = Entity & {
+declare type UrlNode = Entity & {
     url: string;
     title: string;
     size: Vector;
@@ -2620,7 +2057,7 @@ declare namespace Serialized {
     type: "core:url_node";
   };
   function isUrlNode(obj: StageObject | { _: "StageObject" | (string & {}) }): obj is UrlNode;
-  declare type PortalNode = Entity & {
+declare type PortalNode = Entity & {
     // 连接的文件
     portalFilePath: string;
     targetLocation: Vector;
@@ -2634,13 +2071,13 @@ declare namespace Serialized {
     type: "core:portal_node";
   };
   function isPortalNode(obj: StageObject | { _: "StageObject" | (string & {}) }): obj is PortalNode;
-  declare type PenStroke = Entity & {
+declare type PenStroke = Entity & {
     type: "core:pen_stroke";
     content: string;
     color: Color;
   };
   function isPenStroke(obj: StageObject | { _: "StageObject" | (string & {}) }): obj is PenStroke;
-  declare type SvgNode = Entity & {
+declare type SvgNode = Entity & {
     type: "core:svg_node";
     content: string;
     size: Vector;
@@ -2648,13 +2085,13 @@ declare namespace Serialized {
     scale: number;
   };
   function isSvgNode(obj: StageObject | { _: "StageObject" | (string & {}) }): obj is SvgNode;
-  declare type Association = StageObject & {
+declare type Association = StageObject & {
     text: string;
     color: Color;
   };
-  declare type UndirectedEdgeArrowType = "inner" | "outer" | "none";
-  declare type MultiTargetUndirectedEdgeRenderType = "line" | "convex";
-  declare type MultiTargetUndirectedEdge = Association & {
+declare type UndirectedEdgeArrowType = "inner" | "outer" | "none";
+declare type MultiTargetUndirectedEdgeRenderType = "line" | "convex";
+declare type MultiTargetUndirectedEdge = Association & {
     type: "core:multi_target_undirected_edge";
     targets: string[];
     arrow: UndirectedEdgeArrowType;
@@ -2663,36 +2100,32 @@ declare namespace Serialized {
     padding: number;
     renderType: MultiTargetUndirectedEdgeRenderType;
   };
-  function isMultiTargetUndirectedEdge(
-    obj: StageObject | { _: "StageObject" | (string & {}) },
-  ): obj is MultiTargetUndirectedEdge;
-  declare type Edge = Association & {
+  function isMultiTargetUndirectedEdge(obj: StageObject | { _: "StageObject" | (string & {}) }): obj is MultiTargetUndirectedEdge;
+declare type Edge = Association & {
     source: string;
     target: string;
     sourceRectRate: [number, number]; // 默认中心 0.5, 0.5
     targetRectRate: [number, number]; // 默认中心 0.5, 0.5
   };
   function isEdge(obj: StageObject | { _: "StageObject" | (string & {}) }): obj is Edge;
-  declare type LineEdge = Edge & {
+declare type LineEdge = Edge & {
     type: "core:line_edge";
     color: Color;
     text: string;
   };
   function isLineEdge(obj: StageObject | { _: "StageObject" | (string & {}) }): obj is LineEdge;
-  function isCubicCatmullRomSplineEdge(
-    obj: StageObject | { _: "StageObject" | (string & {}) },
-  ): obj is CubicCatmullRomSplineEdge;
-  declare type CubicCatmullRomSplineEdge = Edge & {
+  function isCubicCatmullRomSplineEdge(obj: StageObject | { _: "StageObject" | (string & {}) }): obj is CubicCatmullRomSplineEdge;
+declare type CubicCatmullRomSplineEdge = Edge & {
     type: "core:cublic_catmull_rom_spline_edge";
     text: string;
     controlPoints: Vector[];
     alpha: number;
     tension: number;
   };
-  declare type CoreEntity = TextNode | Section | ConnectPoint | ImageNode | UrlNode | PenStroke | PortalNode | SvgNode;
+declare type CoreEntity = TextNode | Section | ConnectPoint | ImageNode | UrlNode | PenStroke | PortalNode | SvgNode;
   function isCoreEntity(obj: StageObject | { _: "StageObject" | (string & {}) }): obj is CoreEntity;
-  declare type CoreAssociation = LineEdge | CubicCatmullRomSplineEdge | MultiTargetUndirectedEdge;
-  declare type File = {
+declare type CoreAssociation = LineEdge | CubicCatmullRomSplineEdge | MultiTargetUndirectedEdge;
+declare type File = {
     version: typeof Project.latestVersion;
     entities: CoreEntity[];
     associations: CoreAssociation[];
@@ -2709,94 +2142,18 @@ declare type Settings = z.infer<typeof settingsSchema>;
 
 declare class ShapeRenderer {
   constructor(project: Project | { _: "Project" | (string & {}) });
-  renderCircle(
-    centerLocation: Vector | { _: "Vector" | (string & {}) },
-    radius: number,
-    color: Color | { _: "Color" | (string & {}) },
-    strokeColor: Color | { _: "Color" | (string & {}) },
-    strokeWidth: number,
-  ): void;
-  renderArc(
-    centerLocation: Vector | { _: "Vector" | (string & {}) },
-    radius: number,
-    angle1: number,
-    angle2: number,
-    strokeColor: Color | { _: "Color" | (string & {}) },
-    strokeWidth: number,
-  ): void;
-  renderRectFromCenter(
-    centerLocation: Vector | { _: "Vector" | (string & {}) },
-    width: number,
-    height: number,
-    color: Color | { _: "Color" | (string & {}) },
-    strokeColor: Color | { _: "Color" | (string & {}) },
-    strokeWidth: number,
-    radius: number = 0,
-  ): void;
-  renderRect(
-    rect: Rectangle | { _: "Rectangle" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    strokeColor: Color | { _: "Color" | (string & {}) },
-    strokeWidth: number,
-    radius: number = 0,
-  ): Promise<void>;
-  renderDashedRect(
-    rect: Rectangle | { _: "Rectangle" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    strokeColor: Color | { _: "Color" | (string & {}) },
-    strokeWidth: number,
-    radius: number = 0,
-    dashLength = 5,
-  ): Promise<void>;
-  renderRectWithShadow(
-    rect: Rectangle | { _: "Rectangle" | (string & {}) },
-    fillColor: Color | { _: "Color" | (string & {}) },
-    strokeColor: Color | { _: "Color" | (string & {}) },
-    strokeWidth: number,
-    shadowColor: Color | { _: "Color" | (string & {}) },
-    shadowBlur: number,
-    shadowOffsetX: number = 0,
-    shadowOffsetY: number = 0,
-    radius: number = 0,
-  ): Promise<void>;
-  renderPolygonAndFill(
-    points: Vector[],
-    fillColor: Color | { _: "Color" | (string & {}) },
-    strokeColor: Color | { _: "Color" | (string & {}) },
-    strokeWidth: number,
-    lineJoin: "round" | "bevel" = "round",
-  ): void;
-  renderTriangleFromCenter(
-    centerLocation: Vector | { _: "Vector" | (string & {}) },
-    size: number,
-    rotation: number,
-    fillColor: Color | { _: "Color" | (string & {}) },
-    strokeColor: Color | { _: "Color" | (string & {}) },
-    strokeWidth: number,
-  ): void;
-  renderSquareFromCenter(
-    centerLocation: Vector | { _: "Vector" | (string & {}) },
-    size: number,
-    rotation: number,
-    fillColor: Color | { _: "Color" | (string & {}) },
-    strokeColor: Color | { _: "Color" | (string & {}) },
-    strokeWidth: number,
-  ): void;
-  renderCircleTransition(
-    viewLocation: Vector | { _: "Vector" | (string & {}) },
-    radius: number,
-    centerColor: Color | { _: "Color" | (string & {}) },
-  ): Promise<void>;
-  renderCameraShapeBorder(
-    rect: Rectangle | { _: "Rectangle" | (string & {}) },
-    borderColor: Color | { _: "Color" | (string & {}) },
-    borderWidth: number,
-  ): Promise<void>;
-  renderResizeArrow(
-    rect: Rectangle | { _: "Rectangle" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    strokeWidth: number,
-  ): Promise<void>;
+  renderCircle(centerLocation: Vector | { _: "Vector" | (string & {}) }, radius: number, color: Color | { _: "Color" | (string & {}) }, strokeColor: Color | { _: "Color" | (string & {}) }, strokeWidth: number): void;
+  renderArc(centerLocation: Vector | { _: "Vector" | (string & {}) }, radius: number, angle1: number, angle2: number, strokeColor: Color | { _: "Color" | (string & {}) }, strokeWidth: number): void;
+  renderRectFromCenter(centerLocation: Vector | { _: "Vector" | (string & {}) }, width: number, height: number, color: Color | { _: "Color" | (string & {}) }, strokeColor: Color | { _: "Color" | (string & {}) }, strokeWidth: number, radius: number = 0): void;
+  renderRect(rect: Rectangle | { _: "Rectangle" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, strokeColor: Color | { _: "Color" | (string & {}) }, strokeWidth: number, radius: number = 0): Promise<void>;
+  renderDashedRect(rect: Rectangle | { _: "Rectangle" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, strokeColor: Color | { _: "Color" | (string & {}) }, strokeWidth: number, radius: number = 0, dashLength = 5): Promise<void>;
+  renderRectWithShadow(rect: Rectangle | { _: "Rectangle" | (string & {}) }, fillColor: Color | { _: "Color" | (string & {}) }, strokeColor: Color | { _: "Color" | (string & {}) }, strokeWidth: number, shadowColor: Color | { _: "Color" | (string & {}) }, shadowBlur: number, shadowOffsetX: number = 0, shadowOffsetY: number = 0, radius: number = 0): Promise<void>;
+  renderPolygonAndFill(points: Vector[], fillColor: Color | { _: "Color" | (string & {}) }, strokeColor: Color | { _: "Color" | (string & {}) }, strokeWidth: number, lineJoin: "round" | "bevel" = "round"): void;
+  renderTriangleFromCenter(centerLocation: Vector | { _: "Vector" | (string & {}) }, size: number, rotation: number, fillColor: Color | { _: "Color" | (string & {}) }, strokeColor: Color | { _: "Color" | (string & {}) }, strokeWidth: number): void;
+  renderSquareFromCenter(centerLocation: Vector | { _: "Vector" | (string & {}) }, size: number, rotation: number, fillColor: Color | { _: "Color" | (string & {}) }, strokeColor: Color | { _: "Color" | (string & {}) }, strokeWidth: number): void;
+  renderCircleTransition(viewLocation: Vector | { _: "Vector" | (string & {}) }, radius: number, centerColor: Color | { _: "Color" | (string & {}) }): Promise<void>;
+  renderCameraShapeBorder(rect: Rectangle | { _: "Rectangle" | (string & {}) }, borderColor: Color | { _: "Color" | (string & {}) }, borderWidth: number): Promise<void>;
+  renderResizeArrow(rect: Rectangle | { _: "Rectangle" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, strokeWidth: number): Promise<void>;
 }
 
 declare class StageExport {
@@ -2849,29 +2206,11 @@ declare class StageImport {
   mermaidImporter: Promise<MermaidImporter>;
   markdownImporter: Promise<MarkdownImporter>;
   constructor(project: Project | { _: "Project" | (string & {}) });
-  addNodeGraphByText(
-    text: string,
-    diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero(),
-  ): Promise<void>;
-  addNodeTreeByText(
-    text: string,
-    indention: number,
-    diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero(),
-  ): Promise<void>;
-  addNodeTreeByTextFromNode(
-    uuid: string,
-    text: string,
-    indention: number,
-  ): Promise<{ success: boolean; error?: string; nodeCount?: number }>;
-  addNodeMermaidByText(
-    text: string,
-    diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero(),
-  ): Promise<void>;
-  addNodeByMarkdown(
-    markdownText: string,
-    diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero(),
-    autoLayout = true,
-  ): Promise<void>;
+  addNodeGraphByText(text: string, diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero()): Promise<void>;
+  addNodeTreeByText(text: string, indention: number, diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero()): Promise<void>;
+  addNodeTreeByTextFromNode(uuid: string, text: string, indention: number): Promise<{ success: boolean; error?: string; nodeCount?: number }>;
+  addNodeMermaidByText(text: string, diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero()): Promise<void>;
+  addNodeByMarkdown(markdownText: string, diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero(), autoLayout = true): Promise<void>;
 }
 
 declare class StageManager {
@@ -2907,15 +2246,8 @@ declare class StageManager {
   add(stageObject: StageObject | { _: "StageObject" | (string & {}) }, skipUpdateReferences = false): Promise<void>;
   updateReferences(): Promise<void>;
   rebuildSectionRuntimeTree(): Promise<void>;
-  pickDirectParentSection(
-    entity: Entity | { _: "Entity" | (string & {}) },
-    candidates: Section[],
-  ): Promise<Section | null>;
-  assignSectionRuntimeInfo(
-    entity: Entity | { _: "Entity" | (string & {}) },
-    depth: number,
-    lockedAncestor: Section | null,
-  ): Promise<void>;
+  pickDirectParentSection(entity: Entity | { _: "Entity" | (string & {}) }, candidates: Section[]): Promise<Section | null>;
+  assignSectionRuntimeInfo(entity: Entity | { _: "Entity" | (string & {}) }, depth: number, lockedAncestor: Section | null): Promise<void>;
   getEntityArea(entity: Entity | { _: "Entity" | (string & {}) }): Promise<number>;
   getTextNodeByUUID(uuid: string): Promise<TextNode | null>;
   getConnectableEntityByUUID(uuid: string): Promise<ConnectableEntity | null>;
@@ -2929,17 +2261,9 @@ declare class StageManager {
   findAssociationByLocation(location: Vector | { _: "Vector" | (string & {}) }): Promise<Association | null>;
   findSectionByLocation(location: Vector | { _: "Vector" | (string & {}) }): Promise<Section | null>;
   findImageNodeByLocation(location: Vector | { _: "Vector" | (string & {}) }): Promise<ImageNode | null>;
-  findConnectableEntityByLocation(
-    location: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<ConnectableEntity | null>;
+  findConnectableEntityByLocation(location: Vector | { _: "Vector" | (string & {}) }): Promise<ConnectableEntity | null>;
   findEntityByLocation(location: Vector | { _: "Vector" | (string & {}) }): Promise<Entity | null>;
-  findEntityInHierarchyByLocation<T extends Entity>(
-    entities: Entity[],
-    location: Vector | { _: "Vector" | (string & {}) },
-    accept: (entity: Entity) => entity is T,
-    prioritizePenStroke: boolean,
-    sectionOnlyMode: boolean,
-  ): Promise<T | null>;
+  findEntityInHierarchyByLocation<T extends Entity>(entities: Entity[], location: Vector | { _: "Vector" | (string & {}) }, accept: (entity: Entity) => entity is T, prioritizePenStroke: boolean, sectionOnlyMode: boolean): Promise<T | null>;
   findConnectPointByLocation(location: Vector | { _: "Vector" | (string & {}) }): Promise<ConnectPoint | null>;
   isHaveEntitySelected(): Promise<boolean>;
   getSelectedEntities(): Promise<Entity>[];
@@ -2953,19 +2277,8 @@ declare class StageManager {
   deleteAssociation(deleteAssociation: Association): Promise<boolean>;
   deleteEdge(deleteEdge: Edge | { _: "Edge" | (string & {}) }): Promise<boolean>;
   w;
-  connectEntity(
-    fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    isCrEdge: boolean = false,
-  ): Promise<void>;
-  connectMultipleEntities(
-    fromNodes: ConnectableEntity[],
-    toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    isCrEdge: boolean = false,
-    sourceRectRate?: [number, number],
-    targetRectRate?: [number, number],
-    isArcEdge: boolean = false,
-  ): Promise<void>;
+  connectEntity(fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, isCrEdge: boolean = false): Promise<void>;
+  connectMultipleEntities(fromNodes: ConnectableEntity[], toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, isCrEdge: boolean = false, sourceRectRate?: [number, number], targetRectRate?: [number, number], isArcEdge: boolean = false): Promise<void>;
   reverseSelectedEdges(): Promise<void>;
   generateNodeTreeByText(text: string, indention: number = 4, location = this.project.camera.location): Promise<void>;
   generateNodeGraphByText(text: string, location = this.project.camera.location): Promise<void>;
@@ -2978,10 +2291,7 @@ declare class StageManager {
   packSelectedSection(): Promise<void>;
   unpackSelectedSection(): Promise<void>;
   sectionSwitchCollapse(): Promise<void>;
-  connectEntityByCrEdge(
-    fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-  ): Promise<void>;
+  connectEntityByCrEdge(fromNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): Promise<void>;
   refreshAllStageObjects(): Promise<void>;
   refreshSelected(): Promise<void>;
   changeSelectedEdgeConnectLocation(direction: Direction | null, isSource: boolean = false): Promise<void>;
@@ -2994,22 +2304,15 @@ declare class StageManager {
   addSelectedCREdgeTension(): Promise<void>;
   reduceSelectedCREdgeTension(): Promise<void>;
   setSelectedEdgeLineType(lineType: string): Promise<void>;
+  setSelectedEdgeArrowType(arrowType: string): Promise<void>;
   selectAll(): Promise<void>;
   clearSelectAll(): Promise<void>;
 }
 
 declare class StageNodeRotate {
   constructor(project: Project | { _: "Project" | (string & {}) });
-  moveEdges(
-    lastMoveLocation: Vector | { _: "Vector" | (string & {}) },
-    diffLocation: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<void>;
-  rotateNodeDfs(
-    rotateCenterNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    currentNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    degrees: number,
-    visitedUUIDs: string[],
-  ): void;
+  moveEdges(lastMoveLocation: Vector | { _: "Vector" | (string & {}) }, diffLocation: Vector | { _: "Vector" | (string & {}) }): Promise<void>;
+  rotateNodeDfs(rotateCenterNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, currentNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, degrees: number, visitedUUIDs: string[]): void;
 }
 
 declare class StageObject {
@@ -3057,21 +2360,14 @@ declare class StageSyncAssociationManager {
   getSyncAssociationsByMember(member: StageObject | { _: "StageObject" | (string & {}) }): Promise<SyncAssociation>[];
   getSyncSiblings(member: StageObject | { _: "StageObject" | (string & {}) }): Promise<StageObject>[];
   createTwinTextNode(source: TextNode | { _: "TextNode" | (string & {}) }): Promise<TextNode>;
-  syncFrom(
-    source: StageObject | { _: "StageObject" | (string & {}) },
-    key: SyncableKey,
-    syncingSet: Set<string> = new Set(),
-  ): void;
+  syncFrom(source: StageObject | { _: "StageObject" | (string & {}) }, key: SyncableKey, syncingSet: Set<string> = new Set()): void;
   onStageObjectDeleted(deleted: StageObject | { _: "StageObject" | (string & {}) }): void;
 }
 
 declare class StageUtils {
   constructor(project: Project | { _: "Project" | (string & {}) });
   replaceAutoNameWithoutStage(template: string): Promise<string>;
-  replaceAutoNameTemplate(
-    currentName: string,
-    targetStageObject: StageObject | { _: "StageObject" | (string & {}) },
-  ): Promise<string>;
+  replaceAutoNameTemplate(currentName: string, targetStageObject: StageObject | { _: "StageObject" | (string & {}) }): Promise<string>;
   isNameConflictWithTextNodes(name: string): Promise<boolean>;
   isNameConflictWithSections(name: string): Promise<boolean>;
 }
@@ -3079,42 +2375,19 @@ declare class StageUtils {
 declare class StraightEdgeRenderer extends EdgeRendererClass {
   constructor(project: Project | { _: "Project" | (string & {}) });
   getCuttingEffects(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<Effect>[];
-  getConnectedEffects(
-    startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-    targetRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<Effect>[];
-  renderLine(
-    start: Vector | { _: "Vector" | (string & {}) },
-    end: Vector | { _: "Vector" | (string & {}) },
-    edge: LineEdge | { _: "LineEdge" | (string & {}) },
-    width: number,
-  ): void;
+  getConnectedEffects(startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) }, targetRectangleRate?: Vector | { _: "Vector" | (string & {}) }): Promise<Effect>[];
+  renderLine(start: Vector | { _: "Vector" | (string & {}) }, end: Vector | { _: "Vector" | (string & {}) }, edge: LineEdge | { _: "LineEdge" | (string & {}) }, width: number): void;
   renderNormalState(edge: LineEdge | { _: "LineEdge" | (string & {}) }): void;
   getNormalStageSvg(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<React.ReactNode>;
   getCycleStageSvg(): Promise<React.ReactNode>;
   getShiftingStageSvg(): Promise<React.ReactNode>;
-  renderArrowHead(
-    edge: LineEdge | { _: "LineEdge" | (string & {}) },
-    direction: Vector | { _: "Vector" | (string & {}) },
-    endPoint = edge.bodyLine.end.clone(),
-    size = 15,
-  ): Promise<void>;
+  renderArrowHead(edge: LineEdge | { _: "LineEdge" | (string & {}) }, direction: Vector | { _: "Vector" | (string & {}) }, endPoint = edge.bodyLine.end.clone(), size = 15): Promise<void>;
+  getAdjustedLineEnd(endPoint: Vector | { _: "Vector" | (string & {}) }, direction: Vector | { _: "Vector" | (string & {}) }, arrowType: string, edgeWidth: number): Promise<Vector>;
   shouldRenderTargetArrow(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<boolean>;
   renderShiftingState(edge: LineEdge | { _: "LineEdge" | (string & {}) }): void;
   renderCycleState(edge: LineEdge | { _: "LineEdge" | (string & {}) }): void;
-  renderVirtualEdge(
-    startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    mouseLocation: Vector | { _: "Vector" | (string & {}) },
-    sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-  ): void;
-  renderVirtualConfirmedEdge(
-    startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    endNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-    targetRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-  ): void;
+  renderVirtualEdge(startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, mouseLocation: Vector | { _: "Vector" | (string & {}) }, sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) }): void;
+  renderVirtualConfirmedEdge(startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, endNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) }, targetRectangleRate?: Vector | { _: "Vector" | (string & {}) }): void;
 }
 
 declare class SvgNode extends ConnectableEntity implements ResizeAble {
@@ -3126,17 +2399,14 @@ declare class SvgNode extends ConnectableEntity implements ResizeAble {
   isHiddenBySectionCollapse: Promise<boolean>;
   originalSize: Promise<Vector>;
   image: Promise<HTMLImageElement>;
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    {
+  constructor(project: Project | { _: "Project" | (string & {}) }, {
       uuid = crypto.randomUUID(),
       details = [],
       attachmentId = "",
       collisionBox = new CollisionBox([new Rectangle(Vector.getZero(), Vector.getZero())]),
       scale = 1,
       color = Color.Transparent,
-    },
-  );
+    });
   get geometryCenter(): Promise<Vector>;
   scaleUpdate(scaleDiff: number): Promise<void>;
   move(delta: Vector | { _: "Vector" | (string & {}) }): void;
@@ -3154,23 +2424,9 @@ declare class SvgNodeRenderer {
 declare class SvgRenderer {
   svgCache: Promise<{ [key: string]: HTMLImageElement }>;
   constructor(project: Project | { _: "Project" | (string & {}) });
-  renderSvgFromLeftTop(
-    svg: string,
-    location: Vector | { _: "Vector" | (string & {}) },
-    width: number,
-    height: number,
-  ): void;
-  renderSvgFromCenter(
-    svg: string,
-    centerLocation: Vector | { _: "Vector" | (string & {}) },
-    width: number,
-    height: number,
-  ): void;
-  renderSvgFromLeftTopWithoutSize(
-    svg: string,
-    location: Vector | { _: "Vector" | (string & {}) },
-    scaleNumber = 1,
-  ): void;
+  renderSvgFromLeftTop(svg: string, location: Vector | { _: "Vector" | (string & {}) }, width: number, height: number): void;
+  renderSvgFromCenter(svg: string, centerLocation: Vector | { _: "Vector" | (string & {}) }, width: number, height: number): void;
+  renderSvgFromLeftTopWithoutSize(svg: string, location: Vector | { _: "Vector" | (string & {}) }, scaleNumber = 1): void;
   renderSvgFromCenterWithoutSize(svg: string, centerLocation: Vector | { _: "Vector" | (string & {}) }): void;
 }
 
@@ -3178,39 +2434,17 @@ declare class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
   constructor(project: Project | { _: "Project" | (string & {}) });
   shouldRenderTargetArrow(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<boolean>;
   getCuttingEffects(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<Effect>[];
-  getConnectedEffects(
-    startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-    targetRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<Effect>[];
+  getConnectedEffects(startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) }, targetRectangleRate?: Vector | { _: "Vector" | (string & {}) }): Promise<Effect>[];
   renderNormalState(edge: LineEdge | { _: "LineEdge" | (string & {}) }): void;
   renderShiftingState(edge: LineEdge | { _: "LineEdge" | (string & {}) }): void;
   renderCycleState(edge: LineEdge | { _: "LineEdge" | (string & {}) }): void;
   getNormalStageSvg(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<React.ReactNode>;
   getCycleStageSvg(): Promise<React.ReactNode>;
   getShiftingStageSvg(): Promise<React.ReactNode>;
-  renderVirtualEdge(
-    startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    mouseLocation: Vector | { _: "Vector" | (string & {}) },
-    sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-  ): void;
-  renderVirtualConfirmedEdge(
-    startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    endNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-    targetRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-  ): void;
-  renderArrowCurve(
-    curve: SymmetryCurve | { _: "SymmetryCurve" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    width = 2,
-    edge?: LineEdge | { _: "LineEdge" | (string & {}) },
-  ): void;
-  renderText(
-    curve: SymmetryCurve | { _: "SymmetryCurve" | (string & {}) },
-    edge: LineEdge | { _: "LineEdge" | (string & {}) },
-  ): void;
+  renderVirtualEdge(startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, mouseLocation: Vector | { _: "Vector" | (string & {}) }, sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) }): void;
+  renderVirtualConfirmedEdge(startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, endNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) }, targetRectangleRate?: Vector | { _: "Vector" | (string & {}) }): void;
+  renderArrowCurve(curve: SymmetryCurve | { _: "SymmetryCurve" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, width = 2, edge?: LineEdge | { _: "LineEdge" | (string & {}) }): void;
+  renderText(curve: SymmetryCurve | { _: "SymmetryCurve" | (string & {}) }, edge: LineEdge | { _: "LineEdge" | (string & {}) }): void;
 }
 
 declare type SyncableKey = "text" | "color" | "details";
@@ -3224,9 +2458,7 @@ declare class SyncAssociation extends Association {
   _isSelected: Promise<boolean>;
   get isSelected(): Promise<boolean>;
   set isSelected(value: boolean);
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    {
+  constructor(project: Project | { _: "Project" | (string & {}) }, {
       uuid = crypto.randomUUID() as string,
       keys = ["text", "color", "details"] as SyncableKey[],
       associationList = [] as StageObject[],
@@ -3236,9 +2468,7 @@ declare class SyncAssociation extends Association {
       keys?: SyncableKey[];
       associationList?: StageObject[];
       color?: Color;
-    },
-    unknown = false,
-  );
+    }, unknown = false);
   applyFrom(source: StageObject | { _: "StageObject" | (string & {}) }): void;
 }
 
@@ -3309,9 +2539,7 @@ declare class TextNode extends ConnectableEntity implements ResizeAble {
   get isEditing(): Promise<any>;
   set isEditing(value: boolean);
   isHiddenBySectionCollapse;
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    {
+  constructor(project: Project | { _: "Project" | (string & {}) }, {
       uuid = crypto.randomUUID() as string,
       text = "",
       details = [],
@@ -3331,9 +2559,7 @@ declare class TextNode extends ConnectableEntity implements ResizeAble {
       fontScaleLevel?: number;
       fontFamily?: string;
       fontWeight?: string;
-    },
-    unknown = false,
-  );
+    }, unknown = false);
   fontSizeCache: Promise<number>;
   getFontSize(): Promise<number>;
   getPadding(): Promise<number>;
@@ -3343,10 +2569,7 @@ declare class TextNode extends ConnectableEntity implements ResizeAble {
   setFontScaleLevel(level: number): Promise<void>;
   increaseFontSize(anchorRate?: Vector | { _: "Vector" | (string & {}) }): void;
   decreaseFontSize(anchorRate?: Vector | { _: "Vector" | (string & {}) }): void;
-  _adjustLocationToKeepAnchor(
-    oldRect: Rectangle | { _: "Rectangle" | (string & {}) },
-    anchorRate: Vector | { _: "Vector" | (string & {}) },
-  ): void;
+  _adjustLocationToKeepAnchor(oldRect: Rectangle | { _: "Rectangle" | (string & {}) }, anchorRate: Vector | { _: "Vector" | (string & {}) }): void;
   adjustSizeByText(): Promise<void>;
   adjustHeightByText(): Promise<void>;
   forceAdjustSizeByText(): Promise<void>;
@@ -3373,158 +2596,31 @@ declare class TextRenderer {
   constructor(project: Project | { _: "Project" | (string & {}) });
   hash(text: string, size: number, fontFamily?: string, fontWeight?: string): Promise<string>;
   getCache(text: string, size: number, fontFamily?: string, fontWeight?: string): Promise<void>;
-  getCacheNearestSize(
-    text: string,
-    size: number,
-    fontFamily?: string,
-    fontWeight?: string,
-  ): Promise<ImageBitmap | undefined>;
-  buildCache(
-    text: string,
-    size: number,
-    color: Color | { _: "Color" | (string & {}) },
-    fontFamily?: string,
-    fontWeight?: string,
-  ): Promise<CanvasImageSource>;
-  renderText(
-    text: string,
-    location: Vector | { _: "Vector" | (string & {}) },
-    size: number,
-    color: Color | { _: "Color" | (string & {}) } = Color.White,
-    fontFamily?: string,
-    fontWeight?: string,
-  ): void;
-  renderTempText(
-    text: string,
-    location: Vector | { _: "Vector" | (string & {}) },
-    size: number,
-    color: Color | { _: "Color" | (string & {}) } = Color.White,
-    fontFamily?: string,
-    fontWeight?: string,
-  ): void;
-  renderTextFromCenter(
-    text: string,
-    centerLocation: Vector | { _: "Vector" | (string & {}) },
-    size: number,
-    color: Color | { _: "Color" | (string & {}) } = Color.White,
-    fontFamily?: string,
-    fontWeight?: string,
-  ): void;
-  renderTempTextFromCenter(
-    text: string,
-    centerLocation: Vector | { _: "Vector" | (string & {}) },
-    size: number,
-    color: Color | { _: "Color" | (string & {}) } = Color.White,
-    fontFamily?: string,
-    fontWeight?: string,
-  ): void;
-  renderTextInRectangle(
-    text: string,
-    rectangle: Rectangle | { _: "Rectangle" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    fontFamily?: string,
-    fontWeight?: string,
-  ): void;
-  getFontSizeByRectangleSize(
-    text: string,
-    rectangle: Rectangle | { _: "Rectangle" | (string & {}) },
-    fontFamily?: string,
-    fontWeight?: string,
-  ): Promise<Vector>;
-  renderMultiLineText(
-    text: string,
-    location: Vector | { _: "Vector" | (string & {}) },
-    fontSize: number,
-    limitWidth: number,
-    color: Color | { _: "Color" | (string & {}) } = Color.White,
-    lineHeight: number = 1.2,
-    limitLines: number = Infinity,
-    fontFamily?: string,
-    fontWeight?: string,
-  ): void;
-  renderTempMultiLineText(
-    text: string,
-    location: Vector | { _: "Vector" | (string & {}) },
-    fontSize: number,
-    limitWidth: number,
-    color: Color | { _: "Color" | (string & {}) } = Color.White,
-    lineHeight: number = 1.2,
-    limitLines: number = Infinity,
-    fontFamily?: string,
-    fontWeight?: string,
-  ): void;
-  renderMultiLineTextFromCenterWithStroke(
-    text: string,
-    centerLocation: Vector | { _: "Vector" | (string & {}) },
-    size: number,
-    fillColor: Color | { _: "Color" | (string & {}) },
-    strokeColor: Color | { _: "Color" | (string & {}) },
-    limitWidth: number = Infinity,
-    lineHeight: number = 1.2,
-    fontFamily?: string,
-    fontWeight?: string,
-  ): void;
-  renderMultiLineTextFromCenter(
-    text: string,
-    centerLocation: Vector | { _: "Vector" | (string & {}) },
-    size: number,
-    limitWidth: number,
-    color: Color | { _: "Color" | (string & {}) },
-    lineHeight: number = 1.2,
-    limitLines: number = Infinity,
-    fontFamily?: string,
-    fontWeight?: string,
-  ): void;
-  renderTempMultiLineTextFromCenter(
-    text: string,
-    centerLocation: Vector | { _: "Vector" | (string & {}) },
-    size: number,
-    limitWidth: number,
-    color: Color | { _: "Color" | (string & {}) },
-    lineHeight: number = 1.2,
-    limitLines: number = Infinity,
-    fontFamily?: string,
-    fontWeight?: string,
-  ): void;
+  getCacheNearestSize(text: string, size: number, fontFamily?: string, fontWeight?: string): Promise<ImageBitmap | undefined>;
+  buildCache(text: string, size: number, color: Color | { _: "Color" | (string & {}) }, fontFamily?: string, fontWeight?: string): Promise<CanvasImageSource>;
+  renderText(text: string, location: Vector | { _: "Vector" | (string & {}) }, size: number, color: Color | { _: "Color" | (string & {}) } = Color.White, fontFamily?: string, fontWeight?: string): void;
+  renderTempText(text: string, location: Vector | { _: "Vector" | (string & {}) }, size: number, color: Color | { _: "Color" | (string & {}) } = Color.White, fontFamily?: string, fontWeight?: string): void;
+  renderTextFromCenter(text: string, centerLocation: Vector | { _: "Vector" | (string & {}) }, size: number, color: Color | { _: "Color" | (string & {}) } = Color.White, fontFamily?: string, fontWeight?: string): void;
+  renderTempTextFromCenter(text: string, centerLocation: Vector | { _: "Vector" | (string & {}) }, size: number, color: Color | { _: "Color" | (string & {}) } = Color.White, fontFamily?: string, fontWeight?: string): void;
+  renderTextInRectangle(text: string, rectangle: Rectangle | { _: "Rectangle" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, fontFamily?: string, fontWeight?: string): void;
+  getFontSizeByRectangleSize(text: string, rectangle: Rectangle | { _: "Rectangle" | (string & {}) }, fontFamily?: string, fontWeight?: string): Promise<Vector>;
+  renderMultiLineText(text: string, location: Vector | { _: "Vector" | (string & {}) }, fontSize: number, limitWidth: number, color: Color | { _: "Color" | (string & {}) } = Color.White, lineHeight: number = 1.2, limitLines: number = Infinity, fontFamily?: string, fontWeight?: string): void;
+  renderTempMultiLineText(text: string, location: Vector | { _: "Vector" | (string & {}) }, fontSize: number, limitWidth: number, color: Color | { _: "Color" | (string & {}) } = Color.White, lineHeight: number = 1.2, limitLines: number = Infinity, fontFamily?: string, fontWeight?: string): void;
+  renderMultiLineTextFromCenterWithStroke(text: string, centerLocation: Vector | { _: "Vector" | (string & {}) }, size: number, fillColor: Color | { _: "Color" | (string & {}) }, strokeColor: Color | { _: "Color" | (string & {}) }, limitWidth: number = Infinity, lineHeight: number = 1.2, fontFamily?: string, fontWeight?: string): void;
+  renderMultiLineTextFromCenter(text: string, centerLocation: Vector | { _: "Vector" | (string & {}) }, size: number, limitWidth: number, color: Color | { _: "Color" | (string & {}) }, lineHeight: number = 1.2, limitLines: number = Infinity, fontFamily?: string, fontWeight?: string): void;
+  renderTempMultiLineTextFromCenter(text: string, centerLocation: Vector | { _: "Vector" | (string & {}) }, size: number, limitWidth: number, color: Color | { _: "Color" | (string & {}) }, lineHeight: number = 1.2, limitLines: number = Infinity, fontFamily?: string, fontWeight?: string): void;
   textArrayCache: Promise<LruCache<string, string[]>>;
-  textToTextArrayWrapCache(
-    text: string,
-    fontSize: number,
-    limitWidth: number,
-    fontFamily?: string,
-    fontWeight?: string,
-  ): Promise<string>[];
-  textToTextArray(
-    text: string,
-    fontSize: number,
-    limitWidth: number,
-    fontFamily?: string,
-    fontWeight?: string,
-  ): Promise<string>[];
-  measureMultiLineTextSize(
-    text: string,
-    fontSize: number,
-    limitWidth: number,
-    lineHeight: number = 1.2,
-    fontFamily?: string,
-    fontWeight?: string,
-  ): Promise<Vector>;
+  textToTextArrayWrapCache(text: string, fontSize: number, limitWidth: number, fontFamily?: string, fontWeight?: string): Promise<string>[];
+  textToTextArray(text: string, fontSize: number, limitWidth: number, fontFamily?: string, fontWeight?: string): Promise<string>[];
+  measureMultiLineTextSize(text: string, fontSize: number, limitWidth: number, lineHeight: number = 1.2, fontFamily?: string, fontWeight?: string): Promise<Vector>;
 }
 
 declare const transformedKeys;
 
 declare class TreeImporter extends BaseImporter {
   constructor(project: Project | { _: "Project" | (string & {}) });
-  import(
-    text: string,
-    indention: number,
-    diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero(),
-  ): void;
-  importFromNode(
-    uuid: string,
-    text: string,
-    indention: number,
-  ): Promise<{ success: boolean; error?: string; nodeCount?: number }>;
+  import(text: string, indention: number, diffLocation: Vector | { _: "Vector" | (string & {}) } = Vector.getZero()): void;
+  importFromNode(uuid: string, text: string, indention: number): Promise<{ success: boolean; error?: string; nodeCount?: number }>;
   getIndentLevel(line: string, indention: number): Promise<number>;
 }
 
@@ -3560,17 +2656,14 @@ declare class UrlNode extends ConnectableEntity {
   move(delta: Vector | { _: "Vector" | (string & {}) }): void;
   moveTo(location: Vector | { _: "Vector" | (string & {}) }): void;
   isHiddenBySectionCollapse: Promise<boolean>;
-  constructor(
-    project: Project | { _: "Project" | (string & {}) },
-    {
+  constructor(project: Project | { _: "Project" | (string & {}) }, {
       uuid = crypto.randomUUID() as string,
       title = "",
       details = [],
       url = "",
       collisionBox = new CollisionBox([new Rectangle(Vector.getZero(), new Vector(UrlNode.width, UrlNode.height))]),
       color = Color.Transparent,
-    },
-  );
+    });
   rename(title: string): void;
   adjustSizeByText(): Promise<void>;
 }
@@ -3584,12 +2677,7 @@ declare class UrlNodeRenderer {
 declare class VerticalPolyEdgeRenderer extends EdgeRendererClass {
   constructor(project: Project | { _: "Project" | (string & {}) });
   getCuttingEffects(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<Effect>[];
-  getConnectedEffects(
-    startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-    targetRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-  ): Promise<Effect>[];
+  getConnectedEffects(startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, toNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) }, targetRectangleRate?: Vector | { _: "Vector" | (string & {}) }): Promise<Effect>[];
   getVerticalDirection(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<Vector>;
   fixedLength: Promise<number>;
   renderTest(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<void>;
@@ -3597,130 +2685,59 @@ declare class VerticalPolyEdgeRenderer extends EdgeRendererClass {
   renderNormalState(edge: LineEdge | { _: "LineEdge" | (string & {}) }): void;
   renderShiftingState(edge: LineEdge | { _: "LineEdge" | (string & {}) }): void;
   shouldRenderTargetArrow(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<boolean>;
-  renderArrowHead(
-    edge: LineEdge | { _: "LineEdge" | (string & {}) },
-    direction: Vector | { _: "Vector" | (string & {}) },
-    endPoint = edge.bodyLine.end.clone(),
-  ): Promise<void>;
+  renderArrowHead(edge: LineEdge | { _: "LineEdge" | (string & {}) }, direction: Vector | { _: "Vector" | (string & {}) }, endPoint = edge.bodyLine.end.clone()): Promise<void>;
   renderCycleState(edge: LineEdge | { _: "LineEdge" | (string & {}) }): void;
   getNormalStageSvg(edge: LineEdge | { _: "LineEdge" | (string & {}) }): Promise<React.ReactNode>;
   getCycleStageSvg(): Promise<React.ReactNode>;
   getShiftingStageSvg(): Promise<React.ReactNode>;
-  renderVirtualEdge(
-    startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    mouseLocation: Vector | { _: "Vector" | (string & {}) },
-    sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-  ): void;
-  renderVirtualConfirmedEdge(
-    startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    endNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) },
-    sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-    targetRectangleRate?: Vector | { _: "Vector" | (string & {}) },
-  ): void;
+  renderVirtualEdge(startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, mouseLocation: Vector | { _: "Vector" | (string & {}) }, sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) }): void;
+  renderVirtualConfirmedEdge(startNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, endNode: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }, sourceRectangleRate?: Vector | { _: "Vector" | (string & {}) }, targetRectangleRate?: Vector | { _: "Vector" | (string & {}) }): void;
 }
 
 declare class WorldRenderUtils {
   constructor(project: Project | { _: "Project" | (string & {}) });
-  renderCubicCatmullRomSpline(
-    spline: CubicCatmullRomSpline | { _: "CubicCatmullRomSpline" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    width: number,
-  ): void;
-  renderBezierCurve(
-    curve: CubicBezierCurve | { _: "CubicBezierCurve" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    width: number,
-  ): void;
-  renderSymmetryCurve(
-    curve: SymmetryCurve | { _: "SymmetryCurve" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    width: number,
-  ): void;
-  renderDashedSymmetryCurve(
-    curve: SymmetryCurve | { _: "SymmetryCurve" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    width: number,
-    dashLength: number,
-  ): void;
-  renderDoubleSymmetryCurve(
-    curve: SymmetryCurve | { _: "SymmetryCurve" | (string & {}) },
-    color: Color | { _: "Color" | (string & {}) },
-    width: number,
-    gap: number,
-  ): void;
-  renderLaser(
-    start: Vector | { _: "Vector" | (string & {}) },
-    end: Vector | { _: "Vector" | (string & {}) },
-    width: number,
-    color: Color | { _: "Color" | (string & {}) },
-  ): void;
-  renderPrismaticBlock(
-    centerLocation: Vector | { _: "Vector" | (string & {}) },
-    radius: number,
-    color: Color | { _: "Color" | (string & {}) },
-    strokeColor: Color | { _: "Color" | (string & {}) },
-    strokeWidth: number,
-  ): void;
-  renderRectangleFlash(
-    rectangle: Rectangle | { _: "Rectangle" | (string & {}) },
-    shadowColor: Color | { _: "Color" | (string & {}) },
-    shadowBlur: number,
-    roundedRadius = 0,
-  ): Promise<void>;
-  renderCuttingFlash(
-    start: Vector | { _: "Vector" | (string & {}) },
-    end: Vector | { _: "Vector" | (string & {}) },
-    width: number,
-    shadowColor: Color | { _: "Color" | (string & {}) },
-  ): void;
+  renderCubicCatmullRomSpline(spline: CubicCatmullRomSpline | { _: "CubicCatmullRomSpline" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, width: number): void;
+  renderBezierCurve(curve: CubicBezierCurve | { _: "CubicBezierCurve" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, width: number): void;
+  renderSymmetryCurve(curve: SymmetryCurve | { _: "SymmetryCurve" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, width: number): void;
+  renderDashedSymmetryCurve(curve: SymmetryCurve | { _: "SymmetryCurve" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, width: number, dashLength: number): void;
+  renderDoubleSymmetryCurve(curve: SymmetryCurve | { _: "SymmetryCurve" | (string & {}) }, color: Color | { _: "Color" | (string & {}) }, width: number, gap: number): void;
+  renderLaser(start: Vector | { _: "Vector" | (string & {}) }, end: Vector | { _: "Vector" | (string & {}) }, width: number, color: Color | { _: "Color" | (string & {}) }): void;
+  renderPrismaticBlock(centerLocation: Vector | { _: "Vector" | (string & {}) }, radius: number, color: Color | { _: "Color" | (string & {}) }, strokeColor: Color | { _: "Color" | (string & {}) }, strokeWidth: number): void;
+  renderRectangleFlash(rectangle: Rectangle | { _: "Rectangle" | (string & {}) }, shadowColor: Color | { _: "Color" | (string & {}) }, shadowBlur: number, roundedRadius = 0): Promise<void>;
+  renderCuttingFlash(start: Vector | { _: "Vector" | (string & {}) }, end: Vector | { _: "Vector" | (string & {}) }, width: number, shadowColor: Color | { _: "Color" | (string & {}) }): void;
 }
 
 // ── 扩展宿主 API ──
 
 export declare function extensionHostApiFactory(extension: Extension | { _: "Extension" | (string & {}) }): {
-  toast(message: string): Promise<void>;
-  toast_success(message: string): Promise<void>;
-  toast_error(message: string): Promise<void>;
-  toast_warning(message: string): Promise<void>;
-  dialog_confirm: typeof Dialog.confirm;
-  dialog_input: typeof Dialog.input;
-  dialog_copy: typeof Dialog.copy;
-  dialog_buttons: typeof Dialog.buttons;
-  fetch: typeof fetch;
-  fetch_base64(url: string): Promise<Promise<string>>;
-  fetch_json(url: string): Promise<Promise<unknown>>;
-  fetch_binary(url: string): Promise<Promise<{ buffer: Uint8Array; mimeType: string }>>;
-  shell_execute(
-    program: string,
-    args?: string[],
-    stdin?: string,
-  ): Promise<Promise<{ code: number | null; stdout: string; stderr: string }>>;
-  settings_getOwn(key: string): Promise<any>;
-  settings_setOwn(key: string, value: unknown): Promise<void>;
-  settings_getGlobal(key: string): Promise<any>;
-  settings_setGlobal(key: string, value: unknown): Promise<any>;
-  keybinds_register(
-    id: string,
-    icon: KeyBindIcon,
-    defaultKey: string,
-    onPress: () => void,
-    onRelease?: () => void,
-    isContinuous?: boolean,
-  ): Promise<void>;
-  keybinds_unregisterAll(): Promise<void>;
-  tabs_getAll(): Promise<Promise<Tab>[]>;
-  tabs_getAllProjects(): Promise<Promise<Project>[]>;
-  tabs_getCurrent(): Promise<Promise<Tab | null>>;
-  tabs_getCurrentProject(): Promise<Promise<Project | null>>;
-  entity_registerType(
-    typeName: string,
-    initialData: any,
-    collisionBox: CollisionBox | { _: "CollisionBox" | (string & {}) },
-    renderFn: (data: any) => Promise<ImageBitmap>,
-  ): Promise<void>;
-  entity_onClick(typeName: string, handler: (payload: ClickEventPayload) => void): Promise<void>;
-  entity_create(typeName: string, data: any, location: { x: number; y: number }): Promise<Promise<ExtensionEntity>>;
-};
+    toast(message: string): Promise<void>;
+    toast_success(message: string): Promise<void>;
+    toast_error(message: string): Promise<void>;
+    toast_warning(message: string): Promise<void>;
+    dialog_confirm: typeof Dialog.confirm;
+    dialog_input: typeof Dialog.input;
+    dialog_copy: typeof Dialog.copy;
+    dialog_buttons: typeof Dialog.buttons;
+    fetch: typeof fetch;
+    fetch_base64(url: string): Promise<Promise<string>>;
+    fetch_json(url: string): Promise<Promise<unknown>>;
+    fetch_binary(url: string): Promise<Promise<{ buffer: Uint8Array; mimeType: string }>>;
+    shell_execute(program: string, args?: string[], stdin?: string): Promise<Promise<{ code: number | null; stdout: string; stderr: string }>>;
+    settings_getOwn(key: string): Promise<any>;
+    settings_setOwn(key: string, value: unknown): Promise<void>;
+    settings_getGlobal(key: string): Promise<any>;
+    settings_setGlobal(key: string, value: unknown): Promise<any>;
+    keybinds_register(id: string, icon: KeyBindIcon, defaultKey: string, onPress: () => void, onRelease?: () => void, isContinuous?: boolean): Promise<void>;
+    keybinds_unregisterAll(): Promise<void>;
+    themes_register(metadata: { id: string; name: string; description?: string; type: "light" | "dark" }, themeContent: any): Promise<void>;
+    tabs_getAll(): Promise<Promise<Tab>[]>;
+    tabs_getAllProjects(): Promise<Promise<Project>[]>;
+    tabs_getCurrent(): Promise<Promise<Tab | null>>;
+    tabs_getCurrentProject(): Promise<Promise<Project | null>>;
+    entity_registerType(typeName: string, initialData: any, collisionBox: CollisionBox | { _: "CollisionBox" | (string & {}) }, renderFn: (data: any) => Promise<ImageBitmap>): Promise<void>;
+    entity_onClick(typeName: string, handler: (payload: ClickEventPayload) => void): Promise<void>;
+    entity_create(typeName: string, data: any, location: { x: number; y: number }): Promise<Promise<ExtensionEntity>>;
+  };
 
 declare global {
   const prg: ReturnType<typeof extensionHostApiFactory>;
