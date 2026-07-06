@@ -88,6 +88,8 @@ export class DeleteManager {
   private deleteExtensionEntity(entity: ExtensionEntity) {
     if (this.project.stageManager.getEntities().includes(entity)) {
       this.project.stageManager.delete(entity);
+      // 删除所有相关的边
+      this.deleteEntityAfterClearAssociation(entity);
     }
   }
 
