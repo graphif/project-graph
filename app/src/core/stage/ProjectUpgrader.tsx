@@ -11,7 +11,7 @@ import { DetailsManager } from "./stageObject/tools/entityDetailsManager";
 
 export namespace ProjectUpgrader {
   /** N系列的最新版本 */
-  export const NLatestVersion = "2.5.0";
+  export const NLatestVersion = "2.6.0";
 
   /**
    * 比较两个版本号字符串（格式：x.y.z）
@@ -389,6 +389,11 @@ export namespace ProjectUpgrader {
       [data, metadata] = convertN5toN6(data, metadata);
     }
 
+    // 如果版本小于 2.6.0，需要升级
+    if (compareVersion(currentVersion, "2.6.0") < 0) {
+      [data, metadata] = convertN6toN7(data, metadata);
+    }
+
     return [data, metadata];
   }
 
@@ -470,6 +475,27 @@ export namespace ProjectUpgrader {
       }
     }
     return [data, { ...metadata, version: "2.5.0" }];
+  }
+
+  /**
+   * 将 2.5.0 版本升级到 2.6.0 版本
+   * MultiTargetUndirectedEdge 新增 lineType 字段（默认 "solid"）和 arrowType 字段（默认 "default"）。
+   * @param data 2.5.0版本数据
+   * @param metadata 2.5.0版本metadata
+   * @returns 2.6.0版本数据和metadata
+   */
+  function convertN6toN7(data: any[], metadata: any): [any[], PrgMetadata] {
+    for (const item of data) {
+      if (item._ === "MultiTargetUndirectedEdge") {
+        if (item.lineType === undefined) {
+          item.lineType = "solid";
+        }
+        if (item.arrowType === undefined) {
+          item.arrowType = "default";
+        }
+      }
+    }
+    return [data, { ...metadata, version: "2.6.0" }];
   }
 
   /**

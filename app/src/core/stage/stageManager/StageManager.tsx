@@ -1124,10 +1124,10 @@ export class StageManager {
    */
   setSelectedEdgeLineType(lineType: string) {
     const selectedEdges = this.getSelectedAssociations().filter(
-      (edge) => edge instanceof LineEdge || edge instanceof ArcEdge,
+      (edge) => edge instanceof LineEdge || edge instanceof ArcEdge || edge instanceof MultiTargetUndirectedEdge,
     );
     for (const edge of selectedEdges) {
-      edge.lineType = lineType;
+      (edge as LineEdge | ArcEdge | MultiTargetUndirectedEdge).lineType = lineType;
     }
   }
 
@@ -1136,10 +1136,10 @@ export class StageManager {
    */
   setSelectedEdgeArrowType(arrowType: string) {
     const selectedEdges = this.getSelectedAssociations().filter(
-      (edge) => edge instanceof LineEdge || edge instanceof ArcEdge,
+      (edge) => edge instanceof LineEdge || edge instanceof ArcEdge || edge instanceof MultiTargetUndirectedEdge,
     );
     for (const edge of selectedEdges) {
-      (edge as LineEdge | ArcEdge).arrowType = arrowType;
+      (edge as LineEdge | ArcEdge | MultiTargetUndirectedEdge).arrowType = arrowType;
     }
   }
 

@@ -310,7 +310,10 @@ const whenHasSelectedLineEdges: KeyBindWhen = (project) =>
 const whenHasSelectedEdgeWithLineType: KeyBindWhen = (project) =>
   !!project &&
   (project.stageManager.getLineEdges().some((edge) => edge.isSelected) ||
-    project.stageManager.getArcEdges().some((edge) => edge.isSelected));
+    project.stageManager.getArcEdges().some((edge) => edge.isSelected) ||
+    project.stageManager
+      .getSelectedAssociations()
+      .some((association) => association instanceof MultiTargetUndirectedEdge));
 const whenHasSelectedMTUEdges: KeyBindWhen = (project) =>
   !!project &&
   project.stageManager
@@ -2486,17 +2489,7 @@ export const allKeyBinds: KeyBindItem[] = [
     icon: CircleSlash,
     when: whenHasSelectedEdgeWithLineType,
     onPress: (project) => {
-      const selectedEdges = project!.stageManager.getLineEdges().filter((edge) => edge.isSelected);
-      const selectedArcEdges = project!.stageManager.getArcEdges().filter((edge) => edge.isSelected);
-      if (selectedEdges.length === 0 && selectedArcEdges.length === 0) {
-        return;
-      }
-      for (const edge of selectedEdges) {
-        edge.lineType = "dashed";
-      }
-      for (const edge of selectedArcEdges) {
-        edge.lineType = "dashed";
-      }
+      project!.stageManager.setSelectedEdgeLineType("dashed");
       project!.historyManager.recordStep();
     },
   },
@@ -2507,17 +2500,7 @@ export const allKeyBinds: KeyBindItem[] = [
     icon: Link,
     when: whenHasSelectedEdgeWithLineType,
     onPress: (project) => {
-      const selectedEdges = project!.stageManager.getLineEdges().filter((edge) => edge.isSelected);
-      const selectedArcEdges = project!.stageManager.getArcEdges().filter((edge) => edge.isSelected);
-      if (selectedEdges.length === 0 && selectedArcEdges.length === 0) {
-        return;
-      }
-      for (const edge of selectedEdges) {
-        edge.lineType = "solid";
-      }
-      for (const edge of selectedArcEdges) {
-        edge.lineType = "solid";
-      }
+      project!.stageManager.setSelectedEdgeLineType("solid");
       project!.historyManager.recordStep();
     },
   },

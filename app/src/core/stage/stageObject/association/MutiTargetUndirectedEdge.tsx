@@ -23,6 +23,27 @@ export type UndirectedEdgeArrowType = "inner" | "outer" | "none";
  * circle：圆形包围渲染
  */
 export type MultiTargetUndirectedEdgeRenderType = "line" | "convex" | "circle";
+/**
+ * 无向边的线条类型
+ * solid：实线
+ * dashed：虚线
+ * double：双实线
+ */
+export type UndirectedEdgeLineType = "solid" | "dashed" | "double";
+/**
+ * 无向边的箭头形状（与 LineEdge.arrowType 保持一致）
+ * default：燕尾箭头
+ * hollow-triangle：空心三角形
+ * filled-triangle：实心三角形
+ * hollow-diamond：空心菱形
+ * filled-diamond：实心菱形
+ */
+export type UndirectedEdgeArrowShape =
+  | "default"
+  | "hollow-triangle"
+  | "filled-triangle"
+  | "hollow-diamond"
+  | "filled-diamond";
 
 /**
  * 多端无向边
@@ -138,7 +159,11 @@ export class MultiTargetUndirectedEdge extends ConnectableAssociation {
   @serializable
   public arrow: UndirectedEdgeArrowType = "none";
   @serializable
+  public arrowType: UndirectedEdgeArrowShape = "default";
+  @serializable
   public renderType: MultiTargetUndirectedEdgeRenderType = "line";
+  @serializable
+  public lineType: UndirectedEdgeLineType = "solid";
   @serializable
   public padding: number;
 
@@ -155,9 +180,11 @@ export class MultiTargetUndirectedEdge extends ConnectableAssociation {
       color = Color.Transparent,
       rectRates = associationList.map(() => Vector.same(0.5)),
       arrow = "none" as UndirectedEdgeArrowType,
+      arrowType = "default" as UndirectedEdgeArrowShape,
       centerRate = Vector.same(0.5),
       padding = 10,
       renderType = "line" as MultiTargetUndirectedEdgeRenderType,
+      lineType = "solid" as UndirectedEdgeLineType,
     }: {
       associationList?: ConnectableEntity[];
       text?: string;
@@ -165,9 +192,11 @@ export class MultiTargetUndirectedEdge extends ConnectableAssociation {
       color?: Color;
       rectRates?: Vector[];
       arrow?: UndirectedEdgeArrowType;
+      arrowType?: UndirectedEdgeArrowShape;
       centerRate?: Vector;
       padding?: number;
       renderType?: MultiTargetUndirectedEdgeRenderType;
+      lineType?: UndirectedEdgeLineType;
     },
     /** true表示解析状态，false表示解析完毕 */
     public unknown = false,
@@ -181,7 +210,9 @@ export class MultiTargetUndirectedEdge extends ConnectableAssociation {
     this.rectRates = rectRates;
     this.centerRate = centerRate;
     this.arrow = arrow;
+    this.arrowType = arrowType;
     this.renderType = renderType;
+    this.lineType = lineType;
     this.padding = padding;
   }
 

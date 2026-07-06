@@ -91,30 +91,56 @@ export class MultiTargetUndirectedEdgeRenderer {
         const textRectangle = edge.textRectangle;
         toCenterPoint = textRectangle.getLineIntersectionPoint(new Line(centerLocation, targetLocation));
       }
-      this.project.curveRenderer.renderSolidLine(
-        this.project.renderer.transformWorld2View(targetPoint),
-        this.project.renderer.transformWorld2View(toCenterPoint),
-        edgeColor,
-        2 * this.project.camera.currentScale,
-      );
-      // 画箭头
-      if (edge.arrow === "inner") {
-        //
-        this.project.edgeRenderer.renderArrowHead(
-          // Renderer.transformWorld2View(toCenterPoint),
-          toCenterPoint,
-          toCenterPoint.subtract(targetPoint).normalize(),
-          15,
+      const startView = this.project.renderer.transformWorld2View(targetPoint);
+      const endView = this.project.renderer.transformWorld2View(toCenterPoint);
+      const lineWidth = 2 * this.project.camera.currentScale;
+      const lineType = edge.lineType || "solid";
+      if (lineType === "dashed") {
+        this.project.curveRenderer.renderDashedLine(
+          startView,
+          endView,
           edgeColor,
+          lineWidth,
+          10 * this.project.camera.currentScale,
+        );
+      } else if (lineType === "double") {
+        this.project.curveRenderer.renderDoubleLine(
+          startView,
+          endView,
+          edgeColor,
+          lineWidth,
+          5 * this.project.camera.currentScale,
+        );
+      } else {
+        this.project.curveRenderer.renderSolidLine(startView, endView, edgeColor, lineWidth);
+      }
+      // 画箭头（使用 arrowType 控制形状）
+      const arrowType = edge.arrowType || "default";
+      const edgeWidth = 2;
+      const arrowSize = 8 * edgeWidth;
+      if (edge.arrow === "inner") {
+        // 箭头指向中心
+        const direction = toCenterPoint.subtract(targetPoint).normalize();
+        this.project.edgeRenderer.renderArrowByType(
+          toCenterPoint,
+          targetPoint,
+          direction,
+          arrowSize,
+          edgeColor,
+          arrowType,
+          edgeWidth,
         );
       } else if (edge.arrow === "outer") {
-        //
-        this.project.edgeRenderer.renderArrowHead(
-          // Renderer.transformWorld2View(targetPoint),
+        // 箭头指向节点
+        const direction = targetPoint.subtract(toCenterPoint).normalize();
+        this.project.edgeRenderer.renderArrowByType(
           targetPoint,
-          targetPoint.subtract(toCenterPoint).normalize(),
-          15,
+          toCenterPoint,
+          direction,
+          arrowSize,
           edgeColor,
+          arrowType,
+          edgeWidth,
         );
       }
     }
@@ -140,12 +166,29 @@ export class MultiTargetUndirectedEdgeRenderer {
     convexPoints = ConvexHull.computeConvexHull(convexPoints);
     // 保证首尾相接
     convexPoints.push(convexPoints[0]);
-    this.project.curveRenderer.renderSolidLineMultiple(
-      convexPoints.map((point) => this.project.renderer.transformWorld2View(point)),
-      edgeColor.toNewAlpha(0.5),
-      // 当视野缩放足够小时，边框固定粗细
-      this.project.camera.currentScale <= 0.065 ? 8 : 8 * this.project.camera.currentScale,
-    );
+    const lineType = edge.lineType || "solid";
+    const strokeWidth = this.project.camera.currentScale <= 0.065 ? 8 : 8 * this.project.camera.currentScale;
+    const viewPoints = convexPoints.map((point) => this.project.renderer.transformWorld2View(point));
+    if (lineType === "dashed") {
+      const dashLen = 10 * this.project.camera.currentScale;
+      this.project.canvas.ctx.setLineDash([dashLen, dashLen]);
+      this.project.curveRenderer.renderSolidLineMultiple(viewPoints, edgeColor.toNewAlpha(0.5), strokeWidth);
+      this.project.canvas.ctx.setLineDash([]);
+    } else if (lineType === "double") {
+      // 双线：绘制两次，略微偏移
+      const gap = 5 * this.project.camera.currentScale;
+      for (let i = 0; i < viewPoints.length - 1; i++) {
+        this.project.curveRenderer.renderDoubleLine(
+          viewPoints[i],
+          viewPoints[i + 1],
+          edgeColor.toNewAlpha(0.5),
+          strokeWidth / 4,
+          gap,
+        );
+      }
+    } else {
+      this.project.curveRenderer.renderSolidLineMultiple(viewPoints, edgeColor.toNewAlpha(0.5), strokeWidth);
+    }
   }
 
   private renderCircle(edge: MultiTargetUndirectedEdge, edgeColor: Color): void {
@@ -184,14 +227,49 @@ export class MultiTargetUndirectedEdgeRenderer {
       }
     }
 
-    // 绘制圆形
-    this.project.shapeRenderer.renderCircle(
-      this.project.renderer.transformWorld2View(center),
-      maxDistance * this.project.camera.currentScale,
-      Color.Transparent,
-      edgeColor.toNewAlpha(0.5),
-      // 当视野缩放足够小时，边框固定粗细
-      this.project.camera.currentScale <= 0.065 ? 8 : 8 * this.project.camera.currentScale,
-    );
+    const strokeWidth = this.project.camera.currentScale <= 0.065 ? 8 : 8 * this.project.camera.currentScale;
+    const lineType = edge.lineType || "solid";
+    const viewCenter = this.project.renderer.transformWorld2View(center);
+    const viewRadius = maxDistance * this.project.camera.currentScale;
+
+    if (lineType === "dashed") {
+      const dashLen = 10 * this.project.camera.currentScale;
+      this.project.canvas.ctx.setLineDash([dashLen, dashLen]);
+      this.project.shapeRenderer.renderCircle(
+        viewCenter,
+        viewRadius,
+        Color.Transparent,
+        edgeColor.toNewAlpha(0.5),
+        strokeWidth,
+      );
+      this.project.canvas.ctx.setLineDash([]);
+    } else if (lineType === "double") {
+      const gap = 5 * this.project.camera.currentScale;
+      // 内圆
+      this.project.shapeRenderer.renderCircle(
+        viewCenter,
+        viewRadius - gap / 2,
+        Color.Transparent,
+        edgeColor.toNewAlpha(0.5),
+        strokeWidth / 4,
+      );
+      // 外圆
+      this.project.shapeRenderer.renderCircle(
+        viewCenter,
+        viewRadius + gap / 2,
+        Color.Transparent,
+        edgeColor.toNewAlpha(0.5),
+        strokeWidth / 4,
+      );
+    } else {
+      // 绘制圆形
+      this.project.shapeRenderer.renderCircle(
+        viewCenter,
+        viewRadius,
+        Color.Transparent,
+        edgeColor.toNewAlpha(0.5),
+        strokeWidth,
+      );
+    }
   }
 }
