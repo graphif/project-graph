@@ -55,4 +55,4 @@ effects:
   dash: "#fff"
   windowFlash: "#fff"
   warningShadow: "#f00"
-  successShadow: oklch(0.546 0.245 262.881)
+  successShadow: oklch(0.696 0.17 162.48)
