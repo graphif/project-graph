@@ -166,12 +166,18 @@ export function extensionHostApiFactory(extension: Extension) {
 
     //region 主题
     async themes_register(
-      metadata: { id: string; name: string; description?: string; type: "light" | "dark" },
+      id: string,
+      name: string,
+      description: string | undefined,
+      type: "light" | "dark",
       themeContent: any,
     ): Promise<void> {
-      Themes.registerExtensionTheme(metadata.id, extensionId, {
+      Themes.registerExtensionTheme(id, extensionId, {
         metadata: {
-          ...metadata,
+          id,
+          name,
+          description,
+          type,
           source: extension,
         },
         content: themeContent,
