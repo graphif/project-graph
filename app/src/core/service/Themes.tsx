@@ -78,11 +78,15 @@ export namespace Themes {
     }
     return generateCSSVariables(theme);
   }
-  /** 将主题CSS挂载到网页上 */
-  export async function applyThemeById(themeId: string) {
+  /**
+   * 将主题CSS挂载到网页上，并返回主题对象。
+   * 注意：此函数不修改任何 Settings 值，调用者需自行设置 Settings.theme 来持久化。
+   */
+  export async function applyThemeById(themeId: string): Promise<Theme | undefined> {
     const theme = await getThemeById(themeId);
-    if (!theme) return;
+    if (!theme) return undefined;
     await applyTheme(theme.content, theme.metadata.type);
+    return theme;
   }
   export async function applyTheme(themeContent: any, type?: "light" | "dark") {
     let styleEl = document.querySelector("#pg-theme");

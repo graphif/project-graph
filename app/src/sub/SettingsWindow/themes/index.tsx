@@ -13,6 +13,7 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { Extension } from "@/core/extension/Extension";
+import { Settings } from "@/core/service/Settings";
 import { Themes } from "@/core/service/Themes";
 import { Blocks, ChevronRight, Moon, Palette, Sun } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -21,7 +22,6 @@ export default function ThemesTab() {
   const [selectedTheme, setSelectedTheme] = useState<Themes.Theme | null>(null);
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(["builtin"]));
   const [extensionGroups, setExtensionGroups] = useState<{ extension: Extension; themes: Themes.Theme[] }[]>([]);
-  const [applying, setApplying] = useState(false);
 
   const builtinThemes = useMemo(() => Themes.builtinThemes, []);
 
@@ -47,12 +47,7 @@ export default function ThemesTab() {
   }, []);
 
   const handleApply = async (themeId: string) => {
-    setApplying(true);
-    try {
-      await Themes.applyThemeById(themeId);
-    } finally {
-      setApplying(false);
-    }
+    Settings.theme = themeId;
   };
 
   return (
@@ -204,9 +199,9 @@ export default function ThemesTab() {
                 来自扩展：{selectedTheme.metadata.source.metadata.extension?.name || "未知扩展"}
               </p>
             )}
-            <Button onClick={() => handleApply(selectedTheme.metadata.id)} disabled={applying}>
+            <Button onClick={() => handleApply(selectedTheme.metadata.id)}>
               <Palette />
-              {applying ? "应用中…" : "应用主题"}
+              应用主题
             </Button>
           </div>
         ) : (

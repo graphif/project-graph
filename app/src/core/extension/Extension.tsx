@@ -372,8 +372,8 @@ export class Extension extends Tab {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={async () => {
-                              await Themes.applyThemeById(theme.metadata.id);
+                            onClick={() => {
+                              Settings.theme = theme.metadata.id;
                             }}
                           >
                             应用

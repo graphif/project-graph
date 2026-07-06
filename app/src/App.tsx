@@ -86,8 +86,14 @@ export default function App() {
     });
 
     // 监听主题样式切换
-    Settings.watch("theme", (value) => {
-      Themes.applyThemeById(value);
+    Settings.watch("theme", async (value) => {
+      const theme = await Themes.applyThemeById(value);
+      if (!theme) return;
+      if (theme.metadata.type === "light") {
+        Settings.lightTheme = value;
+      } else if (theme.metadata.type === "dark") {
+        Settings.darkTheme = value;
+      }
     });
 
     // 监听主题模式切换
