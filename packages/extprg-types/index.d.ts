@@ -3,7 +3,7 @@
 
 /**
  * Auto-generated. Do not edit manually.
- * 2026-07-06T14:11:33.696Z
+ * 2026-07-06T14:27:58.589Z
  */
 
 // ── 第三方类型导入 ──
@@ -3935,7 +3935,7 @@ export declare function extensionHostApiFactory(extension: Extension | { _: "Ext
   settings_setGlobal(key: string, value: unknown): Promise<any>;
   keybinds_register(
     id: string,
-    icon: KeyBindIcon,
+    icon: KeyBindIcon | { $lucide: string },
     defaultKey: string,
     onPress: () => void,
     onRelease?: () => void,
