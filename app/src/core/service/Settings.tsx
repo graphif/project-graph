@@ -759,7 +759,6 @@ export const settingsSchema = z.object({
           { type: "item", id: "openAITools", icon: "Wrench" },
         ],
       },
-      // ===================== 窗口 =====================
       {
         type: "topMenu",
         id: "window",
@@ -801,6 +800,17 @@ export const settingsSchema = z.object({
               { type: "item", id: "stealthModeScopeRadiusDecrease", icon: "CircleMinus" },
             ],
           },
+        ],
+      },
+      // ===================== 扩展 =====================
+      {
+        type: "topMenu",
+        id: "extensions",
+        icon: "Blocks",
+        children: [
+          { type: "item", id: "openExtensionsWindow", icon: "Blocks" },
+          { type: "item", id: "openPluginMarket", icon: "Store" },
+          { type: "item", id: "openExtensionFolder", icon: "FolderOpen" },
         ],
       },
       // ===================== 关于 =====================
@@ -915,13 +925,27 @@ for (const [rawKey, rawValue] of Object.entries(rawSettings)) {
   pendingSettingsLoadErrorValues.set(rawKey, rawValue);
 }
 
+// 检查菜单配置中是否存在指定 id 的节点（用于版本升级时的配置重置判断）
+function hasMenuId(nodes: GlobalMenuNode[], id: string): boolean {
+  for (const node of nodes) {
+    if (node.id === id) return true;
+    if (node.children && hasMenuId(node.children, id)) return true;
+  }
+  return false;
+}
+
 const mergedGlobalMenuConfig = mergeGlobalMenuConfig(
   savedSettings.globalMenuConfig as GlobalMenuNode[],
   defaultSettings.globalMenuConfig as GlobalMenuNode[],
 );
-if (JSON.stringify(mergedGlobalMenuConfig) !== JSON.stringify(savedSettings.globalMenuConfig)) {
-  savedSettings.globalMenuConfig = mergedGlobalMenuConfig as Settings["globalMenuConfig"];
-  await store.set("globalMenuConfig", mergedGlobalMenuConfig);
+// 检查是否缺少 extensions 顶级菜单（旧版本用户升级后需要重置以保证顺序正确）
+const globalMenuNeedsReset = !hasMenuId(mergedGlobalMenuConfig, "extensions");
+const finalGlobalMenuConfig = globalMenuNeedsReset
+  ? (defaultSettings.globalMenuConfig as GlobalMenuNode[])
+  : mergedGlobalMenuConfig;
+if (JSON.stringify(finalGlobalMenuConfig) !== JSON.stringify(savedSettings.globalMenuConfig)) {
+  savedSettings.globalMenuConfig = finalGlobalMenuConfig as Settings["globalMenuConfig"];
+  await store.set("globalMenuConfig", finalGlobalMenuConfig);
   await store.save();
 }
 
@@ -931,13 +955,6 @@ const mergedContextMenuConfig = mergeGlobalMenuConfig(
 );
 // 检查是否缺少 edge-arrow-type 子菜单（旧版本用户）
 // 若缺少，说明是旧配置，直接重置为默认值以保证顺序正确
-function hasMenuId(nodes: GlobalMenuNode[], id: string): boolean {
-  for (const node of nodes) {
-    if (node.id === id) return true;
-    if (node.children && hasMenuId(node.children, id)) return true;
-  }
-  return false;
-}
 const contextMenuNeedsReset = !hasMenuId(mergedContextMenuConfig, "edge-arrow-type");
 const finalContextMenuConfig = contextMenuNeedsReset
   ? (defaultSettings.contextMenuConfig as GlobalMenuNode[])

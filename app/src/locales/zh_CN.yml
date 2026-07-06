@@ -2455,6 +2455,18 @@ keyBinds:
   openCacheFolder:
     title: 打开缓存文件夹
     description: 在文件管理器中打开应用缓存文件夹
+  openExtensionsWindow:
+    title: 打开扩展窗口
+    description: 打开扩展管理窗口
+  openPluginMarket:
+    title: 插件市场
+    description: 在浏览器中打开插件市场
+  openExtensionFolder:
+    title: 打开扩展文件夹
+    description: 在文件管理器中打开扩展安装目录
+  extensions:
+    title: 扩展
+    description: 扩展相关功能
   openColorManagerWindow:
     title: 打开颜色管理器
     description: 打开颜色管理器窗口

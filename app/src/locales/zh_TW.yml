@@ -2455,6 +2455,18 @@ keyBinds:
   openCacheFolder:
     title: 打開緩存文件夾
     description: 在文件管理器中打開應用緩存文件夾
+  openExtensionsWindow:
+    title: 打開擴展窗口
+    description: 打開擴展管理窗口
+  openPluginMarket:
+    title: 插件市場
+    description: 在瀏覽器中打開插件市場
+  openExtensionFolder:
+    title: 打開擴展文件夾
+    description: 在文件管理器中打開擴展安裝目錄
+  extensions:
+    title: 擴展
+    description: 擴展相關功能
   openColorManagerWindow:
     title: 打開顏色管理器
     description: 打開顏色管理器窗口

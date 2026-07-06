@@ -59,7 +59,7 @@ import { Color, Vector } from "@graphif/data-structures";
 import { serialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import { Encoder } from "@msgpack/msgpack";
-import { appCacheDir, dataDir, join, tempDir } from "@tauri-apps/api/path";
+import { appCacheDir, appDataDir, dataDir, join, tempDir } from "@tauri-apps/api/path";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { exists, mkdir, writeFile } from "@tauri-apps/plugin-fs";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
@@ -95,6 +95,7 @@ import {
   ArrowUpFromLine,
   ArrowUpToLine,
   Axe,
+  Blocks,
   BookOpen,
   BookOpenText,
   Bot,
@@ -212,6 +213,7 @@ import {
   Sparkles,
   Spline,
   Split,
+  Store,
   SquareDashedBottomCode,
   SquareDot,
   SquareRoundCorner,
@@ -3716,6 +3718,36 @@ export const allKeyBinds: KeyBindItem[] = [
     icon: Rabbit,
     when: whenAlways,
     onPress: () => {},
+  },
+  // ===================== Extensions 菜单 =====================
+  {
+    id: "openExtensionsWindow",
+    defaultKey: "",
+    icon: Blocks,
+    when: whenAlways,
+    onPress: () => SettingsWindow.open("extensions"),
+  },
+  {
+    id: "openPluginMarket",
+    defaultKey: "",
+    icon: Store,
+    when: whenAlways,
+    onPress: () => {
+      shellOpen(`${import.meta.env.LR_API_BASE_URL}/ext/marketplace`);
+    },
+  },
+  {
+    id: "openExtensionFolder",
+    defaultKey: "",
+    icon: FolderOpen,
+    when: whenAlways,
+    onPress: async () => {
+      const extensionsDir = await join(await appDataDir(), "extensions");
+      if (!(await exists(extensionsDir))) {
+        await mkdir(extensionsDir, { recursive: true });
+      }
+      shellOpen(extensionsDir);
+    },
   },
   // ===================== AI 菜单 =====================
   {

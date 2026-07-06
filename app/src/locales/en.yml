@@ -2265,6 +2265,18 @@ controlSettingsGroup:
   openCacheFolder:
     title: Open Cache Folder
     description: Open the application cache folder in the file manager
+  openExtensionsWindow:
+    title: Open Extensions Window
+    description: Open the extension management window
+  openPluginMarket:
+    title: Plugin Marketplace
+    description: Open the plugin marketplace in the browser
+  openExtensionFolder:
+    title: Open Extension Folder
+    description: Open the extension installation directory in the file manager
+  extensions:
+    title: Extensions
+    description: Extension related features
   openColorManagerWindow:
     title: Open Color Manager
     description: Open the color manager window
