@@ -1,26 +1,28 @@
 import { Button } from "@/components/ui/button";
-import Markdown from "@/components/ui/markdown";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Project } from "@/core/Project";
 import type { AIMessageMetadata } from "@/core/service/dataManageService/aiEngine/AIEngine";
 import { Settings } from "@/core/service/Settings";
 import { SubWindow } from "@/core/service/SubWindow";
+import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Section } from "@/core/stage/stageObject/entity/Section";
+import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { activeTabAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { useChat } from "@ai-sdk/react";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
+import { code } from "@streamdown/code";
 import type { UIMessage } from "ai";
 import { useAtom } from "jotai";
 import { Bot, Check, ChevronRight, FolderOpen, Paperclip, Plus, Send, Sparkles, Square, User, X } from "lucide-react";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Streamdown } from "streamdown";
+import "streamdown/styles.css";
 import { getOriginalNameOf } from "virtual:original-class-name";
 
 let pendingInitialText: string | null = null;
@@ -208,7 +210,7 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
     [project],
   );
 
-  const markdownComponents = useMemo(() => ({ code: UuidCode }), [UuidCode]);
+  const markdownComponents = useMemo(() => ({ inlineCode: UuidCode }), [UuidCode]);
 
   return (
     <div className="from-background via-background to-muted/30 flex h-full flex-col bg-gradient-to-b">
@@ -359,10 +361,20 @@ function MessageBubble({
                     key={part.toolCallId ?? `${part.type}-${bubbleIndex}-${index}`}
                     part={part}
                     components={components}
+                    isAnimating={!isUser && requesting}
+                    showCaret={!isUser && isLast}
                   />
                 ))
               ) : (
-                <Markdown source={String(message.content ?? "")} components={components} />
+                <Streamdown
+                  plugins={{ code }}
+                  components={components}
+                  animated={!isUser}
+                  isAnimating={!isUser && requesting}
+                  caret={!isUser && isLast ? "circle" : undefined}
+                >
+                  {String(message.content ?? "")}
+                </Streamdown>
               )}
             </div>
           ))
@@ -375,7 +387,15 @@ function MessageBubble({
                 : "bg-card border-border/70 rounded-bl-md border shadow-sm",
             )}
           >
-            <Markdown source={String(message.content ?? "")} components={components} />
+            <Streamdown
+              plugins={{ code }}
+              components={components}
+              animated={!isUser}
+              isAnimating={!isUser && requesting}
+              caret={!isUser && isLast ? "circle" : undefined}
+            >
+              {String(message.content ?? "")}
+            </Streamdown>
           </div>
         )}
         {!isUser && selectedCount === 1 && parts.some((p: any) => p.type === "text") && (!isLast || !requesting) && (
@@ -418,9 +438,29 @@ function splitPartsByStepStart(parts: any[]) {
   return bubbles;
 }
 
-function MessagePart({ part, components }: { part: any; components?: Record<string, React.ComponentType<any>> }) {
+function MessagePart({
+  part,
+  components,
+  isAnimating,
+  showCaret,
+}: {
+  part: any;
+  components?: Record<string, React.ComponentType<any>>;
+  isAnimating?: boolean;
+  showCaret?: boolean;
+}) {
   if (part.type === "text") {
-    return <Markdown source={part.text ?? ""} components={components} />;
+    return (
+      <Streamdown
+        plugins={{ code }}
+        components={components}
+        animated={isAnimating}
+        isAnimating={isAnimating}
+        caret={showCaret ? "circle" : undefined}
+      >
+        {part.text ?? ""}
+      </Streamdown>
+    );
   }
   if (part.type === "reasoning") {
     return (
@@ -449,9 +489,9 @@ function ToolPart({ part }: { part: any }) {
         <ChevronRight className="size-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
       </CollapsibleTrigger>
       <CollapsibleContent className="bg-muted/60 mt-2 animate-none! rounded-lg px-3 py-2">
-        <Markdown
-          source={`\`\`\`json\n${JSON.stringify({ input: part.input, output: part.output, error: part.errorText }, null, 2)}\n\`\`\``}
-        />
+        <Streamdown plugins={{ code }}>
+          {`\`\`\`json\n${JSON.stringify({ input: part.input, output: part.output, error: part.errorText }, null, 2)}\n\`\`\``}
+        </Streamdown>
       </CollapsibleContent>
     </Collapsible>
   );
