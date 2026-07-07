@@ -1,18 +1,19 @@
 import { Project } from "@/core/Project";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { Settings } from "@/core/service/Settings";
+import { blobToCompressedDataUrl } from "@/core/service/dataManageService/imageUtils";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
+import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { Section } from "@/core/stage/stageObject/entity/Section";
+import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { Color, Vector } from "@graphif/data-structures";
 import { serialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
-import { generateText, tool, type ToolSet } from "ai";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { fetch } from "@tauri-apps/plugin-http";
+import { encode } from "@toon-format/toon";
+import { generateText, tool, type ToolSet } from "ai";
 import z from "zod/v4";
-import { Settings } from "@/core/service/Settings";
-import { blobToCompressedDataUrl } from "@/core/service/dataManageService/imageUtils";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { Section } from "@/core/stage/stageObject/entity/Section";
 import { findFirstImageInChildren } from "./imageNodeFinder";
 
 export namespace AITools {
@@ -55,7 +56,7 @@ export namespace AITools {
           inputSchema: definition.parameters as any,
           execute: async (data: any) => {
             const result = await definition.fn(project, data as any);
-            return result ?? { success: true };
+            return result ? encode(result) : "ok";
           },
           ...(definition.toModelOutput
             ? {
