@@ -10,7 +10,7 @@ const conf = readFileSync(CARGO_TOML_PATH);
 const updated = conf
   .toString()
   .replaceAll(
-    /^aha = { version = "(.*)", features = \["(.*)"\] }$/g,
+    /^aha = { version = "(.*)", features = \["(.*)"\] }$/gm,
     `aha = { version = "$1", features = ${JSON.stringify(features)} }`,
   );
 
