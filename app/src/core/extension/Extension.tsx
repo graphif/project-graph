@@ -167,6 +167,20 @@ export class Extension extends Tab {
       const [installed, setInstalled] = useState(false);
       const [disabledExtensions, setDisabledExtensions] = Settings.use("disabledExtensions");
       const disabled = disabledExtensions.includes(self.metadata.extension?.id || "");
+      // 响应式快捷键列表：订阅 KeyBindsUI 的变化，安装插件后自动刷新
+      const [extensionKeyBinds, setExtensionKeyBinds] = useState(() => {
+        const prefix = `ext:${self.metadata.extension?.id || ""}:`;
+        return KeyBindsUI.getAllUIKeyBinds().filter((kb) => kb.id.startsWith(prefix));
+      });
+
+      useEffect(() => {
+        const extensionId = self.metadata.extension?.id || "";
+        const prefix = `ext:${extensionId}:`;
+        const unsubscribe = KeyBindsUI.onKeyBindListChange((allBinds) => {
+          setExtensionKeyBinds(allBinds.filter((kb) => kb.id.startsWith(prefix)));
+        });
+        return unsubscribe;
+      }, []);
 
       useEffect(() => {
         (async () => {
@@ -266,6 +280,8 @@ export class Extension extends Tab {
                     if (self.iconFileName && self.iconRawData) {
                       await writeFile(await join(base, self.iconFileName), self.iconRawData);
                     }
+                    // 安装完成后立即运行插件，使其快捷键等功能即时生效，无需重载
+                    await ExtensionManager.getRuntime(self.metadata.extension?.id || "unknown");
                     setInstalled(true);
                     toast.success("扩展已安装");
                   }}
@@ -385,16 +401,11 @@ export class Extension extends Tab {
                 </TabsContent>
                 <TabsContent value="keybinds">
                   <div className="space-y-1">
-                    {(() => {
-                      const extensionId = self.metadata.extension?.id || "";
-                      const prefix = `ext:${extensionId}:`;
-                      const extensionKeyBinds = KeyBindsUI.getAllUIKeyBinds().filter((kb) => kb.id.startsWith(prefix));
-
-                      if (extensionKeyBinds.length === 0) {
-                        return <p className="text-muted-foreground">该扩展没有注册快捷键</p>;
-                      }
-
-                      return extensionKeyBinds.map((kb) => {
+                    {extensionKeyBinds.length === 0 ? (
+                      <p className="text-muted-foreground">该扩展没有注册快捷键</p>
+                    ) : (
+                      extensionKeyBinds.map((kb) => {
+                        const prefix = `ext:${self.metadata.extension?.id || ""}:`;
                         const getKeyBindIcon = () => {
                           if (kb.icon) {
                             const IconComponent = kb.icon;
@@ -438,8 +449,8 @@ export class Extension extends Tab {
                             </div>
                           </Field>
                         );
-                      });
-                    })()}
+                      })
+                    )}
                   </div>
                 </TabsContent>
               </>
