@@ -58,6 +58,30 @@ export namespace KeyBindsUI {
     return allUIKeyBinds.find((kb) => kb.id === id);
   }
 
+  // 快捷键列表整体变化监听器（新增/注销快捷键时触发）
+  const keyBindListChangeListeners = new Set<(keyBinds: UIKeyBind[]) => void>();
+
+  /**
+   * 监听快捷键列表的整体变化（新增或注销快捷键时触发）
+   * @param callback 回调函数，接收最新的全量快捷键列表
+   * @returns 取消监听的函数
+   */
+  export function onKeyBindListChange(callback: (keyBinds: UIKeyBind[]) => void): () => void {
+    keyBindListChangeListeners.add(callback);
+    return () => {
+      keyBindListChangeListeners.delete(callback);
+    };
+  }
+
+  /**
+   * 通知快捷键列表整体变化
+   */
+  function notifyKeyBindListChange() {
+    keyBindListChangeListeners.forEach((callback) => {
+      callback([...allUIKeyBinds]);
+    });
+  }
+
   // 快捷键变化监听器
   const keyBindChangeListeners = new Map<string, Set<(keyBind: UIKeyBind) => void>>();
 
@@ -174,6 +198,8 @@ export namespace KeyBindsUI {
 
     // 通知监听器有新的快捷键注册
     notifyKeyBindChange(id, keyBind);
+    // 通知快捷键列表整体变化
+    notifyKeyBindListChange();
   }
 
   /**
@@ -183,7 +209,8 @@ export namespace KeyBindsUI {
     if (!registerSet.has(id)) return;
     registerSet.delete(id);
     allUIKeyBinds = allUIKeyBinds.filter((kb) => kb.id !== id);
-    // 这里不需要特别通知，因为 UI 应该会随之消失或不再响应
+    // 通知快捷键列表整体变化（UI 需要移除对应项）
+    notifyKeyBindListChange();
   }
 
   /**
