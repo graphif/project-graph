@@ -167,20 +167,8 @@ export class Extension extends Tab {
       const [installed, setInstalled] = useState(false);
       const [disabledExtensions, setDisabledExtensions] = Settings.use("disabledExtensions");
       const disabled = disabledExtensions.includes(self.metadata.extension?.id || "");
-      // 响应式快捷键列表：订阅 KeyBindsUI 的变化，安装插件后自动刷新
-      const [extensionKeyBinds, setExtensionKeyBinds] = useState(() => {
-        const prefix = `ext:${self.metadata.extension?.id || ""}:`;
-        return KeyBindsUI.getAllUIKeyBinds().filter((kb) => kb.id.startsWith(prefix));
-      });
-
-      useEffect(() => {
-        const extensionId = self.metadata.extension?.id || "";
-        const prefix = `ext:${extensionId}:`;
-        const unsubscribe = KeyBindsUI.onKeyBindListChange((allBinds) => {
-          setExtensionKeyBinds(allBinds.filter((kb) => kb.id.startsWith(prefix)));
-        });
-        return unsubscribe;
-      }, []);
+      // 响应式快捷键列表：安装插件后自动刷新
+      const extensionKeyBinds = KeyBindsUI.use((kb) => kb.id.startsWith(`ext:${self.metadata.extension?.id || ""}:`));
 
       useEffect(() => {
         (async () => {
@@ -219,11 +207,12 @@ export class Extension extends Tab {
                     variant="outline"
                     onClick={async () => {
                       if (await Dialog.confirm("确认卸载", "将彻底删除此扩展，无法恢复。请确认是否继续。")) {
-                        ExtensionKeyBindManager.unregisterAll(self.metadata.extension?.id || "");
-                        await self.fs.remove(
-                          URI.file(await join(await appDataDir(), "extensions", self.metadata.extension?.id || "")),
-                        );
-                        setDisabledExtensions(disabledExtensions.filter((id) => id !== self.metadata.extension?.id));
+                        const extId = self.metadata.extension?.id || "";
+                        ExtensionKeyBindManager.unregisterAll(extId);
+                        // 终止 Worker 并清除缓存，使重新安装时能创建新 Runtime
+                        ExtensionManager.unload(extId);
+                        await self.fs.remove(URI.file(await join(await appDataDir(), "extensions", extId)));
+                        setDisabledExtensions(disabledExtensions.filter((id) => id !== extId));
                         setInstalled(false);
                         toast.success("扩展已卸载");
                       }
@@ -281,7 +270,10 @@ export class Extension extends Tab {
                       await writeFile(await join(base, self.iconFileName), self.iconRawData);
                     }
                     // 安装完成后立即运行插件，使其快捷键等功能即时生效，无需重载
-                    await ExtensionManager.getRuntime(self.metadata.extension?.id || "unknown");
+                    // 先 unload 清除可能残留的旧缓存，再创建新 Runtime
+                    const extId = self.metadata.extension?.id || "unknown";
+                    ExtensionManager.unload(extId);
+                    await ExtensionManager.getRuntime(extId);
                     setInstalled(true);
                     toast.success("扩展已安装");
                   }}

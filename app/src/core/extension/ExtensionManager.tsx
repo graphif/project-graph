@@ -45,6 +45,18 @@ export namespace ExtensionManager {
   }
 
   /**
+   * 卸载单个扩展：终止 Worker 并清除缓存，使下次 getRuntime 能重新创建
+   */
+  export function unload(name: string) {
+    const runtime = runtimes.get(name);
+    if (runtime) {
+      runtime.terminate();
+      runtimes.delete(name);
+    }
+    extensions.delete(name);
+  }
+
+  /**
    * 创建并运行所有扩展
    */
   export async function init() {

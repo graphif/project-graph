@@ -12,6 +12,7 @@ import { createStore } from "@/utils/store";
 import { Queue } from "@graphif/data-structures";
 import { proxy } from "comlink";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
+import { useEffect, useState } from "react";
 import type { LucideProps } from "lucide-react";
 import { allKeyBinds, type KeyBindWhen } from "./shortcutKeysRegister";
 
@@ -68,6 +69,8 @@ export namespace KeyBindsUI {
    */
   export function onKeyBindListChange(callback: (keyBinds: UIKeyBind[]) => void): () => void {
     keyBindListChangeListeners.add(callback);
+    // 立即以当前状态回调一次，确保订阅者拿到最新值（BehaviorSubject 语义）
+    callback([...allUIKeyBinds]);
     return () => {
       keyBindListChangeListeners.delete(callback);
     };
@@ -80,6 +83,35 @@ export namespace KeyBindsUI {
     keyBindListChangeListeners.forEach((callback) => {
       callback([...allUIKeyBinds]);
     });
+  }
+
+  /**
+   * React Hook：订阅快捷键列表，返回经过 filter 过滤后的响应式列表。
+   * 列表发生变化时组件自动重渲染。
+   *
+   * @param filter 可选过滤函数，默认返回全部快捷键
+   * @example
+   * // 获取所有快捷键
+   * const binds = KeyBindsUI.use();
+   * // 只获取某个插件的快捷键
+   * const binds = KeyBindsUI.use((kb) => kb.id.startsWith("ext:my-ext:"));
+   */
+  export function use(filter?: (kb: UIKeyBind) => boolean): UIKeyBind[] {
+    // 初始值同步计算，避免首次渲染闪烁
+    const [binds, setBinds] = useState<UIKeyBind[]>(() => {
+      const all = getAllUIKeyBinds();
+      return filter ? all.filter(filter) : all;
+    });
+
+    useEffect(() => {
+      // 订阅后续变化；onKeyBindListChange 也会立即回调一次同步当前值，
+      // 确保 useEffect 执行时若列表已更新也能正确反映
+      return onKeyBindListChange((all) => {
+        setBinds(filter ? all.filter(filter) : all);
+      });
+    }, []); // filter 是调用方传入的内联箭头函数，不应放入依赖数组
+
+    return binds;
   }
 
   // 快捷键变化监听器
