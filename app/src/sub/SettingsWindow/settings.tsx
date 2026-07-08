@@ -345,6 +345,7 @@ export const categories = {
       "autoLayoutWhenTreeGenerate",
       "enableTreeGenerateConnectByProbe",
       "treeGenerateInheritParentColor",
+      "enableTabGenerateNodeInInput",
       "enableBackslashGenerateNodeInInput",
       "textNodeAutoFormatTreeWhenInput",
       "treeGenerateCameraBehavior",

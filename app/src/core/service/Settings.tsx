@@ -230,6 +230,7 @@ export const settingsSchema = z.object({
   treeGenerateCameraBehavior: z
     .union([z.literal("none"), z.literal("moveToNewNode"), z.literal("resetToTree")])
     .default("moveToNewNode"),
+  enableTabGenerateNodeInInput: z.boolean().default(true),
   enableBackslashGenerateNodeInInput: z.boolean().default(false),
   gamepadDeadzone: z.number().min(0).max(1).default(0.1),
   showGrid: z.boolean().default(true),

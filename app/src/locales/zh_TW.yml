@@ -762,11 +762,18 @@ settings:
     description: |
       開啟後，通過 Tab 或 \ 生長出來的新節點會繼承父節點顏色
       關閉後，新節點不再自動繼承父節點顏色
-  enableBackslashGenerateNodeInInput:
-    title: 在輸入狀態下也能通過反斜槓創建同級節點
+  enableTabGenerateNodeInInput:
+    title: 在輸入狀態下也能通過深度生長快捷鍵創建子節點
     description: |
-      開啟後，在文本節點編輯狀態下，按下反斜槓鍵（\）也可以創建同級節點
-      關閉後，只有在非編輯狀態下才能通過反斜槓鍵創建同級節點
+      開啟後，在文本節點編輯狀態下，按下深度生長快捷鍵（默認為 Tab）也可以創建子節點
+      關閉後，只有在非編輯狀態下才能通過深度生長快捷鍵創建子節點
+      注意：深度生長快捷鍵不支持序列型快捷鍵（如 e tab），請確保將其設置為單個按鍵
+  enableBackslashGenerateNodeInInput:
+    title: 在輸入狀態下也能通過廣度生長快捷鍵創建同級節點
+    description: |
+      開啟後，在文本節點編輯狀態下，按下廣度生長快捷鍵（默認為 \）也可以創建同級節點
+      關閉後，只有在非編輯狀態下才能通過廣度生長快捷鍵創建同級節點
+      注意：廣度生長快捷鍵不支持序列型快捷鍵（如 e \），請確保將其設置為單個按鍵
   moveAmplitude:
     title: 視角移動加速度
     description: |

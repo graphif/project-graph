@@ -745,11 +745,18 @@ settings:
     description: |
       Saat diaktifkan, node baru yang dibuat melalui Tab atau \ akan mewarisi warna dari node induk
       Saat dimatikan, node baru tidak akan mewarisi warna dari node induk
-  enableBackslashGenerateNodeInInput:
-    title: Buat Node Selevel dengan Backslash dalam Mode Input
+  enableTabGenerateNodeInInput:
+    title: Aktifkan shortcut deep-grow untuk membuat node anak dalam mode input
     description: |
-      Saat diaktifkan, dalam mode edit node teks, menekan tombol backslash (\) juga dapat membuat node selevel
-      Saat dimatikan, hanya dapat membuat node selevel dengan tombol backslash dalam mode non-edit
+      Saat diaktifkan, menekan tombol shortcut deep-grow (default: Tab) saat mengedit node teks juga dapat membuat node anak
+      Saat dimatikan, shortcut deep-grow hanya dapat membuat node anak saat tidak dalam mode edit
+      Catatan: Shortcut deep-grow tidak mendukung key binding tipe sekuens (mis. "e tab"). Harap atur ke satu tombol saja.
+  enableBackslashGenerateNodeInInput:
+    title: Aktifkan shortcut broad-grow untuk membuat node selevel dalam mode input
+    description: |
+      Saat diaktifkan, menekan tombol shortcut broad-grow (default: \) saat mengedit node teks juga dapat membuat node selevel
+      Saat dimatikan, shortcut broad-grow hanya dapat membuat node selevel saat tidak dalam mode edit
+      Catatan: Shortcut broad-grow tidak mendukung key binding tipe sekuens (mis. "e \"). Harap atur ke satu tombol saja.
   moveAmplitude:
     title: Percepatan Gerakan Tampilan
     description: |

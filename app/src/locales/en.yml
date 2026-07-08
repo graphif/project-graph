@@ -1001,11 +1001,18 @@ settings:
     description: |
       When enabled, new nodes created via Tab or \ will inherit the parent node color
       When disabled, new nodes will not inherit the parent node color
-  enableBackslashGenerateNodeInInput:
-    title: Enable backslash to create sibling nodes while in input mode
+  enableTabGenerateNodeInInput:
+    title: Enable deep-grow shortcut to create child nodes while in input mode
     description: |
-      When enabled, pressing the backslash key (\) while editing a text node will also create a sibling node
-      When disabled, the backslash key can only create sibling nodes when not in edit mode
+      When enabled, pressing the deep-grow shortcut key (default: Tab) while editing a text node will also create a child node
+      When disabled, the deep-grow shortcut can only create child nodes when not in edit mode
+      Note: The deep-grow shortcut does not support sequence-type key bindings (e.g. "e tab"). Please set it to a single key.
+  enableBackslashGenerateNodeInInput:
+    title: Enable broad-grow shortcut to create sibling nodes while in input mode
+    description: |
+      When enabled, pressing the broad-grow shortcut key (default: \) while editing a text node will also create a sibling node
+      When disabled, the broad-grow shortcut can only create sibling nodes when not in edit mode
+      Note: The broad-grow shortcut does not support sequence-type key bindings (e.g. "e \"). Please set it to a single key.
   agreeTerms:
     title: agree to the Terms of Service
     description: "please read carefully and agree to the Terms of Service\n"

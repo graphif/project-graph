@@ -762,11 +762,18 @@ settings:
     description: |
       开启后，通过 Tab 或 \ 生长出来的新节点会继承父节点颜色
       关闭后，新节点不再自动继承父节点颜色
-  enableBackslashGenerateNodeInInput:
-    title: 在输入状态下也能通过反斜杠创建同级节点
+  enableTabGenerateNodeInInput:
+    title: 在输入状态下也能通过深度生长快捷键创建子节点
     description: |
-      开启后，在文本节点编辑状态下，按下反斜杠键（\）也可以创建同级节点
-      关闭后，只有在非编辑状态下才能通过反斜杠键创建同级节点
+      开启后，在文本节点编辑状态下，按下深度生长快捷键（默认为 Tab）也可以创建子节点
+      关闭后，只有在非编辑状态下才能通过深度生长快捷键创建子节点
+      注意：深度生长快捷键不支持序列型快捷键（如 e tab），请确保将其设置为单个按键
+  enableBackslashGenerateNodeInInput:
+    title: 在输入状态下也能通过广度生长快捷键创建同级节点
+    description: |
+      开启后，在文本节点编辑状态下，按下广度生长快捷键（默认为 \）也可以创建同级节点
+      关闭后，只有在非编辑状态下才能通过广度生长快捷键创建同级节点
+      注意：广度生长快捷键不支持序列型快捷键（如 e \），请确保将其设置为单个按键
   moveAmplitude:
     title: 视角移动加速度
     description: |

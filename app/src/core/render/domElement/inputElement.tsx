@@ -2,7 +2,9 @@ import { Project, service } from "@/core/Project";
 import { EntityShakeEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityShakeEffect";
 import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 import { Settings } from "@/core/service/Settings";
+import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { getEnterKey } from "@/utils/keyboardFunctions";
+import { matchSingleEmacsKey } from "@/utils/emacs";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
@@ -323,7 +325,17 @@ export class InputElement {
           }
         }
 
-        if (event.code === "Backslash") {
+        // 动态检测广度生长快捷键（generateNodeTreeWithBroadMode）
+        const broadKeyBind = KeyBindsUI.getUIKeyBind("generateNodeTreeWithBroadMode");
+        const isBroadKeySingleKey = broadKeyBind && !broadKeyBind.key.trim().includes(" ");
+        const isBroadKeyMatch = isBroadKeySingleKey && matchSingleEmacsKey(broadKeyBind!.key.trim(), event);
+
+        // 动态检测深度生长快捷键（generateNodeTreeWithDeepMode）
+        const deepKeyBind = KeyBindsUI.getUIKeyBind("generateNodeTreeWithDeepMode");
+        const isDeepKeySingleKey = deepKeyBind && !deepKeyBind.key.trim().includes(" ");
+        const isDeepKeyMatch = isDeepKeySingleKey && matchSingleEmacsKey(deepKeyBind!.key.trim(), event);
+
+        if (isBroadKeyMatch) {
           const currentSelectNode = this.project.stageManager.getConnectableEntity().find((node) => node.isSelected);
           if (!currentSelectNode) return;
           if (this.project.graphMethods.isCurrentNodeInTreeStructAndNotRoot(currentSelectNode)) {
@@ -351,30 +363,35 @@ export class InputElement {
               this.addFailEffect(false);
             }
           }
-        } else if (event.key === "Tab") {
-          // 防止tab切换到其他按钮
-          event.preventDefault();
-          // const start = textareaElement.selectionStart;
-          const end = textareaElement.selectionEnd;
-          // textareaElement.value =
-          //   textareaElement.value.substring(0, start) + "\t" + textareaElement.value.substring(end);
-          // textareaElement.selectionStart = start + 1;
-          // textareaElement.selectionEnd = start + 1;
-
-          // 获取光标后面的内容：
-          const afterText = textareaElement.value.substring(end);
-
-          // tab生长后是否选中后面的内容
-          let selectAllTextWhenCreated = true;
-          if (afterText.trim() !== "") {
-            // 如果后面有内容，则在当前节点删除后面的内容
-            textareaElement.value = textareaElement.value.substring(0, end);
-            selectAllTextWhenCreated = false;
+        } else if (isDeepKeyMatch) {
+          // 深度生长快捷键匹配（默认为 Tab）
+          // 如果是 Tab 键，无论是否开启生长都要阻止默认行为（防止焦点跳走）
+          if (event.key === "Tab") {
+            event.preventDefault();
           }
+          if (Settings.enableTabGenerateNodeInInput) {
+            event.preventDefault();
+            // const start = textareaElement.selectionStart;
+            const end = textareaElement.selectionEnd;
 
-          finish();
-          // xmind用户
-          this.project.keyboardOnlyTreeEngine.onDeepGenerateNode(afterText, selectAllTextWhenCreated);
+            // 获取光标后面的内容：
+            const afterText = textareaElement.value.substring(end);
+
+            // 生长后是否选中后面的内容
+            let selectAllTextWhenCreated = true;
+            if (afterText.trim() !== "") {
+              // 如果后面有内容，则在当前节点删除后面的内容
+              textareaElement.value = textareaElement.value.substring(0, end);
+              selectAllTextWhenCreated = false;
+            }
+
+            finish();
+            // xmind用户
+            this.project.keyboardOnlyTreeEngine.onDeepGenerateNode(afterText, selectAllTextWhenCreated);
+          }
+        } else if (event.key === "Tab") {
+          // 深度生长键已被改为其他键，但 Tab 键仍需阻止默认行为（防止焦点跳走）
+          event.preventDefault();
         } else if (event.key === "Escape") {
           event.preventDefault(); // 这里可以阻止mac退出全屏
           // Escape 是通用的取消编辑的快捷键

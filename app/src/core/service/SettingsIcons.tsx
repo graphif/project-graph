@@ -172,6 +172,7 @@ export const settingsIcons = {
   autoLayoutWhenTreeGenerate: ListTree,
   enableTreeGenerateConnectByProbe: ArrowRightFromLine,
   treeGenerateInheritParentColor: Palette,
+  enableTabGenerateNodeInInput: Keyboard,
   enableBackslashGenerateNodeInInput: Keyboard,
   gamepadDeadzone: Skull,
   historySize: Undo,
