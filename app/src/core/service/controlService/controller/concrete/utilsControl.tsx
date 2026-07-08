@@ -51,6 +51,9 @@ export class ControllerUtils {
     const rectView = this.project.renderer.transformWorld2View(rectWorld);
     // 编辑节点
     const textBeforeEdit = clickedNode.text;
+    // 进入编辑状态时，取消所有其他节点的选中，只保留当前节点选中
+    this.project.stageManager.clearSelectAll();
+    clickedNode.isSelected = true;
     clickedNode.isEditing = true;
     // 添加进入编辑状态的闪烁特效（只在默认缩放级别时显示）
     if (this.project.camera.isDefaultZoom()) {
