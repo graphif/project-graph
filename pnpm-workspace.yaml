@@ -17,6 +17,3 @@ catalog:
   jotai: ^2.12.5
   vitest: 4.1.5
   unplugin-original-class-name: ^1.0.1
-
-patchedDependencies:
-  typescript: "patches/typescript.patch"
