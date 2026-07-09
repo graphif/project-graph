@@ -4,7 +4,7 @@ import { KeyBindIcon } from "@/core/service/controlService/shortcutKeysEngine/Ke
 import { Settings } from "@/core/service/Settings";
 import { Themes } from "@/core/service/Themes";
 import { activeTabAtom, store, tabsAtom } from "@/state";
-import { FormOptions, FormWindow } from "@/sub/FormWindow";
+import { FormWindow } from "@/sub/FormWindow";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { invoke } from "@tauri-apps/api/core";
@@ -248,7 +248,15 @@ export function extensionHostApiFactory(extension: Extension) {
     },
 
     //region 表单
-    async form(schema: JSONSchema.BaseSchema, options: FormOptions) {
+    async form(
+      schema: JSONSchema.BaseSchema,
+      // FIXME: 这里其实应该直接用 FormOptions 的，但是如果用的的话，生成 extprg-types 时会套一层 Promise
+      options: {
+        title: string;
+        confirmText?: string;
+        cancelText?: string;
+      },
+    ) {
       const zodSchema = z.fromJSONSchema(schema);
       if (!(zodSchema instanceof z.ZodObject)) {
         throw new Error("表单 schema 必须是一个对象类型");

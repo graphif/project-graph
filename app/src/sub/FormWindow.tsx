@@ -12,8 +12,8 @@ import z from "zod";
 
 export interface FormOptions {
   title: string;
-  confirmButtonText?: string;
-  cancelButtonText?: string;
+  confirmText?: string;
+  cancelText?: string;
 }
 
 export function FormWindow(
@@ -124,7 +124,7 @@ export function FormWindow(
         );
       })}
       <div className="flex gap-2">
-        <Button type="submit">{props.confirmButtonText ?? "确认"}</Button>
+        <Button type="submit">{props.confirmText ?? "确认"}</Button>
         <Button
           type="button"
           variant="outline"
@@ -132,7 +132,7 @@ export function FormWindow(
             props.onCancel();
           }}
         >
-          {props.cancelButtonText ?? "取消"}
+          {props.cancelText ?? "取消"}
         </Button>
       </div>
     </form>
