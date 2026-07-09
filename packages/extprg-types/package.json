@@ -30,7 +30,8 @@
     "comlink": "^4.4.2",
     "lucide-react": "^0.400.0",
     "react": "^19.0.0",
-    "vscode-uri": "^3.0.0"
+    "vscode-uri": "^3.0.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
