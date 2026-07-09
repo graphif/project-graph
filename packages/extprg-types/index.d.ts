@@ -3,7 +3,7 @@
 
 /**
  * Auto-generated. Do not edit manually.
- * 2026-07-09T08:25:45.689Z
+ * 2026-07-09T09:01:58.190Z
  */
 
 // ── 第三方类型导入 ──
@@ -1554,12 +1554,6 @@ declare interface FileSystemProvider {
   exists(uri: URI): Promise<boolean>;
   mkdir(uri: URI): Promise<void>;
   rename(oldUri: URI, newUri: URI): Promise<void>;
-}
-
-declare interface FormOptions {
-  title: Promise<string>;
-  confirmButtonText?: Promise<string>;
-  cancelButtonText?: Promise<string>;
 }
 
 declare class GenerateFromFolder {
@@ -3975,7 +3969,14 @@ export declare function extensionHostApiFactory(extension: Extension | { _: "Ext
   ): Promise<void>;
   entity_onClick(typeName: string, handler: (payload: ClickEventPayload) => void): Promise<void>;
   entity_create(typeName: string, data: any, location: { x: number; y: number }): Promise<Promise<ExtensionEntity>>;
-  form(schema: JSONSchema.BaseSchema, options: FormOptions): Promise<void>;
+  form(
+    schema: JSONSchema.BaseSchema,
+    options: {
+      title: string;
+      confirmText?: string;
+      cancelText?: string;
+    },
+  ): Promise<void>;
 };
 
 declare global {
