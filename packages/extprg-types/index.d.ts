@@ -3,7 +3,7 @@
 
 /**
  * Auto-generated. Do not edit manually.
- * 2026-07-06T14:27:58.589Z
+ * 2026-07-09T08:25:45.689Z
  */
 
 // ── 第三方类型导入 ──
@@ -50,6 +50,7 @@ import type {
   ArrowUpFromLine,
   ArrowUpToLine,
   Axe,
+  Blocks,
   BookOpen,
   BookOpenText,
   Bot,
@@ -167,10 +168,13 @@ import type {
   Sparkles,
   Spline,
   Split,
+  Square,
+  SquareDashed,
   SquareDashedBottomCode,
   SquareDot,
   SquareRoundCorner,
   SquareSquare,
+  Store,
   Sun,
   Tag,
   Terminal,
@@ -192,6 +196,7 @@ import type {
 } from "lucide-react";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 import type { URI } from "vscode-uri";
+import type { JSONSchema } from "zod/v4/core";
 import type * as react_dialog from "@radix-ui/react-dialog";
 
 // ── 本地类型定义 ──
@@ -1446,6 +1451,7 @@ declare class EntityRenderer {
   renderEntityDetails(entity: Entity | { _: "Entity" | (string & {}) }): Promise<void>;
   _renderEntityDetails(entity: Entity | { _: "Entity" | (string & {}) }, limitLiens: number): Promise<void>;
   renderEntityTagShap(entity: Entity | { _: "Entity" | (string & {}) }): Promise<void>;
+  renderGrowthDirectionTriangle(entity: ConnectableEntity | { _: "ConnectableEntity" | (string & {}) }): void;
 }
 
 declare class Extension extends Tab {
@@ -1548,6 +1554,12 @@ declare interface FileSystemProvider {
   exists(uri: URI): Promise<boolean>;
   mkdir(uri: URI): Promise<void>;
   rename(oldUri: URI, newUri: URI): Promise<void>;
+}
+
+declare interface FormOptions {
+  title: Promise<string>;
+  confirmButtonText?: Promise<string>;
+  cancelButtonText?: Promise<string>;
 }
 
 declare class GenerateFromFolder {
@@ -2593,6 +2605,7 @@ declare class Section extends ConnectableEntity {
   children: Promise<Entity>[];
   isCollapsed: Promise<boolean>;
   locked: Promise<boolean>;
+  borderStyle: Promise<"solid" | "dashed" | "none">;
   isHiddenBySectionCollapse;
   constructor(
     project: Project | { _: "Project" | (string & {}) },
@@ -2606,6 +2619,7 @@ declare class Section extends ConnectableEntity {
       isCollapsed = false,
       children = [] as Entity[],
       details = [] as Value,
+      borderStyle = "solid" as "solid" | "dashed" | "none",
     } = {},
     unknown = false,
   );
@@ -2672,6 +2686,7 @@ declare class SectionMethods {
   getBigTitleCoveringAncestorSection(entity: Entity | { _: "Entity" | (string & {}) }): Promise<Section | null>;
   isEntityHiddenByBigTitleSection(entity: Entity | { _: "Entity" | (string & {}) }): Promise<boolean>;
   isEntityCoveredByBigTitleSection(entity: Entity | { _: "Entity" | (string & {}) }): Promise<boolean>;
+  getBigTitleCoveringAncestorSections(entity: Entity | { _: "Entity" | (string & {}) }): Promise<Section>[];
   isAssociationHiddenByBigTitleSection(
     association: Association | { _: "Association" | (string & {}) },
   ): Promise<boolean>;
@@ -2685,7 +2700,6 @@ declare class SectionMethods {
     entity: Entity | { _: "Entity" | (string & {}) },
     section: Section | { _: "Section" | (string & {}) },
   ): Promise<boolean>;
-  isTreePack(rootNode: Section | { _: "Section" | (string & {}) }): Promise<void>;
   getSectionMaxDeep(section: Section | { _: "Section" | (string & {}) }): Promise<number>;
   getAllEntitiesInSelectedSectionsOrEntities(selectedEntities: Entity[]): Promise<Entity>[];
   getSortedSectionsByZ(sections: Section[]): Promise<Section>[];
@@ -3961,6 +3975,7 @@ export declare function extensionHostApiFactory(extension: Extension | { _: "Ext
   ): Promise<void>;
   entity_onClick(typeName: string, handler: (payload: ClickEventPayload) => void): Promise<void>;
   entity_create(typeName: string, data: any, location: { x: number; y: number }): Promise<Promise<ExtensionEntity>>;
+  form(schema: JSONSchema.BaseSchema, options: FormOptions): Promise<void>;
 };
 
 declare global {
