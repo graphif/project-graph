@@ -4,12 +4,15 @@ import { KeyBindIcon } from "@/core/service/controlService/shortcutKeysEngine/Ke
 import { Settings } from "@/core/service/Settings";
 import { Themes } from "@/core/service/Themes";
 import { activeTabAtom, store, tabsAtom } from "@/state";
+import { FormOptions, FormWindow } from "@/sub/FormWindow";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { invoke } from "@tauri-apps/api/core";
 import { fetch } from "@tauri-apps/plugin-http";
 import { proxy } from "comlink";
 import { toast } from "sonner";
+import z from "zod";
+import { JSONSchema } from "zod/v4/core";
 import { CollisionBox } from "../../stage/stageObject/collisionBox/collisionBox";
 import { ExtensionEntity, ExtensionEntityConfig } from "../../stage/stageObject/entity/ExtensionEntity";
 import { Extension } from "../Extension";
@@ -242,6 +245,15 @@ export function extensionHostApiFactory(extension: Extension) {
 
       activeTab.stageManager.add(entity);
       return proxy(entity);
+    },
+
+    //region 表单
+    async form(schema: JSONSchema.BaseSchema, options: FormOptions) {
+      const zodSchema = z.fromJSONSchema(schema);
+      if (!(zodSchema instanceof z.ZodObject)) {
+        throw new Error("表单 schema 必须是一个对象类型");
+      }
+      return FormWindow.open(zodSchema, { ...options, title: `${extensionName}: ${options.title}` });
     },
   };
 
