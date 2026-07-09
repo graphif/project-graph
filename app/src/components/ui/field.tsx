@@ -3,9 +3,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { QuickSettingsManager } from "@/core/service/QuickSettingsManager";
 import { Settings, settingsSchema } from "@/core/service/Settings";
 import { settingsIcons } from "@/core/service/SettingsIcons";
-import { QuickSettingsManager } from "@/core/service/QuickSettingsManager";
 import { Telemetry } from "@/core/service/Telemetry";
 import { cn } from "@/utils/cn";
 import _ from "lodash";
@@ -13,7 +14,6 @@ import { ChevronRight, Pin, PinOff, RotateCw } from "lucide-react";
 import React, { CSSProperties, Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof Settings; extra?: React.ReactNode }) {
   const [value, setValue] = React.useState<any>(Settings[settingKey]);
@@ -50,10 +50,6 @@ export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof 
       // @ts-expect-error 不知道为什么Settings[settingKey]可能是never
       Settings[settingKey] = value;
       postTelemetryEvent();
-    }
-
-    if (settingKey === "language") {
-      i18n.changeLanguage(value);
     }
   }, [value]);
 
