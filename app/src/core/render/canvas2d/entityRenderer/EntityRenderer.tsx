@@ -429,20 +429,21 @@ export class EntityRenderer {
     const direction = this.project.keyboardOnlyTreeEngine.getNodePreDirection(entity);
     const rect = entity.collisionBox.getRectangle();
 
-    const triangleColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected.clone();
-    triangleColor.a = 0.6;
-    const transparent = triangleColor.clone();
-    transparent.a = 0;
+    const triangleColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected.toNewAlpha(0.6);
 
-    const halfWidth = 12;
-    const depth = 8;
-    const gap = 9.5; // 选中框外扩 7.5 世界单位，再额外留 2 单位间距
+    const depth = 10;
+    let gap = 9.5; // 选中框外扩 7.5 世界单位，再额外留 2 单位间距
 
     let worldPoints: Vector[];
     switch (direction) {
       case "right": {
+        if (entity instanceof TextNode && entity.sizeAdjust === "manual" && entity.isEditing === false) {
+          gap = 25;
+        }
         const baseX = rect.right + gap;
         const cy = rect.center.y;
+        const halfWidth = rect.height * 0.4;
+
         worldPoints = [
           new Vector(baseX, cy - halfWidth),
           new Vector(baseX, cy + halfWidth),
@@ -453,6 +454,7 @@ export class EntityRenderer {
       case "left": {
         const baseX = rect.left - gap;
         const cy = rect.center.y;
+        const halfWidth = rect.height * 0.4;
         worldPoints = [
           new Vector(baseX, cy - halfWidth),
           new Vector(baseX, cy + halfWidth),
@@ -463,6 +465,7 @@ export class EntityRenderer {
       case "up": {
         const baseY = rect.top - gap;
         const cx = rect.center.x;
+        const halfWidth = rect.width * 0.4;
         worldPoints = [
           new Vector(cx - halfWidth, baseY),
           new Vector(cx + halfWidth, baseY),
@@ -473,6 +476,7 @@ export class EntityRenderer {
       case "down": {
         const baseY = rect.bottom + gap;
         const cx = rect.center.x;
+        const halfWidth = rect.width * 0.4;
         worldPoints = [
           new Vector(cx - halfWidth, baseY),
           new Vector(cx + halfWidth, baseY),
@@ -483,6 +487,6 @@ export class EntityRenderer {
     }
 
     const viewPoints = worldPoints!.map((p) => this.project.renderer.transformWorld2View(p));
-    this.project.shapeRenderer.renderPolygonAndFill(viewPoints, triangleColor, transparent, 0);
+    this.project.shapeRenderer.renderPolygonAndFill(viewPoints, triangleColor, Color.Transparent, 0);
   }
 }
