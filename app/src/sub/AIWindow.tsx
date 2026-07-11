@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Project } from "@/core/Project";
+import { AIChatSessionStore } from "@/core/service/dataManageService/aiEngine/AIChatSessionStore";
 import type { AIMessageMetadata } from "@/core/service/dataManageService/aiEngine/AIEngine";
 import { Settings } from "@/core/service/Settings";
 import { SubWindow } from "@/core/service/SubWindow";
@@ -103,10 +104,20 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
   const [showTokenCount] = Settings.use("aiShowTokenCount");
   const conversation = useMemo(() => project.aiEngine.createConversation(project), [project]);
   const [selectedCount, setSelectedCount] = useState(0);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
+  const projectUri = project.uri.toString();
 
-  const { messages, sendMessage, stop, status, error } = useChat<UIMessage<AIMessageMetadata>>({
+  const { messages, setMessages, sendMessage, stop, status, error } = useChat<UIMessage<AIMessageMetadata>>({
+    id: projectUri,
     transport: conversation.transport,
     experimental_throttle: 50,
+    onFinish: ({ messages: finishedMessages }) => {
+      void AIChatSessionStore.save(projectUri, finishedMessages, conversation.references.exportSnapshot()).catch(
+        (saveError) => {
+          toast.error(`AI 会话保存失败: ${saveError instanceof Error ? saveError.message : String(saveError)}`);
+        },
+      );
+    },
     onError: (err) => {
       toast.error(`AI 请求失败: ${err.message || err.toString() || JSON.stringify(err)}`);
     },
@@ -117,6 +128,28 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
   useEffect(() => {
     messagesElRef.current?.scrollTo({ top: messagesElRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSessionLoaded(false);
+    AIChatSessionStore.load(projectUri)
+      .then((session) => {
+        if (cancelled) return;
+        if (session) {
+          conversation.references.restoreSnapshot(session.references);
+          setMessages(session.messages);
+        }
+        setSessionLoaded(true);
+      })
+      .catch((loadError) => {
+        if (cancelled) return;
+        setSessionLoaded(true);
+        toast.error(`AI 会话加载失败: ${loadError instanceof Error ? loadError.message : String(loadError)}`);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [conversation.references, projectUri, setMessages]);
 
   useEffect(() => {
     if (error) console.error("AI Chat state error:", error);
@@ -146,7 +179,7 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
 
   function handleUserSend() {
     const text = inputValue.trim();
-    if (!text || requesting) return;
+    if (!text || requesting || !sessionLoaded) return;
     const selectedEntities = project.stageManager.getSelectedEntities();
     const selectedAssociations = project.stageManager.getSelectedAssociations();
     const selectedRefs = [...selectedEntities, ...selectedAssociations].map((object) =>
@@ -274,13 +307,20 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
             </Tooltip>
           )}
           <div className="flex-1" />
-          <span className="text-muted-foreground">{requesting ? "正在思考" : "准备就绪"}</span>
+          <span className="text-muted-foreground">
+            {!sessionLoaded ? "正在加载记忆" : requesting ? "正在思考" : "准备就绪"}
+          </span>
           {requesting ? (
             <Button size="sm" variant="outline" className="h-8 cursor-pointer" onClick={stop}>
               <Square className="size-4" />
             </Button>
           ) : (
-            <Button size="sm" className="h-8 cursor-pointer" onClick={handleUserSend} disabled={!inputValue.trim()}>
+            <Button
+              size="sm"
+              className="h-8 cursor-pointer"
+              onClick={handleUserSend}
+              disabled={!sessionLoaded || !inputValue.trim()}
+            >
               <Send className="size-4" />
             </Button>
           )}
@@ -291,7 +331,7 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           value={inputValue}
-          disabled={requesting}
+          disabled={requesting || !sessionLoaded}
         />
       </div>
     </div>

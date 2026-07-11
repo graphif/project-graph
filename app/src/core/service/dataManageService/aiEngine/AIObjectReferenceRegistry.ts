@@ -9,6 +9,12 @@ export type AIObjectRefKind = "node" | "edge";
 
 export type AIObjectReferenceErrorCode = "invalid_ref_format" | "unknown_ref" | "stale_ref" | "wrong_ref_kind";
 
+export type AIObjectReferenceSnapshot = {
+  entries: Array<{ ref: AIObjectRef; uuid: string }>;
+  nextNodeRef: number;
+  nextEdgeRef: number;
+};
+
 const AI_OBJECT_REF_PATTERN = /^(?:n|e)[1-9]\d*$/;
 
 export function isAIObjectRef(value: string): value is AIObjectRef {
@@ -34,6 +40,49 @@ export class AIObjectReferenceRegistry {
   private nextEdgeRef = 1;
 
   constructor(private readonly project: Project) {}
+
+  exportSnapshot(): AIObjectReferenceSnapshot {
+    return {
+      entries: [...this.refToUuid].map(([ref, uuid]) => ({ ref, uuid })),
+      nextNodeRef: this.nextNodeRef,
+      nextEdgeRef: this.nextEdgeRef,
+    };
+  }
+
+  restoreSnapshot(snapshot: AIObjectReferenceSnapshot): void {
+    if (
+      !Number.isInteger(snapshot.nextNodeRef) ||
+      snapshot.nextNodeRef < 1 ||
+      !Number.isInteger(snapshot.nextEdgeRef) ||
+      snapshot.nextEdgeRef < 1
+    ) {
+      throw new Error("AI对象引用快照计数器无效");
+    }
+
+    const refToUuid = new Map<AIObjectRef, string>();
+    const uuidToRef = new Map<string, AIObjectRef>();
+
+    for (const { ref, uuid } of snapshot.entries) {
+      if (!isAIObjectRef(ref) || typeof uuid !== "string" || uuid.length === 0) {
+        throw new Error("AI对象引用快照格式无效");
+      }
+      if (refToUuid.has(ref) || uuidToRef.has(uuid)) {
+        throw new Error("AI对象引用快照包含重复引用");
+      }
+      refToUuid.set(ref, uuid);
+      uuidToRef.set(uuid, ref);
+    }
+
+    const nextNodeRef = Math.max(1, snapshot.nextNodeRef, this.getNextRefNumber(refToUuid.keys(), "n"));
+    const nextEdgeRef = Math.max(1, snapshot.nextEdgeRef, this.getNextRefNumber(refToUuid.keys(), "e"));
+
+    this.refToUuid.clear();
+    this.uuidToRef.clear();
+    for (const [ref, uuid] of refToUuid) this.refToUuid.set(ref, uuid);
+    for (const [uuid, ref] of uuidToRef) this.uuidToRef.set(uuid, ref);
+    this.nextNodeRef = nextNodeRef;
+    this.nextEdgeRef = nextEdgeRef;
+  }
 
   getOrCreateRef(object: StageObject): AIObjectRef {
     const existing = this.uuidToRef.get(object.uuid);
@@ -88,5 +137,13 @@ export class AIObjectReferenceRegistry {
       if (error instanceof AIObjectReferenceError) return undefined;
       throw error;
     }
+  }
+
+  private getNextRefNumber(refs: Iterable<AIObjectRef>, prefix: "n" | "e"): number {
+    let next = 1;
+    for (const ref of refs) {
+      if (ref.startsWith(prefix)) next = Math.max(next, Number(ref.slice(1)) + 1);
+    }
+    return next;
   }
 }

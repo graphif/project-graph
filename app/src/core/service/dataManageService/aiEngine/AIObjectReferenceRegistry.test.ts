@@ -78,6 +78,25 @@ describe("AIObjectReferenceRegistry", () => {
     expect(registry.getOrCreateRef(restoredNode)).toBe("n1");
   });
 
+  it("导出并恢复引用快照", () => {
+    const { objects, registry } = createFixture();
+    const node = createNode("node-1");
+    const edge = createEdge("edge-1");
+    objects.set(node.uuid, node);
+    objects.set(edge.uuid, edge);
+    registry.getOrCreateRef(node);
+    registry.getOrCreateRef(edge);
+
+    const restoredRegistry = new AIObjectReferenceRegistry({
+      stageManager: { get: (uuid: string) => objects.get(uuid) },
+    } as unknown as Project);
+    restoredRegistry.restoreSnapshot(registry.exportSnapshot());
+
+    expect(restoredRegistry.resolve("n1")).toBe(node);
+    expect(restoredRegistry.resolve("e1")).toBe(edge);
+    expect(restoredRegistry.getOrCreateRef(createNode("node-2"))).toBe("n2");
+  });
+
   it("区分无效、未知和类型错误引用", () => {
     const { objects, registry } = createFixture();
     const edge = createEdge("edge-1");
