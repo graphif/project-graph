@@ -4,6 +4,7 @@ import { SubWindow } from "@/core/service/SubWindow";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { ChevronRight, Wrench } from "lucide-react";
+import z from "zod/v4";
 
 export default function AIToolsWindow() {
   const tools = AITools.tools;
@@ -18,6 +19,7 @@ export default function AIToolsWindow() {
         const schema = tool.parameters as any;
         const props = schema?.shape as Record<string, any> | undefined;
         const hasParams = props && Object.keys(props).length > 0;
+        const rawJsonSchema = JSON.stringify(z.toJSONSchema(tool.parameters), null, 2);
 
         return (
           <div key={tool.name} className="rounded-lg border px-3 py-2">
@@ -32,7 +34,7 @@ export default function AIToolsWindow() {
                   <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   参数
                 </CollapsibleTrigger>
-                <CollapsibleContent className="animate-none! mt-1">
+                <CollapsibleContent className="mt-1 animate-none!">
                   <div className="flex flex-col gap-1">
                     {Object.entries(props!).map(([key, zodType]) => {
                       const desc = (zodType as any)._def?.description;
@@ -48,6 +50,17 @@ export default function AIToolsWindow() {
               </Collapsible>
             )}
             {!hasParams && <div className="text-muted-foreground mt-1 text-xs">无参数</div>}
+            <Collapsible className="group/json-schema mt-2">
+              <CollapsibleTrigger className="text-muted-foreground hover:text-foreground flex cursor-pointer items-center gap-1 text-xs">
+                <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/json-schema:rotate-90" />
+                原始 JSON Schema
+              </CollapsibleTrigger>
+              <CollapsibleContent animate={false} className="mt-1">
+                <pre className="bg-muted max-h-64 overflow-auto rounded p-2 font-mono text-xs select-text">
+                  {rawJsonSchema}
+                </pre>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         );
       })}
