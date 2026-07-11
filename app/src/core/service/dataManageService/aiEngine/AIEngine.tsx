@@ -1,12 +1,13 @@
 import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { AITools } from "@/core/service/dataManageService/aiEngine/AITools";
+import { AIObjectReferenceRegistry } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { fetch } from "@tauri-apps/plugin-http";
 import { convertToModelMessages, DefaultChatTransport, stepCountIs, streamText, type UIMessage } from "ai";
 
 const SYSTEM_PROMPT =
-  "尽可能尝试使用工具解决问题，如果实在不行才能问用户。TextNode正常情况下高度为75，多个节点叠起来时需要适当留padding。节点正常情况下的颜色应该是透明[0,0,0,0]，注意透明色并非是“看不见文本”。";
+  "尽可能尝试使用工具解决问题，如果实在不行才能问用户。TextNode正常情况下高度为75，多个节点叠起来时需要适当留padding。节点正常情况下的颜色应该是透明[0,0,0,0]，注意透明色并非是“看不见文本”。工具使用n1、n2、e1等当前会话对象引用，不要猜测引用；提及对象时用反引号包裹引用，以便用户点击定位。";
 
 export type AIMessageMetadata = {
   inputTokens?: number;
@@ -16,14 +17,16 @@ export type AIMessageMetadata = {
 
 @service("aiEngine")
 export class AIEngine {
-  createTransport(project: Project) {
-    return new DefaultChatTransport({
+  createConversation(project: Project) {
+    const references = new AIObjectReferenceRegistry(project);
+    const transport = new DefaultChatTransport({
       api: "/api/project-graph-ai-chat",
-      fetch: this.createChatFetch(project),
+      fetch: this.createChatFetch(project, references),
     });
+    return { references, transport };
   }
 
-  createChatFetch(project: Project): typeof fetch {
+  createChatFetch(project: Project, references: AIObjectReferenceRegistry): typeof fetch {
     return async (_url, options) => {
       const body = await this.readRequestBody(options?.body);
       const messages = Array.isArray(body.messages) ? (body.messages as UIMessage[]) : [];
@@ -51,7 +54,7 @@ export class AIEngine {
         includeUsage: true,
       });
 
-      const tools = AITools.createTools(project);
+      const tools = AITools.createTools(project, references);
 
       const textStream = streamText({
         model: provider.chatModel(Settings.aiModel),

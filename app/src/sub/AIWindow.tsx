@@ -52,8 +52,6 @@ export default function AIWindow({ winId = "" }: { winId?: string }) {
   return <AIChatPanel key={project.uri.toString()} project={project} winId={winId} />;
 }
 
-const UUID_V4_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 function getContrastTextColor(bg: Color): string {
   const luminance = (0.299 * bg.r + 0.587 * bg.g + 0.114 * bg.b) / 255;
   return luminance > 0.6 ? "#000" : "#fff";
@@ -103,11 +101,11 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
   const [inputValue, setInputValue] = useState("");
   const messagesElRef = useRef<HTMLDivElement>(null);
   const [showTokenCount] = Settings.use("aiShowTokenCount");
-  const transport = useMemo(() => project.aiEngine.createTransport(project), [project]);
+  const conversation = useMemo(() => project.aiEngine.createConversation(project), [project]);
   const [selectedCount, setSelectedCount] = useState(0);
 
   const { messages, sendMessage, stop, status, error } = useChat<UIMessage<AIMessageMetadata>>({
-    transport,
+    transport: conversation.transport,
     experimental_throttle: 50,
     onError: (err) => {
       toast.error(`AI 请求失败: ${err.message || err.toString() || JSON.stringify(err)}`);
@@ -150,7 +148,11 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
     const text = inputValue.trim();
     if (!text || requesting) return;
     const selectedEntities = project.stageManager.getSelectedEntities();
-    const prefix = selectedEntities.length > 0 ? selectedEntities.map((it) => `\`${it.uuid}\``).join(" ") : "";
+    const selectedAssociations = project.stageManager.getSelectedAssociations();
+    const selectedRefs = [...selectedEntities, ...selectedAssociations].map((object) =>
+      conversation.references.getOrCreateRef(object),
+    );
+    const prefix = selectedRefs.length > 0 ? `[selected: ${selectedRefs.join(" ")}]\n` : "";
     sendMessage({ text: prefix + text });
     setInputValue("");
   }
@@ -163,15 +165,10 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
     }
   }
 
-  const UuidCode = useCallback(
+  const ObjectRefCode = useCallback(
     ({ children, ...props }: any) => {
       const text = typeof children === "string" ? children : String(children ?? "");
-
-      if (!UUID_V4_RE.test(text)) {
-        return <code {...props}>{children}</code>;
-      }
-
-      const stageObject = project.stageManager.get(text);
+      const stageObject = conversation.references.tryResolve(text);
       if (!stageObject || !isEntity(stageObject)) {
         return <code {...props}>{children}</code>;
       }
@@ -207,10 +204,10 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
         </Tooltip>
       );
     },
-    [project],
+    [conversation.references, project],
   );
 
-  const markdownComponents = useMemo(() => ({ inlineCode: UuidCode }), [UuidCode]);
+  const markdownComponents = useMemo(() => ({ inlineCode: ObjectRefCode }), [ObjectRefCode]);
 
   return (
     <div className="from-background via-background to-muted/30 flex h-full flex-col bg-gradient-to-b">
