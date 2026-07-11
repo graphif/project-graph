@@ -151,6 +151,7 @@ settings:
     ai:
       title: AI
       api: API
+      ocr: 笔迹识别
     automation:
       title: 自动化
       autoNamer: 自动命名
@@ -1120,6 +1121,11 @@ settings:
     title: 显示 AI 消耗的token数
     description: |
       启用后，在 AI 操作时显示消耗的token数
+  enableOCR:
+    title: 启用笔迹 OCR
+    description: |
+      开启后，使用画笔绘制的内容会在松手后自动进行 OCR 识别，转换为文字节点
+      需要下载 OCR 模型才能使用
   cacheTextAsBitmap:
     title: 开启位图式渲染文本
     description: |

@@ -183,6 +183,8 @@ export class ControllerPenStrokeDrawingClass extends ControllerClass {
    * 在 debounce 窗口（1s）后将累积的笔迹合并成一张图片，调用 OCR 后替换为 TextNode
    */
   private triggerOCR = debounce(async () => {
+    if (!Settings.enableOCR) return;
+
     const strokes = this.pendingOCRStrokes;
     this.pendingOCRStrokes = [];
 

@@ -150,6 +150,7 @@ settings:
     ai:
       title: AI
       api: API
+      ocr: Pengenalan Tulisan Tangan
     automation:
       title: Otomatisasi
       autoNamer: Penamaan Otomatis
@@ -1095,6 +1096,12 @@ settings:
     title: Tampilkan Jumlah Token AI
     description: |
       Saat diaktifkan, tampilkan jumlah token untuk operasi AI
+  enableOCR:
+    title: Aktifkan OCR Tulisan Tangan
+    description: |
+      Saat diaktifkan, goresan tangan akan secara otomatis dikenali melalui OCR
+      setelah Anda berhenti menggambar, dan diubah menjadi node teks
+      Memerlukan pengunduhan model OCR
   cacheTextAsBitmap:
     title: Aktifkan Render Teks sebagai Bitmap
     description: |

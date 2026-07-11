@@ -40,6 +40,7 @@ import {
   Save,
   Scan,
   ScanSearch,
+  ScanText,
   Search,
   Sparkle,
   SplinePointer,
@@ -380,6 +381,7 @@ export const categories = {
   },
   ai: {
     api: ["aiApiBaseUrl", "aiApiKey", "aiModel", "aiShowTokenCount"],
+    ocr: ["enableOCR"],
   },
 };
 
@@ -387,6 +389,7 @@ export const categoryIcons = {
   ai: {
     icon: Brain,
     api: Unplug,
+    ocr: ScanText,
   },
   automation: {
     icon: Bot,

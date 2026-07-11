@@ -1,9 +1,9 @@
+import { Dialog } from "@/components/ui/dialog";
 import { isMac } from "@/utils/platform";
 import { LazyStore } from "@tauri-apps/plugin-store";
-import { useEffect, useState } from "react";
-import { Dialog } from "@/components/ui/dialog";
-import z from "zod";
 import i18next from "i18next";
+import { useEffect, useState } from "react";
+import z from "zod";
 
 type GlobalMenuNode = {
   type: string;
@@ -121,6 +121,7 @@ export const settingsSchema = z.object({
   aiApiKey: z.string().default(""),
   aiModel: z.string().default("gemini-2.5-flash"),
   aiShowTokenCount: z.boolean().default(false),
+  enableOCR: z.boolean().default(true),
   mouseRightDragBackground: z.union([z.literal("cut"), z.literal("moveCamera")]).default("cut"),
   enableSpaceKeyMouseLeftDrag: z.boolean().default(true),
   enableDragAutoAlign: z.boolean().default(false),
