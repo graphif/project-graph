@@ -126,8 +126,6 @@ jobs:
 
   publish-tauri:
     needs: [create-release]
-    outputs:
-      hash: ${{ steps.sha256sum.outputs.hash }}
     permissions:
       contents: write
     strategy:
@@ -337,14 +335,6 @@ jobs:
           gh release upload ${{ inputs.release_tag }} (Get-Item .\app\${{ matrix.dist }}\*.sig).FullName --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - id: sha256sum
-        name: Linux - Calculate SHA256 hash for AUR package
-        if: matrix.platform == 'ubuntu-22.04'
-        run: |
-          cd app/src-tauri/target/release/bundle/deb
-          sha256sum ./*.deb | awk '{print $1}' > sha256sum.txt
-          echo "hash=$(cat sha256sum.txt)" >> "$GITHUB_OUTPUT"
       #endregion
 
   # publish-tauri-linux-arm:
@@ -443,7 +433,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd aurpackage
-          node ../.github/scripts/generate-pkgbuild.mjs ${{ inputs.aur_package_name }} ${{ inputs.aur_version }} ${{ needs.publish-tauri.outputs.hash }}
+          node ../.github/scripts/generate-pkgbuild.mjs ${{ inputs.aur_package_name }} ${{ inputs.aur_version }}
       - name: Commit and push changes
         run: |
           cd aurpackage

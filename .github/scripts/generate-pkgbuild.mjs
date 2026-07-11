@@ -3,13 +3,12 @@
 import { writeFileSync } from "fs";
 
 // 命令行参数：
-// node ./generate-pkgbuild.mjs <pkgname> <pkgver> <sha256sums>
+// node ./generate-pkgbuild.mjs <pkgname> <pkgver>
 const pkgname = process.argv[2];
 const pkgver = process.argv[3];
-const sha256sums = process.argv[4];
 
 if (!pkgname || !pkgver || !sha256sums) {
-  console.error("Usage: node generate-pkgbuild.mjs <pkgname> <pkgver> <sha256sums>");
+  console.error("Usage: node generate-pkgbuild.mjs <pkgname> <pkgver>");
   process.exit(1);
 }
 
@@ -36,7 +35,7 @@ provides=('project-graph')
 conflicts=(${conflicts.map((x) => `'${x}'`).join(" ")})
 install=${pkgname}.install
 source_x86_64=('${source}')
-sha256sums_x86_64=('${sha256sums}')
+sha256sums_x86_64=('SKIP')
 package() {
   # Extract package data
   tar -xz -f data.tar.gz -C "\${pkgdir}"
@@ -69,7 +68,7 @@ ${conflicts.map((x) => `\tconflicts = ${x}`).join("\n")}
 \toptions = !strip
 \toptions = !emptydirs
 \tsource_x86_64 = ${source}
-\tsha256sums_x86_64 = ${sha256sums}
+\tsha256sums_x86_64 = SKIP
 
 pkgname = ${pkgname}`;
 
