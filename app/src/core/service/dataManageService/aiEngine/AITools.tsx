@@ -4,13 +4,15 @@ import {
   AIObjectReferenceError,
   AIObjectReferenceRegistry,
 } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
-import { blobToCompressedDataUrl } from "@/core/service/dataManageService/imageUtils";
+import { blobToCompressedDataUrl, prepareImageBlobForImport } from "@/core/service/dataManageService/imageUtils";
+import { createImageNodeFromBlob } from "@/core/service/dataManageService/imageNodeFactory";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import type { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -19,6 +21,11 @@ import { encode } from "@toon-format/toon";
 import { generateText, tool, type ToolSet } from "ai";
 import z from "zod/v4";
 import { findFirstImageInChildren } from "./imageNodeFinder";
+import {
+  findDownloadableOpenverseImage,
+  type ImageOrientation,
+  type OpenverseImageCandidate,
+} from "./OpenverseImageSearch";
 
 export namespace AITools {
   export type ToolDefinition = {
@@ -28,8 +35,12 @@ export namespace AITools {
   };
 
   type InternalToolDefinition = ToolDefinition & {
-    fn: (project: Project, data: any, references: AIObjectReferenceRegistry) => any;
+    fn: (project: Project, data: any, references: AIObjectReferenceRegistry, context: ToolExecutionContext) => any;
     toModelOutput?: (output: any) => { type: "content"; value: any[] };
+  };
+
+  type ToolExecutionContext = {
+    abortSignal?: AbortSignal;
   };
 
   const toolDefinitions: InternalToolDefinition[] = [];
@@ -39,14 +50,19 @@ export namespace AITools {
     name: string,
     description: string,
     parameters: A,
-    fn: (project: Project, data: z.infer<A>, references: AIObjectReferenceRegistry) => any,
+    fn: (
+      project: Project,
+      data: z.infer<A>,
+      references: AIObjectReferenceRegistry,
+      context: ToolExecutionContext,
+    ) => any,
     toModelOutput?: (output: any) => { type: "content"; value: any[] },
   ) {
     toolDefinitions.push({
       name,
       description,
       parameters,
-      fn: fn as (project: Project, data: any, references: AIObjectReferenceRegistry) => any,
+      fn: fn as InternalToolDefinition["fn"],
       toModelOutput,
     });
   }
@@ -58,9 +74,11 @@ export namespace AITools {
         tool({
           description: definition.description,
           inputSchema: definition.parameters as any,
-          execute: async (data: any) => {
+          execute: async (data: any, executionOptions?: ToolExecutionContext) => {
             try {
-              const result = await definition.fn(project, data as any, references);
+              const result = await definition.fn(project, data as any, references, {
+                abortSignal: executionOptions?.abortSignal,
+              });
               return result ? encode(result) : "ok";
             } catch (error) {
               if (error instanceof AIObjectReferenceError) {
@@ -114,6 +132,37 @@ export namespace AITools {
       info.text = object.text;
     }
     return info;
+  }
+
+  function sanitizeImageSourceText(value: string | null | undefined): string | undefined {
+    const sanitized = value
+      ?.replace(/[\r\n]+/g, " ")
+      .trim()
+      .slice(0, 500)
+      .replace(/([\\`*_[\]{}()#+\-.!|>])/g, "\\$1");
+    return sanitized || undefined;
+  }
+
+  function sanitizeImageSourceUrl(value: string | null | undefined): string | undefined {
+    if (!value || !URL.canParse(value)) return undefined;
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : undefined;
+  }
+
+  function createOpenverseImageDetails(candidate: OpenverseImageCandidate) {
+    const lines = ["## 网络图片来源"];
+    const title = sanitizeImageSourceText(candidate.title);
+    const creator = sanitizeImageSourceText(candidate.creator);
+    const license = sanitizeImageSourceText(candidate.license);
+    const sourceUrl = sanitizeImageSourceUrl(candidate.foreign_landing_url);
+    const licenseUrl = sanitizeImageSourceUrl(candidate.license_url);
+    if (title) lines.push(`标题：${title}`);
+    if (creator) lines.push(`作者：${creator}`);
+    if (license) lines.push(`许可证：${license}`);
+    if (sourceUrl) lines.push(`来源页面：<${sourceUrl}>`);
+    if (licenseUrl) lines.push(`许可证页面：<${licenseUrl}>`);
+    lines.push("搜索服务：Openverse");
+    return DetailsManager.markdownToDetails(lines.join("\n\n"));
   }
 
   addTool("get_all_nodes", "获取舞台上所有对象及其会话引用", z.object({}), (project, _data, references) => ({
@@ -779,6 +828,42 @@ export namespace AITools {
 
       project.historyManager.recordStep();
       return { success: true, movedCount: desired_order.length };
+    },
+  );
+  addTool(
+    "search_and_add_image_node",
+    "从 Openverse 搜索开放授权的网络图片，下载后创建 ImageNode。query 应使用具体、适合图片检索的关键词；工具只返回节点短引用，不返回图片URL或附件ID。",
+    z.object({
+      query: z.string().min(1).max(400).describe("图片搜索关键词，建议包含主体、场景和风格"),
+      x: z.number().describe("图片节点左上角的画布 x 坐标"),
+      y: z.number().describe("图片节点左上角的画布 y 坐标"),
+      preferredOrientation: z
+        .union([z.literal("square"), z.literal("landscape"), z.literal("portrait")])
+        .optional()
+        .describe("偏好的图片方向，不填写时使用搜索相关度最高的结果"),
+      maxDisplaySize: z.number().min(128).max(1600).optional().describe("图片节点最长边的最大画布显示尺寸，默认480"),
+    }),
+    async (project, { query, x, y, preferredOrientation, maxDisplaySize }, references, { abortSignal }) => {
+      const { candidate, image: prepared } = await findDownloadableOpenverseImage(query, {
+        orientation: preferredOrientation as ImageOrientation | undefined,
+        abortSignal,
+        transform: prepareImageBlobForImport,
+      });
+      const { node, width, height } = await createImageNodeFromBlob(project, prepared.blob, {
+        location: new Vector(x, y),
+        intrinsicSize: prepared,
+        maxDisplaySize: maxDisplaySize ?? 480,
+        details: createOpenverseImageDetails(candidate),
+      });
+      project.historyManager.recordStep();
+      const license = candidate.license?.match(/^[a-z0-9-]{1,32}$/i) ? candidate.license.toLowerCase() : undefined;
+      return {
+        ref: references.getOrCreateRef(node),
+        width,
+        height,
+        source: "openverse",
+        license,
+      };
     },
   );
   addTool(

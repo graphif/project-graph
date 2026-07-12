@@ -1,15 +1,10 @@
 import { Project } from "@/core/Project";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
 import { readImage } from "@tauri-apps/plugin-clipboard-manager";
 import { MouseLocation } from "../../controlService/MouseLocation";
 import { Settings } from "@/core/service/Settings";
-import { applyBlackAndWhite } from "../imageUtils";
+import { applyBlackAndWhite, prepareImageBlobForImport } from "../imageUtils";
 import { toast } from "sonner";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { RectanglePushInEffect } from "../../feedbackService/effectEngine/concrete/RectanglePushInEffect";
+import { createImageNodeFromBlob } from "../imageNodeFactory";
 
 export class CopyEngineImage {
   constructor(private project: Project) {}
@@ -89,109 +84,9 @@ export class CopyEngineImage {
   }
 
   private async pasteImageBlob(blob: Blob) {
-    const attachmentId = this.project.addAttachment(blob);
     const location = this.project.renderer.transformView2World(MouseLocation.vector());
-
-    const imageNode = new ImageNode(
-      this.project,
-      {
-        attachmentId,
-        collisionBox: new CollisionBox([new Rectangle(location, new Vector(300, 150))]),
-      },
-      false,
-      Settings.wrapImageInGroup
-        ? () => {
-            const section = Section.fromEntities(this.project, [imageNode]);
-            section.text = "";
-            this.project.stageManager.add(section);
-          }
-        : undefined,
-    );
-
-    this.project.stageManager.add(imageNode);
-
-    const mouseSections = this.project.sectionMethods.getSectionsByInnerLocation(location);
-    if (mouseSections.length > 0) {
-      this.project.stageManager.goInSection([imageNode], mouseSections[0]);
-      this.project.effects.addEffect(
-        RectanglePushInEffect.sectionGoInGoOut(
-          imageNode.collisionBox.getRectangle(),
-          mouseSections[0].collisionBox.getRectangle(),
-        ),
-      );
-    }
-  }
-
-  private async compressImageBlob(blob: Blob): Promise<Blob> {
-    if (!Settings.compressImageToBlackAndWhite && !Settings.resizePastedImages && !Settings.compressImageToWebp)
-      return blob;
-    const url = URL.createObjectURL(blob);
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        let w = img.naturalWidth;
-        let h = img.naturalHeight;
-
-        let needCanvas = Settings.compressImageToBlackAndWhite;
-        if (Settings.resizePastedImages) {
-          const maxSize = Settings.maxPastedImageSize;
-          const maxDim = Math.max(w, h);
-          if (maxDim > maxSize) {
-            const scale = maxSize / maxDim;
-            w = Math.round(w * scale);
-            h = Math.round(h * scale);
-            needCanvas = true;
-          }
-        } else if (!Settings.compressImageToWebp && !Settings.compressImageToBlackAndWhite) {
-          URL.revokeObjectURL(url);
-          resolve(blob);
-          return;
-        }
-
-        if (!needCanvas && !Settings.compressImageToWebp) {
-          URL.revokeObjectURL(url);
-          resolve(blob);
-          return;
-        }
-
-        const canvas = document.createElement("canvas");
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(img, 0, 0, w, h);
-        URL.revokeObjectURL(url);
-
-        if (Settings.compressImageToBlackAndWhite) {
-          applyBlackAndWhite(canvas);
-        }
-
-        const outputType = Settings.compressImageToBlackAndWhite
-          ? "image/png"
-          : Settings.compressImageToWebp
-            ? "image/webp"
-            : "image/png";
-        canvas.toBlob(
-          (b) => {
-            if (b) {
-              if (outputType === "image/webp" && !b.type.includes("webp")) {
-                toast.warning("当前系统 webview 不支持 WebP 编码，已回退为 PNG");
-              }
-              resolve(b);
-            } else reject(new Error("canvas.toBlob returned null"));
-          },
-          outputType,
-          Settings.compressImageToBlackAndWhite
-            ? undefined
-            : Settings.compressImageToWebp
-              ? Settings.webpQuality
-              : undefined,
-        );
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error("Failed to load image for compression"));
-      };
-      img.src = url;
+    await createImageNodeFromBlob(this.project, blob, {
+      location,
     });
   }
 
@@ -208,8 +103,8 @@ export class CopyEngineImage {
       const imageType = item.types.find((t) => t.startsWith("image/"));
       if (!imageType) continue;
       const blob = await item.getType(imageType);
-      const compressed = await this.compressImageBlob(blob);
-      await this.pasteImageBlob(compressed);
+      const prepared = await prepareImageBlobForImport(blob);
+      await this.pasteImageBlob(prepared.blob);
     }
   }
 }

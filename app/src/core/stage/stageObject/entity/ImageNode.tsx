@@ -8,6 +8,16 @@ import { toast } from "sonner";
 import { Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
+import type { Value } from "platejs";
+
+type ImageNodeOptions = {
+  uuid?: string;
+  collisionBox?: CollisionBox;
+  details?: Value;
+  attachmentId?: string;
+  scale?: number;
+  isBackground?: boolean;
+};
 
 /**
  * 一个图片节点
@@ -65,11 +75,11 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
     {
       uuid = crypto.randomUUID() as string,
       collisionBox = new CollisionBox([new Rectangle(Vector.getZero(), Vector.getZero())]),
-      details = [],
+      details = [] as Value,
       attachmentId = "",
       scale = 1,
       isBackground = false,
-    },
+    }: ImageNodeOptions,
     public unknown = false,
     public onReady?: () => void,
   ) {

@@ -1,6 +1,5 @@
 import { Project } from "@/core/Project";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Vector } from "@graphif/data-structures";
@@ -12,9 +11,8 @@ import { onOpenFile } from "../../GlobalMenu";
 import { PathString } from "@/utils/pathString";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
 import { Settings } from "@/core/service/Settings";
-import { applyBlackAndWhite } from "../imageUtils";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { RectanglePushInEffect } from "../../feedbackService/effectEngine/concrete/RectanglePushInEffect";
+import { prepareImageBlobForImport } from "../imageUtils";
+import { createImageNodeFromBlob } from "../imageNodeFactory";
 
 /**
  * 处理文件拖拽到舞台的引擎
@@ -155,76 +153,7 @@ export namespace DragFileIntoStageEngine {
   }
 
   /**
-   * 将任意图片格式（jpg/jpeg/webp/png）转换为 PNG Blob
-   * 利用浏览器 Canvas API 完成转换，并根据设置决定是否压缩
-   */
-  async function convertToPngBlob(fileData: Uint8Array, sourceMime: string): Promise<Blob> {
-    const sourceBlob = new Blob([fileData as BlobPart], { type: sourceMime });
-    const url = URL.createObjectURL(sourceBlob);
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        let w = img.naturalWidth;
-        let h = img.naturalHeight;
-
-        if (Settings.resizePastedImages) {
-          const maxSize = Settings.maxPastedImageSize;
-          const maxDim = Math.max(w, h);
-          if (maxDim > maxSize) {
-            const scale = maxSize / maxDim;
-            w = Math.round(w * scale);
-            h = Math.round(h * scale);
-          }
-        }
-
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          URL.revokeObjectURL(url);
-          reject(new Error("无法获取 Canvas 2D 上下文"));
-          return;
-        }
-        ctx.drawImage(img, 0, 0, w, h);
-        URL.revokeObjectURL(url);
-
-        if (Settings.compressImageToBlackAndWhite) {
-          applyBlackAndWhite(canvas);
-        }
-
-        const outputType = Settings.compressImageToBlackAndWhite
-          ? "image/png"
-          : Settings.compressImageToWebp
-            ? "image/webp"
-            : "image/png";
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              if (outputType === "image/webp" && !blob.type.includes("webp")) {
-                toast.warning("当前系统 webview 不支持 WebP 编码，已回退为 PNG");
-              }
-              resolve(blob);
-            } else reject(new Error("Canvas toBlob 失败"));
-          },
-          outputType,
-          Settings.compressImageToBlackAndWhite
-            ? undefined
-            : Settings.compressImageToWebp
-              ? Settings.webpQuality
-              : undefined,
-        );
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error("图片加载失败"));
-      };
-      img.src = url;
-    });
-  }
-
-  /**
-   * 处理图片文件拖拽到舞台（支持 png/jpg/jpeg/webp，统一转换为 PNG 存储）
+   * 处理图片文件拖拽到舞台（支持 png/jpg/jpeg/webp，统一经过图片导入预处理）
    * 按 imageIndex 从左下阶梯排列：第1张在视野中心，之后每张相对前一张左移50px、下移50px
    */
   export async function handleDropImage(
@@ -234,17 +163,9 @@ export namespace DragFileIntoStageEngine {
     imageIndex: number = 0,
   ): Promise<void> {
     const fileData = await readFile(filePath);
-
-    // 转为 PNG（非 PNG 格式必然转换；PNG 格式仅在开启压缩时经过 canvas 以缩放尺寸）
-    const blob =
-      sourceMime === "image/png" &&
-      !Settings.resizePastedImages &&
-      !Settings.compressImageToWebp &&
-      !Settings.compressImageToBlackAndWhite
-        ? new Blob([new Uint8Array(fileData)], { type: "image/png" })
-        : await convertToPngBlob(new Uint8Array(fileData), sourceMime);
-
-    const attachmentId = project.addAttachment(blob);
+    const prepared = await prepareImageBlobForImport(
+      new Blob([new Uint8Array(fileData) as BlobPart], { type: sourceMime }),
+    );
 
     // 第1张在视野中心，之后每张左移50px、下移50px（y轴向下）
     // collisionBox 使用占位尺寸，ImageNode 构造后会异步加载 bitmap 并自动更新碰撞箱
@@ -252,34 +173,10 @@ export namespace DragFileIntoStageEngine {
     addLocation.x += -imageIndex * 50;
     addLocation.y += imageIndex * 50;
 
-    const imageNode = new ImageNode(
-      project,
-      {
-        attachmentId,
-        collisionBox: new CollisionBox([new Rectangle(addLocation, new Vector(1, 1))]),
-      },
-      false,
-      Settings.wrapImageInGroup
-        ? () => {
-            const section = Section.fromEntities(project, [imageNode]);
-            section.text = "";
-            project.stageManager.add(section);
-          }
-        : undefined,
-    );
-
-    project.stageManager.add(imageNode);
-
-    const mouseSections = project.sectionMethods.getSectionsByInnerLocation(addLocation);
-    if (mouseSections.length > 0) {
-      project.stageManager.goInSection([imageNode], mouseSections[0]);
-      project.effects.addEffect(
-        RectanglePushInEffect.sectionGoInGoOut(
-          imageNode.collisionBox.getRectangle(),
-          mouseSections[0].collisionBox.getRectangle(),
-        ),
-      );
-    }
+    await createImageNodeFromBlob(project, prepared.blob, {
+      location: addLocation,
+      intrinsicSize: prepared,
+    });
   }
 
   /** @deprecated 请使用 handleDropImage */
