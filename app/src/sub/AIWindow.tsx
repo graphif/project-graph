@@ -1,14 +1,41 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Project } from "@/core/Project";
-import { AIChatSessionStore } from "@/core/service/dataManageService/aiEngine/AIChatSessionStore";
+import {
+  AIChatSessionStore,
+  type AIChatSessionProjectState,
+  type AIChatSessionSummary,
+  type StoredAIChatSession,
+} from "@/core/service/dataManageService/aiEngine/AIChatSessionStore";
 import type { AIMessageMetadata } from "@/core/service/dataManageService/aiEngine/AIEngine";
 import {
   resolveAIModelContextWindow,
   type AIModelContextWindow,
 } from "@/core/service/dataManageService/aiEngine/AIModelContextWindow";
+import { AIObjectReferenceRegistry } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
+import { AIProjectReferenceStore } from "@/core/service/dataManageService/aiEngine/AIProjectReferenceStore";
 import { Settings } from "@/core/service/Settings";
 import { SubWindow } from "@/core/service/SubWindow";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
@@ -24,7 +51,23 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/r
 import { code } from "@streamdown/code";
 import type { UIMessage } from "ai";
 import { useAtom } from "jotai";
-import { Bot, Check, ChevronRight, FolderOpen, Paperclip, Plus, Send, Sparkles, Square, User, X } from "lucide-react";
+import {
+  Bot,
+  Check,
+  ChevronRight,
+  FolderOpen,
+  History,
+  MoreHorizontal,
+  Paperclip,
+  Pencil,
+  Plus,
+  Send,
+  Sparkles,
+  Square,
+  Trash2,
+  User,
+  X,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
@@ -55,7 +98,7 @@ export default function AIWindow({ winId = "" }: { winId?: string }) {
     );
   }
 
-  return <AIChatPanel key={project.uri.toString()} project={project} winId={winId} />;
+  return <AIChatWorkspace key={project.uri.toString()} project={project} winId={winId} />;
 }
 
 function getContrastTextColor(bg: Color): string {
@@ -109,7 +152,341 @@ function createAnswerNode(message: UIMessage, project: Project) {
   project.camera.bombMove(node.geometryCenter);
 }
 
-function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
+type ActiveChatController = {
+  save: () => Promise<void>;
+};
+
+function formatSessionUpdatedAt(timestamp: number): string {
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(timestamp);
+}
+
+function AIChatWorkspace({ project, winId }: { project: Project; winId: string }) {
+  const projectUri = project.uri.toString();
+  const [model] = Settings.use("aiModel");
+  const [sessionState, setSessionState] = useState<AIChatSessionProjectState | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [requesting, setRequesting] = useState(false);
+  const [operationInProgress, setOperationInProgress] = useState(false);
+  const operationInProgressRef = useRef(false);
+  const [renamingSessionId, setRenamingSessionId] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState("");
+  const [deletingSession, setDeletingSession] = useState<AIChatSessionSummary | null>(null);
+  const activeChatController = useRef<ActiveChatController | null>(null);
+  const references = useMemo(() => project.aiEngine.getProjectReferences(project), [project]);
+
+  useEffect(
+    () =>
+      references.subscribe((snapshot) => {
+        void AIProjectReferenceStore.save(projectUri, snapshot).catch((saveError) => {
+          toast.error(`AI 项目引用保存失败: ${saveError instanceof Error ? saveError.message : String(saveError)}`);
+        });
+      }),
+    [projectUri, references],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    setSessionState(null);
+    setLoadError(null);
+    Promise.all([AIProjectReferenceStore.load(projectUri), AIChatSessionStore.initializeProject(projectUri)])
+      .then(([referenceSnapshot, initialSessionState]) => {
+        if (cancelled) return;
+        if (referenceSnapshot) references.restoreSnapshot(referenceSnapshot);
+        setSessionState(initialSessionState);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setLoadError(error instanceof Error ? error.message : String(error));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [projectUri, references]);
+
+  async function saveCurrentSession() {
+    await activeChatController.current?.save();
+  }
+
+  async function runSessionOperation(operation: () => Promise<void>) {
+    if (requesting || operationInProgressRef.current) return;
+    operationInProgressRef.current = true;
+    setOperationInProgress(true);
+    try {
+      await operation();
+    } catch (error) {
+      toast.error(`AI 会话操作失败: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      operationInProgressRef.current = false;
+      setOperationInProgress(false);
+    }
+  }
+
+  function handleCreateSession() {
+    void runSessionOperation(async () => {
+      await saveCurrentSession();
+      const nextState = await AIChatSessionStore.createSession(projectUri);
+      setSessionState(nextState);
+      setHistoryOpen(false);
+    });
+  }
+
+  function handleSwitchSession(sessionId: string) {
+    if (!sessionState || sessionState.index.activeSessionId === sessionId) {
+      setHistoryOpen(false);
+      return;
+    }
+    void runSessionOperation(async () => {
+      await saveCurrentSession();
+      const nextState = await AIChatSessionStore.setActiveSession(projectUri, sessionId);
+      setSessionState(nextState);
+      setHistoryOpen(false);
+    });
+  }
+
+  function startRenaming(session: AIChatSessionSummary) {
+    setRenamingSessionId(session.id);
+    setRenameDraft(session.title);
+  }
+
+  function handleRenameSession() {
+    const sessionId = renamingSessionId;
+    if (!sessionId || !renameDraft.trim()) return;
+    void runSessionOperation(async () => {
+      const nextState = await AIChatSessionStore.renameSession(projectUri, sessionId, renameDraft);
+      setSessionState(nextState);
+      setRenamingSessionId(null);
+      setRenameDraft("");
+    });
+  }
+
+  function handleDeleteRequest(session: AIChatSessionSummary) {
+    if (session.messageCount > 0) {
+      setDeletingSession(session);
+      return;
+    }
+    deleteSession(session.id);
+  }
+
+  function deleteSession(sessionId: string) {
+    void runSessionOperation(async () => {
+      if (sessionState?.index.activeSessionId === sessionId) await saveCurrentSession();
+      const nextState = await AIChatSessionStore.deleteSession(projectUri, sessionId);
+      setSessionState(nextState);
+      setDeletingSession(null);
+      setRenamingSessionId(null);
+    });
+  }
+
+  function handleClose() {
+    void runSessionOperation(async () => {
+      await saveCurrentSession();
+      SubWindow.close(winId);
+    });
+  }
+
+  const actionsDisabled = requesting || operationInProgress || !sessionState;
+
+  return (
+    <div className="from-background via-background to-muted/30 flex h-full flex-col bg-gradient-to-b">
+      <div data-pg-drag-region className="border-border/70 flex items-center gap-2 border-b px-3 py-2">
+        <div className="bg-primary/10 text-primary flex size-8 items-center justify-center rounded-xl">
+          <Sparkles className="size-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-semibold">
+            {sessionState?.activeSession.title ?? "Project Graph AI"}
+          </div>
+          <div className="text-muted-foreground truncate text-xs">{model}</div>
+        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="会话历史"
+              disabled={!sessionState}
+              onClick={() => setHistoryOpen(true)}
+            >
+              <History />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>会话历史</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="新建会话"
+              disabled={actionsDisabled}
+              onClick={handleCreateSession}
+            >
+              <Plus />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>新建会话</TooltipContent>
+        </Tooltip>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="关闭 AI 窗口"
+          disabled={requesting || operationInProgress}
+          onClick={handleClose}
+        >
+          <X />
+        </Button>
+      </div>
+
+      {loadError ? (
+        <div className="text-destructive flex flex-1 items-center justify-center p-6 text-center text-sm">
+          AI 会话加载失败：{loadError}
+        </div>
+      ) : !sessionState ? (
+        <div className="text-muted-foreground flex flex-1 items-center justify-center text-sm">正在加载 AI 记忆…</div>
+      ) : (
+        <AIChatPanel
+          key={sessionState.activeSession.id}
+          project={project}
+          session={sessionState.activeSession}
+          references={references}
+          onControllerChange={(controller) => {
+            activeChatController.current = controller;
+          }}
+          onRequestingChange={setRequesting}
+          onSessionSaved={setSessionState}
+        />
+      )}
+
+      <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+        <SheetContent side="left" className="w-72 sm:max-w-72">
+          <SheetHeader>
+            <SheetTitle>会话历史</SheetTitle>
+            <SheetDescription>每个会话保留独立的聊天上下文，共享当前项目的节点引用。</SheetDescription>
+          </SheetHeader>
+          <ScrollArea className="min-h-0 flex-1 px-3 pb-4">
+            <div className="flex flex-col gap-1">
+              {sessionState?.index.sessions.map((session) => {
+                const isActive = session.id === sessionState.index.activeSessionId;
+                const isRenaming = renamingSessionId === session.id;
+                return (
+                  <div
+                    key={session.id}
+                    className={cn("flex items-center rounded-md", isActive && "bg-accent text-accent-foreground")}
+                  >
+                    {isRenaming ? (
+                      <div className="flex min-w-0 flex-1 items-center gap-1 p-1">
+                        <Input
+                          autoFocus
+                          aria-label="会话标题"
+                          value={renameDraft}
+                          disabled={operationInProgress}
+                          onChange={(event) => setRenameDraft(event.target.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter") handleRenameSession();
+                            if (event.key === "Escape") setRenamingSessionId(null);
+                          }}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="保存标题"
+                          disabled={!renameDraft.trim() || operationInProgress}
+                          onClick={handleRenameSession}
+                        >
+                          <Check />
+                        </Button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="flex min-w-0 flex-1 cursor-pointer flex-col items-start gap-0.5 rounded-md px-2 py-2 text-left disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={actionsDisabled}
+                        onClick={() => handleSwitchSession(session.id)}
+                      >
+                        <span className="w-full truncate text-sm font-medium">{session.title}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {formatSessionUpdatedAt(session.updatedAt)} · {session.messageCount} 条消息
+                        </span>
+                      </button>
+                    )}
+                    {!isRenaming && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`${session.title} 的操作`}
+                            disabled={actionsDisabled}
+                          >
+                            <MoreHorizontal />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuGroup>
+                            <DropdownMenuItem onSelect={() => startRenaming(session)}>
+                              <Pencil />
+                              重命名
+                            </DropdownMenuItem>
+                            <DropdownMenuItem variant="destructive" onSelect={() => handleDeleteRequest(session)}>
+                              <Trash2 />
+                              删除
+                            </DropdownMenuItem>
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
+
+      <AlertDialog open={!!deletingSession} onOpenChange={(open) => !open && setDeletingSession(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>删除会话？</AlertDialogTitle>
+            <AlertDialogDescription>
+              “{deletingSession?.title}”中的聊天记录会从本地删除，但该会话已经修改的画布内容不会撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={operationInProgress}
+              onClick={() => deletingSession && deleteSession(deletingSession.id)}
+            >
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function AIChatPanel({
+  project,
+  session,
+  references,
+  onControllerChange,
+  onRequestingChange,
+  onSessionSaved,
+}: {
+  project: Project;
+  session: StoredAIChatSession;
+  references: AIObjectReferenceRegistry;
+  onControllerChange: (controller: ActiveChatController | null) => void;
+  onRequestingChange: (requesting: boolean) => void;
+  onSessionSaved: (state: AIChatSessionProjectState) => void;
+}) {
   const [inputValue, setInputValue] = useState("");
   const messagesElRef = useRef<HTMLDivElement>(null);
   const [showTokenCount] = Settings.use("aiShowTokenCount");
@@ -117,23 +494,28 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
   const [apiKey] = Settings.use("aiApiKey");
   const [model] = Settings.use("aiModel");
   const [manualContextWindow] = Settings.use("aiContextWindow");
-  const conversation = useMemo(() => project.aiEngine.createConversation(project), [project]);
+  const conversation = useMemo(() => project.aiEngine.createConversation(project, references), [project, references]);
   const [selectedCount, setSelectedCount] = useState(0);
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [contextWindowState, setContextWindowState] = useState<ContextWindowState>({ status: "loading" });
   const projectUri = project.uri.toString();
+  const messagesRef = useRef<UIMessage<AIMessageMetadata>[]>(session.messages);
+  const lastSavedMessagesRef = useRef<UIMessage<AIMessageMetadata>[]>(session.messages);
 
-  const { messages, setMessages, sendMessage, stop, status, error } = useChat<UIMessage<AIMessageMetadata>>({
-    id: projectUri,
+  const persistMessages = useCallback(
+    async (nextMessages: UIMessage<AIMessageMetadata>[]) => {
+      await AIProjectReferenceStore.save(projectUri, references.exportSnapshot());
+      const nextState = await AIChatSessionStore.saveSession(projectUri, session.id, nextMessages);
+      lastSavedMessagesRef.current = nextMessages;
+      onSessionSaved(nextState);
+    },
+    [onSessionSaved, projectUri, references, session.id],
+  );
+
+  const { messages, setMessages, sendMessage, stop, status } = useChat<UIMessage<AIMessageMetadata>>({
+    id: session.id,
     transport: conversation.transport,
     experimental_throttle: 50,
-    onFinish: ({ messages: finishedMessages }) => {
-      void AIChatSessionStore.save(projectUri, finishedMessages, conversation.references.exportSnapshot()).catch(
-        (saveError) => {
-          toast.error(`AI 会话保存失败: ${saveError instanceof Error ? saveError.message : String(saveError)}`);
-        },
-      );
-    },
     onError: (err) => {
       toast.error(`AI 请求失败: ${err.message || err.toString() || JSON.stringify(err)}`);
     },
@@ -141,6 +523,10 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
   const requesting = status === "submitted" || status === "streaming";
   const tokenUsage = useMemo(() => getTokenUsage(messages), [messages]);
   const contextUsage = useMemo(() => getCurrentContextUsage(messages), [messages]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     messagesElRef.current?.scrollTo({ top: messagesElRef.current.scrollHeight, behavior: "smooth" });
@@ -172,30 +558,35 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
   }, [apiBaseUrl, apiKey, manualContextWindow, model]);
 
   useEffect(() => {
-    let cancelled = false;
-    setSessionLoaded(false);
-    AIChatSessionStore.load(projectUri)
-      .then((session) => {
-        if (cancelled) return;
-        if (session) {
-          conversation.references.restoreSnapshot(session.references);
-          setMessages(session.messages);
-        }
-        setSessionLoaded(true);
-      })
-      .catch((loadError) => {
-        if (cancelled) return;
-        setSessionLoaded(true);
-        toast.error(`AI 会话加载失败: ${loadError instanceof Error ? loadError.message : String(loadError)}`);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [conversation.references, projectUri, setMessages]);
+    setMessages(session.messages);
+    messagesRef.current = session.messages;
+    lastSavedMessagesRef.current = session.messages;
+    setSessionLoaded(true);
+  }, [session.id, setMessages]);
 
   useEffect(() => {
-    if (error) console.error("AI Chat state error:", error);
-  }, [error]);
+    onRequestingChange(requesting);
+    return () => onRequestingChange(false);
+  }, [onRequestingChange, requesting]);
+
+  useEffect(() => {
+    onControllerChange({
+      save: async () => {
+        await persistMessages(messagesRef.current);
+      },
+    });
+    return () => onControllerChange(null);
+  }, [onControllerChange, persistMessages]);
+
+  useEffect(() => {
+    if (!sessionLoaded || requesting || messages === lastSavedMessagesRef.current) return;
+    const timeout = window.setTimeout(() => {
+      void persistMessages(messages).catch((saveError) => {
+        toast.error(`AI 会话保存失败: ${saveError instanceof Error ? saveError.message : String(saveError)}`);
+      });
+    }, 250);
+    return () => window.clearTimeout(timeout);
+  }, [messages, persistMessages, requesting, sessionLoaded]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -225,7 +616,7 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
     const selectedEntities = project.stageManager.getSelectedEntities();
     const selectedAssociations = project.stageManager.getSelectedAssociations();
     const selectedRefs = [...selectedEntities, ...selectedAssociations].map((object) =>
-      conversation.references.getOrCreateRef(object),
+      references.getOrCreateRef(object),
     );
     const prefix = selectedRefs.length > 0 ? `[selected: ${selectedRefs.join(" ")}]\n` : "";
     sendMessage({ text: prefix + text });
@@ -243,7 +634,7 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
   const ObjectRefCode = useCallback(
     ({ children, ...props }: any) => {
       const text = typeof children === "string" ? children : String(children ?? "");
-      const stageObject = conversation.references.tryResolve(text);
+      const stageObject = references.tryResolve(text);
       if (!stageObject || !isEntity(stageObject)) {
         return <code {...props}>{children}</code>;
       }
@@ -279,27 +670,13 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
         </Tooltip>
       );
     },
-    [conversation.references, project],
+    [project, references],
   );
 
   const markdownComponents = useMemo(() => ({ inlineCode: ObjectRefCode }), [ObjectRefCode]);
 
   return (
-    <div className="from-background via-background to-muted/30 flex h-full flex-col bg-gradient-to-b">
-      <div data-pg-drag-region className="border-border/70 flex items-center gap-3 border-b px-3 py-2">
-        <div className="bg-primary/10 text-primary flex size-8 items-center justify-center rounded-xl">
-          <Sparkles className="size-4" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold">Project Graph AI</div>
-          <div className="text-muted-foreground truncate text-xs">{model}</div>
-        </div>
-        <X
-          className="text-muted-foreground hover:text-foreground size-5 cursor-pointer"
-          onClick={() => SubWindow.close(winId)}
-        />
-      </div>
-
+    <div className="flex min-h-0 flex-1 flex-col">
       <div ref={messagesElRef} className="flex-1 overflow-y-auto px-3 py-4">
         {messages.length === 0 ? (
           <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-3 text-center">

@@ -38,6 +38,24 @@ describe("AIObjectReferenceRegistry", () => {
     expect(registry.getOrCreateRef(edge)).toBe("e1");
   });
 
+  it("只在分配新引用时通知持久化", () => {
+    const objects = new Map<string, StageObject>();
+    const project = {
+      stageManager: {
+        get: (uuid: string) => objects.get(uuid),
+      },
+    } as unknown as Project;
+    const snapshots: ReturnType<AIObjectReferenceRegistry["exportSnapshot"]>[] = [];
+    const registry = new AIObjectReferenceRegistry(project, (snapshot) => snapshots.push(snapshot));
+    const node = createNode("node-1");
+    objects.set(node.uuid, node);
+
+    expect(registry.getOrCreateRef(node)).toBe("n1");
+    expect(registry.getOrCreateRef(node)).toBe("n1");
+    expect(snapshots).toHaveLength(1);
+    expect(snapshots[0].entries).toEqual([{ ref: "n1", uuid: "node-1" }]);
+  });
+
   it("通过短引用解析当前舞台对象", () => {
     const { objects, registry } = createFixture();
     const node = createNode("node-1");

@@ -36,10 +36,21 @@ export class AIObjectReferenceError extends Error {
 export class AIObjectReferenceRegistry {
   private readonly refToUuid = new Map<AIObjectRef, string>();
   private readonly uuidToRef = new Map<string, AIObjectRef>();
+  private readonly changeListeners = new Set<(snapshot: AIObjectReferenceSnapshot) => void>();
   private nextNodeRef = 1;
   private nextEdgeRef = 1;
 
-  constructor(private readonly project: Project) {}
+  constructor(
+    private readonly project: Project,
+    onChange?: (snapshot: AIObjectReferenceSnapshot) => void,
+  ) {
+    if (onChange) this.changeListeners.add(onChange);
+  }
+
+  subscribe(listener: (snapshot: AIObjectReferenceSnapshot) => void): () => void {
+    this.changeListeners.add(listener);
+    return () => this.changeListeners.delete(listener);
+  }
 
   exportSnapshot(): AIObjectReferenceSnapshot {
     return {
@@ -92,6 +103,8 @@ export class AIObjectReferenceRegistry {
       object instanceof Association ? (`e${this.nextEdgeRef++}` as AIEdgeRef) : (`n${this.nextNodeRef++}` as AINodeRef);
     this.refToUuid.set(ref, object.uuid);
     this.uuidToRef.set(object.uuid, ref);
+    const snapshot = this.exportSnapshot();
+    for (const listener of this.changeListeners) listener(snapshot);
     return ref;
   }
 
@@ -109,7 +122,7 @@ export class AIObjectReferenceRegistry {
       throw new AIObjectReferenceError(
         "unknown_ref",
         ref,
-        `当前会话中不存在对象引用 ${ref}。请先使用查询工具获取对象引用。`,
+        `当前项目中不存在对象引用 ${ref}。请先使用查询工具获取对象引用。`,
       );
     }
 

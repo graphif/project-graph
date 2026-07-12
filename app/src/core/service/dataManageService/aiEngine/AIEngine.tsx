@@ -7,7 +7,7 @@ import { fetch } from "@tauri-apps/plugin-http";
 import { convertToModelMessages, DefaultChatTransport, stepCountIs, streamText, type UIMessage } from "ai";
 
 const SYSTEM_PROMPT =
-  "尽可能尝试使用工具解决问题，如果实在不行才能问用户。TextNode正常情况下高度为75，多个节点叠起来时需要适当留padding。节点正常情况下的颜色应该是透明[0,0,0,0]，注意透明色并非是“看不见文本”。工具使用n1、n2、e1等当前会话对象引用，不要猜测引用；提及对象时用反引号包裹引用，以便用户点击定位。";
+  "尽可能尝试使用工具解决问题，如果实在不行才能问用户。TextNode正常情况下高度为75，多个节点叠起来时需要适当留padding。节点正常情况下的颜色应该是透明[0,0,0,0]，注意透明色并非是“看不见文本”。工具使用n1、n2、e1等当前项目对象引用，这些引用在项目的不同会话间保持一致；不要猜测引用，提及对象时用反引号包裹引用，以便用户点击定位。";
 
 export type AIMessageMetadata = {
   inputTokens?: number;
@@ -19,8 +19,14 @@ export type AIMessageMetadata = {
 
 @service("aiEngine")
 export class AIEngine {
-  createConversation(project: Project) {
-    const references = new AIObjectReferenceRegistry(project);
+  private references: AIObjectReferenceRegistry | undefined;
+
+  getProjectReferences(project: Project) {
+    this.references ??= new AIObjectReferenceRegistry(project);
+    return this.references;
+  }
+
+  createConversation(project: Project, references = this.getProjectReferences(project)) {
     const transport = new DefaultChatTransport({
       api: "/api/project-graph-ai-chat",
       fetch: this.createChatFetch(project, references),
