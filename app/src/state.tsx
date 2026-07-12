@@ -30,3 +30,5 @@ export interface AuthUser {
 
 export const currentUserAtom = atom<AuthUser | null>(null);
 export const isAuthLoadingAtom = atom(true);
+
+export const commandPaletteVisibleAtom = atom(false);

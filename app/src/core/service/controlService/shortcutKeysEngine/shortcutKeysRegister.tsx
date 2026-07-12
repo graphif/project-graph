@@ -18,7 +18,7 @@ import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { TestTab } from "@/core/TestTab";
-import { activeTabAtom, isWindowMaxsizedAtom, store, tabsAtom } from "@/state";
+import { activeTabAtom, commandPaletteVisibleAtom, isWindowMaxsizedAtom, store, tabsAtom } from "@/state";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { Image as TauriImage } from "@tauri-apps/api/image";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -117,10 +117,11 @@ import {
   Clipboard,
   Code,
   Columns4,
+  Command,
   Copy,
   CornerUpRight,
-  Dices,
   Diamond,
+  Dices,
   Dot,
   Dumbbell,
   Equal,
@@ -213,20 +214,20 @@ import {
   Sparkles,
   Spline,
   Split,
-  Store,
-  SquareDashedBottomCode,
-  SquareDashed,
   Square,
+  SquareDashed,
+  SquareDashedBottomCode,
   SquareDot,
   SquareRoundCorner,
   SquareSquare,
+  Store,
   Sun,
   Tag,
   Terminal,
   TextQuote,
   Trash2,
-  Triangle,
   TreePine,
+  Triangle,
   Tv,
   Type,
   Undo,
@@ -4356,6 +4357,15 @@ export const allKeyBinds: KeyBindItem[] = [
         node.moveTo(new Vector(x, y));
         project!.stage.push(node);
       }
+    },
+  },
+  {
+    id: "toggleCommandPalette",
+    defaultKey: "C-k",
+    icon: Command,
+    when: whenAlways,
+    onPress: () => {
+      store.set(commandPaletteVisibleAtom, !store.get(commandPaletteVisibleAtom));
     },
   },
 ];

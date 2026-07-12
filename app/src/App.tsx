@@ -30,6 +30,7 @@ import { ChevronsLeftRight, Copy, Minus, Pin, PinOff, Square, X } from "lucide-r
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { cpuInfo } from "tauri-plugin-system-info-api";
+import CommandPalette from "./CommandPalette";
 import { DropWindowCover } from "./DropWindowCover";
 import { ProjectTabs } from "./ProjectTabs";
 import RightToolbar from "./components/right-toolbar";
@@ -435,6 +436,8 @@ export default function App() {
           ></div>
         )}
         {activeTab instanceof Project ? <DropWindowCover project={activeTab} /> : null}
+
+        <CommandPalette />
       </div>
     </>
   );
