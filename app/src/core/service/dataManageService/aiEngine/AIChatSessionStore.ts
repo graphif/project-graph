@@ -1,4 +1,5 @@
 import type { AIMessageMetadata } from "@/core/service/dataManageService/aiEngine/AIEngine";
+import type { AIChatSessionMemory } from "@/core/service/dataManageService/aiEngine/AIChatSessionMemory";
 import { LazyStore } from "@tauri-apps/plugin-store";
 import type { UIMessage } from "ai";
 
@@ -22,6 +23,7 @@ export type StoredAIChatSession = {
   title: string;
   titleManuallyEdited: boolean;
   messages: UIMessage<AIMessageMetadata>[];
+  memory?: AIChatSessionMemory;
   createdAt: number;
   updatedAt: number;
 };
@@ -101,8 +103,21 @@ function isStoredSession(value: unknown): value is StoredAIChatSession {
     typeof session.title === "string" &&
     typeof session.titleManuallyEdited === "boolean" &&
     Array.isArray(session.messages) &&
+    (session.memory === undefined || isSessionMemory(session.memory)) &&
     typeof session.createdAt === "number" &&
     typeof session.updatedAt === "number"
+  );
+}
+
+function isSessionMemory(value: unknown): value is AIChatSessionMemory {
+  if (!value || typeof value !== "object") return false;
+  const memory = value as Partial<AIChatSessionMemory>;
+  return (
+    typeof memory.summary === "string" &&
+    memory.summary.trim().length > 0 &&
+    typeof memory.coveredMessageCount === "number" &&
+    Number.isInteger(memory.coveredMessageCount) &&
+    memory.coveredMessageCount > 0
   );
 }
 
@@ -200,6 +215,36 @@ export namespace AIChatSessionStore {
   export async function loadSession(projectUri: string, sessionId: string): Promise<StoredAIChatSession> {
     const initializedStore = await getStore();
     return readRequiredSession(initializedStore, projectUri, sessionId);
+  }
+
+  export async function getSessionMemory(
+    projectUri: string,
+    sessionId: string,
+  ): Promise<AIChatSessionMemory | undefined> {
+    return (await loadSession(projectUri, sessionId)).memory;
+  }
+
+  export async function setSessionMemory(
+    projectUri: string,
+    sessionId: string,
+    memory: AIChatSessionMemory,
+  ): Promise<void> {
+    if (!isSessionMemory(memory)) throw new Error("AI 会话记忆格式无效");
+    await enqueueWrite(async (initializedStore) => {
+      const index = await readIndex(initializedStore, projectUri);
+      if (!index || !index.sessions.some((session) => session.id === sessionId)) {
+        throw new Error("指定的 AI 会话不存在");
+      }
+      const current = await readRequiredSession(initializedStore, projectUri, sessionId);
+      const savedSession: StoredAIChatSession = {
+        ...current,
+        memory,
+        updatedAt: Date.now(),
+      };
+      await initializedStore.set(getSessionKey(projectUri, sessionId), savedSession);
+      await initializedStore.set(getIndexKey(projectUri), replaceSummary(index, savedSession));
+      await initializedStore.save();
+    });
   }
 
   export async function createSession(projectUri: string): Promise<AIChatSessionProjectState> {

@@ -494,7 +494,11 @@ function AIChatPanel({
   const [apiKey] = Settings.use("aiApiKey");
   const [model] = Settings.use("aiModel");
   const [manualContextWindow] = Settings.use("aiContextWindow");
-  const conversation = useMemo(() => project.aiEngine.createConversation(project, references), [project, references]);
+  const contextWindowTokenLimitRef = useRef<number | undefined>(undefined);
+  const conversation = useMemo(
+    () => project.aiEngine.createConversation(project, references, () => contextWindowTokenLimitRef.current),
+    [project, references],
+  );
   const [selectedCount, setSelectedCount] = useState(0);
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [contextWindowState, setContextWindowState] = useState<ContextWindowState>({ status: "loading" });
@@ -534,6 +538,7 @@ function AIChatPanel({
 
   useEffect(() => {
     let cancelled = false;
+    contextWindowTokenLimitRef.current = undefined;
     setContextWindowState({ status: "loading" });
     resolveAIModelContextWindow({
       apiBaseUrl,
@@ -543,10 +548,12 @@ function AIChatPanel({
     })
       .then((info) => {
         if (cancelled) return;
+        contextWindowTokenLimitRef.current = info?.tokenLimit;
         setContextWindowState(info ? { status: "ready", info } : { status: "unknown" });
       })
       .catch((contextWindowError) => {
         if (cancelled) return;
+        contextWindowTokenLimitRef.current = undefined;
         setContextWindowState({
           status: "error",
           message: contextWindowError instanceof Error ? contextWindowError.message : String(contextWindowError),

@@ -5,8 +5,9 @@ import {
   AIObjectReferenceRegistry,
 } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
 import { blobToCompressedDataUrl, prepareImageBlobForImport } from "@/core/service/dataManageService/imageUtils";
-import { createImageNodeFromBlob } from "@/core/service/dataManageService/imageNodeFactory";
+import { calculateImageDisplaySize, createImageNodeFromBlob } from "@/core/service/dataManageService/imageNodeFactory";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
+import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import type { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
@@ -103,15 +104,15 @@ export namespace AITools {
   const objectRefSchema = z
     .string()
     .regex(/^(?:n|e)[1-9]\d*$/)
-    .describe("当前AI会话中的对象引用，例如n1或e1");
+    .describe("当前项目中的对象引用，例如n1或e1");
   const nodeRefSchema = z
     .string()
     .regex(/^n[1-9]\d*$/)
-    .describe("当前AI会话中的节点引用，例如n1");
+    .describe("当前项目中的节点引用，例如n1");
   const edgeRefSchema = z
     .string()
     .regex(/^e[1-9]\d*$/)
-    .describe("当前AI会话中的连线引用，例如e1");
+    .describe("当前项目中的连线引用，例如e1");
 
   function toAgentObjectInfo(object: StageObject, references: AIObjectReferenceRegistry) {
     const rect = object.collisionBox.getRectangle();
@@ -122,6 +123,10 @@ export namespace AITools {
       size: { width: rect.size.x, height: rect.size.y },
     };
     if (object instanceof TextNode) info.text = object.text;
+    if (object instanceof ImageNode) {
+      info.isBackground = object.isBackground;
+      info.imageState = object.state;
+    }
     if ("color" in object && object.color instanceof Color) info.color = object.color.toArray();
     if (object instanceof Section) {
       info.childRefs = object.children.map((child) => references.getOrCreateRef(child));
@@ -165,16 +170,25 @@ export namespace AITools {
     return DetailsManager.markdownToDetails(lines.join("\n\n"));
   }
 
-  addTool("get_all_nodes", "获取舞台上所有对象及其会话引用", z.object({}), (project, _data, references) => ({
+  function getViewportCenteredLocation(project: Project, size: Vector): Vector {
+    return project.renderer.getCoverWorldRectangle().center.subtract(size.clone().multiply(0.5));
+  }
+
+  addTool("get_all_nodes", "获取舞台上所有对象及其项目级引用", z.object({}), (project, _data, references) => ({
     objects: project.stage.map((object) => toAgentObjectInfo(object, references)),
   }));
-  addTool("delete_node", "根据会话引用删除对象", z.object({ ref: objectRefSchema }), (project, { ref }, references) => {
-    project.stageManager.delete(references.resolve(ref));
-    project.historyManager.recordStep();
-  });
+  addTool(
+    "delete_node",
+    "根据项目级引用删除对象",
+    z.object({ ref: objectRefSchema }),
+    (project, { ref }, references) => {
+      project.stageManager.delete(references.resolve(ref));
+      project.historyManager.recordStep();
+    },
+  );
   addTool(
     "delete_nodes",
-    "批量删除指定会话引用对应的对象",
+    "批量删除指定项目级引用对应的对象",
     z.object({
       refs: z.array(objectRefSchema).describe("要删除的对象引用数组"),
     }),
@@ -218,70 +232,278 @@ export namespace AITools {
   });
   addTool(
     "edit_text_node",
-    "根据会话引用编辑TextNode",
+    "编辑 TextNode 的内容、颜色和尺寸。此工具不会移动节点。",
     z.object({
       ref: nodeRefSchema,
       data: z.object({
         text: z.string().optional(),
         color: z.array(z.number()).optional().describe("[255,255,255,1]"),
-        x: z.number().optional(),
-        y: z.number().optional(),
-        width: z.number().optional(),
+        width: z.number().min(16).max(4096).optional(),
         sizeAdjust: z
           .union([
-            z.string("auto").describe("自动调整宽度"),
-            z.string("manual").describe("宽度由width字段定义，文本自动换行"),
+            z.literal("auto").describe("自动调整宽度"),
+            z.literal("manual").describe("宽度由width字段定义，文本自动换行"),
           ])
-          .optional()
-          .default("auto"),
+          .optional(),
       }),
     }),
     (project, { ref, data }, references) => {
       const node = references.resolve(ref, "node");
-      if (!(node instanceof TextNode)) return { success: false, error: `${ref}不是TextNode` };
-      node.text = data.text ?? node.text;
-      node.color = data.color ? new Color(...(data.color as [number, number, number, number])) : node.color;
-      node.collisionBox.updateShapeList([
-        new Rectangle(
-          new Vector(
-            data.x ?? node.collisionBox.getRectangle().location.x,
-            data.y ?? node.collisionBox.getRectangle().location.y,
-          ),
-          new Vector(data.width ?? node.collisionBox.getRectangle().size.x, node.collisionBox.getRectangle().size.y),
-        ),
-      ]);
-      node.sizeAdjust = data.sizeAdjust ?? node.sizeAdjust;
-      node.forceAdjustSizeByText();
-      project.historyManager.recordStep();
+      if (!(node instanceof TextNode)) {
+        return {
+          success: false,
+          error: { code: "wrong_node_type", ref, expected: "TextNode", actual: node.constructor.name },
+        };
+      }
+      if (
+        data.text === undefined &&
+        data.color === undefined &&
+        data.width === undefined &&
+        data.sizeAdjust === undefined
+      ) {
+        return { success: false, error: { code: "no_changes", ref, message: "没有提供要修改的字段" } };
+      }
+
+      if (data.width !== undefined && data.sizeAdjust === "auto") {
+        return {
+          success: false,
+          error: { code: "invalid_size_mode", ref, message: "width 只能在 manual 宽度模式下使用" },
+        };
+      }
+
+      const previous = {
+        text: node.text,
+        color: node.color,
+        sizeAdjust: node.sizeAdjust,
+        rectangle: node.collisionBox.getRectangle().clone(),
+      };
+      try {
+        node.text = data.text ?? node.text;
+        node.color = data.color ? new Color(...(data.color as [number, number, number, number])) : node.color;
+        node.sizeAdjust = data.sizeAdjust ?? (data.width !== undefined ? "manual" : node.sizeAdjust);
+        if (data.width !== undefined) {
+          const rect = node.collisionBox.getRectangle();
+          node.collisionBox.updateShapeList([
+            new Rectangle(rect.location.clone(), new Vector(data.width, rect.size.y)),
+          ]);
+        }
+        if (node.sizeAdjust === "manual") {
+          node.forceAdjustHeightByText();
+        } else {
+          node.forceAdjustSizeByText();
+        }
+
+        project.historyManager.recordStep();
+        const finalRect = node.collisionBox.getRectangle();
+        return {
+          success: true,
+          ref,
+          text: node.text,
+          size: { width: finalRect.size.x, height: finalRect.size.y },
+          sizeAdjust: node.sizeAdjust,
+        };
+      } catch (error) {
+        node.text = previous.text;
+        node.color = previous.color;
+        node.sizeAdjust = previous.sizeAdjust;
+        node.collisionBox.updateShapeList([previous.rectangle]);
+        throw error;
+      }
+    },
+  );
+  addTool(
+    "edit_image_node",
+    "编辑 ImageNode 的显示尺寸和背景状态。图片始终保持原始宽高比；此工具不会移动节点。",
+    z.object({
+      ref: nodeRefSchema,
+      data: z.object({
+        displaySize: z
+          .object({
+            basis: z
+              .union([z.literal("width"), z.literal("height"), z.literal("longest_edge")])
+              .describe("按照宽度、高度或最长边设置显示尺寸"),
+            value: z.number().min(16).max(4096).describe("目标显示尺寸"),
+          })
+          .optional(),
+        isBackground: z.boolean().optional().describe("是否把图片作为背景图片"),
+      }),
+    }),
+    (project, { ref, data }, references) => {
+      const node = references.resolve(ref, "node");
+      if (!(node instanceof ImageNode)) {
+        return {
+          success: false,
+          error: { code: "wrong_node_type", ref, expected: "ImageNode", actual: node.constructor.name },
+        };
+      }
+      if (data.displaySize === undefined && data.isBackground === undefined) {
+        return { success: false, error: { code: "no_changes", ref, message: "没有提供要修改的字段" } };
+      }
+
+      const previous = {
+        scale: node.scale,
+        isBackground: node.isBackground,
+        rectangle: node.collisionBox.getRectangle().clone(),
+      };
+      try {
+        const currentRect = node.collisionBox.getRectangle();
+        if (data.displaySize) {
+          const intrinsicWidth = node.bitmap?.width ?? currentRect.width / node.scale;
+          const intrinsicHeight = node.bitmap?.height ?? currentRect.height / node.scale;
+          if (
+            !Number.isFinite(intrinsicWidth) ||
+            !Number.isFinite(intrinsicHeight) ||
+            intrinsicWidth <= 0 ||
+            intrinsicHeight <= 0
+          ) {
+            return {
+              success: false,
+              error: { code: "invalid_image_size", ref, message: "无法确定图片的原始尺寸" },
+            };
+          }
+
+          const basisSize =
+            data.displaySize.basis === "width"
+              ? intrinsicWidth
+              : data.displaySize.basis === "height"
+                ? intrinsicHeight
+                : Math.max(intrinsicWidth, intrinsicHeight);
+          const nextScale = data.displaySize.value / basisSize;
+          if (nextScale < 0.1 || nextScale > 10) {
+            return {
+              success: false,
+              error: {
+                code: "scale_out_of_range",
+                ref,
+                message: "目标尺寸超出 ImageNode 支持的 0.1 到 10 倍缩放范围",
+              },
+            };
+          }
+          node.scaleUpdate(nextScale - node.scale);
+          if (!node.bitmap) {
+            node.collisionBox.updateShapeList([
+              new Rectangle(
+                currentRect.location.clone(),
+                new Vector(intrinsicWidth * nextScale, intrinsicHeight * nextScale),
+              ),
+            ]);
+          }
+        }
+
+        node.isBackground = data.isBackground ?? node.isBackground;
+        project.historyManager.recordStep();
+        const finalRect = node.collisionBox.getRectangle();
+        return {
+          success: true,
+          ref,
+          displaySize: { width: finalRect.width, height: finalRect.height },
+          isBackground: node.isBackground,
+        };
+      } catch (error) {
+        node.scale = previous.scale;
+        node.isBackground = previous.isBackground;
+        node.collisionBox.updateShapeList([previous.rectangle]);
+        throw error;
+      }
+    },
+  );
+  addTool(
+    "auto_layout_dag",
+    "将同一分组层级中已经通过有向连线连接的普通节点，按从左到右的 DAG 分层方式整体布局。创建并连线完成后调用一次；不能用于 Section、孤立节点或有环图。",
+    z.object({
+      refs: z.array(nodeRefSchema).min(2).describe("需要整体布局的节点项目级引用"),
+    }),
+    (project, { refs }, references) => {
+      const uniqueRefs = [...new Set(refs)];
+      if (uniqueRefs.length !== refs.length) {
+        return { success: false, error: { code: "duplicate_refs", message: "refs 不能包含重复节点引用" } };
+      }
+
+      const nodes = uniqueRefs.map((ref) => ({ ref, node: references.resolve(ref, "node") }));
+      const invalidNode = nodes.find(({ node }) => !(node instanceof ConnectableEntity) || node instanceof Section);
+      if (invalidNode) {
+        return {
+          success: false,
+          error: {
+            code: "unsupported_node_type",
+            ref: invalidNode.ref,
+            message: "DAG 布局目前只支持非 Section 的可连接节点",
+          },
+        };
+      }
+
+      const entities = nodes.map(({ node }) => node as ConnectableEntity);
+      const parentSection = entities[0].parentSection;
+      if (!entities.every((entity) => entity.parentSection === parentSection)) {
+        return {
+          success: false,
+          error: { code: "mixed_containers", message: "DAG 布局的节点必须位于同一直属 Section 层级" },
+        };
+      }
+
+      const nodeIds = new Set(entities.map((entity) => entity.uuid));
+      const internalEdgeCount = project.stageManager
+        .getEdges()
+        .filter((edge) => nodeIds.has(edge.source.uuid) && nodeIds.has(edge.target.uuid)).length;
+      if (internalEdgeCount === 0) {
+        return {
+          success: false,
+          error: { code: "no_internal_edges", message: "DAG 布局至少需要一条位于 refs 范围内的有向连线" },
+        };
+      }
+      if (!project.graphMethods.isDAGByNodes(entities)) {
+        return { success: false, error: { code: "not_dag", message: "指定节点不构成有向无环图" } };
+      }
+
+      const result = project.autoLayout.autoLayoutDAG(entities);
+      return { success: true, ...result };
     },
   );
   addTool(
     "create_text_node",
-    "创建TextNode",
+    "创建 TextNode。节点会插入到当前视野中心；完成连线后使用 auto_layout_dag 整体整理，不要尝试提供坐标。",
     z.object({
       text: z.string(),
-      color: z.array(z.number()).describe("[R,G,B,A]，RGB为0~255，A为0~1，正常情况下为透明[0,0,0,0]"),
-      x: z.number(),
-      y: z.number().describe("文本框默认高度=75"),
-      width: z.number().describe("如果sizeAdjust为manual，则定义文本框宽度，否则可以写0"),
+      color: z.array(z.number()).optional().describe("[R,G,B,A]，不填写时使用透明色"),
+      width: z.number().min(16).max(4096).optional().describe("手动宽度模式下的文本框宽度"),
       sizeAdjust: z
         .union([
-          z.string("auto").describe("自动调整宽度"),
-          z.string("manual").describe("宽度由width字段定义，文本自动换行"),
+          z.literal("auto").describe("自动调整宽度"),
+          z.literal("manual").describe("宽度由width字段定义，文本自动换行"),
         ])
-        .optional()
-        .describe("建议用auto"),
+        .optional(),
     }),
-    (project, { text, color, x, y, width, sizeAdjust }, references) => {
+    (project, { text, color, width, sizeAdjust }, references) => {
+      if (width !== undefined && sizeAdjust === "auto") {
+        return {
+          success: false,
+          error: { code: "invalid_size_mode", message: "width 只能在 manual 宽度模式下使用" },
+        };
+      }
+      if (sizeAdjust === "manual" && width === undefined) {
+        return {
+          success: false,
+          error: { code: "missing_width", message: "manual 宽度模式必须提供 width" },
+        };
+      }
+
+      const resolvedSizeAdjust = sizeAdjust ?? (width === undefined ? "auto" : "manual");
       const node = new TextNode(project, {
         text,
-        color: new Color(...(color as [number, number, number, number])),
-        collisionBox: new CollisionBox([new Rectangle(new Vector(x, y), new Vector(width, 50))]),
-        sizeAdjust: (sizeAdjust ?? "auto") as "auto" | "manual",
+        color: color ? new Color(...(color as [number, number, number, number])) : Color.Transparent,
+        collisionBox: new CollisionBox([new Rectangle(Vector.getZero(), new Vector(width ?? 100, 50))]),
+        sizeAdjust: resolvedSizeAdjust,
       });
+      node.moveTo(getViewportCenteredLocation(project, node.collisionBox.getRectangle().size));
       project.stageManager.add(node);
       project.historyManager.recordStep();
-      return { ref: references.getOrCreateRef(node) };
+      const rect = node.collisionBox.getRectangle();
+      return {
+        success: true,
+        ref: references.getOrCreateRef(node),
+        size: { width: rect.width, height: rect.height },
+        sizeAdjust: node.sizeAdjust,
+      };
     },
   );
   addTool(
@@ -331,7 +553,7 @@ export namespace AITools {
   );
   addTool(
     "get_children",
-    "通过会话引用获取一个节点的所有第一层子节点（基于连接关系）",
+    "通过项目级引用获取一个节点的所有第一层子节点（基于连接关系）",
     z.object({
       ref: nodeRefSchema,
     }),
@@ -351,7 +573,7 @@ export namespace AITools {
   );
   addTool(
     "get_parents",
-    "通过会话引用获取一个节点的所有父级节点（基于连接关系）",
+    "通过项目级引用获取一个节点的所有父级节点（基于连接关系）",
     z.object({
       ref: nodeRefSchema,
     }),
@@ -394,7 +616,7 @@ export namespace AITools {
   );
   addTool(
     "get_object_details",
-    "通过会话引用数组获取对象的模型可读详细信息",
+    "通过项目级引用数组获取对象的模型可读详细信息",
     z.object({
       refs: z.array(objectRefSchema).describe("对象引用数组"),
     }),
@@ -521,7 +743,7 @@ export namespace AITools {
   );
   addTool(
     "select_objects",
-    "通过会话引用选中一些舞台对象",
+    "通过项目级引用选中一些舞台对象",
     z.object({
       refs: z.array(objectRefSchema).describe("要选中的对象引用数组"),
       clearOthers: z.boolean().optional().default(false).describe("是否清除其他对象的选中状态"),
@@ -550,7 +772,7 @@ export namespace AITools {
   );
   addTool(
     "get_selected_nodes",
-    "获取用户当前所有选中对象的详细信息和会话引用",
+    "获取用户当前所有选中对象的详细信息和项目级引用",
     z.object({}),
     (project, _data, references) => ({
       objects: [...project.stageManager.getSelectedEntities(), ...project.stageManager.getSelectedAssociations()].map(
@@ -577,7 +799,7 @@ export namespace AITools {
       return { nodes: results };
     },
   );
-  addTool("get_selected_refs", "获取用户当前所有选中对象的会话引用", z.object({}), (project, _data, references) => {
+  addTool("get_selected_refs", "获取用户当前所有选中对象的项目级引用", z.object({}), (project, _data, references) => {
     const selectedEntities = project.stageManager.getSelectedEntities();
     const selectedAssociations = project.stageManager.getSelectedAssociations();
     const refs = [...selectedEntities, ...selectedAssociations].map((object) => references.getOrCreateRef(object));
@@ -832,25 +1054,24 @@ export namespace AITools {
   );
   addTool(
     "search_and_add_image_node",
-    "从 Openverse 搜索开放授权的网络图片，下载后创建 ImageNode。query 应使用具体、适合图片检索的关键词；工具只返回节点短引用，不返回图片URL或附件ID。",
+    "从 Openverse 搜索开放授权的网络图片，下载后在当前视野中心创建 ImageNode。完成连线后使用 auto_layout_dag 整体整理；工具不返回图片 URL、附件 ID 或坐标。",
     z.object({
       query: z.string().min(1).max(400).describe("图片搜索关键词，建议包含主体、场景和风格"),
-      x: z.number().describe("图片节点左上角的画布 x 坐标"),
-      y: z.number().describe("图片节点左上角的画布 y 坐标"),
       preferredOrientation: z
         .union([z.literal("square"), z.literal("landscape"), z.literal("portrait")])
         .optional()
         .describe("偏好的图片方向，不填写时使用搜索相关度最高的结果"),
       maxDisplaySize: z.number().min(128).max(1600).optional().describe("图片节点最长边的最大画布显示尺寸，默认480"),
     }),
-    async (project, { query, x, y, preferredOrientation, maxDisplaySize }, references, { abortSignal }) => {
+    async (project, { query, preferredOrientation, maxDisplaySize }, references, { abortSignal }) => {
       const { candidate, image: prepared } = await findDownloadableOpenverseImage(query, {
         orientation: preferredOrientation as ImageOrientation | undefined,
         abortSignal,
         transform: prepareImageBlobForImport,
       });
+      const targetDisplaySize = calculateImageDisplaySize(prepared.width, prepared.height, maxDisplaySize ?? 480);
       const { node, width, height } = await createImageNodeFromBlob(project, prepared.blob, {
-        location: new Vector(x, y),
+        location: getViewportCenteredLocation(project, new Vector(targetDisplaySize.width, targetDisplaySize.height)),
         intrinsicSize: prepared,
         maxDisplaySize: maxDisplaySize ?? 480,
         details: createOpenverseImageDetails(candidate),
@@ -859,8 +1080,8 @@ export namespace AITools {
       const license = candidate.license?.match(/^[a-z0-9-]{1,32}$/i) ? candidate.license.toLowerCase() : undefined;
       return {
         ref: references.getOrCreateRef(node),
-        width,
-        height,
+        intrinsicSize: { width, height },
+        displaySize: { width: targetDisplaySize.width, height: targetDisplaySize.height },
         source: "openverse",
         license,
       };

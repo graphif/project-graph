@@ -16,6 +16,15 @@ export type CreateImageNodeFromBlobOptions = {
   wrapInSection?: boolean;
 };
 
+export function calculateImageDisplaySize(width: number, height: number, maxDisplaySize: number) {
+  if (width <= 0 || height <= 0 || !Number.isFinite(width) || !Number.isFinite(height)) {
+    throw new Error("图片尺寸无效");
+  }
+  if (maxDisplaySize <= 0 || Number.isNaN(maxDisplaySize)) throw new Error("图片显示尺寸无效");
+  const scale = Math.min(1, maxDisplaySize / Math.max(width, height));
+  return { width: width * scale, height: height * scale, scale };
+}
+
 export async function createImageNodeFromBlob(
   project: Project,
   blob: Blob,
@@ -29,10 +38,9 @@ export async function createImageNodeFromBlob(
     height = bitmap.height;
     bitmap.close();
   }
-  if (width <= 0 || height <= 0) throw new Error("图片尺寸无效");
-
   const maxDisplaySize = options.maxDisplaySize ?? Number.POSITIVE_INFINITY;
-  const scale = Math.min(1, maxDisplaySize / Math.max(width, height));
+  const displaySize = calculateImageDisplaySize(width, height, maxDisplaySize);
+  const scale = displaySize.scale;
   const attachmentId = project.addAttachment(blob);
   const location = options.location.clone();
   const imageNode = new ImageNode(
