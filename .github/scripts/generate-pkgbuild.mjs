@@ -7,7 +7,7 @@ import { writeFileSync } from "fs";
 const pkgname = process.argv[2];
 const pkgver = process.argv[3];
 
-if (!pkgname || !pkgver || !sha256sums) {
+if (!pkgname || !pkgver) {
   console.error("Usage: node generate-pkgbuild.mjs <pkgname> <pkgver>");
   process.exit(1);
 }
