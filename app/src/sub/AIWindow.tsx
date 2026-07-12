@@ -1,9 +1,14 @@
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Project } from "@/core/Project";
 import { AIChatSessionStore } from "@/core/service/dataManageService/aiEngine/AIChatSessionStore";
 import type { AIMessageMetadata } from "@/core/service/dataManageService/aiEngine/AIEngine";
+import {
+  resolveAIModelContextWindow,
+  type AIModelContextWindow,
+} from "@/core/service/dataManageService/aiEngine/AIModelContextWindow";
 import { Settings } from "@/core/service/Settings";
 import { SubWindow } from "@/core/service/SubWindow";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
@@ -64,6 +69,12 @@ function isEntity(
   return typeof obj === "object" && obj !== null && "isSelected" in obj && "collisionBox" in obj;
 }
 
+type ContextWindowState =
+  | { status: "loading" }
+  | { status: "ready"; info: AIModelContextWindow }
+  | { status: "unknown" }
+  | { status: "error"; message: string };
+
 function createAnswerNode(message: UIMessage, project: Project) {
   const answerText = (Array.isArray(message.parts) ? message.parts : [])
     .filter((p: any) => p.type === "text")
@@ -102,9 +113,14 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
   const [inputValue, setInputValue] = useState("");
   const messagesElRef = useRef<HTMLDivElement>(null);
   const [showTokenCount] = Settings.use("aiShowTokenCount");
+  const [apiBaseUrl] = Settings.use("aiApiBaseUrl");
+  const [apiKey] = Settings.use("aiApiKey");
+  const [model] = Settings.use("aiModel");
+  const [manualContextWindow] = Settings.use("aiContextWindow");
   const conversation = useMemo(() => project.aiEngine.createConversation(project), [project]);
   const [selectedCount, setSelectedCount] = useState(0);
   const [sessionLoaded, setSessionLoaded] = useState(false);
+  const [contextWindowState, setContextWindowState] = useState<ContextWindowState>({ status: "loading" });
   const projectUri = project.uri.toString();
 
   const { messages, setMessages, sendMessage, stop, status, error } = useChat<UIMessage<AIMessageMetadata>>({
@@ -124,10 +140,36 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
   });
   const requesting = status === "submitted" || status === "streaming";
   const tokenUsage = useMemo(() => getTokenUsage(messages), [messages]);
+  const contextUsage = useMemo(() => getCurrentContextUsage(messages), [messages]);
 
   useEffect(() => {
     messagesElRef.current?.scrollTo({ top: messagesElRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setContextWindowState({ status: "loading" });
+    resolveAIModelContextWindow({
+      apiBaseUrl,
+      apiKey,
+      model,
+      manualTokenLimit: manualContextWindow,
+    })
+      .then((info) => {
+        if (cancelled) return;
+        setContextWindowState(info ? { status: "ready", info } : { status: "unknown" });
+      })
+      .catch((contextWindowError) => {
+        if (cancelled) return;
+        setContextWindowState({
+          status: "error",
+          message: contextWindowError instanceof Error ? contextWindowError.message : String(contextWindowError),
+        });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [apiBaseUrl, apiKey, manualContextWindow, model]);
 
   useEffect(() => {
     let cancelled = false;
@@ -250,7 +292,7 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-semibold">Project Graph AI</div>
-          <div className="text-muted-foreground truncate text-xs">{Settings.aiModel}</div>
+          <div className="text-muted-foreground truncate text-xs">{model}</div>
         </div>
         <X
           className="text-muted-foreground hover:text-foreground size-5 cursor-pointer"
@@ -333,6 +375,11 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
           value={inputValue}
           disabled={requesting || !sessionLoaded}
         />
+        <ContextWindowUsage
+          usage={contextUsage}
+          state={contextWindowState}
+          sessionTotalTokens={tokenUsage.totalTokens}
+        />
       </div>
     </div>
   );
@@ -352,6 +399,89 @@ function getTokenUsage(messages: UIMessage<AIMessageMetadata>[]) {
 
 function formatTokenCount(value: number) {
   return value.toLocaleString();
+}
+
+type CurrentContextUsage = {
+  inputTokens: number;
+  outputTokens: number;
+  usedTokens: number;
+};
+
+function getCurrentContextUsage(messages: UIMessage<AIMessageMetadata>[]): CurrentContextUsage | null {
+  for (let index = messages.length - 1; index >= 0; index--) {
+    const metadata = messages[index].metadata;
+    if (typeof metadata?.lastStepInputTokens !== "number") continue;
+    const outputTokens = metadata.lastStepOutputTokens ?? 0;
+    return {
+      inputTokens: metadata.lastStepInputTokens,
+      outputTokens,
+      usedTokens: metadata.lastStepInputTokens + outputTokens,
+    };
+  }
+  return null;
+}
+
+function formatCompactTokenCount(value: number) {
+  return new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(value);
+}
+
+function ContextWindowUsage({
+  usage,
+  state,
+  sessionTotalTokens,
+}: {
+  usage: CurrentContextUsage | null;
+  state: ContextWindowState;
+  sessionTotalTokens: number;
+}) {
+  const tokenLimit = state.status === "ready" ? state.info.tokenLimit : undefined;
+  const percentage = tokenLimit && usage ? Math.min(100, (usage.usedTokens / tokenLimit) * 100) : 0;
+  const indicatorVariant = percentage >= 90 ? "destructive" : percentage >= 70 ? "caution" : "default";
+  const usedText = usage ? formatCompactTokenCount(usage.usedTokens) : "--";
+  const summary =
+    state.status === "loading"
+      ? `${usedText} / 正在获取上限`
+      : state.status === "ready"
+        ? `${usedText} / ${formatCompactTokenCount(state.info.tokenLimit)} · ${usage ? `${((usage.usedTokens / state.info.tokenLimit) * 100).toFixed(1)}%` : "--"}`
+        : state.status === "error"
+          ? `${usedText} / 获取失败`
+          : `${usedText} / 上限未知`;
+  const source = state.status === "ready" ? (state.info.source === "openrouter" ? "OpenRouter" : "手动设置") : "未知";
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div
+          className="mt-2 flex flex-col gap-1 outline-none"
+          tabIndex={0}
+          role="status"
+          aria-label={`上下文窗口 ${summary}`}
+        >
+          <div className="text-muted-foreground flex items-center justify-between text-xs">
+            <span>上下文</span>
+            <span>{summary}</span>
+          </div>
+          <Progress
+            value={percentage}
+            indicatorVariant={indicatorVariant}
+            className="h-1"
+            aria-label="上下文窗口使用率"
+          />
+        </div>
+      </TooltipTrigger>
+      <TooltipContent>
+        <div className="flex min-w-56 flex-col gap-1">
+          <div>占用量按最后一步模型输入与输出计算</div>
+          <div>最后输入：{usage ? formatTokenCount(usage.inputTokens) : "暂无"}</div>
+          <div>最后输出：{usage ? formatTokenCount(usage.outputTokens) : "暂无"}</div>
+          <div>会话累计计费：{formatTokenCount(sessionTotalTokens)}</div>
+          <div>上下文上限来源：{source}</div>
+          {state.status === "error" && <div>错误：{state.message}</div>}
+          {state.status === "unknown" && <div>可在 AI 设置中手动填写上下文窗口大小</div>}
+        </div>
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 function MessageBubble({

@@ -1116,6 +1116,10 @@ settings:
       密钥将会明文存储在本地
   aiModel:
     title: AI 模型
+  aiContextWindow:
+    title: AI 上下文窗口大小
+    description: |
+      输入 0 时自动从 OpenRouter 获取；其他兼容服务可手动填写模型的上下文 token 上限
   aiShowTokenCount:
     title: 显示 AI 消耗的token数
     description: |

@@ -120,6 +120,7 @@ export const settingsSchema = z.object({
   aiApiBaseUrl: z.string().default("https://generativelanguage.googleapis.com/v1beta/openai/"),
   aiApiKey: z.string().default(""),
   aiModel: z.string().default("gemini-2.5-flash"),
+  aiContextWindow: z.number().int().nonnegative().default(0),
   aiShowTokenCount: z.boolean().default(false),
   mouseRightDragBackground: z.union([z.literal("cut"), z.literal("moveCamera")]).default("cut"),
   enableSpaceKeyMouseLeftDrag: z.boolean().default(true),

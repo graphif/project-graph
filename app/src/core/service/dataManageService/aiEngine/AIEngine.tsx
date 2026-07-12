@@ -13,6 +13,8 @@ export type AIMessageMetadata = {
   inputTokens?: number;
   outputTokens?: number;
   totalTokens?: number;
+  lastStepInputTokens?: number;
+  lastStepOutputTokens?: number;
 };
 
 @service("aiEngine")
@@ -56,6 +58,7 @@ export class AIEngine {
 
       const tools = AITools.createTools(project, references);
 
+      let lastStepUsage: { inputTokens?: number; outputTokens?: number } | undefined;
       const textStream = streamText({
         model: provider.chatModel(Settings.aiModel),
         system: SYSTEM_PROMPT,
@@ -67,6 +70,9 @@ export class AIEngine {
         stopWhen: stepCountIs(8),
         abortSignal: options?.signal ?? undefined,
         maxRetries: 0,
+        onStepFinish: ({ usage }) => {
+          lastStepUsage = usage;
+        },
       });
 
       return textStream.toUIMessageStreamResponse<UIMessage<AIMessageMetadata>>({
@@ -77,6 +83,8 @@ export class AIEngine {
             inputTokens: part.totalUsage.inputTokens,
             outputTokens: part.totalUsage.outputTokens,
             totalTokens: part.totalUsage.totalTokens,
+            lastStepInputTokens: lastStepUsage?.inputTokens,
+            lastStepOutputTokens: lastStepUsage?.outputTokens,
           };
         },
       });

@@ -1032,6 +1032,10 @@ settings:
       The key will be stored in plain text locally
   aiModel:
     title: AI Model
+  aiContextWindow:
+    title: AI context window size
+    description: |
+      Enter 0 to detect it automatically from OpenRouter. For other compatible services, enter the model's context token limit manually.
   aiShowTokenCount:
     title: Show AI token count
     description: |

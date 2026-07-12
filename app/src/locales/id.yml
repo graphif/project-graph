@@ -1091,6 +1091,10 @@ settings:
       Kunci akan disimpan sebagai teks biasa secara lokal
   aiModel:
     title: Model AI
+  aiContextWindow:
+    title: Ukuran jendela konteks AI
+    description: |
+      Masukkan 0 untuk mendeteksi secara otomatis dari OpenRouter. Untuk layanan kompatibel lainnya, masukkan batas token konteks model secara manual.
   aiShowTokenCount:
     title: Tampilkan Jumlah Token AI
     description: |

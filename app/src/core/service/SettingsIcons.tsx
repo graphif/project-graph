@@ -264,4 +264,5 @@ export const settingsIcons = {
   colorPanelMouseEnterPreview: Mouse,
   maxFps: Timer,
   maxFpsUnfocused: Timer,
+  aiContextWindow: Gauge,
 };
