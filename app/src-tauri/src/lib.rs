@@ -72,8 +72,6 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_clipboard_manager::init())
-        .plugin(tauri_plugin_system_info::init())
         .plugin(tauri_plugin_deep_link::init())
         .setup(|app| {
             println!("Tauri setup closure started");
@@ -102,6 +100,7 @@ pub fn run() {
             {
                 app.handle().plugin(tauri_plugin_cli::init())?;
                 app.handle().plugin(tauri_plugin_process::init())?;
+                app.handle().plugin(tauri_plugin_system_info::init())?;
                 
                 // On Linux Qt mode, we don't want window state to interfere with hidden windows
                 #[cfg(not(target_os = "linux"))]
@@ -123,8 +122,11 @@ pub fn run() {
             #[cfg(target_os = "linux")]
             qt_ipc_response,
             take_pending_open_files,
+            #[cfg(desktop)]
             cmd::paddle::get_aha_directory,
+            #[cfg(desktop)]
             cmd::paddle::paddleocr_vl_1_6_model_exists,
+            #[cfg(desktop)]
             cmd::paddle::paddleocr_vl_1_6_generate,
             cmd::fs::read_folder_structure,
             cmd::fs::exists,

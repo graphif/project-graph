@@ -32,7 +32,6 @@ tauri-plugin-process = "2"
 tauri-plugin-fs = "2.5.1"
 tauri-plugin-devtools = "2.0.0"
 tauri-plugin-global-shortcut = "2.3.0"
-tauri-plugin-system-info = "2.0.9"
 tauri-plugin-deep-link = "2"
 regex = "1.12.3"
 
@@ -52,6 +51,7 @@ aha = { version = "0.2.6" }
 tauri-plugin-cli = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-window-state = "2"
+tauri-plugin-system-info = "2.0.9"
 tokio = { version = "1", features = ["rt"] }
 
 [patch.crates-io]

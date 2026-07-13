@@ -1,5 +1,3 @@
-console.log("Starting app...");
-
 import { runCli } from "@/cli";
 import { Toaster } from "@/components/ui/sonner";
 import { authClient } from "@/core/service/AuthClient";
@@ -16,10 +14,10 @@ import { type AuthUser, currentUserAtom, isAuthLoadingAtom, store } from "@/stat
 import { exit, writeStderr } from "@/utils/otherApi";
 import { isDesktop, isMobile, isWeb } from "@/utils/platform";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { getMatches } from "@tauri-apps/plugin-cli";
 import { getCurrent, onOpenUrl } from "@tauri-apps/plugin-deep-link";
-import { listen } from "@tauri-apps/api/event";
 import { exists } from "@tauri-apps/plugin-fs";
 import "driver.js/dist/driver.css";
 import i18next from "i18next";
@@ -32,8 +30,8 @@ import VConsole from "vconsole";
 import { URI } from "vscode-uri";
 import App from "./App";
 import { ExtensionManager } from "./core/extension/ExtensionManager";
-import { onOpenFile } from "./core/service/GlobalMenu";
 import { handleDeepLink, isProjectGraphDeepLink } from "./core/service/dataFileService/DeepLinkHandler";
+import { onOpenFile } from "./core/service/GlobalMenu";
 import "./css/index.css";
 import Fallback from "./Fallback";
 

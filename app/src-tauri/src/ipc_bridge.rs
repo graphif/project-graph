@@ -1,3 +1,5 @@
+#![cfg(target_os = "linux")]
+
 #[cxx_qt::bridge]
 pub mod qobject {
     unsafe extern "C++" {

@@ -10,6 +10,8 @@ import { createLogger, defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 import { i18nAutoTW } from "./vite-plugins/i18n-auto-tw";
 
+const host = process.env.TAURI_DEV_HOST ?? "localhost";
+
 export const viteLogger = createLogger("info", { prefix: "[project-graph]" });
 
 // https://vitejs.dev/config/
@@ -38,6 +40,7 @@ export default defineConfig({
   clearScreen: false,
   // tauri需要固定的端口
   server: {
+    host,
     port: 1420,
     // 端口冲突时直接报错，不尝试下一个可用端口
     strictPort: true,

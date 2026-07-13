@@ -21,21 +21,6 @@
         "decorations": false,
         "transparent": true,
         "visible": false
-      },
-      {
-        "label": "splash",
-        "title": "Project Graph Startup",
-        "url": "/splash",
-        "width": 640,
-        "height": 375,
-        "minWidth": 640,
-        "minHeight": 375,
-        "maxWidth": 640,
-        "maxHeight": 375,
-        "decorations": false,
-        "transparent": true,
-        "resizable": false,
-        "visible": false
       }
     ],
     "macOSPrivateApi": true,

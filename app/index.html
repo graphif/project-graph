@@ -6,13 +6,13 @@
     <title>Project Graph</title>
   </head>
   <body class="bg-transparent">
-    <div id="root" class="h-screen relative overflow-hidden rounded-xl"></div>
+    <div id="root" class="relative h-screen overflow-hidden rounded-xl"></div>
     <script type="module">
       console.log("Project Graph");
 
       import { getCurrentWindow } from "@tauri-apps/api/window";
       console.log(navigator.userAgent);
-      if (navigator.userAgent.includes("Linux") && !window.ipc_bridge) {
+      if (navigator.userAgent.includes("Linux") && !navigator.userAgent.includes("Android") && !window.ipc_bridge) {
         console.log("Running on Linux, closing this WebKitGTK window to prevent potential issues.");
         getCurrentWindow().close();
       }
@@ -23,6 +23,8 @@
       import { getOriginalNameOf } from "virtual:original-class-name";
       configureSerializer(getOriginalNameOf);
       console.log("Serializer configured");
+
+      alert("preload script executed");
     </script>
     <script src="/src/main.tsx" type="module"></script>
   </body>

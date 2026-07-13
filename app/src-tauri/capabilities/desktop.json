@@ -2,5 +2,5 @@
   "identifier": "desktop-capability",
   "platforms": ["macOS", "windows", "linux"],
   "windows": ["main", "proxy"],
-  "permissions": ["cli:default", "updater:default", "window-state:default"]
+  "permissions": ["cli:default", "updater:default", "window-state:default", "system-info:allow-all"]
 }
