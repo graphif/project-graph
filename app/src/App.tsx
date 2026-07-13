@@ -22,7 +22,7 @@ import {
 } from "@/state";
 import { getVersion } from "@tauri-apps/api/app";
 import { invoke } from "@tauri-apps/api/core";
-import { getAllWindows, getCurrentWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { arch, platform, version } from "@tauri-apps/plugin-os";
 import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
 import { useAtom } from "jotai";
@@ -162,13 +162,6 @@ export default function App() {
     if (!window.ipc_bridge) {
       getCurrentWindow().show();
     }
-    // 关闭splash
-    getAllWindows().then((windows) => {
-      const splash = windows.find((w) => w.label === "splash");
-      if (splash) {
-        splash.close();
-      }
-    });
 
     // 初始化全局快捷键管理
     globalShortcutManager.init();
@@ -370,7 +363,7 @@ export default function App() {
           </div>
         ))}
 
-        {/* Zoomed UI layer - 只缩放主窗口的 UI 组件，不缩放 Canvas 画布 */}
+        {/* Zoomed UI layer - 缩放所有 DOM UI 元素，不缩放 Canvas 画布 */}
         <div style={zoomStyle} className={zoomClass}>
           {/* 菜单 | 标签页 | ...移动窗口区域... | 窗口控制按钮 */}
           <div
@@ -425,8 +418,8 @@ export default function App() {
           {activeTab && showQuickSettingsToolbar && <RightToolbar />}
         </div>
 
-        {/* NOT zoomed - 使用固定/全屏定位的组件，缩放会破坏它们的位置计算 */}
-        <RenderSubWindows />
+        {/* NOT zoomed - 使用固定/全屏定位的组件，缩放会破坏它们的坐标计算 */}
+        <RenderSubWindows zoomStyle={zoomStyle} />
 
         {/* 右上角关闭的触发角 */}
         {isWindows && (
@@ -437,7 +430,7 @@ export default function App() {
         )}
         {activeTab instanceof Project ? <DropWindowCover project={activeTab} /> : null}
 
-        <CommandPalette />
+        <CommandPalette zoomStyle={zoomStyle} />
       </div>
     </>
   );

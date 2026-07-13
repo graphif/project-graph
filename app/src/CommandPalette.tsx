@@ -1,6 +1,7 @@
 import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
 import { useAtom } from "jotai";
+import type React from "react";
 import { useTranslation } from "react-i18next";
 import {
   Command,
@@ -14,14 +15,14 @@ import {
 import { Project } from "./core/Project";
 import { activeTabAtom, commandPaletteVisibleAtom } from "./state";
 
-export default function CommandPalette() {
+export default function CommandPalette({ zoomStyle }: { zoomStyle?: React.CSSProperties }) {
   const [commandPaletteVisible, setCommandPaletteVisible] = useAtom(commandPaletteVisibleAtom);
   const [tab] = useAtom(activeTabAtom);
   const { t } = useTranslation("keyBinds");
   const uiKeyBinds = KeyBindsUI.use();
 
   return (
-    <CommandDialog open={commandPaletteVisible} onOpenChange={setCommandPaletteVisible}>
+    <CommandDialog open={commandPaletteVisible} onOpenChange={setCommandPaletteVisible} contentStyle={zoomStyle}>
       <Command shouldFilter>
         <CommandInput placeholder="搜索命令或快捷键..." />
         <CommandList>

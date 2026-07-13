@@ -5,12 +5,14 @@ import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Transition } from "@headlessui/react";
 import { X } from "lucide-react";
+import type React from "react";
 
 /**
  * 这个组件中管理了所有的 子窗口
+ * @param zoomStyle 可选的缩放样式，用于让子窗口跟随全局缩放
  * @returns
  */
-export default function RenderSubWindows() {
+export default function RenderSubWindows({ zoomStyle }: { zoomStyle?: React.CSSProperties }) {
   const subWindows = SubWindow.use();
 
   const onClickInner = (win: SubWindow.Window) => {
@@ -20,7 +22,7 @@ export default function RenderSubWindows() {
   };
 
   return (
-    <div className="pointer-events-none fixed left-0 top-0 z-40 h-full w-full">
+    <div className="pointer-events-none fixed top-0 left-0 z-40 h-full w-full" style={zoomStyle}>
       {subWindows.map((win: SubWindow.Window) => (
         // transition 组件可以让关闭流程更平滑
         <Transition key={win.id} appear={true} show={!win.closing}>
@@ -84,7 +86,7 @@ export default function RenderSubWindows() {
             <div
               className={cn(
                 "flex p-1",
-                win.titleBarOverlay && "pointer-events-none absolute left-0 top-0 z-[100] w-full",
+                win.titleBarOverlay && "pointer-events-none absolute top-0 left-0 z-[100] w-full",
               )}
             >
               <div
@@ -115,7 +117,7 @@ export default function RenderSubWindows() {
             </div>
             {/* 添加一个可调整大小的边缘，这里以右下角为例 */}
             <div
-              className="bg-sub-window-resize-bg hover:bg-foreground/50 absolute bottom-0 right-0 h-4 w-4 cursor-se-resize"
+              className="bg-sub-window-resize-bg hover:bg-foreground/50 absolute right-0 bottom-0 h-4 w-4 cursor-se-resize"
               onMouseDown={(e) => {
                 const start = new Vector(e.clientX, e.clientY);
                 const onMouseUp = () => {
