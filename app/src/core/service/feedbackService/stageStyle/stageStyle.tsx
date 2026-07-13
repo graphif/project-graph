@@ -64,6 +64,13 @@ export class StageStyle {
     style.effects = Object.fromEntries(
       Object.entries(themeObj?.content.effects).map(([k, v]) => [k, Color.fromCss(v as string)]),
     ) as any as EffectColors;
+    // 合并默认值，补全主题中缺失的 effects 键
+    const defaultEffects = new StageStyle().effects;
+    for (const key of Object.keys(defaultEffects) as (keyof EffectColors)[]) {
+      if (!(key in style.effects)) {
+        style.effects[key] = defaultEffects[key];
+      }
+    }
     return style;
   }
 }
