@@ -2,7 +2,7 @@ import { AssetsRepository } from "@/core/service/AssetsRepository";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { onNewDraft, onOpenFile } from "@/core/service/GlobalMenu";
 import { Telemetry } from "@/core/service/Telemetry";
-import { Tutorials } from "@/core/service/Tourials";
+import { Tutorials } from "@/core/service/Tutorials";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
 import { cn } from "@/utils/cn";
 import { Path } from "@/utils/path";
@@ -41,8 +41,6 @@ interface Announcement {
   author: string;
   content: string;
 }
-
-const CONFIRMED_ANNOUNCEMENTS_KEY = "confirmed-announcements";
 
 export default function WelcomePage() {
   const [recentFiles, setRecentFiles] = useState<RecentFileManager.RecentFile[]>([]);
@@ -117,8 +115,15 @@ export default function WelcomePage() {
         .then(async (response) => {
           if (!response.ok) throw new Error(`获取公告失败：HTTP ${response.status}`);
           const result = (await response.json()) as Announcement[];
-          const confirmedIds = new Set<string>(JSON.parse(localStorage.getItem(CONFIRMED_ANNOUNCEMENTS_KEY) ?? "[]"));
-          setAnnouncements(result.filter(({ id }) => !confirmedIds.has(id)));
+          const unfinishedAnnouncements = await Promise.all(
+            result.map(async (announcement) => ({
+              announcement,
+              isFinished: await Tutorials.isFinished(`announcement:${announcement.id}`),
+            })),
+          );
+          setAnnouncements(
+            unfinishedAnnouncements.filter(({ isFinished }) => !isFinished).map(({ announcement }) => announcement),
+          );
         })
         .catch((error: unknown) => {
           if (error instanceof DOMException && error.name === "AbortError") return;
@@ -130,9 +135,7 @@ export default function WelcomePage() {
 
   async function confirmAnnouncement(id: string) {
     await Telemetry.event("announcement_confirmed", { announcementId: id });
-    const confirmedIds = new Set<string>(JSON.parse(localStorage.getItem(CONFIRMED_ANNOUNCEMENTS_KEY) ?? "[]"));
-    confirmedIds.add(id);
-    localStorage.setItem(CONFIRMED_ANNOUNCEMENTS_KEY, JSON.stringify([...confirmedIds]));
+    await Tutorials.finish(`announcement:${id}`);
     setAnnouncements((current) => current.filter((announcement) => announcement.id !== id));
   }
 

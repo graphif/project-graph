@@ -7,7 +7,7 @@ import { StartFilesManager } from "@/core/service/dataFileService/StartFilesMana
 import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import { QuickSettingsManager } from "@/core/service/QuickSettingsManager";
 import { Settings } from "@/core/service/Settings";
-import { Tutorials } from "@/core/service/Tourials";
+import { Tutorials } from "@/core/service/Tutorials";
 import { UserState } from "@/core/service/UserState";
 import { EdgeCollisionBoxGetter } from "@/core/stage/stageObject/association/EdgeCollisionBoxGetter";
 import { type AuthUser, currentUserAtom, isAuthLoadingAtom, store } from "@/state";

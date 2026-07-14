@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import { KeyBindsUI } from "../service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { Settings } from "../service/Settings";
-import { Tutorials } from "../service/Tourials";
+import { Tutorials } from "../service/Tutorials";
 import { Tab } from "../Tab";
 import { ExtensionKeyBindManager } from "./ExtensionKeyBindManager";
 import { ExtensionManager } from "./ExtensionManager";
