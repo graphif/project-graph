@@ -719,11 +719,11 @@ importers:
       lucide-react:
         specifier: ^0.400.0
         version: 0.400.0(react@19.2.7)
-      platjs:
-        specifier: ^1.2.6
-        version: 1.2.6
+      platejs:
+        specifier: ^49.2.21
+        version: 49.2.21(@types/react@19.2.14)(immer@10.2.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7))
       react:
-        specifier: ^19.2.7
+        specifier: "catalog:"
         version: 19.2.7
       sonner:
         specifier: ^2.0.7
@@ -5500,9 +5500,9 @@ packages:
       { integrity: sha512-70QWGkr4snxr0OXLRWsFLeRBIRPuQOvt4s8QYjmUlmlkyTZkRqS7EDVRZtzU3TiyDbXSzaOeF0XUKy8PchzukQ== }
     engines: { node: ">=18.0.0" }
 
-  expect-type@1.3.0:
+  expect-type@1.4.0:
     resolution:
-      { integrity: sha512-knvyeauYhqjOYvQ66MznSMs83wmHrCycNEN6Ao+2AeYEfxUIkuiVxdEa1qlGEPK+We3n0THiDciYSsCcgW/DoA== }
+      { integrity: sha512-KfYbmpRm0VbLjEvVa9yGwCi9GI34xvi7A/HXYWQO65CSD2u3MczUJSuwXKFIxlGsgBQizV9q5J9NHj4VG0n+pA== }
     engines: { node: ">=12.0.0" }
 
   extend@3.0.2:
@@ -7241,10 +7241,6 @@ packages:
     peerDependencies:
       react: ">=18.0.0"
       react-dom: ">=18.0.0"
-
-  platjs@1.2.6:
-    resolution:
-      { integrity: sha512-jlHdulh5TvJ61bYW5AEs3sbjMR1uQuV+1jpPPRfHTppnoi+n74Mixj0W+5VfbEQV//f1sZUNL3MmccUPgp130w== }
 
   player.style@0.3.4:
     resolution:
@@ -9922,7 +9918,7 @@ snapshots:
       html-entities: 2.6.0
       is-hotkey: 0.2.0
       jotai: 2.8.4(@types/react@19.2.14)(react@19.2.7)
-      jotai-optics: 0.4.0(jotai@2.8.4(@types/react@19.2.14)(react@19.2.7))(optics-ts@2.4.1)
+      jotai-optics: 0.4.0(jotai@2.8.4(react@19.2.7))(optics-ts@2.4.1)
       jotai-x: 2.3.3(@types/react@19.2.14)(jotai@2.8.4(@types/react@19.2.14)(react@19.2.7))(react@19.2.7)
       lodash: 4.18.1
       nanoid: 5.1.11
@@ -13032,7 +13028,7 @@ snapshots:
 
   eventsource-parser@3.0.8: {}
 
-  expect-type@1.3.0: {}
+  expect-type@1.4.0: {}
 
   extend@3.0.2: {}
 
@@ -13606,7 +13602,7 @@ snapshots:
 
   jose@6.2.3: {}
 
-  jotai-optics@0.4.0(jotai@2.8.4(@types/react@19.2.14)(react@19.2.7))(optics-ts@2.4.1):
+  jotai-optics@0.4.0(jotai@2.8.4(react@19.2.7))(optics-ts@2.4.1):
     dependencies:
       jotai: 2.8.4(@types/react@19.2.14)(react@19.2.7)
       optics-ts: 2.4.1
@@ -14838,8 +14834,6 @@ snapshots:
       - react-native
       - scheduler
       - use-sync-external-store
-
-  platjs@1.2.6: {}
 
   player.style@0.3.4(react@19.2.7):
     dependencies:
@@ -16245,7 +16239,7 @@ snapshots:
       "@vitest/spy": 4.1.5
       "@vitest/utils": 4.1.5
       es-module-lexer: 2.1.0
-      expect-type: 1.3.0
+      expect-type: 1.4.0
       magic-string: 0.30.21
       obug: 2.1.1
       pathe: 2.0.3

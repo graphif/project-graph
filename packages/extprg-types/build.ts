@@ -117,6 +117,20 @@ function propertyName(symbol: ts.Symbol): string {
   return /^[$A-Z_a-z][$\w]*$/u.test(symbol.name) ? symbol.name : JSON.stringify(symbol.name);
 }
 
+function tsdoc(declaration: ts.Declaration | undefined, indentation = ""): string {
+  if (!declaration) return "";
+  const sourceFile = declaration.getSourceFile();
+  const leadingText = sourceFile.text.slice(declaration.getFullStart(), declaration.getStart(sourceFile));
+  const comments = leadingText.match(/\/\*\*[\s\S]*?\*\//gu);
+  const comment = comments?.at(-1);
+  if (!comment) return "";
+  return `${comment
+    .trim()
+    .split("\n")
+    .map((line) => `${indentation}${line.trim()}`)
+    .join("\n")}\n`;
+}
+
 function renderObjectLikeDeclaration(checker: ts.TypeChecker, symbol: ts.Symbol, type: ts.Type): string {
   const members: string[] = [];
   for (const property of checker.getPropertiesOfType(type)) {
@@ -129,14 +143,17 @@ function renderObjectLikeDeclaration(checker: ts.TypeChecker, symbol: ts.Symbol,
     if (signatures.length > 0) {
       for (const signature of signatures) {
         members.push(
-          `  ${readonly}${propertyName(property)}${optional}${renderCallableSignature(checker, signature)};`,
+          `${tsdoc(declaration, "  ")}  ${readonly}${propertyName(property)}${optional}${renderCallableSignature(checker, signature)};`,
         );
       }
       continue;
     }
-    members.push(`  ${readonly}${propertyName(property)}${optional}: ${printType(checker, propertyType)};`);
+    members.push(
+      `${tsdoc(declaration, "  ")}  ${readonly}${propertyName(property)}${optional}: ${printType(checker, propertyType)};`,
+    );
   }
-  return `declare interface ${symbol.name}${typeParameters(symbol)} {\n${members.join("\n")}\n}`;
+  const declaration = symbol.valueDeclaration ?? symbol.declarations?.[0];
+  return `${tsdoc(declaration)}declare interface ${symbol.name}${typeParameters(symbol)} {\n${members.join("\n")}\n}`;
 }
 
 function renderEnum(symbol: ts.Symbol): string {
@@ -144,9 +161,9 @@ function renderEnum(symbol: ts.Symbol): string {
   if (!declaration) return `declare type ${symbol.name} = number;`;
   const members = declaration.members.map((member) => {
     const initializer = member.initializer ? ` = ${member.initializer.getText()}` : "";
-    return `  ${member.name.getText()}${initializer},`;
+    return `${tsdoc(member, "  ")}  ${member.name.getText()}${initializer},`;
   });
-  return `declare enum ${symbol.name} {\n${members.join("\n")}\n}`;
+  return `${tsdoc(declaration)}declare enum ${symbol.name} {\n${members.join("\n")}\n}`;
 }
 
 function renderLocalDeclaration(checker: ts.TypeChecker, local: LocalDeclaration): string {
@@ -162,12 +179,12 @@ function renderLocalDeclaration(checker: ts.TypeChecker, local: LocalDeclaration
     const aliasedType = typeAlias
       ? printer.printNode(ts.EmitHint.Unspecified, typeAlias.type, sourceFile).trim()
       : printType(checker, declaredType);
-    return `declare type ${symbol.name}${typeParameters(symbol)} = ${aliasedType};`;
+    return `${tsdoc(typeAlias)}declare type ${symbol.name}${typeParameters(symbol)} = ${aliasedType};`;
   }
   if (symbol.flags & (ts.SymbolFlags.Class | ts.SymbolFlags.Interface)) {
     return renderObjectLikeDeclaration(checker, symbol, declaredType);
   }
-  return `declare const ${symbol.name}: ${printType(checker, checker.getTypeOfSymbolAtLocation(symbol, declaration))};`;
+  return `${tsdoc(declaration)}declare const ${symbol.name}: ${printType(checker, checker.getTypeOfSymbolAtLocation(symbol, declaration))};`;
 }
 
 function collectLocalDeclarations(checker: ts.TypeChecker, rootType: ts.Type): LocalDeclaration[] {
@@ -491,15 +508,17 @@ function renderExtensionHostApi(
     const proxyKind = proxiedMethods.get(property.name);
     if (signature && proxyKind) {
       members.push(
-        `  ${propertyName(property)}(${renderCallableParameters(checker, signature)}): ${renderAutoProxyReturnType(checker, checker.getReturnTypeOfSignature(signature), proxyKind)};`,
+        `${tsdoc(declaration, "  ")}  ${propertyName(property)}(${renderCallableParameters(checker, signature)}): ${renderAutoProxyReturnType(checker, checker.getReturnTypeOfSignature(signature), proxyKind)};`,
       );
       continue;
     }
     if (signature) {
-      members.push(`  ${propertyName(property)}${renderCallableSignature(checker, signature)};`);
+      members.push(
+        `${tsdoc(declaration, "  ")}  ${propertyName(property)}${renderCallableSignature(checker, signature)};`,
+      );
       continue;
     }
-    members.push(`  ${propertyName(property)}: ${printType(checker, propertyType)};`);
+    members.push(`${tsdoc(declaration, "  ")}  ${propertyName(property)}: ${printType(checker, propertyType)};`);
   }
   return `{\n${members.join("\n")}\n}`;
 }
