@@ -142,8 +142,11 @@ function renderObjectLikeDeclaration(checker: ts.TypeChecker, symbol: ts.Symbol,
     const signatures = checker.getSignaturesOfType(propertyType, ts.SignatureKind.Call);
     if (signatures.length > 0) {
       for (const signature of signatures) {
+        const callable = renderCallableSignature(checker, signature);
         members.push(
-          `${tsdoc(declaration, "  ")}  ${readonly}${propertyName(property)}${optional}${renderCallableSignature(checker, signature)};`,
+          isReadonly(property)
+            ? `${tsdoc(declaration, "  ")}  readonly ${propertyName(property)}${optional}: ${renderCallableType(checker, signature)};`
+            : `${tsdoc(declaration, "  ")}  ${propertyName(property)}${optional}${callable};`,
         );
       }
       continue;
@@ -269,7 +272,8 @@ function externalImports(
   referencedText: string,
 ): string[] {
   const imports = new Map<string, Set<string>>([["comlink", new Set(["ProxyMethods"])]]);
-  const isReferenced = (name: string): boolean => new RegExp(`\\b${name}\\b`, "u").test(referencedText);
+  const declarationText = referencedText.replaceAll(/\/\*[\s\S]*?\*\/|\/\/.*$/gmu, "");
+  const isReferenced = (name: string): boolean => new RegExp(`\\b${name}\\b`, "u").test(declarationText);
   for (const sourceFile of sourceFiles) {
     for (const declaration of sourceFile.statements) {
       if (!ts.isImportDeclaration(declaration) || !ts.isStringLiteral(declaration.moduleSpecifier)) continue;
@@ -492,6 +496,10 @@ function renderCallableParameters(checker: ts.TypeChecker, signature: ts.Signatu
 
 function renderCallableSignature(checker: ts.TypeChecker, signature: ts.Signature): string {
   return `(${renderCallableParameters(checker, signature)}): ${printType(checker, checker.getReturnTypeOfSignature(signature))}`;
+}
+
+function renderCallableType(checker: ts.TypeChecker, signature: ts.Signature): string {
+  return `(${renderCallableParameters(checker, signature)}) => ${printType(checker, checker.getReturnTypeOfSignature(signature))}`;
 }
 
 function renderExtensionHostApi(

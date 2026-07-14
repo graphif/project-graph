@@ -32,6 +32,7 @@
     "ai": "^6.0.174",
     "class-variance-authority": "^0.7.1",
     "comlink": "^4.4.2",
+    "katex": "^0.16.45",
     "lodash": "^4.18.1",
     "lucide-react": "^0.400.0",
     "platejs": "^49.2.21",
@@ -41,7 +42,9 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.24",
     "@types/node": "^25.6.0",
+    "@types/react": "catalog:",
     "tsx": "^4.21.0",
     "typescript": "catalog:"
   }

@@ -7,7 +7,7 @@ settings:
 catalogs:
   default:
     "@types/react":
-      specifier: ^19.1.0
+      specifier: ^19.2.14
       version: 19.2.14
     jotai:
       specifier: ^2.12.5
@@ -713,6 +713,9 @@ importers:
       comlink:
         specifier: ^4.4.2
         version: 4.4.2
+      katex:
+        specifier: ^0.16.45
+        version: 0.16.45
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -735,9 +738,15 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
+      "@types/lodash":
+        specifier: ^4.17.24
+        version: 4.17.24
       "@types/node":
         specifier: ^25.6.0
         version: 25.6.0
+      "@types/react":
+        specifier: "catalog:"
+        version: 19.2.14
       tsx:
         specifier: ^4.21.0
         version: 4.23.0
@@ -9918,7 +9927,7 @@ snapshots:
       html-entities: 2.6.0
       is-hotkey: 0.2.0
       jotai: 2.8.4(@types/react@19.2.14)(react@19.2.7)
-      jotai-optics: 0.4.0(jotai@2.8.4(react@19.2.7))(optics-ts@2.4.1)
+      jotai-optics: 0.4.0(jotai@2.8.4(@types/react@19.2.14)(react@19.2.7))(optics-ts@2.4.1)
       jotai-x: 2.3.3(@types/react@19.2.14)(jotai@2.8.4(@types/react@19.2.14)(react@19.2.7))(react@19.2.7)
       lodash: 4.18.1
       nanoid: 5.1.11
@@ -13602,7 +13611,7 @@ snapshots:
 
   jose@6.2.3: {}
 
-  jotai-optics@0.4.0(jotai@2.8.4(react@19.2.7))(optics-ts@2.4.1):
+  jotai-optics@0.4.0(jotai@2.8.4(@types/react@19.2.14)(react@19.2.7))(optics-ts@2.4.1):
     dependencies:
       jotai: 2.8.4(@types/react@19.2.14)(react@19.2.7)
       optics-ts: 2.4.1
