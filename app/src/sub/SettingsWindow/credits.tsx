@@ -350,7 +350,7 @@ export default function CreditsTab() {
           className="bg-muted/50 group flex flex-1 cursor-pointer flex-col justify-center gap-2 rounded-lg border p-4 **:cursor-pointer"
           onClick={() => {
             Telemetry.event("credits_donate_clicked");
-            open("https://2y.nz/pgdonate");
+            open("https://graphif.dev/donate");
           }}
         >
           <div className="flex items-center justify-center gap-2">
@@ -358,7 +358,7 @@ export default function CreditsTab() {
             <span className="text-lg">前往捐赠页面</span>
           </div>
           <div className="flex items-end justify-center gap-2 text-center">
-            <span className="underline-offset-4 group-hover:underline">2y.nz/pgdonate</span>
+            <span className="underline-offset-4 group-hover:underline">graphif.dev/donate</span>
           </div>
         </div>
       </div>
