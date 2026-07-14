@@ -1124,6 +1124,10 @@ settings:
     title: 顯示 AI 消耗的token數
     description: |
       啟用後，在 AI 操作時顯示消耗的token數
+  aiAutoApproveMcpTools:
+    title: 自動批准 MCP 工具
+    description: |
+      啟用後，MCP 工具無需手動批准即可執行。本地 stdio 進程的首次啟動仍需單獨確認。
   cacheTextAsBitmap:
     title: 開啟位圖式渲染文本
     description: |

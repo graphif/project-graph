@@ -1099,6 +1099,10 @@ settings:
     title: Tampilkan Jumlah Token AI
     description: |
       Saat diaktifkan, tampilkan jumlah token untuk operasi AI
+  aiAutoApproveMcpTools:
+    title: Setujui alat MCP secara otomatis
+    description: |
+      Jika diaktifkan, alat MCP dapat dijalankan tanpa persetujuan manual. Peluncuran pertama proses stdio lokal tetap memerlukan konfirmasi terpisah.
   cacheTextAsBitmap:
     title: Aktifkan Render Teks sebagai Bitmap
     description: |

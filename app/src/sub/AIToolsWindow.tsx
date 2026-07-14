@@ -2,17 +2,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Input } from "@/components/ui/input";
+import { Dialog } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { Project } from "@/core/Project";
 import { SubWindow } from "@/core/service/SubWindow";
 import {
   AIMCPStore,
-  discoverMCPTools,
-  normalizeMCPServerName,
+  createMCPDefinitionFingerprint,
+  createEmptyMCPSnapshot,
+  materializeMCPServers,
+  parseMCPConfigDocument,
+  serializeMCPConfigDocument,
+  type AIMCPSnapshot,
   type AIMCPServerConfig,
   type AIMCPToolDescriptor,
-} from "@/core/service/dataManageService/aiEngine/AIMCP";
+} from "@/core/service/dataManageService/aiEngine/AIMCPConfig";
+import { discoverMCPTools, stopStdioMCPServer } from "@/core/service/dataManageService/aiEngine/AIMCP";
 import { AISkillTrustStore, discoverSkills, type AISkill } from "@/core/service/dataManageService/aiEngine/AISkills";
 import { AITools } from "@/core/service/dataManageService/aiEngine/AITools";
 import { activeTabAtom } from "@/state";
@@ -20,7 +26,7 @@ import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useAtom } from "jotai";
 import { ChevronRight, Wrench } from "lucide-react";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import z from "zod/v4";
 
@@ -137,20 +143,19 @@ function MCPToolRow({
 }
 
 function MCPSection() {
-  const [servers, setServers] = useState<AIMCPServerConfig[]>([]);
-  const [name, setName] = useState("");
-  const [url, setUrl] = useState("");
+  const [snapshot, setSnapshot] = useState<AIMCPSnapshot>(createEmptyMCPSnapshot());
+  const [configDocument, setConfigDocument] = useState(serializeMCPConfigDocument([]));
   const [busyServer, setBusyServer] = useState<string | null>(null);
+  const servers = materializeMCPServers(snapshot);
 
   useEffect(() => {
     void AIMCPStore.load()
-      .then(setServers)
+      .then((loaded) => {
+        setSnapshot(loaded);
+        setConfigDocument(serializeMCPConfigDocument(loaded.definitions));
+      })
       .catch((error) => toast.error(`读取 MCP 配置失败：${getErrorMessage(error)}`));
   }, []);
-
-  const saveServers = async (nextServers: AIMCPServerConfig[]) => {
-    setServers(await AIMCPStore.save(nextServers));
-  };
 
   const runServerAction = async (serverName: string, action: () => Promise<void>) => {
     setBusyServer(serverName);
@@ -163,45 +168,82 @@ function MCPSection() {
     }
   };
 
-  const addServer = async (event: FormEvent) => {
-    event.preventDefault();
-    const normalizedName = normalizeMCPServerName(name);
-    await runServerAction(normalizedName, async () => {
-      if (!name.trim()) throw new Error("服务器名称不能为空");
-      if (servers.some((server) => server.name === normalizedName)) throw new Error(`服务器 ${normalizedName} 已存在`);
-      await saveServers([
-        ...servers,
-        { name: normalizedName, url: url.trim(), enabled: false, enabledTools: [], cachedTools: [] },
-      ]);
-      setName("");
-      setUrl("");
+  const applyConfigDocument = async () => {
+    await runServerAction("configuration", async () => {
+      const definitions = parseMCPConfigDocument(configDocument);
+      const nextByName = new Map(definitions.map((definition) => [definition.name, definition]));
+      const stoppedServers = snapshot.definitions.filter((definition) => {
+        if (definition.transport.type !== "stdio") return false;
+        const next = nextByName.get(definition.name);
+        return !next || createMCPDefinitionFingerprint(next) !== createMCPDefinitionFingerprint(definition);
+      });
+      await Promise.all(stoppedServers.map((server) => stopStdioMCPServer(server.name)));
+      const saved = await AIMCPStore.saveDefinitions(definitions);
+      setSnapshot(saved);
+      setConfigDocument(serializeMCPConfigDocument(saved.definitions));
+      toast.success(`已保存 ${saved.definitions.length} 个 MCP 服务器`);
     });
   };
 
-  const updateServer = async (serverName: string, update: (server: AIMCPServerConfig) => AIMCPServerConfig) => {
+  const updateServerRuntime = async (
+    serverName: string,
+    update: (state: AIMCPSnapshot["runtime"][string]) => AIMCPSnapshot["runtime"][string],
+  ) => {
     await runServerAction(serverName, async () => {
-      await saveServers(servers.map((server) => (server.name === serverName ? update(server) : server)));
+      setSnapshot(await AIMCPStore.updateRuntime(serverName, update));
     });
   };
 
   const refreshTools = async (server: AIMCPServerConfig) => {
     await runServerAction(server.name, async () => {
+      const definition = snapshot.definitions.find((entry) => entry.name === server.name);
+      if (!definition) throw new Error(`服务器 ${server.name} 不存在`);
+      const definitionHash = createMCPDefinitionFingerprint(definition);
+      if (server.transport.type === "stdio" && server.trustedDefinitionHash !== definitionHash) {
+        const envNames = Object.keys(server.transport.env ?? {});
+        const trusted = await Dialog.confirm(
+          "允许启动本地 MCP 进程？",
+          [
+            `服务器：${server.name}`,
+            `命令：${JSON.stringify([server.transport.command, ...server.transport.args])}`,
+            `工作目录：${server.transport.cwd ?? "继承应用目录"}`,
+            `环境变量名称：${envNames.length > 0 ? envNames.join(", ") : "无"}`,
+            "该进程将以当前用户权限运行。修改命令、参数、工作目录或环境变量后需要重新确认。",
+          ].join("\n"),
+        );
+        if (!trusted) return;
+      }
+
       const cachedTools = await discoverMCPTools(server);
       const availableNames = new Set(cachedTools.map((tool) => tool.name));
-      await saveServers(
-        servers.map((entry) =>
-          entry.name === server.name
-            ? { ...entry, cachedTools, enabledTools: entry.enabledTools.filter((tool) => availableNames.has(tool)) }
-            : entry,
-        ),
+      setSnapshot(
+        await AIMCPStore.updateRuntime(server.name, (state) => ({
+          ...state,
+          cachedTools,
+          enabledTools: state.enabledTools.filter((tool) => availableNames.has(tool)),
+          ...(server.transport.type === "stdio" ? { trustedDefinitionHash: definitionHash } : {}),
+        })),
       );
       toast.success(`已读取 ${cachedTools.length} 个 MCP 工具`);
     });
   };
 
+  const toggleServer = async (server: AIMCPServerConfig, enabled: boolean) => {
+    await runServerAction(server.name, async () => {
+      if (!enabled && server.transport.type === "stdio") await stopStdioMCPServer(server.name);
+      setSnapshot(await AIMCPStore.updateRuntime(server.name, (state) => ({ ...state, enabled })));
+    });
+  };
+
   const deleteServer = async (serverName: string) => {
     await runServerAction(serverName, async () => {
-      await saveServers(servers.filter((server) => server.name !== serverName));
+      const definition = snapshot.definitions.find((entry) => entry.name === serverName);
+      if (definition?.transport.type === "stdio") await stopStdioMCPServer(serverName);
+      const saved = await AIMCPStore.saveDefinitions(
+        snapshot.definitions.filter((definition) => definition.name !== serverName),
+      );
+      setSnapshot(saved);
+      setConfigDocument(serializeMCPConfigDocument(saved.definitions));
     });
   };
 
@@ -209,52 +251,71 @@ function MCPSection() {
     <section className="flex flex-col gap-2">
       <div>
         <h2 className="text-sm font-semibold">MCP 服务器</h2>
-        <p className="text-muted-foreground text-xs">仅支持 Streamable HTTP；每次工具调用都需要审批。</p>
+        <p className="text-muted-foreground text-xs">
+          支持 stdio 与 Streamable HTTP；配置要求包含外层 mcpServers 或 servers，每次工具调用都需要审批。
+        </p>
       </div>
-      <form
-        className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] gap-2"
-        onSubmit={(event) => void addServer(event)}
-      >
-        <Input
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="服务器名称"
-          aria-label="MCP 服务器名称"
-        />
-        <Input
-          value={url}
-          onChange={(event) => setUrl(event.target.value)}
-          placeholder="https://example.com/mcp"
-          aria-label="MCP 服务器 URL"
-        />
-        <Button type="submit" disabled={busyServer !== null}>
-          添加
+      <Textarea
+        value={configDocument}
+        onChange={(event) => setConfigDocument(event.target.value)}
+        className="min-h-56 resize-y font-mono text-xs"
+        spellCheck={false}
+        aria-label="MCP JSON 配置"
+      />
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" disabled={busyServer !== null} onClick={() => void applyConfigDocument()}>
+          {busyServer === "configuration" ? "保存中" : "保存 JSON 配置"}
         </Button>
-      </form>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={busyServer !== null}
+          onClick={() => {
+            try {
+              setConfigDocument(serializeMCPConfigDocument(parseMCPConfigDocument(configDocument)));
+            } catch (error) {
+              toast.error(`MCP 配置格式错误：${getErrorMessage(error)}`);
+            }
+          }}
+        >
+          格式化
+        </Button>
+      </div>
+      <div className="text-muted-foreground rounded-md border border-dashed p-2 text-xs">
+        headers 和 env 会以明文保存在应用配置 Store 中，不会写入项目文件。请不要在共享设备上保存长期密钥。
+      </div>
       {servers.length === 0 && (
         <div className="text-muted-foreground rounded-lg border p-3 text-xs">尚未配置 MCP 服务器。</div>
       )}
       {servers.map((server) => {
         const busy = busyServer !== null;
         const serverBusy = busyServer === server.name;
+        const definition = snapshot.definitions.find((entry) => entry.name === server.name);
+        const requiresStdioTrust =
+          !server.enabled &&
+          server.transport.type === "stdio" &&
+          (!definition || server.trustedDefinitionHash !== createMCPDefinitionFingerprint(definition));
         return (
           <div key={server.name} className="rounded-lg border p-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-sm font-semibold">{server.name}</span>
+                  <Badge variant="secondary">{server.transport.type}</Badge>
                   <Badge variant="outline">{server.cachedTools.length} tools</Badge>
                 </div>
-                <div className="text-muted-foreground mt-1 text-xs break-all">{server.url}</div>
+                <div className="text-muted-foreground mt-1 text-xs break-all">
+                  {server.transport.type === "stdio"
+                    ? JSON.stringify([server.transport.command, ...server.transport.args])
+                    : server.transport.url}
+                </div>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <span className="text-muted-foreground text-xs">启用</span>
                 <Switch
                   checked={server.enabled}
-                  disabled={busy || (!server.enabled && server.cachedTools.length === 0)}
-                  onCheckedChange={(checked) =>
-                    void updateServer(server.name, (entry) => ({ ...entry, enabled: checked }))
-                  }
+                  disabled={busy || (!server.enabled && server.cachedTools.length === 0) || requiresStdioTrust}
+                  onCheckedChange={(checked) => void toggleServer(server, checked)}
                   aria-label={`启用 MCP 服务器 ${server.name}`}
                 />
               </div>
@@ -288,11 +349,11 @@ function MCPSection() {
                     enabled={server.enabledTools.includes(descriptor.name)}
                     disabled={busy}
                     onEnabledChange={(enabled) =>
-                      void updateServer(server.name, (entry) => ({
-                        ...entry,
+                      void updateServerRuntime(server.name, (state) => ({
+                        ...state,
                         enabledTools: enabled
-                          ? [...new Set([...entry.enabledTools, descriptor.name])]
-                          : entry.enabledTools.filter((tool) => tool !== descriptor.name),
+                          ? [...new Set([...state.enabledTools, descriptor.name])]
+                          : state.enabledTools.filter((tool) => tool !== descriptor.name),
                       }))
                     }
                   />

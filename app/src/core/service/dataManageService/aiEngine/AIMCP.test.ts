@@ -4,10 +4,12 @@ import {
   decorateMCPTools,
   discoverMCPTools,
   normalizeMCPServerName,
-  validateMCPServerConfigs,
   type AIMCPClientLike,
   type AIMCPServerConfig,
 } from "./AIMCP";
+
+vi.mock("@ai-sdk/mcp", () => ({ createMCPClient: vi.fn() }));
+vi.mock("@tauri-apps/plugin-http", () => ({ fetch: vi.fn() }));
 
 describe("AIMCP tool adaptation", () => {
   it("normalizes server names into stable readable slugs", () => {
@@ -30,6 +32,13 @@ describe("AIMCP tool adaptation", () => {
     });
   });
 
+  it("allows MCP approval to be disabled without changing the source tool", () => {
+    const sourceTool = { description: "Resolve a library", execute: vi.fn() };
+    expect(decorateMCPTools("context-7", { resolve_library: sourceTool }, ["resolve_library"], false)).toEqual({
+      "mcp__context-7__resolve_library": { ...sourceTool, needsApproval: false },
+    });
+  });
+
   it("keeps model-facing tool names within provider limits", () => {
     const name = createMCPToolName("server-".repeat(10), "very_long_tool_name_".repeat(10));
     expect(name.length).toBeLessThanOrEqual(64);
@@ -40,25 +49,6 @@ describe("AIMCP tool adaptation", () => {
     expect(() => decorateMCPTools("demo", { "read file": {}, read_file: {} }, ["read file", "read_file"])).toThrow(
       /collision/i,
     );
-  });
-
-  it("rejects empty server names and cached tools without JSON Schema", () => {
-    expect(() =>
-      validateMCPServerConfigs([
-        { name: "", url: "https://example.com/mcp", enabled: false, enabledTools: [], cachedTools: [] },
-      ]),
-    ).toThrow(/name/i);
-    expect(() =>
-      validateMCPServerConfigs([
-        {
-          name: "demo",
-          url: "https://example.com/mcp",
-          enabled: false,
-          enabledTools: [],
-          cachedTools: [{ serverName: "demo", name: "search", modelName: "mcp__demo__search" }],
-        },
-      ]),
-    ).toThrow(/schema/i);
   });
 });
 
@@ -78,7 +68,7 @@ describe("AIMCP lifecycle", () => {
     };
     const config: AIMCPServerConfig = {
       name: "images",
-      url: "https://images.example/mcp",
+      transport: { type: "streamable-http", url: "https://images.example/mcp" },
       enabled: false,
       enabledTools: [],
       cachedTools: [],
@@ -103,8 +93,20 @@ describe("AIMCP lifecycle", () => {
       close,
     };
     const configs: AIMCPServerConfig[] = [
-      { name: "first", url: "https://first.example/mcp", enabled: true, enabledTools: ["ping"], cachedTools: [] },
-      { name: "second", url: "https://second.example/mcp", enabled: true, enabledTools: ["ping"], cachedTools: [] },
+      {
+        name: "first",
+        transport: { type: "streamable-http", url: "https://first.example/mcp" },
+        enabled: true,
+        enabledTools: ["ping"],
+        cachedTools: [],
+      },
+      {
+        name: "second",
+        transport: { type: "streamable-http", url: "https://second.example/mcp" },
+        enabled: true,
+        enabledTools: ["ping"],
+        cachedTools: [],
+      },
     ];
     const factory = vi
       .fn<() => Promise<AIMCPClientLike>>()
@@ -112,7 +114,7 @@ describe("AIMCP lifecycle", () => {
       .mockRejectedValueOnce(new Error("offline"));
 
     const { prepareMCPTools } = await import("./AIMCP");
-    await expect(prepareMCPTools(configs, factory)).rejects.toThrow("second: offline");
+    await expect(prepareMCPTools(configs, { clientFactory: factory })).rejects.toThrow("second: offline");
     expect(close).toHaveBeenCalledOnce();
   });
 });

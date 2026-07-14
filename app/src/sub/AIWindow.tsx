@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Project } from "@/core/Project";
@@ -63,13 +64,14 @@ import {
   Pencil,
   Plus,
   Send,
+  ShieldCheck,
   Sparkles,
   Square,
   Trash2,
   User,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
 import "streamdown/styles.css";
@@ -491,6 +493,8 @@ function AIChatPanel({
   const [inputValue, setInputValue] = useState("");
   const messagesElRef = useRef<HTMLDivElement>(null);
   const [showTokenCount] = Settings.use("aiShowTokenCount");
+  const [autoApproveMcpTools, setAutoApproveMcpTools] = Settings.use("aiAutoApproveMcpTools");
+  const autoApproveMcpToolsId = useId();
   const [apiBaseUrl] = Settings.use("aiApiBaseUrl");
   const [apiKey] = Settings.use("aiApiKey");
   const [model] = Settings.use("aiModel");
@@ -766,6 +770,32 @@ function AIChatPanel({
           value={inputValue}
           disabled={requesting || !sessionLoaded}
         />
+        <div className="mt-2 flex items-center gap-2">
+          <Switch
+            id={autoApproveMcpToolsId}
+            checked={autoApproveMcpTools}
+            disabled={requesting || !sessionLoaded}
+            onCheckedChange={setAutoApproveMcpTools}
+            aria-label="自动批准 MCP 工具"
+          />
+          <label htmlFor={autoApproveMcpToolsId} className="flex cursor-pointer items-center gap-1.5 text-xs">
+            <ShieldCheck className="size-3.5" />
+            自动批准 MCP 工具
+          </label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="text-muted-foreground cursor-help text-xs underline decoration-dotted underline-offset-2"
+              >
+                安全说明
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-72">
+              开启后 MCP 工具无需逐次批准；本地 stdio 进程首次启动仍需单独确认。设置从下一次请求开始生效。
+            </TooltipContent>
+          </Tooltip>
+        </div>
         <ContextWindowUsage
           usage={contextUsage}
           state={contextWindowState}

@@ -8,7 +8,7 @@ import {
   getSessionMemoryWorkingMessages,
 } from "@/core/service/dataManageService/aiEngine/AIChatSessionMemory";
 import { AITools } from "@/core/service/dataManageService/aiEngine/AITools";
-import { AIMCPStore, prepareMCPTools } from "@/core/service/dataManageService/aiEngine/AIMCP";
+import { AIMCPStore, materializeMCPServers, prepareMCPTools } from "@/core/service/dataManageService/aiEngine/AIMCP";
 import { AIObjectReferenceRegistry } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
 import {
   buildSkillSystemContext,
@@ -149,7 +149,9 @@ export class AIEngine {
           await AIChatSessionStore.activateSkill(projectUri, sessionId, snapshot);
         },
       });
-      const mcpRuntime = await prepareMCPTools(await AIMCPStore.load());
+      const mcpRuntime = await prepareMCPTools(materializeMCPServers(await AIMCPStore.load()), {
+        requireApproval: !Settings.aiAutoApproveMcpTools,
+      });
 
       try {
         const tools = mergeAgentToolSets(AITools.createTools(project, references), mcpRuntime.tools, skillTools);

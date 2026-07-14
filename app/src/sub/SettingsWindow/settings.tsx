@@ -379,7 +379,7 @@ export const categories = {
     experimental: ["compatibilityMode", "isEnableEntityCollision"],
   },
   ai: {
-    api: ["aiApiBaseUrl", "aiApiKey", "aiModel", "aiContextWindow", "aiShowTokenCount"],
+    api: ["aiApiBaseUrl", "aiApiKey", "aiModel", "aiContextWindow", "aiShowTokenCount", "aiAutoApproveMcpTools"],
   },
 };
 

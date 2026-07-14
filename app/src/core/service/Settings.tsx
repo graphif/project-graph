@@ -122,6 +122,7 @@ export const settingsSchema = z.object({
   aiModel: z.string().default("gemini-2.5-flash"),
   aiContextWindow: z.number().int().nonnegative().default(0),
   aiShowTokenCount: z.boolean().default(false),
+  aiAutoApproveMcpTools: z.boolean().default(false),
   mouseRightDragBackground: z.union([z.literal("cut"), z.literal("moveCamera")]).default("cut"),
   enableSpaceKeyMouseLeftDrag: z.boolean().default(true),
   enableDragAutoAlign: z.boolean().default(false),

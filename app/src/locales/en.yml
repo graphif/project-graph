@@ -1040,6 +1040,10 @@ settings:
     title: Show AI token count
     description: |
       When enabled, shows the token count for AI operations
+  aiAutoApproveMcpTools:
+    title: Automatically approve MCP tools
+    description: |
+      When enabled, MCP tools can run without manual approval. The first launch of a local stdio process still requires separate confirmation.
   soundPitchVariationRange:
     title: Sound Pitch Variation
     description: Controls how much the pitch of sound effects varies randomly. Range for 0-1200 cents (1200 cents = 1 octave, 100 cents = 1 semitone). Higher values create more noticeable variations.
