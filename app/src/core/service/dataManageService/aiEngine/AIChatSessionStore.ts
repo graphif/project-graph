@@ -1,5 +1,7 @@
 import type { AIMessageMetadata } from "@/core/service/dataManageService/aiEngine/AIEngine";
 import type { AIChatSessionMemory } from "@/core/service/dataManageService/aiEngine/AIChatSessionMemory";
+import { isActivatedSkillSnapshot } from "./AISkillSession";
+import type { ActivatedSkillSnapshot } from "./AISkills";
 import { LazyStore } from "@tauri-apps/plugin-store";
 import type { UIMessage } from "ai";
 
@@ -24,6 +26,7 @@ export type StoredAIChatSession = {
   titleManuallyEdited: boolean;
   messages: UIMessage<AIMessageMetadata>[];
   memory?: AIChatSessionMemory;
+  activatedSkills?: ActivatedSkillSnapshot[];
   createdAt: number;
   updatedAt: number;
 };
@@ -104,6 +107,8 @@ function isStoredSession(value: unknown): value is StoredAIChatSession {
     typeof session.titleManuallyEdited === "boolean" &&
     Array.isArray(session.messages) &&
     (session.memory === undefined || isSessionMemory(session.memory)) &&
+    (session.activatedSkills === undefined ||
+      (Array.isArray(session.activatedSkills) && session.activatedSkills.every(isActivatedSkillSnapshot))) &&
     typeof session.createdAt === "number" &&
     typeof session.updatedAt === "number"
   );
@@ -222,6 +227,35 @@ export namespace AIChatSessionStore {
     sessionId: string,
   ): Promise<AIChatSessionMemory | undefined> {
     return (await loadSession(projectUri, sessionId)).memory;
+  }
+
+  export async function getActivatedSkills(projectUri: string, sessionId: string): Promise<ActivatedSkillSnapshot[]> {
+    const snapshots = (await loadSession(projectUri, sessionId)).activatedSkills ?? [];
+    return snapshots.map((snapshot) => ({ ...snapshot, resources: [...snapshot.resources] }));
+  }
+
+  export async function activateSkill(
+    projectUri: string,
+    sessionId: string,
+    snapshot: ActivatedSkillSnapshot,
+  ): Promise<void> {
+    if (!isActivatedSkillSnapshot(snapshot)) throw new Error("AI Skill 会话快照格式无效");
+    await enqueueWrite(async (initializedStore) => {
+      const index = await readIndex(initializedStore, projectUri);
+      if (!index || !index.sessions.some((session) => session.id === sessionId)) {
+        throw new Error("指定的 AI 会话不存在");
+      }
+      const current = await readRequiredSession(initializedStore, projectUri, sessionId);
+      if (current.activatedSkills?.some((activeSkill) => activeSkill.name === snapshot.name)) return;
+      const savedSession: StoredAIChatSession = {
+        ...current,
+        activatedSkills: [...(current.activatedSkills ?? []), { ...snapshot, resources: [...snapshot.resources] }],
+        updatedAt: Date.now(),
+      };
+      await initializedStore.set(getSessionKey(projectUri, sessionId), savedSession);
+      await initializedStore.set(getIndexKey(projectUri), replaceSummary(index, savedSession));
+      await initializedStore.save();
+    });
   }
 
   export async function setSessionMemory(

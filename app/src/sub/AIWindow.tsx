@@ -36,6 +36,7 @@ import {
 } from "@/core/service/dataManageService/aiEngine/AIModelContextWindow";
 import { AIObjectReferenceRegistry } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
 import { AIProjectReferenceStore } from "@/core/service/dataManageService/aiEngine/AIProjectReferenceStore";
+import { getAIToolPartName, isAIToolPart } from "@/core/service/dataManageService/aiEngine/AIToolUIPart";
 import { Settings } from "@/core/service/Settings";
 import { SubWindow } from "@/core/service/SubWindow";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
@@ -49,7 +50,7 @@ import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { code } from "@streamdown/code";
-import type { UIMessage } from "ai";
+import { lastAssistantMessageIsCompleteWithApprovalResponses, type UIMessage } from "ai";
 import { useAtom } from "jotai";
 import {
   Bot,
@@ -516,10 +517,13 @@ function AIChatPanel({
     [onSessionSaved, projectUri, references, session.id],
   );
 
-  const { messages, setMessages, sendMessage, stop, status } = useChat<UIMessage<AIMessageMetadata>>({
+  const { messages, setMessages, sendMessage, stop, status, addToolApprovalResponse } = useChat<
+    UIMessage<AIMessageMetadata>
+  >({
     id: session.id,
     transport: conversation.transport,
     experimental_throttle: 50,
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
     onError: (err) => {
       toast.error(`AI 请求失败: ${err.message || err.toString() || JSON.stringify(err)}`);
     },
@@ -704,6 +708,9 @@ function AIChatPanel({
                 selectedCount={selectedCount}
                 isLast={index === messages.length - 1}
                 requesting={requesting}
+                onToolApproval={async (id, approved) => {
+                  await addToolApprovalResponse({ id, approved });
+                }}
               />
             ))}
           </div>
@@ -875,6 +882,7 @@ function MessageBubble({
   selectedCount,
   isLast,
   requesting,
+  onToolApproval,
 }: {
   message: any;
   components?: Record<string, React.ComponentType<any>>;
@@ -882,6 +890,7 @@ function MessageBubble({
   selectedCount: number;
   isLast: boolean;
   requesting: boolean;
+  onToolApproval: (id: string, approved: boolean) => Promise<void>;
 }) {
   const isUser = message.role === "user";
   const parts = Array.isArray(message.parts) ? message.parts : [];
@@ -914,6 +923,7 @@ function MessageBubble({
                     components={components}
                     isAnimating={!isUser && requesting}
                     showCaret={!isUser && isLast}
+                    onToolApproval={onToolApproval}
                   />
                 ))
               ) : (
@@ -994,11 +1004,13 @@ function MessagePart({
   components,
   isAnimating,
   showCaret,
+  onToolApproval,
 }: {
   part: any;
   components?: Record<string, React.ComponentType<any>>;
   isAnimating?: boolean;
   showCaret?: boolean;
+  onToolApproval: (id: string, approved: boolean) => Promise<void>;
 }) {
   if (part.type === "text") {
     return (
@@ -1018,18 +1030,28 @@ function MessagePart({
       <div className="text-muted-foreground border-l-2 pl-2 text-xs leading-relaxed">{part.text ?? part.reasoning}</div>
     );
   }
-  if (typeof part.type === "string" && part.type.startsWith("tool-")) {
-    return <ToolPart part={part} />;
+  if (isAIToolPart(part)) {
+    return <ToolPart part={part} onToolApproval={onToolApproval} />;
   }
   return (
     <pre className="text-muted-foreground overflow-auto text-xs">unknown part: {JSON.stringify(part, null, 2)}</pre>
   );
 }
 
-function ToolPart({ part }: { part: any }) {
-  const name = part.type.replace(/^tool-/, "");
+function ToolPart({
+  part,
+  onToolApproval,
+}: {
+  part: any;
+  onToolApproval: (id: string, approved: boolean) => Promise<void>;
+}) {
+  const name = getAIToolPartName(part);
   const done = part.state === "output-available";
   const failed = part.state === "output-error";
+
+  if (part.state === "approval-requested") {
+    return <ToolApprovalPart name={name} part={part} onToolApproval={onToolApproval} />;
+  }
 
   return (
     <Collapsible className="group/collapsible">
@@ -1048,12 +1070,63 @@ function ToolPart({ part }: { part: any }) {
   );
 }
 
+function ToolApprovalPart({
+  name,
+  part,
+  onToolApproval,
+}: {
+  name: string;
+  part: any;
+  onToolApproval: (id: string, approved: boolean) => Promise<void>;
+}) {
+  const [submitting, setSubmitting] = useState(false);
+  const respond = async (approved: boolean) => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await onToolApproval(part.approval.id, approved);
+    } catch (error) {
+      toast.error(`提交工具审批失败：${error instanceof Error ? error.message : String(error)}`);
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="text-muted-foreground text-xs">
+        <span className="font-mono">{name}</span> 请求执行
+      </div>
+      <pre className="bg-muted max-h-48 overflow-auto rounded-md p-2 font-mono text-xs select-text">
+        {JSON.stringify(part.input, null, 2)}
+      </pre>
+      <div className="flex justify-end gap-2">
+        <Button
+          size="sm"
+          className="h-7 px-2"
+          variant="outline"
+          disabled={submitting}
+          onClick={() => void respond(false)}
+        >
+          拒绝
+        </Button>
+        <Button size="sm" className="h-7 px-2" disabled={submitting} onClick={() => void respond(true)}>
+          允许本次调用
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function toolStateText(state: string | undefined) {
   switch (state) {
     case "input-streaming":
       return "准备参数";
     case "input-available":
       return "执行中";
+    case "approval-requested":
+      return "等待批准";
+    case "approval-responded":
+      return "已处理批准";
     case "output-available":
       return "完成";
     case "output-error":

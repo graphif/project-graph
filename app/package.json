@@ -19,6 +19,7 @@
     "sync-locales": "tsx ./scripts/sync-locales.ts"
   },
   "dependencies": {
+    "@ai-sdk/mcp": "^1.0.61",
     "@ai-sdk/openai-compatible": "^2.0.45",
     "@ai-sdk/react": "^3.0.176",
     "@ariakit/react": "^0.4.26",
