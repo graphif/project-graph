@@ -15,6 +15,10 @@ import { Rectangle } from "@graphif/shapes";
  *
  */
 export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
+  protected get allowViewerModeInteraction(): boolean {
+    return true;
+  }
+
   private isMovingEntity = false;
   private mouseDownViewLocation = Vector.getZero();
   private shakeDetector = new ShakeDetector();
@@ -24,6 +28,9 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
   private shiftAccumulatedDelta = Vector.getZero();
 
   public mousedown: (event: MouseEvent) => void = (event: MouseEvent) => {
+    if (Settings.viewerMode) {
+      this.isMovingEntity = false;
+    }
     if (event.button !== 0) {
       return;
     }
@@ -55,7 +62,7 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
             obj.isSelected = false;
           });
           outermostLockedAncestor.isSelected = true;
-          this.isMovingEntity = true;
+          this.isMovingEntity = !Settings.viewerMode;
           return;
         }
       } else {
@@ -68,7 +75,7 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
               obj.isSelected = false;
             });
             outermostLockedSection.isSelected = true;
-            this.isMovingEntity = true;
+            this.isMovingEntity = !Settings.viewerMode;
           }
           return;
         }
@@ -82,7 +89,7 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
 
     // 单击选中
     if (clickedStageObject !== null) {
-      this.isMovingEntity = true;
+      this.isMovingEntity = !Settings.viewerMode;
       this.shakeDetector.reset(); // 开始拖拽时重置摇晃检测器
       this.shiftAxisLock = null;
       this.shiftAccumulatedDelta = Vector.getZero();
@@ -139,6 +146,10 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
   };
 
   public mousemove: (event: MouseEvent) => void = (event: MouseEvent) => {
+    if (Settings.viewerMode) {
+      this.isMovingEntity = false;
+      return;
+    }
     if (
       this.project.controller.rectangleSelect.isUsing ||
       this.project.controller.cutting.isUsing ||
@@ -231,6 +242,13 @@ export class ControllerEntityClickSelectAndMoveClass extends ControllerClass {
   };
 
   public mouseup: (event: MouseEvent) => void = (event: MouseEvent) => {
+    if (Settings.viewerMode) {
+      this.isMovingEntity = false;
+      this.shakeDetector.reset();
+      this.shiftAxisLock = null;
+      this.shiftAccumulatedDelta = Vector.getZero();
+      return;
+    }
     if (event.button !== 0) {
       return;
     }

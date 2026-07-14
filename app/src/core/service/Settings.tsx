@@ -38,6 +38,7 @@ export const settingsSchema = z.object({
     .union([z.literal("en"), z.literal("zh_CN"), z.literal("zh_TW"), z.literal("zh_TWC"), z.literal("id")])
     .default("zh_CN"),
   isClassroomMode: z.boolean().default(false),
+  viewerMode: z.boolean().default(false),
   showQuickSettingsToolbar: z.boolean().default(true),
   showRecentFilesThumbnails: z.boolean().default(true),
   windowBackgroundAlpha: z.number().min(0).max(1).default(0.9),

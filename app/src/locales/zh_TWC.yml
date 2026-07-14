@@ -264,6 +264,11 @@ settings:
     description: '用於教學、培訓等場景。
 
       開啟後視窗頂部按鈕會透明，滑鼠懸浮上去會恢復，可以修改進入退出專注模式的快捷鍵'
+  viewerMode:
+    title: 瀏覽模式
+    description: '開啟後禁止透過畫布互動修改專案內容，避免觸控誤操作。
+
+      仍可移動和縮放視野、選取及框選物件。'
   hideCursorInPenMode:
     title: 畫筆模式下隱藏游標
     description: "開啟後，在使用畫筆繪製時會隱藏滑鼠游標"

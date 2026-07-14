@@ -18,6 +18,10 @@ import { LimitLengthQueue, Vector } from "@graphif/data-structures";
  * @param event - 键盘事件
  */
 export class ControllerCameraClass extends ControllerClass {
+  protected get allowViewerModeInteraction(): boolean {
+    return true;
+  }
+
   // 是否正在使用
   public isUsingMouseGrabMove = false;
   private lastMousePressLocation: Vector[] = [Vector.getZero(), Vector.getZero(), Vector.getZero()];

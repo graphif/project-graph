@@ -155,6 +155,11 @@ settings:
     description: |
       For teaching, training.
       When enabled, the buttons at the top of the window will become transparent, and they will revert when the mouse hovers over them. You can customize the shortcut keys to enter and exit focus mode.
+  viewerMode:
+    title: Viewer Mode
+    description: |
+      Prevents canvas interactions from changing project content, avoiding accidental edits on touchscreens.
+      Camera navigation, object selection, and rectangle selection remain available.
   hideCursorInPenMode:
     title: Hide Cursor in Brush Mode
     description: "When enabled, hides the mouse cursor while drawing with the brush tool"

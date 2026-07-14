@@ -207,6 +207,11 @@ settings:
     description: |
       Untuk skenario pengajaran, pelatihan, dll.
       Saat diaktifkan, tombol atas jendela akan transparan, akan pulih saat mouse diarahkan, dapat mengubah pintasan keyboard untuk masuk/keluar mode fokus
+  viewerMode:
+    title: Mode Penampil
+    description: |
+      Mencegah interaksi kanvas mengubah isi proyek agar tidak terjadi perubahan yang tidak disengaja pada layar sentuh.
+      Navigasi kamera, pemilihan objek, dan pemilihan kotak tetap tersedia.
   hideCursorInPenMode:
     title: Sembunyikan Kursor dalam Mode Kuas
     description: "Saat diaktifkan, kursor mouse akan disembunyikan saat menggambar dengan kuas"

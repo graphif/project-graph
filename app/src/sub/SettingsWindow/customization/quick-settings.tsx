@@ -38,7 +38,7 @@ export default function QuickSettingsTab() {
     setQuickSettings(items);
   };
 
-  const handleRemove = async (settingKey: string) => {
+  const handleRemove = async (settingKey: QuickSettingsManager.QuickSettingItem["settingKey"]) => {
     await QuickSettingsManager.removeQuickSetting(settingKey);
     await loadData();
   };

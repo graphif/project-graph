@@ -218,6 +218,11 @@ settings:
     description: |
       用于教学、培训等场景。
       开启后窗口顶部按钮会透明，鼠标悬浮上去会恢复，可以修改进入退出专注模式的快捷键
+  viewerMode:
+    title: 浏览模式
+    description: |
+      开启后禁止通过画布交互修改项目内容，避免触屏误操作。
+      仍可移动和缩放视野、选择及框选对象。
   hideCursorInPenMode:
     title: 画笔模式下隐藏鼠标
     description: "开启后，在使用画笔绘制时会隐藏鼠标指针"

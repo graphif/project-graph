@@ -206,6 +206,7 @@ export const categories = {
     basic: [
       "language",
       "isClassroomMode",
+      "viewerMode",
       "showQuickSettingsToolbar",
       "showRecentFilesThumbnails",
       "showKeyBindHint",

@@ -4,6 +4,10 @@ import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
 export class ControllerRectangleSelectClass extends ControllerClass {
+  protected get allowViewerModeInteraction(): boolean {
+    return true;
+  }
+
   private _isUsing: boolean = false;
   /**
    * 框选框
