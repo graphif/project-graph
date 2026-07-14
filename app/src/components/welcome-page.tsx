@@ -1,6 +1,7 @@
 import { AssetsRepository } from "@/core/service/AssetsRepository";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { onNewDraft, onOpenFile } from "@/core/service/GlobalMenu";
+import { Telemetry } from "@/core/service/Telemetry";
 import { Tutorials } from "@/core/service/Tourials";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
 import { cn } from "@/utils/cn";
@@ -9,9 +10,12 @@ import { isMac } from "@/utils/platform";
 import { getVersion } from "@tauri-apps/api/app";
 import { join, tempDir } from "@tauri-apps/api/path";
 import { writeFile } from "@tauri-apps/plugin-fs";
+import { fetch } from "@tauri-apps/plugin-http";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import {
   AlertTriangle,
+  Bell,
+  Check,
   Earth,
   FilePlus,
   FolderOpen,
@@ -30,6 +34,16 @@ import { cpuInfo } from "tauri-plugin-system-info-api";
 import { URI } from "vscode-uri";
 import SettingsWindow from "../sub/SettingsWindow";
 
+interface Announcement {
+  id: string;
+  title: string;
+  time: string;
+  author: string;
+  content: string;
+}
+
+const CONFIRMED_ANNOUNCEMENTS_KEY = "confirmed-announcements";
+
 export default function WelcomePage() {
   const [recentFiles, setRecentFiles] = useState<RecentFileManager.RecentFile[]>([]);
   const { t } = useTranslation("welcome");
@@ -41,6 +55,8 @@ export default function WelcomePage() {
   const [isAmdWarningDismissed, setIsAmdWarningDismissed] = useState(true);
   const [currentSlogan, setCurrentSlogan] = useState("");
   const [isHoveringSlogan, setIsHoveringSlogan] = useState(false);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcementLoadError, setAnnouncementLoadError] = useState(false);
 
   // 中文 slogan 列表（展示一些有趣特性或技巧）
   const slogans = [
@@ -94,7 +110,31 @@ export default function WelcomePage() {
 
     // 随机选择 slogan
     randomizeSlogan();
+
+    if (import.meta.env.LR_API_BASE_URL) {
+      const abortController = new AbortController();
+      fetch(`${import.meta.env.LR_API_BASE_URL}/api/announcements`, { signal: abortController.signal })
+        .then(async (response) => {
+          if (!response.ok) throw new Error(`获取公告失败：HTTP ${response.status}`);
+          const result = (await response.json()) as Announcement[];
+          const confirmedIds = new Set<string>(JSON.parse(localStorage.getItem(CONFIRMED_ANNOUNCEMENTS_KEY) ?? "[]"));
+          setAnnouncements(result.filter(({ id }) => !confirmedIds.has(id)));
+        })
+        .catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === "AbortError") return;
+          setAnnouncementLoadError(true);
+        });
+      return () => abortController.abort();
+    }
   }, []);
+
+  async function confirmAnnouncement(id: string) {
+    await Telemetry.event("announcement_confirmed", { announcementId: id });
+    const confirmedIds = new Set<string>(JSON.parse(localStorage.getItem(CONFIRMED_ANNOUNCEMENTS_KEY) ?? "[]"));
+    confirmedIds.add(id);
+    localStorage.setItem(CONFIRMED_ANNOUNCEMENTS_KEY, JSON.stringify([...confirmedIds]));
+    setAnnouncements((current) => current.filter((announcement) => announcement.id !== id));
+  }
 
   // 随机选择一条slogan
   const randomizeSlogan = () => {
@@ -159,6 +199,40 @@ export default function WelcomePage() {
                 <X size={14} />
               </button>
             </div>
+          )}
+          {announcementLoadError && (
+            <div className="text-muted-foreground flex items-center gap-2 text-xs">
+              <AlertTriangle className="size-4" />
+              暂时无法获取公告
+            </div>
+          )}
+          {announcements.length > 0 && (
+            <section className="mt-2 grid max-h-64 gap-2 overflow-auto" aria-label="公告">
+              {announcements.map((announcement) => (
+                <article key={announcement.id} className="bg-card/60 rounded-lg border p-3 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <Bell className="text-primary mt-0.5 size-4 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-sm font-medium">{announcement.title}</h2>
+                      <p className="text-muted-foreground mt-0.5 text-xs">
+                        {announcement.author} · {new Date(announcement.time).toLocaleString()}
+                      </p>
+                      <p className="mt-2 max-w-2xl text-sm leading-5 wrap-break-word whitespace-pre-wrap">
+                        {announcement.content}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void confirmAnnouncement(announcement.id)}
+                      className="hover:bg-muted flex shrink-0 cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors"
+                    >
+                      <Check className="size-3.5" />
+                      确认
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </section>
           )}
         </div>
         {/* 底部区域 */}
