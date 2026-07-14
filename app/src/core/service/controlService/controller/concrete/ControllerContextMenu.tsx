@@ -1,6 +1,6 @@
+import { Settings } from "@/core/service/Settings";
 import { Vector } from "@graphif/data-structures";
 import { ControllerClass } from "../ControllerClass";
-import { Settings } from "@/core/service/Settings";
 
 export class ControllerContextMenuClass extends ControllerClass {
   /** view */
@@ -40,7 +40,7 @@ export class ControllerContextMenuClass extends ControllerClass {
     }
 
     if (distance < 5) {
-      this.project.emit("contextmenu", mouseUpLocation);
+      this.project.emit("contextmenu", this.project.canvas.viewToClient(mouseUpLocation));
     }
   };
 }

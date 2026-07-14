@@ -4,10 +4,10 @@ import {
   LogicNodeNameToArgsTipsMap,
   LogicNodeNameToRenderNameMap,
 } from "@/core/service/dataGenerateService/autoComputeEngine/logicNodeNameEnum";
-import { SubWindow } from "@/core/service/SubWindow";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { activeTabAtom } from "@/state";
+import { TabWorkspace } from "@/core/TabWorkspace";
+import { activeResourceTabAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -17,7 +17,7 @@ import { useAtom } from "jotai";
  *
  */
 export default function LogicNodePanel({ className = "" }: { className?: string }) {
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   return (
     <div className={cn("flex h-full w-full flex-col p-2 pb-32 transition-all", className)}>
@@ -60,8 +60,9 @@ export default function LogicNodePanel({ className = "" }: { className?: string 
 }
 
 LogicNodePanel.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "逻辑节点",
+    contextTarget: "activeResourceTab",
     children: <LogicNodePanel />,
     rect: new Rectangle(new Vector(100, 100), new Vector(500, 600)),
     // closeWhenClickOutside: true,

@@ -1,6 +1,6 @@
 import MyContextMenuContent from "@/components/context-menu-content";
+import FloatingTabs from "@/components/floating-tabs";
 import PieMenu from "@/components/pie-menu";
-import RenderSubWindows from "@/components/render-sub-windows";
 import ThemeModeSwitch from "@/components/theme-mode-switch";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
@@ -8,12 +8,15 @@ import { Dialog } from "@/components/ui/dialog";
 import Welcome from "@/components/welcome-page";
 import { Project, ProjectState } from "@/core/Project";
 import { Tab } from "@/core/Tab";
+import { TabWorkspace } from "@/core/TabWorkspace";
 import { GlobalMenu } from "@/core/service/GlobalMenu";
 import { flushSettingsLoadErrors, Settings } from "@/core/service/Settings";
 import { Telemetry } from "@/core/service/Telemetry";
 import { Themes } from "@/core/service/Themes";
 import { globalShortcutManager } from "@/core/service/controlService/shortcutKeysEngine/GlobalShortcutManager";
 import {
+  activeDockedTabAtom,
+  activeResourceTabAtom,
   activeTabAtom,
   isClassroomModeAtom,
   isClickThroughEnabledAtom,
@@ -26,7 +29,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { arch, platform, version } from "@tauri-apps/plugin-os";
 import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { ChevronsLeftRight, Copy, Minus, Pin, PinOff, Square, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -34,6 +37,7 @@ import { cpuInfo } from "tauri-plugin-system-info-api";
 import CommandPalette from "./CommandPalette";
 import { DropWindowCover } from "./DropWindowCover";
 import { ProjectTabs } from "./ProjectTabs";
+import RenderOverlays from "./components/overlay-host";
 import RightToolbar from "./components/right-toolbar";
 import ToolbarContent from "./components/toolbar-content";
 import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
@@ -47,6 +51,8 @@ export default function App() {
 
   const [tabs, setTabs] = useAtom(tabsAtom);
   const [activeTab, setActiveTab] = useAtom(activeTabAtom);
+  const activeDockedTab = useAtomValue(activeDockedTabAtom);
+  const [activeResourceTab] = useAtom(activeResourceTabAtom);
   // const [isWide, setIsWide] = useState(false);
   const [telemetryEventSent, setTelemetryEventSent] = useState(false);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
@@ -70,16 +76,14 @@ export default function App() {
     KeyBindsUI.registerAllUIKeyBinds();
     KeyBindsUI.uiStartListen();
 
-    // 在捕获阶段无条件禁止浏览器/WebView 原生右键菜单弹出。
-    // 使用 capture:true 确保在任何子元素（包括 Radix UI Portal）处理事件之前就拦截，
-    // 防止快速连续右键或右键双击时浏览器菜单与应用自定义菜单混合弹出。
-    // 应用自定义菜单由 mouseup 事件驱动，不依赖 contextmenu 事件，不受影响。
+    // 在捕获阶段禁止浏览器/WebView 原生右键菜单，但允许 Radix ContextMenu 处理自己的触发区域。
     window.addEventListener(
       "contextmenu",
       (event) => {
+        if (event.target instanceof Element && event.target.closest('[data-slot="context-menu-trigger"]')) return;
         event.preventDefault();
       },
-      true, // capture 阶段，优先于所有子元素
+      true,
     );
 
     // 全局错误处理
@@ -196,10 +200,10 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (!activeTab) return;
-    activeTab.loop();
-    tabs.filter((p) => p !== activeTab).forEach((p) => p.pause());
-  }, [activeTab]);
+    if (!activeResourceTab) return;
+    activeResourceTab.loop();
+    tabs.filter((tab) => tab !== activeResourceTab).forEach((tab) => tab.pause());
+  }, [activeResourceTab]);
 
   /**
    * 首次启动时显示欢迎页面
@@ -308,29 +312,11 @@ export default function App() {
         }
       }
     }
-    await tab.dispose();
-    setTabs((tabs) => {
-      const result = tabs.filter((p) => p !== tab);
-      // 如果删除了当前标签页，就切换到下一个标签页
-      if (activeTab === tab && result.length > 0) {
-        const activeTabIndex = tabs.findIndex((p) => p === activeTab);
-        if (activeTabIndex === tabs.length - 1) {
-          // 关闭了最后一个标签页
-          setActiveTab(result[activeTabIndex - 1]);
-        } else {
-          setActiveTab(result[activeTabIndex]);
-        }
-      }
-      // 如果删除了唯一一个标签页，就显示欢迎页面
-      if (result.length === 0) {
-        setActiveTab(undefined);
-      }
-      return result;
-    });
+    await TabWorkspace.close(tab.id);
   };
 
   const handleTabClick = useCallback((tab: Tab) => {
-    setActiveTab(tab);
+    TabWorkspace.focus(tab.id);
   }, []);
 
   const handleTabClose = useCallback(
@@ -346,23 +332,26 @@ export default function App() {
   return (
     <>
       {/* 这是一个底层的 div，用于在拖拽改变窗口大小时填充背景，防止窗口出现透明闪烁 */}
-      <div
-        className="absolute inset-0 z-[-1] bg-[var(--stage-background)]"
-        style={{ opacity: windowBackgroundAlpha }}
-      />
+      <div className="absolute inset-0 z-[-1] bg-(--stage-background)" style={{ opacity: windowBackgroundAlpha }} />
       <div
         className="relative flex h-full w-full flex-col overflow-clip rounded-lg sm:gap-2 sm:p-2"
-        onContextMenu={(e) => e.preventDefault()}
+        onContextMenu={(event) => {
+          if ((event.target as Element).closest('[data-slot="context-menu-trigger"]')) return;
+          event.preventDefault();
+        }}
       >
         {/* Canvas content - NOT zoomed */}
-        {tabs.map((p) => (
-          <div
-            key={p instanceof Project ? p.uri.toString() : p.constructor.name}
-            className={cn("absolute inset-0 overflow-hidden", activeTab === p ? "block" : "hidden")}
-          >
-            {React.createElement(p.getComponent())}
-          </div>
-        ))}
+        {tabs
+          .filter((tab) => tab.layout === "docked")
+          .map((p) => (
+            <div
+              key={p.id}
+              className={cn("absolute inset-0 overflow-hidden", activeDockedTab === p ? "block" : "hidden")}
+              onPointerDownCapture={() => TabWorkspace.focus(p.id)}
+            >
+              {React.createElement(p.getComponent())}
+            </div>
+          ))}
 
         {/* Zoomed UI layer - 缩放所有 DOM UI 元素，不缩放 Canvas 画布 */}
         <div style={zoomStyle} className={zoomClass}>
@@ -413,14 +402,14 @@ export default function App() {
           </ContextMenu>
 
           {/* 底部工具栏 */}
-          {activeTab && <ToolbarContent />}
+          {activeResourceTab && <ToolbarContent />}
 
           {/* 右侧工具栏 */}
-          {activeTab && showQuickSettingsToolbar && <RightToolbar />}
+          {activeResourceTab && showQuickSettingsToolbar && <RightToolbar />}
         </div>
 
         {/* NOT zoomed - 使用固定/全屏定位的组件，缩放会破坏它们的坐标计算 */}
-        <RenderSubWindows zoomStyle={zoomStyle} />
+        <FloatingTabs zoomStyle={zoomStyle} onTabClose={closeTab} />
         <PieMenu />
 
         {/* 右上角关闭的触发角 */}
@@ -430,9 +419,10 @@ export default function App() {
             onClick={() => getCurrentWindow().close()}
           ></div>
         )}
-        {activeTab instanceof Project ? <DropWindowCover project={activeTab} /> : null}
+        {activeResourceTab instanceof Project ? <DropWindowCover project={activeResourceTab} /> : null}
 
         <CommandPalette zoomStyle={zoomStyle} />
+        <RenderOverlays />
       </div>
     </>
   );

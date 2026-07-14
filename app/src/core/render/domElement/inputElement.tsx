@@ -1,10 +1,10 @@
 import { Project, service } from "@/core/Project";
+import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { EntityShakeEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityShakeEffect";
 import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 import { Settings } from "@/core/service/Settings";
-import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
-import { getEnterKey } from "@/utils/keyboardFunctions";
 import { matchSingleEmacsKey } from "@/utils/emacs";
+import { getEnterKey } from "@/utils/keyboardFunctions";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
@@ -33,6 +33,7 @@ export class InputElement {
       inputElement.type = "text";
       inputElement.value = defaultValue;
 
+      inputElement.style.zIndex = "9999";
       inputElement.style.position = "fixed";
       inputElement.style.top = `${location.y}px`;
       inputElement.style.left = `${location.x}px`;
@@ -158,6 +159,7 @@ export class InputElement {
 
       textareaElement.id = "pg-textarea";
       textareaElement.autocomplete = "off"; // 禁止使用自动填充内容，防止影响输入体验
+      textareaElement.style.zIndex = "9999";
       // const initSizeView = this.project.textRenderer.measureMultiLineTextSize(
       //   defaultValue,
       //   Renderer.FONT_SIZE * this.project.camera.currentScale,

@@ -2,25 +2,25 @@ import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/load
 import { Project } from "@/core/Project";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { ReferenceFileScanner } from "@/core/service/dataFileService/ReferenceFileScanner";
-import { CrossFileContentQuery } from "@/core/service/dataGenerateService/crossFileContentQuery";
 import { LogicNodeNameToRenderNameMap } from "@/core/service/dataGenerateService/autoComputeEngine/logicNodeNameEnum";
+import { CrossFileContentQuery } from "@/core/service/dataGenerateService/crossFileContentQuery";
 import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
-import { SubWindow } from "@/core/service/SubWindow";
 import { ReferenceManager } from "@/core/stage/stageManager/concreteMethods/StageReferenceManager";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { TabWorkspace } from "@/core/TabWorkspace";
 import { activeTabAtom, store, tabsAtom } from "@/state";
 import AutoCompleteWindow from "@/sub/AutoCompleteWindow";
 import { DateChecker } from "@/utils/dateChecker";
 import { PathString } from "@/utils/pathString";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
+import Fuse from "fuse.js";
+import katex from "katex";
+import _ from "lodash";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
-import Fuse from "fuse.js";
-import _ from "lodash";
-import katex from "katex";
 
 /**
  * 自动将文本节点转换为引用块（支持自动创建新文件）
@@ -265,7 +265,7 @@ export class LatexPreviewManager {
  * - `[[...]]` — 模糊匹配最近文件名，含 `[[文件名#Section名]]` 格式
  */
 export class AutoCompleteManager {
-  private currentWindowId: string | undefined;
+  private currentTabId: string | undefined;
 
   constructor(private readonly project: Project) {}
 
@@ -288,13 +288,13 @@ export class AutoCompleteManager {
     onSelect: (value: string) => void,
     setWindowId: (id: string) => void,
   ) {
-    if (this.currentWindowId) SubWindow.close(this.currentWindowId);
+    if (this.currentTabId) void TabWorkspace.close(this.currentTabId);
     const windowId = AutoCompleteWindow.open(
       this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
       entries,
       onSelect,
     ).id;
-    this.currentWindowId = windowId;
+    this.currentTabId = windowId;
     setWindowId(windowId);
   }
 

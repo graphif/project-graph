@@ -1,13 +1,28 @@
 import { Dialog } from "@/components/ui/dialog";
+import { Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 import { EventEmitter } from "events";
 import React from "react";
 import { toast } from "sonner";
 import { getOriginalNameOf } from "virtual:original-class-name";
+import type { URI } from "vscode-uri";
 import { FileSystemProvider, Service } from "./interfaces/Service";
 import { Settings } from "./service/Settings";
 import { Telemetry } from "./service/Telemetry";
 
 export abstract class Tab extends React.Component<Record<string, never>, Record<string, never>> {
+  readonly id = crypto.randomUUID();
+  layout: "docked" | "floating" = "docked";
+  floatingRect = new Rectangle(Vector.getZero(), Vector.same(100));
+  zIndex = 0;
+  closing = false;
+  canDock = true;
+  closable = true;
+  closeOnEscape = true;
+  closeWhenClickOutside = false;
+  closeWhenClickInside = false;
+  titleBarOverlay = false;
+
   protected eventEmitter = new EventEmitter();
 
   protected readonly services = new Map<string, Service>();
@@ -43,16 +58,16 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
   }
 
   // EventEmitter proxy methods
-  on(event: string | number, listener: (...args: any[]) => void): this {
+  on(event: string | symbol, listener: (...args: any[]) => void): this {
     this.eventEmitter.on(event, listener);
     return this;
   }
 
-  emit(event: string | number, ...args: any[]): boolean {
+  emit(event: string | symbol, ...args: any[]): boolean {
     return this.eventEmitter.emit(event, ...args);
   }
 
-  removeAllListeners(event?: string | number): this {
+  removeAllListeners(event?: string | symbol): this {
     this.eventEmitter.removeAllListeners(event);
     return this;
   }
@@ -95,7 +110,7 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
     return this.services.get(serviceId) as this[T];
   }
 
-  abstract init(): Promise<void>;
+  async init(): Promise<void> {}
 
   loop() {
     if (this.rafHandle !== -1) return;
@@ -180,5 +195,71 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
     return this.rafHandle !== -1;
   }
 
-  abstract render(): React.ReactNode;
+  render(): React.ReactNode {
+    return null;
+  }
+}
+
+export interface ResourceTab extends Tab {
+  readonly uri: URI;
+}
+
+export function isResourceTab(tab: Tab): tab is ResourceTab {
+  return "uri" in tab;
+}
+
+export interface ComponentTabOptions {
+  title?: string;
+  icon?: React.ComponentType<any> | null;
+  children?: React.ReactNode | ((tab: ComponentTab) => React.ReactNode);
+  contextTarget?: "activeResourceTab";
+  layout?: Tab["layout"];
+  rect?: Rectangle;
+  canDock?: boolean;
+  closable?: boolean;
+  closeOnEscape?: boolean;
+  closeWhenClickOutside?: boolean;
+  closeWhenClickInside?: boolean;
+  titleBarOverlay?: boolean;
+}
+
+export class ComponentTab extends Tab {
+  private readonly tabTitle: string;
+  private readonly tabIcon: React.ComponentType<any> | null;
+  readonly contextTarget: ComponentTabOptions["contextTarget"];
+  children: ComponentTabOptions["children"];
+  private readonly component: React.ComponentType;
+
+  constructor(options: ComponentTabOptions) {
+    super({});
+    this.tabTitle = options.title ?? "";
+    this.tabIcon = options.icon ?? null;
+    this.contextTarget = options.contextTarget;
+    this.children = options.children;
+    this.layout = options.layout ?? "floating";
+    this.floatingRect = options.rect ?? this.floatingRect;
+    this.canDock = options.canDock ?? true;
+    this.closable = options.closable ?? true;
+    this.closeOnEscape = options.closeOnEscape ?? true;
+    this.closeWhenClickOutside = options.closeWhenClickOutside ?? false;
+    this.closeWhenClickInside = options.closeWhenClickInside ?? false;
+    this.titleBarOverlay = options.titleBarOverlay ?? false;
+
+    const tab = this;
+    this.component = function ComponentTabContent() {
+      return <>{typeof tab.children === "function" ? tab.children(tab) : tab.children}</>;
+    };
+  }
+
+  override get title() {
+    return this.tabTitle;
+  }
+
+  override get icon() {
+    return this.tabIcon;
+  }
+
+  getComponent(): React.ComponentType {
+    return this.component;
+  }
 }

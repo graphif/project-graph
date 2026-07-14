@@ -1,12 +1,12 @@
-import { Project } from "@/core/Project";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
+import { Project } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
-import { SubWindow } from "@/core/service/SubWindow";
-import { activeTabAtom } from "@/state";
+import { TabWorkspace } from "@/core/TabWorkspace";
+import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { save } from "@tauri-apps/plugin-dialog";
@@ -17,7 +17,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export default function ExportPngWindow() {
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
   const [scale, setScale] = useState(1);
@@ -166,8 +166,9 @@ export default function ExportPngWindow() {
 }
 
 ExportPngWindow.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "导出 PNG",
+    contextTarget: "activeResourceTab",
     children: <ExportPngWindow />,
     rect: new Rectangle(new Vector(100, 100), new Vector(600, 700)),
   });

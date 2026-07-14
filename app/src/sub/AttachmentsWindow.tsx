@@ -1,11 +1,11 @@
-import { Project, ProjectState } from "@/core/Project";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Dialog } from "@/components/ui/dialog";
 import { Popover } from "@/components/ui/popover";
-import { SubWindow } from "@/core/service/SubWindow";
-import { activeTabAtom } from "@/state";
+import { Project, ProjectState } from "@/core/Project";
+import { TabWorkspace } from "@/core/TabWorkspace";
+import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { open, save } from "@tauri-apps/plugin-dialog";
@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function AttachmentsWindow() {
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
   const [attachments, setAttachments] = useState(new Map<string, Blob>());
@@ -175,8 +175,9 @@ function formatBytes(bytes: number, decimals = 2): string {
 }
 
 AttachmentsWindow.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "附件管理器",
+    contextTarget: "activeResourceTab",
     children: <AttachmentsWindow />,
     rect: new Rectangle(new Vector(100, 100), new Vector(300, 600)),
   });

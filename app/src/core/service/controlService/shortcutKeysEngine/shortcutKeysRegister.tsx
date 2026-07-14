@@ -5,7 +5,6 @@ import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { ViewFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewFlashEffect";
 import { ViewOutlineFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewOutlineFlashEffect";
 import { Settings } from "@/core/service/Settings";
-import { SubWindow } from "@/core/service/SubWindow";
 import { Themes } from "@/core/service/Themes";
 import { PenStrokeMethods } from "@/core/stage/stageManager/basicMethods/PenStrokeMethods";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
@@ -17,6 +16,7 @@ import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlo
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
+import { TabWorkspace } from "@/core/TabWorkspace";
 import { TestTab } from "@/core/TestTab";
 import { activeTabAtom, commandPaletteVisibleAtom, isWindowMaxsizedAtom, store, tabsAtom } from "@/state";
 import { LogicalSize } from "@tauri-apps/api/dpi";
@@ -388,8 +388,8 @@ export const allKeyBinds: KeyBindItem[] = [
     icon: X,
     when: whenAlways,
     onPress: () => {
-      if (!SubWindow.hasOpenWindows()) return;
-      SubWindow.closeAll();
+      if (!TabWorkspace.hasOpenFloatingTabs()) return;
+      TabWorkspace.closeAllFloating();
     },
   },
   {

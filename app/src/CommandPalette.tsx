@@ -13,11 +13,11 @@ import {
   CommandShortcut,
 } from "./components/ui/command";
 import { Project } from "./core/Project";
-import { activeTabAtom, commandPaletteVisibleAtom } from "./state";
+import { activeResourceTabAtom, commandPaletteVisibleAtom } from "./state";
 
 export default function CommandPalette({ zoomStyle }: { zoomStyle?: React.CSSProperties }) {
   const [commandPaletteVisible, setCommandPaletteVisible] = useAtom(commandPaletteVisibleAtom);
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const { t } = useTranslation("keyBinds");
   const uiKeyBinds = KeyBindsUI.use();
 

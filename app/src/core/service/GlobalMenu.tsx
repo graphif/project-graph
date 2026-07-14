@@ -3,8 +3,9 @@ import { Dialog } from "@/components/ui/dialog";
 import { Extension } from "@/core/extension/Extension";
 import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project, ProjectState } from "@/core/Project";
+import { isResourceTab } from "@/core/Tab";
 import { TabFactory } from "@/core/TabFactory";
-import { activeTabAtom, store, tabsAtom } from "@/state";
+import { activeResourceTabAtom, activeTabAtom, store, tabsAtom } from "@/state";
 import { PathString } from "@/utils/pathString";
 import { isMac } from "@/utils/platform";
 import { ensurePrgThumbnailCached } from "@/utils/readPrgThumbnail";
@@ -43,6 +44,7 @@ export async function onNewDraft() {
   loadAllServicesAfterInit(project);
   store.set(tabsAtom, [...store.get(tabsAtom), project]);
   store.set(activeTabAtom, project);
+  store.set(activeResourceTabAtom, project);
 }
 
 export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise<Project | undefined> {
@@ -68,6 +70,7 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
         .find((p) => (p instanceof Project || p instanceof Extension) && p.uri.toString() === uri.toString())!,
     );
     const tab = store.get(activeTabAtom);
+    if (tab && isResourceTab(tab)) store.set(activeResourceTabAtom, tab);
     const activeProject = tab instanceof Project ? tab : undefined;
     if (activeProject) activeProject.loop();
     // const activeExtension = tab instanceof Extension ? tab : undefined;

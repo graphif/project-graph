@@ -2,13 +2,11 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
 import * as React from "react";
 
+import { OverlayHost } from "@/components/overlay-host";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { SubWindow } from "@/core/service/SubWindow";
 import { cn } from "@/utils/cn";
-import { Vector } from "@graphif/data-structures";
-import { Rectangle } from "@graphif/shapes";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { toast } from "sonner";
 
@@ -117,7 +115,7 @@ function DialogDescription({ className, ...props }: React.ComponentProps<typeof 
 
 Dialog.confirm = (title = "你确定？", description = "", { destructive = false } = {}): Promise<boolean> => {
   return new Promise((resolve) => {
-    function Component({ winId }: { winId?: string }) {
+    function Component({ overlayId }: { overlayId?: string }) {
       const [open, setOpen] = React.useState(true);
 
       return (
@@ -137,7 +135,7 @@ Dialog.confirm = (title = "你确定？", description = "", { destructive = fals
                     resolve(false);
                     setOpen(false);
                     setTimeout(() => {
-                      SubWindow.close(winId!);
+                      OverlayHost.close(overlayId!);
                     }, 500);
                   }}
                 >
@@ -149,7 +147,7 @@ Dialog.confirm = (title = "你确定？", description = "", { destructive = fals
                     resolve(true);
                     setOpen(false);
                     setTimeout(() => {
-                      SubWindow.close(winId!);
+                      OverlayHost.close(overlayId!);
                     }, 500);
                   }}
                 >
@@ -162,12 +160,7 @@ Dialog.confirm = (title = "你确定？", description = "", { destructive = fals
       );
     }
 
-    SubWindow.create({
-      titleBarOverlay: true,
-      closable: false,
-      rect: new Rectangle(Vector.same(100), Vector.same(-1)),
-      children: <Component />,
-    });
+    OverlayHost.open(<Component />);
   });
 };
 
@@ -177,7 +170,7 @@ Dialog.input = (
   { defaultValue = "", placeholder = "...", destructive = false, multiline = false } = {},
 ): Promise<string | undefined> => {
   return new Promise((resolve) => {
-    function Component({ winId }: { winId?: string }) {
+    function Component({ overlayId }: { overlayId?: string }) {
       const [open, setOpen] = React.useState(true);
       const [value, setValue] = React.useState(defaultValue);
       const InputComponent = multiline ? Textarea : Input;
@@ -199,7 +192,7 @@ Dialog.input = (
                     resolve(value);
                     setOpen(false);
                     setTimeout(() => {
-                      SubWindow.close(winId!);
+                      OverlayHost.close(overlayId!);
                     }, 500);
                   } else if (e.key === "Escape") {
                     e.preventDefault();
@@ -207,7 +200,7 @@ Dialog.input = (
                     resolve(undefined);
                     setOpen(false);
                     setTimeout(() => {
-                      SubWindow.close(winId!);
+                      OverlayHost.close(overlayId!);
                     }, 500);
                   }
                 }}
@@ -219,7 +212,7 @@ Dialog.input = (
                     resolve(undefined);
                     setOpen(false);
                     setTimeout(() => {
-                      SubWindow.close(winId!);
+                      OverlayHost.close(overlayId!);
                     }, 500);
                   }}
                 >
@@ -231,7 +224,7 @@ Dialog.input = (
                     resolve(value);
                     setOpen(false);
                     setTimeout(() => {
-                      SubWindow.close(winId!);
+                      OverlayHost.close(overlayId!);
                     }, 500);
                   }}
                 >
@@ -244,12 +237,7 @@ Dialog.input = (
       );
     }
 
-    SubWindow.create({
-      titleBarOverlay: true,
-      closable: false,
-      rect: new Rectangle(Vector.same(100), Vector.same(-1)),
-      children: <Component />,
-    });
+    OverlayHost.open(<Component />);
   });
 };
 
@@ -265,7 +253,7 @@ Dialog.buttons = <
   buttons: Buttons,
 ): Promise<Buttons[number]["id"]> => {
   return new Promise((resolve) => {
-    function Component({ winId }: { winId?: string }) {
+    function Component({ overlayId }: { overlayId?: string }) {
       const [open, setOpen] = React.useState(true);
 
       return (
@@ -287,7 +275,7 @@ Dialog.buttons = <
                       resolve(id);
                       setOpen(false);
                       setTimeout(() => {
-                        SubWindow.close(winId!);
+                        OverlayHost.close(overlayId!);
                       }, 500);
                     }}
                   >
@@ -301,18 +289,13 @@ Dialog.buttons = <
       );
     }
 
-    SubWindow.create({
-      titleBarOverlay: true,
-      closable: false,
-      rect: new Rectangle(Vector.same(100), Vector.same(-1)),
-      children: <Component />,
-    });
+    OverlayHost.open(<Component />);
   });
 };
 
 Dialog.copy = (title = "导出成功", description = "", value = ""): Promise<void> => {
   return new Promise((resolve) => {
-    function Component({ winId }: { winId?: string }) {
+    function Component({ overlayId }: { overlayId?: string }) {
       const [open, setOpen] = React.useState(true);
 
       return (
@@ -337,7 +320,7 @@ Dialog.copy = (title = "导出成功", description = "", value = ""): Promise<vo
                     resolve();
                     setOpen(false);
                     setTimeout(() => {
-                      SubWindow.close(winId!);
+                      OverlayHost.close(overlayId!);
                     }, 500);
                   }}
                 >
@@ -350,12 +333,7 @@ Dialog.copy = (title = "导出成功", description = "", value = ""): Promise<vo
       );
     }
 
-    SubWindow.create({
-      titleBarOverlay: true,
-      closable: false,
-      rect: new Rectangle(Vector.same(100), Vector.same(-1)),
-      children: <Component />,
-    });
+    OverlayHost.open(<Component />);
   });
 };
 

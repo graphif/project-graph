@@ -6,8 +6,8 @@ import { DragFileIntoStageEngine } from "@/core/service/dataManageService/dragFi
 import { SoundService } from "@/core/service/feedbackService/SoundService";
 import { onOpenFile } from "@/core/service/GlobalMenu";
 import { Settings } from "@/core/service/Settings";
-import { SubWindow } from "@/core/service/SubWindow";
-import { activeTabAtom } from "@/state";
+import { TabWorkspace } from "@/core/TabWorkspace";
+import { activeResourceTabAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { PathString } from "@/utils/pathString";
 import { isMac } from "@/utils/platform";
@@ -137,8 +137,8 @@ function FileThumbnail({ fsPath, refreshVersion }: { fsPath: string; refreshVers
  * 最近文件面板按钮
  * @returns
  */
-export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
-  const [tab] = useAtom(activeTabAtom);
+export default function RecentFilesWindow({ tabId }: { tabId: string }) {
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   const [showThumbnails] = Settings.use("showRecentFilesThumbnails");
   /**
@@ -254,7 +254,7 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
   const checkoutFile = async (file: RecentFileManager.RecentFile) => {
     try {
       await onOpenFile(file.uri, "历史界面-最近打开的文件");
-      SubWindow.close(winId);
+      void TabWorkspace.close(tabId);
     } catch (error) {
       toast.error(error as string);
     }
@@ -534,7 +534,7 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
           onChange={onInputChange}
           onKeyDown={(e) => {
             if (e.key === "Escape") {
-              SubWindow.close(winId);
+              void TabWorkspace.close(tabId);
             }
             if (e.key === "Enter") {
               const native = e.nativeEvent as unknown as { isComposing?: boolean; keyCode?: number };
@@ -782,9 +782,10 @@ export default function RecentFilesWindow({ winId = "" }: { winId?: string }) {
 }
 
 RecentFilesWindow.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "最近打开的文件",
-    children: <RecentFilesWindow />,
+    contextTarget: "activeResourceTab",
+    children: (tab) => <RecentFilesWindow tabId={tab.id} />,
     rect: new Rectangle(new Vector(50, 50), new Vector(window.innerWidth - 100, window.innerHeight - 100)),
     // 不要点击外面就关闭当前面板，不太好用
     // closeWhenClickOutside: true,

@@ -1,5 +1,7 @@
 import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
+import { activeTabAtom, store } from "@/state";
+import { Vector } from "@graphif/data-structures";
 
 /**
  * 将Canvas标签和里面的ctx捏在一起封装成一个类
@@ -7,6 +9,7 @@ import { Settings } from "@/core/service/Settings";
 @service("canvas")
 export class Canvas {
   ctx: CanvasRenderingContext2D;
+  private resizeObserver?: ResizeObserver;
 
   constructor(
     private readonly project: Project,
@@ -24,6 +27,7 @@ export class Canvas {
     // 重定向键盘事件
     element.addEventListener("focus", () => element.blur());
     const shouldRedirectKeyboardEvent = () =>
+      store.get(activeTabAtom) === this.project &&
       !(
         document.activeElement?.tagName === "INPUT" ||
         document.activeElement?.tagName === "TEXTAREA" ||
@@ -84,16 +88,41 @@ export class Canvas {
   }
 
   mount(wrapper: HTMLDivElement) {
+    this.resizeObserver?.disconnect();
     wrapper.innerHTML = "";
     wrapper.appendChild(this.element);
     // 监听画布大小变化
-    const resizeObserver = new ResizeObserver(() => {
+    this.resizeObserver = new ResizeObserver(() => {
       this.project.renderer.resizeWindow(wrapper.clientWidth, wrapper.clientHeight);
     });
-    resizeObserver.observe(wrapper);
+    this.resizeObserver.observe(wrapper);
+  }
+
+  clientToView(clientX: number, clientY: number) {
+    const rect = this.element.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return new Vector(clientX - rect.left, clientY - rect.top);
+    return new Vector(
+      ((clientX - rect.left) * this.element.clientWidth) / rect.width,
+      ((clientY - rect.top) * this.element.clientHeight) / rect.height,
+    );
+  }
+
+  viewToClient(location: Vector) {
+    const rect = this.element.getBoundingClientRect();
+    const scale = this.viewToClientScale();
+    return new Vector(rect.left + location.x * scale.x, rect.top + location.y * scale.y);
+  }
+
+  viewToClientScale() {
+    const rect = this.element.getBoundingClientRect();
+    return new Vector(
+      this.element.clientWidth === 0 ? 1 : rect.width / this.element.clientWidth,
+      this.element.clientHeight === 0 ? 1 : rect.height / this.element.clientHeight,
+    );
   }
 
   dispose() {
+    this.resizeObserver?.disconnect();
     this.element.remove();
   }
 }

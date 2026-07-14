@@ -4,12 +4,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Project } from "@/core/Project";
 import type { AIMessageMetadata } from "@/core/service/dataManageService/aiEngine/AIEngine";
 import { Settings } from "@/core/service/Settings";
-import { SubWindow } from "@/core/service/SubWindow";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { activeTabAtom } from "@/state";
+import { TabWorkspace } from "@/core/TabWorkspace";
+import { activeResourceTabAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { useChat } from "@ai-sdk/react";
 import { Color, Vector } from "@graphif/data-structures";
@@ -33,8 +33,8 @@ export function setAIWindowInitialText(text: string, prompt?: string) {
   pendingInitialPrompt = prompt || null;
 }
 
-export default function AIWindow({ winId = "" }: { winId?: string }) {
-  const [tab] = useAtom(activeTabAtom);
+export default function AIWindow({ tabId }: { tabId: string }) {
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
 
   if (!project) {
@@ -49,7 +49,7 @@ export default function AIWindow({ winId = "" }: { winId?: string }) {
     );
   }
 
-  return <AIChatPanel key={project.uri.toString()} project={project} winId={winId} />;
+  return <AIChatPanel key={project.uri.toString()} project={project} tabId={tabId} />;
 }
 
 const UUID_V4_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -99,7 +99,7 @@ function createAnswerNode(message: UIMessage, project: Project) {
   project.camera.bombMove(node.geometryCenter);
 }
 
-function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
+function AIChatPanel({ project, tabId }: { project: Project; tabId: string }) {
   const [inputValue, setInputValue] = useState("");
   const messagesElRef = useRef<HTMLDivElement>(null);
   const [showTokenCount] = Settings.use("aiShowTokenCount");
@@ -224,7 +224,7 @@ function AIChatPanel({ project, winId }: { project: Project; winId: string }) {
         </div>
         <X
           className="text-muted-foreground hover:text-foreground size-5 cursor-pointer"
-          onClick={() => SubWindow.close(winId)}
+          onClick={() => void TabWorkspace.close(tabId)}
         />
       </div>
 
@@ -513,12 +513,13 @@ function toolStateText(state: string | undefined) {
 }
 
 AIWindow.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "",
+    contextTarget: "activeResourceTab",
     closable: false,
     titleBarOverlay: true,
     closeOnEscape: false,
-    children: <AIWindow />,
+    children: (tab) => <AIWindow tabId={tab.id} />,
     rect: new Rectangle(new Vector(8, 88), new Vector(380, window.innerHeight - 96)),
   });
 };

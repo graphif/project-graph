@@ -3,7 +3,7 @@ import { Project } from "@/core/Project";
 import { KeyBindIcon } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { Settings } from "@/core/service/Settings";
 import { Themes } from "@/core/service/Themes";
-import { activeTabAtom, store, tabsAtom } from "@/state";
+import { activeResourceTabAtom, store, tabsAtom } from "@/state";
 import { FormWindow } from "@/sub/FormWindow";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -198,11 +198,11 @@ export function extensionHostApiFactory(extension: Extension) {
         .map((it) => proxy(it));
     },
     async tabs_getCurrent(): Promise<import("../../Tab").Tab | null> {
-      const activeTab = store.get(activeTabAtom);
+      const activeTab = store.get(activeResourceTabAtom);
       return activeTab ? proxy(activeTab) : null;
     },
     async tabs_getCurrentProject(): Promise<Project | null> {
-      const activeTab = store.get(activeTabAtom);
+      const activeTab = store.get(activeResourceTabAtom);
       if (activeTab instanceof Project) {
         return proxy(activeTab);
       }
@@ -229,7 +229,7 @@ export function extensionHostApiFactory(extension: Extension) {
     },
 
     async entity_create(typeName: string, data: any, location: { x: number; y: number }): Promise<ExtensionEntity> {
-      const activeTab = store.get(activeTabAtom);
+      const activeTab = store.get(activeResourceTabAtom);
       if (!(activeTab instanceof Project)) {
         throw new Error("当前标签页不是一个项目，无法创建实体");
       }

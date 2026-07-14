@@ -1,19 +1,19 @@
 import { Button } from "@/components/ui/button";
-import { SubWindow } from "@/core/service/SubWindow";
-import { activeTabAtom } from "@/state";
+import { Project } from "@/core/Project";
+import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
+import { TabWorkspace } from "@/core/TabWorkspace";
+import { activeResourceTabAtom } from "@/state";
+import { PathString } from "@/utils/pathString";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { RefreshCcw } from "lucide-react";
 import { useAtom } from "jotai";
-import { useState, useEffect } from "react";
-import { PathString } from "@/utils/pathString";
+import { RefreshCcw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { URI } from "vscode-uri";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
-import { Project } from "@/core/Project";
 
 export default function ReferencesWindow(props: { currentProjectFileName: string }) {
   const currentProjectFileName = props.currentProjectFileName;
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
 
@@ -105,7 +105,7 @@ export default function ReferencesWindow(props: { currentProjectFileName: string
 export function SectionReferencePanel(props: { currentProjectFileName: string; sectionName: string }) {
   // const currentProjectFileName = props.currentProjectFileName;
   const sectionName = props.sectionName;
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
   const [references, setReferences] = useState(project.references);
@@ -153,8 +153,9 @@ export function SectionReferencePanel(props: { currentProjectFileName: string; s
 
 SectionReferencePanel.open = (currentURI: URI, sectionName: string, sectionViewLocation: Vector) => {
   const fileName = PathString.getFileNameFromPath(currentURI.path);
-  SubWindow.create({
+  TabWorkspace.create({
     title: `引用它的地方`,
+    contextTarget: "activeResourceTab",
     children: <SectionReferencePanel currentProjectFileName={fileName} sectionName={sectionName} />,
     rect: new Rectangle(sectionViewLocation, new Vector(150, 150)),
     closeWhenClickOutside: true,
@@ -164,8 +165,9 @@ SectionReferencePanel.open = (currentURI: URI, sectionName: string, sectionViewL
 
 ReferencesWindow.open = (currentURI: URI) => {
   const fileName = PathString.getFileNameFromPath(currentURI.path);
-  SubWindow.create({
+  TabWorkspace.create({
     title: "引用管理器：" + fileName,
+    contextTarget: "activeResourceTab",
     children: <ReferencesWindow currentProjectFileName={fileName} />,
     rect: new Rectangle(new Vector(100, 100), new Vector(300, 600)),
   });

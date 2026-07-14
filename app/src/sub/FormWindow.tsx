@@ -3,7 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { SubWindow } from "@/core/service/SubWindow";
+import { TabWorkspace } from "@/core/TabWorkspace";
 import { cn } from "@/utils/cn";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -141,7 +141,7 @@ export function FormWindow(
 
 FormWindow.open = (schema: z.ZodObject, options: FormOptions): Promise<z.infer<typeof schema>> => {
   return new Promise((resolve, reject) => {
-    const win = SubWindow.create({
+    const win = TabWorkspace.create({
       title: options.title,
       children: (
         <FormWindow
@@ -150,11 +150,11 @@ FormWindow.open = (schema: z.ZodObject, options: FormOptions): Promise<z.infer<t
             ...options,
             onConfirm: (data) => {
               resolve(data);
-              SubWindow.close(win.id);
+              void TabWorkspace.close(win.id);
             },
             onCancel: () => {
               reject();
-              SubWindow.close(win.id);
+              void TabWorkspace.close(win.id);
             },
           }}
         />

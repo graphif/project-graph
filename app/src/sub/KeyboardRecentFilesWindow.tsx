@@ -1,12 +1,12 @@
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { onOpenFile } from "@/core/service/GlobalMenu";
-import { SubWindow } from "@/core/service/SubWindow";
+import { TabWorkspace } from "@/core/TabWorkspace";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-export default function KeyboardRecentFilesWindow({ winId = "" }: { winId?: string }) {
+export default function KeyboardRecentFilesWindow({ tabId }: { tabId: string }) {
   const [recentFiles, setRecentFiles] = useState<RecentFileManager.RecentFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -39,7 +39,7 @@ export default function KeyboardRecentFilesWindow({ winId = "" }: { winId?: stri
         if (file.uri) {
           toast(`打开第 ${event.key} 项`);
           onOpenFile(file.uri, "KeyboardRecentFilesWindow");
-          SubWindow.close(winId);
+          void TabWorkspace.close(tabId);
         }
       }
     }
@@ -58,9 +58,9 @@ export default function KeyboardRecentFilesWindow({ winId = "" }: { winId?: stri
 }
 
 KeyboardRecentFilesWindow.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "最近打开的文件",
-    children: <KeyboardRecentFilesWindow />,
+    children: (tab) => <KeyboardRecentFilesWindow tabId={tab.id} />,
     rect: new Rectangle(Vector.same(100), Vector.same(-1)),
     closeWhenClickInside: true,
     closeWhenClickOutside: true,

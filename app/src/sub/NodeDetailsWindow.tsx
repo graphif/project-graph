@@ -9,7 +9,7 @@ import { ListKit } from "@/components/editor/plugins/list-kit";
 import { MathKit } from "@/components/editor/plugins/math-kit";
 import { TableKit } from "@/components/editor/plugins/table-kit";
 import { Editor, EditorContainer } from "@/components/ui/editor";
-import { SubWindow } from "@/core/service/SubWindow";
+import { TabWorkspace } from "@/core/TabWorkspace";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Value } from "platejs";
@@ -48,7 +48,7 @@ export default function NodeDetailsWindow({
 }
 
 NodeDetailsWindow.open = (value?: Value, onChange?: (value: Value) => void) => {
-  SubWindow.create({
+  TabWorkspace.create({
     children: <NodeDetailsWindow value={value} onChange={onChange} />,
     // rect: Rectangle.inCenter(new Vector(innerWidth * 0.625, innerHeight * 0.74)),
     rect: new Rectangle(

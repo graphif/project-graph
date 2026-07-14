@@ -3,10 +3,19 @@ import { Vector } from "@graphif/data-structures";
 export const MouseLocation = {
   x: 0,
   y: 0,
+  clientX: 0,
+  clientY: 0,
   init() {
     window.addEventListener("pointermove", (event) => {
-      MouseLocation.x = event.clientX;
-      MouseLocation.y = event.clientY;
+      MouseLocation.clientX = event.clientX;
+      MouseLocation.clientY = event.clientY;
+      if (event.target instanceof HTMLCanvasElement) {
+        const rect = event.target.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          MouseLocation.x = ((event.clientX - rect.left) * event.target.clientWidth) / rect.width;
+          MouseLocation.y = ((event.clientY - rect.top) * event.target.clientHeight) / rect.height;
+        }
+      }
       // this.project.controller.recordManipulate();
       // 检测是否超出范围
       // TODO: 优化，给每个 Controller 加一个 pointerMoveOutWindowForcedShutdown 方法
@@ -31,5 +40,8 @@ export const MouseLocation = {
    */
   vector(): Vector {
     return new Vector(this.x, this.y);
+  },
+  clientVector(): Vector {
+    return new Vector(this.clientX, this.clientY);
   },
 };

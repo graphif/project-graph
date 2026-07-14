@@ -1,5 +1,5 @@
 import Tree from "@/components/ui/tree";
-import { SubWindow } from "@/core/service/SubWindow";
+import { TabWorkspace } from "@/core/TabWorkspace";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
@@ -17,7 +17,7 @@ export default function TestWindow() {
 }
 
 TestWindow.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "测试",
     children: <TestWindow />,
     rect: new Rectangle(new Vector(100, 100), new Vector(150, 500)),

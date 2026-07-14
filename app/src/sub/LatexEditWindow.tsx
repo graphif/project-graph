@@ -1,8 +1,8 @@
-import { Project } from "@/core/Project";
 import { Button } from "@/components/ui/button";
+import { Project } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { SubWindow } from "@/core/service/SubWindow";
 import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
+import { TabWorkspace } from "@/core/TabWorkspace";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import katex from "katex";
@@ -89,8 +89,8 @@ function LatexEditWindowContent({
  */
 LatexEditWindowContent.open = (project: Project, node: LatexNode) => {
   // 在节点上方或鼠标位置弹出
-  const mousePos = MouseLocation.vector().clone();
-  const win = SubWindow.create({
+  const mousePos = MouseLocation.clientVector();
+  const win = TabWorkspace.create({
     title: "编辑 LaTeX 公式",
     rect: new Rectangle(mousePos, new Vector(360, 260)),
     closeWhenClickOutside: false,
@@ -98,9 +98,8 @@ LatexEditWindowContent.open = (project: Project, node: LatexNode) => {
     children: null, // 先占位，下面再设置（避免循环引用）
   });
 
-  // 重新设置 children，传入 winId 用于关闭
-  const winId = win.id;
-  SubWindow.update(winId, {
+  const tabId = win.id;
+  TabWorkspace.update(tabId, {
     children: (
       <LatexEditWindowContent
         initialLatex={node.latexSource}
@@ -108,7 +107,7 @@ LatexEditWindowContent.open = (project: Project, node: LatexNode) => {
           node.updateLatex(newLatex).then(() => {
             project.historyManager.recordStep();
           });
-          SubWindow.close(winId);
+          void TabWorkspace.close(tabId);
         }}
       />
     ),

@@ -11,7 +11,7 @@ import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/Key
 import { allKeyBinds } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
 import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import { Settings } from "@/core/service/Settings";
-import { activeTabAtom } from "@/state";
+import { activeResourceTabAtom } from "@/state";
 import ColorPaletteWindow from "@/sub/ColorPaletteWindow";
 import ColorWindow from "@/sub/ColorWindow";
 import { Color } from "@graphif/data-structures";
@@ -90,7 +90,7 @@ const SubContent = ContextMenuSubContent;
  * @returns
  */
 export default function MyContextMenuContent() {
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const p = tab instanceof Project ? tab : undefined;
   const { t } = useTranslation("contextMenu");
   const { t: tKeyBind } = useTranslation("keyBinds");

@@ -80,7 +80,7 @@ export class ControllerCameraClass extends ControllerClass {
       // 右键按下
       this.isUsingMouseGrabMove = true;
     }
-    const pressWorldLocation = this.project.renderer.transformView2World(new Vector(event.x, event.y));
+    const pressWorldLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
     // 获取左右中键
     this.lastMousePressLocation[event.button] = pressWorldLocation;
 

@@ -2,7 +2,7 @@ import { Project } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { KeyBindsUI, type UIKeyBind } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { Settings } from "@/core/service/Settings";
-import { activeTabAtom } from "@/state";
+import { activeResourceTabAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { matchEmacsKeyPress, parseSingleEmacsKey, transformedKeys } from "@/utils/emacs";
 import { useAtomValue } from "jotai";
@@ -58,7 +58,7 @@ function getSelectedIndex(center: { x: number; y: number }, x: number, y: number
 }
 
 export default function PieMenu() {
-  const activeTab = useAtomValue(activeTabAtom);
+  const activeTab = useAtomValue(activeResourceTabAtom);
   const activeProject = activeTab instanceof Project ? activeTab : undefined;
   const [openMenu, setOpenMenu] = useState<OpenMenu | null>(null);
   const [enabledItems, setEnabledItems] = useState<boolean[]>([]);
@@ -116,7 +116,8 @@ export default function PieMenu() {
         const release = getReleaseInput(config.trigger);
         if (!release) return false;
 
-        const location = event instanceof MouseEvent ? { x: event.clientX, y: event.clientY } : MouseLocation.vector();
+        const location =
+          event instanceof MouseEvent ? { x: event.clientX, y: event.clientY } : MouseLocation.clientVector();
         const nextOpenMenu = { config, center: clampCenter(location.x, location.y), release };
         const generation = ++availabilityGeneration;
         openMenuRef.current = nextOpenMenu;

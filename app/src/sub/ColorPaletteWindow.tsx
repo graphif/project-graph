@@ -1,7 +1,7 @@
 import { Project } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { SubWindow } from "@/core/service/SubWindow";
-import { activeTabAtom } from "@/state";
+import { TabWorkspace } from "@/core/TabWorkspace";
+import { activeResourceTabAtom } from "@/state";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useAtom } from "jotai";
@@ -16,7 +16,7 @@ interface ColorInfo {
  * 颜色表窗口 - 显示当前文件中所有颜色及其使用数量
  */
 export default function ColorPaletteWindow() {
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   const [colorInfos, setColorInfos] = useState<ColorInfo[]>([]);
 
@@ -103,10 +103,11 @@ export default function ColorPaletteWindow() {
 }
 
 ColorPaletteWindow.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "当前文件颜色表",
+    contextTarget: "activeResourceTab",
     children: <ColorPaletteWindow />,
-    rect: new Rectangle(MouseLocation.vector().clone(), new Vector(400, 400)),
+    rect: new Rectangle(MouseLocation.clientVector(), new Vector(400, 400)),
     closeWhenClickOutside: true,
     closeWhenClickInside: false,
   });

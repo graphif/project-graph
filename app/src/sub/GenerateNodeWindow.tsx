@@ -1,10 +1,10 @@
-import { Project } from "@/core/Project";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { SubWindow } from "@/core/service/SubWindow";
+import { Project } from "@/core/Project";
+import { TabWorkspace } from "@/core/TabWorkspace";
 import { Telemetry } from "@/core/service/Telemetry";
-import { activeTabAtom } from "@/state";
+import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useAtom } from "jotai";
@@ -22,7 +22,7 @@ export default function GenerateNodeTree() {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const activeProject = tab instanceof Project ? tab : undefined;
 
   const handleGenerate = async () => {
@@ -91,7 +91,7 @@ export default function GenerateNodeTree() {
       <div className="flex justify-end gap-2">
         <Button onClick={handleGenerate} disabled={isLoading} className="relative">
           {isLoading && (
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin"></span>
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin"></span>
           )}
           {isLoading ? `${t("actions.generating")}...` : t("actions.confirm")}
         </Button>
@@ -109,7 +109,7 @@ export function GenerateNodeTreeByMarkdown() {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const activeProject = tab instanceof Project ? tab : undefined;
 
   const handleGenerate = async () => {
@@ -165,7 +165,7 @@ export function GenerateNodeTreeByMarkdown() {
       <div className="flex justify-end gap-2">
         <Button onClick={handleGenerate} disabled={isLoading} className="relative">
           {isLoading && (
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin"></span>
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin"></span>
           )}
           {isLoading ? `${t("actions.generating")}...` : t("actions.confirm")}
         </Button>
@@ -175,16 +175,18 @@ export function GenerateNodeTreeByMarkdown() {
 }
 
 GenerateNodeTree.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "生成节点群",
+    contextTarget: "activeResourceTab",
     children: <GenerateNodeTree />,
     rect: new Rectangle(new Vector(100, 100), new Vector(500, 600)),
   });
 };
 
 GenerateNodeTreeByMarkdown.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "通过Markdown生成节点群",
+    contextTarget: "activeResourceTab",
     children: <GenerateNodeTreeByMarkdown />,
     rect: new Rectangle(new Vector(100, 100), new Vector(500, 600)),
   });
@@ -195,7 +197,7 @@ export function GenerateNodeGraph() {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const activeProject = tab instanceof Project ? tab : undefined;
 
   const handleGenerate = async () => {
@@ -246,7 +248,7 @@ export function GenerateNodeGraph() {
       <div className="flex justify-end gap-2">
         <Button onClick={handleGenerate} disabled={isLoading} className="relative">
           {isLoading && (
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin"></span>
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin"></span>
           )}
           {isLoading ? `${t("actions.generating")}...` : t("actions.confirm")}
         </Button>
@@ -256,8 +258,9 @@ export function GenerateNodeGraph() {
 }
 
 GenerateNodeGraph.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "生成节点网",
+    contextTarget: "activeResourceTab",
     children: <GenerateNodeGraph />,
     rect: new Rectangle(new Vector(100, 100), new Vector(600, 600)),
   });
@@ -272,7 +275,7 @@ export function GenerateNodeMermaid() {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const activeProject = tab instanceof Project ? tab : undefined;
 
   const handleGenerate = async () => {
@@ -331,7 +334,7 @@ export function GenerateNodeMermaid() {
       <div className="flex justify-end gap-2">
         <Button onClick={handleGenerate} disabled={isLoading} className="relative">
           {isLoading && (
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin"></span>
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-spin"></span>
           )}
           {isLoading ? `${t("actions.generating")}...` : t("actions.confirm")}
         </Button>
@@ -341,8 +344,9 @@ export function GenerateNodeMermaid() {
 }
 
 GenerateNodeMermaid.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "生成框嵌套网状结构(Mermaid格式)",
+    contextTarget: "activeResourceTab",
     children: <GenerateNodeMermaid />,
     rect: new Rectangle(new Vector(100, 100), new Vector(600, 600)),
   });

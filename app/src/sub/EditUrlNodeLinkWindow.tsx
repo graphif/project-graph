@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SubWindow } from "@/core/service/SubWindow";
+import { TabWorkspace } from "@/core/TabWorkspace";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useState } from "react";
@@ -35,16 +35,16 @@ export default function EditUrlNodeLinkWindow({
 }
 
 EditUrlNodeLinkWindow.open = (initialUrl: string, onConfirm: (newUrl: string) => void) => {
-  const win = SubWindow.create({
+  const win = TabWorkspace.create({
     title: "",
     children: (
       <EditUrlNodeLinkWindow
         initialUrl={initialUrl}
         onConfirm={(newUrl) => {
-          SubWindow.close(win.id);
+          void TabWorkspace.close(win.id);
           onConfirm(newUrl);
         }}
-        onCancel={() => SubWindow.close(win.id)}
+        onCancel={() => void TabWorkspace.close(win.id)}
       />
     ),
     rect: new Rectangle(new Vector(200, 200), new Vector(420, 160)),

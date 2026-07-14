@@ -16,7 +16,7 @@ import { allKeyBinds } from "@/core/service/controlService/shortcutKeysEngine/sh
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { onOpenFile } from "@/core/service/GlobalMenu";
 import { Settings } from "@/core/service/Settings";
-import { activeTabAtom } from "@/state";
+import { activeResourceTabAtom } from "@/state";
 import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
 import { PathString } from "@/utils/pathString";
 import { useAtom } from "jotai";
@@ -88,7 +88,7 @@ function RecentFilesSection() {
 // ----------------- 主组件 -----------------
 
 export default function GlobalMenuContent() {
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const activeProject = tab instanceof Project ? tab : undefined;
   const [config] = Settings.use("globalMenuConfig");
   const { t } = useTranslation("keyBinds");

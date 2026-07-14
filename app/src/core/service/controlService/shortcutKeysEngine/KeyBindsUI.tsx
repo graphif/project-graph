@@ -1,5 +1,5 @@
 import { Project } from "@/core/Project";
-import { activeTabAtom, store } from "@/state";
+import { activeResourceTabAtom, activeTabAtom, store } from "@/state";
 import {
   formatEmacsKey,
   matchEmacsKeyPress,
@@ -71,6 +71,11 @@ export namespace KeyBindsUI {
   }
 
   function getActiveProject(): Project | undefined {
+    const tab = store.get(activeResourceTabAtom);
+    return tab instanceof Project ? tab : undefined;
+  }
+
+  function getFocusedProject(): Project | undefined {
     const tab = store.get(activeTabAtom);
     return tab instanceof Project ? tab : undefined;
   }
@@ -547,7 +552,7 @@ export namespace KeyBindsUI {
     }
     if (["control", "alt", "shift", "meta"].includes(event.key.toLowerCase())) return;
 
-    const activeProject = getActiveProject();
+    const activeProject = getFocusedProject();
 
     enqueue(event);
     if (await interceptInput(event)) {
@@ -597,7 +602,7 @@ export namespace KeyBindsUI {
     for (const interceptor of inputInterceptors) {
       await interceptor.onKeyUp?.(event);
     }
-    const activeProject = getActiveProject();
+    const activeProject = getFocusedProject();
     const key = event.key;
 
     // ——持续型快捷键松开——

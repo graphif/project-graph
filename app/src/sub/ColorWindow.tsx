@@ -1,12 +1,12 @@
-import { Project } from "@/core/Project";
 import { Button } from "@/components/ui/button";
+import { Project } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { ColorManager } from "@/core/service/feedbackService/ColorManager";
-import { SubWindow } from "@/core/service/SubWindow";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { activeTabAtom } from "@/state";
+import { TabWorkspace } from "@/core/TabWorkspace";
+import { activeResourceTabAtom } from "@/state";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useAtom } from "jotai";
@@ -21,7 +21,7 @@ import { toast } from "sonner";
  */
 export default function ColorWindow() {
   const [currentColors, setCurrentColors] = useState<Color[]>([]);
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
 
   useEffect(() => {
@@ -124,10 +124,11 @@ export default function ColorWindow() {
 }
 
 ColorWindow.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "调色盘",
+    contextTarget: "activeResourceTab",
     children: <ColorWindow />,
-    rect: new Rectangle(MouseLocation.vector().clone(), new Vector(256, 256)),
+    rect: new Rectangle(MouseLocation.clientVector(), new Vector(256, 256)),
     closeWhenClickOutside: true,
     closeWhenClickInside: true,
   });
@@ -148,7 +149,7 @@ export function ColorManagerPanel() {
   });
   const [preAddColor, setPreAddColor] = useState("#000000");
   const [currentColorList, setCurrentColorList] = useState<Color[]>([]);
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
 
   return (
@@ -243,10 +244,11 @@ export function ColorManagerPanel() {
 }
 
 ColorManagerPanel.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "调色盘",
+    contextTarget: "activeResourceTab",
     children: <ColorManagerPanel />,
-    rect: new Rectangle(MouseLocation.vector().clone(), new Vector(256, 500)),
+    rect: new Rectangle(MouseLocation.clientVector(), new Vector(256, 500)),
     closeWhenClickOutside: false,
     closeWhenClickInside: false,
   });

@@ -1,21 +1,21 @@
-import { Project } from "@/core/Project";
 import { Button } from "@/components/ui/button";
-import { SubWindow } from "@/core/service/SubWindow";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Project } from "@/core/Project";
+import { TabWorkspace } from "@/core/TabWorkspace";
+import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
+import { useAtom } from "jotai";
 import { Angry, MousePointerClick, RefreshCcw, Smile, Table, Tags, Telescope } from "lucide-react";
 import React from "react";
-import { useAtom } from "jotai";
-import { activeTabAtom } from "@/state";
 import { toast } from "sonner";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 /**
  * 标签相关面板
  * @param param0
  */
 export default function TagWindow() {
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
 
@@ -171,8 +171,9 @@ export default function TagWindow() {
 }
 
 TagWindow.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "标签管理器",
+    contextTarget: "activeResourceTab",
     children: <TagWindow />,
     rect: new Rectangle(new Vector(100, 100), new Vector(300, 600)),
   });
@@ -182,7 +183,7 @@ TagWindow.open = () => {
  * 单个的标签成一个子窗口
  */
 function LittleTagWindow({ uuid, tagName }: { uuid: string; tagName: string }) {
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
   const onClick = () => {
@@ -197,8 +198,9 @@ function LittleTagWindow({ uuid, tagName }: { uuid: string; tagName: string }) {
 }
 
 LittleTagWindow.open = (uuid: string, tagName: string, height: number, y: number) => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "",
+    contextTarget: "activeResourceTab",
     children: <LittleTagWindow uuid={uuid} tagName={tagName} />,
     rect: new Rectangle(new Vector(100, y), new Vector(150, height)),
   });

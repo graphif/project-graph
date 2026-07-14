@@ -1,24 +1,25 @@
 import { Project, service } from "@/core/Project";
+import { TabWorkspace } from "@/core/TabWorkspace";
+import { Renderer } from "@/core/render/canvas2d/renderer";
+import { Settings } from "@/core/service/Settings";
 import { EntityCreateFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityCreateFlashEffect";
-import { SubWindow } from "@/core/service/SubWindow";
+import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
 import type { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import type { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import type { Edge } from "@/core/stage/stageObject/association/Edge";
-import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
+import { Section } from "@/core/stage/stageObject/entity/Section";
+import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
+import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import NodeDetailsWindow from "@/sub/NodeDetailsWindow";
 import type { Direction } from "@/types/directions";
 import { isDesktop } from "@/utils/platform";
 import { colorInvert, Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";
-import { Settings } from "@/core/service/Settings";
-import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
-import { Renderer } from "@/core/render/canvas2d/renderer";
 import {
   autoChangeTextNodeToLatexNode,
   autoChangeTextNodeToReferenceBlock,
@@ -37,6 +38,14 @@ export class ControllerUtils {
     this.autoComplete = new AutoCompleteManager(project);
   }
 
+  private viewRectangleToClient(rectangle: Rectangle) {
+    const scale = this.project.canvas.viewToClientScale();
+    return new Rectangle(
+      this.project.canvas.viewToClient(rectangle.location),
+      new Vector(rectangle.width * scale.x, rectangle.height * scale.y),
+    );
+  }
+
   /**
    * 编辑节点
    * @param clickedNode
@@ -49,6 +58,8 @@ export class ControllerUtils {
     this.project.entityMoveManager.stopImmediately();
     const rectWorld = clickedNode.collisionBox.getRectangle();
     const rectView = this.project.renderer.transformWorld2View(rectWorld);
+    const rectClient = this.viewRectangleToClient(rectView);
+    const clientScale = this.project.canvas.viewToClientScale();
     // 编辑节点
     const textBeforeEdit = clickedNode.text;
     // 进入编辑状态时，取消所有其他节点的选中，只保留当前节点选中
@@ -66,14 +77,15 @@ export class ControllerUtils {
     }
     const syncTextareaPositionWithNode = (ele: HTMLTextAreaElement) => {
       const currentRectView = this.project.renderer.transformWorld2View(clickedNode.collisionBox.getRectangle());
-      ele.style.left = `${currentRectView.left.toFixed(2)}px`;
-      ele.style.top = `${currentRectView.top.toFixed(2)}px`;
-      ele.style.minWidth = `${currentRectView.width.toFixed(2)}px`;
-      ele.style.minHeight = `${currentRectView.height.toFixed(2)}px`;
+      const currentRectClient = this.viewRectangleToClient(currentRectView);
+      ele.style.left = `${currentRectClient.left.toFixed(2)}px`;
+      ele.style.top = `${currentRectClient.top.toFixed(2)}px`;
+      ele.style.minWidth = `${currentRectClient.width.toFixed(2)}px`;
+      ele.style.minHeight = `${currentRectClient.height.toFixed(2)}px`;
       ele.style.height = "auto";
-      ele.style.height = `${(currentRectView.height + 8).toFixed(2)}px`;
+      ele.style.height = `${(currentRectClient.height + 8 * clientScale.y).toFixed(2)}px`;
       if (clickedNode.sizeAdjust === "manual") {
-        ele.style.width = `${currentRectView.width.toFixed(2)}px`;
+        ele.style.width = `${currentRectClient.width.toFixed(2)}px`;
       }
     };
     const relayoutTreeWhileEditing = () => {
@@ -90,7 +102,7 @@ export class ControllerUtils {
       rootNode.isSelected = false;
       clickedNode.isSelected = true;
     };
-    let lastAutoCompleteWindowId: string;
+    let lastAutoCompleteTabId: string;
     // 实时 LaTeX 预览管理器（输入 $...$ 时在节点上方显示）
     const latexPreview = new LatexPreviewManager();
 
@@ -99,12 +111,12 @@ export class ControllerUtils {
         clickedNode.text,
         async (text, ele) => {
           const currentRequestId = latexPreview.nextRequestId();
-          if (lastAutoCompleteWindowId) {
-            SubWindow.close(lastAutoCompleteWindowId);
+          if (lastAutoCompleteTabId) {
+            void TabWorkspace.close(lastAutoCompleteTabId);
           }
           // 自动补全逻辑
           await this.autoComplete.handle(text, clickedNode, ele, (value) => {
-            lastAutoCompleteWindowId = value;
+            lastAutoCompleteTabId = value;
           });
           // onChange
           clickedNode?.rename(text);
@@ -132,7 +144,7 @@ export class ControllerUtils {
               const currentRectView = this.project.renderer.transformWorld2View(
                 clickedNode.collisionBox.getRectangle(),
               );
-              latexPreview.update(latexContent, currentRectView);
+              latexPreview.update(latexContent, this.viewRectangleToClient(currentRectView));
             }
           } else {
             latexPreview.remove();
@@ -145,32 +157,32 @@ export class ControllerUtils {
           overflow: "hidden",
           whiteSpace: "pre-wrap",
           wordBreak: "break-all",
-          left: `${rectView.left.toFixed(2)}px`,
-          top: `${rectView.top.toFixed(2)}px`,
+          left: `${rectClient.left.toFixed(2)}px`,
+          top: `${rectClient.top.toFixed(2)}px`,
           // ====
           // auto 模式：初始给节点宽度+8作为起始值，adjustSize 会用镜像 div 立即修正
           // manual 模式：宽度固定为节点当前宽度，不扩展
-          width: `${(clickedNode.sizeAdjust === "manual" ? rectView.width : rectView.width + 8).toFixed(2)}px`,
-          minWidth: `${rectView.width.toFixed(2)}px`,
-          minHeight: `${rectView.height.toFixed(2)}px`,
+          width: `${(clickedNode.sizeAdjust === "manual" ? rectClient.width : rectClient.width + 8 * clientScale.x).toFixed(2)}px`,
+          minWidth: `${rectClient.width.toFixed(2)}px`,
+          minHeight: `${rectClient.height.toFixed(2)}px`,
           // height: `${rectView.height.toFixed(2)}px`,
-          padding: `${clickedNode.getPadding() * this.project.camera.currentScale}px`,
-          fontSize: `${clickedNode.getFontSize() * this.project.camera.currentScale}px`,
+          padding: `${clickedNode.getPadding() * this.project.camera.currentScale * clientScale.x}px`,
+          fontSize: `${clickedNode.getFontSize() * this.project.camera.currentScale * clientScale.x}px`,
           backgroundColor: "transparent",
           color: (clickedNode.color.a === 1
             ? colorInvert(clickedNode.color)
             : colorInvert(this.project.stageStyleManager.currentStyle.Background)
           ).toHexStringWithoutAlpha(),
           outline: `solid 1px ${this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(Settings.textNodeEditModeOutlineOpacity).toString()}`,
-          borderRadius: `${clickedNode.getBorderRadius() * this.project.camera.currentScale}px`,
+          borderRadius: `${clickedNode.getBorderRadius() * this.project.camera.currentScale * clientScale.x}px`,
         },
         selectAll,
         Settings.textNodeExitEditModeOnWheel,
         // fixedWidth：manual 模式宽度固定为节点当前视图宽度，auto 模式不传（自动扩展）
-        clickedNode.sizeAdjust === "manual" ? rectView.width : undefined,
+        clickedNode.sizeAdjust === "manual" ? rectClient.width : undefined,
       )
       .then(async () => {
-        SubWindow.close(lastAutoCompleteWindowId);
+        void TabWorkspace.close(lastAutoCompleteTabId);
         // 移除 LaTeX 实时预览 div
         latexPreview.dismiss();
         clickedNode!.isEditing = false;
@@ -191,6 +203,8 @@ export class ControllerUtils {
     const textAreaLocation = this.project.renderer
       .transformWorld2View(edge.textRectangle.location)
       .add(Vector.same(Renderer.NODE_PADDING).multiply(this.project.camera.currentScale));
+    const textAreaClientLocation = this.project.canvas.viewToClient(textAreaLocation);
+    const clientScale = this.project.canvas.viewToClientScale();
     return this.project.inputElement
       .textarea(
         edge.text,
@@ -204,9 +218,9 @@ export class ControllerUtils {
           overflow: "hidden",
           whiteSpace: "pre-wrap",
           wordBreak: "break-all",
-          left: `${textAreaLocation.x.toFixed(2)}px`,
-          top: `${textAreaLocation.y.toFixed(2)}px`,
-          fontSize: `${Renderer.FONT_SIZE * this.project.camera.currentScale}px`,
+          left: `${textAreaClientLocation.x.toFixed(2)}px`,
+          top: `${textAreaClientLocation.y.toFixed(2)}px`,
+          fontSize: `${Renderer.FONT_SIZE * this.project.camera.currentScale * clientScale.x}px`,
           backgroundColor: this.project.stageStyleManager.currentStyle.Background.toString(),
           color: this.project.stageStyleManager.currentStyle.StageObjectBorder.toString(),
           outline: "solid 1px rgba(255,255,255,0.1)",
@@ -369,11 +383,13 @@ export class ControllerUtils {
     this.project.controller.isCameraLocked = true;
     this.project.camera.stopImmediately();
     section.isEditingTitle = true;
+    const inputViewLocation = this.project.renderer
+      .transformWorld2View(section.rectangle.location.subtract(new Vector(0, section.text === "" ? 50 : 0)))
+      .add(Vector.same(Renderer.NODE_PADDING).multiply(this.project.camera.currentScale));
+    const clientScale = this.project.canvas.viewToClientScale();
     this.project.inputElement
       .input(
-        this.project.renderer
-          .transformWorld2View(section.rectangle.location.subtract(new Vector(0, section.text === "" ? 50 : 0)))
-          .add(Vector.same(Renderer.NODE_PADDING).multiply(this.project.camera.currentScale)),
+        this.project.canvas.viewToClient(inputViewLocation),
         section.text,
         (text) => {
           section.rename(text);
@@ -382,11 +398,11 @@ export class ControllerUtils {
           position: "fixed",
           resize: "none",
           boxSizing: "border-box",
-          fontSize: `${Renderer.FONT_SIZE * this.project.camera.currentScale}px`,
+          fontSize: `${Renderer.FONT_SIZE * this.project.camera.currentScale * clientScale.x}px`,
           backgroundColor: "transparent",
           color: this.project.stageStyleManager.currentStyle.StageObjectBorder.toString(),
-          outline: `solid ${2 * this.project.camera.currentScale}px ${this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.25).toString()}`,
-          marginTop: `${-8 * this.project.camera.currentScale}px`,
+          outline: `solid ${2 * this.project.camera.currentScale * clientScale.x}px ${this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(0.25).toString()}`,
+          marginTop: `${-8 * this.project.camera.currentScale * clientScale.y}px`,
         },
       )
       .then(() => {

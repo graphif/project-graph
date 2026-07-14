@@ -1,7 +1,7 @@
-import { Vector } from "@graphif/data-structures";
 import type { Project } from "@/core/Project";
 import { ViewOutlineFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewOutlineFlashEffect";
 import { Settings } from "@/core/service/Settings";
+import { Vector } from "@graphif/data-structures";
 
 /**
  * 控制器类，用于处理事件绑定和解绑
@@ -45,19 +45,19 @@ export class ControllerClass {
   };
 
   private readonly handleMousedown = (event: PointerEvent) => {
-    if (this.shouldHandleInteraction) this.mousedown(event);
+    if (this.shouldHandleInteraction) this.mousedown(this.toViewEvent(event));
   };
 
   private readonly handleMouseup = (event: PointerEvent) => {
-    if (this.shouldHandleInteraction) this._mouseup(event);
+    if (this.shouldHandleInteraction) this._mouseup(this.toViewEvent(event));
   };
 
   private readonly handleMousemove = (event: PointerEvent) => {
-    if (this.shouldHandleInteraction) this.mousemove(event);
+    if (this.shouldHandleInteraction) this.mousemove(this.toViewEvent(event));
   };
 
   private readonly handleMousewheel = (event: WheelEvent) => {
-    if (this.shouldHandleInteraction) this.mousewheel(event);
+    if (this.shouldHandleInteraction) this.mousewheel(this.toViewEvent(event));
   };
 
   private readonly handleTouchstart = (event: TouchEvent) => {
@@ -82,6 +82,18 @@ export class ControllerClass {
   public touchstart: (event: TouchEvent) => void = () => {};
   public touchmove: (event: TouchEvent) => void = () => {};
   public touchend: (event: TouchEvent) => void = () => {};
+
+  private toViewEvent<T extends PointerEvent | WheelEvent>(event: T): T {
+    const location = this.project.canvas.clientToView(event.clientX, event.clientY);
+    return new Proxy(event, {
+      get(target, property) {
+        if (property === "clientX") return location.x;
+        if (property === "clientY") return location.y;
+        const value = Reflect.get(target, property, target);
+        return typeof value === "function" ? value.bind(target) : value;
+      },
+    });
+  }
 
   public dispose() {
     clearTimeout(this.bindEventsTimeout);
@@ -144,13 +156,17 @@ export class ControllerClass {
 
   private _touchstart = (event: TouchEvent) => {
     // event.preventDefault();
+    const location = this.project.canvas.clientToView(
+      event.touches[event.touches.length - 1].clientX,
+      event.touches[event.touches.length - 1].clientY,
+    );
     const touch = {
       ...(event.touches[event.touches.length - 1] as unknown as PointerEvent),
       button: 0, // 通过对象展开实现相对安全的属性合并
 
       // 尝试修复华为触摸屏的笔记本报错问题
-      clientX: event.touches[event.touches.length - 1].clientX,
-      clientY: event.touches[event.touches.length - 1].clientY,
+      clientX: location.x,
+      clientY: location.y,
     } as PointerEvent;
     if (event.touches.length > 1) {
       this.project.controller.rectangleSelect.shutDown();
@@ -160,7 +176,7 @@ export class ControllerClass {
 
   private _touchmove = (event: TouchEvent) => {
     // event.preventDefault();
-    this.onePointTouchMoveLocation = new Vector(
+    this.onePointTouchMoveLocation = this.project.canvas.clientToView(
       event.touches[event.touches.length - 1].clientX,
       event.touches[event.touches.length - 1].clientY,
     );

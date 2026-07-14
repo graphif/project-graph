@@ -1,22 +1,22 @@
-import { Project } from "@/core/Project";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Project } from "@/core/Project";
 import { SearchScope } from "@/core/service/dataManageService/contentSearchEngine/contentSearchEngine";
 import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
-import { SubWindow } from "@/core/service/SubWindow";
-import { activeTabAtom } from "@/state";
+import { TabWorkspace } from "@/core/TabWorkspace";
+import { activeResourceTabAtom } from "@/state";
+import { cn } from "@/utils/cn";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { cn } from "@/utils/cn";
 import { useAtom } from "jotai";
 import {
   CaseSensitive,
   MessageCircleQuestionMark,
   Square,
-  SquareDashedTopSolid,
   SquareDashedMousePointer,
+  SquareDashedTopSolid,
   Telescope,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -25,7 +25,7 @@ import { toast } from "sonner";
 /**
  * 搜索内容的面板
  */
-export default function FindWindow({ windowId }: { windowId?: string }) {
+export default function FindWindow({ tabId }: { tabId: string }) {
   const [isCaseSensitive, setIsCaseSensitive] = useState(false);
   const [searchString, setSearchString] = useState("");
   const [searchResults, setSearchResults] = useState<{ title: string; uuid: string }[]>([]);
@@ -34,7 +34,7 @@ export default function FindWindow({ windowId }: { windowId?: string }) {
   const [isMouseEnterCameraMovable, setIsMouseEnterCameraMovable] = useState(false);
   // 搜索范围
   const [searchScope, setSearchScope] = useState<SearchScope>(SearchScope.ALL);
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
 
   const selectAllResult = () => {
@@ -89,9 +89,7 @@ export default function FindWindow({ windowId }: { windowId?: string }) {
         }}
         onKeyDown={(e) => {
           if (e.key === "Escape") {
-            if (windowId) {
-              SubWindow.close(windowId);
-            }
+            void TabWorkspace.close(tabId);
           } else if (e.key === "Enter") {
             e.preventDefault();
             if (e.shiftKey) {
@@ -254,12 +252,10 @@ export default function FindWindow({ windowId }: { windowId?: string }) {
 }
 
 FindWindow.open = () => {
-  const win = SubWindow.create({
+  TabWorkspace.create({
     title: "搜索",
-    children: <FindWindow windowId="" />,
+    contextTarget: "activeResourceTab",
+    children: (tab) => <FindWindow tabId={tab.id} />,
     rect: new Rectangle(new Vector(100, 100), new Vector(300, 600)),
-  });
-  SubWindow.update(win.id, {
-    children: <FindWindow windowId={win.id} />,
   });
 };

@@ -1,8 +1,8 @@
-import { Project } from "@/core/Project";
 import { Button } from "@/components/ui/button";
-import { SubWindow } from "@/core/service/SubWindow";
+import { Project } from "@/core/Project";
+import { TabWorkspace } from "@/core/TabWorkspace";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { activeTabAtom } from "@/state";
+import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useAtom } from "jotai";
@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function BackgroundManagerWindow() {
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   const [backgroundImages, setBackgroundImages] = useState<ImageNode[]>([]);
   const [urls, setUrls] = useState(new Map<string, string>());
@@ -105,8 +105,9 @@ export default function BackgroundManagerWindow() {
 }
 
 BackgroundManagerWindow.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "背景管理器",
+    contextTarget: "activeResourceTab",
     children: <BackgroundManagerWindow />,
     rect: new Rectangle(new Vector(100, 100), new Vector(400, 500)),
   });

@@ -1,20 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SubWindow } from "@/core/service/SubWindow";
-import { activeTabAtom } from "@/state";
-import { TextFileImporter } from "@/core/service/dataGenerateService/TextFileImporter";
 import { Project } from "@/core/Project";
+import { TextFileImporter } from "@/core/service/dataGenerateService/TextFileImporter";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { TabWorkspace } from "@/core/TabWorkspace";
+import { activeResourceTabAtom } from "@/state";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useAtom } from "jotai";
-import { FileText, FolderOpen, List, FileUp } from "lucide-react";
+import { FileText, FileUp, FolderOpen, List } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function TextImportWindow() {
-  const [tab] = useAtom(activeTabAtom);
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   const [fileContent, setFileContent] = useState<{ fileName: string; content: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -180,7 +180,7 @@ export default function TextImportWindow() {
             <div className="mb-2 font-medium">
               {fileContent.fileName} ({fileContent.content.length} 字)
             </div>
-            <div className="text-muted-foreground max-h-32 overflow-auto whitespace-pre-wrap text-sm">
+            <div className="text-muted-foreground max-h-32 overflow-auto text-sm whitespace-pre-wrap">
               {fileContent.content.slice(0, 500)}
               {fileContent.content.length > 500 && "..."}
             </div>
@@ -279,8 +279,9 @@ export default function TextImportWindow() {
 }
 
 export function openTextImportWindow() {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "文本导入",
+    contextTarget: "activeResourceTab",
     children: <TextImportWindow />,
     rect: new Rectangle(new Vector(100, 100), new Vector(420, 480)),
     closable: true,

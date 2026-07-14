@@ -1,6 +1,6 @@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AITools } from "@/core/service/dataManageService/aiEngine/AITools";
-import { SubWindow } from "@/core/service/SubWindow";
+import { TabWorkspace } from "@/core/TabWorkspace";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { ChevronRight, Wrench } from "lucide-react";
@@ -32,7 +32,7 @@ export default function AIToolsWindow() {
                   <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                   参数
                 </CollapsibleTrigger>
-                <CollapsibleContent className="animate-none! mt-1">
+                <CollapsibleContent className="mt-1 animate-none!">
                   <div className="flex flex-col gap-1">
                     {Object.entries(props!).map(([key, zodType]) => {
                       const desc = (zodType as any)._def?.description;
@@ -55,7 +55,7 @@ export default function AIToolsWindow() {
   );
 }
 AIToolsWindow.open = () => {
-  SubWindow.create({
+  TabWorkspace.create({
     title: "AI 工具列表",
     children: <AIToolsWindow />,
     rect: new Rectangle(new Vector(100, 100), new Vector(400, 500)),
