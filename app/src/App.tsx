@@ -1,4 +1,5 @@
 import MyContextMenuContent from "@/components/context-menu-content";
+import PieMenu from "@/components/pie-menu";
 import RenderSubWindows from "@/components/render-sub-windows";
 import ThemeModeSwitch from "@/components/theme-mode-switch";
 import { Button } from "@/components/ui/button";
@@ -420,6 +421,7 @@ export default function App() {
 
         {/* NOT zoomed - 使用固定/全屏定位的组件，缩放会破坏它们的坐标计算 */}
         <RenderSubWindows zoomStyle={zoomStyle} />
+        <PieMenu />
 
         {/* 右上角关闭的触发角 */}
         {isWindows && (

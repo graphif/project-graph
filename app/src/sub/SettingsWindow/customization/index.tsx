@@ -7,11 +7,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Menu as MenuIcon, PanelTop, SlidersHorizontal, Sparkles, Volume2 } from "lucide-react";
+import { CircleGauge, Menu as MenuIcon, PanelTop, SlidersHorizontal, Sparkles, Volume2 } from "lucide-react";
 import { Fragment, useState } from "react";
 import ContextMenuPage from "./context-menu";
 import EffectsPage from "./effects";
 import GlobalMenuPage from "./global-menu";
+import PieMenuPage from "./pie-menu";
 import QuickSettingsTab from "./quick-settings";
 import SoundEffectsPage from "./sounds";
 
@@ -69,6 +70,11 @@ const categories = {
     name: "菜单栏",
     icon: PanelTop,
     component: GlobalMenuPage,
+  },
+  pieMenu: {
+    name: "Pie Menu",
+    icon: CircleGauge,
+    component: PieMenuPage,
   },
   quickSettings: {
     name: "快捷设置",

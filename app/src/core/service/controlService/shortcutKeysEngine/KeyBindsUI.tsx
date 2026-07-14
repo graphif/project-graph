@@ -11,9 +11,9 @@ import { isMac } from "@/utils/platform";
 import { createStore } from "@/utils/store";
 import { Queue } from "@graphif/data-structures";
 import { proxy } from "comlink";
+import type { LucideProps } from "lucide-react";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 import { useEffect, useState } from "react";
-import type { LucideProps } from "lucide-react";
 import { allKeyBinds, type KeyBindWhen } from "./shortcutKeysRegister";
 
 export type KeyBindIcon = ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>;
@@ -28,6 +28,15 @@ export interface UIKeyBind {
   // 是否是持续型快捷键
   isContinuous?: boolean;
   onRelease?: (project?: Project) => void;
+}
+
+export interface KeyBindInputInterceptor {
+  onInput: (
+    event: KeyboardEvent | MouseEvent | WheelEvent,
+    sequence: readonly (KeyboardEvent | MouseEvent | WheelEvent)[],
+  ) => boolean | Promise<boolean>;
+  onKeyUp?: (event: KeyboardEvent) => void | Promise<void>;
+  onMouseUp?: (event: MouseEvent) => void | Promise<void>;
 }
 /**
  * UI级别的快捷键管理
@@ -44,6 +53,27 @@ export namespace KeyBindsUI {
   }
 
   let allUIKeyBinds: UIKeyBind[] = [];
+  const inputInterceptors = new Set<KeyBindInputInterceptor>();
+
+  export function registerInputInterceptor(interceptor: KeyBindInputInterceptor): () => void {
+    inputInterceptors.add(interceptor);
+    return () => inputInterceptors.delete(interceptor);
+  }
+
+  async function interceptInput(event: KeyboardEvent | MouseEvent | WheelEvent): Promise<boolean> {
+    for (const interceptor of inputInterceptors) {
+      if (await interceptor.onInput(event, userEventQueue.arrayList)) {
+        userEventQueue.clear();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function getActiveProject(): Project | undefined {
+    const tab = store.get(activeTabAtom);
+    return tab instanceof Project ? tab : undefined;
+  }
 
   /**
    * 获取所有已注册的UI快捷键
@@ -57,6 +87,23 @@ export namespace KeyBindsUI {
    */
   export function getUIKeyBind(id: string): UIKeyBind | undefined {
     return allUIKeyBinds.find((kb) => kb.id === id);
+  }
+
+  export async function canExecute(id: string, project = getActiveProject()): Promise<boolean> {
+    const keyBind = getUIKeyBind(id);
+    return !!keyBind && keyBind.isEnabled && (await keyBind.when(project));
+  }
+
+  export async function execute(id: string, project = getActiveProject()): Promise<boolean> {
+    const keyBind = getUIKeyBind(id);
+    if (!keyBind || !keyBind.isEnabled || !(await keyBind.when(project))) return false;
+    const actionProject = keyBind.id.startsWith("ext:") && project ? proxy(project) : project;
+    await keyBind.onPress(actionProject);
+    if (keyBind.onRelease) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await keyBind.onRelease(actionProject);
+    }
+    return true;
   }
 
   // 快捷键列表整体变化监听器（新增/注销快捷键时触发）
@@ -410,6 +457,7 @@ export namespace KeyBindsUI {
 
   export function uiStartListen() {
     window.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mouseup", onMouseUp);
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
     window.addEventListener("wheel", onWheel, { passive: true });
@@ -417,6 +465,7 @@ export namespace KeyBindsUI {
 
   export function uiStopListen() {
     window.removeEventListener("mousedown", onMouseDown);
+    window.removeEventListener("mouseup", onMouseUp);
     window.removeEventListener("keydown", onKeyDown);
     window.removeEventListener("keyup", onKeyUp);
     window.removeEventListener("wheel", onWheel);
@@ -478,7 +527,16 @@ export namespace KeyBindsUI {
 
   async function onMouseDown(event: MouseEvent) {
     enqueue(event);
+    if (await interceptInput(event)) {
+      event.preventDefault();
+      return;
+    }
     await check();
+  }
+  async function onMouseUp(event: MouseEvent) {
+    for (const interceptor of inputInterceptors) {
+      await interceptor.onMouseUp?.(event);
+    }
   }
   async function onKeyDown(event: KeyboardEvent) {
     // 如果有文本输入元素获得焦点，不处理键盘事件
@@ -489,8 +547,13 @@ export namespace KeyBindsUI {
     }
     if (["control", "alt", "shift", "meta"].includes(event.key.toLowerCase())) return;
 
-    const tab = store.get(activeTabAtom);
-    const activeProject = tab instanceof Project ? tab : undefined;
+    const activeProject = getActiveProject();
+
+    enqueue(event);
+    if (await interceptInput(event)) {
+      event.preventDefault();
+      return;
+    }
 
     // ——持续型快捷键独立路径——
     let continuousExecuted = false;
@@ -519,7 +582,6 @@ export namespace KeyBindsUI {
     // 持续型路径处理后，不 return——序列型照常入队检测（两者不冲突）
 
     // ——序列型快捷键路径——
-    enqueue(event);
     const sequenceExecuted = await check();
 
     // 只要有快捷键被执行，就阻止浏览器默认行为（防止 Tab 跳焦点、方向键滚动页面等）
@@ -532,8 +594,10 @@ export namespace KeyBindsUI {
     if (!isMac && !shouldProcessKeyboardEvent()) {
       return;
     }
-    const tab = store.get(activeTabAtom);
-    const activeProject = tab instanceof Project ? tab : undefined;
+    for (const interceptor of inputInterceptors) {
+      await interceptor.onKeyUp?.(event);
+    }
+    const activeProject = getActiveProject();
     const key = event.key;
 
     // ——持续型快捷键松开——
@@ -568,6 +632,7 @@ export namespace KeyBindsUI {
   }
   async function onWheel(event: WheelEvent) {
     enqueue(event);
+    if (await interceptInput(event)) return;
     await check();
   }
 

@@ -295,6 +295,17 @@ export const settingsSchema = z.object({
   showKeyBindHint: z.boolean().default(true),
   showEditModeHint: z.boolean().default(true),
   textNodeEditModeOutlineOpacity: z.number().min(0).max(1).default(0.5),
+  pieMenuConfig: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        enabled: z.boolean().default(true),
+        trigger: z.string(),
+        items: z.array(z.string()).max(32),
+      }),
+    )
+    .default([]),
   contextMenuConfig: z
     .array(
       z.object({
@@ -1063,6 +1074,7 @@ export const Settings = new Proxy<
               (newValue: Settings[T]) => {
                 console.log(newValue);
                 store.set(key, newValue);
+                Reflect.set(target, key, newValue);
                 listeners[key]?.forEach((cb) => cb(newValue));
               },
             ];
