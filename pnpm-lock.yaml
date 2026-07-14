@@ -689,6 +689,12 @@ importers:
       "@graphif/shapes":
         specifier: workspace:*
         version: link:../shapes
+      "@msgpack/msgpack":
+        specifier: ^3.1.3
+        version: 3.1.3
+      "@tauri-apps/plugin-dialog":
+        specifier: ^2.7.1
+        version: 2.7.1
       "@tauri-apps/plugin-fs":
         specifier: ^2.0.0
         version: 2.5.1
@@ -698,15 +704,30 @@ importers:
       "@tauri-apps/plugin-store":
         specifier: ^2.0.0
         version: 2.4.3
+      ai:
+        specifier: ^6.0.174
+        version: 6.0.174(zod@4.4.3)
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
       comlink:
         specifier: ^4.4.2
         version: 4.4.2
+      lodash:
+        specifier: ^4.18.1
+        version: 4.18.1
       lucide-react:
         specifier: ^0.400.0
         version: 0.400.0(react@19.2.7)
+      platjs:
+        specifier: ^1.2.6
+        version: 1.2.6
       react:
-        specifier: ^19.0.0
+        specifier: ^19.2.7
         version: 19.2.7
+      sonner:
+        specifier: ^2.0.7
+        version: 2.0.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       vscode-uri:
         specifier: ^3.0.0
         version: 3.1.0
@@ -5883,6 +5904,11 @@ packages:
       { integrity: sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg== }
     engines: { node: ">= 4" }
 
+  ignore@7.0.6:
+    resolution:
+      { integrity: sha512-BAg6QkE8W+TuQLrrw0Ugr7HegXduRuuj8/ti2kSOc+jz1dmx8/WNcjr6XGnq5YpDWxFwwaavqD0+jIUOKelTsw== }
+    engines: { node: ">= 4" }
+
   immediate@3.0.6:
     resolution:
       { integrity: sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ== }
@@ -7215,6 +7241,10 @@ packages:
     peerDependencies:
       react: ">=18.0.0"
       react-dom: ">=18.0.0"
+
+  platjs@1.2.6:
+    resolution:
+      { integrity: sha512-jlHdulh5TvJ61bYW5AEs3sbjMR1uQuV+1jpPPRfHTppnoi+n74Mixj0W+5VfbEQV//f1sZUNL3MmccUPgp130w== }
 
   player.style@0.3.4:
     resolution:
@@ -10950,7 +10980,7 @@ snapshots:
   "@react-grab/cli@0.1.37":
     dependencies:
       commander: 14.0.3
-      ignore: 7.0.5
+      ignore: 7.0.6
       jsonc-parser: 3.3.1
       ora: 9.4.0
       package-manager-detector: 1.7.0
@@ -13366,6 +13396,8 @@ snapshots:
 
   ignore@7.0.5: {}
 
+  ignore@7.0.6: {}
+
   immediate@3.0.6: {}
 
   immer@10.2.0: {}
@@ -14806,6 +14838,8 @@ snapshots:
       - react-native
       - scheduler
       - use-sync-external-store
+
+  platjs@1.2.6: {}
 
   player.style@0.3.4(react@19.2.7):
     dependencies:

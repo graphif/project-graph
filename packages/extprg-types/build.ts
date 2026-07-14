@@ -1,1267 +1,564 @@
-/**
- * 提取 extensionHostApiFactory 的返回类型，收集所有本地类型声明，
- * 生成一个自包含的 d.ts 文件。
- *
- * 原理：纯 AST 解析（不使用 TypeScript Program/TypeChecker），
- * 遍历返回表达式中的全部类型节点，跟踪 import 找到类型定义，
- * 递归收集所有间接引用的本地类型，去重后输出到一个文件。
- */
-
-import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { exit } from "node:process";
+import { writeFileSync } from "node:fs";
+import { dirname, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
-// ═══════════════════════════════════════════════════════════════════════
-//  配置
-// ═══════════════════════════════════════════════════════════════════════
-
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const APP_DIR = resolve(ROOT, "app");
-const SRC_DIR = resolve(APP_DIR, "src");
-const TARGET_FILE = resolve(SRC_DIR, "core/extension/api/host.tsx");
-// const OUTPUT_FILE = resolve(SRC_DIR, "core/extension/api/extension-api.d.ts");
+const TARGET_FILE = resolve(APP_DIR, "src/core/extension/api/host.tsx");
+const OUTPUT_FILE = resolve(ROOT, "packages/extprg-types/index.d.ts");
+const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
 
-/** 包的 api.d.ts 目标路径 */
-const PKG_API_FILE = resolve(ROOT, "packages/extprg-types/index.d.ts");
-
-/** 视为第三方包的模块前缀 */
-const THIRD_PARTY_PREFIXES = [
-  "@tauri-apps/",
-  "comlink",
-  "sonner",
-  "react",
-  "react-dom",
-  "react/jsx-runtime",
-  "@radix-ui/",
-  "@ariakit/",
-  "@dnd-kit/",
-  "@headlessui/",
-  "lucide-react",
-  "lucide",
-  "@ai-sdk/",
-  "@msgpack/",
-  "@octokit/",
-  "@platejs/",
-  "zod",
-  "clsx",
-  "tailwind-merge",
-  "class-variance-authority",
-  "events",
-  "zustand",
-  "immer",
-  "@zip.js/",
-  "virtual:",
-  "@graphif/",
-  "emoji-mart",
-  "@emoji-mart/",
-  "vditor",
-  "vscode-uri",
-  "md5",
-  "mime",
-];
-
-const RESOLVE_EXTS = [".tsx", ".ts", ".d.ts", ".mts", ".cts"];
-
-// ═══════════════════════════════════════════════════════════════════════
-//  工具
-// ═══════════════════════════════════════════════════════════════════════
-
-function isThirdParty(specifier: string): boolean {
-  if (specifier.startsWith(".") || specifier.startsWith("@/")) return false;
-  return THIRD_PARTY_PREFIXES.some((p) => specifier === p || specifier.startsWith(p));
+interface LocalDeclaration {
+  readonly key: string;
+  readonly symbol: ts.Symbol;
 }
 
-const BUILTIN_TYPES = new Set([
-  "string",
-  "number",
-  "boolean",
-  "void",
-  "any",
-  "never",
-  "undefined",
-  "null",
-  "unknown",
-  "bigint",
-  "symbol",
-  "object",
-  "Promise",
-  "Array",
-  "Map",
-  "Set",
-  "WeakMap",
-  "WeakSet",
-  "ReadonlyArray",
-  "Partial",
-  "Required",
-  "Readonly",
-  "Pick",
-  "Omit",
-  "Record",
-  "Exclude",
-  "Extract",
-  "NonNullable",
-  "ReturnType",
-  "Parameters",
-  "ConstructorParameters",
-  "InstanceType",
-  "ThisType",
-  "ThisParameterType",
-  "Uint8Array",
-  "ArrayBuffer",
-  "SharedArrayBuffer",
-  "ImageBitmap",
-  "Error",
-  "Date",
-  "RegExp",
-  "Function",
-  "Buffer",
-  "Iterable",
-  "Iterator",
-  "AsyncIterable",
-  "AsyncIterator",
-  "PromiseLike",
-  "ArrayLike",
-  "ReadonlyMap",
-  "ReadonlySet",
-  "JSON",
-  "Math",
-  "console",
-  "NodeJS",
-  "Element",
-  "HTMLElement",
-  "SVGElement",
-  "SVGSVGElement",
-  "MouseEvent",
-  "KeyboardEvent",
-  "React",
-  "JSX",
-]);
-
-function isBuiltin(name: string): boolean {
-  return BUILTIN_TYPES.has(name);
+function isWorkspaceFile(fileName: string): boolean {
+  const workspacePath = relative(ROOT, fileName);
+  return (
+    workspacePath !== "" && !workspacePath.startsWith(`..${sep}`) && !workspacePath.includes(`${sep}node_modules${sep}`)
+  );
 }
 
-function tryResolvePath(basePath: string): string | null {
-  try {
-    if (existsSync(basePath) && statSync(basePath).isFile()) return basePath;
-  } catch {
-    /* invalid path */
-  }
-  for (const ext of RESOLVE_EXTS) {
-    try {
-      const p = basePath + ext;
-      if (existsSync(p) && statSync(p).isFile()) return p;
-    } catch {
-      /* skip */
-    }
-  }
-  // 作为目录
-  for (const ext of RESOLVE_EXTS) {
-    try {
-      const p = resolve(basePath, `index${ext}`);
-      if (existsSync(p) && statSync(p).isFile()) return p;
-    } catch {
-      /* skip */
-    }
-  }
-  return null;
-}
-
-function resolveSpecifier(fromFile: string, specifier: string): string | null {
-  if (specifier.startsWith("@/")) return tryResolvePath(resolve(SRC_DIR, specifier.slice(2)));
-  if (specifier.startsWith(".")) return tryResolvePath(resolve(dirname(fromFile), specifier));
-  return null;
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-//  文件解析缓存
-// ═══════════════════════════════════════════════════════════════════════
-
-interface ImportEntry {
-  specifier: string;
-  /** localName → exportedName */
-  named: Map<string, string>;
-  defaultName: string | null;
-  isNamespace: boolean;
-}
-
-interface FileInfo {
-  sf: ts.SourceFile;
-  text: string;
-  imports: ImportEntry[];
-}
-
-const fileCache = new Map<string, FileInfo>();
-
-function parseFile(filePath: string): FileInfo | null {
-  if (!existsSync(filePath)) return null;
-  const cached = fileCache.get(filePath);
-  if (cached) return cached;
-
-  const text = readFileSync(filePath, "utf-8");
-  const sf = ts.createSourceFile(filePath, text, ts.ScriptTarget.Latest, true);
-  const imports: ImportEntry[] = [];
-
-  ts.forEachChild(sf, (node) => {
-    if (!ts.isImportDeclaration(node)) return;
-    const specifier = (node.moduleSpecifier as ts.StringLiteral).text;
-    const named = new Map<string, string>();
-    let defaultName: string | null = null;
-    let isNamespace = false;
-
-    if (node.importClause) {
-      if (node.importClause.name) defaultName = node.importClause.name.text;
-      if (node.importClause.namedBindings) {
-        if (ts.isNamedImports(node.importClause.namedBindings)) {
-          for (const el of node.importClause.namedBindings.elements) {
-            named.set(el.name.text, el.propertyName?.text ?? el.name.text);
-          }
-        } else if (ts.isNamespaceImport(node.importClause.namedBindings)) {
-          named.set(node.importClause.namedBindings.name.text, "__ns__");
-          isNamespace = true;
-        }
-      }
-    }
-    imports.push({ specifier, named, defaultName, isNamespace });
+function getProgram(): ts.Program {
+  const configPath = resolve(APP_DIR, "tsconfig.json");
+  const config = ts.getParsedCommandLineOfConfigFile(
+    configPath,
+    {},
+    {
+      ...ts.sys,
+      onUnRecoverableConfigFileDiagnostic: (diagnostic) => {
+        throw new Error(ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
+      },
+    },
+  );
+  if (!config) throw new Error(`Cannot read TypeScript configuration: ${configPath}`);
+  return ts.createProgram({
+    rootNames: config.fileNames,
+    options: config.options,
+    projectReferences: config.projectReferences,
   });
-
-  const info: FileInfo = { sf, text, imports };
-  fileCache.set(filePath, info);
-  return info;
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  类型引用收集（AST 遍历）
-// ═══════════════════════════════════════════════════════════════════════
+function findFactory(sourceFile: ts.SourceFile): ts.FunctionDeclaration {
+  const factory = sourceFile.statements.find(
+    (statement): statement is ts.FunctionDeclaration =>
+      ts.isFunctionDeclaration(statement) && statement.name?.text === "extensionHostApiFactory",
+  );
+  if (!factory) throw new Error("extensionHostApiFactory was not found");
+  return factory;
+}
 
-/**
- * 遍历 AST 节点，收集所有引用的类型。
- * result: Map<typeName, { specifier, originalName, isValue }>
- *   - 普通的类型引用通过 import 解析
- *   - 值引用（如 shorthand fetch）通过 import 解析其类型
- */
-function collectTypeRefs(
-  node: ts.Node,
-  imports: ImportEntry[],
-  result: Map<string, { specifier: string; originalName: string; isValue?: boolean }>,
-  visited: Set<number> = new Set(),
-): void {
-  const uid = node.kind * 1e9 + (node.pos >>> 0);
-  if (visited.has(uid)) return;
-  visited.add(uid);
+function resolveAlias(checker: ts.TypeChecker, symbol: ts.Symbol): ts.Symbol {
+  return symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+}
 
-  // 1. 命名类型引用
-  if (ts.isTypeReferenceNode(node)) {
-    const name = node.typeName;
-    if (ts.isIdentifier(name)) checkImport(name.text, imports, result);
-    else if (ts.isQualifiedName(name)) {
-      let left = name.left;
-      while (ts.isQualifiedName(left)) left = left.left;
-      if (ts.isIdentifier(left)) checkImport(left.text, imports, result);
-    }
-    if (node.typeArguments) for (const a of node.typeArguments) collectTypeRefs(a, imports, result, visited);
-    return;
-  }
+function getDeclarationSymbol(checker: ts.TypeChecker, type: ts.Type): ts.Symbol | undefined {
+  const symbol = type.aliasSymbol ?? type.getSymbol();
+  return symbol ? resolveAlias(checker, symbol) : undefined;
+}
 
-  // 2. typeof X
-  if (ts.isTypeQueryNode(node)) {
-    const en = node.exprName;
-    if (ts.isIdentifier(en)) checkImport(en.text, imports, result, true);
-    else if (ts.isQualifiedName(en)) {
-      let left = en.left;
-      while (ts.isQualifiedName(left)) left = left.left;
-      if (ts.isIdentifier(left)) checkImport(left.text, imports, result, true);
-    }
-    return;
-  }
+function isExportableLocalSymbol(symbol: ts.Symbol): boolean {
+  return (
+    symbol.declarations?.some(
+      (declaration) =>
+        isWorkspaceFile(declaration.getSourceFile().fileName) && declaration.getSourceFile().fileName !== TARGET_FILE,
+    ) ?? false
+  );
+}
 
-  // 3. import("...").X
-  if (ts.isImportTypeNode(node)) {
-    let mod: string | null = null;
-    const arg = node.argument;
-    if (ts.isLiteralTypeNode(arg)) {
-      const lit = arg.literal;
-      if (ts.isStringLiteral(lit)) mod = lit.text;
-    } else if (ts.isStringLiteral(arg)) {
-      mod = arg.text;
-    }
-    if (mod && node.qualifier && ts.isIdentifier(node.qualifier)) {
-      const encoded = `__import_type__|${mod}|${node.qualifier.text}`;
-      if (!result.has(encoded)) result.set(encoded, { specifier: encoded, originalName: node.qualifier.text });
-    }
-    if (node.typeArguments) for (const a of node.typeArguments) collectTypeRefs(a, imports, result, visited);
-    return;
-  }
+function isRenderableLocalSymbol(symbol: ts.Symbol): boolean {
+  return !!(
+    symbol.flags &
+    (ts.SymbolFlags.Class |
+      ts.SymbolFlags.Interface |
+      ts.SymbolFlags.TypeAlias |
+      ts.SymbolFlags.Enum |
+      ts.SymbolFlags.Value)
+  );
+}
 
-  // 4. 函数类型
-  if (ts.isFunctionTypeNode(node) || ts.isConstructorTypeNode(node)) {
-    if (node.type) collectTypeRefs(node.type, imports, result, visited);
-    for (const p of node.parameters) {
-      if (p.type) collectTypeRefs(p.type, imports, result, visited);
-    }
-    if (node.typeParameters)
-      for (const tp of node.typeParameters) {
-        if (tp.constraint) collectTypeRefs(tp.constraint, imports, result, visited);
+function getSymbolKey(symbol: ts.Symbol): string {
+  const declaration = symbol.valueDeclaration ?? symbol.declarations?.[0];
+  return `${declaration?.getSourceFile().fileName ?? "unknown"}:${symbol.name}`;
+}
+
+function printType(checker: ts.TypeChecker, type: ts.Type): string {
+  const sourceFile = ts.createSourceFile("generated.d.ts", "", ts.ScriptTarget.Latest);
+  const node = checker.typeToTypeNode(
+    type,
+    undefined,
+    ts.NodeBuilderFlags.NoTruncation | ts.NodeBuilderFlags.UseAliasDefinedOutsideCurrentScope,
+  );
+  return node ? printer.printNode(ts.EmitHint.Unspecified, node, sourceFile).trim() : checker.typeToString(type);
+}
+
+function isReadonly(symbol: ts.Symbol): boolean {
+  return (
+    symbol.declarations?.some(
+      (declaration) =>
+        ts.canHaveModifiers(declaration) &&
+        !!ts.getModifiers(declaration)?.some((modifier) => modifier.kind === ts.SyntaxKind.ReadonlyKeyword),
+    ) ?? false
+  );
+}
+
+function typeParameters(symbol: ts.Symbol): string {
+  const declaration = symbol.declarations?.find(
+    (candidate): candidate is ts.ClassDeclaration | ts.InterfaceDeclaration | ts.TypeAliasDeclaration =>
+      ts.isClassDeclaration(candidate) || ts.isInterfaceDeclaration(candidate) || ts.isTypeAliasDeclaration(candidate),
+  );
+  if (!declaration?.typeParameters?.length) return "";
+  return `<${declaration.typeParameters.map((parameter) => parameter.name.text).join(", ")}>`;
+}
+
+function propertyName(symbol: ts.Symbol): string {
+  return /^[$A-Z_a-z][$\w]*$/u.test(symbol.name) ? symbol.name : JSON.stringify(symbol.name);
+}
+
+function renderObjectLikeDeclaration(checker: ts.TypeChecker, symbol: ts.Symbol, type: ts.Type): string {
+  const members: string[] = [];
+  for (const property of checker.getPropertiesOfType(type)) {
+    const declaration = property.valueDeclaration ?? property.declarations?.[0];
+    if (!declaration) continue;
+    const propertyType = checker.getTypeOfSymbolAtLocation(property, declaration);
+    const readonly = isReadonly(property) ? "readonly " : "";
+    const optional = property.flags & ts.SymbolFlags.Optional ? "?" : "";
+    const signatures = checker.getSignaturesOfType(propertyType, ts.SignatureKind.Call);
+    if (signatures.length > 0) {
+      for (const signature of signatures) {
+        members.push(
+          `  ${readonly}${propertyName(property)}${optional}${renderCallableSignature(checker, signature)};`,
+        );
       }
-    return;
-  }
-
-  // 5. 条件类型
-  if (ts.isConditionalTypeNode(node)) {
-    collectTypeRefs(node.checkType, imports, result, visited);
-    collectTypeRefs(node.extendsType, imports, result, visited);
-    collectTypeRefs(node.trueType, imports, result, visited);
-    collectTypeRefs(node.falseType, imports, result, visited);
-    return;
-  }
-
-  // 6. Mapped type
-  if (ts.isMappedTypeNode(node)) {
-    if (node.type) collectTypeRefs(node.type, imports, result, visited);
-    if (node.nameType) collectTypeRefs(node.nameType, imports, result, visited);
-    return;
-  }
-
-  // 7. ExpressionWithTypeArguments
-  if (ts.isExpressionWithTypeArguments(node)) {
-    if (node.typeArguments) for (const a of node.typeArguments) collectTypeRefs(a, imports, result, visited);
-    const expr = node.expression;
-    if (ts.isIdentifier(expr)) checkImport(expr.text, imports, result);
-    else if (ts.isPropertyAccessExpression(expr)) {
-      let left: ts.Expression = expr;
-      while (ts.isPropertyAccessExpression(left)) left = (left as ts.PropertyAccessExpression).expression;
-      if (ts.isIdentifier(left)) checkImport(left.text, imports, result);
+      continue;
     }
-    return;
+    members.push(`  ${readonly}${propertyName(property)}${optional}: ${printType(checker, propertyType)};`);
   }
-
-  // 8. 值引用（shorthand property assignment）
-  if (ts.isShorthandPropertyAssignment(node)) {
-    checkImport(node.name.text, imports, result, true);
-    return;
-  }
-
-  // 9. 值引用（PropertyAssignment 中的标识符）
-  if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.initializer)) {
-    checkImport(node.initializer.text, imports, result, true);
-    return;
-  }
-
-  // 10. 值引用（CallExpression 中的标识符）
-  if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
-    // 如果是 proxy(it) 这种，proxy 可能是一个导入的值
-    // 但我们只关心 proxy 本身的类型，而不是调用结果类型
-  }
-
-  ts.forEachChild(node, (child) => collectTypeRefs(child, imports, result, visited));
+  return `declare interface ${symbol.name}${typeParameters(symbol)} {\n${members.join("\n")}\n}`;
 }
 
-function checkImport(
-  name: string,
-  imports: ImportEntry[],
-  result: Map<string, { specifier: string; originalName: string; isValue?: boolean }>,
-  isValue = false,
-): void {
-  if (isBuiltin(name)) return;
-  for (const imp of imports) {
-    if (imp.named.has(name)) {
-      const orig = imp.named.get(name)!;
-      const key = `${imp.specifier}::${orig}`;
-      if (!result.has(key)) result.set(key, { specifier: imp.specifier, originalName: orig, isValue });
-      return;
+function renderEnum(symbol: ts.Symbol): string {
+  const declaration = symbol.declarations?.find(ts.isEnumDeclaration);
+  if (!declaration) return `declare type ${symbol.name} = number;`;
+  const members = declaration.members.map((member) => {
+    const initializer = member.initializer ? ` = ${member.initializer.getText()}` : "";
+    return `  ${member.name.getText()}${initializer},`;
+  });
+  return `declare enum ${symbol.name} {\n${members.join("\n")}\n}`;
+}
+
+function renderLocalDeclaration(checker: ts.TypeChecker, local: LocalDeclaration): string {
+  const { symbol } = local;
+  const declaration = symbol.valueDeclaration ?? symbol.declarations?.[0];
+  if (!declaration) return `declare type ${symbol.name} = unknown;`;
+  if (symbol.flags & ts.SymbolFlags.Enum) return renderEnum(symbol);
+
+  const declaredType = checker.getDeclaredTypeOfSymbol(symbol);
+  if (symbol.flags & ts.SymbolFlags.TypeAlias) {
+    const typeAlias = symbol.declarations?.find(ts.isTypeAliasDeclaration);
+    const sourceFile = typeAlias?.getSourceFile() ?? ts.createSourceFile("generated.d.ts", "", ts.ScriptTarget.Latest);
+    const aliasedType = typeAlias
+      ? printer.printNode(ts.EmitHint.Unspecified, typeAlias.type, sourceFile).trim()
+      : printType(checker, declaredType);
+    return `declare type ${symbol.name}${typeParameters(symbol)} = ${aliasedType};`;
+  }
+  if (symbol.flags & (ts.SymbolFlags.Class | ts.SymbolFlags.Interface)) {
+    return renderObjectLikeDeclaration(checker, symbol, declaredType);
+  }
+  return `declare const ${symbol.name}: ${printType(checker, checker.getTypeOfSymbolAtLocation(symbol, declaration))};`;
+}
+
+function collectLocalDeclarations(checker: ts.TypeChecker, rootType: ts.Type): LocalDeclaration[] {
+  const locals = new Map<string, LocalDeclaration>();
+  const visitedTypes = new Set<ts.Type>();
+  const visitedNodes = new Set<ts.Node>();
+  const pendingDeclarations: ts.Declaration[] = [];
+
+  const addSymbol = (symbol: ts.Symbol): void => {
+    const resolved = resolveAlias(checker, symbol);
+    if (isExportableLocalSymbol(resolved) && isRenderableLocalSymbol(resolved) && !resolved.name.startsWith("__")) {
+      const key = getSymbolKey(resolved);
+      if (!locals.has(key)) {
+        locals.set(key, { key, symbol: resolved });
+        pendingDeclarations.push(...(resolved.declarations ?? []));
+      }
     }
-    if (imp.defaultName === name) {
-      const key = `${imp.specifier}::__default__`;
-      if (!result.has(key)) result.set(key, { specifier: imp.specifier, originalName: "default", isValue });
-      return;
+  };
+
+  const visitNode = (node: ts.Node): void => {
+    if (visitedNodes.has(node)) return;
+    visitedNodes.add(node);
+    if (ts.isTypeReferenceNode(node)) {
+      const symbol = checker.getSymbolAtLocation(node.typeName);
+      if (symbol) addSymbol(symbol);
+    } else if (ts.isExpressionWithTypeArguments(node)) {
+      const symbol = checker.getSymbolAtLocation(node.expression);
+      if (symbol) addSymbol(symbol);
+    } else if (ts.isTypeQueryNode(node)) {
+      const symbol = checker.getSymbolAtLocation(node.exprName);
+      if (symbol) addSymbol(symbol);
+    } else if (ts.isImportTypeNode(node) && node.qualifier) {
+      const symbol = checker.getSymbolAtLocation(node.qualifier);
+      if (symbol) addSymbol(symbol);
+    }
+    ts.forEachChild(node, visitNode);
+  };
+
+  const visitType = (type: ts.Type): void => {
+    if (visitedTypes.has(type)) return;
+    visitedTypes.add(type);
+    const symbol = getDeclarationSymbol(checker, type);
+    if (symbol) {
+      addSymbol(symbol);
+      for (const declaration of symbol.declarations ?? []) visitNode(declaration);
+    }
+    if (type.isUnionOrIntersection()) type.types.forEach(visitType);
+    if (type.flags & ts.TypeFlags.Object) {
+      const reference = type as ts.TypeReference;
+      if (reference.target) checker.getTypeArguments(reference).forEach(visitType);
+    }
+    type.aliasTypeArguments?.forEach(visitType);
+
+    for (const signature of checker.getSignaturesOfType(type, ts.SignatureKind.Call)) {
+      for (const parameter of signature.getParameters()) {
+        const declaration = parameter.valueDeclaration ?? parameter.declarations?.[0];
+        if (declaration) visitType(checker.getTypeOfSymbolAtLocation(parameter, declaration));
+      }
+      visitType(checker.getReturnTypeOfSignature(signature));
+    }
+
+    for (const signature of checker.getSignaturesOfType(type, ts.SignatureKind.Construct)) {
+      for (const parameter of signature.getParameters()) {
+        const declaration = parameter.valueDeclaration ?? parameter.declarations?.[0];
+        if (declaration) visitType(checker.getTypeOfSymbolAtLocation(parameter, declaration));
+      }
+      visitType(checker.getReturnTypeOfSignature(signature));
+    }
+  };
+
+  for (const property of checker.getPropertiesOfType(rootType)) {
+    const declaration = property.valueDeclaration ?? property.declarations?.[0];
+    if (declaration) visitType(checker.getTypeOfSymbolAtLocation(property, declaration));
+  }
+  while (pendingDeclarations.length > 0) visitNode(pendingDeclarations.pop()!);
+  return [...locals.values()].sort((left, right) => left.key.localeCompare(right.key));
+}
+
+function externalImports(
+  checker: ts.TypeChecker,
+  sourceFiles: Iterable<ts.SourceFile>,
+  referencedText: string,
+): string[] {
+  const imports = new Map<string, Set<string>>([["comlink", new Set(["ProxyMethods"])]]);
+  const isReferenced = (name: string): boolean => new RegExp(`\\b${name}\\b`, "u").test(referencedText);
+  for (const sourceFile of sourceFiles) {
+    for (const declaration of sourceFile.statements) {
+      if (!ts.isImportDeclaration(declaration) || !ts.isStringLiteral(declaration.moduleSpecifier)) continue;
+      const specifier = declaration.moduleSpecifier.text;
+      if (specifier.startsWith(".") || specifier.startsWith("@/") || specifier.startsWith("@graphif/")) continue;
+      const clause = declaration.importClause;
+      if (!clause) continue;
+      const importedNames = imports.get(specifier) ?? new Set<string>();
+      imports.set(specifier, importedNames);
+      const moduleSymbol = checker.getSymbolAtLocation(declaration.moduleSpecifier);
+      const includeModuleExports = (): void => {
+        if (!moduleSymbol) return;
+        for (const exportedSymbol of checker.getExportsOfModule(moduleSymbol)) {
+          if (/^[A-Z_$]/u.test(exportedSymbol.name) && isReferenced(exportedSymbol.name)) {
+            importedNames.add(exportedSymbol.name);
+          }
+        }
+      };
+
+      const defaultImport = clause.name && isReferenced(clause.name.text) ? clause.name.text : undefined;
+      if (clause.name && !defaultImport) includeModuleExports();
+      const bindings = clause.namedBindings;
+      if (bindings && ts.isNamespaceImport(bindings) && isReferenced(bindings.name.text)) {
+        importedNames.add(`* as ${bindings.name.text}`);
+        continue;
+      }
+
+      if (bindings && ts.isNamespaceImport(bindings)) includeModuleExports();
+
+      const namedImports =
+        bindings && ts.isNamedImports(bindings)
+          ? bindings.elements
+              .filter((element) => isReferenced(element.name.text))
+              .map((element) =>
+                element.propertyName ? `${element.propertyName.text} as ${element.name.text}` : element.name.text,
+              )
+          : [];
+      if (defaultImport) importedNames.add(`default:${defaultImport}`);
+      for (const namedImport of namedImports) importedNames.add(namedImport);
     }
   }
+  return [...imports]
+    .filter(([, names]) => names.size > 0)
+    .map(([specifier, names]) => {
+      const defaultImport = [...names].find((name) => name.startsWith("default:"))?.slice("default:".length);
+      const namespaceImport = [...names].find((name) => name.startsWith("* as "));
+      if (namespaceImport) return `import type ${namespaceImport} from ${JSON.stringify(specifier)};`;
+      const namedImports = [...names]
+        .filter((name) => !name.startsWith("default:") && name !== defaultImport)
+        .sort((left, right) => left.localeCompare(right));
+      const parts = [defaultImport, namedImports.length ? `{ ${namedImports.join(", ")} }` : undefined].filter(Boolean);
+      return `import type ${parts.join(", ")} from ${JSON.stringify(specifier)};`;
+    })
+    .sort((left, right) => left.localeCompare(right));
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  声明文本生成
-// ═══════════════════════════════════════════════════════════════════════
+type AutoProxyReturnKind = "array" | "single";
 
-function hasMod(node: ts.Node, kind: ts.SyntaxKind): boolean {
-  const decl = node as ts.NamedDeclaration;
-  return (ts.getCombinedModifierFlags(decl) & (1 << (kind - ts.SyntaxKind.PublicKeyword))) !== 0;
+function isProxyCall(node: ts.Node): boolean {
+  return ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "proxy";
 }
 
-function nodeText(node: ts.Node, text: string): string {
-  return text.slice(node.pos, node.end).trim();
+function containsProxyCall(node: ts.Node): boolean {
+  if (isProxyCall(node)) return true;
+  return ts.forEachChild(node, containsProxyCall) ?? false;
 }
 
-/** 收集所有已记录的 class 类型名称 */
-function getClassNameSet(): Set<string> {
-  const names = new Set<string>();
-  for (const [, info] of localTypes) {
-    if (info.kind === "class") names.add(info.name);
+function autoProxyReturnKind(expression: ts.Expression): AutoProxyReturnKind | undefined {
+  if (isProxyCall(expression)) return "single";
+  if (
+    ts.isCallExpression(expression) &&
+    ts.isPropertyAccessExpression(expression.expression) &&
+    expression.expression.name.text === "map" &&
+    expression.arguments.some(containsProxyCall)
+  ) {
+    return "array";
   }
-  // 从 workspace 包中添加已知的 class 类型（第三方包中的类）
-  for (const name of WORKSPACE_CLASS_NAMES) {
-    names.add(name);
+  if (
+    ts.isParenthesizedExpression(expression) ||
+    ts.isAsExpression(expression) ||
+    ts.isTypeAssertionExpression(expression)
+  ) {
+    return autoProxyReturnKind(expression.expression);
   }
-  return names;
+  if (ts.isConditionalExpression(expression)) {
+    return autoProxyReturnKind(expression.whenTrue) ?? autoProxyReturnKind(expression.whenFalse);
+  }
+  return undefined;
 }
 
-/** @graphif/shapes 和 @graphif/data-structures 中的 class 名称 */
-const WORKSPACE_CLASS_NAMES = [
-  // shapes
-  "Shape",
-  "Rectangle",
-  "Line",
-  "Circle",
-  "CubicCatmullRomSpline",
-  "CubicBezierCurve",
-  "SymmetryCurve",
-  // data-structures
-  "Vector",
-  "Color",
-  "Queue",
-  "Stack",
-  "MonoStack",
-  "LimitLengthQueue",
-  "ProgressNumber",
-  "LruCache",
-  "MaxSizeCache",
-];
-
-/**
- * 如果类型名是 class，追加序列化形式 `| { _: "TypeName" | (string & {}) }`。
- */
-function addSerializedForm(typeStr: string, classNames: Set<string>): string {
-  const trimmed = typeStr.trim();
-  if (classNames.has(trimmed)) {
-    return `${trimmed} | { _: "${trimmed}" | (string & {}) }`;
-  }
-  return trimmed;
+function getAutoProxyReturnKind(body: ts.ConciseBody): AutoProxyReturnKind | undefined {
+  if (!ts.isBlock(body)) return autoProxyReturnKind(body);
+  let kind: AutoProxyReturnKind | undefined;
+  const visit = (node: ts.Node): void => {
+    if (ts.isReturnStatement(node) && node.expression) kind ??= autoProxyReturnKind(node.expression);
+    ts.forEachChild(node, visit);
+  };
+  visit(body);
+  return kind;
 }
 
-function formatParams(params: ts.NodeArray<ts.ParameterDeclaration>, text: string): string {
-  const classNames = getClassNameSet();
-  return params
-    .map((p) => {
-      const rest = p.dotDotDotToken ? "..." : "";
-      const q = p.questionToken ? "?" : "";
-      const type = p.type ? `: ${addSerializedForm(nodeText(p.type, text), classNames)}` : "";
-      const init = p.initializer ? ` = ${nodeText(p.initializer, text)}` : "";
-      return `${rest}${p.name.getText()}${q}${type}${init}`;
+function autoProxyMethods(factory: ts.FunctionDeclaration): Map<string, AutoProxyReturnKind> {
+  const methods = new Map<string, AutoProxyReturnKind>();
+  const returnStatement = factory.body?.statements.find(
+    (statement): statement is ts.ReturnStatement =>
+      ts.isReturnStatement(statement) && !!statement.expression && ts.isObjectLiteralExpression(statement.expression),
+  );
+  if (!returnStatement || !returnStatement.expression || !ts.isObjectLiteralExpression(returnStatement.expression))
+    return methods;
+
+  for (const property of returnStatement.expression.properties) {
+    if (!ts.isMethodDeclaration(property) || !property.name || !property.body) continue;
+    const kind = getAutoProxyReturnKind(property.body);
+    if (kind) methods.set(property.name.getText(), kind);
+  }
+  return methods;
+}
+
+function renderAutoProxyReturnType(checker: ts.TypeChecker, returnType: ts.Type, kind: AutoProxyReturnKind): string {
+  const promiseSymbol = getDeclarationSymbol(checker, returnType);
+  const promiseArguments =
+    returnType.flags & ts.TypeFlags.Object ? checker.getTypeArguments(returnType as ts.TypeReference) : [];
+  const valueType =
+    promiseSymbol?.name === "Promise" && promiseArguments.length === 1 ? promiseArguments[0] : returnType;
+  if (kind === "array") {
+    const elementType = checker.getIndexTypeOfType(valueType, ts.IndexKind.Number);
+    if (!elementType) throw new Error(`AUTO_PROXY array return is not array-like: ${checker.typeToString(valueType)}`);
+    return `Array<Promise<AutoProxy<${printType(checker, elementType)}>>>`;
+  }
+  const remoteType = valueType.isUnion()
+    ? valueType.types
+        .map((member: ts.Type) =>
+          member.flags & (ts.TypeFlags.Null | ts.TypeFlags.Undefined)
+            ? printType(checker, member)
+            : `AutoProxy<${printType(checker, member)}>`,
+        )
+        .join(" | ")
+    : `AutoProxy<${printType(checker, valueType)}>`;
+  return `Promise<${remoteType}>`;
+}
+
+function isPrimitiveType(type: ts.Type): boolean {
+  return !!(
+    type.flags &
+    (ts.TypeFlags.Any |
+      ts.TypeFlags.Unknown |
+      ts.TypeFlags.Never |
+      ts.TypeFlags.VoidLike |
+      ts.TypeFlags.StringLike |
+      ts.TypeFlags.NumberLike |
+      ts.TypeFlags.BooleanLike |
+      ts.TypeFlags.BigIntLike |
+      ts.TypeFlags.ESSymbolLike |
+      ts.TypeFlags.Null |
+      ts.TypeFlags.Undefined)
+  );
+}
+
+function isLucideType(checker: ts.TypeChecker, type: ts.Type): boolean {
+  const symbol = getDeclarationSymbol(checker, type);
+  if (
+    symbol?.declarations?.some((declaration) =>
+      declaration.getSourceFile().fileName.includes(`${sep}lucide-react${sep}`),
+    )
+  ) {
+    return true;
+  }
+  const alias = symbol?.declarations?.find(ts.isTypeAliasDeclaration);
+  if (!alias) return false;
+  let lucide = false;
+  const visit = (node: ts.Node): void => {
+    if (ts.isTypeReferenceNode(node)) {
+      const reference = checker.getSymbolAtLocation(node.typeName);
+      const resolved = reference ? resolveAlias(checker, reference) : undefined;
+      lucide ||=
+        resolved?.declarations?.some((declaration) =>
+          declaration.getSourceFile().fileName.includes(`${sep}lucide-react${sep}`),
+        ) ?? false;
+    }
+    if (!lucide) ts.forEachChild(node, visit);
+  };
+  visit(alias.type);
+  return lucide;
+}
+
+function renderExtensionInputType(checker: ts.TypeChecker, type: ts.Type): string {
+  if (isPrimitiveType(type)) return printType(checker, type);
+  if (type.isUnion()) {
+    return type.types
+      .map((member) => {
+        const rendered = renderExtensionInputType(checker, member);
+        return checker.getSignaturesOfType(member, ts.SignatureKind.Call).length > 0 ? `(${rendered})` : rendered;
+      })
+      .join(" | ");
+  }
+  if (isLucideType(checker, type)) return "LucideIcon";
+
+  const symbol = getDeclarationSymbol(checker, type);
+  const typeArguments = type.flags & ts.TypeFlags.Object ? checker.getTypeArguments(type as ts.TypeReference) : [];
+  if ((symbol?.name === "Array" || symbol?.name === "ReadonlyArray") && typeArguments.length === 1) {
+    return `Array<${renderExtensionInputType(checker, typeArguments[0])}>`;
+  }
+  if (symbol && symbol.name !== "__type" && !(symbol.flags & ts.SymbolFlags.Function)) {
+    return `${printType(checker, type)} | SerializedObject<${JSON.stringify(symbol.name)}>`;
+  }
+  return printType(checker, type);
+}
+
+function renderCallableParameters(checker: ts.TypeChecker, signature: ts.Signature): string {
+  return signature
+    .getParameters()
+    .map((parameter) => {
+      const declaration = parameter.valueDeclaration ?? parameter.declarations?.[0];
+      const type = declaration ? checker.getTypeOfSymbolAtLocation(parameter, declaration) : undefined;
+      const rest = declaration && ts.isParameter(declaration) && declaration.dotDotDotToken ? "..." : "";
+      return `${rest}${parameter.name}${parameter.flags & ts.SymbolFlags.Optional ? "?" : ""}: ${type ? renderExtensionInputType(checker, type) : "unknown"}`;
     })
     .join(", ");
 }
 
-function formatTypeParams(tps: ts.NodeArray<ts.TypeParameterDeclaration> | undefined, text: string): string {
-  if (!tps || tps.length === 0) return "";
-  return `<${tps
-    .map((tp) => {
-      let s = tp.name.text;
-      if (tp.constraint) s += ` extends ${nodeText(tp.constraint, text)}`;
-      if (tp.default) s += ` = ${nodeText(tp.default, text)}`;
-      return s;
-    })
-    .join(", ")}>`;
+function renderCallableSignature(checker: ts.TypeChecker, signature: ts.Signature): string {
+  return `(${renderCallableParameters(checker, signature)}): ${printType(checker, checker.getReturnTypeOfSignature(signature))}`;
 }
 
-/**
- * 将类型字符串包裹为 Promise<type>。
- * - 已经是 Promise<T> 的保持不变
- * - 数组类型 T[] 变为 Promise<T>[]
- * - void/any/never 保持不变
- * - 其他包裹为 Promise<type>
- */
-function promisifyType(t: string): string {
-  const trimmed = t.trim();
-  if (trimmed.startsWith("Promise<") || trimmed === "void" || trimmed === "any" || trimmed === "never") return trimmed;
-  // 类型谓词（obj is Type）不能包裹 Promise
-  if (/\w+\s+is\s+\w/.test(trimmed)) return trimmed;
-  // 数组类型：T[] → Promise<T>[]
-  if (trimmed.endsWith("[]")) {
-    const inner = trimmed.slice(0, -2).trim();
-    return `Promise<${inner}>[]`;
-  }
-  return `Promise<${trimmed}>`;
-}
-
-function genInterface(node: ts.InterfaceDeclaration, text: string): string {
-  const tp = formatTypeParams(node.typeParameters, text);
-  const ext = node.heritageClauses ? " " + node.heritageClauses.map((h) => nodeText(h, text)).join(" ") : "";
-  const members = node.members.map((m) => {
-    if (ts.isMethodSignature(m)) {
-      const p = formatParams(m.parameters, text);
-      const r = m.type ? `: ${promisifyType(nodeText(m.type, text))}` : ": Promise<void>";
-      const t = formatTypeParams(m.typeParameters, text);
-      return `  ${m.name.getText()}${t}(${p})${r};`;
-    }
-    if (ts.isPropertySignature(m)) {
-      const r = hasMod(m, ts.SyntaxKind.ReadonlyKeyword) ? "readonly " : "";
-      const q = m.questionToken ? "?" : "";
-      const t = m.type ? `: ${promisifyType(nodeText(m.type, text))}` : "";
-      return `  ${r}${m.name.getText()}${q}${t};`;
-    }
-    if (ts.isIndexSignatureDeclaration(m)) return `  ${nodeText(m, text)};`;
-    if (ts.isCallSignatureDeclaration(m)) {
-      const p = formatParams(m.parameters, text);
-      const r = m.type ? `: ${promisifyType(nodeText(m.type, text))}` : ": Promise<void>";
-      return `  (${p})${r};`;
-    }
-    if (ts.isConstructSignatureDeclaration(m)) {
-      const p = formatParams(m.parameters, text);
-      const r = m.type ? `: ${promisifyType(nodeText(m.type, text))}` : ": Promise<void>";
-      return `  new (${p})${r};`;
-    }
-    return `  ${nodeText(m, text)};`;
-  });
-  return `declare interface ${node.name.text}${tp}${ext} {\n${members.join("\n")}\n}`;
-}
-
-function genTypeAlias(node: ts.TypeAliasDeclaration, text: string): string {
-  const tp = formatTypeParams(node.typeParameters, text);
-  return `declare type ${node.name.text}${tp} = ${nodeText(node.type, text)};`;
-}
-
-function genEnum(node: ts.EnumDeclaration, text: string): string {
-  const members = node.members.map((m) => {
-    const v = m.initializer ? ` = ${nodeText(m.initializer, text)}` : "";
-    return `  ${m.name.getText()}${v},`;
-  });
-  return `declare enum ${node.name.text} {\n${members.join("\n")}\n}`;
-}
-
-/**
- * 查找源文件中通过 declare module "..." { interface ClassName { ... } }
- * 为类添加的额外属性/方法，并合并到成员列表中。
- */
-function mergeAugmentationMembers(sf: ts.SourceFile, text: string, className: string, existingMembers: string[]): void {
-  const existingNames = new Set<string>();
-  for (const m of existingMembers) {
-    const nameMatch = m.match(/^\s*(?:get |set |readonly |static )?(\w+)/);
-    if (nameMatch) existingNames.add(nameMatch[1]);
-  }
-
-  ts.forEachChild(sf, (node) => {
-    if (!ts.isModuleDeclaration(node)) return;
-    if (!node.body || !ts.isModuleBlock(node.body)) return;
-
-    for (const stmt of node.body.statements) {
-      if (!ts.isInterfaceDeclaration(stmt)) continue;
-      if (stmt.name.text !== className) continue;
-
-      for (const member of stmt.members) {
-        const name = member.name?.getText(sf);
-        if (!name || existingNames.has(name)) continue;
-        existingNames.add(name);
-
-        if (ts.isMethodSignature(member)) {
-          const t = formatTypeParams(member.typeParameters, text);
-          const r = member.type ? `: ${promisifyType(nodeText(member.type, text))}` : ": Promise<void>";
-          existingMembers.push(`  ${member.name.getText()}${t}(${formatParams(member.parameters, text)})${r};`);
-        } else if (ts.isPropertySignature(member)) {
-          const ro = hasMod(member, ts.SyntaxKind.ReadonlyKeyword) ? "readonly " : "";
-          const q = member.questionToken ? "?" : "";
-          const t = member.type ? `: ${promisifyType(nodeText(member.type, text))}` : "";
-          existingMembers.push(`  ${ro}${member.name.getText()}${q}${t};`);
-        }
-      }
-    }
-  });
-}
-
-function genClass(node: ts.ClassDeclaration, text: string): string {
-  const tp = formatTypeParams(node.typeParameters, text);
-  const her = node.heritageClauses ? " " + node.heritageClauses.map((h) => nodeText(h, text)).join(" ") : "";
+function renderExtensionHostApi(
+  checker: ts.TypeChecker,
+  apiType: ts.Type,
+  proxiedMethods: ReadonlyMap<string, AutoProxyReturnKind>,
+): string {
   const members: string[] = [];
-  for (const m of node.members) {
-    if (hasMod(m, ts.SyntaxKind.PrivateKeyword)) continue;
-    if (hasMod(m, ts.SyntaxKind.ProtectedKeyword)) continue;
-
-    if (ts.isConstructorDeclaration(m)) {
-      members.push(`  constructor(${formatParams(m.parameters, text)});`);
-    } else if (ts.isMethodDeclaration(m)) {
-      const t = formatTypeParams(m.typeParameters, text);
-      const r = m.type ? `: ${promisifyType(nodeText(m.type, text))}` : ": Promise<void>";
-      members.push(`  ${m.name.getText()}${t}(${formatParams(m.parameters, text)})${r};`);
-    } else if (ts.isPropertyDeclaration(m)) {
-      const ro = hasMod(m, ts.SyntaxKind.ReadonlyKeyword) ? "readonly " : "";
-      const q = m.questionToken ? "?" : "";
-      const t = m.type ? `: ${promisifyType(nodeText(m.type, text))}` : "";
-      members.push(`  ${ro}${m.name.getText()}${q}${t};`);
-    } else if (ts.isGetAccessorDeclaration(m)) {
-      members.push(`  get ${m.name.getText()}(): ${m.type ? promisifyType(nodeText(m.type, text)) : "Promise<any>"};`);
-    } else if (ts.isSetAccessorDeclaration(m)) {
-      const p = m.parameters[0];
-      if (p)
-        members.push(`  set ${m.name.getText()}(${p.name.getText()}${p.type ? `: ${nodeText(p.type, text)}` : ""});`);
-    } else if (ts.isIndexSignatureDeclaration(m)) {
-      members.push(`  ${nodeText(m, text)};`);
-    }
-  }
-
-  // 合并模块增强中的属性（如 declare module "./Project" { interface Project { ... } }）
-  const sf = node.getSourceFile();
-  mergeAugmentationMembers(sf, text, node.name?.text ?? "", members);
-
-  return `declare class ${node.name?.text || "_"}${tp}${her} {\n${members.join("\n")}\n}`;
-}
-
-function genNamespace(node: ts.ModuleDeclaration, text: string): string {
-  const body = node.body;
-  if (!body || !ts.isModuleBlock(body)) return `declare namespace ${node.name.text} {}`;
-  const items: string[] = [];
-  for (const s of body.statements) {
-    if (ts.isInterfaceDeclaration(s)) items.push(genInterface(s, text));
-    else if (ts.isTypeAliasDeclaration(s)) items.push(genTypeAlias(s, text));
-    else if (ts.isEnumDeclaration(s)) items.push(genEnum(s, text));
-    else if (ts.isClassDeclaration(s)) items.push(genClass(s, text));
-    else if (ts.isFunctionDeclaration(s) && s.name) {
-      const t = formatTypeParams(s.typeParameters, text);
-      const r = s.type ? `: ${promisifyType(nodeText(s.type, text))}` : ": Promise<void>";
-      items.push(`  function ${s.name.text}${t}(${formatParams(s.parameters, text)})${r};`);
-    } else if (ts.isModuleDeclaration(s)) items.push(genNamespace(s, text));
-    else if (ts.isVariableStatement(s)) {
-      for (const d of s.declarationList.declarations) {
-        if (ts.isIdentifier(d.name)) {
-          items.push(`  const ${d.name.text}${d.type ? `: ${promisifyType(nodeText(d.type, text))}` : ""};`);
-        }
-      }
-    }
-  }
-  return `declare namespace ${node.name.text} {\n${items.join("\n")}\n}`;
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-//  从目标文件中提取函数和返回表达式
-// ═══════════════════════════════════════════════════════════════════════
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function findFactoryFunction(sf: ts.SourceFile, _text: string): ts.FunctionDeclaration | null {
-  let found: ts.FunctionDeclaration | null = null;
-  ts.forEachChild(sf, (node) => {
-    if (found) return;
-    if (ts.isFunctionDeclaration(node) && node.name?.text === "extensionHostApiFactory") found = node;
-  });
-  return found;
-}
-
-function findReturnStatement(fd: ts.FunctionDeclaration): ts.ReturnStatement | null {
-  if (!fd.body) return null;
-  let rs: ts.ReturnStatement | null = null;
-  ts.forEachChild(fd.body, (node) => {
-    if (rs) return;
-    if (ts.isReturnStatement(node)) rs = node;
-  });
-  return rs;
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-//  生成函数签名（用于 d.ts 输出）
-// ═══════════════════════════════════════════════════════════════════════
-
-function genFunctionSignature(fd: ts.FunctionDeclaration, text: string, imports: ImportEntry[]): string {
-  const name = fd.name!.text;
-  const tp = fd.typeParameters ? formatTypeParams(fd.typeParameters, text) : "";
-  const params = formatParams(fd.parameters, text);
-
-  const ret = extractReturnType(fd, text, imports);
-  return `export declare function ${name}${tp}(${params}): ${ret};`;
-}
-
-/**
- * 将方法返回类型进一步 promisify：Promise<Tab[]> → Promise<Promise<Tab>[]>
- * 即保留外层 Promise，内部类型也执行 promisifyType。
- */
-function promisifyReturnType(typeStr: string): string {
-  const innerMatch = typeStr.trim().match(/^Promise<(.+)>$/);
-  if (innerMatch) {
-    const inner = innerMatch[1].trim();
-    return `Promise<${promisifyType(inner)}>`;
-  }
-  return promisifyType(typeStr);
-}
-
-function extractReturnType(fd: ts.FunctionDeclaration, text: string, imports: ImportEntry[]): string {
-  const rs = findReturnStatement(fd);
-  if (!rs?.expression) return "any";
-
-  const expr = rs.expression;
-  if (!ts.isObjectLiteralExpression(expr)) return nodeText(expr, text);
-
-  const props: string[] = [];
-  for (const p of expr.properties) {
-    // 方法声明 → 方法签名
-    if (ts.isMethodDeclaration(p)) {
-      const t = formatTypeParams(p.typeParameters, text);
-      const r = p.type ? `: ${promisifyReturnType(nodeText(p.type, text))}` : ": Promise<void>";
-      props.push(`    ${p.name.getText()}${t}(${formatParams(p.parameters, text)})${r};`);
+  for (const property of checker.getPropertiesOfType(apiType)) {
+    const declaration = property.valueDeclaration ?? property.declarations?.[0];
+    if (!declaration) continue;
+    const propertyType = checker.getTypeOfSymbolAtLocation(property, declaration);
+    const signature = checker.getSignaturesOfType(propertyType, ts.SignatureKind.Call)[0];
+    const proxyKind = proxiedMethods.get(property.name);
+    if (signature && proxyKind) {
+      members.push(
+        `  ${propertyName(property)}(${renderCallableParameters(checker, signature)}): ${renderAutoProxyReturnType(checker, checker.getReturnTypeOfSignature(signature), proxyKind)};`,
+      );
       continue;
     }
-    // PropertyAssignment
-    if (ts.isPropertyAssignment(p)) {
-      const name = p.name.getText();
-      const init = p.initializer;
-      // satisfies typeof X
-      if (ts.isSatisfiesExpression(init)) {
-        props.push(`    ${name}: ${nodeText(init.type, text)};`);
-        continue;
-      }
-      // identifier (value reference)
-      if (ts.isIdentifier(init)) {
-        const ref = lookupTypeForValue(init.text, imports);
-        props.push(`    ${name}: ${ref};`);
-        continue;
-      }
-      // arrow function
-      if (ts.isArrowFunction(init)) {
-        const t = formatTypeParams(init.typeParameters, text);
-        const r = init.type ? `: ${nodeText(init.type, text)}` : "";
-        props.push(`    ${name}: ${t}(${formatParams(init.parameters, text)})${r};`);
-        continue;
-      }
-      // call expression (如 proxy(it))
-      if (ts.isCallExpression(init) && ts.isIdentifier(init.expression)) {
-        const ref = lookupTypeForValue(init.expression.text, imports);
-        props.push(`    ${name}: ${ref};`);
-        continue;
-      }
-      props.push(`    ${name}: ${nodeText(init, text)};`);
+    if (signature) {
+      members.push(`  ${propertyName(property)}${renderCallableSignature(checker, signature)};`);
       continue;
     }
-    // ShorthandPropertyAssignment (如 fetch)
-    // 值引用需要用 typeof 包裹（值为函数）
-    if (ts.isShorthandPropertyAssignment(p)) {
-      const ref = lookupTypeForValue(p.name.text, imports);
-      props.push(`    ${p.name.text}: typeof ${ref};`);
-      continue;
-    }
-    // SpreadAssignment
-    if (ts.isSpreadAssignment(p)) {
-      props.push(`    ...${nodeText(p.expression, text)};`);
-      continue;
+    members.push(`  ${propertyName(property)}: ${printType(checker, propertyType)};`);
+  }
+  return `{\n${members.join("\n")}\n}`;
+}
+
+function main(): void {
+  const program = getProgram();
+  const checker = program.getTypeChecker();
+  const sourceFile = program.getSourceFile(TARGET_FILE);
+  if (!sourceFile) throw new Error(`Source file was not included in the program: ${TARGET_FILE}`);
+  const factory = findFactory(sourceFile);
+  const signature = checker.getSignatureFromDeclaration(factory);
+  if (!signature) throw new Error("Cannot infer extensionHostApiFactory signature");
+
+  const apiType = checker.getReturnTypeOfSignature(signature);
+  const localDeclarations = collectLocalDeclarations(checker, apiType);
+  const localSourceFiles = new Map<string, ts.SourceFile>([[sourceFile.fileName, sourceFile]]);
+  for (const local of localDeclarations) {
+    for (const declaration of local.symbol.declarations ?? []) {
+      const declarationSourceFile = declaration.getSourceFile();
+      localSourceFiles.set(declarationSourceFile.fileName, declarationSourceFile);
     }
   }
-
-  return `{\n${props.join("\n")}\n  }`;
-}
-
-/**
- * 查找一个导入值的类型引用文本。
- * 对于本地模块导入，直接返回原始导出名（因为类型会在同一文件中定义）。
- * 对于第三方导入，返回原始导出名（因为会有 import type）。
- */
-function lookupTypeForValue(name: string, imports: ImportEntry[]): string {
-  for (const imp of imports) {
-    if (imp.named.has(name)) {
-      return imp.named.get(name)!;
-    }
-    if (imp.defaultName === name) {
-      return name;
-    }
-  }
-  return name;
-}
-
-/**
- * 在类型字符串中，将 proxied 类型名包裹为 `Remote<name>`。
- * 按名称长度从长到短排序替换，避免部分匹配（如 Tab 不应匹配 TabExporter）。
- */
-// function wrapReturnTypeWithRemote(typeStr: string, proxied: Set<string>): string {
-//   const sorted = [...proxied].sort((a, b) => b.length - a.length);
-//   let result = typeStr;
-//   for (const name of sorted) {
-//     result = result.replace(new RegExp(`\\b${escapeRegExp(name)}\\b`, "g"), `Remote<${name}>`);
-//   }
-//   return result;
-// }
-
-// function escapeRegExp(s: string): string {
-//   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-// }
-
-// (kept for reference, no longer used)
-
-// ═══════════════════════════════════════════════════════════════════════
-//  递归收集类型
-// ═══════════════════════════════════════════════════════════════════════
-
-const localTypes = new Map<string, { name: string; kind: string; text: string; file: string }>();
-const thirdPartyImports = new Map<string, Set<string>>();
-const processedFiles = new Set<string>();
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function collectTypes(filePath: string, _rootImports: ImportEntry[]): void {
-  if (processedFiles.has(filePath)) return;
-  processedFiles.add(filePath);
-
-  const fi = parseFile(filePath);
-  if (!fi) return;
-
-  // 收集当前文件中的所有类型引用
-  const refs = new Map<string, { specifier: string; originalName: string; isValue?: boolean }>();
-  collectTypeRefs(fi.sf, fi.imports, refs);
-
-  for (const [, ref] of refs) {
-    const { specifier, originalName } = ref;
-
-    // 第三方 → 记录
-    if (isThirdParty(specifier)) {
-      if (!thirdPartyImports.has(specifier)) thirdPartyImports.set(specifier, new Set());
-      thirdPartyImports.get(specifier)!.add(originalName === "default" ? "default" : originalName);
-      continue;
-    }
-
-    // import type 引用（import("...").X 语法）
-    if (specifier.startsWith("__import_type__")) {
-      // specifier 格式: __import_type__|moduleSpecifier|typeName
-      const parts = specifier.split("|");
-      if (parts.length >= 3) {
-        const modSpec = parts[1];
-        const typeName = parts.slice(2).join("|");
-        if (!isThirdParty(modSpec)) {
-          const resolved = resolveSpecifier(filePath, modSpec);
-          if (!resolved) continue;
-
-          // 先递归处理该文件（收集它自身的类型引用）
-          collectTypes(resolved, fi.imports);
-
-          // 再确保该类型本身被加入到 localTypes
-          const key = `${resolved}::${typeName}`;
-          if (!localTypes.has(key)) {
-            const tfi = parseFile(resolved);
-            if (tfi) {
-              const decl = findDecl(resolved, typeName, tfi);
-              if (decl) {
-                const text = genDecl(decl, tfi.text);
-                if (text) {
-                  let kind = "type";
-                  if (ts.isInterfaceDeclaration(decl)) kind = "interface";
-                  else if (ts.isClassDeclaration(decl)) kind = "class";
-                  else if (ts.isEnumDeclaration(decl)) kind = "enum";
-                  else if (ts.isTypeAliasDeclaration(decl)) kind = "type";
-                  else if (ts.isModuleDeclaration(decl)) kind = "namespace";
-                  else if (ts.isFunctionDeclaration(decl)) kind = "function";
-                  localTypes.set(key, { name: typeName, kind, text, file: resolved });
-                }
-              }
-            }
-          }
-        }
-      }
-      continue;
-    }
-
-    // 本地 → 递归解析
-    const resolved = resolveSpecifier(filePath, specifier);
-    if (!resolved) continue;
-
-    const typeName = originalName === "default" ? "default" : originalName;
-    const key = `${resolved}::${typeName}`;
-    if (localTypes.has(key)) continue;
-
-    // 解析目标文件
-    const tfi = parseFile(resolved);
-    if (!tfi) continue;
-
-    // 查找声明节点
-    const decl = findDecl(resolved, typeName, tfi);
-    if (!decl) continue;
-
-    // 生成声明文本
-    let text = genDecl(decl, tfi.text);
-    if (!text) continue;
-
-    let kind = "type";
-    if (ts.isInterfaceDeclaration(decl)) kind = "interface";
-    else if (ts.isClassDeclaration(decl)) kind = "class";
-    else if (ts.isEnumDeclaration(decl)) kind = "enum";
-    else if (ts.isTypeAliasDeclaration(decl)) kind = "type";
-    else if (ts.isModuleDeclaration(decl)) kind = "namespace";
-    else if (ts.isFunctionDeclaration(decl)) kind = "function";
-
-    // 特殊处理：函数+静态属性合并（如 Dialog）
-    if (ts.isFunctionDeclaration(decl) && typeName !== "default") {
-      const merged = tryMergeFuncAndNamespace(tfi.sf, tfi.text, typeName);
-      if (merged) text = merged;
-    }
-
-    localTypes.set(key, { name: typeName, kind, text, file: resolved });
-
-    // 递归
-    collectTypes(resolved, tfi.imports);
-  }
-}
-
-function findDecl(_fileName: string, typeName: string, fi: FileInfo): ts.Declaration | null {
-  let found: ts.Declaration | null = null;
-  ts.forEachChild(fi.sf, (node) => {
-    if (found) return;
-    if (ts.isInterfaceDeclaration(node) && node.name.text === typeName) found = node;
-    else if (ts.isTypeAliasDeclaration(node) && node.name.text === typeName) found = node;
-    else if (ts.isEnumDeclaration(node) && node.name.text === typeName) found = node;
-    else if (ts.isClassDeclaration(node) && node.name?.text === typeName) found = node;
-    else if (ts.isModuleDeclaration(node) && node.name.text === typeName) found = node;
-    else if (ts.isFunctionDeclaration(node) && node.name?.text === typeName) found = node;
-    else if (ts.isVariableStatement(node)) {
-      for (const d of node.declarationList.declarations) {
-        if (ts.isIdentifier(d.name) && d.name.text === typeName) found = d;
-      }
-    }
-    // 默认导出
-    else if (typeName === "default") {
-      if (ts.isExportAssignment(node)) {
-        // export default expression
-      } else if ((node as ts.HasModifiers).modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)) {
-        // won't match here
-      }
-    }
-  });
-  return found;
-}
-
-function genDecl(node: ts.Declaration, text: string): string | null {
-  if (ts.isInterfaceDeclaration(node)) return genInterface(node, text);
-  if (ts.isTypeAliasDeclaration(node)) return genTypeAlias(node, text);
-  if (ts.isEnumDeclaration(node)) return genEnum(node, text);
-  if (ts.isClassDeclaration(node)) return genClass(node, text);
-  if (ts.isModuleDeclaration(node)) return genNamespace(node, text);
-  if (ts.isFunctionDeclaration(node)) {
-    const t = formatTypeParams(node.typeParameters, text);
-    const r = node.type ? `: ${promisifyType(nodeText(node.type, text))}` : ": Promise<void>";
-    return `declare function ${node.name?.text}${t}(${formatParams(node.parameters, text)})${r};`;
-  }
-  if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name)) {
-    const t = node.type ? `: ${promisifyType(nodeText(node.type, text))}` : "";
-    return `declare const ${node.name.text}${t};`;
-  }
-  return null;
-}
-
-/** 尝试合并函数声明和其静态属性赋值（如 Dialog.confirm = ...） */
-function tryMergeFuncAndNamespace(sf: ts.SourceFile, text: string, name: string): string | null {
-  let funcNode: ts.FunctionDeclaration | null = null;
-  ts.forEachChild(sf, (node) => {
-    if (ts.isFunctionDeclaration(node) && node.name?.text === name) funcNode = node;
-  });
-  if (!funcNode) return null;
-
-  const staticMembers: string[] = [];
-
-  // 查找 export 后的属性赋值语句: Dialog.confirm = ...
-  ts.forEachChild(sf, (node) => {
-    if (!ts.isExpressionStatement(node)) return;
-    const expr = node.expression;
-    if (!ts.isBinaryExpression(expr) || expr.operatorToken.kind !== ts.SyntaxKind.EqualsToken) return;
-    const left = expr.left;
-    if (!ts.isPropertyAccessExpression(left)) return;
-    if (!ts.isIdentifier(left.expression) || left.expression.text !== name) return;
-    const propName = left.name.text;
-
-    const right = expr.right;
-    if (ts.isArrowFunction(right) || ts.isFunctionExpression(right)) {
-      const t = formatTypeParams(right.typeParameters, text);
-      const r = right.type ? `: ${nodeText(right.type, text)}` : "";
-      staticMembers.push(`  function ${propName}${t}(${formatParams(right.parameters, text)})${r};`);
-    } else if (ts.isIdentifier(right)) {
-      staticMembers.push(`  var ${propName}: typeof ${right.text};`);
-    } else {
-      staticMembers.push(`  var ${propName}: ${nodeText(right, text)};`);
-    }
-  });
-
-  // 同名的 namespace/module 声明
-  ts.forEachChild(sf, (node) => {
-    if (ts.isModuleDeclaration(node) && node.name.text === name) {
-      const nsText = genNamespace(node, text);
-      const m = nsText.match(/declare namespace \w+ \{(.*)\}/s);
-      if (m) {
-        const inner = m[1].trim();
-        if (inner) staticMembers.push(inner);
-      }
-    }
-  });
-
-  const fn = funcNode! as ts.FunctionDeclaration;
-  const t = formatTypeParams(fn.typeParameters, text);
-  const r = fn.type ? `: ${nodeText(fn.type, text)}` : "";
-  const funcDecl = `declare function ${name}${t}(${formatParams(fn.parameters, text)})${r};`;
-
-  if (staticMembers.length === 0) return funcDecl;
-
-  return `${funcDecl}\ndeclare namespace ${name} {\n${staticMembers.join("\n")}\n}`;
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-//  输出文件生成
-// ═══════════════════════════════════════════════════════════════════════
-
-/** 收集本地类型名称集合，用于后续替换 inline import type */
-function getLocalTypeNames(): Set<string> {
-  const names = new Set<string>();
-  for (const [, info] of localTypes) names.add(info.name);
-  return names;
-}
-
-/**
- * 替换函数签名中的 inline import type 引用。
- * import("../../Tab").Tab → Tab（如果 Tab 是本地类型）
- */
-function replaceInlineImportTypes(text: string, localNames: Set<string>): string {
-  return text.replace(/import\("[^"]+"\)\.(\w+)/g, (match, typeName) => {
-    return localNames.has(typeName) ? typeName : match;
-  });
-}
-
-function generateOutput(funcSignature: string): string {
-  const localNames = getLocalTypeNames();
-
-  const lines: string[] = [
+  const localDeclarationText = localDeclarations.map((local) => renderLocalDeclaration(checker, local));
+  const extensionHostApi = renderExtensionHostApi(checker, apiType, autoProxyMethods(factory));
+  const referencedText = [...localDeclarationText, extensionHostApi].join("\n");
+  const output = [
     "/* eslint-disable */",
-    "// @ts-nocheck",
+    "/** Auto-generated from extensionHostApiFactory. Do not edit manually. */",
+    ...externalImports(checker, localSourceFiles.values(), referencedText),
     "",
-    "/**",
-    " * Auto-generated. Do not edit manually.",
-    ` * ${new Date().toISOString()}`,
-    " */",
+    ...localDeclarationText,
     "",
-  ];
+    "interface SerializedObject<Name extends string> {",
+    "  $rpc?: { deserializeWithProject?: boolean };",
+    "  _: Name | (string & {});",
+    "  [key: string | number | symbol]: any;",
+    "}",
+    "",
+    "interface LucideIcon {",
+    "  $lucide: string;",
+    "}",
+    "",
+    "type AutoProxyArrayItem<T> = T extends object ? Promise<AutoProxy<T>> : T;",
+    "type AutoProxyValue<T> = T extends readonly (infer Item)[] ? AutoProxyArrayItem<Item>[] : T extends object ? AutoProxy<T> : T;",
+    "type AutoProxyMethod<T> = T extends (...args: infer Args) => infer Result ? (...args: Args) => Promise<AutoProxyValue<Awaited<Result>>> : never;",
+    "type AutoProxy<T> = T extends object ? { [Key in keyof T]: T[Key] extends (...args: any[]) => any ? AutoProxyMethod<T[Key]> : Promise<AutoProxyValue<T[Key]>>; } & ProxyMethods : T;",
+    "",
+    `export type ExtensionHostApi = ${extensionHostApi};`,
+    "",
+    "declare global {",
+    "  const prg: ExtensionHostApi;",
+    "  interface Window { prg: ExtensionHostApi; }",
+    "  interface DedicatedWorkerGlobalScope { prg: ExtensionHostApi; }",
+    "}",
+    "",
+  ].join("\n");
 
-  // 1. Third-party imports
-  if (thirdPartyImports.size > 0) {
-    lines.push("// ── 第三方类型导入 ──");
-    const namespaceImports: [string, string][] = [];
-    const namedImports: [string, Set<string>][] = [];
-
-    for (const [spec, names] of [...thirdPartyImports.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
-      const cleaned = new Set<string>();
-      let nsName = "";
-
-      for (const n of names) {
-        if (n === "__ns__") {
-          // namespace import: 用 spec 的最后一段作为命名空间名
-          const parts = spec.replace(/^@/, "").split("/");
-          nsName = parts[parts.length - 1]?.replace(/-/g, "_") ?? "NS";
-        } else if (n !== "default") {
-          cleaned.add(n);
-        }
-      }
-
-      if (nsName) {
-        namespaceImports.push([nsName, spec]);
-      }
-      if (cleaned.size > 0) {
-        namedImports.push([spec, cleaned]);
-      }
-    }
-
-    // Named imports
-    for (const [spec, names] of namedImports) {
-      const sorted = [...names].sort();
-      if (sorted.length === 1) {
-        lines.push(`import type { ${sorted[0]} } from "${spec}";`);
-      } else {
-        lines.push(`import type { ${sorted.join(", ")} } from "${spec}";`);
-      }
-    }
-
-    // Namespace imports
-    for (const [alias, spec] of namespaceImports) {
-      lines.push(`import type * as ${alias} from "${spec}";`);
-    }
-
-    lines.push("");
-  }
-
-  // 2. Local type definitions
-  if (localTypes.size > 0) {
-    lines.push("// ── 本地类型定义 ──");
-    for (const [, info] of [...localTypes.entries()].sort((a, b) => a[1].name.localeCompare(b[1].name))) {
-      lines.push(info.text);
-      lines.push("");
-    }
-  }
-
-  // 3. Function signature
-  lines.push("// ── 扩展宿主 API ──");
-  lines.push("");
-  const cleanedSig = replaceInlineImportTypes(funcSignature, localNames);
-  lines.push(cleanedSig);
-  lines.push("");
-
-  // 5. Global type augmentation
-  lines.push("declare global {");
-  lines.push("  const prg: ReturnType<typeof extensionHostApiFactory>;");
-  lines.push('  const Comlink: typeof import("comlink");');
-  lines.push("  interface Window {");
-  lines.push("    prg: ReturnType<typeof extensionHostApiFactory>;");
-  lines.push('    Comlink: typeof import("comlink");');
-  lines.push("  }");
-  lines.push("  interface DedicatedWorkerGlobalScope {");
-  lines.push("    prg: ReturnType<typeof extensionHostApiFactory>;");
-  lines.push('    Comlink: typeof import("comlink");');
-  lines.push("  }");
-  lines.push("}");
-  lines.push("");
-
-  return lines.join("\n");
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-//  入口
-// ═══════════════════════════════════════════════════════════════════════
-
-function main() {
-  console.log("🔍 解析目标文件...");
-
-  const fi = parseFile(TARGET_FILE);
-  if (!fi) {
-    console.error("❌ 无法解析:", TARGET_FILE);
-    exit(1);
-  }
-  console.log(`✅ 已解析: ${TARGET_FILE}`);
-
-  const fd = findFactoryFunction(fi.sf, fi.text);
-  if (!fd) {
-    console.error("❌ 未找到 extensionHostApiFactory");
-    exit(1);
-  }
-  console.log("✅ 已找到 extensionHostApiFactory 函数");
-
-  // 收集初始类型引用（包括函数参数和返回表达式）
-  console.log("");
-  console.log("🔍 收集返回类型中的类型引用...");
-  const refs = new Map<string, { specifier: string; originalName: string; isValue?: boolean }>();
-
-  // 从函数参数中收集类型（如 Extension）
-  for (const param of fd.parameters) {
-    if (param.type) collectTypeRefs(param.type, fi.imports, refs);
-  }
-
-  // 从返回表达式中收集类型
-  const rs = findReturnStatement(fd);
-  if (rs?.expression) {
-    collectTypeRefs(rs.expression, fi.imports, refs);
-  }
-
-  for (const [, r] of refs) {
-    console.log(`   ${r.originalName}  ←  ${r.specifier}${r.isValue ? " (value)" : ""}`);
-  }
-
-  // 递归收集
-  console.log("");
-  console.log("🔍 递归收集类型定义...");
-
-  // 先处理初始引用中的本地类型
-  const todoImports = new Map<string, { specifier: string; originalName: string }>();
-  for (const [, ref] of refs) {
-    if (!isThirdParty(ref.specifier) && !ref.specifier.startsWith("__import_type__")) {
-      todoImports.set(ref.specifier, { specifier: ref.specifier, originalName: ref.originalName });
-    }
-    if (isThirdParty(ref.specifier)) {
-      if (!thirdPartyImports.has(ref.specifier)) thirdPartyImports.set(ref.specifier, new Set());
-      thirdPartyImports.get(ref.specifier)!.add(ref.originalName === "default" ? "default" : ref.originalName);
-    }
-  }
-
-  // 解析初始引用中的本地类型
-  for (const [, imp] of todoImports) {
-    const resolved = resolveSpecifier(TARGET_FILE, imp.specifier);
-    if (!resolved) continue;
-    collectTypes(resolved, fi.imports);
-
-    // 确保该类型本身被加入到 localTypes（当类型在文件中定义而非引用时）
-    const typeName = imp.originalName === "default" ? "default" : imp.originalName;
-    const key = `${resolved}::${typeName}`;
-    if (!localTypes.has(key)) {
-      const tfi = parseFile(resolved);
-      if (tfi) {
-        const decl = findDecl(resolved, typeName, tfi);
-        if (decl) {
-          let text = genDecl(decl, tfi.text);
-          if (text) {
-            // 特殊处理：函数+静态属性合并（如 Dialog）
-            if (ts.isFunctionDeclaration(decl)) {
-              const merged = tryMergeFuncAndNamespace(tfi.sf, tfi.text, typeName);
-              if (merged) text = merged;
-            }
-            let kind = "type";
-            if (ts.isInterfaceDeclaration(decl)) kind = "interface";
-            else if (ts.isClassDeclaration(decl)) kind = "class";
-            else if (ts.isEnumDeclaration(decl)) kind = "enum";
-            else if (ts.isTypeAliasDeclaration(decl)) kind = "type";
-            else if (ts.isModuleDeclaration(decl)) kind = "namespace";
-            else if (ts.isFunctionDeclaration(decl)) kind = "function";
-            localTypes.set(key, { name: typeName, kind, text, file: resolved });
-          }
-        }
-      }
-    }
-  }
-
-  // 还要处理 import type 引用（使用 | 分隔符）
-  for (const [, ref] of refs) {
-    if (ref.specifier.startsWith("__import_type__")) {
-      const parts = ref.specifier.split("|");
-      if (parts.length >= 3) {
-        const modSpec = parts[1];
-        const typeName = parts.slice(2).join("|");
-        if (!isThirdParty(modSpec)) {
-          const resolved = resolveSpecifier(TARGET_FILE, modSpec);
-          if (!resolved) continue;
-
-          // 先递归处理该文件
-          collectTypes(resolved, fi.imports);
-
-          // 再确保该类型本身被加入到 localTypes
-          const key = `${resolved}::${typeName}`;
-          if (!localTypes.has(key)) {
-            const tfi = parseFile(resolved);
-            if (tfi) {
-              const decl = findDecl(resolved, typeName, tfi);
-              if (decl) {
-                const text = genDecl(decl, tfi.text);
-                if (text) {
-                  let kind = "type";
-                  if (ts.isInterfaceDeclaration(decl)) kind = "interface";
-                  else if (ts.isClassDeclaration(decl)) kind = "class";
-                  else if (ts.isEnumDeclaration(decl)) kind = "enum";
-                  else if (ts.isTypeAliasDeclaration(decl)) kind = "type";
-                  else if (ts.isModuleDeclaration(decl)) kind = "namespace";
-                  else if (ts.isFunctionDeclaration(decl)) kind = "function";
-                  localTypes.set(key, { name: typeName, kind, text, file: resolved });
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  console.log(`\n📊 收集结果:`);
-  console.log(`   本地类型: ${localTypes.size}`);
-  console.log(`   第三方模块: ${thirdPartyImports.size}`);
-
-  // 生成函数签名
-  console.log("");
-  console.log("🔧 生成函数签名...");
-  const sig = genFunctionSignature(fd, fi.text, fi.imports);
-
-  // 生成输出
-  console.log("📝 生成输出文件...");
-  const output = generateOutput(sig);
-  // writeFileSync(OUTPUT_FILE, output, "utf-8");
-  // console.log(`✅ 已写入: ${OUTPUT_FILE}`);
-
-  // 同步到 extprg-types 包
-  writeFileSync(PKG_API_FILE, output, "utf-8");
-  console.log(`✅ 已同步到包: ${PKG_API_FILE}`);
-
-  // 统计
-  console.log("");
-  console.log("📋 本地类型列表:");
-  for (const [, info] of [...localTypes.entries()].sort((a, b) => a[1].name.localeCompare(b[1].name))) {
-    console.log(`   ${info.kind.padEnd(12)} ${info.name}`);
-  }
+  writeFileSync(OUTPUT_FILE, output, "utf8");
+  console.log(`Generated ${OUTPUT_FILE} with ${localDeclarations.length} workspace declarations.`);
 }
 
 main();
