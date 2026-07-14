@@ -63,7 +63,7 @@ type AIMCPServerRuntimeState = {
   enabled: boolean;
   enabledTools: string[];
   cachedTools: AIMCPToolDescriptor[];
-  trustedDefinition?: string;
+  trustedDefinitionHash?: string;
 };
 ```
 
@@ -108,7 +108,7 @@ Local process trust and model tool approval are independent:
 1. Before starting an untrusted or changed stdio definition, Project Graph shows the exact executable, arguments, working directory, and environment variable names. Environment values are not repeated in the dialog. The server starts only after explicit confirmation.
 2. Every model-initiated MCP tool invocation continues to require the existing AI SDK approval response.
 
-The trusted value is a deterministic serialization of the normalized stdio definition. Changing any execution-affecting field invalidates trust. Saving configuration never starts a process or performs a network request.
+The trusted value is a deterministic fingerprint of the normalized stdio definition. Changing any execution-affecting field invalidates trust. Saving configuration never starts a process or performs a network request.
 
 Literal `env` and `headers` values are stored locally in the Tauri Store. The UI warns that these values are stored in the local configuration file. `${input:...}` and OAuth are outside this implementation because they require a separate secure credential-provider design.
 
