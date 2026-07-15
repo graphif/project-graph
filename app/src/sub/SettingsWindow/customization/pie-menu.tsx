@@ -237,7 +237,7 @@ export default function PieMenuPage() {
                   return (
                     <div
                       key={`${id}-preview`}
-                      className={`group bg-popover absolute flex h-12 w-28 -translate-x-1/2 -translate-y-1/2 cursor-grab items-center gap-2 rounded-xl border px-3 text-xs shadow transition-[left,top,transform,opacity] active:cursor-grabbing ${isDragged ? "z-10 scale-105 opacity-90 shadow-xl transition-none" : "hover:border-primary/50 hover:scale-105"}`}
+                      className={`group bg-popover absolute flex h-8 w-32 -translate-x-1/2 -translate-y-1/2 cursor-grab items-center gap-2 rounded-full border px-3 text-xs shadow transition-[left,top,transform,opacity] active:cursor-grabbing ${isDragged ? "z-10 scale-105 opacity-90 shadow-xl transition-none" : "hover:border-primary/50 hover:scale-105"}`}
                       style={
                         isDragged && dragPosition
                           ? { left: dragPosition.x, top: dragPosition.y }

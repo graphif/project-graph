@@ -9,7 +9,7 @@ import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const RADIUS = 112;
+const RADIUS = 130;
 const DEAD_ZONE = 30;
 const ITEM_WIDTH = 112;
 const ITEM_HEIGHT = 52;
@@ -182,7 +182,7 @@ export default function PieMenu() {
             role="menuitem"
             aria-disabled={!enabled}
             className={cn(
-              "bg-popover text-popover-foreground absolute flex h-13 w-28 -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-xl border px-3 shadow-lg transition-[transform,opacity,background-color]",
+              "bg-popover text-popover-foreground absolute flex h-8 w-32 -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full border px-3 shadow-lg transition-[transform,opacity,background-color]",
               selected && enabled && "bg-primary text-primary-foreground scale-110",
               selected && !enabled && "border-destructive/60",
               !enabled && "opacity-45 grayscale",
