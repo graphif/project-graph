@@ -269,7 +269,9 @@ jobs:
           echo "${{ secrets.BUILD_ENV }}" > app/.env
       - name: Build
         run: |
-          pnpm run ${{ matrix.android && inputs.task_build_android || inputs.task_build }}
+          # pnpm run ${{ matrix.android && inputs.task_build_android || inputs.task_build }}
+          pnpm nx run-many -t build
+          pnpm nx run-many -t tauri:build
         env:
           APPIMAGE_EXTRACT_AND_RUN: ${{ matrix.platform == 'ubuntu-22.04' && '1' || '' }}
           NO_STRIP: ${{ matrix.platform == 'ubuntu-22.04' && 'true' || '' }}
