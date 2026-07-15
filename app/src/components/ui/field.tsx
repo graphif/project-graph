@@ -17,7 +17,7 @@ import { toast } from "sonner";
 
 export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof Settings; extra?: React.ReactNode }) {
   const [value, setValue] = React.useState<any>(Settings[settingKey]);
-  const { t, i18n } = useTranslation("settings");
+  const { t } = useTranslation("settings");
   const schema = settingsSchema.shape[settingKey];
   const [isPinned, setIsPinned] = useState(false);
 

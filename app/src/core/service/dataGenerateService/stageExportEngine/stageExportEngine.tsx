@@ -17,7 +17,7 @@ export class StageExport {
   private readonly tabExporter: TabExporter;
   private readonly mermaidExporter: MermaidExporter;
 
-  constructor(private readonly project: Project) {
+  constructor(project: Project) {
     this.plainTextExporter = new PlainTextExporter(project);
     this.markdownExporter = new MarkdownExporter(project);
     this.tabExporter = new TabExporter(project);

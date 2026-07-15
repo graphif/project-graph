@@ -106,8 +106,8 @@ export class CubicCatmullRomSplineEdge extends Edge {
     this.color = new Color(...color);
     this.tension = tension;
     this.controlPoints = controlPoints.map((item) => new Vector(item[0], item[1]));
-    this.setSourceRectangleRate(new Vector(...sourceRectRate));
-    this.setTargetRectangleRate(new Vector(...targetRectRate));
+    this.sourceRectangleRate = new Vector(...sourceRectRate);
+    this.targetRectangleRate = new Vector(...targetRectRate);
     this._collisionBox = new CollisionBox([new CubicCatmullRomSpline(this.controlPoints, this.alpha, this.tension)]);
   }
 

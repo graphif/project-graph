@@ -27,7 +27,6 @@ function TooltipContent({
   children,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Content>) {
-  const [coords, setCoords] = React.useState({ x: 0, y: 0 });
   const contentRef = React.useRef<HTMLDivElement>(null);
   const [offset, setOffset] = React.useState({ left: 0, top: 0 });
 
@@ -35,7 +34,6 @@ function TooltipContent({
     const handleMouseMove = (event: MouseEvent) => {
       const x = event.clientX;
       const y = event.clientY;
-      setCoords({ x, y });
 
       if (contentRef.current) {
         const { width, height } = contentRef.current.getBoundingClientRect();

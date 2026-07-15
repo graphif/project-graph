@@ -245,23 +245,4 @@ export class NodeAdder {
   public addNodeByMarkdown(markdownText: string, diffLocation: Vector = Vector.getZero(), autoLayout = true) {
     this.project.stageImport.addNodeByMarkdown(markdownText, diffLocation, autoLayout);
   }
-
-  /***
-   * 'a' -> 0
-   * '    a' -> 1
-   * '\t\ta' -> 2
-   */
-  private getIndentLevel(line: string, indention: number): number {
-    let indent = 0;
-    for (let i = 0; i < line.length; i++) {
-      if (line[i] === " ") {
-        indent++;
-      } else if (line[i] === "\t") {
-        indent += indention;
-      } else {
-        break;
-      }
-    }
-    return Math.floor(indent / indention);
-  }
 }
