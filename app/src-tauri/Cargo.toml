@@ -40,9 +40,6 @@ aha = { version = "0.2.6", features = ["metal"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 aha = { version = "0.2.6", features = ["cuda"] }
-cxx = "1.0.126"
-cxx-qt = "0.7"
-cxx-qt-lib = "0.7"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 aha = { version = "0.2.6" }

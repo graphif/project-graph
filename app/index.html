@@ -10,13 +10,6 @@
     <script type="module">
       console.log("Project Graph");
 
-      import { getCurrentWindow } from "@tauri-apps/api/window";
-      console.log(navigator.userAgent);
-      if (navigator.userAgent.includes("Linux") && !navigator.userAgent.includes("Android") && !window.ipc_bridge) {
-        console.log("Running on Linux, closing this WebKitGTK window to prevent potential issues.");
-        getCurrentWindow().close();
-      }
-
       // 此处configureSerializer必须在所有代码的最开头
       // 否则@serializable装饰器无法获取正确的类名
       import { configureSerializer } from "@graphif/serializer";
