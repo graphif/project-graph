@@ -2201,8 +2201,12 @@ declare interface AutoLayout {
    * DAG布局主函数
    * @param entities 选中的实体列表
    */
-  autoLayoutDAG(entities: Array<ConnectableEntity | SerializedObject<"ConnectableEntity">>): void;
+  autoLayoutDAG(entities: Array<ConnectableEntity | SerializedObject<"ConnectableEntity">>): DAGLayoutResult;
 }
+declare type DAGLayoutResult = {
+  movedCount: number;
+  internalEdgeCount: number;
+};
 /**
  * 关系的重新塑性控制器
  *
@@ -4419,7 +4423,6 @@ declare interface StageExport {
   readonly markdownExporter: MarkdownExporter;
   readonly tabExporter: TabExporter;
   readonly mermaidExporter: MermaidExporter;
-  readonly project: Project;
   /**
    * 格式：
    * A
@@ -4768,11 +4771,19 @@ declare interface TreeImporter {
   readonly project: Project;
 }
 declare interface AIEngine {
-  createTransport(
+  references: AIObjectReferenceRegistry | undefined;
+  getProjectReferences(project: Project | SerializedObject<"Project">): AIObjectReferenceRegistry;
+  createConversation(
     project: Project | SerializedObject<"Project">,
-  ): DefaultChatTransport<UIMessage<unknown, UIDataTypes, UITools>>;
+    references: AIObjectReferenceRegistry | SerializedObject<"AIObjectReferenceRegistry">,
+    getContextWindowTokenLimit: () => number | undefined,
+  ): {
+    references: AIObjectReferenceRegistry;
+    transport: DefaultChatTransport<UIMessage<unknown, UIDataTypes, UITools>>;
+  };
   createChatFetch(
     project: Project | SerializedObject<"Project">,
+    references: AIObjectReferenceRegistry | SerializedObject<"AIObjectReferenceRegistry">,
   ): (input: string | URL | Request, init?: (RequestInit & ClientOptions) | undefined) => Promise<Response>;
   getModels(): Promise<string[]>;
   readRequestBody(
@@ -4798,7 +4809,36 @@ declare type AIMessageMetadata = {
   inputTokens?: number;
   outputTokens?: number;
   totalTokens?: number;
+  lastStepInputTokens?: number;
+  lastStepOutputTokens?: number;
 };
+declare type AIEdgeRef = `e${number}`;
+declare type AINodeRef = `n${number}`;
+declare type AIObjectRef = AINodeRef | AIEdgeRef;
+declare interface AIObjectReferenceRegistry {
+  readonly refToUuid: Map<AIObjectRef, string>;
+  readonly uuidToRef: Map<string, AIObjectRef>;
+  readonly changeListeners: Set<(snapshot: AIObjectReferenceSnapshot) => void>;
+  nextNodeRef: number;
+  nextEdgeRef: number;
+  readonly project: Project;
+  subscribe(listener: (snapshot: AIObjectReferenceSnapshot) => void): () => void;
+  exportSnapshot(): AIObjectReferenceSnapshot;
+  restoreSnapshot(snapshot: AIObjectReferenceSnapshot | SerializedObject<"AIObjectReferenceSnapshot">): void;
+  getOrCreateRef(object: StageObject | SerializedObject<"StageObject">): AIObjectRef;
+  resolve(ref: string, expectedKind: undefined | "node" | "edge"): StageObject;
+  tryResolve(ref: string): StageObject | undefined;
+  getNextRefNumber(refs: Iterable<AIObjectRef> | SerializedObject<"Iterable">, prefix: "n" | "e"): number;
+}
+declare type AIObjectReferenceSnapshot = {
+  entries: Array<{
+    ref: AIObjectRef;
+    uuid: string;
+  }>;
+  nextNodeRef: number;
+  nextEdgeRef: number;
+};
+declare type AIObjectRefKind = "node" | "edge";
 /**
  * 舞台场景复杂度检测器
  */
@@ -4926,7 +4966,6 @@ declare interface CopyEngineImage {
   project: Project;
   pasteImageFromTauriClipboard(): Promise<void>;
   pasteImageBlob(blob: Blob | SerializedObject<"Blob">): Promise<void>;
-  compressImageBlob(blob: Blob | SerializedObject<"Blob">): Promise<Blob>;
   pasteImageFromWebClipboard(): Promise<false | undefined>;
 }
 /**
@@ -5072,8 +5111,10 @@ declare const settingsSchema: ZodObject<
     aiApiBaseUrl: ZodDefault<ZodString>;
     aiApiKey: ZodDefault<ZodString>;
     aiModel: ZodDefault<ZodString>;
+    aiContextWindow: ZodDefault<ZodNumber>;
     aiShowTokenCount: ZodDefault<ZodBoolean>;
     enableOCR: ZodDefault<ZodBoolean>;
+    aiAutoApproveMcpTools: ZodDefault<ZodBoolean>;
     mouseRightDragBackground: ZodDefault<ZodUnion<readonly [ZodLiteral<"cut">, ZodLiteral<"moveCamera">]>>;
     enableSpaceKeyMouseLeftDrag: ZodDefault<ZodBoolean>;
     enableDragAutoAlign: ZodDefault<ZodBoolean>;
@@ -6194,12 +6235,6 @@ declare interface NodeAdder {
    * @param autoLayout 是否自动应用树形布局（默认为 true）
    */
   addNodeByMarkdown(markdownText: string, diffLocation: Vector | SerializedObject<"Vector">, autoLayout: boolean): void;
-  /***
-   * 'a' -> 0
-   * '    a' -> 1
-   * '\t\ta' -> 2
-   */
-  getIndentLevel(line: string, indention: number): number;
 }
 /**
  * 集成所有连线相关的功能
@@ -8101,6 +8136,14 @@ declare interface ImageNode {
    */
   _isSyncing: boolean;
 }
+declare type ImageNodeOptions = {
+  uuid?: string;
+  collisionBox?: CollisionBox;
+  details?: Value;
+  attachmentId?: string;
+  scale?: number;
+  isBackground?: boolean;
+};
 /**
  * LaTeX 公式节点
  *

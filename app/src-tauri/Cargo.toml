@@ -14,9 +14,6 @@ crate-type = ["lib", "cdylib", "staticlib"]
 [build-dependencies]
 tauri-build = { version = "2.6.0", features = [] }
 
-[target.'cfg(target_os = "linux")'.build-dependencies]
-cxx-qt-build = "0.7"
-
 [dependencies]
 tauri = { version = "2.11.0", features = [
   "macos-private-api",
