@@ -289,11 +289,11 @@ export class AutoCompleteManager {
     setWindowId: (id: string) => void,
   ) {
     if (this.currentTabId) void TabWorkspace.close(this.currentTabId);
-    const windowId = AutoCompleteWindow.open(
+    // transformWorld2View 返回 canvas 内坐标，浮动窗口使用 fixed 定位，需要转到页面坐标
+    const location = this.project.canvas.viewToClient(
       this.project.renderer.transformWorld2View(node.rectangle).leftBottom,
-      entries,
-      onSelect,
-    ).id;
+    );
+    const windowId = AutoCompleteWindow.open(location, entries, onSelect).id;
     this.currentTabId = windowId;
     setWindowId(windowId);
   }
