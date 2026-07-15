@@ -48,7 +48,12 @@ pub fn run() {
     #[cfg(target_os = "linux")]
     tauri_runtime_cef::dispatch_cef_subprocess();
 
-    let builder = tauri::Builder::<tauri_runtime_cef::Cef<tauri::EventLoopMessage>>::new()
+    #[cfg(target_os = "linux")]
+    let builder = tauri::Builder::<tauri_runtime_cef::Cef<tauri::EventLoopMessage>>::new();
+    #[cfg(not(target_os = "linux"))]
+    let builder = tauri::Builder::new();
+
+    builder
         .manage(PendingOpenFiles::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
