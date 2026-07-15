@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/context-menu";
 import { Tab } from "@/core/Tab";
 import { TabWorkspace } from "@/core/TabWorkspace";
-import { AppWindowMac, Dock, X } from "lucide-react";
+import { AppWindowMac, Columns2, Dock, Rows2, X } from "lucide-react";
 import React from "react";
 
 export default function TabContextMenu({
@@ -24,10 +24,21 @@ export default function TabContextMenu({
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent>
         {tab.layout === "docked" ? (
-          <ContextMenuItem onSelect={() => TabWorkspace.float(tab.id)}>
-            <AppWindowMac />
-            浮动
-          </ContextMenuItem>
+          <>
+            <ContextMenuItem onSelect={() => TabWorkspace.split(tab.id, "right")}>
+              <Columns2 />
+              向右拆分
+            </ContextMenuItem>
+            <ContextMenuItem onSelect={() => TabWorkspace.split(tab.id, "bottom")}>
+              <Rows2 />
+              向下拆分
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+            <ContextMenuItem onSelect={() => TabWorkspace.float(tab.id)}>
+              <AppWindowMac />
+              浮动
+            </ContextMenuItem>
+          </>
         ) : (
           <ContextMenuItem disabled={!tab.canDock} onSelect={() => TabWorkspace.dock(tab.id)}>
             <Dock />

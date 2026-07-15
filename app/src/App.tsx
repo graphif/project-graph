@@ -15,7 +15,6 @@ import { Telemetry } from "@/core/service/Telemetry";
 import { Themes } from "@/core/service/Themes";
 import { globalShortcutManager } from "@/core/service/controlService/shortcutKeysEngine/GlobalShortcutManager";
 import {
-  activeDockedTabAtom,
   activeResourceTabAtom,
   activeTabAtom,
   isClassroomModeAtom,
@@ -29,14 +28,14 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { arch, platform, version } from "@tauri-apps/plugin-os";
 import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import { ChevronsLeftRight, Copy, Minus, Pin, PinOff, Square, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { cpuInfo } from "tauri-plugin-system-info-api";
 import CommandPalette from "./CommandPalette";
 import { DropWindowCover } from "./DropWindowCover";
-import { ProjectTabs } from "./ProjectTabs";
+import DockedArea from "./components/docked-area";
 import RenderOverlays from "./components/overlay-host";
 import RightToolbar from "./components/right-toolbar";
 import ToolbarContent from "./components/toolbar-content";
@@ -50,8 +49,7 @@ export default function App() {
   const [_, _setMaximized] = useAtom(isWindowMaxsizedAtom);
 
   const [tabs, setTabs] = useAtom(tabsAtom);
-  const [activeTab, setActiveTab] = useAtom(activeTabAtom);
-  const activeDockedTab = useAtomValue(activeDockedTabAtom);
+  const [, setActiveTab] = useAtom(activeTabAtom);
   const [activeResourceTab] = useAtom(activeResourceTabAtom);
   // const [isWide, setIsWide] = useState(false);
   const [telemetryEventSent, setTelemetryEventSent] = useState(false);
@@ -205,6 +203,10 @@ export default function App() {
     tabs.filter((tab) => tab !== activeResourceTab).forEach((tab) => tab.pause());
   }, [activeResourceTab]);
 
+  useEffect(() => {
+    TabWorkspace.synchronizeGroups();
+  }, [tabs]);
+
   /**
    * 首次启动时显示欢迎页面
    */
@@ -341,17 +343,7 @@ export default function App() {
         }}
       >
         {/* Canvas content - NOT zoomed */}
-        {tabs
-          .filter((tab) => tab.layout === "docked")
-          .map((p) => (
-            <div
-              key={p.id}
-              className={cn("absolute inset-0 overflow-hidden", activeDockedTab === p ? "block" : "hidden")}
-              onPointerDownCapture={() => TabWorkspace.focus(p.id)}
-            >
-              {React.createElement(p.getComponent())}
-            </div>
-          ))}
+        <DockedArea onTabClick={handleTabClick} onTabClose={handleTabClose} isClassroomMode={isClassroomMode} />
 
         {/* Zoomed UI layer - 缩放所有 DOM UI 元素，不缩放 Canvas 画布 */}
         <div style={zoomStyle} className={zoomClass}>
@@ -377,14 +369,6 @@ export default function App() {
             </div>
             {!isMac && <WindowButtons />}
           </div>
-
-          <ProjectTabs
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabClick={handleTabClick}
-            onTabClose={handleTabClose}
-            isClassroomMode={isClassroomMode}
-          />
 
           {/* 没有项目处于打开状态时，显示欢迎页面 */}
           {tabs.length === 0 && (

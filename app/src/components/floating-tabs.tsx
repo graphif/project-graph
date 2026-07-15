@@ -25,22 +25,6 @@ export default function FloatingTabs({
   const activeTab = useAtomValue(activeTabAtom);
   const activeResourceTab = useAtomValue(activeResourceTabAtom);
 
-  const getDockIndex = (clientX: number) => {
-    const dockedTabs = Array.from(document.querySelectorAll<HTMLElement>("[data-pg-docked-tab-id]"));
-    const index = dockedTabs.findIndex((element) => {
-      const rect = element.getBoundingClientRect();
-      return clientX < rect.left + rect.width / 2;
-    });
-    return index === -1 ? dockedTabs.length : index;
-  };
-
-  const isOverTabBar = (clientX: number, clientY: number) => {
-    const tabBar = document.querySelector<HTMLElement>("[data-pg-tab-bar]");
-    if (!tabBar) return false;
-    const rect = tabBar.getBoundingClientRect();
-    return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
-  };
-
   const onClickInner = (tab: Tab) => {
     if (tab.closeWhenClickInside) {
       void TabWorkspace.close(tab.id);
@@ -79,13 +63,14 @@ export default function FloatingTabs({
               const onMouseUp = (event: MouseEvent) => {
                 window.removeEventListener("mouseup", onMouseUp);
                 window.removeEventListener("mousemove", onMouseMove);
-                if (isOverTabBar(event.clientX, event.clientY) && tab.canDock) {
-                  TabWorkspace.dock(tab.id, getDockIndex(event.clientX));
-                }
+                const target = TabWorkspace.getDropTarget(event.clientX, event.clientY, true);
+                TabWorkspace.clearDropPreview();
+                if (target && tab.canDock) TabWorkspace.moveTab(tab.id, target);
               };
               const onMouseMove = (e: MouseEvent) => {
                 const delta = new Vector(e.clientX, e.clientY).subtract(start);
                 TabWorkspace.update(tab.id, { rect: originalRect.translate(delta) });
+                TabWorkspace.previewDrop(e.clientX, e.clientY, true);
               };
               window.addEventListener("mouseup", onMouseUp);
               window.addEventListener("mousemove", onMouseMove);
@@ -104,15 +89,16 @@ export default function FloatingTabs({
                 window.removeEventListener("touchend", onTouchEnd);
                 window.removeEventListener("touchmove", onTouchMove);
                 const touch = event.changedTouches[0];
-                if (isOverTabBar(touch.clientX, touch.clientY) && tab.canDock) {
-                  TabWorkspace.dock(tab.id, getDockIndex(touch.clientX));
-                }
+                const target = TabWorkspace.getDropTarget(touch.clientX, touch.clientY, true);
+                TabWorkspace.clearDropPreview();
+                if (target && tab.canDock) TabWorkspace.moveTab(tab.id, target);
               };
               const onTouchMove = (e: TouchEvent) => {
                 if (e.touches.length > 1) return;
                 const touch = e.touches[0];
                 const delta = new Vector(touch.clientX, touch.clientY).subtract(start);
                 TabWorkspace.update(tab.id, { rect: originalRect.translate(delta) });
+                TabWorkspace.previewDrop(touch.clientX, touch.clientY, true);
               };
               window.addEventListener("touchend", onTouchEnd);
               window.addEventListener("touchmove", onTouchMove);

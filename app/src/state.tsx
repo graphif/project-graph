@@ -1,16 +1,29 @@
 import { isResourceTab, ResourceTab, Tab } from "@/core/Tab";
+import { findTabGroup, findTabGroupByTabId, TabDropEdge, TabGroupNode } from "@/core/TabGroup";
 import { atom, createStore } from "jotai";
 
 export const store = createStore();
 
 export const tabsAtom = atom<Tab[]>([]);
 export const activeTabAtom = atom<Tab | undefined>(undefined);
+export const tabGroupRootAtom = atom<TabGroupNode | null>(null);
+export const activeGroupIdAtom = atom<string | undefined>(undefined);
+export interface TabDropTarget {
+  groupId: string;
+  index?: number;
+  edge?: TabDropEdge;
+}
+export const tabDropTargetAtom = atom<TabDropTarget | null>(null);
 const lastActiveDockedTabAtom = atom<Tab | undefined>(undefined);
 export const activeDockedTabAtom = atom(
   (get) => {
     const activeTab = get(activeTabAtom);
-    if (activeTab?.layout === "docked") return activeTab;
+    const root = get(tabGroupRootAtom);
+    if (activeTab?.layout === "docked" && findTabGroupByTabId(root, activeTab.id)) return activeTab;
     const dockedTabs = get(tabsAtom).filter((tab) => tab.layout === "docked");
+    const activeGroup = findTabGroup(root, get(activeGroupIdAtom) ?? "");
+    const groupTab = dockedTabs.find((tab) => tab.id === activeGroup?.activeTabId);
+    if (groupTab) return groupTab;
     const lastActive = get(lastActiveDockedTabAtom);
     return lastActive && dockedTabs.includes(lastActive) ? lastActive : dockedTabs.at(-1);
   },

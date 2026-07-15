@@ -17,19 +17,20 @@ import { replaceTextWhenProtect } from "./utils/font";
 
 // 将 ProjectTabs 移出 App 组件，作为独立组件
 export const ProjectTabs = memo(function ProjectTabs({
+  groupId,
   tabs,
   activeTab,
   onTabClick,
   onTabClose,
   isClassroomMode,
 }: {
+  groupId: string;
   tabs: Tab[];
   activeTab: Tab | undefined;
   onTabClick: (tab: Tab) => void;
   onTabClose: (tab: Tab) => void;
   isClassroomMode: boolean;
 }) {
-  const dockedTabs = tabs.filter((tab) => tab.layout === "docked");
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef(0);
   const [protectingPrivacy, setProtectingPrivacy] = useState(Settings.protectingPrivacy);
@@ -85,13 +86,14 @@ export const ProjectTabs = memo(function ProjectTabs({
     <div
       ref={tabsContainerRef}
       data-pg-tab-bar
+      data-pg-tab-group-bar-id={groupId}
       className={cn(
         "scrollbar-hide hover:bg-primary/20 z-10 flex h-4 overflow-x-auto whitespace-nowrap transition-colors hover:opacity-100 sm:h-6 sm:gap-1",
         isClassroomMode && "opacity-0",
       )}
       onScroll={handleScroll}
     >
-      {dockedTabs.map((tab) => (
+      {tabs.map((tab) => (
         <TabContextMenu key={tab.id} tab={tab} onClose={onTabClose}>
           <Button
             data-pg-docked-tab-id={tab.id}
@@ -109,16 +111,19 @@ export const ProjectTabs = memo(function ProjectTabs({
                 const onMouseUp = (event: MouseEvent) => {
                   window.removeEventListener("mousemove", onMouseMove);
                   window.removeEventListener("mouseup", onMouseUp);
-                  if (
-                    dragged &&
-                    !document.elementFromPoint(event.clientX, event.clientY)?.closest("[data-pg-tab-bar]")
-                  ) {
+                  const target = TabWorkspace.getDropTarget(event.clientX, event.clientY);
+                  TabWorkspace.clearDropPreview();
+                  if (!dragged) return;
+                  if (target) {
+                    TabWorkspace.moveTab(tab.id, target);
+                  } else {
                     TabWorkspace.float(tab.id, new Vector(event.clientX - 80, event.clientY - 12));
                   }
                 };
                 const onMouseMove = (event: MouseEvent) => {
                   if (new Vector(event.clientX, event.clientY).subtract(start).magnitude() < 8) return;
                   dragged = true;
+                  TabWorkspace.previewDrop(event.clientX, event.clientY);
                 };
                 window.addEventListener("mousemove", onMouseMove);
                 window.addEventListener("mouseup", onMouseUp);
