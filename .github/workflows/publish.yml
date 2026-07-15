@@ -193,7 +193,8 @@ jobs:
             librsvg2-dev \
             patchelf \
             libxcb1-dev \
-            libudev-dev
+            libudev-dev \
+            libwebkit2gtk-4.1-dev
       - uses: pnpm/action-setup@v4
         id: pnpm
         name: Install pnpm
