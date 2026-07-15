@@ -51,7 +51,7 @@ pub fn run() {
     #[cfg(target_os = "linux")]
     let builder = tauri::Builder::<tauri_runtime_cef::Cef<tauri::EventLoopMessage>>::new();
     #[cfg(not(target_os = "linux"))]
-    let builder = tauri::Builder::new();
+    let builder = tauri::Builder::default();
 
     builder
         .manage(PendingOpenFiles::default())
