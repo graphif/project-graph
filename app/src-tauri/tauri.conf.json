@@ -7,6 +7,7 @@
     "beforeDevCommand": "",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "",
+    "beforeBundleCommand": "node ./scripts/collect-cef-linux.js",
     "frontendDist": "../dist",
     "removeUnusedCommands": true
   },
@@ -51,7 +52,20 @@
     },
     "linux": {
       "appimage": {
-        "bundleMediaFramework": true
+        "bundleMediaFramework": true,
+        "files": {
+          "/usr/lib/project-graph/": "cef-linux-runtime/"
+        }
+      },
+      "deb": {
+        "files": {
+          "/usr/lib/project-graph/": "cef-linux-runtime/"
+        }
+      },
+      "rpm": {
+        "files": {
+          "/usr/lib/project-graph/": "cef-linux-runtime/"
+        }
       }
     },
     "macOS": {

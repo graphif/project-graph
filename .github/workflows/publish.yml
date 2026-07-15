@@ -65,11 +65,6 @@ on:
         description: The alias of the Android key.
         required: false
         default: "upload"
-      include_devtools:
-        type: boolean
-        description: Whether to include devtools in the build.
-        required: false
-        default: false
     secrets:
       TAURI_SIGNING_PRIVATE_KEY:
         description: Sign app binaries for updater support.
@@ -194,15 +189,11 @@ jobs:
             libssl-dev \
             libfuse2 \
             libgtk-3-dev \
-            libwebkit2gtk-4.1-dev \
             libappindicator3-dev \
             librsvg2-dev \
             patchelf \
-            qt6-base-dev \
-            qt6-declarative-dev \
             libxcb1-dev \
-            libudev-dev \
-            qt6-webengine-dev
+            libudev-dev
       - uses: pnpm/action-setup@v4
         id: pnpm
         name: Install pnpm
@@ -258,20 +249,10 @@ jobs:
         if: ${{ !matrix.android && matrix.variant }}
         run: |
           node ./.github/scripts/set-version.mjs ${{ inputs.app_version }}-${{ matrix.variant }}
-      - name: Enable DevTools
-        if: ${{ inputs.include_devtools }}
-        run: |
-          node ./.github/scripts/set-tauri-features.mjs devtools
-          node ./.github/scripts/enable-sourcemap.mjs
       - name: Android - Set app version
         if: matrix.android
         run: |
           node ./.github/scripts/set-version.mjs ${{ inputs.app_version_android }}
-      - name: Variant - win7
-        if: matrix.variant == 'win7'
-        run: |
-          (Get-Content ./app/src-tauri/tauri.conf.json).Replace('downloadBootstrapper', 'embedBootstrapper') | Set-Content ./app/src-tauri/tauri.conf.json
-          cat ./app/src-tauri/tauri.conf.json
       - name: Windows - Use static CRT
         if: matrix.platform == 'windows-latest'
         run: |

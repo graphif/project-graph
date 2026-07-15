@@ -18,7 +18,11 @@ tauri-build = { version = "2.6.0", features = [] }
 cxx-qt-build = "0.7"
 
 [dependencies]
-tauri = { version = "2.11.0", features = ["macos-private-api", "image-png"] }
+tauri = { version = "2.11.0", features = [
+  "macos-private-api",
+  "image-png",
+  "devtools",
+] }
 tauri-plugin-shell = "2.3.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -39,7 +43,8 @@ regex = "1.12.3"
 aha = { version = "0.2.6", features = ["metal"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-aha = { version = "0.2.6", features = ["cuda"] }
+aha = { version = "0.2.6", features = [] }
+tauri-runtime-cef = { path = "vendor/tauri-runtime-cef" }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 aha = { version = "0.2.6" }

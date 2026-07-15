@@ -29,7 +29,7 @@ pkgdesc="A simple tool to create topology diagrams."
 arch=('x86_64')
 url="https://github.com/LiRenTech/project-graph"
 license=('mit')
-depends=('cairo' 'desktop-file-utils' 'gdk-pixbuf2' 'glib2' 'gtk3' 'hicolor-icon-theme' 'libsoup' 'pango' 'webkit2gtk')
+depends=('cairo' 'desktop-file-utils' 'gdk-pixbuf2' 'glib2' 'gtk3' 'hicolor-icon-theme' 'libsoup' 'pango')
 options=('!strip' '!emptydirs')
 provides=('project-graph')
 conflicts=(${conflicts.map((x) => `'${x}'`).join(" ")})
@@ -62,7 +62,6 @@ const SRCINFO = `pkgbase = ${pkgname}
 \tdepends = hicolor-icon-theme
 \tdepends = libsoup
 \tdepends = pango
-\tdepends = webkit2gtk
 \tprovides = project-graph
 ${conflicts.map((x) => `\tconflicts = ${x}`).join("\n")}
 \toptions = !strip

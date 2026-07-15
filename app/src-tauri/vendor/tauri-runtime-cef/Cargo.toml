@@ -1,0 +1,66 @@
+[package]
+name = "tauri-runtime-cef"
+version = "0.1.0"
+description = "CEF (Chromium) webview backend for Tauri on desktop"
+authors = ["kabegame"]
+edition = "2021"
+publish = false
+
+# This crate is an *adapter*: it implements the `tauri-runtime` trait contract
+# (Runtime / RuntimeHandle / WebviewDispatch / WindowDispatch / WindowBuilder /
+# EventLoopProxy) on top of the `cef` crate (tauri-apps/cef-rs), exactly the way
+# `tauri-runtime-wry` implements those same traits on top of `wry`.
+#
+# It NEVER forks the `tauri` source tree — it only depends on the published
+# `tauri-runtime` trait crate. See README.md for the full rationale.
+
+[dependencies]
+# The trait contract we implement. `"2"` lets cargo unify this with whatever
+# tauri version the kabegame app resolves (currently tauri 2.11.x).
+tauri-runtime = { version = "2", features = ["devtools"] }
+tauri-utils = "2"
+
+http = "1"
+url = "2"
+raw-window-handle = "0.6"
+cookie = "0.18"
+
+# The Chromium engine binding (tauri-apps/cef-rs). Tracks CEF/Chromium major
+# versions: bumping this version is how we "follow upstream Chromium".
+cef = { version = "149", default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Window + event-loop host (same lib tauri-runtime-wry uses). `rwh_06` exposes
+# raw-window-handle 0.6 so we can read the tao window's handle. Default features
+# stay ON, plus rwh_06.
+tao = { version = "0.35", features = ["rwh_06"] }
+
+tracing = "0.1"
+ash = "0.38"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = { version = "0.18", features = ["v3_24"] }
+libc = "0.2"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.61", features = ["Win32_Foundation"] }
+windows-sys = { version = "0.52", features = [
+  "Win32_Foundation",
+  "Win32_UI_Shell",
+  "Win32_UI_WindowsAndMessaging",
+] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = { version = "0.6", default-features = false }
+objc2-app-kit = { version = "0.3", default-features = false, features = [
+  "std",
+  "NSApplication",
+  "NSResponder",
+  "NSEvent",
+  "NSRunningApplication",
+] }
+objc2-foundation = { version = "0.3", default-features = false, features = [
+  "std",
+  "NSRunLoop",
+] }

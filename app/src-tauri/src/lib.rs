@@ -44,7 +44,11 @@ pub fn run() {
         }
     }
 
-    let builder = tauri::Builder::default()
+    // CEF 单 binary 自举：子进程 re-exec 本程序时必须在任何 Tauri 初始化前分流。
+    #[cfg(target_os = "linux")]
+    tauri_runtime_cef::dispatch_cef_subprocess();
+
+    let builder = tauri::Builder::<tauri_runtime_cef::Cef<tauri::EventLoopMessage>>::new()
         .manage(PendingOpenFiles::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
