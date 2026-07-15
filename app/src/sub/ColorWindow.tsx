@@ -5,11 +5,10 @@ import { ColorManager } from "@/core/service/feedbackService/ColorManager";
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { useComponentTabResourceTab } from "@/core/Tab";
 import { TabWorkspace } from "@/core/TabWorkspace";
-import { activeResourceTabAtom } from "@/state";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { useAtom } from "jotai";
 import { ArrowRightLeft, Blend, Pipette } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -21,7 +20,7 @@ import { toast } from "sonner";
  */
 export default function ColorWindow() {
   const [currentColors, setCurrentColors] = useState<Color[]>([]);
-  const [tab] = useAtom(activeResourceTabAtom);
+  const tab = useComponentTabResourceTab();
   const project = tab instanceof Project ? tab : undefined;
 
   useEffect(() => {
@@ -149,7 +148,7 @@ export function ColorManagerPanel() {
   });
   const [preAddColor, setPreAddColor] = useState("#000000");
   const [currentColorList, setCurrentColorList] = useState<Color[]>([]);
-  const [tab] = useAtom(activeResourceTabAtom);
+  const tab = useComponentTabResourceTab();
   const project = tab instanceof Project ? tab : undefined;
 
   return (

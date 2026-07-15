@@ -213,6 +213,7 @@ export interface ComponentTabOptions {
   icon?: React.ComponentType<any> | null;
   children?: React.ReactNode | ((tab: ComponentTab) => React.ReactNode);
   contextTarget?: "activeResourceTab";
+  contextResourceTab?: ResourceTab;
   layout?: Tab["layout"];
   rect?: Rectangle;
   canDock?: boolean;
@@ -227,6 +228,7 @@ export class ComponentTab extends Tab {
   private readonly tabTitle: string;
   private readonly tabIcon: React.ComponentType<any> | null;
   readonly contextTarget: ComponentTabOptions["contextTarget"];
+  readonly contextResourceTab: ResourceTab | undefined;
   children: ComponentTabOptions["children"];
   private readonly component: React.ComponentType;
 
@@ -235,6 +237,7 @@ export class ComponentTab extends Tab {
     this.tabTitle = options.title ?? "";
     this.tabIcon = options.icon ?? null;
     this.contextTarget = options.contextTarget;
+    this.contextResourceTab = options.contextResourceTab;
     this.children = options.children;
     this.layout = options.layout ?? "floating";
     this.floatingRect = options.rect ?? this.floatingRect;
@@ -245,9 +248,12 @@ export class ComponentTab extends Tab {
     this.closeWhenClickInside = options.closeWhenClickInside ?? false;
     this.titleBarOverlay = options.titleBarOverlay ?? false;
 
-    const tab = this;
-    this.component = function ComponentTabContent() {
-      return <>{typeof tab.children === "function" ? tab.children(tab) : tab.children}</>;
+    this.component = () => {
+      return (
+        <ComponentTabContext.Provider value={this}>
+          {typeof this.children === "function" ? this.children(this) : this.children}
+        </ComponentTabContext.Provider>
+      );
     };
   }
 
@@ -262,4 +268,10 @@ export class ComponentTab extends Tab {
   getComponent(): React.ComponentType {
     return this.component;
   }
+}
+
+export const ComponentTabContext = React.createContext<ComponentTab | undefined>(undefined);
+
+export function useComponentTabResourceTab() {
+  return React.useContext(ComponentTabContext)?.contextResourceTab;
 }

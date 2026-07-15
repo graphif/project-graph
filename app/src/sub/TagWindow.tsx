@@ -1,11 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Project } from "@/core/Project";
+import { useComponentTabResourceTab } from "@/core/Tab";
 import { TabWorkspace } from "@/core/TabWorkspace";
-import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { useAtom } from "jotai";
 import { Angry, MousePointerClick, RefreshCcw, Smile, Table, Tags, Telescope } from "lucide-react";
 import React from "react";
 import { toast } from "sonner";
@@ -15,7 +14,7 @@ import { toast } from "sonner";
  * @param param0
  */
 export default function TagWindow() {
-  const [tab] = useAtom(activeResourceTabAtom);
+  const tab = useComponentTabResourceTab();
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
 
@@ -183,7 +182,7 @@ TagWindow.open = () => {
  * 单个的标签成一个子窗口
  */
 function LittleTagWindow({ uuid, tagName }: { uuid: string; tagName: string }) {
-  const [tab] = useAtom(activeResourceTabAtom);
+  const tab = useComponentTabResourceTab();
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
   const onClick = () => {

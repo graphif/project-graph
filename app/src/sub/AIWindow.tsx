@@ -8,8 +8,8 @@ import { ConnectableEntity } from "@/core/stage/stageObject/abstract/Connectable
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { useComponentTabResourceTab } from "@/core/Tab";
 import { TabWorkspace } from "@/core/TabWorkspace";
-import { activeResourceTabAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { useChat } from "@ai-sdk/react";
 import { Color, Vector } from "@graphif/data-structures";
@@ -17,7 +17,6 @@ import { Rectangle } from "@graphif/shapes";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { code } from "@streamdown/code";
 import type { UIMessage } from "ai";
-import { useAtom } from "jotai";
 import { Bot, Check, ChevronRight, FolderOpen, Paperclip, Plus, Send, Sparkles, Square, User, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -34,7 +33,7 @@ export function setAIWindowInitialText(text: string, prompt?: string) {
 }
 
 export default function AIWindow({ tabId }: { tabId: string }) {
-  const [tab] = useAtom(activeResourceTabAtom);
+  const tab = useComponentTabResourceTab();
   const project = tab instanceof Project ? tab : undefined;
 
   if (!project) {

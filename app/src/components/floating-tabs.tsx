@@ -2,7 +2,7 @@ import TabContextMenu from "@/components/tab-context-menu";
 import { SimpleCard } from "@/components/ui/card";
 import { ComponentTab, Tab } from "@/core/Tab";
 import { TabWorkspace } from "@/core/TabWorkspace";
-import { activeResourceTabAtom, activeTabAtom, tabsAtom } from "@/state";
+import { activeTabAtom, tabsAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -23,7 +23,6 @@ export default function FloatingTabs({
 }) {
   const floatingTabs = useAtomValue(tabsAtom).filter((tab) => tab.layout === "floating");
   const activeTab = useAtomValue(activeTabAtom);
-  const activeResourceTab = useAtomValue(activeResourceTabAtom);
 
   const onClickInner = (tab: Tab) => {
     if (tab.closeWhenClickInside) {
@@ -118,7 +117,7 @@ export default function FloatingTabs({
                   <span className="truncate">{tab.title}</span>
                   {tab instanceof ComponentTab && tab.contextTarget === "activeResourceTab" && (
                     <span className="bg-muted text-muted-foreground max-w-48 shrink truncate rounded px-1.5 py-0.5 text-xs">
-                      作用于：{activeResourceTab?.title ?? "无项目"}
+                      作用于：{tab.contextResourceTab?.title ?? "无项目"}
                     </span>
                   )}
                 </div>

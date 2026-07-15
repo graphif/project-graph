@@ -2,12 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Project } from "@/core/Project";
+import { useComponentTabResourceTab } from "@/core/Tab";
 import { TabWorkspace } from "@/core/TabWorkspace";
 import { Telemetry } from "@/core/service/Telemetry";
-import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { useAtom } from "jotai";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -22,7 +21,7 @@ export default function GenerateNodeTree() {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
-  const [tab] = useAtom(activeResourceTabAtom);
+  const tab = useComponentTabResourceTab();
   const activeProject = tab instanceof Project ? tab : undefined;
 
   const handleGenerate = async () => {
@@ -109,7 +108,7 @@ export function GenerateNodeTreeByMarkdown() {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
-  const [tab] = useAtom(activeResourceTabAtom);
+  const tab = useComponentTabResourceTab();
   const activeProject = tab instanceof Project ? tab : undefined;
 
   const handleGenerate = async () => {
@@ -197,7 +196,7 @@ export function GenerateNodeGraph() {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
-  const [tab] = useAtom(activeResourceTabAtom);
+  const tab = useComponentTabResourceTab();
   const activeProject = tab instanceof Project ? tab : undefined;
 
   const handleGenerate = async () => {
@@ -275,7 +274,7 @@ export function GenerateNodeMermaid() {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
-  const [tab] = useAtom(activeResourceTabAtom);
+  const tab = useComponentTabResourceTab();
   const activeProject = tab instanceof Project ? tab : undefined;
 
   const handleGenerate = async () => {

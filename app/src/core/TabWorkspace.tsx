@@ -113,7 +113,14 @@ export namespace TabWorkspace {
   }
 
   export function create(options: ComponentTabOptions): ComponentTab {
-    return open(new ComponentTab(options));
+    return open(
+      new ComponentTab({
+        ...options,
+        contextResourceTab:
+          options.contextResourceTab ??
+          (options.contextTarget === "activeResourceTab" ? store.get(activeResourceTabAtom) : undefined),
+      }),
+    );
   }
 
   export function get(id: string) {

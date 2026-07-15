@@ -4,17 +4,16 @@ import { Project } from "@/core/Project";
 import { TextFileImporter } from "@/core/service/dataGenerateService/TextFileImporter";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { useComponentTabResourceTab } from "@/core/Tab";
 import { TabWorkspace } from "@/core/TabWorkspace";
-import { activeResourceTabAtom } from "@/state";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { useAtom } from "jotai";
 import { FileText, FileUp, FolderOpen, List } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function TextImportWindow() {
-  const [tab] = useAtom(activeResourceTabAtom);
+  const tab = useComponentTabResourceTab();
   const project = tab instanceof Project ? tab : undefined;
   const [fileContent, setFileContent] = useState<{ fileName: string; content: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);

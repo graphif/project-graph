@@ -4,20 +4,19 @@ import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } 
 import { Dialog } from "@/components/ui/dialog";
 import { Popover } from "@/components/ui/popover";
 import { Project, ProjectState } from "@/core/Project";
+import { useComponentTabResourceTab } from "@/core/Tab";
 import { TabWorkspace } from "@/core/TabWorkspace";
-import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { readFile, writeFile } from "@tauri-apps/plugin-fs";
-import { useAtom } from "jotai";
 import { BrushCleaning, FileOutput, Plus, RefreshCcw, Trash } from "lucide-react";
 import mime from "mime";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function AttachmentsWindow() {
-  const [tab] = useAtom(activeResourceTabAtom);
+  const tab = useComponentTabResourceTab();
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
   const [attachments, setAttachments] = useState(new Map<string, Blob>());

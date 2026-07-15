@@ -4,19 +4,18 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Project } from "@/core/Project";
 import { GenerateScreenshot } from "@/core/service/dataGenerateService/generateScreenshot";
+import { useComponentTabResourceTab } from "@/core/Tab";
 import { TabWorkspace } from "@/core/TabWorkspace";
-import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
-import { useAtom } from "jotai";
 import { Info } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function NewExportPngWindow() {
-  const [tab] = useAtom(activeResourceTabAtom);
+  const tab = useComponentTabResourceTab();
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
 

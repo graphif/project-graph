@@ -1,19 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Project } from "@/core/Project";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
+import { useComponentTabResourceTab } from "@/core/Tab";
 import { TabWorkspace } from "@/core/TabWorkspace";
-import { activeResourceTabAtom } from "@/state";
 import { PathString } from "@/utils/pathString";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { useAtom } from "jotai";
 import { RefreshCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { URI } from "vscode-uri";
 
 export default function ReferencesWindow(props: { currentProjectFileName: string }) {
   const currentProjectFileName = props.currentProjectFileName;
-  const [tab] = useAtom(activeResourceTabAtom);
+  const tab = useComponentTabResourceTab();
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
 
@@ -105,7 +104,7 @@ export default function ReferencesWindow(props: { currentProjectFileName: string
 export function SectionReferencePanel(props: { currentProjectFileName: string; sectionName: string }) {
   // const currentProjectFileName = props.currentProjectFileName;
   const sectionName = props.sectionName;
-  const [tab] = useAtom(activeResourceTabAtom);
+  const tab = useComponentTabResourceTab();
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
   const [references, setReferences] = useState(project.references);

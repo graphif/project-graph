@@ -1,16 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Project } from "@/core/Project";
+import { useComponentTabResourceTab } from "@/core/Tab";
 import { TabWorkspace } from "@/core/TabWorkspace";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function BackgroundManagerWindow() {
-  const [tab] = useAtom(activeResourceTabAtom);
+  const tab = useComponentTabResourceTab();
   const project = tab instanceof Project ? tab : undefined;
   const [backgroundImages, setBackgroundImages] = useState<ImageNode[]>([]);
   const [urls, setUrls] = useState(new Map<string, string>());
