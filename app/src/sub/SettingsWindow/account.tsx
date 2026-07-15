@@ -5,6 +5,7 @@ import { FeatureFlags } from "@/core/service/FeatureFlags";
 import { UserState } from "@/core/service/UserState";
 import type { AuthUser } from "@/state";
 import { currentUserAtom, store } from "@/state";
+import { getAppVersion, getDeviceId } from "@/utils/otherApi";
 import { open } from "@tauri-apps/plugin-shell";
 import { useAtom } from "jotai";
 import { ExternalLink, LoaderCircle, LogIn, LogOut, Mail } from "lucide-react";
@@ -61,7 +62,16 @@ function LoginForm({ onLogin }: { onLogin: (user: AuthUser) => void }) {
     setLoading(true);
     setError("");
     try {
-      const { data, error: authError } = await authClient!.signIn.email({ email, password });
+      const { data, error: authError } = await authClient!.signIn.email(
+        { email, password },
+        {
+          headers: {
+            "x-app-name": "Project Graph",
+            "x-app-version": await getAppVersion(),
+            "x-device-id": await getDeviceId(),
+          },
+        },
+      );
       if (authError) {
         setError(authError.message ?? "登录失败，请检查邮箱和密码");
         return;
