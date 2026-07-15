@@ -1,8 +1,14 @@
 import { Project, service } from "@/core/Project";
+import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";
+
+export type DAGLayoutResult = {
+  movedCount: number;
+  internalEdgeCount: number;
+};
 
 @service("autoLayout")
 export class AutoLayout {
@@ -231,19 +237,18 @@ export class AutoLayout {
    * DAG布局主函数
    * @param entities 选中的实体列表
    */
-  public autoLayoutDAG(entities: ConnectableEntity[]) {
+  public autoLayoutDAG(entities: ConnectableEntity[]): DAGLayoutResult {
+    const input = this.getDAGLayoutInput(entities);
+    const newPositions = this.computeDAGLayout(input);
+    const nodeMap = new Map<string, ConnectableEntity>();
+    entities.forEach((entity) => nodeMap.set(entity.uuid, entity));
+    const previousLocations = new Map(
+      entities.map((entity) => [entity, entity.collisionBox.getRectangle().location.clone()]),
+    );
+    const previousSectionCollision = Settings.isEnableSectionCollision;
+    Settings.isEnableSectionCollision = false;
+
     try {
-      // 1. 准备算法输入数据
-      const input = this.getDAGLayoutInput(entities);
-
-      // 2. 调用DAG布局算法计算新位置
-      const newPositions = this.computeDAGLayout(input);
-
-      // 3. 应用计算结果到实际节点
-      const nodeMap = new Map<string, ConnectableEntity>();
-      entities.forEach((entity) => nodeMap.set(entity.uuid, entity));
-
-      // 4. 移动节点到新位置
       for (const [nodeId, position] of Object.entries(newPositions)) {
         const entity = nodeMap.get(nodeId);
         if (entity) {
@@ -251,15 +256,17 @@ export class AutoLayout {
         }
       }
 
-      // 5. 记录操作步骤，支持撤销
       this.project.historyManager.recordStep();
-
-      // 6. 显示成功提示
-      toast.success("DAG布局已应用");
     } catch (error) {
-      // 7. 错误处理
-      console.error("DAG布局失败:", error);
-      toast.error("DAG布局失败，请检查控制台日志");
+      for (const [entity, location] of previousLocations) {
+        entity.moveTo(location);
+      }
+      throw error;
+    } finally {
+      Settings.isEnableSectionCollision = previousSectionCollision;
     }
+
+    toast.success("DAG布局已应用");
+    return { movedCount: Object.keys(newPositions).length, internalEdgeCount: input.edges.length };
   }
 }

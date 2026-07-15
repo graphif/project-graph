@@ -74,6 +74,7 @@ import {
   ScanEye,
   ScanText,
   Shapes,
+  ShieldCheck,
   Skull,
   Slash,
   Space,
@@ -267,4 +268,6 @@ export const settingsIcons = {
   enableOCR: ScanText,
   maxFps: Timer,
   maxFpsUnfocused: Timer,
+  aiContextWindow: Gauge,
+  aiAutoApproveMcpTools: ShieldCheck,
 };

@@ -85,6 +85,9 @@ importers:
 
   app:
     dependencies:
+      "@ai-sdk/mcp":
+        specifier: ^1.0.61
+        version: 1.0.61(zod@4.4.3)
       "@ai-sdk/openai-compatible":
         specifier: ^2.0.45
         version: 2.0.45(zod@4.4.3)
@@ -806,6 +809,13 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  "@ai-sdk/mcp@1.0.61":
+    resolution:
+      { integrity: sha512-kHwafUfkh0fuJ4aLYo/TcXMeN8zbWTb9dZ4XgSwC4Yn9f37kMDkRaRJjUrI+jnWNddydkjv9dzIwkQG4ck9O7g== }
+    engines: { node: ">=18" }
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   "@ai-sdk/openai-compatible@2.0.45":
     resolution:
       { integrity: sha512-5YBvurNL7Oj7mT3srws4Rh4cQidoorfEGObAOb5jV40eld8IC7EkXWARZjnWYqgYzabUs6Sn6muiXfQVkgOyOQ== }
@@ -820,9 +830,21 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  "@ai-sdk/provider-utils@4.0.38":
+    resolution:
+      { integrity: sha512-/HHGmtKllqjg1OLc023v9w9kK3laW7Z6TzfZukYQWCsGBbzB9p60zTvvpXFVcs44NZBVXL3viOa1HRKUbeee8g== }
+    engines: { node: ">=18" }
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   "@ai-sdk/provider@3.0.10":
     resolution:
       { integrity: sha512-Q3BZ27qfpYqnCYGvE3vt+Qi6LGOF9R5Nmzn+9JoM1lCRsD9mYaIhfJLkSunN48nfGXJ6n+XNV0J/XVpqGQl7Dw== }
+    engines: { node: ">=18" }
+
+  "@ai-sdk/provider@3.0.14":
+    resolution:
+      { integrity: sha512-5X1k57JBJ4H7H1QjX7CnJYAB1I19r/trVZTMcSms7/kLNZ8RaU4Nt2agcwZzv82Hfx6Q7/TOLU7agAKeFfc8cA== }
     engines: { node: ">=18" }
 
   "@ai-sdk/react@3.0.176":
@@ -7258,6 +7280,11 @@ packages:
       { integrity: sha512-r34yH/GlQpKZbU1BvFFqOjhISRo1MNx1tWYsYvmj6KIRHSPMT2+yHOEb1SG6NMvRoHRF0a07kCOox/9yakl1vg== }
     hasBin: true
 
+  pkce-challenge@5.0.1:
+    resolution:
+      { integrity: sha512-wQ0b/W4Fr01qtpHlqSqspcj3EhBvimsdh0KlHhH8HRZnMsEa0ea2fTULOXOS9ccQr3om+GcGRk4e+isrZWV8qQ== }
+    engines: { node: ">=16.20.0" }
+
   platejs@49.2.21:
     resolution:
       { integrity: sha512-JK3W4WxEGOW7W+GHMH1Wro46mVfkbKgFlj0DrajDv4HmmK7FQVu9IkVdeR97IbimM76GafoHglbqlJrLM7CYIw== }
@@ -8987,6 +9014,13 @@ snapshots:
       "@vercel/oidc": 3.2.0
       zod: 4.4.3
 
+  "@ai-sdk/mcp@1.0.61(zod@4.4.3)":
+    dependencies:
+      "@ai-sdk/provider": 3.0.14
+      "@ai-sdk/provider-utils": 4.0.38(zod@4.4.3)
+      pkce-challenge: 5.0.1
+      zod: 4.4.3
+
   "@ai-sdk/openai-compatible@2.0.45(zod@4.4.3)":
     dependencies:
       "@ai-sdk/provider": 3.0.10
@@ -9000,7 +9034,18 @@ snapshots:
       eventsource-parser: 3.0.8
       zod: 4.4.3
 
+  "@ai-sdk/provider-utils@4.0.38(zod@4.4.3)":
+    dependencies:
+      "@ai-sdk/provider": 3.0.14
+      "@standard-schema/spec": 1.1.0
+      eventsource-parser: 3.0.8
+      zod: 4.4.3
+
   "@ai-sdk/provider@3.0.10":
+    dependencies:
+      json-schema: 0.4.0
+
+  "@ai-sdk/provider@3.0.14":
     dependencies:
       json-schema: 0.4.0
 
@@ -14848,6 +14893,8 @@ snapshots:
       safe-stable-stringify: 2.5.0
       sonic-boom: 4.2.1
       thread-stream: 4.2.0
+
+  pkce-challenge@5.0.1: {}
 
   platejs@49.2.21(@types/react@19.2.14)(immer@10.2.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(scheduler@0.27.0)(use-sync-external-store@1.6.0(react@19.2.7)):
     dependencies:

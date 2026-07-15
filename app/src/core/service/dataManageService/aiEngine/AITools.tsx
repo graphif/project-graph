@@ -1,20 +1,32 @@
-import { Project } from "@/core/Project";
+import type { Project } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
-import { blobToCompressedDataUrl } from "@/core/service/dataManageService/imageUtils";
+import {
+  AIObjectReferenceError,
+  AIObjectReferenceRegistry,
+} from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
+import { blobToCompressedDataUrl, prepareImageBlobForImport } from "@/core/service/dataManageService/imageUtils";
+import { calculateImageDisplaySize, createImageNodeFromBlob } from "@/core/service/dataManageService/imageNodeFactory";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
+import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import type { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { Color, Vector } from "@graphif/data-structures";
-import { serialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import { fetch } from "@tauri-apps/plugin-http";
 import { encode } from "@toon-format/toon";
 import { generateText, tool, type ToolSet } from "ai";
 import z from "zod/v4";
 import { findFirstImageInChildren } from "./imageNodeFinder";
+import {
+  findDownloadableOpenverseImage,
+  type ImageOrientation,
+  type OpenverseImageCandidate,
+} from "./OpenverseImageSearch";
 
 export namespace AITools {
   export type ToolDefinition = {
@@ -24,8 +36,12 @@ export namespace AITools {
   };
 
   type InternalToolDefinition = ToolDefinition & {
-    fn: (project: Project, data: any) => any;
+    fn: (project: Project, data: any, references: AIObjectReferenceRegistry, context: ToolExecutionContext) => any;
     toModelOutput?: (output: any) => { type: "content"; value: any[] };
+  };
+
+  type ToolExecutionContext = {
+    abortSignal?: AbortSignal;
   };
 
   const toolDefinitions: InternalToolDefinition[] = [];
@@ -35,28 +51,45 @@ export namespace AITools {
     name: string,
     description: string,
     parameters: A,
-    fn: (project: Project, data: z.infer<A>) => any,
+    fn: (
+      project: Project,
+      data: z.infer<A>,
+      references: AIObjectReferenceRegistry,
+      context: ToolExecutionContext,
+    ) => any,
     toModelOutput?: (output: any) => { type: "content"; value: any[] },
   ) {
     toolDefinitions.push({
       name,
       description,
       parameters,
-      fn: fn as (project: Project, data: any) => any,
+      fn: fn as InternalToolDefinition["fn"],
       toModelOutput,
     });
   }
 
-  export function createTools(project: Project): ToolSet {
+  export function createTools(project: Project, references: AIObjectReferenceRegistry): ToolSet {
     return Object.fromEntries(
       toolDefinitions.map((definition) => [
         definition.name,
         tool({
           description: definition.description,
           inputSchema: definition.parameters as any,
-          execute: async (data: any) => {
-            const result = await definition.fn(project, data as any);
-            return result ? encode(result) : "ok";
+          execute: async (data: any, executionOptions?: ToolExecutionContext) => {
+            try {
+              const result = await definition.fn(project, data as any, references, {
+                abortSignal: executionOptions?.abortSignal,
+              });
+              return result ? encode(result) : "ok";
+            } catch (error) {
+              if (error instanceof AIObjectReferenceError) {
+                return encode({
+                  success: false,
+                  error: { code: error.code, ref: error.ref, message: error.message },
+                });
+              }
+              throw error;
+            }
           },
           ...(definition.toModelOutput
             ? {
@@ -68,25 +101,102 @@ export namespace AITools {
     ) as ToolSet;
   }
 
-  addTool("get_all_nodes", "获取舞台上所有节点以及uuid", z.object({}), (project) => serialize(project.stage));
-  addTool("delete_node", "根据uuid删除节点", z.object({ uuid: z.string() }), (project, { uuid }) => {
-    project.stageManager.delete(project.stageManager.get(uuid)!);
-    project.historyManager.recordStep();
-  });
+  const objectRefSchema = z
+    .string()
+    .regex(/^(?:n|e)[1-9]\d*$/)
+    .describe("当前项目中的对象引用，例如n1或e1");
+  const nodeRefSchema = z
+    .string()
+    .regex(/^n[1-9]\d*$/)
+    .describe("当前项目中的节点引用，例如n1");
+  const edgeRefSchema = z
+    .string()
+    .regex(/^e[1-9]\d*$/)
+    .describe("当前项目中的连线引用，例如e1");
+
+  function toAgentObjectInfo(object: StageObject, references: AIObjectReferenceRegistry) {
+    const rect = object.collisionBox.getRectangle();
+    const info: Record<string, unknown> = {
+      ref: references.getOrCreateRef(object),
+      type: object.constructor.name,
+      position: { x: rect.location.x, y: rect.location.y },
+      size: { width: rect.size.x, height: rect.size.y },
+    };
+    if (object instanceof TextNode) info.text = object.text;
+    if (object instanceof ImageNode) {
+      info.isBackground = object.isBackground;
+      info.imageState = object.state;
+    }
+    if ("color" in object && object.color instanceof Color) info.color = object.color.toArray();
+    if (object instanceof Section) {
+      info.childRefs = object.children.map((child) => references.getOrCreateRef(child));
+    }
+    if (object instanceof Edge) {
+      info.sourceRef = references.getOrCreateRef(object.source);
+      info.targetRef = references.getOrCreateRef(object.target);
+      info.text = object.text;
+    }
+    return info;
+  }
+
+  function sanitizeImageSourceText(value: string | null | undefined): string | undefined {
+    const sanitized = value
+      ?.replace(/[\r\n]+/g, " ")
+      .trim()
+      .slice(0, 500)
+      .replace(/([\\`*_[\]{}()#+\-.!|>])/g, "\\$1");
+    return sanitized || undefined;
+  }
+
+  function sanitizeImageSourceUrl(value: string | null | undefined): string | undefined {
+    if (!value || !URL.canParse(value)) return undefined;
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : undefined;
+  }
+
+  function createOpenverseImageDetails(candidate: OpenverseImageCandidate) {
+    const lines = ["## 网络图片来源"];
+    const title = sanitizeImageSourceText(candidate.title);
+    const creator = sanitizeImageSourceText(candidate.creator);
+    const license = sanitizeImageSourceText(candidate.license);
+    const sourceUrl = sanitizeImageSourceUrl(candidate.foreign_landing_url);
+    const licenseUrl = sanitizeImageSourceUrl(candidate.license_url);
+    if (title) lines.push(`标题：${title}`);
+    if (creator) lines.push(`作者：${creator}`);
+    if (license) lines.push(`许可证：${license}`);
+    if (sourceUrl) lines.push(`来源页面：<${sourceUrl}>`);
+    if (licenseUrl) lines.push(`许可证页面：<${licenseUrl}>`);
+    lines.push("搜索服务：Openverse");
+    return DetailsManager.markdownToDetails(lines.join("\n\n"));
+  }
+
+  function getViewportCenteredLocation(project: Project, size: Vector): Vector {
+    return project.renderer.getCoverWorldRectangle().center.subtract(size.clone().multiply(0.5));
+  }
+
+  addTool("get_all_nodes", "获取舞台上所有对象及其项目级引用", z.object({}), (project, _data, references) => ({
+    objects: project.stage.map((object) => toAgentObjectInfo(object, references)),
+  }));
   addTool(
-    "delete_nodes_by_uuids",
-    "批量删除指定uuid数组对应的节点",
+    "delete_node",
+    "根据项目级引用删除对象",
+    z.object({ ref: objectRefSchema }),
+    (project, { ref }, references) => {
+      project.stageManager.delete(references.resolve(ref));
+      project.historyManager.recordStep();
+    },
+  );
+  addTool(
+    "delete_nodes",
+    "批量删除指定项目级引用对应的对象",
     z.object({
-      uuids: z.array(z.string()).describe("要删除的节点UUID数组"),
+      refs: z.array(objectRefSchema).describe("要删除的对象引用数组"),
     }),
-    (project, { uuids }) => {
+    (project, { refs }, references) => {
       let deletedCount = 0;
-      for (const uuid of uuids) {
-        const obj = project.stageManager.get(uuid);
-        if (obj) {
-          project.stageManager.delete(obj);
-          deletedCount++;
-        }
+      for (const ref of refs) {
+        project.stageManager.delete(references.resolve(ref));
+        deletedCount++;
       }
       if (deletedCount > 0) {
         project.historyManager.recordStep();
@@ -122,70 +232,278 @@ export namespace AITools {
   });
   addTool(
     "edit_text_node",
-    "根据uuid编辑TextNode",
+    "编辑 TextNode 的内容、颜色和尺寸。此工具不会移动节点。",
     z.object({
-      uuid: z.string(),
+      ref: nodeRefSchema,
       data: z.object({
         text: z.string().optional(),
         color: z.array(z.number()).optional().describe("[255,255,255,1]"),
-        x: z.number().optional(),
-        y: z.number().optional(),
-        width: z.number().optional(),
+        width: z.number().min(16).max(4096).optional(),
         sizeAdjust: z
           .union([
-            z.string("auto").describe("自动调整宽度"),
-            z.string("manual").describe("宽度由width字段定义，文本自动换行"),
+            z.literal("auto").describe("自动调整宽度"),
+            z.literal("manual").describe("宽度由width字段定义，文本自动换行"),
           ])
-          .optional()
-          .default("auto"),
+          .optional(),
       }),
     }),
-    (project, { uuid, data }) => {
-      const node = project.stageManager.get(uuid);
-      if (!(node instanceof TextNode)) return;
-      node.text = data.text ?? node.text;
-      node.color = data.color ? new Color(...(data.color as [number, number, number, number])) : node.color;
-      node.collisionBox.updateShapeList([
-        new Rectangle(
-          new Vector(
-            data.x ?? node.collisionBox.getRectangle().location.x,
-            data.y ?? node.collisionBox.getRectangle().location.y,
-          ),
-          new Vector(data.width ?? node.collisionBox.getRectangle().size.x, node.collisionBox.getRectangle().size.y),
-        ),
-      ]);
-      node.sizeAdjust = data.sizeAdjust ?? node.sizeAdjust;
-      node.forceAdjustSizeByText();
-      project.historyManager.recordStep();
+    (project, { ref, data }, references) => {
+      const node = references.resolve(ref, "node");
+      if (!(node instanceof TextNode)) {
+        return {
+          success: false,
+          error: { code: "wrong_node_type", ref, expected: "TextNode", actual: node.constructor.name },
+        };
+      }
+      if (
+        data.text === undefined &&
+        data.color === undefined &&
+        data.width === undefined &&
+        data.sizeAdjust === undefined
+      ) {
+        return { success: false, error: { code: "no_changes", ref, message: "没有提供要修改的字段" } };
+      }
+
+      if (data.width !== undefined && data.sizeAdjust === "auto") {
+        return {
+          success: false,
+          error: { code: "invalid_size_mode", ref, message: "width 只能在 manual 宽度模式下使用" },
+        };
+      }
+
+      const previous = {
+        text: node.text,
+        color: node.color,
+        sizeAdjust: node.sizeAdjust,
+        rectangle: node.collisionBox.getRectangle().clone(),
+      };
+      try {
+        node.text = data.text ?? node.text;
+        node.color = data.color ? new Color(...(data.color as [number, number, number, number])) : node.color;
+        node.sizeAdjust = data.sizeAdjust ?? (data.width !== undefined ? "manual" : node.sizeAdjust);
+        if (data.width !== undefined) {
+          const rect = node.collisionBox.getRectangle();
+          node.collisionBox.updateShapeList([
+            new Rectangle(rect.location.clone(), new Vector(data.width, rect.size.y)),
+          ]);
+        }
+        if (node.sizeAdjust === "manual") {
+          node.forceAdjustHeightByText();
+        } else {
+          node.forceAdjustSizeByText();
+        }
+
+        project.historyManager.recordStep();
+        const finalRect = node.collisionBox.getRectangle();
+        return {
+          success: true,
+          ref,
+          text: node.text,
+          size: { width: finalRect.size.x, height: finalRect.size.y },
+          sizeAdjust: node.sizeAdjust,
+        };
+      } catch (error) {
+        node.text = previous.text;
+        node.color = previous.color;
+        node.sizeAdjust = previous.sizeAdjust;
+        node.collisionBox.updateShapeList([previous.rectangle]);
+        throw error;
+      }
+    },
+  );
+  addTool(
+    "edit_image_node",
+    "编辑 ImageNode 的显示尺寸和背景状态。图片始终保持原始宽高比；此工具不会移动节点。",
+    z.object({
+      ref: nodeRefSchema,
+      data: z.object({
+        displaySize: z
+          .object({
+            basis: z
+              .union([z.literal("width"), z.literal("height"), z.literal("longest_edge")])
+              .describe("按照宽度、高度或最长边设置显示尺寸"),
+            value: z.number().min(16).max(4096).describe("目标显示尺寸"),
+          })
+          .optional(),
+        isBackground: z.boolean().optional().describe("是否把图片作为背景图片"),
+      }),
+    }),
+    (project, { ref, data }, references) => {
+      const node = references.resolve(ref, "node");
+      if (!(node instanceof ImageNode)) {
+        return {
+          success: false,
+          error: { code: "wrong_node_type", ref, expected: "ImageNode", actual: node.constructor.name },
+        };
+      }
+      if (data.displaySize === undefined && data.isBackground === undefined) {
+        return { success: false, error: { code: "no_changes", ref, message: "没有提供要修改的字段" } };
+      }
+
+      const previous = {
+        scale: node.scale,
+        isBackground: node.isBackground,
+        rectangle: node.collisionBox.getRectangle().clone(),
+      };
+      try {
+        const currentRect = node.collisionBox.getRectangle();
+        if (data.displaySize) {
+          const intrinsicWidth = node.bitmap?.width ?? currentRect.width / node.scale;
+          const intrinsicHeight = node.bitmap?.height ?? currentRect.height / node.scale;
+          if (
+            !Number.isFinite(intrinsicWidth) ||
+            !Number.isFinite(intrinsicHeight) ||
+            intrinsicWidth <= 0 ||
+            intrinsicHeight <= 0
+          ) {
+            return {
+              success: false,
+              error: { code: "invalid_image_size", ref, message: "无法确定图片的原始尺寸" },
+            };
+          }
+
+          const basisSize =
+            data.displaySize.basis === "width"
+              ? intrinsicWidth
+              : data.displaySize.basis === "height"
+                ? intrinsicHeight
+                : Math.max(intrinsicWidth, intrinsicHeight);
+          const nextScale = data.displaySize.value / basisSize;
+          if (nextScale < 0.1 || nextScale > 10) {
+            return {
+              success: false,
+              error: {
+                code: "scale_out_of_range",
+                ref,
+                message: "目标尺寸超出 ImageNode 支持的 0.1 到 10 倍缩放范围",
+              },
+            };
+          }
+          node.scaleUpdate(nextScale - node.scale);
+          if (!node.bitmap) {
+            node.collisionBox.updateShapeList([
+              new Rectangle(
+                currentRect.location.clone(),
+                new Vector(intrinsicWidth * nextScale, intrinsicHeight * nextScale),
+              ),
+            ]);
+          }
+        }
+
+        node.isBackground = data.isBackground ?? node.isBackground;
+        project.historyManager.recordStep();
+        const finalRect = node.collisionBox.getRectangle();
+        return {
+          success: true,
+          ref,
+          displaySize: { width: finalRect.width, height: finalRect.height },
+          isBackground: node.isBackground,
+        };
+      } catch (error) {
+        node.scale = previous.scale;
+        node.isBackground = previous.isBackground;
+        node.collisionBox.updateShapeList([previous.rectangle]);
+        throw error;
+      }
+    },
+  );
+  addTool(
+    "auto_layout_dag",
+    "将同一分组层级中已经通过有向连线连接的普通节点，按从左到右的 DAG 分层方式整体布局。创建并连线完成后调用一次；不能用于 Section、孤立节点或有环图。",
+    z.object({
+      refs: z.array(nodeRefSchema).min(2).describe("需要整体布局的节点项目级引用"),
+    }),
+    (project, { refs }, references) => {
+      const uniqueRefs = [...new Set(refs)];
+      if (uniqueRefs.length !== refs.length) {
+        return { success: false, error: { code: "duplicate_refs", message: "refs 不能包含重复节点引用" } };
+      }
+
+      const nodes = uniqueRefs.map((ref) => ({ ref, node: references.resolve(ref, "node") }));
+      const invalidNode = nodes.find(({ node }) => !(node instanceof ConnectableEntity) || node instanceof Section);
+      if (invalidNode) {
+        return {
+          success: false,
+          error: {
+            code: "unsupported_node_type",
+            ref: invalidNode.ref,
+            message: "DAG 布局目前只支持非 Section 的可连接节点",
+          },
+        };
+      }
+
+      const entities = nodes.map(({ node }) => node as ConnectableEntity);
+      const parentSection = entities[0].parentSection;
+      if (!entities.every((entity) => entity.parentSection === parentSection)) {
+        return {
+          success: false,
+          error: { code: "mixed_containers", message: "DAG 布局的节点必须位于同一直属 Section 层级" },
+        };
+      }
+
+      const nodeIds = new Set(entities.map((entity) => entity.uuid));
+      const internalEdgeCount = project.stageManager
+        .getEdges()
+        .filter((edge) => nodeIds.has(edge.source.uuid) && nodeIds.has(edge.target.uuid)).length;
+      if (internalEdgeCount === 0) {
+        return {
+          success: false,
+          error: { code: "no_internal_edges", message: "DAG 布局至少需要一条位于 refs 范围内的有向连线" },
+        };
+      }
+      if (!project.graphMethods.isDAGByNodes(entities)) {
+        return { success: false, error: { code: "not_dag", message: "指定节点不构成有向无环图" } };
+      }
+
+      const result = project.autoLayout.autoLayoutDAG(entities);
+      return { success: true, ...result };
     },
   );
   addTool(
     "create_text_node",
-    "创建TextNode",
+    "创建 TextNode。节点会插入到当前视野中心；完成连线后使用 auto_layout_dag 整体整理，不要尝试提供坐标。",
     z.object({
       text: z.string(),
-      color: z.array(z.number()).describe("[R,G,B,A]，RGB为0~255，A为0~1，正常情况下为透明[0,0,0,0]"),
-      x: z.number(),
-      y: z.number().describe("文本框默认高度=75"),
-      width: z.number().describe("如果sizeAdjust为manual，则定义文本框宽度，否则可以写0"),
+      color: z.array(z.number()).optional().describe("[R,G,B,A]，不填写时使用透明色"),
+      width: z.number().min(16).max(4096).optional().describe("手动宽度模式下的文本框宽度"),
       sizeAdjust: z
         .union([
-          z.string("auto").describe("自动调整宽度"),
-          z.string("manual").describe("宽度由width字段定义，文本自动换行"),
+          z.literal("auto").describe("自动调整宽度"),
+          z.literal("manual").describe("宽度由width字段定义，文本自动换行"),
         ])
-        .optional()
-        .describe("建议用auto"),
+        .optional(),
     }),
-    (project, { text, color, x, y, width, sizeAdjust }) => {
+    (project, { text, color, width, sizeAdjust }, references) => {
+      if (width !== undefined && sizeAdjust === "auto") {
+        return {
+          success: false,
+          error: { code: "invalid_size_mode", message: "width 只能在 manual 宽度模式下使用" },
+        };
+      }
+      if (sizeAdjust === "manual" && width === undefined) {
+        return {
+          success: false,
+          error: { code: "missing_width", message: "manual 宽度模式必须提供 width" },
+        };
+      }
+
+      const resolvedSizeAdjust = sizeAdjust ?? (width === undefined ? "auto" : "manual");
       const node = new TextNode(project, {
         text,
-        color: new Color(...(color as [number, number, number, number])),
-        collisionBox: new CollisionBox([new Rectangle(new Vector(x, y), new Vector(width, 50))]),
-        sizeAdjust: (sizeAdjust ?? "auto") as "auto" | "manual",
+        color: color ? new Color(...(color as [number, number, number, number])) : Color.Transparent,
+        collisionBox: new CollisionBox([new Rectangle(Vector.getZero(), new Vector(width ?? 100, 50))]),
+        sizeAdjust: resolvedSizeAdjust,
       });
+      node.moveTo(getViewportCenteredLocation(project, node.collisionBox.getRectangle().size));
       project.stageManager.add(node);
       project.historyManager.recordStep();
-      return { uuid: node.uuid };
+      const rect = node.collisionBox.getRectangle();
+      return {
+        success: true,
+        ref: references.getOrCreateRef(node),
+        size: { width: rect.width, height: rect.height },
+        sizeAdjust: node.sizeAdjust,
+      };
     },
   );
   addTool(
@@ -202,13 +520,14 @@ export namespace AITools {
   );
   addTool(
     "expand_node_tree_from_node",
-    "从指定节点开始进行树形扩展，传入一个uuid和缩进文本，在该节点下生成树状子节点",
+    "从指定节点开始进行树形扩展，传入一个节点引用和缩进文本，在该节点下生成树状子节点",
     z.object({
-      uuid: z.string().describe("根节点的UUID"),
+      ref: nodeRefSchema.describe("根节点引用"),
       text: z.string().describe("包含缩进结构的文本，每一层缩进2个空格，例如：'child1\\n  grandchild\\nchild2'"),
     }),
-    (project, { uuid, text }) => {
-      const result = project.stageImport.addNodeTreeByTextFromNode(uuid, text, 2);
+    (project, { ref, text }, references) => {
+      const root = references.resolve(ref, "node");
+      const result = project.stageImport.addNodeTreeByTextFromNode(root.uuid, text, 2);
       if (result.success && result.nodeCount && result.nodeCount > 0) {
         project.historyManager.recordStep();
       }
@@ -221,50 +540,52 @@ export namespace AITools {
     z.object({
       regex: z.string().describe("正则表达式字符串"),
     }),
-    (project, { regex }) => {
-      const results: { text: string; uuid: string }[] = [];
+    (project, { regex }, references) => {
+      const results: { text: string; ref: string }[] = [];
       const regexObj = new RegExp(regex);
       for (const entity of project.stageManager.getEntities()) {
         if (entity instanceof TextNode && regexObj.test(entity.text)) {
-          results.push({ text: entity.text, uuid: entity.uuid });
+          results.push({ text: entity.text, ref: references.getOrCreateRef(entity) });
         }
       }
       return results;
     },
   );
   addTool(
-    "get_children_by_uuid",
-    "通过UUID获取一个节点的所有第一层子集节点（基于连接关系）",
+    "get_children",
+    "通过项目级引用获取一个节点的所有第一层子节点（基于连接关系）",
     z.object({
-      uuid: z.string(),
+      ref: nodeRefSchema,
     }),
-    (project, { uuid }) => {
-      const node = project.stageManager.getConnectableEntityByUUID(uuid);
+    (project, { ref }, references) => {
+      const object = references.resolve(ref, "node");
+      const node = project.stageManager.getConnectableEntityByUUID(object.uuid);
       if (!node) return [];
       const children = project.graphMethods.nodeChildrenArray(node);
-      const results: { text: string; uuid: string }[] = [];
+      const results: { text: string; ref: string }[] = [];
       for (const child of children) {
         if (child instanceof TextNode) {
-          results.push({ text: child.text, uuid: child.uuid });
+          results.push({ text: child.text, ref: references.getOrCreateRef(child) });
         }
       }
       return results;
     },
   );
   addTool(
-    "get_parents_by_uuid",
-    "通过UUID获取一个节点的所有父级节点（基于连接关系）",
+    "get_parents",
+    "通过项目级引用获取一个节点的所有父级节点（基于连接关系）",
     z.object({
-      uuid: z.string(),
+      ref: nodeRefSchema,
     }),
-    (project, { uuid }) => {
-      const node = project.stageManager.getConnectableEntityByUUID(uuid);
+    (project, { ref }, references) => {
+      const object = references.resolve(ref, "node");
+      const node = project.stageManager.getConnectableEntityByUUID(object.uuid);
       if (!node) return [];
       const parents = project.graphMethods.nodeParentArray(node);
-      const results: { text: string; uuid: string }[] = [];
+      const results: { text: string; ref: string }[] = [];
       for (const parent of parents) {
         if (parent instanceof TextNode) {
-          results.push({ text: parent.text, uuid: parent.uuid });
+          results.push({ text: parent.text, ref: references.getOrCreateRef(parent) });
         }
       }
       return results;
@@ -274,15 +595,15 @@ export namespace AITools {
     "batch_change_color",
     "批量给物体更改颜色",
     z.object({
-      uuids: z.array(z.string()).describe("UUID数组"),
+      refs: z.array(objectRefSchema).describe("对象引用数组"),
       color: z.array(z.number()).describe("[R,G,B,A]，RGB为0~255，A为0~1"),
     }),
-    (project, { uuids, color }) => {
+    (project, { refs, color }, references) => {
       const colorObj = new Color(...(color as [number, number, number, number]));
       let changedCount = 0;
-      for (const uuid of uuids) {
-        const obj = project.stageManager.get(uuid);
-        if (obj && "color" in obj && obj.color instanceof Color) {
+      for (const ref of refs) {
+        const obj = references.resolve(ref);
+        if ("color" in obj && obj.color instanceof Color) {
           obj.color = colorObj;
           changedCount++;
         }
@@ -294,41 +615,31 @@ export namespace AITools {
     },
   );
   addTool(
-    "get_serialized_info",
-    "通过uuid数组获取对应内容的详细序列化信息",
+    "get_object_details",
+    "通过项目级引用数组获取对象的模型可读详细信息",
     z.object({
-      uuids: z.array(z.string()).describe("UUID数组"),
+      refs: z.array(objectRefSchema).describe("对象引用数组"),
     }),
-    (project, { uuids }) => {
-      const results: { uuid: string; serialized: any }[] = [];
-      for (const uuid of uuids) {
-        const obj = project.stageManager.get(uuid);
-        if (obj) {
-          results.push({
-            uuid,
-            serialized: serialize(obj),
-          });
-        }
-      }
-      return results;
-    },
+    (_project, { refs }, references) => refs.map((ref) => toAgentObjectInfo(references.resolve(ref), references)),
   );
   addTool(
     "check_connections",
     "检查节点是否是通过Edge直接连接的",
     z.object({
-      pairs: z.array(z.array(z.string()).length(2)).describe("UUID对儿数组，例如[[uuid1, uuid2], [uuid3, uuid4]]"),
+      pairs: z.array(z.array(nodeRefSchema).length(2)).describe("节点引用对数组，例如[[n1,n2],[n3,n4]]"),
     }),
-    (project, { pairs }) => {
-      const results: { from: string; to: string; connected: boolean }[] = [];
-      for (const [fromUuid, toUuid] of pairs) {
-        const fromNode = project.stageManager.getConnectableEntityByUUID(fromUuid);
-        const toNode = project.stageManager.getConnectableEntityByUUID(toUuid);
+    (project, { pairs }, references) => {
+      const results: { fromRef: string; toRef: string; connected: boolean }[] = [];
+      for (const [fromRef, toRef] of pairs) {
+        const fromObject = references.resolve(fromRef, "node");
+        const toObject = references.resolve(toRef, "node");
+        const fromNode = project.stageManager.getConnectableEntityByUUID(fromObject.uuid);
+        const toNode = project.stageManager.getConnectableEntityByUUID(toObject.uuid);
         if (fromNode && toNode) {
           const connected = project.graphMethods.isConnected(fromNode, toNode);
-          results.push({ from: fromUuid, to: toUuid, connected });
+          results.push({ fromRef, toRef, connected });
         } else {
-          results.push({ from: fromUuid, to: toUuid, connected: false });
+          results.push({ fromRef, toRef, connected: false });
         }
       }
       return results;
@@ -340,27 +651,29 @@ export namespace AITools {
     z.object({
       edges: z.array(
         z.object({
-          sourceUuid: z.string(),
-          targetUuid: z.string(),
+          sourceRef: nodeRefSchema,
+          targetRef: nodeRefSchema,
           text: z.string().optional().default(""),
         }),
       ),
     }),
-    (project, { edges }) => {
+    (project, { edges }, references) => {
       const results: Array<{
-        sourceUuid: string;
-        targetUuid: string;
+        sourceRef: string;
+        targetRef: string;
         success: boolean;
-        edgeUuid?: string;
+        edgeRef?: string;
         error?: string;
       }> = [];
       for (const edgeData of edges) {
-        const sourceNode = project.stageManager.getConnectableEntityByUUID(edgeData.sourceUuid);
-        const targetNode = project.stageManager.getConnectableEntityByUUID(edgeData.targetUuid);
+        const sourceObject = references.resolve(edgeData.sourceRef, "node");
+        const targetObject = references.resolve(edgeData.targetRef, "node");
+        const sourceNode = project.stageManager.getConnectableEntityByUUID(sourceObject.uuid);
+        const targetNode = project.stageManager.getConnectableEntityByUUID(targetObject.uuid);
         if (!sourceNode) {
           results.push({
-            sourceUuid: edgeData.sourceUuid,
-            targetUuid: edgeData.targetUuid,
+            sourceRef: edgeData.sourceRef,
+            targetRef: edgeData.targetRef,
             success: false,
             error: `源节点不存在或不是可连接对象`,
           });
@@ -368,8 +681,8 @@ export namespace AITools {
         }
         if (!targetNode) {
           results.push({
-            sourceUuid: edgeData.sourceUuid,
-            targetUuid: edgeData.targetUuid,
+            sourceRef: edgeData.sourceRef,
+            targetRef: edgeData.targetRef,
             success: false,
             error: `目标节点不存在或不是可连接对象`,
           });
@@ -383,23 +696,23 @@ export namespace AITools {
             .find((edge) => edge instanceof Edge && edge.source === sourceNode && edge.target === targetNode);
           if (newEdge) {
             results.push({
-              sourceUuid: edgeData.sourceUuid,
-              targetUuid: edgeData.targetUuid,
+              sourceRef: edgeData.sourceRef,
+              targetRef: edgeData.targetRef,
               success: true,
-              edgeUuid: newEdge.uuid,
+              edgeRef: references.getOrCreateRef(newEdge),
             });
           } else {
             results.push({
-              sourceUuid: edgeData.sourceUuid,
-              targetUuid: edgeData.targetUuid,
+              sourceRef: edgeData.sourceRef,
+              targetRef: edgeData.targetRef,
               success: false,
               error: `连线创建失败，未知原因`,
             });
           }
         } catch (error) {
           results.push({
-            sourceUuid: edgeData.sourceUuid,
-            targetUuid: edgeData.targetUuid,
+            sourceRef: edgeData.sourceRef,
+            targetRef: edgeData.targetRef,
             success: false,
             error: error instanceof Error ? error.message : "连线创建失败",
           });
@@ -415,11 +728,11 @@ export namespace AITools {
     "change_edge_text",
     "更改连线上的文字",
     z.object({
-      edgeUuid: z.string(),
+      edgeRef: edgeRefSchema,
       text: z.string(),
     }),
-    (project, { edgeUuid, text }) => {
-      const edge = project.stageManager.get(edgeUuid);
+    (project, { edgeRef, text }, references) => {
+      const edge = references.resolve(edgeRef, "edge");
       if (!(edge instanceof Edge)) {
         return { success: false, error: "连线不存在或不是Edge类型" };
       }
@@ -430,12 +743,12 @@ export namespace AITools {
   );
   addTool(
     "select_objects",
-    "通过一些UUID，选中一些舞台对象",
+    "通过项目级引用选中一些舞台对象",
     z.object({
-      uuids: z.array(z.string()).describe("要选中的对象UUID数组"),
+      refs: z.array(objectRefSchema).describe("要选中的对象引用数组"),
       clearOthers: z.boolean().optional().default(false).describe("是否清除其他对象的选中状态"),
     }),
-    (project, { uuids, clearOthers }) => {
+    (project, { refs, clearOthers }, references) => {
       if (clearOthers) {
         // 清除所有对象的选中状态
         for (const obj of project.stageManager.getEntities()) {
@@ -446,12 +759,10 @@ export namespace AITools {
         }
       }
       let selectedCount = 0;
-      for (const uuid of uuids) {
-        const obj = project.stageManager.get(uuid);
-        if (obj) {
-          obj.isSelected = true;
-          selectedCount++;
-        }
+      for (const ref of refs) {
+        const obj = references.resolve(ref);
+        obj.isSelected = true;
+        selectedCount++;
       }
       if (selectedCount > 0) {
         project.historyManager.recordStep();
@@ -459,92 +770,52 @@ export namespace AITools {
       return { selectedCount };
     },
   );
-  addTool("get_selected_nodes", "获取用户当前所有选中的节点的详细信息", z.object({}), (project) => {
-    const results: Array<{
-      uuid: string;
-      type: string;
-      text?: string;
-      position: { x: number; y: number };
-      size: { width: number; height: number };
-    }> = [];
+  addTool(
+    "get_selected_nodes",
+    "获取用户当前所有选中对象的详细信息和项目级引用",
+    z.object({}),
+    (project, _data, references) => ({
+      objects: [...project.stageManager.getSelectedEntities(), ...project.stageManager.getSelectedAssociations()].map(
+        (object) => toAgentObjectInfo(object, references),
+      ),
+    }),
+  );
 
-    for (const entity of project.stageManager.getSelectedEntities()) {
-      const rect = entity.collisionBox.getRectangle();
-      const info = {
-        uuid: entity.uuid,
-        type: entity.constructor.name,
-        position: { x: rect.location.x, y: rect.location.y },
-        size: { width: rect.size.x, height: rect.size.y },
-      };
-      if (entity instanceof TextNode) {
-        (info as any).text = entity.text;
-      }
-      results.push(info);
-    }
+  addTool(
+    "get_nodes_in_viewport",
+    "获取当前视野范围中被完全覆盖住的节点",
+    z.object({}),
+    (project, _data, references) => {
+      const viewRect = project.renderer.getCoverWorldRectangle();
+      const results: Array<Record<string, unknown>> = [];
 
-    for (const assoc of project.stageManager.getSelectedAssociations()) {
-      const rect = assoc.collisionBox.getRectangle();
-      const info = {
-        uuid: assoc.uuid,
-        type: assoc.constructor.name,
-        position: { x: rect.location.x, y: rect.location.y },
-        size: { width: rect.size.x, height: rect.size.y },
-      };
-      if (assoc instanceof Edge) {
-        (info as any).sourceUuid = assoc.source.uuid;
-        (info as any).targetUuid = assoc.target.uuid;
-        (info as any).text = assoc.text;
-      }
-      results.push(info);
-    }
-
-    return { nodes: results };
-  });
-
-  addTool("get_nodes_in_viewport", "获取当前视野范围中被完全覆盖住的节点", z.object({}), (project) => {
-    const viewRect = project.renderer.getCoverWorldRectangle();
-    const results: Array<{
-      uuid: string;
-      type: string;
-      text?: string;
-      position: { x: number; y: number };
-      size: { width: number; height: number };
-    }> = [];
-
-    for (const entity of project.stageManager.getEntities()) {
-      const rect = entity.collisionBox.getRectangle();
-      if (rect.isAbsoluteIn(viewRect)) {
-        const info = {
-          uuid: entity.uuid,
-          type: entity.constructor.name,
-          position: { x: rect.location.x, y: rect.location.y },
-          size: { width: rect.size.x, height: rect.size.y },
-        };
-        if (entity instanceof TextNode) {
-          (info as any).text = entity.text;
+      for (const entity of project.stageManager.getEntities()) {
+        const rect = entity.collisionBox.getRectangle();
+        if (rect.isAbsoluteIn(viewRect)) {
+          results.push(toAgentObjectInfo(entity, references));
         }
-        results.push(info);
       }
-    }
 
-    return { nodes: results };
-  });
-  addTool("get_selected_uuids", "获取用户当前所有选中的物体的uuid们", z.object({}), (project) => {
+      return { nodes: results };
+    },
+  );
+  addTool("get_selected_refs", "获取用户当前所有选中对象的项目级引用", z.object({}), (project, _data, references) => {
     const selectedEntities = project.stageManager.getSelectedEntities();
     const selectedAssociations = project.stageManager.getSelectedAssociations();
-    const uuids = [...selectedEntities.map((e) => e.uuid), ...selectedAssociations.map((a) => a.uuid)];
-    return { uuids };
+    const refs = [...selectedEntities, ...selectedAssociations].map((object) => references.getOrCreateRef(object));
+    return { refs };
   });
 
   addTool(
     "breadth_expand_node",
-    "广度扩展一个节点，传入一个uuid和一个字符串数组，自动根据字符串数组给这个节点添加一层子节点",
+    "广度扩展一个节点，传入一个节点引用和字符串数组，自动添加一层子节点",
     z.object({
-      uuid: z.string().describe("源节点的UUID"),
+      ref: nodeRefSchema.describe("源节点引用"),
       texts: z.array(z.string()).describe("要添加的子节点文本数组"),
     }),
-    (project, { uuid, texts }) => {
-      const sourceNode = project.stageManager.getConnectableEntityByUUID(uuid);
+    (project, { ref, texts }, references) => {
+      const sourceObject = references.resolve(ref, "node");
+      const sourceNode = project.stageManager.getConnectableEntityByUUID(sourceObject.uuid);
       if (!sourceNode) {
         return { success: false, error: "源节点不存在或不是可连接对象" };
       }
@@ -554,7 +825,7 @@ export namespace AITools {
       const startY = sourceRect.location.y;
       const verticalSpacing = 60;
 
-      const results: Array<{ text: string; uuid: string; success: boolean; error?: string }> = [];
+      const results: Array<{ text: string; ref?: string; success: boolean; error?: string }> = [];
 
       for (let i = 0; i < texts.length; i++) {
         const text = texts[i];
@@ -572,11 +843,10 @@ export namespace AITools {
           // 创建连线
           project.nodeConnector.connectConnectableEntity(sourceNode, node, "");
 
-          results.push({ text, uuid: node.uuid, success: true });
+          results.push({ text, ref: references.getOrCreateRef(node), success: true });
         } catch (error) {
           results.push({
             text,
-            uuid: "",
             success: false,
             error: error instanceof Error ? error.message : "创建节点失败",
           });
@@ -593,18 +863,19 @@ export namespace AITools {
 
   addTool(
     "depth_expand_node",
-    "深度扩展一个节点，传入一个uuid作为根节点，根据字符串数组在这个节点上扩展出一个链式结构",
+    "深度扩展一个节点，传入一个节点引用作为根节点，根据字符串数组扩展出链式结构",
     z.object({
-      uuid: z.string().describe("根节点的UUID"),
+      ref: nodeRefSchema.describe("根节点引用"),
       texts: z.array(z.string()).describe("要添加的链式节点文本数组"),
     }),
-    (project, { uuid, texts }) => {
-      const rootNode = project.stageManager.getConnectableEntityByUUID(uuid);
+    (project, { ref, texts }, references) => {
+      const rootObject = references.resolve(ref, "node");
+      const rootNode = project.stageManager.getConnectableEntityByUUID(rootObject.uuid);
       if (!rootNode) {
         return { success: false, error: "根节点不存在或不是可连接对象" };
       }
 
-      const results: Array<{ text: string; uuid: string; success: boolean; error?: string }> = [];
+      const results: Array<{ text: string; ref?: string; success: boolean; error?: string }> = [];
       let currentNode = rootNode;
       const horizontalSpacing = 150;
 
@@ -628,12 +899,11 @@ export namespace AITools {
           // 创建连线：从前一个节点连接到新节点
           project.nodeConnector.connectConnectableEntity(currentNode, node, "");
 
-          results.push({ text, uuid: node.uuid, success: true });
+          results.push({ text, ref: references.getOrCreateRef(node), success: true });
           currentNode = node; // 更新当前节点为新建的节点，继续链式扩展
         } catch (error) {
           results.push({
             text,
-            uuid: "",
             success: false,
             error: error instanceof Error ? error.message : "创建节点失败",
           });
@@ -783,19 +1053,51 @@ export namespace AITools {
     },
   );
   addTool(
-    "recognize_image_by_uuid",
-    "识别指定节点中的图片内容并返回文字描述。传入 ImageNode 的 uuid（或包含图片的 Section 的 uuid，会自动取其内部第一张图片），并用 prompt 描述你想识别什么。工具会用多模态模型独立识别图片（不依赖主对话上下文），返回识别结果的文字描述。",
+    "search_and_add_image_node",
+    "从 Openverse 搜索开放授权的网络图片，下载后在当前视野中心创建 ImageNode。完成连线后使用 auto_layout_dag 整体整理；工具不返回图片 URL、附件 ID 或坐标。",
     z.object({
-      uuid: z.string().describe("ImageNode 的 uuid，或包含图片的 Section 的 uuid"),
+      query: z.string().min(1).max(400).describe("图片搜索关键词，建议包含主体、场景和风格"),
+      preferredOrientation: z
+        .union([z.literal("square"), z.literal("landscape"), z.literal("portrait")])
+        .optional()
+        .describe("偏好的图片方向，不填写时使用搜索相关度最高的结果"),
+      maxDisplaySize: z.number().min(128).max(1600).optional().describe("图片节点最长边的最大画布显示尺寸，默认480"),
+    }),
+    async (project, { query, preferredOrientation, maxDisplaySize }, references, { abortSignal }) => {
+      const { candidate, image: prepared } = await findDownloadableOpenverseImage(query, {
+        orientation: preferredOrientation as ImageOrientation | undefined,
+        abortSignal,
+        transform: prepareImageBlobForImport,
+      });
+      const targetDisplaySize = calculateImageDisplaySize(prepared.width, prepared.height, maxDisplaySize ?? 480);
+      const { node, width, height } = await createImageNodeFromBlob(project, prepared.blob, {
+        location: getViewportCenteredLocation(project, new Vector(targetDisplaySize.width, targetDisplaySize.height)),
+        intrinsicSize: prepared,
+        maxDisplaySize: maxDisplaySize ?? 480,
+        details: createOpenverseImageDetails(candidate),
+      });
+      project.historyManager.recordStep();
+      const license = candidate.license?.match(/^[a-z0-9-]{1,32}$/i) ? candidate.license.toLowerCase() : undefined;
+      return {
+        ref: references.getOrCreateRef(node),
+        intrinsicSize: { width, height },
+        displaySize: { width: targetDisplaySize.width, height: targetDisplaySize.height },
+        source: "openverse",
+        license,
+      };
+    },
+  );
+  addTool(
+    "recognize_image",
+    "识别指定节点中的图片内容并返回文字描述。传入ImageNode引用或包含图片的Section引用，并用prompt描述识别目标。",
+    z.object({
+      ref: nodeRefSchema.describe("ImageNode引用，或包含图片的Section引用"),
       prompt: z
         .string()
         .describe('向图像识别模型提问的提示词，例如"这张图片里有哪些文字？"或"描述图片中的主要物体和场景"。'),
     }),
-    async (project, { uuid, prompt }) => {
-      const obj = project.stageManager.get(uuid);
-      if (!obj) {
-        return { success: false, error: "未找到该 uuid 对应的节点" };
-      }
+    async (project, { ref, prompt }, references) => {
+      const obj = references.resolve(ref, "node");
       const imageNode = (
         obj instanceof ImageNode
           ? obj

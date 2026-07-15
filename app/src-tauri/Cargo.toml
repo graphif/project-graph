@@ -54,7 +54,18 @@ tauri-plugin-cli = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-window-state = "2"
 tauri-plugin-system-info = "2.0.9"
-tokio = { version = "1", features = ["rt"] }
+rmcp = { version = "2.2.0", default-features = false, features = [
+  "client",
+  "transport-child-process",
+  "which-command",
+] }
+tokio = { version = "1", features = [
+  "rt",
+  "rt-multi-thread",
+  "macros",
+  "process",
+  "sync",
+] }
 
 [patch.crates-io]
 esaxx-rs = { path = "vendor/esaxx-rs" }

@@ -1099,6 +1099,9 @@ settings:
       '
   aiModel:
     title: AI 模型
+  aiContextWindow:
+    title: AI 上下文視窗大小
+    description: 輸入 0 時自動從 OpenRouter 取得；其他相容服務可手動填寫模型的上下文 token 上限
   aiShowTokenCount:
     title: 顯示 AI 消耗的token數
     description: |
@@ -1108,6 +1111,10 @@ settings:
     description: |
       開啟後，使用畫筆繪製的內容會在鬆手後自動進行 OCR 辨識，轉換為文字節點
       需要下載 OCR 模型才能使用
+  aiAutoApproveMcpTools:
+    title: 自動批准 MCP 工具
+    description: |
+      開啟後，MCP 工具不用逐次確認就可以執行。本機 stdio 程序第一次啟動時仍然需要另外確認。
   cacheTextAsBitmap:
     title: 開啟點陣式渲染文字
     description: '開啟後，文字節點的點陣圖快取將會被保留，以提升渲染速度

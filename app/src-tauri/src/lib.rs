@@ -55,6 +55,7 @@ pub fn run() {
 
     builder
         .manage(PendingOpenFiles::default())
+        .manage(cmd::mcp::McpStdioManager::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_http::init())
@@ -105,6 +106,14 @@ pub fn run() {
             cmd::fs::create_folder,
             cmd::shell::run_command,
             cmd::device::get_distribution,
+            #[cfg(desktop)]
+            cmd::mcp::mcp_stdio_start,
+            #[cfg(desktop)]
+            cmd::mcp::mcp_stdio_list_tools,
+            #[cfg(desktop)]
+            cmd::mcp::mcp_stdio_call_tool,
+            #[cfg(desktop)]
+            cmd::mcp::mcp_stdio_stop,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
