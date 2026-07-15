@@ -72,7 +72,7 @@ const categories = {
     component: GlobalMenuPage,
   },
   pieMenu: {
-    name: "Pie Menu",
+    name: "饼状菜单",
     icon: CircleGauge,
     component: PieMenuPage,
   },
