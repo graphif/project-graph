@@ -91,6 +91,7 @@
     "@swc-jotai/react-refresh": "^0.5.0",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.4",
+    "@tanstack/react-virtual": "^3.14.6",
     "@tauri-apps/api": "^2.11.0",
     "@tauri-apps/cli": "^2.11.0",
     "@tauri-apps/plugin-cli": "~2.4.1",

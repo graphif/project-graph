@@ -85,7 +85,7 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
         </TabsList>
         <div data-pg-drag-region className="h-full flex-1" />
       </div>
-      <TabsContent value="settings" className="overflow-auto">
+      <TabsContent value="settings" className="min-h-0 overflow-hidden">
         <SettingsTab />
       </TabsContent>
       <TabsContent value="linuxRuntime" className="overflow-auto">

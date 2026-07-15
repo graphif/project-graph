@@ -14,7 +14,8 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { SoundService } from "@/core/service/feedbackService/SoundService";
-import { settingsSchema } from "@/core/service/Settings";
+import { Settings, settingsSchema } from "@/core/service/Settings";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import Fuse from "fuse.js";
 import {
   Bot,
@@ -54,8 +55,48 @@ import {
   Wrench,
   Zap,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+
+const SETTING_FIELD_ESTIMATE_SIZE = 88;
+
+function SettingFieldVirtualList({ keys }: { keys: string[] }) {
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: keys.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => SETTING_FIELD_ESTIMATE_SIZE,
+    overscan: 6,
+    getItemKey: (index) => keys[index] ?? index,
+  });
+
+  const keysIdentity = keys.join("\0");
+  useEffect(() => {
+    parentRef.current?.scrollTo({ top: 0 });
+  }, [keysIdentity]);
+
+  return (
+    <div ref={parentRef} className="min-h-0 flex-1 overflow-auto">
+      <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
+        {virtualizer.getVirtualItems().map((virtualItem) => {
+          const key = keys[virtualItem.index];
+          if (!key) return null;
+          return (
+            <div
+              key={virtualItem.key}
+              data-index={virtualItem.index}
+              ref={virtualizer.measureElement}
+              className="absolute top-0 left-0 w-full"
+              style={{ transform: `translateY(${virtualItem.start}px)` }}
+            >
+              <SettingField settingKey={key as keyof Settings} />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function SettingsTab() {
   const { t } = useTranslation("settings");
@@ -83,8 +124,14 @@ export default function SettingsTab() {
     setSearchResult(result);
   }, [searchKeyword, fuse]);
 
+  const groupKeys = useMemo(() => {
+    if (currentCategory === "search" || !currentCategory || !currentGroup) return [] as string[];
+    // @ts-expect-error fuck ts
+    return (categories[currentCategory][currentGroup] ?? []) as string[];
+  }, [currentCategory, currentGroup]);
+
   return (
-    <div className="flex h-full">
+    <div className="flex h-full min-h-0">
       <Sidebar className="h-full overflow-auto">
         <SidebarContent>
           <SidebarGroup>
@@ -162,7 +209,7 @@ export default function SettingsTab() {
           </SidebarGroup>
         </SidebarContent>
       </Sidebar>
-      <div className="mx-auto flex w-2/3 flex-col overflow-auto">
+      <div className="mx-auto flex min-h-0 w-2/3 flex-col">
         {currentCategory === "search" ? (
           <>
             <Input
@@ -170,9 +217,10 @@ export default function SettingsTab() {
               onChange={(e) => setSearchKeyword(e.target.value)}
               placeholder="搜索..."
               autoFocus
+              className="shrink-0"
             />
-            {searchResult.length === 0 && (
-              <>
+            {searchResult.length === 0 ? (
+              <div className="flex flex-col">
                 <span className="h-4"></span>
                 <span>直接输入: 模糊匹配</span>
                 <span>空格分割: “与”</span>
@@ -184,17 +232,13 @@ export default function SettingsTab() {
                 <span>!^: 反向匹配开头</span>
                 <span>$: 匹配结尾</span>
                 <span>!$: 反向匹配结尾</span>
-              </>
+              </div>
+            ) : (
+              <SettingFieldVirtualList keys={searchResult} />
             )}
-            {searchResult.map((it) => (
-              <SettingField key={it} settingKey={it as any} />
-            ))}
           </>
         ) : (
-          currentCategory &&
-          currentGroup &&
-          // @ts-expect-error fuck ts
-          categories[currentCategory][currentGroup]?.map((key) => <SettingField key={key} settingKey={key} />)
+          groupKeys.length > 0 && <SettingFieldVirtualList keys={groupKeys} />
         )}
       </div>
     </div>
