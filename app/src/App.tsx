@@ -5,11 +5,11 @@ import ThemeModeSwitch from "@/components/theme-mode-switch";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Dialog } from "@/components/ui/dialog";
-import Welcome from "@/components/welcome-page";
 import { Project, ProjectState } from "@/core/Project";
 import { Tab } from "@/core/Tab";
 import { TabWorkspace } from "@/core/TabWorkspace";
-import { GlobalMenu } from "@/core/service/GlobalMenu";
+import { GlobalMenu, onNewDraft } from "@/core/service/GlobalMenu";
+import WelcomeWindow from "@/sub/WelcomeWindow";
 import { flushSettingsLoadErrors, Settings } from "@/core/service/Settings";
 import { Telemetry } from "@/core/service/Telemetry";
 import { Themes } from "@/core/service/Themes";
@@ -207,15 +207,19 @@ export default function App() {
     TabWorkspace.synchronizeGroups();
   }, [tabs]);
 
-  /**
-   * 首次启动时显示欢迎页面
-   */
-  // const navigate = useNavigate();
-  // useEffect(() => {
-  //   if (LastLaunch.isFirstLaunch) {
-  //     navigate("/welcome");
-  //   }
-  // }, []);
+  // 关掉最后一个 Project 后：再创建空草稿并弹出欢迎窗（启动时无 Project 由 main 处理，这里只响应 true→false）
+  const previousHadProjectRef = useRef(tabs.some((tab) => tab instanceof Project && !tab.closing));
+  useEffect(() => {
+    const hasOpenProject = tabs.some((tab) => tab instanceof Project && !tab.closing);
+    const previousHadProject = previousHadProjectRef.current;
+    previousHadProjectRef.current = hasOpenProject;
+    if (previousHadProject && !hasOpenProject) {
+      void (async () => {
+        await onNewDraft();
+        WelcomeWindow.open();
+      })();
+    }
+  }, [tabs]);
 
   useEffect(() => {
     let unlisten1: () => void;
@@ -369,13 +373,6 @@ export default function App() {
             </div>
             {!isMac && <WindowButtons />}
           </div>
-
-          {/* 没有项目处于打开状态时，显示欢迎页面 */}
-          {tabs.length === 0 && (
-            <div className="absolute inset-0 overflow-hidden *:h-full *:w-full">
-              <Welcome />
-            </div>
-          )}
 
           {/* 右键菜单 */}
           <ContextMenu>

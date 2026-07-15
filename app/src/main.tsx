@@ -10,7 +10,7 @@ import { Settings } from "@/core/service/Settings";
 import { Tutorials } from "@/core/service/Tutorials";
 import { UserState } from "@/core/service/UserState";
 import { EdgeCollisionBoxGetter } from "@/core/stage/stageObject/association/EdgeCollisionBoxGetter";
-import { type AuthUser, currentUserAtom, isAuthLoadingAtom, store } from "@/state";
+import { type AuthUser, currentUserAtom, isAuthLoadingAtom, store, tabsAtom } from "@/state";
 import { exit, writeStderr } from "@/utils/otherApi";
 import { isDesktop, isMobile, isWeb } from "@/utils/platform";
 import { invoke } from "@tauri-apps/api/core";
@@ -31,7 +31,8 @@ import { URI } from "vscode-uri";
 import App from "./App";
 import { ExtensionManager } from "./core/extension/ExtensionManager";
 import { handleDeepLink, isProjectGraphDeepLink } from "./core/service/dataFileService/DeepLinkHandler";
-import { onOpenFile } from "./core/service/GlobalMenu";
+import { onNewDraft, onOpenFile } from "./core/service/GlobalMenu";
+import WelcomeWindow from "./sub/WelcomeWindow";
 import "./css/index.css";
 import Fallback from "./Fallback";
 
@@ -60,6 +61,9 @@ const el = document.getElementById("root")!;
   await Promise.all([loadLanguageFiles(), loadSyncModules(), initAuth()]);
   await renderApp(isCliMode);
   await loadStartFile();
+  if (!isCliMode) {
+    await ensureStartupDraftAndWelcome();
+  }
   if (isCliMode) {
     try {
       await runCli(matches);
@@ -151,6 +155,8 @@ async function renderApp(cli: boolean = false) {
 }
 
 async function loadStartFile() {
+  if (isWeb || !isDesktop) return;
+
   const cliMatches = await getMatches();
   const argPath = cliMatches.args.path.value as string | undefined;
   if (argPath) {
@@ -164,7 +170,7 @@ async function loadStartFile() {
       try {
         const isExists = await exists(argPath);
         if (isExists) {
-          onOpenFile(URI.file(argPath), "CLI或双击文件");
+          await onOpenFile(URI.file(argPath), "CLI或双击文件");
         } else {
           toast.error("文件不存在");
         }
@@ -174,44 +180,48 @@ async function loadStartFile() {
     }
   }
 
-  if (!isWeb && isDesktop) {
-    const pending = await invoke<string[]>("take_pending_open_files");
-    for (const path of pending) {
-      if (!path.toLowerCase().endsWith(".prg")) continue;
-      const isExists = await exists(path);
-      if (isExists) {
-        onOpenFile(URI.file(path), "macOS双击文件(启动)");
-      } else {
-        toast.error("文件不存在");
-      }
+  const pending = await invoke<string[]>("take_pending_open_files");
+  for (const path of pending) {
+    if (!path.toLowerCase().endsWith(".prg")) continue;
+    const isExists = await exists(path);
+    if (isExists) {
+      await onOpenFile(URI.file(path), "macOS双击文件(启动)");
+    } else {
+      toast.error("文件不存在");
     }
-
-    listen<string>("open-file-from-os", async (event) => {
-      const path = event.payload;
-      const isExists = await exists(path);
-      if (isExists) {
-        onOpenFile(URI.file(path), "macOS双击文件");
-      } else {
-        toast.error("文件不存在");
-      }
-    });
-
-    // Deep link: 冷启动（应用通过 URL 唤起）
-    getCurrent()
-      .then((urls) => {
-        if (urls && urls.length > 0) {
-          handleDeepLink(urls);
-        }
-      })
-      .catch((e) => {
-        toast.error("处理 Deep Link 失败: " + String(e));
-      });
-
-    // Deep link: 热启动（应用已运行时收到 URL）
-    onOpenUrl((urls) => {
-      if (urls.length > 0) {
-        handleDeepLink(urls);
-      }
-    });
   }
+
+  listen<string>("open-file-from-os", async (event) => {
+    const path = event.payload;
+    const isExists = await exists(path);
+    if (isExists) {
+      await onOpenFile(URI.file(path), "macOS双击文件");
+    } else {
+      toast.error("文件不存在");
+    }
+  });
+
+  // Deep link: 冷启动（应用通过 URL 唤起）
+  try {
+    const urls = await getCurrent();
+    if (urls && urls.length > 0) {
+      await handleDeepLink(urls);
+    }
+  } catch (e) {
+    toast.error("处理 Deep Link 失败: " + String(e));
+  }
+
+  // Deep link: 热启动（应用已运行时收到 URL）
+  onOpenUrl((urls) => {
+    if (urls.length > 0) {
+      void handleDeepLink(urls);
+    }
+  });
+}
+
+/** 无外部文件时创建空草稿并弹出欢迎窗（类 Blender splash） */
+async function ensureStartupDraftAndWelcome() {
+  if (store.get(tabsAtom).length > 0) return;
+  await onNewDraft();
+  WelcomeWindow.open();
 }

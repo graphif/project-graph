@@ -45,6 +45,19 @@ export async function onNewDraft() {
   store.set(tabsAtom, [...store.get(tabsAtom), project]);
   store.set(activeTabAtom, project);
   store.set(activeResourceTabAtom, project);
+  return project;
+}
+
+/** 关闭未编辑的空草稿（打开真实文件后清理启动草稿） */
+export async function closeEmptyDrafts(except?: Project) {
+  const { TabWorkspace } = await import("@/core/TabWorkspace");
+  const empties = store
+    .get(tabsAtom)
+    .filter(
+      (tab): tab is Project =>
+        tab instanceof Project && tab !== except && !tab.closing && tab.isDraft && tab.stage.length === 0,
+    );
+  await Promise.all(empties.map((tab) => TabWorkspace.close(tab.id)));
 }
 
 export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise<Project | undefined> {
