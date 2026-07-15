@@ -271,6 +271,18 @@ jobs:
         run: |
           # pnpm run ${{ matrix.android && inputs.task_build_android || inputs.task_build }}
           pnpm nx run-many -t build
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: ${{ matrix.platform == 'ubuntu-22.04' && '1' || '' }}
+          NO_STRIP: ${{ matrix.platform == 'ubuntu-22.04' && 'true' || '' }}
+          TAURI_BUILD_ARGS: ${{ matrix.args }}
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.11902837
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          NX_SKIP_LOG_GROUPING: "true"
+      - name: Build Tauri
+        run: |
+          # pnpm run ${{ matrix.android && inputs.task_build_android || inputs.task_build }}
           pnpm nx run-many -t tauri:build
         env:
           APPIMAGE_EXTRACT_AND_RUN: ${{ matrix.platform == 'ubuntu-22.04' && '1' || '' }}
