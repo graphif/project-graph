@@ -11,12 +11,14 @@ import {
   CircleGauge,
   LayoutPanelLeft,
   Menu as MenuIcon,
+  Palette,
   PanelTop,
   SlidersHorizontal,
   Sparkles,
   Volume2,
 } from "lucide-react";
 import { Fragment, useState } from "react";
+import ThemesTab from "../themes";
 import ContextMenuPage from "./context-menu";
 import EffectsPage from "./effects";
 import GlobalMenuPage from "./global-menu";
@@ -52,7 +54,7 @@ export default function CustomizationTab() {
           </SidebarGroup>
         </SidebarContent>
       </Sidebar>
-      <div className="mx-auto flex w-full flex-col overflow-auto p-4">
+      <div className="mx-auto flex w-full flex-col overflow-auto">
         <Component />
       </div>
     </div>
@@ -60,6 +62,11 @@ export default function CustomizationTab() {
 }
 
 const categories = {
+  themes: {
+    name: "主题",
+    icon: Palette,
+    component: ThemesTab,
+  },
   effects: {
     name: "特效",
     icon: Sparkles,

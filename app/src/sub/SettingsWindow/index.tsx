@@ -3,7 +3,7 @@ import { createSubWindow } from "@/core/subWindowOpen";
 import { activeTabAtom, store } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { Blocks, Bot, Brush, Command, HandHeart, Info, Keyboard, Palette, Settings, User } from "lucide-react";
+import { Blocks, Bot, Brush, Command, HandHeart, Info, Keyboard, Settings, User } from "lucide-react";
 import { useState } from "react";
 import AboutTab from "./about";
 import AccountTab from "./account";
@@ -15,7 +15,6 @@ import KeyBindsPage from "./keybinds";
 import KeyBindsGlobalPage from "./keybindsGlobal";
 import LocalAiTab from "./local-ai";
 import SettingsTab from "./settings";
-import ThemesTab from "./themes";
 
 type TabName =
   | "settings"
@@ -54,10 +53,6 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
             <Brush />
             个性化
           </TabsTrigger>
-          <TabsTrigger value="themes">
-            <Palette />
-            主题
-          </TabsTrigger>
           <TabsTrigger value="account">
             <User />
             账户
@@ -91,9 +86,6 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
       </TabsContent>
       <TabsContent value="customization" className="overflow-auto">
         <CustomizationTab />
-      </TabsContent>
-      <TabsContent value="themes" className="overflow-auto">
-        <ThemesTab />
       </TabsContent>
       <TabsContent value="account" className="overflow-auto">
         <AccountTab />
