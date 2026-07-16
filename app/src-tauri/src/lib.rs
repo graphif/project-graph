@@ -67,6 +67,9 @@ pub fn run() {
             #[cfg(debug_assertions)]
             {
                 app.handle().plugin(tauri_plugin_devtools::init())?;
+                if let Some(window) = app.handle().get_webview_window("main") {
+                    let _ = window.show();
+                }
             }
             #[cfg(desktop)]
             {

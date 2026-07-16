@@ -134,7 +134,7 @@ export default function DockedArea({
   };
 
   return (
-    <div className="absolute inset-x-0 top-4 bottom-0 min-h-0 min-w-0 overflow-hidden sm:top-13">
+    <div className="absolute inset-x-0 top-4 bottom-0 min-h-0 min-w-0 overflow-hidden sm:top-8">
       {root && renderNode(root)}
     </div>
   );

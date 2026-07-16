@@ -1,9 +1,9 @@
 import { Settings } from "@/core/service/Settings";
-import { Switch } from "./ui/switch";
-import { Sun, Moon } from "lucide-react";
 import { cn } from "@/utils/cn";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { Moon, Sun } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Switch } from "./ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function ThemeModeSwitch() {
   const { t } = useTranslation("settings");
@@ -19,7 +19,7 @@ export default function ThemeModeSwitch() {
       <TooltipTrigger asChild>
         <div
           className={cn(
-            "bg-background shadow-xs outline-accent-foreground/10 relative h-6 w-11 cursor-pointer overflow-hidden rounded-full outline-1",
+            "bg-background outline-accent-foreground/10 relative h-6 w-11 cursor-pointer overflow-hidden rounded-full shadow-xs outline-1",
           )}
         >
           {/* Hidden default thumb */}
@@ -31,7 +31,7 @@ export default function ThemeModeSwitch() {
           {/* Custom thumb with icon */}
           <span
             className={cn(
-              "pointer-events-none absolute left-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full transition-all duration-200",
+              "pointer-events-none absolute top-0.5 left-0.5 flex h-5 w-5 items-center justify-center rounded-full transition-all duration-200",
               isDark && "translate-x-5",
               isDark ? "bg-neutral-300" : "bg-amber-200",
             )}

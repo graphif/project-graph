@@ -324,14 +324,13 @@ export default function App() {
   );
 
   const zoomStyle = uiScalePercent !== 100 ? ({ zoom: `${uiScalePercent / 100}` } as React.CSSProperties) : undefined;
-  const zoomClass = "relative z-10 flex h-full w-full flex-col gap-2 pointer-events-none [&>*]:pointer-events-auto";
 
   return (
     <>
       {/* 这是一个底层的 div，用于在拖拽改变窗口大小时填充背景，防止窗口出现透明闪烁 */}
       <div className="absolute inset-0 z-[-1] bg-(--stage-background)" style={{ opacity: windowBackgroundAlpha }} />
       <div
-        className="relative flex h-full w-full flex-col overflow-clip rounded-lg sm:gap-2 sm:p-2"
+        className="relative flex h-full w-full flex-col overflow-clip rounded-lg sm:gap-2"
         onContextMenu={(event) => {
           if ((event.target as Element).closest('[data-slot="context-menu-trigger"]')) return;
           event.preventDefault();
@@ -341,11 +340,14 @@ export default function App() {
         <DockedArea onTabClick={handleTabClick} onTabClose={handleTabClose} isClassroomMode={isClassroomMode} />
 
         {/* Zoomed UI layer - 缩放所有 DOM UI 元素，不缩放 Canvas 画布 */}
-        <div style={zoomStyle} className={zoomClass}>
+        <div
+          style={zoomStyle}
+          className="pointer-events-none relative z-10 flex h-full w-full flex-col *:pointer-events-auto"
+        >
           {/* 菜单 | 标签页 | ...移动窗口区域... | 窗口控制按钮 */}
           <div
             className={cn(
-              "z-10 flex h-4 items-center transition-all hover:opacity-100 sm:h-9 sm:gap-2",
+              "bg-background z-10 flex h-4 items-center border-b transition-all hover:opacity-100 sm:h-8 sm:gap-2",
               isClassroomMode && "opacity-0",
             )}
           >
@@ -355,10 +357,7 @@ export default function App() {
             />
             {isMac && <WindowButtons />}
             <GlobalMenu />
-            <div
-              className="hover:bg-primary/25 h-full flex-1 cursor-grab transition-colors hover:*:opacity-100 active:cursor-grabbing sm:rounded-sm sm:hover:border"
-              data-tauri-drag-region
-            />
+            <div className="h-full flex-1" data-tauri-drag-region />
             <div className="hidden sm:block">
               <ThemeModeSwitch />
             </div>
@@ -413,7 +412,7 @@ function WindowButtons() {
   };
 
   return (
-    <div className="bg-background flex h-full items-center shadow-xs sm:rounded-md sm:border">
+    <div className="bg-background flex h-full items-center">
       {isClickThroughEnabled && <span className="text-destructive font-bold">Alt + 2关闭窗口穿透点击</span>}
       {isMac ? (
         <span className="flex *:flex *:size-3 sm:px-2 sm:*:m-1">
@@ -453,7 +452,7 @@ function WindowButtons() {
         <span className="flex h-full flex-row sm:gap-1">
           {/* 钉住 */}
           <Button
-            className="size-4 sm:size-9"
+            className="size-4 sm:h-full sm:w-6"
             variant="ghost"
             size="icon"
             onClick={async (e) => {
@@ -465,7 +464,7 @@ function WindowButtons() {
           </Button>
           {/* 最小化 */}
           <Button
-            className="size-4 sm:size-9"
+            className="size-4 sm:h-full sm:w-6"
             variant="ghost"
             size="icon"
             onClick={() => getCurrentWindow().minimize()}
@@ -475,7 +474,7 @@ function WindowButtons() {
           {/* 最大化/还原 */}
           {maximized ? (
             <Button
-              className="size-4 text-xs sm:size-9"
+              className="size-4 sm:h-full sm:w-6"
               variant="ghost"
               size="icon"
               onClick={() => getCurrentWindow().unmaximize()}
@@ -484,7 +483,7 @@ function WindowButtons() {
             </Button>
           ) : (
             <Button
-              className="size-4 text-xs sm:size-9"
+              className="size-4 sm:h-full sm:w-6"
               variant="ghost"
               size="icon"
               onClick={() => getCurrentWindow().maximize()}
@@ -494,7 +493,7 @@ function WindowButtons() {
           )}
           {/* 关闭 */}
           <Button
-            className="size-4 text-xs sm:size-9"
+            className="size-4 sm:h-full sm:w-6"
             variant="ghost"
             size="icon"
             onClick={() => getCurrentWindow().close()}
