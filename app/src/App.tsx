@@ -9,7 +9,6 @@ import { Project, ProjectState } from "@/core/Project";
 import { Tab } from "@/core/Tab";
 import { TabWorkspace } from "@/core/TabWorkspace";
 import { GlobalMenu, onNewDraft } from "@/core/service/GlobalMenu";
-import WelcomeWindow from "@/sub/WelcomeWindow";
 import { flushSettingsLoadErrors, Settings } from "@/core/service/Settings";
 import { Telemetry } from "@/core/service/Telemetry";
 import { Themes } from "@/core/service/Themes";
@@ -23,6 +22,7 @@ import {
   isWindowMaxsizedAtom,
   tabsAtom,
 } from "@/state";
+import WelcomeWindow from "@/sub/WelcomeWindow";
 import { getVersion } from "@tauri-apps/api/app";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -37,8 +37,6 @@ import CommandPalette from "./CommandPalette";
 import { DropWindowCover } from "./DropWindowCover";
 import DockedArea from "./components/docked-area";
 import RenderOverlays from "./components/overlay-host";
-import RightToolbar from "./components/right-toolbar";
-import ToolbarContent from "./components/toolbar-content";
 import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { checkAndFixShortcutStorage } from "./core/service/controlService/shortcutKeysEngine/ShortcutKeyFixer";
 import { cn } from "./utils/cn";
@@ -54,7 +52,6 @@ export default function App() {
   // const [isWide, setIsWide] = useState(false);
   const [telemetryEventSent, setTelemetryEventSent] = useState(false);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
-  const [showQuickSettingsToolbar, setShowQuickSettingsToolbar] = useState(Settings.showQuickSettingsToolbar);
   const [windowBackgroundAlpha, setWindowBackgroundAlpha] = useState(Settings.windowBackgroundAlpha);
   const [uiScalePercent, setUiScalePercent] = useState(Settings.uiScalePercent);
 
@@ -118,11 +115,6 @@ export default function App() {
       }
     });
 
-    // 监听快捷设置工具栏显示设置
-    const unwatchShowQuickSettingsToolbar = Settings.watch("showQuickSettingsToolbar", (value) => {
-      setShowQuickSettingsToolbar(value);
-    });
-
     // 监听窗口背景不透明度
     const unwatchWindowBackgroundAlpha = Settings.watch("windowBackgroundAlpha", (value) => {
       setWindowBackgroundAlpha(value);
@@ -173,7 +165,6 @@ export default function App() {
       unlisten1?.then((f) => f());
       KeyBindsUI.uiStopListen();
       // 清理全局快捷键资源
-      unwatchShowQuickSettingsToolbar();
       unwatchWindowBackgroundAlpha();
       unwatchUiScale();
       globalShortcutManager.dispose();
@@ -381,12 +372,6 @@ export default function App() {
             </ContextMenuTrigger>
             <MyContextMenuContent />
           </ContextMenu>
-
-          {/* 底部工具栏 */}
-          {activeResourceTab && <ToolbarContent />}
-
-          {/* 右侧工具栏 */}
-          {activeResourceTab && showQuickSettingsToolbar && <RightToolbar />}
         </div>
 
         {/* NOT zoomed - 使用固定/全屏定位的组件，缩放会破坏它们的坐标计算 */}
