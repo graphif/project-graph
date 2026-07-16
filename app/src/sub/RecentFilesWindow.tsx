@@ -7,6 +7,7 @@ import { SoundService } from "@/core/service/feedbackService/SoundService";
 import { onOpenFile } from "@/core/service/GlobalMenu";
 import { Settings } from "@/core/service/Settings";
 import { createSubWindow } from "@/core/subWindowOpen";
+import { TabWorkspace } from "@/core/TabWorkspace";
 import { activeResourceTabAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { PathString } from "@/utils/pathString";
