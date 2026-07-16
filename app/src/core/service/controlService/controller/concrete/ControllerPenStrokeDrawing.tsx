@@ -65,10 +65,14 @@ export class ControllerPenStrokeDrawingClass extends ControllerClass {
     if (!this._isUsing) return;
     if (!this.project.controller.isMouseDown[0] && Settings.mouseLeftMode === "draw") return;
     if (this.project.controller.isMouseDown[0] && Settings.mouseLeftMode !== "draw") return;
-    const events = "getCoalescedEvents" in event ? event.getCoalescedEvents() : [event];
+    const coalescedEvents = "getCoalescedEvents" in event ? event.getCoalescedEvents() : null;
+    const events = coalescedEvents ?? [event];
     for (const e of events) {
       const isPen = e.pointerType === "pen";
-      const worldLocation = this.project.renderer.transformView2World(new Vector(e.clientX, e.clientY));
+      const viewLocation = coalescedEvents
+        ? this.project.canvas.clientToView(e.clientX, e.clientY)
+        : new Vector(e.clientX, e.clientY);
+      const worldLocation = this.project.renderer.transformView2World(viewLocation);
       let finalPressure = isPen ? e.pressure : 1;
       if (isPen) {
         switch (Settings.penPressureCurve) {
