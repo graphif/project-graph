@@ -1139,24 +1139,6 @@ settings:
     title: 自动批准 MCP 工具
     description: |
       启用后，MCP 工具无需手动批准即可执行。本地 stdio 进程的首次启动仍需单独确认。
-  cacheTextAsBitmap:
-    title: 开启位图式渲染文本
-    description: |
-      开启后，文本节点的位图缓存将会被保留，以提升渲染速度
-      但可能会造成模糊
-  textCacheSize:
-    title: 文本缓存限制
-    description: |
-      默认情况下会对频繁渲染的文本进行缓存，以提升渲染速度
-      如果值过大可能会导致内存占用过高造成卡顿甚至崩溃
-      值为0代表禁用缓存，每次渲染都会重新渲染文本
-      *重新打开文件时生效
-  textScalingBehavior:
-    title: 摄像机缩放时的文本渲染方式
-    options:
-      temp: 每一帧都重新渲染文本，不使用缓存
-      nearestCache: 使用文本大小最接近的缓存，缩放再渲染
-      cacheEveryTick: 每一帧都重新渲染文本，并且缓存
   textIntegerLocationAndSizeRender:
     title: 文本整数位置和大小渲染
     description: |

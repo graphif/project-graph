@@ -5,6 +5,22 @@ const _canvas = document.createElement("canvas");
 const _context = _canvas.getContext("2d");
 
 const _cache = new MaxSizeCache<string, number>(10000);
+const _fontDescriptorCache = new MaxSizeCache<string, string>(100);
+const REFERENCE_FONT_SIZE = 100;
+
+export function getFontIdentity(fontFamily?: string, fontWeight?: string): string {
+  return JSON.stringify([fontWeight || "normal", fontFamily || Settings.defaultFontFamily]);
+}
+
+function resolveFontFamily(fontFamily?: string, fontWeight?: string): string {
+  const cacheKey = getFontIdentity(fontFamily, fontWeight);
+  const cached = _fontDescriptorCache.get(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const resolvedFamily = fontFamily ? `"${fontFamily}"` : Settings.defaultFontFamily;
+  _fontDescriptorCache.set(cacheKey, resolvedFamily);
+  return resolvedFamily;
+}
 
 /**
  * 解析字体字符串，支持自定义字体族和字重
@@ -13,7 +29,7 @@ const _cache = new MaxSizeCache<string, number>(10000);
  * @param fontWeight 自定义字重，空字符串或 undefined 时使用 normal
  */
 export function resolveFont(fontSize: number, fontFamily?: string, fontWeight?: string): string {
-  return `${fontWeight || "normal"} ${fontSize}px ${fontFamily ? `"${fontFamily}"` : Settings.defaultFontFamily}`;
+  return `${fontWeight || "normal"} ${fontSize}px ${resolveFontFamily(fontFamily, fontWeight)}`;
 }
 
 // eslint-disable-next-line prefer-const
@@ -26,11 +42,11 @@ let useCache = true;
  * @returns
  */
 export function getTextSize(text: string, size: number, fontFamily?: string, fontWeight?: string): Vector {
-  // const t1 = performance.now();
+  const cacheKey = JSON.stringify([text, getFontIdentity(fontFamily, fontWeight)]);
   if (useCache) {
-    const value = _cache.get(`${text}-${size}-${fontFamily || ""}-${fontWeight || ""}`);
-    if (value) {
-      return new Vector(value, size);
+    const referenceWidth = _cache.get(cacheKey);
+    if (referenceWidth !== undefined) {
+      return new Vector((referenceWidth * size) / REFERENCE_FONT_SIZE, size);
     }
   }
 
@@ -38,14 +54,13 @@ export function getTextSize(text: string, size: number, fontFamily?: string, fon
     throw new Error("Failed to get canvas context");
   }
 
-  _context.font = resolveFont(size, fontFamily, fontWeight);
+  _context.font = resolveFont(REFERENCE_FONT_SIZE, fontFamily, fontWeight);
   const metrics = _context.measureText(text);
-  // const t2 = performance.now();
   if (useCache) {
-    _cache.set(`${text}-${size}-${fontFamily || ""}-${fontWeight || ""}`, metrics.width);
+    _cache.set(cacheKey, metrics.width);
   }
 
-  return new Vector(metrics.width, size);
+  return new Vector((metrics.width * size) / REFERENCE_FONT_SIZE, size);
 }
 
 /**
@@ -142,35 +157,52 @@ export function textToTextArray(
   fontFamily?: string,
   fontWeight?: string,
 ): string[] {
-  if (!_context) {
-    return text.split("\n");
-  }
-
-  let currentLine = "";
   const lines: string[] = [];
+  const paragraphs = text.split("\n");
 
-  // 设置字体以进行测量
-  _context.font = resolveFont(fontSize, fontFamily, fontWeight);
+  for (let paragraphIndex = 0; paragraphIndex < paragraphs.length; paragraphIndex++) {
+    const paragraph = paragraphs[paragraphIndex];
+    const characters = Array.from(paragraph);
+    let start = 0;
+    let isFirstWrappedLine = true;
 
-  for (const char of text) {
-    // 新来字符的宽度
-    const measureSize = _context.measureText(currentLine + char);
-    // 先判断是否溢出或者是换行符
-    if (measureSize.width > limitWidth || char === "\n") {
-      // 溢出了，将这一整行保存
-      lines.push(currentLine);
-      if (char !== "\n") {
-        currentLine = char;
-      } else {
-        currentLine = "";
+    while (start < characters.length) {
+      const remaining = characters.slice(start);
+      const remainingText = remaining.join("");
+      if (getTextSize(remainingText, fontSize, fontFamily, fontWeight).x <= limitWidth) {
+        lines.push(remainingText);
+        start = characters.length;
+        break;
       }
-    } else {
-      // 未溢出，继续添加字符
-      currentLine += char;
+
+      let low = 1;
+      let high = remaining.length;
+      let fittingLength = 0;
+      while (low <= high) {
+        const middle = Math.floor((low + high) / 2);
+        const width = getTextSize(remaining.slice(0, middle).join(""), fontSize, fontFamily, fontWeight).x;
+        if (width <= limitWidth) {
+          fittingLength = middle;
+          low = middle + 1;
+        } else {
+          high = middle - 1;
+        }
+      }
+
+      if (fittingLength === 0) {
+        if (isFirstWrappedLine) lines.push("");
+        fittingLength = 1;
+      }
+      lines.push(remaining.slice(0, fittingLength).join(""));
+      start += fittingLength;
+      isFirstWrappedLine = false;
     }
-  }
-  if (currentLine) {
-    lines.push(currentLine);
+
+    if (paragraphIndex < paragraphs.length - 1 && paragraph.length === 0) {
+      lines.push("");
+    } else if (paragraphIndex < paragraphs.length - 1 && start === 0) {
+      lines.push(paragraph);
+    }
   }
 
   return lines;

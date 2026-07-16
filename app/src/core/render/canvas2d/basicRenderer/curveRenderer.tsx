@@ -48,6 +48,27 @@ export class CurveRenderer {
     this.project.canvas.ctx.lineJoin = "round";
     if (stroke.length < 2) return;
 
+    if (this.project.camera.currentScale <= 0.065) {
+      const ctx = this.project.canvas.ctx;
+      ctx.beginPath();
+      ctx.moveTo(stroke[0].location.x, stroke[0].location.y);
+      let previous = stroke[0].location;
+      for (let i = 1; i < stroke.length - 1; i++) {
+        const current = stroke[i].location;
+        const dx = current.x - previous.x;
+        const dy = current.y - previous.y;
+        if (dx * dx + dy * dy < 1) {
+          continue;
+        }
+        ctx.lineTo(current.x, current.y);
+        previous = current;
+      }
+      ctx.lineTo(stroke[stroke.length - 1].location.x, stroke[stroke.length - 1].location.y);
+      ctx.lineWidth = Math.max(0.5, stroke[0].pressure * 5 * this.project.camera.currentScale);
+      ctx.stroke();
+      return;
+    }
+
     this.project.canvas.ctx.beginPath();
     this.project.canvas.ctx.moveTo(stroke[0].location.x, stroke[0].location.y);
 

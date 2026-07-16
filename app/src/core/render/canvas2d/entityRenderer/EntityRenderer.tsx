@@ -1,14 +1,14 @@
 import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { ExtensionEntity } from "@/core/stage/stageObject/entity/ExtensionEntity";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
 import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
-import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
@@ -242,7 +242,11 @@ export class EntityRenderer {
         this.project.stageStyleManager.currentStyle.CollideBoxSelected,
       );
     }
-    if (this.project.camera.currentScale < 0.2 && !connectPoint.detailsManager.isEmpty()) {
+    if (
+      this.project.camera.currentScale < 0.2 &&
+      (this.project.camera.currentScale > 0.065 || connectPoint.isMouseHover || connectPoint.isSelected) &&
+      !connectPoint.detailsManager.isEmpty()
+    ) {
       const detailsText = DetailsManager.detailsToMarkdown(connectPoint.details);
       this.project.textRenderer.renderTextFromCenter(
         detailsText,
@@ -372,6 +376,13 @@ export class EntityRenderer {
   }
 
   renderEntityDetails(entity: Entity) {
+    if (
+      Settings.entityDetailsFontSize * this.project.camera.currentScale <= 2 &&
+      !entity.isMouseHover &&
+      !entity.isSelected
+    ) {
+      return;
+    }
     if (entity.details) {
       if (Settings.alwaysShowDetails) {
         this._renderEntityDetails(entity, Settings.entityDetailsLinesLimit);

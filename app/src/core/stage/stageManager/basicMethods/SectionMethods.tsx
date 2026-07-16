@@ -11,18 +11,31 @@
  * 新增函数时请同步补充 @complexity 说明，保持文件风格一致。
  */
 
-import { Vector } from "@graphif/data-structures";
 import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { Association } from "@/core/stage/stageObject/abstract/Association";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { Section } from "@/core/stage/stageObject/entity/Section";
+import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import { Section } from "@/core/stage/stageObject/entity/Section";
+import { Vector } from "@graphif/data-structures";
 
 @service("sectionMethods")
 export class SectionMethods {
+  private bigTitleCacheFrame = -1;
+  private readonly bigTitleActiveCache = new Map<Section, boolean>();
+  private readonly bigTitleCoveringAncestorCache = new Map<Entity, Section | null>();
+
+  private prepareBigTitleFrameCache(): void {
+    if (this.bigTitleCacheFrame === this.project.renderer.frameIndex) {
+      return;
+    }
+    this.bigTitleCacheFrame = this.project.renderer.frameIndex;
+    this.bigTitleActiveCache.clear();
+    this.bigTitleCoveringAncestorCache.clear();
+  }
+
   constructor(protected readonly project: Project) {}
 
   /**
@@ -122,19 +135,26 @@ export class SectionMethods {
    * @complexity O(1)
    */
   isSectionBigTitleActive(section: Section): boolean {
+    this.prepareBigTitleFrameCache();
+    const cached = this.bigTitleActiveCache.get(section);
+    if (cached !== undefined) {
+      return cached;
+    }
     if (section.isCollapsed || section.isHiddenBySectionCollapse) {
+      this.bigTitleActiveCache.set(section, false);
       return false;
     }
     if (Settings.sectionBitTitleRenderType === "none") {
+      this.bigTitleActiveCache.set(section, false);
       return false;
     }
-    const viewRect = this.project.renderer.getCoverWorldRectangle();
     const sectionMaxSide = Math.max(section.rectangle.size.x, section.rectangle.size.y);
-    const viewMaxSide = Math.max(viewRect.size.x, viewRect.size.y);
-    return (
+    const viewMaxSide = Math.max(this.project.renderer.w, this.project.renderer.h) / this.project.camera.currentScale;
+    const active =
       sectionMaxSide < viewMaxSide * Settings.sectionBigTitleThresholdRatio &&
-      this.project.camera.currentScale <= Settings.sectionBigTitleCameraScaleThreshold
-    );
+      this.project.camera.currentScale <= Settings.sectionBigTitleCameraScaleThreshold;
+    this.bigTitleActiveCache.set(section, active);
+    return active;
   }
 
   /**
@@ -143,13 +163,19 @@ export class SectionMethods {
    * @complexity O(d)，d 为实体祖先链深度
    */
   getBigTitleCoveringAncestorSection(entity: Entity): Section | null {
+    this.prepareBigTitleFrameCache();
+    if (this.bigTitleCoveringAncestorCache.has(entity)) {
+      return this.bigTitleCoveringAncestorCache.get(entity) ?? null;
+    }
     let current = entity.parentSection;
     while (current) {
       if (this.isSectionBigTitleActive(current)) {
+        this.bigTitleCoveringAncestorCache.set(entity, current);
         return current;
       }
       current = current.parentSection;
     }
+    this.bigTitleCoveringAncestorCache.set(entity, null);
     return null;
   }
 

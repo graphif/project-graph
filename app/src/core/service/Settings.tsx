@@ -90,11 +90,6 @@ export const settingsSchema = z.object({
   sectionBackgroundFillMode: z.union([z.literal("full"), z.literal("titleOnly")]).default("titleOnly"),
   sectionInitBorderStyle: z.union([z.literal("solid"), z.literal("dashed"), z.literal("none")]).default("solid"),
   autoEnterSectionEditMode: z.boolean().default(true),
-  cacheTextAsBitmap: z.boolean().default(false),
-  textCacheSize: z.number().default(100),
-  textScalingBehavior: z
-    .union([z.literal("temp"), z.literal("nearestCache"), z.literal("cacheEveryTick")])
-    .default("temp"),
   antialiasing: z
     .union([z.literal("disabled"), z.literal("low"), z.literal("medium"), z.literal("high")])
     .default("low"),

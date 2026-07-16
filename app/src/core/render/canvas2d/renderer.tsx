@@ -11,8 +11,8 @@ import { getTextSize } from "@/utils/font";
 import { isFrame, isMac } from "@/utils/platform";
 import { Color, mixColors, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Rectangle } from "@graphif/shapes";
-import { GlobalMaskRenderer } from "./utilsRenderer/globalMaskRenderer";
 import i18next from "i18next";
+import { GlobalMaskRenderer } from "./utilsRenderer/globalMaskRenderer";
 
 /**
  * 渲染器
@@ -148,7 +148,7 @@ export class Renderer {
     this.renderEntities(viewRectangle);
     this.renderEdges(viewRectangle); // 先渲染实体再渲染连线，因为连线要在图片上面
     this.project.entityRenderer.renderAllSectionsBigTitle(viewRectangle);
-    this.renderTags();
+    this.renderTags(viewRectangle);
     // debug
 
     // debugRender();
@@ -655,10 +655,10 @@ export class Renderer {
   }
 
   /** 画所有被标签了的节点的特殊装饰物和缩小视野时的直观显示 */
-  private renderTags() {
+  private renderTags(viewRectangle: Rectangle) {
     for (const tagString of this.project.tags) {
       const tagObject = this.project.stageManager.get(tagString); // 这不成了ON方了？
-      if (!tagObject) {
+      if (!tagObject || this.isOverView(viewRectangle, tagObject)) {
         continue;
       }
       const rect = tagObject.collisionBox.getRectangle();

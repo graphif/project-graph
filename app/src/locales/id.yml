@@ -1115,24 +1115,6 @@ settings:
     title: Setujui alat MCP secara otomatis
     description: |
       Jika diaktifkan, alat MCP dapat dijalankan tanpa persetujuan manual. Peluncuran pertama proses stdio lokal tetap memerlukan konfirmasi terpisah.
-  cacheTextAsBitmap:
-    title: Aktifkan Render Teks sebagai Bitmap
-    description: |
-      Saat diaktifkan, cache bitmap node teks akan dipertahankan untuk meningkatkan kecepatan render
-      tetapi mungkin menyebabkan kabur
-  textCacheSize:
-    title: Batas Cache Teks
-    description: |
-      Secara default, teks yang sering dirender akan di-cache untuk meningkatkan kecepatan render
-      Jika nilai terlalu besar dapat menyebabkan penggunaan memori tinggi dan lag atau crash
-      Nilai 0 berarti nonaktifkan cache, setiap render akan merender ulang teks
-      *Berlaku saat membuka ulang file
-  textScalingBehavior:
-    title: Cara Render Teks saat Zoom Kamera
-    options:
-      temp: Render ulang teks setiap frame, tidak menggunakan cache
-      nearestCache: Gunakan cache dengan ukuran teks terdekat, zoom lalu render
-      cacheEveryTick: Render ulang teks setiap frame, dan cache
   textIntegerLocationAndSizeRender:
     title: Render Posisi dan Ukuran Bilangan Bulat Teks
     description: |
