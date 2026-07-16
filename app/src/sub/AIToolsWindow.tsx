@@ -20,7 +20,7 @@ import {
 } from "@/core/service/dataManageService/aiEngine/AIMCPConfig";
 import { AISkillTrustStore, discoverSkills, type AISkill } from "@/core/service/dataManageService/aiEngine/AISkills";
 import { AITools } from "@/core/service/dataManageService/aiEngine/AITools";
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { createSubWindow } from "@/core/subWindowOpen";
 import { activeTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -493,7 +493,7 @@ export default function AIToolsWindow() {
 }
 
 AIToolsWindow.open = () => {
-  TabWorkspace.create({
+  createSubWindow("AIToolsWindow", {
     title: "AI 工具列表",
     children: <AIToolsWindow />,
     rect: new Rectangle(new Vector(100, 60), new Vector(620, 720)),

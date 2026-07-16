@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   createTabGroup,
+  FIXED_SIDE_GROUP_IDS,
+  findTabGroup,
   findTabGroupByTabId,
   getTabGroups,
   insertTabIntoGroup,
@@ -20,7 +22,35 @@ describe("TabGroup", () => {
       type: "split",
       direction: "horizontal",
       children: [{ id: "second" }, { id: "first" }],
+      sizes: [20, 80],
     });
+  });
+
+  it("defaults right side splits to one fifth for the new group", () => {
+    const first = createTabGroup(["a"], "first");
+    const second = createTabGroup(["b"], "second");
+    const root = splitTabGroup(first, "first", second, "right", "split");
+
+    expect(root).toMatchObject({
+      direction: "horizontal",
+      children: [{ id: "first" }, { id: "second" }],
+      sizes: [80, 20],
+    });
+  });
+
+  it("can create stable left/right side groups for reuse", () => {
+    const center = createTabGroup(["project"], "center");
+    const left = createTabGroup(["find"], FIXED_SIDE_GROUP_IDS.left);
+    const withLeft = splitTabGroup(center, "center", left, "left");
+    expect(findTabGroup(withLeft, FIXED_SIDE_GROUP_IDS.left)?.tabIds).toEqual(["find"]);
+
+    const stacked = insertTabIntoGroup(withLeft, FIXED_SIDE_GROUP_IDS.left, "tags");
+    expect(findTabGroup(stacked, FIXED_SIDE_GROUP_IDS.left)?.tabIds).toEqual(["find", "tags"]);
+
+    const right = createTabGroup(["ai"], FIXED_SIDE_GROUP_IDS.right);
+    const withRight = splitTabGroup(stacked, "center", right, "right");
+    expect(findTabGroup(withRight, FIXED_SIDE_GROUP_IDS.left)?.tabIds).toEqual(["find", "tags"]);
+    expect(findTabGroup(withRight, FIXED_SIDE_GROUP_IDS.right)?.tabIds).toEqual(["ai"]);
   });
 
   it("moves and reorders tabs without duplicates", () => {

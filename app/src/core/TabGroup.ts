@@ -1,6 +1,18 @@
 export type TabSplitDirection = "horizontal" | "vertical";
 export type TabDropEdge = "left" | "right" | "top" | "bottom";
 
+/** Stable group ids for default left/right docked panels. Empty groups still collapse; ids are recreated on next open. */
+export const FIXED_SIDE_GROUP_IDS = {
+  left: "pg-side-left",
+  right: "pg-side-right",
+} as const;
+
+export type FixedSideEdge = keyof typeof FIXED_SIDE_GROUP_IDS;
+
+export function isFixedSideGroupId(id: string): boolean {
+  return id === FIXED_SIDE_GROUP_IDS.left || id === FIXED_SIDE_GROUP_IDS.right;
+}
+
 export interface TabGroup {
   id: string;
   type: "group";
@@ -97,16 +109,27 @@ export function removeTabFromGroups(root: TabGroupNode | null, tabId: string): R
   return { root: root ? remove(root) : null, sourceGroupId: source.id, nextActiveTabId };
 }
 
+/** Default share for a newly split side panel (left/right). Vertical splits stay half. */
+export const DEFAULT_SIDE_SPLIT_RATIO = 20;
+
 export function splitTabGroup(
   root: TabGroupNode | null,
   targetGroupId: string,
   newGroup: TabGroup,
   edge: TabDropEdge,
   splitId: string = crypto.randomUUID(),
+  sizes?: [number, number],
 ): TabGroupNode | null {
   if (!root) return newGroup;
   const direction: TabSplitDirection = edge === "left" || edge === "right" ? "horizontal" : "vertical";
   const newGroupFirst = edge === "left" || edge === "top";
+  const resolvedSizes: [number, number] =
+    sizes ??
+    (direction === "horizontal"
+      ? newGroupFirst
+        ? [DEFAULT_SIDE_SPLIT_RATIO, 100 - DEFAULT_SIDE_SPLIT_RATIO]
+        : [100 - DEFAULT_SIDE_SPLIT_RATIO, DEFAULT_SIDE_SPLIT_RATIO]
+      : [50, 50]);
   const replace = (node: TabGroupNode): TabGroupNode => {
     if (node.type === "group") {
       if (node.id !== targetGroupId) return node;
@@ -115,7 +138,7 @@ export function splitTabGroup(
         type: "split",
         direction,
         children: newGroupFirst ? [newGroup, node] : [node, newGroup],
-        sizes: [50, 50],
+        sizes: resolvedSizes,
       };
     }
     const first = replace(node.children[0]);

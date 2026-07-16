@@ -5,11 +5,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Project } from "@/core/Project";
 import { SearchScope } from "@/core/service/dataManageService/contentSearchEngine/contentSearchEngine";
 import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
-import { useComponentTabResourceTab } from "@/core/Tab";
+import { createSubWindow } from "@/core/subWindowOpen";
 import { TabWorkspace } from "@/core/TabWorkspace";
+import { activeResourceTabAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
+import { useAtom } from "jotai";
 import {
   CaseSensitive,
   MessageCircleQuestionMark,
@@ -33,7 +35,7 @@ export default function FindWindow({ tabId }: { tabId: string }) {
   const [isMouseEnterCameraMovable, setIsMouseEnterCameraMovable] = useState(false);
   // 搜索范围
   const [searchScope, setSearchScope] = useState<SearchScope>(SearchScope.ALL);
-  const tab = useComponentTabResourceTab();
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
 
   const selectAllResult = () => {
@@ -251,7 +253,7 @@ export default function FindWindow({ tabId }: { tabId: string }) {
 }
 
 FindWindow.open = () => {
-  TabWorkspace.create({
+  createSubWindow("FindWindow", {
     title: "搜索",
     contextTarget: "activeResourceTab",
     children: (tab) => <FindWindow tabId={tab.id} />,

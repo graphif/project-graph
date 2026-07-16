@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Project } from "@/core/Project";
-import { useComponentTabResourceTab } from "@/core/Tab";
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { createSubWindow } from "@/core/subWindowOpen";
+import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
+import { useAtom } from "jotai";
 import { Angry, MousePointerClick, RefreshCcw, Smile, Table, Tags, Telescope } from "lucide-react";
 import React from "react";
 import { toast } from "sonner";
@@ -14,7 +15,7 @@ import { toast } from "sonner";
  * @param param0
  */
 export default function TagWindow() {
-  const tab = useComponentTabResourceTab();
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
 
@@ -32,7 +33,7 @@ export default function TagWindow() {
 
   React.useEffect(() => {
     refreshTagNameList();
-  }, []);
+  }, [project]);
 
   const handleMoveCameraToTag = (tagUUID: string) => {
     return () => {
@@ -170,7 +171,7 @@ export default function TagWindow() {
 }
 
 TagWindow.open = () => {
-  TabWorkspace.create({
+  createSubWindow("TagWindow", {
     title: "标签管理器",
     contextTarget: "activeResourceTab",
     children: <TagWindow />,
@@ -182,7 +183,7 @@ TagWindow.open = () => {
  * 单个的标签成一个子窗口
  */
 function LittleTagWindow({ uuid, tagName }: { uuid: string; tagName: string }) {
-  const tab = useComponentTabResourceTab();
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
   const onClick = () => {
@@ -197,7 +198,7 @@ function LittleTagWindow({ uuid, tagName }: { uuid: string; tagName: string }) {
 }
 
 LittleTagWindow.open = (uuid: string, tagName: string, height: number, y: number) => {
-  TabWorkspace.create({
+  createSubWindow("LittleTagWindow", {
     title: "",
     contextTarget: "activeResourceTab",
     children: <LittleTagWindow uuid={uuid} tagName={tagName} />,

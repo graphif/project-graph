@@ -1,4 +1,4 @@
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { createSubWindow } from "@/core/subWindowOpen";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
@@ -7,7 +7,7 @@ export default function OnboardingWindow() {
 }
 
 OnboardingWindow.open = () => {
-  TabWorkspace.create({
+  createSubWindow("OnboardingWindow", {
     children: <OnboardingWindow />,
     rect: Rectangle.inCenter(new Vector(innerWidth > 1653 ? 1240 : innerWidth * 0.75, innerHeight * 0.875)),
     titleBarOverlay: true,

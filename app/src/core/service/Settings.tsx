@@ -1,4 +1,5 @@
 import { Dialog } from "@/components/ui/dialog";
+import { DEFAULT_SUB_WINDOW_OPEN_MODES, subWindowOpenModesSchema } from "@/core/subWindowOpenModes";
 import { isMac } from "@/utils/platform";
 import { LazyStore } from "@tauri-apps/plugin-store";
 import i18next from "i18next";
@@ -908,6 +909,7 @@ export const settingsSchema = z.object({
         ],
       },
     ]),
+  subWindowOpenModes: subWindowOpenModesSchema.default(DEFAULT_SUB_WINDOW_OPEN_MODES),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

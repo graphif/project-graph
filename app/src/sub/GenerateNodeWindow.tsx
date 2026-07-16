@@ -2,11 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Project } from "@/core/Project";
-import { useComponentTabResourceTab } from "@/core/Tab";
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { createSubWindow } from "@/core/subWindowOpen";
 import { Telemetry } from "@/core/service/Telemetry";
+import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
+import { useAtom } from "jotai";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -21,7 +22,7 @@ export default function GenerateNodeTree() {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
-  const tab = useComponentTabResourceTab();
+  const [tab] = useAtom(activeResourceTabAtom);
   const activeProject = tab instanceof Project ? tab : undefined;
 
   const handleGenerate = async () => {
@@ -108,7 +109,7 @@ export function GenerateNodeTreeByMarkdown() {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
-  const tab = useComponentTabResourceTab();
+  const [tab] = useAtom(activeResourceTabAtom);
   const activeProject = tab instanceof Project ? tab : undefined;
 
   const handleGenerate = async () => {
@@ -174,7 +175,7 @@ export function GenerateNodeTreeByMarkdown() {
 }
 
 GenerateNodeTree.open = () => {
-  TabWorkspace.create({
+  createSubWindow("GenerateNodeTree", {
     title: "生成节点群",
     contextTarget: "activeResourceTab",
     children: <GenerateNodeTree />,
@@ -183,7 +184,7 @@ GenerateNodeTree.open = () => {
 };
 
 GenerateNodeTreeByMarkdown.open = () => {
-  TabWorkspace.create({
+  createSubWindow("GenerateNodeTreeByMarkdown", {
     title: "通过Markdown生成节点群",
     contextTarget: "activeResourceTab",
     children: <GenerateNodeTreeByMarkdown />,
@@ -196,7 +197,7 @@ export function GenerateNodeGraph() {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
-  const tab = useComponentTabResourceTab();
+  const [tab] = useAtom(activeResourceTabAtom);
   const activeProject = tab instanceof Project ? tab : undefined;
 
   const handleGenerate = async () => {
@@ -257,7 +258,7 @@ export function GenerateNodeGraph() {
 }
 
 GenerateNodeGraph.open = () => {
-  TabWorkspace.create({
+  createSubWindow("GenerateNodeGraph", {
     title: "生成节点网",
     contextTarget: "activeResourceTab",
     children: <GenerateNodeGraph />,
@@ -274,7 +275,7 @@ export function GenerateNodeMermaid() {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation("globalMenu");
 
-  const tab = useComponentTabResourceTab();
+  const [tab] = useAtom(activeResourceTabAtom);
   const activeProject = tab instanceof Project ? tab : undefined;
 
   const handleGenerate = async () => {
@@ -343,7 +344,7 @@ export function GenerateNodeMermaid() {
 }
 
 GenerateNodeMermaid.open = () => {
-  TabWorkspace.create({
+  createSubWindow("GenerateNodeMermaid", {
     title: "生成框嵌套网状结构(Mermaid格式)",
     contextTarget: "activeResourceTab",
     children: <GenerateNodeMermaid />,

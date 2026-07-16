@@ -1,6 +1,6 @@
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { onOpenFile } from "@/core/service/GlobalMenu";
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { createSubWindow } from "@/core/subWindowOpen";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useEffect, useState } from "react";
@@ -58,7 +58,7 @@ export default function KeyboardRecentFilesWindow({ tabId }: { tabId: string }) 
 }
 
 KeyboardRecentFilesWindow.open = () => {
-  TabWorkspace.create({
+  createSubWindow("KeyboardRecentFilesWindow", {
     title: "最近打开的文件",
     children: (tab) => <KeyboardRecentFilesWindow tabId={tab.id} />,
     rect: new Rectangle(Vector.same(100), Vector.same(-1)),

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Project } from "@/core/Project";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
+import { createSubWindow } from "@/core/subWindowOpen";
 import { TabWorkspace } from "@/core/TabWorkspace";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -90,7 +91,7 @@ function LatexEditWindowContent({
 LatexEditWindowContent.open = (project: Project, node: LatexNode) => {
   // 在节点上方或鼠标位置弹出
   const mousePos = MouseLocation.clientVector();
-  const win = TabWorkspace.create({
+  const win = createSubWindow("LatexEditWindow", {
     title: "编辑 LaTeX 公式",
     rect: new Rectangle(mousePos, new Vector(360, 260)),
     closeWhenClickOutside: false,

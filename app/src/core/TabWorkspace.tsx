@@ -15,15 +15,19 @@ import { startTransition } from "react";
 import { ComponentTab, ComponentTabOptions, isResourceTab, Tab } from "./Tab";
 import {
   createTabGroup,
+  FIXED_SIDE_GROUP_IDS,
   findTabGroup,
   findTabGroupByTabId,
   getTabGroups,
   insertTabIntoGroup,
+  isFixedSideGroupId,
   removeTabFromGroups,
   splitTabGroup,
   updateTabGroup,
   updateTabSplitSizes,
+  type FixedSideEdge,
   type TabDropEdge,
+  type TabGroupNode,
 } from "./TabGroup";
 
 const outsideListeners = new Map<string, (event: PointerEvent) => void>();
@@ -31,6 +35,46 @@ const closeTimers = new Map<string, ReturnType<typeof setTimeout>[]>();
 
 function maxZIndex() {
   return store.get(tabsAtom).reduce((maximum, tab) => Math.max(maximum, tab.zIndex), 0);
+}
+
+/** Prefer the main editor group over fixed side panels when creating a new side split. */
+function preferMainGroup(root: TabGroupNode | null) {
+  const groups = getTabGroups(root);
+  return (
+    groups.find((group) => !isFixedSideGroupId(group.id)) ??
+    groups.find((group) => group.id === store.get(activeGroupIdAtom)) ??
+    groups[0]
+  );
+}
+
+/**
+ * Put a docked tab into the stable left/right side group (create the side group once if missing).
+ * Subsequent default side windows stack as tabs in the same group instead of splitting again.
+ * Caller should focus the tab afterwards.
+ */
+function dockToSideGroup(tabId: string, edge: FixedSideEdge) {
+  const fixedId = FIXED_SIDE_GROUP_IDS[edge];
+  removeFromGroup(tabId);
+  let root = store.get(tabGroupRootAtom);
+
+  if (findTabGroup(root, fixedId)) {
+    store.set(tabGroupRootAtom, insertTabIntoGroup(root, fixedId, tabId));
+    store.set(activeGroupIdAtom, fixedId);
+    return;
+  }
+
+  const target = preferMainGroup(root);
+  if (!target) {
+    const group = createTabGroup([tabId], fixedId);
+    store.set(tabGroupRootAtom, group);
+    store.set(activeGroupIdAtom, fixedId);
+    return;
+  }
+
+  const sideGroup = createTabGroup([tabId], fixedId);
+  root = splitTabGroup(root, target.id, sideGroup, edge);
+  store.set(tabGroupRootAtom, root);
+  store.set(activeGroupIdAtom, fixedId);
 }
 
 function constrainRect(rect: Rectangle) {
@@ -113,7 +157,7 @@ export namespace TabWorkspace {
   }
 
   export function create(options: ComponentTabOptions): ComponentTab {
-    return open(
+    const tab = open(
       new ComponentTab({
         ...options,
         contextResourceTab:
@@ -121,6 +165,15 @@ export namespace TabWorkspace {
           (options.contextTarget === "activeResourceTab" ? store.get(activeResourceTabAtom) : undefined),
       }),
     );
+    if (tab.layout === "docked" && options.splitEdge) {
+      if (options.splitEdge === "left" || options.splitEdge === "right") {
+        focus(tab.id);
+        dockToSideGroup(tab.id, options.splitEdge);
+      } else {
+        split(tab.id, options.splitEdge);
+      }
+    }
+    return tab;
   }
 
   export function get(id: string) {

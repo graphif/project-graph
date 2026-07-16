@@ -3,6 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { createSubWindow } from "@/core/subWindowOpen";
 import { TabWorkspace } from "@/core/TabWorkspace";
 import { cn } from "@/utils/cn";
 import { Vector } from "@graphif/data-structures";
@@ -141,7 +142,7 @@ export function FormWindow(
 
 FormWindow.open = (schema: z.ZodObject, options: FormOptions): Promise<z.infer<typeof schema>> => {
   return new Promise((resolve, reject) => {
-    const win = TabWorkspace.create({
+    const win = createSubWindow("FormWindow", {
       title: options.title,
       children: (
         <FormWindow

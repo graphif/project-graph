@@ -5,18 +5,19 @@ import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Project } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
-import { useComponentTabResourceTab } from "@/core/Tab";
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { createSubWindow } from "@/core/subWindowOpen";
+import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
+import { useAtom } from "jotai";
 import { FileWarning, Info } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export default function ExportPngWindow() {
-  const tab = useComponentTabResourceTab();
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
   const [scale, setScale] = useState(1);
@@ -165,7 +166,7 @@ export default function ExportPngWindow() {
 }
 
 ExportPngWindow.open = () => {
-  TabWorkspace.create({
+  createSubWindow("ExportPngWindow", {
     title: "导出 PNG",
     contextTarget: "activeResourceTab",
     children: <ExportPngWindow />,

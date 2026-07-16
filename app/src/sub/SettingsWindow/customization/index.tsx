@@ -7,7 +7,15 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { CircleGauge, Menu as MenuIcon, PanelTop, SlidersHorizontal, Sparkles, Volume2 } from "lucide-react";
+import {
+  CircleGauge,
+  LayoutPanelLeft,
+  Menu as MenuIcon,
+  PanelTop,
+  SlidersHorizontal,
+  Sparkles,
+  Volume2,
+} from "lucide-react";
 import { Fragment, useState } from "react";
 import ContextMenuPage from "./context-menu";
 import EffectsPage from "./effects";
@@ -15,6 +23,7 @@ import GlobalMenuPage from "./global-menu";
 import PieMenuPage from "./pie-menu";
 import QuickSettingsTab from "./quick-settings";
 import SoundEffectsPage from "./sounds";
+import WindowOpenModesPage from "./window-open-modes";
 
 export default function CustomizationTab() {
   const [currentCategory, setCurrentCategory] = useState("effects");
@@ -80,5 +89,10 @@ const categories = {
     name: "快捷设置",
     icon: SlidersHorizontal,
     component: QuickSettingsTab,
+  },
+  windowOpenModes: {
+    name: "窗口打开方式",
+    icon: LayoutPanelLeft,
+    component: WindowOpenModesPage,
   },
 };

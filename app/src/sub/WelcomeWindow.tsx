@@ -1,4 +1,5 @@
 import { Project } from "@/core/Project";
+import { createSubWindow } from "@/core/subWindowOpen";
 import { TabWorkspace } from "@/core/TabWorkspace";
 import { AssetsRepository } from "@/core/service/AssetsRepository";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
@@ -404,7 +405,7 @@ WelcomeWindow.open = () => {
     return existing;
   }
 
-  const tab = TabWorkspace.create({
+  const tab = createSubWindow("WelcomeWindow", {
     children: (componentTab) => <WelcomeWindow tabId={componentTab.id} />,
     rect: Rectangle.inCenter(new Vector(Math.min(960, innerWidth * 0.85), Math.min(640, innerHeight * 0.8))),
     canDock: false,

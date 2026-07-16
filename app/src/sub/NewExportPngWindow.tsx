@@ -4,18 +4,19 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Project } from "@/core/Project";
 import { GenerateScreenshot } from "@/core/service/dataGenerateService/generateScreenshot";
-import { useComponentTabResourceTab } from "@/core/Tab";
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { createSubWindow } from "@/core/subWindowOpen";
+import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
+import { useAtom } from "jotai";
 import { Info } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function NewExportPngWindow() {
-  const tab = useComponentTabResourceTab();
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   if (!project) return <></>;
 
@@ -122,7 +123,7 @@ export default function NewExportPngWindow() {
 
 // 导出打开窗口的函数
 NewExportPngWindow.open = (type: "selected" | "all") => {
-  TabWorkspace.create({
+  createSubWindow("NewExportPngWindow", {
     title: `导出 ${type === "selected" ? "选中内容" : "全部内容"} 为 PNG`,
     contextTarget: "activeResourceTab",
     children: <NewExportPngWindow />,

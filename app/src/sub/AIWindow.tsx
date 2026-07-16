@@ -43,8 +43,9 @@ import { ConnectableEntity } from "@/core/stage/stageObject/abstract/Connectable
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { useComponentTabResourceTab } from "@/core/Tab";
+import { createSubWindow } from "@/core/subWindowOpen";
 import { TabWorkspace } from "@/core/TabWorkspace";
+import { activeResourceTabAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { useChat } from "@ai-sdk/react";
 import { Color, Vector } from "@graphif/data-structures";
@@ -52,6 +53,7 @@ import { Rectangle } from "@graphif/shapes";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import { code } from "@streamdown/code";
 import { lastAssistantMessageIsCompleteWithApprovalResponses, type UIMessage } from "ai";
+import { useAtom } from "jotai";
 import {
   Bot,
   Check,
@@ -85,7 +87,7 @@ export function setAIWindowInitialText(text: string, prompt?: string) {
 }
 
 export default function AIWindow({ tabId }: { tabId: string }) {
-  const tab = useComponentTabResourceTab();
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
 
   if (!project) {
@@ -1166,7 +1168,7 @@ function toolStateText(state: string | undefined) {
 }
 
 AIWindow.open = () => {
-  TabWorkspace.create({
+  createSubWindow("AIWindow", {
     title: "",
     contextTarget: "activeResourceTab",
     closable: false,

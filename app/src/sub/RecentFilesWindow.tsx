@@ -6,8 +6,8 @@ import { DragFileIntoStageEngine } from "@/core/service/dataManageService/dragFi
 import { SoundService } from "@/core/service/feedbackService/SoundService";
 import { onOpenFile } from "@/core/service/GlobalMenu";
 import { Settings } from "@/core/service/Settings";
-import { useComponentTabResourceTab } from "@/core/Tab";
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { createSubWindow } from "@/core/subWindowOpen";
+import { activeResourceTabAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { PathString } from "@/utils/pathString";
 import { isMac } from "@/utils/platform";
@@ -16,6 +16,7 @@ import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
+import { useAtom } from "jotai";
 import {
   DoorClosed,
   DoorOpen,
@@ -137,7 +138,7 @@ function FileThumbnail({ fsPath, refreshVersion }: { fsPath: string; refreshVers
  * @returns
  */
 export default function RecentFilesWindow({ tabId }: { tabId: string }) {
-  const tab = useComponentTabResourceTab();
+  const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
   const [showThumbnails] = Settings.use("showRecentFilesThumbnails");
   /**
@@ -781,7 +782,7 @@ export default function RecentFilesWindow({ tabId }: { tabId: string }) {
 }
 
 RecentFilesWindow.open = () => {
-  TabWorkspace.create({
+  createSubWindow("RecentFilesWindow", {
     title: "最近打开的文件",
     contextTarget: "activeResourceTab",
     children: (tab) => <RecentFilesWindow tabId={tab.id} />,

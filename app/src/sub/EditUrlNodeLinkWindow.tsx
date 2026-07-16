@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { createSubWindow } from "@/core/subWindowOpen";
 import { TabWorkspace } from "@/core/TabWorkspace";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -35,7 +36,7 @@ export default function EditUrlNodeLinkWindow({
 }
 
 EditUrlNodeLinkWindow.open = (initialUrl: string, onConfirm: (newUrl: string) => void) => {
-  const win = TabWorkspace.create({
+  const win = createSubWindow("EditUrlNodeLinkWindow", {
     title: "",
     children: (
       <EditUrlNodeLinkWindow

@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { createSubWindow } from "@/core/subWindowOpen";
 import { activeTabAtom, store } from "@/state";
 import { isLinux } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
@@ -128,7 +128,7 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
 // TODO: page参数
 SettingsWindow.open = (tab: TabName = "settings") => {
   store.get(activeTabAtom)?.pause();
-  TabWorkspace.create({
+  createSubWindow("SettingsWindow", {
     children: <SettingsWindow defaultTab={tab} />,
     rect: Rectangle.inCenter(new Vector(innerWidth > 1653 ? 1240 : innerWidth * 0.75, innerHeight * 0.875)),
     titleBarOverlay: true,

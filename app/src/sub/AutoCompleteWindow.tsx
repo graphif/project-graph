@@ -1,4 +1,4 @@
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { createSubWindow } from "@/core/subWindowOpen";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
@@ -22,7 +22,7 @@ export default function AutoCompleteWindow({
 }
 
 AutoCompleteWindow.open = (location: Vector, items: Record<string, string>, onSelect: (value: string) => void) => {
-  return TabWorkspace.create({
+  return createSubWindow("AutoCompleteWindow", {
     children: <AutoCompleteWindow items={items} onSelect={onSelect} />,
     rect: new Rectangle(location, Vector.same(-1)),
     canDock: false,
