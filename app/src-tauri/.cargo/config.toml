@@ -1,4 +1,0 @@
-[env]
-CMAKE_OSX_DEPLOYMENT_TARGET = "10.15"
-CXXFLAGS = "-faligned-allocation"
-MACOSX_DEPLOYMENT_TARGET = "10.15"

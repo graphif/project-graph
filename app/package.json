@@ -16,6 +16,7 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "node ./scripts/tauri_build.js",
+    "tauri:build:macos-10.15": "cross-env MACOSX_DEPLOYMENT_TARGET=10.15 CXXFLAGS=-faligned-allocation tauri build --target x86_64-apple-darwin",
     "sync-locales": "tsx ./scripts/sync-locales.ts"
   },
   "dependencies": {
