@@ -114,6 +114,11 @@ mod imp {
             Self::default()
         }
 
+        fn transparent(mut self, transparent: bool) -> Self {
+            self.inner = self.inner.with_transparent(transparent);
+            self
+        }
+
         /// 从 Tauri 配置文件里的 `WindowConfig` 构造 tao builder。
         fn with_config(config: &tauri_utils::config::WindowConfig) -> Self {
             let mut window = Self::new()
@@ -262,16 +267,6 @@ mod imp {
 
         fn visible(mut self, visible: bool) -> Self {
             self.inner = self.inner.with_visible(visible);
-            self
-        }
-
-        // Mirror the trait gate: `WindowBuilder::transparent` only exists on
-        // macOS when the `macos-private-api` feature is enabled, which this
-        // crate never enables. Providing it unconditionally under
-        // `target_os = "macos"` breaks the trait impl (E0407).
-        #[cfg(not(target_os = "macos"))]
-        fn transparent(mut self, transparent: bool) -> Self {
-            self.inner = self.inner.with_transparent(transparent);
             self
         }
 

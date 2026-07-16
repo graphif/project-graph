@@ -41,10 +41,14 @@ define_class!(
 );
 
 pub(crate) fn init_cef_app_mac() {
+    eprintln!("[cef-runtime] macOS application setup: start");
     let _mtm = MainThreadMarker::new().expect("CEF application must initialize on the main thread");
+    eprintln!("[cef-runtime] macOS application setup: getting shared application");
     let app: Retained<KabegameCefApplication> =
         unsafe { msg_send![KabegameCefApplication::class(), sharedApplication] };
+    eprintln!("[cef-runtime] macOS application setup: finishing launch");
     app.finishLaunching();
+    eprintln!("[cef-runtime] macOS application setup: complete");
 }
 
 pub(crate) fn pump_events() -> bool {

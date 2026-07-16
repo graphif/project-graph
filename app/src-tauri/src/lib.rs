@@ -45,12 +45,12 @@ pub fn run() {
     }
 
     // CEF 单 binary 自举：子进程 re-exec 本程序时必须在任何 Tauri 初始化前分流。
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
     tauri_runtime_cef::dispatch_cef_subprocess();
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
     let builder = tauri::Builder::<tauri_runtime_cef::Cef<tauri::EventLoopMessage>>::new();
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(any(target_os = "macos", target_os = "linux")))]
     let builder = tauri::Builder::default();
 
     builder

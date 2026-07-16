@@ -5394,6 +5394,14 @@ declare const settingsSchema: ZodObject<
         >
       >
     >;
+    subWindowOpenModes: ZodDefault<
+      ZodPreprocess<
+        ZodRecord<
+          ZodString,
+          ZodEnum<{ docked: "docked"; floating: "floating"; dockedLeft: "dockedLeft"; dockedRight: "dockedRight" }>
+        >
+      >
+    >;
   },
   $strip
 >;

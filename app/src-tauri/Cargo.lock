@@ -7583,6 +7583,7 @@ version = "0.1.0"
 dependencies = [
  "ash",
  "cef",
+ "cef-dll-sys",
  "cookie",
  "gtk",
  "http 1.4.0",

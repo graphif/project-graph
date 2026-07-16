@@ -5,6 +5,7 @@ description = "CEF (Chromium) webview backend for Tauri on desktop"
 authors = ["kabegame"]
 edition = "2021"
 publish = false
+build = "build.rs"
 
 # This crate is an *adapter*: it implements the `tauri-runtime` trait contract
 # (Runtime / RuntimeHandle / WebviewDispatch / WindowDispatch / WindowBuilder /
@@ -52,6 +53,7 @@ windows-sys = { version = "0.52", features = [
 ] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
+cef-dll-sys = "149"
 objc2 = { version = "0.6", default-features = false }
 objc2-app-kit = { version = "0.3", default-features = false, features = [
   "std",

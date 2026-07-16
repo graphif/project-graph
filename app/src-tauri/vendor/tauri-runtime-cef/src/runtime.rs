@@ -686,6 +686,8 @@ mod imp {
         /// `cef_execute_process` so runtime initialization does not dispatch the
         /// browser process a second time. Both operations happen on the UI thread.
         static PREPARED_CEF_APP: RefCell<Option<cef::App>> = const { RefCell::new(None) };
+        #[cfg(target_os = "macos")]
+        static CEF_LIBRARY_LOADER: RefCell<Option<cef::library_loader::LibraryLoader>> = const { RefCell::new(None) };
         static CEF_INITIALIZED: Cell<bool> = const { Cell::new(false) };
     }
 
@@ -717,6 +719,7 @@ mod imp {
     /// CEF 再 exec 本进程并带上 `--type=...` 时，此处 `execute_process` 会接管并
     /// `exit`；browser 进程拿到 `-1` 后继续 `cef_initialize`。
     pub fn dispatch_cef_subprocess() {
+        eprintln!("[cef-runtime] subprocess dispatch: start");
         // Select X11 before CEF parses
         // the process environment or launches any child process.
         #[cfg(target_os = "linux")]
@@ -725,18 +728,31 @@ mod imp {
         }
         #[cfg(target_os = "macos")]
         {
-            // dyld loads the directly linked CEF framework at process startup,
-            // so CefAppProtocol setup has no runtime loader ordering constraint.
+            CEF_LIBRARY_LOADER.with(|loader| {
+                if loader.borrow().is_none() {
+                    eprintln!("[cef-runtime] loading macOS CEF framework");
+                    let framework = cef::library_loader::LibraryLoader::new(
+                        &std::env::current_exe().expect("failed to resolve current executable"),
+                        false,
+                    );
+                    assert!(framework.load(), "failed to load the macOS CEF framework");
+                    loader.replace(Some(framework));
+                    eprintln!("[cef-runtime] macOS CEF framework loaded");
+                }
+            });
             crate::app_mac::init_cef_app_mac();
         }
         if CEF_INITIALIZED.with(Cell::get) {
+            eprintln!("[cef-runtime] subprocess dispatch: CEF already initialized");
             return;
         }
+        eprintln!("[cef-runtime] subprocess dispatch: creating CEF app");
         let mut app = create_cef_app();
         // 子进程在这里退出；browser 得到 -1 后继续初始化。
         maybe_exit_as_cef_subprocess(&mut app);
         eprintln!("[cef-runtime] browser initialization (CEF Views/windowed)");
         initialize_cef(&mut app).expect("failed to initialize CEF before Tauri startup");
+        eprintln!("[cef-runtime] subprocess dispatch: CEF initialization complete");
         PREPARED_CEF_APP.with(|prepared| prepared.replace(Some(app)));
         CEF_INITIALIZED.with(|initialized| initialized.set(true));
     }
@@ -1266,13 +1282,18 @@ mod imp {
 
     /// 创建 browser 与 helper 共用的 CEF app。
     fn create_cef_app() -> cef::App {
+        eprintln!("[cef-runtime] create CEF app: negotiate API version");
         let _ = api_hash(sys::CEF_API_VERSION_LAST, 0);
+        eprintln!("[cef-runtime] create CEF app: create quit state");
         let quit = windowed_quit();
-        CefRuntimeApp::new(
-            quit.clone(),
-            crate::subprocess::initialization_render_process_handler(),
-            WindowedBrowserProcessHandler::new(RefCell::new(None), quit),
-        )
+        eprintln!("[cef-runtime] create CEF app: create render handler");
+        let render_process_handler = crate::subprocess::initialization_render_process_handler();
+        eprintln!("[cef-runtime] create CEF app: create browser handler");
+        let browser_process_handler = WindowedBrowserProcessHandler::new(RefCell::new(None), quit.clone());
+        eprintln!("[cef-runtime] create CEF app: create CEF wrapper");
+        let app = CefRuntimeApp::new(quit, render_process_handler, browser_process_handler);
+        eprintln!("[cef-runtime] create CEF app: complete");
+        app
     }
 
     /// 若当前进程是 CEF 再 exec 出的 renderer/GPU/utility 子进程，则进入子进程
