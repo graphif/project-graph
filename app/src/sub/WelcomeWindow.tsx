@@ -1,11 +1,11 @@
 import { Project } from "@/core/Project";
-import { createSubWindow } from "@/core/subWindowOpen";
-import { TabWorkspace } from "@/core/TabWorkspace";
 import { AssetsRepository } from "@/core/service/AssetsRepository";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
 import { closeEmptyDrafts, onNewDraft, onOpenFile } from "@/core/service/GlobalMenu";
 import { Telemetry } from "@/core/service/Telemetry";
 import { Tutorials } from "@/core/service/Tutorials";
+import { createSubWindow } from "@/core/subWindowOpen";
+import { TabWorkspace } from "@/core/TabWorkspace";
 import { store, tabsAtom } from "@/state";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
 import SettingsWindow from "@/sub/SettingsWindow";

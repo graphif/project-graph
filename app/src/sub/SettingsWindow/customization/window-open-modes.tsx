@@ -1,5 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Settings } from "@/core/service/Settings";
+import {
+  getAllSubWindowOpenModes,
+  resetSubWindowOpenMode,
+  resetSubWindowOpenModes,
+  setSubWindowOpenMode,
+} from "@/core/subWindowOpen";
 import {
   DEFAULT_SUB_WINDOW_OPEN_MODES,
   SUB_WINDOW_IDS,
@@ -7,13 +14,6 @@ import {
   type SubWindowId,
   type SubWindowOpenMode,
 } from "@/core/subWindowOpenModes";
-import {
-  getAllSubWindowOpenModes,
-  resetSubWindowOpenMode,
-  resetSubWindowOpenModes,
-  setSubWindowOpenMode,
-} from "@/core/subWindowOpen";
-import { Settings } from "@/core/service/Settings";
 import { RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 

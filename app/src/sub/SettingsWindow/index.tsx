@@ -1,7 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createSubWindow } from "@/core/subWindowOpen";
 import { activeTabAtom, store } from "@/state";
-import { isLinux } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Blocks, Bot, Brush, Command, HandHeart, Info, Keyboard, Palette, Settings, User } from "lucide-react";
@@ -14,7 +13,6 @@ import QuickSettingsTab from "./customization/quick-settings";
 import ExtensionsTab from "./extensions";
 import KeyBindsPage from "./keybinds";
 import KeyBindsGlobalPage from "./keybindsGlobal";
-import LinuxRuntimeTab from "./linuxRuntime";
 import LocalAiTab from "./local-ai";
 import SettingsTab from "./settings";
 import ThemesTab from "./themes";
@@ -40,12 +38,6 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
             <Settings />
             设置
           </TabsTrigger>
-          {isLinux && (
-            <TabsTrigger value="linuxRuntime">
-              <Settings />
-              Linux 运行时设置
-            </TabsTrigger>
-          )}
           <TabsTrigger value="localAi">
             <Bot />
             本地 AI
@@ -88,9 +80,6 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
       <TabsContent value="settings" className="min-h-0 overflow-hidden">
         <SettingsTab />
       </TabsContent>
-      <TabsContent value="linuxRuntime" className="overflow-auto">
-        <LinuxRuntimeTab />
-      </TabsContent>
       <TabsContent value="localAi" className="overflow-auto">
         <LocalAiTab />
       </TabsContent>
@@ -129,6 +118,8 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
 SettingsWindow.open = (tab: TabName = "settings") => {
   store.get(activeTabAtom)?.pause();
   createSubWindow("SettingsWindow", {
+    icon: Settings,
+    title: "设置",
     children: <SettingsWindow defaultTab={tab} />,
     rect: Rectangle.inCenter(new Vector(innerWidth > 1653 ? 1240 : innerWidth * 0.75, innerHeight * 0.875)),
     titleBarOverlay: true,

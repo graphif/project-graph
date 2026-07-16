@@ -15,9 +15,9 @@ import { startTransition } from "react";
 import { ComponentTab, ComponentTabOptions, isResourceTab, Tab } from "./Tab";
 import {
   createTabGroup,
-  FIXED_SIDE_GROUP_IDS,
   findTabGroup,
   findTabGroupByTabId,
+  FIXED_SIDE_GROUP_IDS,
   getTabGroups,
   insertTabIntoGroup,
   isFixedSideGroupId,

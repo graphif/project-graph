@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   createTabGroup,
-  FIXED_SIDE_GROUP_IDS,
   findTabGroup,
   findTabGroupByTabId,
+  FIXED_SIDE_GROUP_IDS,
   getTabGroups,
   insertTabIntoGroup,
   removeTabFromGroups,
