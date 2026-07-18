@@ -44,6 +44,7 @@ import GenerateNodeTree, {
 import NewExportPngWindow from "@/sub/NewExportPngWindow";
 import NodeDetailsWindow from "@/sub/NodeDetailsWindow";
 import OnboardingWindow from "@/sub/OnboardingWindow";
+import OutlineWindow from "@/sub/OutlineWindow";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
 import ReferencesWindow from "@/sub/ReferencesWindow";
 import SettingsWindow from "@/sub/SettingsWindow";
@@ -164,6 +165,7 @@ import {
   Images,
   Keyboard,
   Layers,
+  ListTree,
   LayoutDashboard,
   LayoutGrid,
   LayoutPanelTop,
@@ -1261,6 +1263,13 @@ export const allKeyBinds: KeyBindItem[] = [
     icon: Tag,
     when: whenAlways,
     onPress: () => TagWindow.open(),
+  },
+  {
+    id: "openOutlineWindow",
+    defaultKey: "C-S-o",
+    icon: ListTree,
+    when: whenAlways,
+    onPress: () => OutlineWindow.open(),
   },
   {
     id: "switchActiveProject",

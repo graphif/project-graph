@@ -1738,6 +1738,10 @@ keyBinds:
     title: Open/Close Tag Panel
     description: |
       Pressing this key will toggle the tag panel, similar to clicking the expand/collapse button on the page.
+  openOutlineWindow:
+    title: Open Outline
+    description: |
+      Open the outline panel to view graph-theory types of connected structures on the stage
   copy:
     title: Copy
     description: Copy the selected content when pressed

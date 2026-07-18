@@ -632,6 +632,7 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "openColorPanel",
       "clickAppMenuSettingsButton",
       "clickTagPanelButton",
+      "openOutlineWindow",
       "clickAppMenuRecentFileButton",
       "clickStartFilePanelButton",
       "switchActiveProject",

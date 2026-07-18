@@ -696,6 +696,7 @@ export const settingsSchema = z.object({
           { type: "separator", id: "sep-file-3" },
           { type: "item", id: "openAttachmentsWindow", icon: "Paperclip" },
           { type: "item", id: "clickTagPanelButton", icon: "Tag" },
+          { type: "item", id: "openOutlineWindow", icon: "ListTree" },
           { type: "item", id: "openReferencesWindow", icon: "Link" },
           { type: "item", id: "openColorManagerWindow", icon: "Palette" },
           { type: "item", id: "openBackgroundManagerWindow", icon: "Images" },

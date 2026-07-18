@@ -1847,6 +1847,10 @@ keyBinds:
     title: 打开/关闭标签面板
     description: |
       按下此键可代替鼠标点击页面上的标签面板展开关闭按钮
+  openOutlineWindow:
+    title: 打开大纲
+    description: |
+      打开大纲面板，查看画布中各关联结构的图论类型
   clickAppMenuRecentFileButton:
     title: 打开最近打开文件列表
     description: |

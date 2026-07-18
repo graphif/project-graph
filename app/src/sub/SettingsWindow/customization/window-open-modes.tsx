@@ -47,6 +47,7 @@ const WINDOW_LABELS: Record<SubWindowId, string> = {
   NewExportPngWindow: "新导出 PNG",
   NodeDetailsWindow: "节点详情",
   OnboardingWindow: "引导",
+  OutlineWindow: "大纲",
   RecentFilesWindow: "最近打开的文件",
   ReferencesWindow: "引用管理器",
   SectionReferencePanel: "框引用面板",

@@ -2164,6 +2164,10 @@ keyBinds:
     title: Buka/Tutup Panel Tag
     description: |
       Tekan tombol ini dapat menggantikan klik tombol buka tutup panel tag di halaman dengan mouse
+  openOutlineWindow:
+    title: Buka Outline
+    description: |
+      Buka panel outline untuk melihat tipe teori graf dari struktur yang terhubung di kanvas
   clickAppMenuRecentFileButton:
     title: Buka Daftar File Terbaru
     description: |

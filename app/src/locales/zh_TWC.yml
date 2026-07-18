@@ -2104,6 +2104,9 @@ keyBinds:
   clickTagPanelButton:
     title: 開啟/關閉標籤面板
     description: 按下此鍵可代替滑鼠點擊頁面上的標籤面板展開關閉按鈕
+  openOutlineWindow:
+    title: 開啟大綱
+    description: 開啟大綱面板，查看畫布中各關聯結構的圖論類型
   clickAppMenuRecentFileButton:
     title: 開啟最近開啟檔案清單
     description: 按下此鍵可代替滑鼠點擊功能表列裡的最近開啟檔案列表按鈕
