@@ -1,12 +1,16 @@
 import "reflect-metadata";
 
-let getOriginalNameOf: (class_: { [x: string | number | symbol]: any; new (...args: any[]): any }) => string = (
-  class_,
-) => class_.name;
+type SerializableClass = {
+  className?: string;
+  name: string;
+  new (...args: any[]): any;
+};
+
+let getOriginalNameOf: (class_: SerializableClass) => string = (class_) => class_.className ?? class_.name;
 export function configureSerializer(
-  getOriginalNameOfFn: (class_: { [x: string | number | symbol]: any; new (...args: any[]): any }) => string,
+  getOriginalNameOfFn: (class_: SerializableClass) => string,
 ) {
-  getOriginalNameOf = getOriginalNameOfFn;
+  getOriginalNameOf = (class_) => (class_.className === undefined ? class_.name : getOriginalNameOfFn(class_));
 }
 
 /**
@@ -124,7 +128,7 @@ export function deserialize(originalJson: any, extra?: any): any {
     const className = json._;
     const class_ = classes.get(className);
     if (!class_) {
-      throw TypeError(`[Serializer] Cannot find class ${class_} of ${JSON.stringify(json)}`);
+      throw TypeError(`[Serializer] Cannot find class ${className} of ${JSON.stringify(json)}`);
     }
     // 先把json中有_的值反序列化
     for (const key in json) {

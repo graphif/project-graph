@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { deserialize, serializable, serialize } from "../src";
+import { configureSerializer, deserialize, serializable, serialize } from "../src";
 
 describe("对象序列化", () => {
   class A {
@@ -69,6 +69,41 @@ describe("对象序列化", () => {
     expect(deserialized.nestedInstance).toBeInstanceOf(A);
     expect(deserialized.propString).toBe("@graphif/serializer");
   });
+
+  test("使用稳定类名而不是压缩后的运行时类名", () => {
+    class a {
+      static className = "StableClass";
+
+      @serializable
+      value: string;
+
+      constructor(value: string) {
+        this.value = value;
+      }
+    }
+
+    const serialized = serialize(new a("value"));
+    expect(serialized).toEqual({ _: "StableClass", value: "value" });
+    expect(deserialize(serialized)).toBeInstanceOf(a);
+  });
+
+  test("配置的类名解析器会回退到运行时类名", () => {
+    configureSerializer((class_) => class_.className!);
+
+    class C {
+      @serializable
+      value: string;
+
+      constructor(value: string) {
+        this.value = value;
+      }
+    }
+
+    const serialized = serialize(new C("value"));
+    expect(serialized).toEqual({ _: "C", value: "value" });
+    expect(deserialize(serialized)).toBeInstanceOf(C);
+  });
+
   // 指针引用同一性的反序列化测试（数组与对象容器）
   class B {
     @serializable
