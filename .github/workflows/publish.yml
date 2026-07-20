@@ -211,10 +211,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.rust_targets }}
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: "app/src-tauri -> target"
       #endregion
 
       #region Android - Prepare environment
