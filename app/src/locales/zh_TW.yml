@@ -1847,6 +1847,10 @@ keyBinds:
     title: 打開/關閉標籤面板
     description: |
       按下此鍵可代替鼠標點擊頁面上的標籤面板展開關閉按鈕
+  openOutlineWindow:
+    title: 打開大綱
+    description: |
+      打開大綱面板，查看畫布中各關聯結構的圖論類型
   clickAppMenuRecentFileButton:
     title: 打開最近打開文件列表
     description: |

@@ -428,13 +428,13 @@ export class EntityRenderer {
   }
 
   /**
-   * 在 ConnectableEntity 选中时，于碰撞箱对应方向的中点外侧渲染一个扁宽三角形，表示生长方向。
+   * 在 ConnectableEntity 选中时，于碰撞箱对应方向的中点外侧渲染一个小三角形，表示生长方向。
    * 三角形在世界坐标系中定义，随画布缩放/平移正确跟随节点。
    *
    * 尺寸说明（世界单位）：
-   *   halfWidth = 12  垂直于生长方向的半宽，形成扁宽效果
-   *   depth     = 8   沿生长方向的深度
-   *   gap       = 9.5 底边距碰撞箱边框的偏移（选中框外扩 7.5 + 额外 2）
+   *   halfWidth = 12  垂直于生长方向的半宽（固定大小，不随节点尺寸变化）
+   *   depth     = 14  沿生长方向的深度
+   *   gap       = 2   底边距选中框外边缘的偏移，让三角形露出节点外面一些
    */
   private renderGrowthDirectionTriangle(entity: ConnectableEntity): void {
     const direction = this.project.keyboardOnlyTreeEngine.getNodePreDirection(entity);
@@ -442,19 +442,17 @@ export class EntityRenderer {
 
     const triangleColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected.toNewAlpha(0.6);
 
-    const depth = 10;
-    let gap = 9.5; // 选中框外扩 7.5 世界单位，再额外留 2 单位间距
+    // 固定大小的小三角形，不随节点尺寸变化
+    const halfWidth = 12; // 垂直于生长方向的半宽
+    const depth = 14; // 沿生长方向的深度
+    // 选中框外扩 7.5 世界单位，gap=10 让三角形底边与选中框之间有明显间隔
+    const gap = 10;
 
     let worldPoints: Vector[];
     switch (direction) {
       case "right": {
-        if (entity instanceof TextNode && entity.sizeAdjust === "manual" && entity.isEditing === false) {
-          gap = 25;
-        }
-        const baseX = rect.right + gap;
+        const baseX = rect.right + gap + 7.5;
         const cy = rect.center.y;
-        const halfWidth = rect.height * 0.4;
-
         worldPoints = [
           new Vector(baseX, cy - halfWidth),
           new Vector(baseX, cy + halfWidth),
@@ -463,9 +461,8 @@ export class EntityRenderer {
         break;
       }
       case "left": {
-        const baseX = rect.left - gap;
+        const baseX = rect.left - gap - 7.5;
         const cy = rect.center.y;
-        const halfWidth = rect.height * 0.4;
         worldPoints = [
           new Vector(baseX, cy - halfWidth),
           new Vector(baseX, cy + halfWidth),
@@ -474,9 +471,8 @@ export class EntityRenderer {
         break;
       }
       case "up": {
-        const baseY = rect.top - gap;
+        const baseY = rect.top - gap - 7.5;
         const cx = rect.center.x;
-        const halfWidth = rect.width * 0.4;
         worldPoints = [
           new Vector(cx - halfWidth, baseY),
           new Vector(cx + halfWidth, baseY),
@@ -485,9 +481,8 @@ export class EntityRenderer {
         break;
       }
       case "down": {
-        const baseY = rect.bottom + gap;
+        const baseY = rect.bottom + gap + 7.5;
         const cx = rect.center.x;
-        const halfWidth = rect.width * 0.4;
         worldPoints = [
           new Vector(cx - halfWidth, baseY),
           new Vector(cx + halfWidth, baseY),
