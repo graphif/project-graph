@@ -333,8 +333,7 @@ export class Project extends Tab {
         this.stageManager.updateReferences();
       }
 
-      const wasUpgraded = currentVersion !== latestVersion;
-      this.projectState = wasUpgraded ? ProjectState.Unsaved : ProjectState.Saved;
+      this.wasUpgraded = currentVersion !== latestVersion;
     } catch (e) {
       console.warn(e);
       const errorMessage = `打开文件时发生错误，文件内容可能已损坏或与当前软件版本不兼容。\n\n错误信息：${e}`;
@@ -347,6 +346,7 @@ export class Project extends Tab {
       }
       return;
     }
+    this.projectState = ProjectState.Saved;
   }
 
   get isDraft() {
@@ -398,6 +398,7 @@ export class Project extends Tab {
   public references: { sections: Record<string, string[]>; files: string[] } = { sections: {}, files: [] };
   public metadata: PrgMetadata = createDefaultMetadata(ProjectUpgrader.NLatestVersion);
   public readme?: string;
+  public wasUpgraded = false;
 
   // 备份也要用到这个
   async getFileContent(options: { includeThumbnail?: boolean } = {}) {
