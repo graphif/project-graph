@@ -393,7 +393,7 @@ export class HistoryManager extends HistoryManagerAbs {
   // 当前使用的历史管理器实例
   private currentManager: HistoryManagerAbs;
 
-  constructor(project: Project) {
+  constructor(private readonly project: Project) {
     super();
     this.memoryEfficient = new HistorymanagerMemoryEfficient(project);
     this.timeEfficient = new HistoryManagerTimeEfficient(project);
@@ -413,6 +413,7 @@ export class HistoryManager extends HistoryManagerAbs {
    */
   public recordStep(): void {
     this.currentManager.recordStep();
+    this.project.emit("stage-commit");
   }
 
   /**

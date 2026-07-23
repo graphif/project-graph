@@ -63,6 +63,11 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
     return this;
   }
 
+  off(event: string | symbol, listener: (...args: any[]) => void): this {
+    this.eventEmitter.off(event, listener);
+    return this;
+  }
+
   emit(event: string | symbol, ...args: any[]): boolean {
     return this.eventEmitter.emit(event, ...args);
   }

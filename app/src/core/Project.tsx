@@ -85,6 +85,7 @@ import md5 from "md5";
 import mime from "mime";
 import React from "react";
 import { URI } from "vscode-uri";
+import { CollaborationService } from "./service/collaboration/CollaborationService";
 import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
 import { generateThumbnail } from "./service/dataGenerateService/generateThumbnail";
 import { ProjectUpgrader } from "./stage/ProjectUpgrader";
@@ -352,12 +353,17 @@ export class Project extends Tab {
   get isDraft() {
     return this.uri.scheme === "draft";
   }
+  get isCollab() {
+    return this.uri.scheme === "collab";
+  }
   get title(): string {
     return this.uri.scheme === "draft"
       ? `临时草稿 (${this.uri.path})`
-      : this.uri.scheme === "file"
-        ? this.uri.path.split("/").pop()!
-        : this.uri.toString();
+      : this.uri.scheme === "collab"
+        ? `协作 (${this.uri.path})`
+        : this.uri.scheme === "file"
+          ? this.uri.path.split("/").pop()!
+          : this.uri.toString();
   }
   get icon() {
     return File;
@@ -629,6 +635,7 @@ declare module "./Project" {
     stageStyleManager: StageStyleManager;
     autoSaveBackup: AutoSaveBackupService;
     referenceManager: ReferenceManager;
+    collaboration: CollaborationService;
   }
 }
 

@@ -233,6 +233,10 @@ import {
   Tv,
   Type,
   Undo,
+  UserMinus,
+  UserPlus,
+  Users,
+  UsersRound,
   View,
   Wand2,
   Workflow,
@@ -258,7 +262,10 @@ import { DragFileIntoStageEngine } from "../../dataManageService/dragFileIntoSta
 import { TextNodeSmartTools } from "../../dataManageService/textNodeSmartTools";
 import {
   createFileAtCurrentProjectDir,
+  onJoinCollaboration,
+  onLeaveCollaboration,
   onNewDraft,
+  onStartCollaboration,
   onOpenFile,
   onUpgradeOldJson,
   openCurrentProjectFolder,
@@ -1495,6 +1502,38 @@ export const allKeyBinds: KeyBindItem[] = [
     icon: FilePlus,
     when: whenAlways,
     onPress: () => onNewDraft(),
+  },
+  {
+    id: "startCollaboration",
+    defaultKey: "",
+    icon: Users,
+    when: whenHasProject,
+    onPress: () => void onStartCollaboration(),
+  },
+  {
+    id: "joinCollaboration",
+    defaultKey: "",
+    icon: UserPlus,
+    when: whenAlways,
+    onPress: () => void onJoinCollaboration(),
+  },
+  {
+    id: "openCollaborationPanel",
+    defaultKey: "",
+    icon: UsersRound,
+    when: whenAlways,
+    onPress: () => {
+      void import("@/sub/CollaborationWindow").then(({ default: CollaborationWindow }) => {
+        CollaborationWindow.open();
+      });
+    },
+  },
+  {
+    id: "leaveCollaboration",
+    defaultKey: "",
+    icon: UserMinus,
+    when: whenHasProject,
+    onPress: () => void onLeaveCollaboration(),
   },
   {
     id: "newFileAtCurrentProjectDir",

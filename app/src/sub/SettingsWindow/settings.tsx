@@ -413,6 +413,7 @@ export const categories = {
     cpu: ["autoRefreshStageByMouseAction", "maxFps", "maxFpsUnfocused"],
     render: [
       "isPauseRenderWhenManipulateOvertime",
+      "pauseRenderWhenTabUnfocused",
       "renderOverTimeWhenNoManipulateTime",
       "scaleExponent",
       "ignoreTextNodeTextRenderLessThanFontSize",

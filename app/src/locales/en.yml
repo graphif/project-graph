@@ -338,6 +338,11 @@ settings:
       period of time
     description: |
       When enabled, rendering will pause after a certain number of seconds without stage manipulation to save CPU/GPU resources.
+  pauseRenderWhenTabUnfocused:
+    title: Pause rendering when tab loses focus
+    description: |
+      When enabled, non-active tabs pause their render loops to save CPU/GPU resources.
+      When disabled, all open resource tabs keep rendering (may increase resource usage).
   renderOverTimeWhenNoManipulateTime:
     title: Time to Stop Rendering Stage When Idle (Seconds)
     description: |
@@ -1862,6 +1867,20 @@ keyBinds:
     title: Create New Draft
     description: "Create a new draft file and switch to this file.\nIf the current
       file is not saved, you cannot switch.\n"
+  startCollaboration:
+    title: Start Collaboration
+    description: "Share the current stage as a real-time collaboration room.
+      Requires a Graphif account login.\n"
+  joinCollaboration:
+    title: Join Collaboration
+    description: "Join a collaboration room with an invite code.
+      Requires a Graphif account login.\n"
+  leaveCollaboration:
+    title: Leave Collaboration
+    description: "Leave the current real-time collaboration session.\n"
+  openCollaborationPanel:
+    title: Collaboration Panel
+    description: "Open the collaboration side panel showing room info and members.\n"
   newFileAtCurrentProjectDir:
     title: Create New File at Current Project Directory
     description: "Create a new project file in the current project directory and

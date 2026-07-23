@@ -1,6 +1,8 @@
+import { FileSystemProviderCollab } from "@/core/fileSystemProvider/FileSystemProviderCollab";
 import { FileSystemProviderDraft } from "@/core/fileSystemProvider/FileSystemProviderDraft";
 import { FileSystemProviderFile } from "@/core/fileSystemProvider/FileSystemProviderFile";
 import { Project } from "@/core/Project";
+import { CollaborationService } from "@/core/service/collaboration/CollaborationService";
 import { CurveRenderer } from "@/core/render/canvas2d/basicRenderer/curveRenderer";
 import { ImageRenderer } from "@/core/render/canvas2d/basicRenderer/ImageRenderer";
 import { ShapeRenderer } from "@/core/render/canvas2d/basicRenderer/shapeRenderer";
@@ -83,6 +85,7 @@ import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageRefe
 export function loadAllServicesBeforeInit(project: Project): void {
   project.registerFileSystemProvider("file", FileSystemProviderFile);
   project.registerFileSystemProvider("draft", FileSystemProviderDraft);
+  project.registerFileSystemProvider("collab", FileSystemProviderCollab);
   project.loadService(Canvas);
   project.loadService(InputElement);
   project.loadService(StageStyleManager);
@@ -178,4 +181,5 @@ export function loadAllServicesBeforeInit(project: Project): void {
 
 export function loadAllServicesAfterInit(project: Project): void {
   project.loadService(HistoryManager);
+  project.loadService(CollaborationService);
 }

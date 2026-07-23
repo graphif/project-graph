@@ -1403,11 +1403,11 @@ mod imp {
     /// 打印 "Opening in existing browser session." 并返回 false → `initialize_cef`
     /// panic(见 issue:开发启动时弹出一个 Chrome 窗口后崩溃)。按构建 profile 隔离即可:
     /// 安装态恒为 release,`bun dev` 恒为 debug,两者目录不再冲突。
-    const fn cef_cache_dir_name() -> &'static str {
+    fn cef_cache_dir_name() -> String {
         if cfg!(debug_assertions) {
-            "kabegame-cef-dev"
+            format!("project-graph-cef-dev-{}", rand::random::<u64>())
         } else {
-            "kabegame-cef"
+            "project-graph-cef".into()
         }
     }
 

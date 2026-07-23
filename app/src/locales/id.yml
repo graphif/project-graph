@@ -513,6 +513,11 @@ settings:
     title: Jeda Render Saat Tidak Beroperasi Panggung Selama Waktu Tertentu
     description: |
       Saat diaktifkan, jika tidak ada operasi panggung selama beberapa detik, render panggung akan dijeda untuk menghemat sumber daya CPU/GPU.
+  pauseRenderWhenTabUnfocused:
+    title: Jeda render saat tab kehilangan fokus
+    description: |
+      Saat diaktifkan, tab yang tidak aktif akan menjeda loop render untuk menghemat sumber daya CPU/GPU.
+      Saat dinonaktifkan, semua tab sumber daya yang terbuka terus merender (dapat meningkatkan penggunaan sumber daya).
   renderOverTimeWhenNoManipulateTime:
     title: Waktu Berhenti Render Saat Tidak Beroperasi (detik)
     description: |

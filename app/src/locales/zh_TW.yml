@@ -530,6 +530,11 @@ settings:
     title: 超過一定時間未操作舞臺，暫停渲染
     description: |
       開啟後，超過若干秒未做出舞臺操作，舞臺渲染會暫停，以節省CPU/GPU資源。
+  pauseRenderWhenTabUnfocused:
+    title: 標籤頁失去焦點後暫停渲染
+    description: |
+      開啟後，非當前激活的標籤頁將暫停渲染循環，以節省 CPU/GPU 資源。
+      關閉後，所有已打開的資源標籤頁會持續渲染（可能增加資源佔用）。
   renderOverTimeWhenNoManipulateTime:
     title: 超時停止渲染舞臺的時間（秒）
     description: |
@@ -1458,6 +1463,24 @@ keyBinds:
     description: |
       新建一個草稿文件，並切換到該文件
       若當前文件未保存則無法切換
+  startCollaboration:
+    title: 開始協作
+    description: |
+      將當前舞臺共享為實時協作房間
+      需要登錄 Graphif 賬號
+  joinCollaboration:
+    title: 加入協作
+    description: |
+      使用邀請碼加入協作房間
+      需要登錄 Graphif 賬號
+  leaveCollaboration:
+    title: 離開協作
+    description: |
+      離開當前實時協作會話
+  openCollaborationPanel:
+    title: 協作面板
+    description: |
+      打開協作側欄，查看房間信息與成員列表
   newFileAtCurrentProjectDir:
     title: 在當前項目目錄下新建文件
     description: |

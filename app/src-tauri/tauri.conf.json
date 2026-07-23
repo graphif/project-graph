@@ -103,6 +103,12 @@
           "short": "o",
           "takesValue": true,
           "multiple": false
+        },
+        {
+          "name": "size",
+          "short": "s",
+          "takesValue": true,
+          "multiple": false
         }
       ]
     },

@@ -542,6 +542,11 @@ settings:
   isPauseRenderWhenManipulateOvertime:
     title: 超過一定時間未操作舞台，暫停渲染
     description: 開啟後，超過若干秒未做出舞台操作，舞台渲染會暫停，以節省CPU/GPU資源。
+  pauseRenderWhenTabUnfocused:
+    title: 分頁失去焦點後暫停渲染
+    description: |
+      開啟後，非目前啟用的分頁會暫停渲染迴圈，以節省 CPU/GPU 資源。
+      關閉後，所有已開啟的資源分頁會持續渲染（可能增加資源佔用）。
   renderOverTimeWhenNoManipulateTime:
     title: 超時停止渲染舞台的時間（秒）
     description: '超過一定時間未做出舞台操作，舞台渲染會停止，以節省CPU/GPU資源。

@@ -24,6 +24,7 @@ import { ProjectUpgrader } from "../stage/ProjectUpgrader";
 import { CollisionBox } from "../stage/stageObject/collisionBox/collisionBox";
 import { TextNode } from "../stage/stageObject/entity/TextNode";
 import { RecentFileManager } from "./dataFileService/RecentFileManager";
+import { FeatureFlags } from "./FeatureFlags";
 import { Settings } from "./Settings";
 import { Telemetry } from "./Telemetry";
 
@@ -46,6 +47,88 @@ export async function onNewDraft() {
   store.set(activeTabAtom, project);
   store.set(activeResourceTabAtom, project);
   return project;
+}
+
+export async function onStartCollaboration() {
+  const resource = store.get(activeResourceTabAtom);
+  const active = store.get(activeTabAtom);
+  const project = resource instanceof Project ? resource : active instanceof Project ? active : undefined;
+  if (!project) {
+    toast.error("请先打开一个工程");
+    return;
+  }
+  if (!FeatureFlags.USER) {
+    toast.error("云服务未启用（缺少 LR_API_BASE_URL）");
+    return;
+  }
+  try {
+    if (project.collaboration.isActive) {
+      toast.message(`已在协作中，邀请码：${project.collaboration.currentInviteCode}`);
+      return;
+    }
+    const { inviteCode } = await project.collaboration.createRoom();
+    const { default: CollaborationWindow } = await import("@/sub/CollaborationWindow");
+    CollaborationWindow.open();
+    await Dialog.buttons("协作房间已创建", `邀请码：${inviteCode}\n把邀请码发给同伴即可加入。`, [
+      { id: "ok", label: "确定" },
+    ]);
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : "创建协作房间失败");
+  }
+}
+
+export async function onJoinCollaboration() {
+  if (!FeatureFlags.USER) {
+    toast.error("云服务未启用（缺少 LR_API_BASE_URL）");
+    return;
+  }
+  const inviteCode = await Dialog.input("加入协作", "请输入房间邀请码", {
+    placeholder: "例如 ABCD1234",
+  });
+  if (!inviteCode?.trim()) return;
+
+  const project = new Project(URI.parse(`collab:${inviteCode.trim().toUpperCase()}`));
+  loadAllServicesBeforeInit(project);
+  await project.init();
+  loadAllServicesAfterInit(project);
+
+  try {
+    await project.collaboration.joinRoom(inviteCode.trim());
+    if (project.collaboration.currentRoomId) {
+      project.uri = URI.parse(`collab:${project.collaboration.currentRoomId}`);
+    }
+    store.set(tabsAtom, [...store.get(tabsAtom), project]);
+    store.set(activeTabAtom, project);
+    store.set(activeResourceTabAtom, project);
+    const { default: CollaborationWindow } = await import("@/sub/CollaborationWindow");
+    CollaborationWindow.open();
+  } catch (e) {
+    project.collaboration.dispose();
+    toast.error(e instanceof Error ? e.message : "加入协作失败");
+  }
+}
+
+function resolveCollaborationProject(): Project | undefined {
+  // 协作面板停靠时 activeTab 是面板本身，需用 activeResourceTab / 扫描 tabs
+  const candidates = [store.get(activeResourceTabAtom), store.get(activeTabAtom), ...store.get(tabsAtom)];
+  for (const tab of candidates) {
+    if (tab instanceof Project && tab.collaboration?.isActive) {
+      return tab;
+    }
+  }
+  return undefined;
+}
+
+export async function onLeaveCollaboration() {
+  const project = resolveCollaborationProject();
+  if (!project) {
+    toast.message("当前不在协作会话中");
+    return;
+  }
+  project.collaboration.leave();
+  const { default: CollaborationWindow } = await import("@/sub/CollaborationWindow");
+  CollaborationWindow.closeAll();
+  toast.success("已离开协作房间");
 }
 
 /** 关闭未编辑的空草稿（打开真实文件后清理启动草稿） */
@@ -87,11 +170,13 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
     const activeProject = tab instanceof Project ? tab : undefined;
     if (activeProject) activeProject.loop();
     // const activeExtension = tab instanceof Extension ? tab : undefined;
-    // 把其他项目pause
-    store
-      .get(tabsAtom)
-      .filter((p) => p instanceof Project && p.uri.toString() !== uri.toString())
-      .forEach((p) => (p as Project).pause());
+    // 把其他项目 pause（受设置控制）
+    if (Settings.pauseRenderWhenTabUnfocused) {
+      store
+        .get(tabsAtom)
+        .filter((p) => p instanceof Project && p.uri.toString() !== uri.toString())
+        .forEach((p) => (p as Project).pause());
+    }
     toast.success("切换到已打开的标签页");
     return tab as any;
   }

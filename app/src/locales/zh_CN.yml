@@ -530,6 +530,11 @@ settings:
     title: 超过一定时间未操作舞台，暂停渲染
     description: |
       开启后，超过若干秒未做出舞台操作，舞台渲染会暂停，以节省CPU/GPU资源。
+  pauseRenderWhenTabUnfocused:
+    title: 标签页失去焦点后暂停渲染
+    description: |
+      开启后，非当前激活的标签页将暂停渲染循环，以节省 CPU/GPU 资源。
+      关闭后，所有已打开的资源标签页会持续渲染（可能增加资源占用）。
   renderOverTimeWhenNoManipulateTime:
     title: 超时停止渲染舞台的时间（秒）
     description: |
@@ -1458,6 +1463,24 @@ keyBinds:
     description: |
       新建一个草稿文件，并切换到该文件
       若当前文件未保存则无法切换
+  startCollaboration:
+    title: 开始协作
+    description: |
+      将当前舞台共享为实时协作房间
+      需要登录 Graphif 账号
+  joinCollaboration:
+    title: 加入协作
+    description: |
+      使用邀请码加入协作房间
+      需要登录 Graphif 账号
+  leaveCollaboration:
+    title: 离开协作
+    description: |
+      离开当前实时协作会话
+  openCollaborationPanel:
+    title: 协作面板
+    description: |
+      打开协作侧栏，查看房间信息与成员列表
   newFileAtCurrentProjectDir:
     title: 在当前项目目录下新建文件
     description: |

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Dialog } from "@/components/ui/dialog";
 import { Project, ProjectState } from "@/core/Project";
-import { Tab } from "@/core/Tab";
+import { isResourceTab, Tab } from "@/core/Tab";
 import { TabWorkspace } from "@/core/TabWorkspace";
 import { GlobalMenu, onNewDraft } from "@/core/service/GlobalMenu";
 import { flushSettingsLoadErrors, Settings } from "@/core/service/Settings";
@@ -189,10 +189,17 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (!activeResourceTab) return;
-    activeResourceTab.loop();
-    tabs.filter((tab) => tab !== activeResourceTab).forEach((tab) => tab.pause());
-  }, [activeResourceTab]);
+    const updateTabRenderLoops = () => {
+      if (!activeResourceTab) return;
+      if (Settings.pauseRenderWhenTabUnfocused) {
+        activeResourceTab.loop();
+        tabs.filter((tab) => tab !== activeResourceTab).forEach((tab) => tab.pause());
+      } else {
+        tabs.filter((tab) => isResourceTab(tab) && !tab.closing).forEach((tab) => tab.loop());
+      }
+    };
+    return Settings.watch("pauseRenderWhenTabUnfocused", updateTabRenderLoops);
+  }, [activeResourceTab, tabs]);
 
   useEffect(() => {
     TabWorkspace.synchronizeGroups();

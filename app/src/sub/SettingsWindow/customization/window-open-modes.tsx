@@ -34,6 +34,7 @@ const WINDOW_LABELS: Record<SubWindowId, string> = {
   ColorPaletteWindow: "当前文件颜色表",
   ColorWindow: "调色盘",
   ColorManagerPanel: "颜色管理",
+  CollaborationWindow: "协作",
   EditUrlNodeLinkWindow: "编辑 URL 节点链接",
   ExportPngWindow: "导出 PNG",
   FindWindow: "搜索",

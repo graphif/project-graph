@@ -38,6 +38,7 @@ tao = { version = "0.35", features = ["rwh_06"] }
 
 tracing = "0.1"
 ash = "0.38"
+rand = "0.10.2"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 gtk = { version = "0.18", features = ["v3_24"] }
