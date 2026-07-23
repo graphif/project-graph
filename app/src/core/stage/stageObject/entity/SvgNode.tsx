@@ -78,6 +78,7 @@ export class SvgNode extends ConnectableEntity implements ResizeAble {
     this.collisionBox = new CollisionBox([
       new Rectangle(this.collisionBox.getRectangle().location, this.originalSize.multiply(this.scale)),
     ]);
+    this.updateFatherSectionByMove();
   }
 
   move(delta: Vector): void {

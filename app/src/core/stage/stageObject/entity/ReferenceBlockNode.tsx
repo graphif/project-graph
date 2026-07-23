@@ -152,6 +152,7 @@ export class ReferenceBlockNode extends ConnectableEntity implements ResizeAble 
       this.scale = 10;
     }
     this.updateCollisionBox();
+    this.updateFatherSectionByMove();
   }
 
   public get rectangle(): Rectangle {

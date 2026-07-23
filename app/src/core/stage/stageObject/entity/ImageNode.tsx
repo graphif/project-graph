@@ -117,6 +117,7 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
     this.collisionBox = new CollisionBox([
       new Rectangle(this.rectangle.location, new Vector(this.bitmap.width, this.bitmap.height).multiply(this.scale)),
     ]);
+    this.updateFatherSectionByMove();
   }
 
   /**
