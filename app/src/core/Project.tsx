@@ -332,6 +332,9 @@ export class Project extends Tab {
       if (this.getService("stageManager")) {
         this.stageManager.updateReferences();
       }
+
+      const wasUpgraded = currentVersion !== latestVersion;
+      this.projectState = wasUpgraded ? ProjectState.Unsaved : ProjectState.Saved;
     } catch (e) {
       console.warn(e);
       const errorMessage = `打开文件时发生错误，文件内容可能已损坏或与当前软件版本不兼容。\n\n错误信息：${e}`;
@@ -344,7 +347,6 @@ export class Project extends Tab {
       }
       return;
     }
-    this.projectState = ProjectState.Saved;
   }
 
   get isDraft() {
