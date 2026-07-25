@@ -1,3 +1,4 @@
+import Markdown from "@/components/ui/markdown";
 import { Project } from "@/core/Project";
 import { AssetsRepository } from "@/core/service/AssetsRepository";
 import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
@@ -260,7 +261,7 @@ export default function WelcomeWindow({ tabId }: { tabId: string }) {
                         {announcement.author} · {new Date(announcement.time).toLocaleString()}
                       </p>
                       <p className="mt-2 max-w-2xl text-sm leading-5 wrap-break-word whitespace-pre-wrap">
-                        {announcement.content}
+                        <Markdown source={announcement.content} />
                       </p>
                     </div>
                     <button

@@ -1,4 +1,5 @@
 import { cn } from "@/utils/cn";
+import { open } from "@tauri-apps/plugin-shell";
 import { useEffect, useState } from "react";
 import production from "react/jsx-runtime";
 import rehypeReact from "rehype-react";
@@ -8,15 +9,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 
-export default function Markdown({
-  source,
-  className = "",
-  components,
-}: {
-  source: string;
-  className?: string;
-  components?: Record<string, React.ComponentType<any>>;
-}) {
+export default function Markdown({ source, className = "" }: { source: string; className?: string }) {
   const [content, setContent] = useState(<>loading</>);
 
   useEffect(() => {
@@ -25,11 +18,24 @@ export default function Markdown({
       .use(remarkGfm)
       .use(remarkBreaks)
       .use(remarkRehype)
-      .use(rehypeReact, { ...production, components });
+      .use(rehypeReact, {
+        ...production,
+        components: {
+          a: (props: any) => (
+            <a
+              {...props}
+              onClick={(e) => {
+                e.preventDefault();
+                open(props.href);
+              }}
+            />
+          ),
+        },
+      });
     processor.process(source).then((data: any) => {
       setContent(data.result);
     });
-  }, [source, components]);
+  }, [source]);
 
   return (
     <div
