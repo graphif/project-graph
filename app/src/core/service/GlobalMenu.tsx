@@ -73,7 +73,11 @@ export async function onStartCollaboration() {
       { id: "ok", label: "确定" },
     ]);
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : "创建协作房间失败");
+    if (e instanceof Error && e.message === "forbidden") {
+      toast.error("多人协作目前处于早期阶段，为防止滥用，请先在群内联系开发者获取邀请码");
+    } else {
+      toast.error(e instanceof Error ? e.message : "创建协作房间失败");
+    }
   }
 }
 
