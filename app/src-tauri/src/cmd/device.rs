@@ -8,10 +8,10 @@ use std::os::windows::process::CommandExt;
 #[tauri::command]
 #[cfg(target_os = "windows")]
 pub fn get_device_id() -> Result<String, String> {
-    let output = Command::new("wmic")
-        .arg("csproduct")
-        .arg("get")
-        .arg("uuid")
+    let output = Command::new("powershell")
+        .arg("-NoProfile")
+        .arg("-Command")
+        .arg("(Get-CimInstance Win32_ComputerSystemProduct).UUID")
         .creation_flags(0x08000000) // CREATE_NO_WINDOW
         .output()
         .map_err(|e| format!("Failed to execute wmic: {e}"))?;
