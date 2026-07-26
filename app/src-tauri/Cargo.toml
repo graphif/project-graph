@@ -15,7 +15,7 @@ crate-type = ["lib", "cdylib", "staticlib"]
 tauri-build = { version = "2.6.0", features = [] }
 
 [dependencies]
-tauri = { version = "2.11.0", features = [
+tauri = { version = "2.11.5", features = [
   "macos-private-api",
   "image-png",
   "devtools",
