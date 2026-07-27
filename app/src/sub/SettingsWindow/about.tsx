@@ -28,7 +28,7 @@ export default function AboutTab() {
   }, [logoClickCount]);
 
   return (
-    <div className="items-between mx-auto flex h-full w-full max-w-1/2 flex-col justify-center gap-4 text-white">
+    <div className="items-between text-foreground mx-auto flex h-full w-full max-w-1/2 flex-col justify-center gap-4">
       <img src={logoUrl} alt="Project Graph Logo" className="absolute inset-0 -z-10 size-full blur-[150px]" />
       <img
         src={logoUrl}
@@ -46,7 +46,7 @@ export default function AboutTab() {
               href="https://graphif.dev/docs/app/misc/history"
               target="_blank"
               rel="noopener noreferrer"
-              className="border-border inline-flex cursor-pointer items-center rounded-md border bg-gray-800 px-2 py-1 text-xl hover:underline"
+              className="border-border bg-muted inline-flex cursor-pointer items-center rounded-md border px-2 py-1 text-xl hover:underline"
             >
               v{appVersion}
             </a>
