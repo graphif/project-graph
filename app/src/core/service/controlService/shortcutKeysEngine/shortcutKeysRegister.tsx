@@ -296,8 +296,8 @@ const whenKeyboardOnlyOpen: KeyBindWhen = (project) => !!project && project.keyb
 const whenHasSelectedStageObjectsOrSelectionRectangle: KeyBindWhen = (project) =>
   !!project &&
   (project.stageManager.getSelectedStageObjects().length > 0 || project.rectangleSelect.getRectangle() !== null);
-const whenHasSelectedEntities: KeyBindWhen = (project) =>
-  !!project && project.stageManager.getSelectedEntities().length > 0;
+// const whenHasSelectedEntities: KeyBindWhen = (project) =>
+//   !!project && project.stageManager.getSelectedEntities().length > 0;
 const whenHasMultipleSelectedEntities: KeyBindWhen = (project) =>
   !!project && project.stageManager.getSelectedEntities().length >= 2;
 const whenHasMultipleSelectedEntitiesOrOneSection: KeyBindWhen = (project) =>
@@ -1366,7 +1366,7 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "exportSelectedTreeStructureToPlainText",
     defaultKey: "S-e t p",
     icon: Type,
-    when: whenHasSelectedTextNodes,
+    when: whenHasProject,
     onPress: () => {
       const tab = store.get(activeTabAtom);
       const activeProject = tab instanceof Project ? tab : undefined;
@@ -1382,7 +1382,7 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "exportSelectedTreeStructureToMarkdown",
     defaultKey: "S-e t m",
     icon: Type,
-    when: whenHasSelectedTextNodes,
+    when: whenHasProject,
     onPress: () => {
       const tab = store.get(activeTabAtom);
       const activeProject = tab instanceof Project ? tab : undefined;
@@ -1398,7 +1398,7 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "exportSelectedNetStructureToPlainText",
     defaultKey: "S-e n p",
     icon: Network,
-    when: whenHasSelectedEntities,
+    when: whenHasProject,
     onPress: () => {
       const tab = store.get(activeTabAtom);
       const activeProject = tab instanceof Project ? tab : undefined;
@@ -1408,6 +1408,10 @@ export const allKeyBinds: KeyBindItem[] = [
       }
       const entities = activeProject.stageManager.getEntities();
       const selectedEntities = entities.filter((entity) => entity.isSelected);
+      if (selectedEntities.length === 0) {
+        toast.warning("没有选中节点");
+        return;
+      }
       const result = activeProject.stageExport.getPlainTextByEntities(selectedEntities);
       writeText(result);
       toast.success("已将选中的网状结构纯文本格式复制到粘贴板");
@@ -1417,7 +1421,7 @@ export const allKeyBinds: KeyBindItem[] = [
     id: "exportSelectedNetStructureToMermaid",
     defaultKey: "S-e n m",
     icon: Network,
-    when: whenHasSelectedEntities,
+    when: whenHasProject,
     onPress: () => {
       const tab = store.get(activeTabAtom);
       const activeProject = tab instanceof Project ? tab : undefined;
@@ -1426,6 +1430,10 @@ export const allKeyBinds: KeyBindItem[] = [
         return;
       }
       const selectedEntities = activeProject.stageManager.getSelectedEntities();
+      if (selectedEntities.length === 0) {
+        toast.warning("没有选中节点");
+        return;
+      }
       const result = activeProject.stageExport.getMermaidTextByEntities(selectedEntities);
       writeText(result);
       toast.success("已将选中的网状结构mermaid格式复制到粘贴板");
