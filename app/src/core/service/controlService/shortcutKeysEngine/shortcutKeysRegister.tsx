@@ -1294,7 +1294,7 @@ export const allKeyBinds: KeyBindItem[] = [
       const activeTab = store.get(activeTabAtom);
       const activeIndex = tabs.findIndex((t) => t === activeTab);
       const nextIndex = (activeIndex + 1) % tabs.length;
-      store.set(activeTabAtom, tabs[nextIndex]);
+      TabWorkspace.focus(tabs[nextIndex].id);
     },
   },
   {
@@ -1314,7 +1314,7 @@ export const allKeyBinds: KeyBindItem[] = [
         return ((n % m) + m) % m;
       };
       const nextIndex = mod(activeIndex - 1, tabs.length);
-      store.set(activeTabAtom, tabs[nextIndex]);
+      TabWorkspace.focus(tabs[nextIndex].id);
     },
   },
   {
