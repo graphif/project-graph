@@ -1825,10 +1825,14 @@ keyBinds:
       Karena garis saat ini hanya dapat melakukan banyak-ke-satu sekaligus.
   setSelectedEdgesToDashed:
     title: Ubah Garis yang Dipilih Menjadi Putus-Putus
-    description: Mengatur tipe garis yang dipilih menjadi putus-putus
+    description: |
+      Mengatur tipe garis yang dipilih menjadi putus-putus
+      Catatan tombol pintas default: Shift+T, E, D. T=Type (tipe garis), E=Edge (garis), D=Dashed (putus-putus)
   setSelectedEdgesToSolid:
     title: Ubah Garis yang Dipilih Menjadi Solid
-    description: Mengatur tipe garis yang dipilih menjadi solid
+    description: |
+      Mengatur tipe garis yang dipilih menjadi solid
+      Catatan tombol pintas default: Shift+T, E, S. T=Type (tipe garis), E=Edge (garis), S=Solid (garis penuh)
   setSelectedEdgesArrowDefault:
     title: Atur Panah ke Gaya Default
     description: Mengatur panah garis yang dipilih ke gaya ekor walet default
@@ -1846,10 +1850,16 @@ keyBinds:
     description: Mengatur ekor garis yang dipilih ke berlian terisi, umum digunakan untuk komposisi UML
   switchEdgeToUndirectedEdge:
     title: Ubah Garis Berarah Menjadi Garis Tak Berarah
+    description: |
+      Catatan tombol pintas default: E, T, U. E=Edge (garis), T=To (menjadi), U=Undirected (tak berarah)
   switchEdgeToArcEdge:
     title: Ubah Garis Berarah Menjadi Garis Lengkung
+    description: |
+      Catatan tombol pintas default: E, T, A. E=Edge (garis), T=To (menjadi), A=Arc (lengkung)
   switchUndirectedEdgeToEdge:
     title: Ubah Garis Tak Berarah Menjadi Garis Berarah
+    description: |
+      Catatan tombol pintas default: U, T, E. U=Undirected (tak berarah), T=To (menjadi), E=Edge (garis berarah)
   createUndirectedEdgeFromEntities:
     title: Buat Garis Tak Berarah antar Entitas yang Dipilih
     description: |
@@ -1907,6 +1917,7 @@ keyBinds:
       Tekan e lalu tab untuk menumbuhkan node secara instan dan letakkan di kanan node yang dipilih.
       Pertama masuk ke mode edit teks edge, lalu otomatis masuk ke mode edit teks node baru.
       Jika terhubung ke node yang sudah ada (jarum benang), hanya buat edge dan masuk ke mode edit teks edge.
+      Catatan tombol pintas default: Tekan e lalu tab. Di sini e singkatan dari Edge (sisi/tepi)
   generateNodeTreeWithBroadMode:
     title: Tumbuhkan Node Selevel
     description: |
@@ -2363,7 +2374,9 @@ keyBinds:
 
   toggleTextNodeSizeMode:
     title: Alihkan Mode Penyesuaian Ukuran Node Teks yang Dipilih
-    description: "Hanya berlaku untuk node teks, mode auto: input teks tidak dapat memisah baris otomatis, mode manual: lebar adalah lebar kotak, lebihan lebar memisah baris otomatis"
+    description: |
+      Hanya berlaku untuk node teks, mode auto: input teks tidak dapat memisah baris otomatis, mode manual: lebar adalah lebar kotak, lebihan lebar memisah baris otomatis
+      Catatan tombol pintas default: t singkatan dari transform (transformasi/penyesuaian)
   decreaseFontSize:
     title: Kurangi Ukuran Font Node Teks yang Dipilih
     description: "Hanya berlaku untuk node teks, tekan Ctrl+- untuk mengurangi ukuran font node teks yang dipilih"
@@ -2433,21 +2446,25 @@ keyBinds:
     description: |
       Ekspor struktur pohon yang dipilih ke format teks murni dengan indentasi dan salin ke clipboard
       Perlu memilih satu node teks sebagai akar pohon terlebih dahulu
+      Catatan tombol pintas default: shift e di mana e singkatan dari Export (ekspor), t singkatan dari Tree (struktur pohon), p singkatan dari Plain text (teks murni)
   exportSelectedTreeStructureToMarkdown:
     title: Ekspor Struktur Pohon yang Dipilih ke Markdown
     description: |
       Ekspor struktur pohon yang dipilih ke format Markdown dan salin ke clipboard
       Perlu memilih satu node teks sebagai akar pohon terlebih dahulu
+      Catatan tombol pintas default: shift e di mana e singkatan dari Export (ekspor), t singkatan dari Tree (struktur pohon), m singkatan dari Markdown
   exportSelectedNetStructureToPlainText:
     title: Ekspor Struktur Jaringan yang Dipilih ke Teks Murni
     description: |
       Ekspor struktur jaringan yang dipilih ke format teks murni dan salin ke clipboard
       Mengekspor entitas yang dipilih dan hubungan di antara mereka
+      Catatan tombol pintas default: shift e di mana e singkatan dari Export (ekspor), n singkatan dari Network (jaringan), p singkatan dari Plain text (teks murni)
   exportSelectedNetStructureToMermaid:
     title: Ekspor Struktur Jaringan yang Dipilih ke Mermaid
     description: |
       Ekspor struktur jaringan yang dipilih ke format diagram Mermaid dan salin ke clipboard
       Dapat ditempel di editor yang mendukung Mermaid
+      Catatan tombol pintas default: shift e di mana e singkatan dari Export (ekspor), n singkatan dari Network (jaringan), m singkatan dari Mermaid
 
 sounds:
   soundEnabled: Sakelar Suara

@@ -1765,10 +1765,14 @@ keyBinds:
       因為目前的連線只能一次性做到多連一。'
   setSelectedEdgesToDashed:
     title: 將選中的邊切換為虛線
-    description: 將當前選中的連線的線型設置為虛線
+    description: |
+      將當前選中的連線的線型設置為虛線
+      預設快捷鍵說明：Shift+T, E, D。T=Type（線型），E=Edge（連線），D=Dashed（虛線）
   setSelectedEdgesToSolid:
     title: 將選中的邊切換為實線
-    description: 將當前選中的連線的線型設置為實線
+    description: |
+      將當前選中的連線的線型設置為實線
+      預設快捷鍵說明：Shift+T, E, S。T=Type（線型），E=Edge（連線），S=Solid（實線）
   setSelectedEdgesArrowDefault:
     title: 設置箭頭為預設樣式
     description: 將選中連線的箭頭設置為預設的燕尾箭頭
@@ -1786,10 +1790,16 @@ keyBinds:
     description: 將選中連線的尾部設置為實心菱形，常用於 UML 組合關係
   switchEdgeToUndirectedEdge:
     title: 將有向連線轉化為無向連線
+    description: |
+      預設快捷鍵說明：E, T, U。E=Edge（連線），T=To（轉換為），U=Undirected（無向）
   switchEdgeToArcEdge:
     title: 將有向連線轉化為弧形連線
+    description: |
+      預設快捷鍵說明：E, T, A。E=Edge（連線），T=To（轉換為），A=Arc（弧形）
   switchUndirectedEdgeToEdge:
     title: 將無向連線轉化為有向連線
+    description: |
+      預設快捷鍵說明：U, T, E。U=Undirected（無向），T=To（轉換為），E=Edge（有向連線）
   createUndirectedEdgeFromEntities:
     title: 選取的實體之間建立無向連線
     description: 按下後，選取的兩個或多個實體之間會建立一條無向連線
@@ -1847,7 +1857,8 @@ keyBinds:
     title: 生長子層節點並編輯連線文字
     description: '按下後，先按e再按tab，瞬間生長一個節點並放置在當前選取節點的右側
       先進入連線文字的編輯狀態，編輯完成後自動進入新節點的文字編輯狀態
-      如果是穿針連接已有節點，則只建立連線並進入連線文字編輯狀態'
+      如果是穿針連接已有節點，則只建立連線並進入連線文字編輯狀態
+      預設快捷鍵說明：先按一下e，再按一下tab。這裡的e表示Edge，邊'
   generateNodeTreeWithBroadMode:
     title: 生長同級節點
     description: '按下後，瞬間生長一個同級節點並放置在目前選取節點的下方
@@ -2322,7 +2333,9 @@ keyBinds:
     description: 將選取的節點從樹中摘出來，並重新連接前後節點
   toggleTextNodeSizeMode:
     title: 將選取的文字節點切換大小調整模式
-    description: 僅對文字節點生效，auto模式：輸入文字不能自動換行，manual模式：寬度為框的寬度，寬度超出自動換行
+    description: |
+      僅對文字節點生效，auto模式：輸入文字不能自動換行，manual模式：寬度為框的寬度，寬度超出自動換行
+      預設快捷鍵說明：t代表transform（變換/調整）
   decreaseFontSize:
     title: 减小選取的文字節點字體大小
     description: 僅對文字節點生效，按下Ctrl+-减小選取的文字節點字體大小

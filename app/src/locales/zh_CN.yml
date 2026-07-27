@@ -1598,6 +1598,7 @@ keyBinds:
       按下后，先按e再按tab，瞬间生长一个节点并放置在当前选中节点的右侧
       先进入连线文字的编辑状态，编辑完成后自动进入新节点的文字编辑状态
       如果是穿针连接已有节点，则只创建连线并进入连线文字编辑状态
+      默认快捷键说明：先按一下e，再按一下tab。这里的e表示Edge，边
   generateNodeTreeWithBroadMode:
     title: 生长同级节点
     description: |
@@ -1611,6 +1612,7 @@ keyBinds:
       此时，按住”I J K L”键自由调整生长位置
       松开此键，完成节点创建
       使用此功能前先确保已选中一个节点
+      默认快捷键说明：I J K L 是类 拳皇风格的方向键，I=上、J=左、K=下、L=右，与右手食指到小指的键位对应
   generateNodeGraphMoveUp:
     title: 自由生长节点——向上移动
     description: |
@@ -2049,13 +2051,19 @@ keyBinds:
     title: 递归紧密堆积
   adjustSelectedTextNodeWidthMin:
     title: 统一宽度为最小值
-    description: 仅对文本节点生效，将所有选中节点的宽度统一为最小值（快捷键：1→3→2）
+    description: |
+      仅对文本节点生效，将所有选中节点的宽度统一为最小值（快捷键：1→3→2）
+      默认快捷键说明：数字键盘上1在左、3在右、2在中间，先按两端再按中间；1最小，所以取最小值
   adjustSelectedTextNodeWidthMax:
     title: 统一宽度为最大值
-    description: 仅对文本节点生效，将所有选中节点的宽度统一为最大值（快捷键：7→9→8）
+    description: |
+      仅对文本节点生效，将所有选中节点的宽度统一为最大值（快捷键：7→9→8）
+      默认快捷键说明：数字键盘上7在左、9在右、8在中间，先按两端再按中间；9最大，所以取最大值
   adjustSelectedTextNodeWidthAverage:
     title: 统一宽度为平均值
-    description: 仅对文本节点生效，将所有选中节点的宽度统一为平均值（快捷键：4→6→5）
+    description: |
+      仅对文本节点生效，将所有选中节点的宽度统一为平均值（快捷键：4→6→5）
+      默认快捷键说明：数字键盘上4在左、6在右、5在中间，先按两端再按中间；5居中，所以取平均值
   connectAllSelectedEntities:
     title: 将所有选中实体进行全连接
     description: 用于特殊教学场景或图论教学，“- -”开头表示连线相关
@@ -2070,10 +2078,14 @@ keyBinds:
     description: 仅选择所有视野内的连线
   setSelectedEdgesToDashed:
     title: 将选中的边切换为虚线
-    description: 将当前选中的连线的线型设置为虚线
+    description: |
+      将当前选中的连线的线型设置为虚线
+      默认快捷键说明：Shift+T, E, D。T=Type（线型），E=Edge（连线），D=Dashed（虚线）
   setSelectedEdgesToSolid:
     title: 将选中的边切换为实线
-    description: 将当前选中的连线的线型设置为实线
+    description: |
+      将当前选中的连线的线型设置为实线
+      默认快捷键说明：Shift+T, E, S。T=Type（线型），E=Edge（连线），S=Solid（实线）
   colorSelectedRed:
     title: 将所有选中物体染色为纯红色
     description: 具体为：(239, 68, 68)，仅作快速标注用
@@ -2109,7 +2121,9 @@ keyBinds:
 
   toggleTextNodeSizeMode:
     title: 将选中的文本节点，切换大小调整模式
-    description: 仅对文本节点生效，auto模式：输入文字不能自动换行，manual模式：宽度为框的宽度，宽度超出自动换行
+    description: |
+      仅对文本节点生效，auto模式：输入文字不能自动换行，manual模式：宽度为框的宽度，宽度超出自动换行
+      默认快捷键说明：t代表transform（变换/调整）
   decreaseFontSize:
     title: 减小选中的文本节点字体大小
     description: 仅对文本节点生效，按下Ctrl+-减小选中的文本节点字体大小
@@ -2130,10 +2144,14 @@ keyBinds:
     description: 仅对文本节点生效，顺序按从上到下排列，节点的位置按节点矩形左上角顶点坐标为准
   swapTextAndDetails:
     title: 详略交换
-    description: 将所有选中的文本节点的详细信息和实际内容进行交换，连按5次e，主要用于直接粘贴进来的文本内容想写入详细信息
+    description: |
+      将所有选中的文本节点的详细信息和实际内容进行交换，连按5次e，主要用于直接粘贴进来的文本内容想写入详细信息
+      默认快捷键说明：e表示Exchange（交换），连按5次是为了避免误触，因为单个字母e是英文单词中出现频率最高的字母
   createTwinTextNode:
     title: 创建孪生节点
-    description: 为所有选中的文本节点分别创建孪生节点，新节点与原节点内容同步，按 Shift+Y 触发
+    description: |
+      为所有选中的文本节点分别创建孪生节点，新节点与原节点内容同步，按 Shift+Y 触发
+      默认快捷键说明：Y 形状像一个分叉，象征一个节点分裂成两个孪生节点
   reverseImageColors:
     title: 反转图片颜色
     description: 反转选中图片的颜色（将白色背景变为黑色，反之亦然）
@@ -2179,21 +2197,25 @@ keyBinds:
     description: |
       将选中的树形结构导出为纯文本缩进格式并复制到剪贴板
       需要先选中一个文本节点作为树的根节点
+      默认快捷键说明：shift e 中的 e 表示 Export（导出），t 表示 Tree（树状结构），p 表示 Plain text（纯文本）
   exportSelectedTreeStructureToMarkdown:
     title: 导出选中树形结构为Markdown
     description: |
       将选中的树形结构导出为Markdown格式并复制到剪贴板
       需要先选中一个文本节点作为树的根节点
+      默认快捷键说明：shift e 中的 e 表示 Export（导出），t 表示 Tree（树状结构），m 表示 Markdown
   exportSelectedNetStructureToPlainText:
     title: 导出选中网状结构为纯文本
     description: |
       将选中的网状结构导出为纯文本格式并复制到剪贴板
       导出选中实体及其之间的关系
+      默认快捷键说明：shift e 中的 e 表示 Export（导出），n 表示 Network（网状结构），p 表示 Plain text（纯文本）
   exportSelectedNetStructureToMermaid:
     title: 导出选中网状结构为Mermaid
     description: |
       将选中的网状结构导出为Mermaid图表格式并复制到剪贴板
       可用于在支持Mermaid的编辑器中粘贴显示
+      默认快捷键说明：shift e 中的 e 表示 Export（导出），n 表示 Network（网状结构），m 表示 Mermaid
   close:
     title: 关闭
   createMTUEdgeConvex:
@@ -2222,6 +2244,8 @@ keyBinds:
     title: 重置涂鸦颜色
   setSelectedEdgesToDouble:
     title: 设置选中连线为双线
+    description: |
+      默认快捷键说明：Shift+T, E, B。T=Type（线型），E=Edge（连线），B=Both（双线，两条线）
   setSelectedEdgesArrowDefault:
     title: 设置箭头为默认样式
     description: 将选中连线的箭头设置为默认的燕尾箭头
@@ -2239,10 +2263,16 @@ keyBinds:
     description: 将选中连线的尾部设置为实心菱形，常用于 UML 组合关系
   switchEdgeToUndirectedEdge:
     title: 将有向连线转化为无向连线
+    description: |
+      默认快捷键说明：E, T, U。E=Edge（连线），T=To（转换为），U=Undirected（无向）
   switchEdgeToArcEdge:
     title: 将有向连线转化为弧形连线
+    description: |
+      默认快捷键说明：E, T, A。E=Edge（连线），T=To（转换为），A=Arc（弧形）
   switchUndirectedEdgeToEdge:
     title: 将无向连线转化为有向连线
+    description: |
+      默认快捷键说明：U, T, E。U=Undirected（无向），T=To（转换为），E=Edge（有向连线）
   setSelectedEdgeSourceConnectLocationUp:
     title: 设置起点连接位置为上方
   setSelectedEdgeSourceConnectLocationLeft:
@@ -2302,7 +2332,9 @@ keyBinds:
     description: 视野中心移动到引用块指向的原节点
   switchStealthMode:
     title: 切换潜行模式
-    description: 在中心显示遮罩，用于记忆力训练
+    description: |
+      在中心显示遮罩，用于记忆力训练
+      默认快捷键说明：jackal为豺狼的英文，在美剧《豺狼的日子》中，主角是一个狙击手，开启这个快捷键可以看到狙击镜
   removeFirstCharFromSelectedTextNodes:
     title: 首字消除
     description: 移除所有选中文本节点的第一个字符

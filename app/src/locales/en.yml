@@ -1491,10 +1491,14 @@ keyBinds:
       Since connections can currently only be made one-to-many.
   setSelectedEdgesToDashed:
     title: Set Selected Edges to Dashed
-    description: Set the line type of selected edges to dashed
+    description: |
+      Set the line type of selected edges to dashed
+      Default shortcut note: Shift+T, E, D. T=Type (line type), E=Edge, D=Dashed
   setSelectedEdgesToSolid:
     title: Set Selected Edges to Solid
-    description: Set the line type of selected edges to solid
+    description: |
+      Set the line type of selected edges to solid
+      Default shortcut note: Shift+T, E, S. T=Type (line type), E=Edge, S=Solid
   setSelectedEdgesArrowDefault:
     title: Set Arrow to Default Style
     description: Set the arrow of selected edges to the default swallow-tail style
@@ -1512,10 +1516,16 @@ keyBinds:
     description: Set the tail of selected edges to a filled diamond, commonly used for UML composition
   switchEdgeToUndirectedEdge:
     title: Convert Directed Edge to Undirected Edge
+    description: |
+      Default shortcut note: E, T, U. E=Edge, T=To (convert to), U=Undirected
   switchEdgeToArcEdge:
     title: Convert Directed Edge to Arc Edge
+    description: |
+      Default shortcut note: E, T, A. E=Edge, T=To (convert to), A=Arc
   switchUndirectedEdgeToEdge:
     title: Convert Undirected Edge to Directed Edge
+    description: |
+      Default shortcut note: U, T, E. U=Undirected, T=To (convert to), E=Edge (directed)
   packEntityToSection:
     title: Pack Selected Entities into Section Box
     description: |
@@ -1579,6 +1589,7 @@ keyBinds:
       Press e then tab to instantly grow a node and place it to the right of the currently selected node.
       First enters the edge text editing mode, then automatically enters the new node's text editing mode.
       If connected to an existing node (thread needle), only creates the edge and enters edge text editing mode.
+      Default shortcut note: Press e then tab. Here e stands for Edge
   generateNodeTreeWithBroadMode:
     title: Grow Node in Brother Mode
     description: |
@@ -1919,21 +1930,25 @@ keyBinds:
     description: |
       Export the selected tree structure as plain text indentation format and copy to clipboard
       Need to select a text node as the root of the tree first
+      Default shortcut note: shift e where e stands for Export, t stands for Tree, p stands for Plain text
   exportSelectedTreeStructureToMarkdown:
     title: Export Selected Tree Structure to Markdown
     description: |
       Export the selected tree structure as Markdown format and copy to clipboard
       Need to select a text node as the root of the tree first
+      Default shortcut note: shift e where e stands for Export, t stands for Tree, m stands for Markdown
   exportSelectedNetStructureToPlainText:
     title: Export Selected Net Structure to Plain Text
     description: |
       Export the selected net structure as plain text format and copy to clipboard
       Exports selected entities and their relationships
+      Default shortcut note: shift e where e stands for Export, n stands for Network, p stands for Plain text
   exportSelectedNetStructureToMermaid:
     title: Export Selected Net Structure to Mermaid
     description: |
       Export the selected net structure as Mermaid diagram format and copy to clipboard
       Can be pasted in editors that support Mermaid
+      Default shortcut note: shift e where e stands for Export, n stands for Network, m stands for Mermaid
   
 effects:
   RectangleLittleNoteEffect:

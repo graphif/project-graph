@@ -1598,6 +1598,7 @@ keyBinds:
       按下後，先按e再按tab，瞬間生長一個節點並放置在當前選中節點的右側
       先進入連線文字的編輯狀態，編輯完成後自動進入新節點的文字編輯狀態
       如果是穿針連接已有節點，則只創建連線並進入連線文字編輯狀態
+      預設快捷鍵說明：先按一下e，再按一下tab。這裡的e表示Edge，邊
   generateNodeTreeWithBroadMode:
     title: 生長同級節點
     description: |
@@ -2070,10 +2071,14 @@ keyBinds:
     description: 僅選擇所有視野內的連線
   setSelectedEdgesToDashed:
     title: 將選中的邊切換為虛線
-    description: 將當前選中的連線的線型設置為虛線
+    description: |
+      將當前選中的連線的線型設置為虛線
+      預設快捷鍵說明：Shift+T, E, D。T=Type（線型），E=Edge（連線），D=Dashed（虛線）
   setSelectedEdgesToSolid:
     title: 將選中的邊切換為實線
-    description: 將當前選中的連線的線型設置為實線
+    description: |
+      將當前選中的連線的線型設置為實線
+      預設快捷鍵說明：Shift+T, E, S。T=Type（線型），E=Edge（連線），S=Solid（實線）
   colorSelectedRed:
     title: 將所有選中物體染色為純紅色
     description: 具體為：(239, 68, 68)，僅作快速標註用
@@ -2109,7 +2114,9 @@ keyBinds:
 
   toggleTextNodeSizeMode:
     title: 將選中的文本節點，切換大小調整模式
-    description: 僅對文本節點生效，auto模式：輸入文字不能自動換行，manual模式：寬度為框的寬度，寬度超出自動換行
+    description: |
+      僅對文本節點生效，auto模式：輸入文字不能自動換行，manual模式：寬度為框的寬度，寬度超出自動換行
+      預設快捷鍵說明：t代表transform（變換/調整）
   decreaseFontSize:
     title: 減小選中的文本節點字體大小
     description: 僅對文本節點生效，按下Ctrl+-減小選中的文本節點字體大小
@@ -2179,21 +2186,25 @@ keyBinds:
     description: |
       將選中的樹形結構導出為純文本縮進格式並複製到剪貼板
       需要先選中一個文本節點作為樹的根節點
+      預設快捷鍵說明：shift e 中的 e 表示 Export（導出），t 表示 Tree（樹狀結構），p 表示 Plain text（純文本）
   exportSelectedTreeStructureToMarkdown:
     title: 導出選中樹形結構為Markdown
     description: |
       將選中的樹形結構導出為Markdown格式並複製到剪貼板
       需要先選中一個文本節點作為樹的根節點
+      預設快捷鍵說明：shift e 中的 e 表示 Export（導出），t 表示 Tree（樹狀結構），m 表示 Markdown
   exportSelectedNetStructureToPlainText:
     title: 導出選中網狀結構為純文本
     description: |
       將選中的網狀結構導出為純文本格式並複製到剪貼板
       導出選中實體及其之間的關係
+      預設快捷鍵說明：shift e 中的 e 表示 Export（導出），n 表示 Network（網狀結構），p 表示 Plain text（純文本）
   exportSelectedNetStructureToMermaid:
     title: 導出選中網狀結構為Mermaid
     description: |
       將選中的網狀結構導出為Mermaid圖表格式並複製到剪貼板
       可用於在支持Mermaid的編輯器中粘貼顯示
+      預設快捷鍵說明：shift e 中的 e 表示 Export（導出），n 表示 Network（網狀結構），m 表示 Mermaid
   close:
     title: 關閉
   createMTUEdgeConvex:
@@ -2222,6 +2233,8 @@ keyBinds:
     title: 重置塗鴉顏色
   setSelectedEdgesToDouble:
     title: 設置選中連線為雙線
+    description: |
+      預設快捷鍵說明：Shift+T, E, B。T=Type（線型），E=Edge（連線），B=Both（雙線，兩條線）
   setSelectedEdgesArrowDefault:
     title: 設置箭頭為默認樣式
     description: 將選中連線的箭頭設置為默認的燕尾箭頭
@@ -2239,10 +2252,16 @@ keyBinds:
     description: 將選中連線的尾部設置為實心菱形，常用於 UML 組合關係
   switchEdgeToUndirectedEdge:
     title: 將有向連線轉化為無向連線
+    description: |
+      預設快捷鍵說明：E, T, U。E=Edge（連線），T=To（轉換為），U=Undirected（無向）
   switchEdgeToArcEdge:
     title: 將有向連線轉化為弧形連線
+    description: |
+      預設快捷鍵說明：E, T, A。E=Edge（連線），T=To（轉換為），A=Arc（弧形）
   switchUndirectedEdgeToEdge:
     title: 將無向連線轉化為有向連線
+    description: |
+      預設快捷鍵說明：U, T, E。U=Undirected（無向），T=To（轉換為），E=Edge（有向連線）
   setSelectedEdgeSourceConnectLocationUp:
     title: 設置起點連接位置為上方
   setSelectedEdgeSourceConnectLocationLeft:
@@ -2302,7 +2321,9 @@ keyBinds:
     description: 視野中心移動到引用塊指向的原節點
   switchStealthMode:
     title: 切換潛行模式
-    description: 在中心顯示遮罩，用於記憶力訓練
+    description: |
+      在中心顯示遮罩，用於記憶力訓練
+      預設快捷鍵說明：jackal為豺狼的英文，在美劇《豺狼的日子》中，主角是一個狙擊手，開啟這個快捷鍵可以看到狙擊鏡
   removeFirstCharFromSelectedTextNodes:
     title: 首字消除
     description: 移除所有選中文本節點的第一個字符
