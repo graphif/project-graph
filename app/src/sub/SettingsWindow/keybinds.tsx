@@ -26,6 +26,7 @@ import Fuse from "fuse.js";
 import { AlertCircle, AlignStartVertical, Focus, LineSquiggle, TextCursorInput } from "lucide-react";
 
 import { transEmacsKeyWinToMac } from "@/utils/emacs";
+import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
 import { isMac } from "@/utils/platform";
 import { createStore } from "@/utils/store";
 import {
@@ -264,10 +265,7 @@ export default function KeyBindsPage() {
                       }
                       setData((data) => data.map((item) => (item.id === id ? { ...item, key: defaultValue } : item)));
                       KeyBindsUI.changeOneUIKeyBind(id, defaultValue);
-                      Dialog.confirm(
-                        `已重置为 '${defaultValue}'，但需要刷新页面后生效`,
-                        "切换左侧选项卡即可更新页面显示，看到效果。",
-                      );
+                      Dialog.confirm(`已重置为 '${formatKeyBindSequenceToString(defaultValue)}'`, "");
                     }
                   }}
                 />
@@ -277,6 +275,7 @@ export default function KeyBindsPage() {
               </TooltipContent>
             </Tooltip>
             <KeyBind
+              key={keyBindData?.key}
               defaultValue={keyBindData?.key}
               isContinuous={keyBind?.isContinuous}
               onChange={(value) => {
