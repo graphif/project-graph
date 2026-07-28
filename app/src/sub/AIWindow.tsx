@@ -47,6 +47,7 @@ import { createSubWindow } from "@/core/subWindowOpen";
 import { TabWorkspace } from "@/core/TabWorkspace";
 import { activeResourceTabAtom } from "@/state";
 import { cn } from "@/utils/cn";
+import { AIRequestTraceView } from "@/sub/AIRequestTraceView";
 import { useChat } from "@ai-sdk/react";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -494,6 +495,7 @@ function AIChatPanel({
   const [inputValue, setInputValue] = useState("");
   const messagesElRef = useRef<HTMLDivElement>(null);
   const [showTokenCount] = Settings.use("aiShowTokenCount");
+  const [showDebug] = Settings.use("showDebug");
   const [autoApproveMcpTools, setAutoApproveMcpTools] = Settings.use("aiAutoApproveMcpTools");
   const autoApproveMcpToolsId = useId();
   const [apiBaseUrl] = Settings.use("aiApiBaseUrl");
@@ -635,7 +637,9 @@ function AIChatPanel({
       references.getOrCreateRef(object),
     );
     const prefix = selectedRefs.length > 0 ? `[selected: ${selectedRefs.join(" ")}]\n` : "";
-    sendMessage({ text: prefix + text });
+    const messageText = prefix + text;
+    project.aiEngine.getRequestTraceBuffer().capturePendingInput(session.id, messageText);
+    sendMessage({ text: messageText });
     setInputValue("");
   }
 
@@ -802,6 +806,9 @@ function AIChatPanel({
           state={contextWindowState}
           sessionTotalTokens={tokenUsage.totalTokens}
         />
+        {showDebug && (
+          <AIRequestTraceView buffer={project.aiEngine.getRequestTraceBuffer()} activeSessionId={session.id} />
+        )}
       </div>
     </div>
   );

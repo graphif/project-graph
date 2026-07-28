@@ -11,6 +11,10 @@ import { AITools } from "@/core/service/dataManageService/aiEngine/AITools";
 import { AIMCPStore, materializeMCPServers, prepareMCPTools } from "@/core/service/dataManageService/aiEngine/AIMCP";
 import { AIObjectReferenceRegistry } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
 import {
+  AIRequestTraceBuffer,
+  type AIRequestTraceCallKind,
+} from "@/core/service/dataManageService/aiEngine/AIRequestTrace";
+import {
   buildSkillSystemContext,
   filterActivatedSkillSnapshots,
 } from "@/core/service/dataManageService/aiEngine/AISkillSession";
@@ -29,6 +33,7 @@ import {
   stepCountIs,
   streamText,
   type UIMessage,
+  wrapLanguageModel,
 } from "ai";
 
 const SYSTEM_PROMPT =
@@ -45,10 +50,15 @@ export type AIMessageMetadata = {
 @service("aiEngine")
 export class AIEngine {
   private references: AIObjectReferenceRegistry | undefined;
+  private readonly requestTraceBuffer = new AIRequestTraceBuffer(20);
 
   getProjectReferences(project: Project) {
     this.references ??= new AIObjectReferenceRegistry(project);
     return this.references;
+  }
+
+  getRequestTraceBuffer() {
+    return this.requestTraceBuffer;
   }
 
   createConversation(
@@ -71,32 +81,78 @@ export class AIEngine {
     return async (_url, options) => {
       const body = await this.readRequestBody(options?.body);
       const messages = Array.isArray(body.messages) ? (body.messages as UIMessage<AIMessageMetadata>[]) : [];
+      const sessionId = typeof body.id === "string" && body.id.length > 0 ? body.id : undefined;
+      const modelId = Settings.aiModel;
+      const traceRunId = this.requestTraceBuffer.startRun({
+        sessionId,
+        model: modelId,
+        messages,
+      });
+      const pendingTraceCallIds: number[] = [];
+      let traceCallKind: AIRequestTraceCallKind = "agent";
 
       const provider = createOpenAICompatible({
         name: "project-graph",
         baseURL: Settings.aiApiBaseUrl,
         apiKey: Settings.aiApiKey || undefined,
         fetch: async (url: any, init: any) => {
-          const response = await fetch(url.toString(), {
-            ...init,
-            headers: {
-              ...init?.headers,
-            },
-            mode: "cors",
-          });
+          const traceCallId = pendingTraceCallIds.shift();
+          const wireRequestId = this.requestTraceBuffer.recordWireRequest(
+            traceRunId,
+            traceCallId,
+            url.toString(),
+            init?.body,
+          );
+          try {
+            const response = await fetch(url.toString(), {
+              ...init,
+              headers: {
+                ...init?.headers,
+              },
+              mode: "cors",
+            });
+            this.requestTraceBuffer.recordWireResponse(traceRunId, wireRequestId, response.status);
 
-          if (!response.ok) {
-            const errorText = await response.text().catch(() => "unknown error");
-            throw new Error(`API 请求失败 (${response.status}): ${errorText}`);
+            if (!response.ok) {
+              const errorText = await response.text().catch(() => "unknown error");
+              throw new Error(`API 请求失败 (${response.status}): ${errorText}`);
+            }
+
+            return response;
+          } catch (error) {
+            this.requestTraceBuffer.recordWireError(traceRunId, wireRequestId, error);
+            throw error;
           }
-
-          return response;
         },
         includeUsage: true,
       });
 
-      const model = provider.chatModel(Settings.aiModel);
-      const sessionId = typeof body.id === "string" && body.id.length > 0 ? body.id : undefined;
+      const model = wrapLanguageModel({
+        model: provider.chatModel(modelId),
+        middleware: {
+          specificationVersion: "v3",
+          wrapGenerate: async ({ doGenerate, params }) => {
+            const callId = this.requestTraceBuffer.recordModelCall(traceRunId, traceCallKind, params);
+            pendingTraceCallIds.push(callId);
+            try {
+              return await doGenerate();
+            } finally {
+              const pendingIndex = pendingTraceCallIds.indexOf(callId);
+              if (pendingIndex >= 0) pendingTraceCallIds.splice(pendingIndex, 1);
+            }
+          },
+          wrapStream: async ({ doStream, params }) => {
+            const callId = this.requestTraceBuffer.recordModelCall(traceRunId, traceCallKind, params);
+            pendingTraceCallIds.push(callId);
+            try {
+              return await doStream();
+            } finally {
+              const pendingIndex = pendingTraceCallIds.indexOf(callId);
+              if (pendingIndex >= 0) pendingTraceCallIds.splice(pendingIndex, 1);
+            }
+          },
+        },
+      });
       const contextWindowTokenLimit = getContextWindowTokenLimit(body.contextWindowTokenLimit);
       let sessionMemory = sessionId
         ? await AIChatSessionStore.getSessionMemory(project.uri.toString(), sessionId)
@@ -111,6 +167,7 @@ export class AIEngine {
         : null;
 
       if (compactionPlan && sessionId) {
+        traceCallKind = "memory-summary";
         const summaryResult = await generateText({
           model,
           system:
@@ -123,6 +180,7 @@ export class AIEngine {
           abortSignal: options?.signal ?? undefined,
           maxRetries: 0,
         });
+        traceCallKind = "agent";
         const summary = summaryResult.text.trim();
         if (!summary) throw new Error("AI 会话记忆压缩未返回内容");
         sessionMemory = {
@@ -160,18 +218,23 @@ export class AIEngine {
           ? `以下是当前会话的压缩记忆，仅用于保持对话连续性。当前用户消息和工具读取到的项目状态优先。\n${sessionMemory.summary}`
           : undefined;
         const system = composeAgentSystemPrompt(SYSTEM_PROMPT, skillContext, memoryContext);
+        const modelMessages = pruneMessages({
+          messages: await convertToModelMessages(workingMessages, {
+            tools,
+            ignoreIncompleteToolCalls: true,
+          }),
+          reasoning: "all",
+        });
+        this.requestTraceBuffer.recordPreparedInput(traceRunId, {
+          system,
+          messages: modelMessages,
+        });
 
         let lastStepUsage: { inputTokens?: number; outputTokens?: number } | undefined;
         const textStream = streamText({
           model,
           system,
-          messages: pruneMessages({
-            messages: await convertToModelMessages(workingMessages, {
-              tools,
-              ignoreIncompleteToolCalls: true,
-            }),
-            reasoning: "all",
-          }),
+          messages: modelMessages,
           tools,
           stopWhen: stepCountIs(8),
           abortSignal: options?.signal ?? undefined,
