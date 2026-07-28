@@ -225,6 +225,7 @@ export const settingsSchema = z.object({
   allowAddCycleEdge: z.boolean().default(false),
   enableDragNodeShakeDetachFromEdge: z.boolean().default(false),
   autoLayoutWhenTreeGenerate: z.boolean().default(true),
+  autoLayoutWhenSectionCollapseToggle: z.boolean().default(false),
   enableTreeGenerateConnectByProbe: z.boolean().default(true),
   treeGenerateInheritParentColor: z.boolean().default(false),
   textNodeAutoFormatTreeWhenInput: z.boolean().default(false),

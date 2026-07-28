@@ -776,6 +776,11 @@ settings:
     description: '開啟後，生長節點時自動更新佈局
 
       此處的生長節點指tab和\鍵生長節點'
+  autoLayoutWhenSectionCollapseToggle:
+    title: 折疊/展開分組框時自動格式化所在節點樹
+    description: '開啟後，折疊或展開分組框時，若該分組框與其他節點有連線，
+
+      則自動觸發其所在節點樹的樹形結構格式化（等同於 Alt+Shift+F）'
   enableTreeGenerateConnectByProbe:
     title: 啟用 Tab 探針連接既有節點
     description: '開啟後，按下 Tab 生長節點前會先沿目前生長方向探測是否命中既有節點。

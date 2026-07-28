@@ -32,6 +32,8 @@ export class SectionPackManager {
       section.isCollapsed = true;
     }
     this.project.stageManager.updateReferences();
+    // 折叠后，对有连线的分组框触发所在节点树的格式化
+    this.autoLayoutConnectedSections();
   }
 
   /**
@@ -64,6 +66,33 @@ export class SectionPackManager {
       section.isCollapsed = false;
     }
     this.project.stageManager.updateReferences();
+    // 展开后，对有连线的分组框触发所在节点树的格式化
+    this.autoLayoutConnectedSections();
+  }
+
+  /**
+   * 对所有选中的、且有连线的分组框，触发其所在节点树的格式化布局。
+   * 用于折叠/展开后自动重排树形结构。
+   */
+  private autoLayoutConnectedSections(): void {
+    if (!Settings.autoLayoutWhenSectionCollapseToggle) {
+      return;
+    }
+    for (const section of this.project.stageManager.getSections()) {
+      if (!section.isSelected) {
+        continue;
+      }
+      const hasEdges =
+        this.project.graphMethods.getIncomingEdges(section).length > 0 ||
+        this.project.graphMethods.getOutgoingEdges(section).length > 0;
+      if (!hasEdges) {
+        continue;
+      }
+      const roots = this.project.graphMethods.getRoots(section, true);
+      if (roots.length === 1) {
+        this.project.autoAlign.autoLayoutSelectedFastTreeMode(roots[0]);
+      }
+    }
   }
 
   switchCollapse(): void {

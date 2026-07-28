@@ -389,6 +389,7 @@ export const categories = {
     ],
     generateNode: [
       "autoLayoutWhenTreeGenerate",
+      "autoLayoutWhenSectionCollapseToggle",
       "enableTreeGenerateConnectByProbe",
       "treeGenerateInheritParentColor",
       "enableTabGenerateNodeInInput",

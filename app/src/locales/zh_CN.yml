@@ -762,6 +762,11 @@ settings:
     description: |
       开启后，生长节点时自动更新布局
       此处的生长节点指tab和\键生长节点
+  autoLayoutWhenSectionCollapseToggle:
+    title: 折叠/展开分组框时自动格式化所在节点树
+    description: |
+      开启后，折叠或展开分组框时，若该分组框与其他节点有连线，
+      则自动触发其所在节点树的树形结构格式化（等同于 Alt+Shift+F）
   enableTreeGenerateConnectByProbe:
     title: 启用 Tab 探针连接已有节点
     description: |

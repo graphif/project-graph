@@ -1000,6 +1000,11 @@ settings:
     description: "After it is turned on, the layout will be automatically updated
       when growing nodes\nThe growing nodes here refer to the tab and \\ key growing
       nodes\n"
+  autoLayoutWhenSectionCollapseToggle:
+    title: Auto-format node tree when toggling section collapse
+    description: |
+      When enabled, collapsing or expanding a section that has edges connected to other nodes
+      will automatically trigger tree layout formatting for its node tree (equivalent to Alt+Shift+F)
   enableTreeGenerateConnectByProbe:
     title: Enable Tab probe connect to existing nodes
     description: |

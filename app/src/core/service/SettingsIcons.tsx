@@ -171,6 +171,7 @@ export const settingsIcons = {
   enableDragEdgeRotateStructure: SplinePointer,
   enableCtrlWheelRotateStructure: RefreshCcw,
   autoLayoutWhenTreeGenerate: ListTree,
+  autoLayoutWhenSectionCollapseToggle: ListTree,
   enableTreeGenerateConnectByProbe: ArrowRightFromLine,
   treeGenerateInheritParentColor: Palette,
   enableTabGenerateNodeInInput: Keyboard,

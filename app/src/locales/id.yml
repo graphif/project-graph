@@ -745,6 +745,11 @@ settings:
     description: |
       Saat diaktifkan, layout akan diperbarui secara otomatis saat node tumbuh
       Pertumbuhan node di sini merujuk pada pertumbuhan node dengan tombol tab dan \
+  autoLayoutWhenSectionCollapseToggle:
+    title: Format otomatis pohon node saat lipat/buka section
+    description: |
+      Saat diaktifkan, melipat atau membuka section yang memiliki koneksi ke node lain
+      akan secara otomatis memicu pemformatan tata letak pohon (setara dengan Alt+Shift+F)
   enableTreeGenerateConnectByProbe:
     title: Aktifkan probe Tab untuk menghubungkan node yang sudah ada
     description: |
