@@ -1658,6 +1658,9 @@ controlSettingsGroup:
   openReferencesWindow:
     title: Open References Manager
     description: Open the references manager window
+  collaborationSub:
+    title: Kolaborasi
+    description: Fitur terkait kolaborasi
   recentFilesSub:
     title: Recent Files
     description: List of recently opened files

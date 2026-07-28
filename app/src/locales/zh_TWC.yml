@@ -1603,6 +1603,9 @@ controlSettingsGroup:
   openReferencesWindow:
     title: 打開引用管理器
     description: 打開引用管理器窗口
+  collaborationSub:
+    title: 協作
+    description: 協作相關功能
   recentFilesSub:
     title: 最近文件
     description: 最近打開的文件列表

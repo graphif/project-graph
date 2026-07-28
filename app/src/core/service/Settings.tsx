@@ -636,10 +636,17 @@ export const settingsSchema = z.object({
           { type: "item", id: "openCustomBackupFolder", icon: "FolderClock" },
           { type: "item", id: "openDefaultBackupFolder", icon: "FolderClock" },
           { type: "separator", id: "sep-file-collab" },
-          { type: "item", id: "startCollaboration", icon: "Users" },
-          { type: "item", id: "joinCollaboration", icon: "UserPlus" },
-          { type: "item", id: "openCollaborationPanel", icon: "UsersRound" },
-          { type: "item", id: "leaveCollaboration", icon: "UserMinus" },
+          {
+            type: "sub",
+            id: "collaborationSub",
+            icon: "Users",
+            children: [
+              { type: "item", id: "startCollaboration", icon: "Users" },
+              { type: "item", id: "joinCollaboration", icon: "UserPlus" },
+              { type: "item", id: "openCollaborationPanel", icon: "UsersRound" },
+              { type: "item", id: "leaveCollaboration", icon: "UserMinus" },
+            ],
+          },
           { type: "separator", id: "sep-file-2" },
           {
             type: "sub",

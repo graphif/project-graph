@@ -3520,6 +3520,13 @@ export const allKeyBinds: KeyBindItem[] = [
   },
   // ===================== 仅作为 sub 菜单的「触发器」存在 =====================
   {
+    id: "collaborationSub",
+    defaultKey: "",
+    icon: Users,
+    when: whenAlways,
+    onPress: () => {},
+  },
+  {
     id: "recentFilesSub",
     defaultKey: "",
     icon: FileClock,

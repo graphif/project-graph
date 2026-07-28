@@ -2583,6 +2583,9 @@ keyBinds:
   openReferencesWindow:
     title: 打开引用管理器
     description: 打开引用管理器窗口
+  collaborationSub:
+    title: 协作
+    description: 协作相关功能
   recentFilesSub:
     title: 最近文件
     description: 最近打开的文件列表
