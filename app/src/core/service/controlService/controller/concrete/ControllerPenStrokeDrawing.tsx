@@ -168,6 +168,7 @@ export class ControllerPenStrokeDrawingClass extends ControllerClass {
         color: this.getCurrentStrokeColor(),
       });
       this.project.stageManager.add(stroke);
+      this.tryAttachStrokeToSection(stroke, new Vector(startX, startY), new Vector(endX, endY));
     } else {
       // 普通笔迹
       const stroke = new PenStroke(this.project, {
@@ -175,6 +176,9 @@ export class ControllerPenStrokeDrawingClass extends ControllerClass {
         color: this.getCurrentStrokeColor(),
       });
       this.project.stageManager.add(stroke);
+      const startPt = this.currentSegments[0].location;
+      const endPt = this.currentSegments[this.currentSegments.length - 1].location;
+      this.tryAttachStrokeToSection(stroke, startPt, endPt);
       this.pendingOCRStrokes.push(stroke);
       this.triggerOCR();
     }
@@ -320,6 +324,24 @@ export class ControllerPenStrokeDrawingClass extends ControllerClass {
       // toast.promise 已展示错误信息
     }
   }, 1000);
+
+  /**
+   * 尝试将涂鸦纳入分组框。
+   * 当涂鸦的起点和终点都位于同一个 Section 内时，将该涂鸦挂入该 Section。
+   */
+  private tryAttachStrokeToSection(stroke: PenStroke, startLocation: Vector, endLocation: Vector) {
+    const startSection = this.project.sectionMethods.getInnermostSectionByLocation(startLocation);
+    if (!startSection) {
+      return;
+    }
+    const endSection = this.project.sectionMethods.getInnermostSectionByLocation(endLocation);
+    if (!endSection) {
+      return;
+    }
+    if (startSection.uuid === endSection.uuid) {
+      this.project.sectionInOutManager.goInSection([stroke], startSection);
+    }
+  }
 
   private releaseMouseAndClear() {
     // 清理
