@@ -8,6 +8,7 @@ import { blobToCompressedDataUrl, prepareImageBlobForImport } from "@/core/servi
 import { calculateImageDisplaySize, createImageNodeFromBlob } from "@/core/service/dataManageService/imageNodeFactory";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import type { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
@@ -174,46 +175,51 @@ export namespace AITools {
     return project.renderer.getCoverWorldRectangle().center.subtract(size.clone().multiply(0.5));
   }
 
+  function resolveEntityRefs(refs: string[], references: AIObjectReferenceRegistry): Entity[] {
+    const entitiesByUuid = new Map<string, Entity>();
+    for (const ref of refs) {
+      const object = references.resolve(ref, "node");
+      if (!(object instanceof Entity)) {
+        throw new Error(`节点引用 ${ref} 未指向可删除的实体`);
+      }
+      entitiesByUuid.set(object.uuid, object);
+    }
+    return [...entitiesByUuid.values()];
+  }
+
+  function deleteEntities(project: Project, entities: Entity[]) {
+    const entityCountBefore = project.stageManager.getEntities().length;
+    const associationCountBefore = project.stageManager.getAssociations().length;
+    project.stageManager.deleteEntities(entities);
+    return {
+      deletedNodeCount: entityCountBefore - project.stageManager.getEntities().length,
+      deletedAssociationCount: associationCountBefore - project.stageManager.getAssociations().length,
+    };
+  }
+
   addTool("get_all_nodes", "获取舞台上所有对象及其项目级引用", z.object({}), (project, _data, references) => ({
     objects: project.stage.map((object) => toAgentObjectInfo(object, references)),
   }));
   addTool(
     "delete_node",
-    "根据项目级引用删除对象",
-    z.object({ ref: objectRefSchema }),
+    "根据项目级引用删除节点及其关联连线",
+    z.object({ ref: nodeRefSchema }),
     (project, { ref }, references) => {
-      project.stageManager.delete(references.resolve(ref));
-      project.historyManager.recordStep();
+      return deleteEntities(project, resolveEntityRefs([ref], references));
     },
   );
   addTool(
     "delete_nodes",
-    "批量删除指定项目级引用对应的对象",
+    "批量删除指定项目级引用对应的节点及其关联连线",
     z.object({
-      refs: z.array(objectRefSchema).describe("要删除的对象引用数组"),
+      refs: z.array(nodeRefSchema).describe("要删除的节点引用数组"),
     }),
     (project, { refs }, references) => {
-      let deletedCount = 0;
-      for (const ref of refs) {
-        project.stageManager.delete(references.resolve(ref));
-        deletedCount++;
-      }
-      if (deletedCount > 0) {
-        project.historyManager.recordStep();
-      }
-      return { deletedCount };
+      return deleteEntities(project, resolveEntityRefs(refs, references));
     },
   );
   addTool("delete_selected_nodes", "删除当前所有选中的节点", z.object({}), (project) => {
-    const selected = project.stageManager.getSelectedEntities();
-    const count = selected.length;
-    for (const entity of [...selected]) {
-      project.stageManager.delete(entity);
-    }
-    if (count > 0) {
-      project.historyManager.recordStep();
-    }
-    return { deletedCount: count };
+    return deleteEntities(project, [...project.stageManager.getSelectedEntities()]);
   });
   addTool("delete_all_nodes", "删除舞台上所有的节点和连线（清空舞台）", z.object({}), (project) => {
     const entities = [...project.stageManager.getEntities()];

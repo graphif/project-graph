@@ -57,6 +57,37 @@ function createNode(uuid: string): ConnectableEntity {
   }) as ConnectableEntity;
 }
 
+function createDeletionProject(initialEntities: ConnectableEntity[], initialAssociations: object[] = []) {
+  let entities = [...initialEntities];
+  let associations = [...initialAssociations];
+  const deleteEntities = vi.fn((targets: ConnectableEntity[]) => {
+    const targetSet = new Set(targets);
+    entities = entities.filter((entity) => !targetSet.has(entity));
+    associations = associations.filter(
+      (association) =>
+        !(association as { associationList?: ConnectableEntity[] }).associationList?.some((entity) =>
+          targetSet.has(entity),
+        ),
+    );
+  });
+  const stageManager = {
+    get: (uuid: string) => [...entities, ...associations].find((object) => (object as { uuid?: string }).uuid === uuid),
+    getEntities: () => entities,
+    getAssociations: () => associations,
+    getSelectedEntities: () => entities.filter((entity) => entity.isSelected),
+    deleteEntities,
+  };
+  return {
+    project: { stageManager },
+    deleteEntities,
+    getEntities: () => entities,
+    getAssociations: () => associations,
+    removeEntityFromStage: (entity: ConnectableEntity) => {
+      entities = entities.filter((candidate) => candidate !== entity);
+    },
+  };
+}
+
 describe("AI layout tool schemas", () => {
   it("exposes DAG layout without exposing placement", () => {
     const tool = getTool("auto_layout_dag");
@@ -142,5 +173,97 @@ describe("AI layout tool schemas", () => {
 
     expect(autoLayoutDAG).toHaveBeenCalledWith([first, second]);
     expect(result).toContain("movedCount");
+  });
+});
+
+describe("AI node deletion tools", () => {
+  it("only accepts node references", () => {
+    const deleteNode = getTool("delete_node");
+    const deleteNodes = getTool("delete_nodes");
+
+    expect(deleteNode.parameters.safeParse({ ref: "n1" }).success).toBe(true);
+    expect(deleteNode.parameters.safeParse({ ref: "e1" }).success).toBe(false);
+    expect(deleteNodes.parameters.safeParse({ refs: ["n1", "n2"] }).success).toBe(true);
+    expect(deleteNodes.parameters.safeParse({ refs: ["n1", "e1"] }).success).toBe(false);
+  });
+
+  it("uses the shared deletion pipeline so connected associations are removed", async () => {
+    const deleted = createNode("deleted");
+    const remaining = createNode("remaining");
+    const association = { uuid: "edge", associationList: [deleted, remaining] };
+    const fixture = createDeletionProject([deleted, remaining], [association]);
+    const references = new AIObjectReferenceRegistry(fixture.project as never);
+    const tools = AITools.createTools(fixture.project as never, references) as unknown as Record<
+      string,
+      { execute: (data: unknown) => Promise<string> }
+    >;
+
+    const result = await tools.delete_node.execute({ ref: references.getOrCreateRef(deleted) });
+
+    expect(fixture.deleteEntities).toHaveBeenCalledOnce();
+    expect(fixture.deleteEntities).toHaveBeenCalledWith([deleted]);
+    expect(fixture.getEntities()).toEqual([remaining]);
+    expect(fixture.getAssociations()).toEqual([]);
+    expect(result).toContain("deletedNodeCount: 1");
+    expect(result).toContain("deletedAssociationCount: 1");
+  });
+
+  it("resolves an entire batch before deleting anything", async () => {
+    const first = createNode("first");
+    const stale = createNode("stale");
+    const fixture = createDeletionProject([first, stale]);
+    const references = new AIObjectReferenceRegistry(fixture.project as never);
+    const firstRef = references.getOrCreateRef(first);
+    const staleRef = references.getOrCreateRef(stale);
+    fixture.removeEntityFromStage(stale);
+    const tools = AITools.createTools(fixture.project as never, references) as unknown as Record<
+      string,
+      { execute: (data: unknown) => Promise<string> }
+    >;
+
+    const result = await tools.delete_nodes.execute({ refs: [firstRef, staleRef] });
+
+    expect(result).toContain("stale_ref");
+    expect(fixture.deleteEntities).not.toHaveBeenCalled();
+    expect(fixture.getEntities()).toEqual([first]);
+  });
+
+  it("deduplicates a batch and records it through one deletion transaction", async () => {
+    const first = createNode("first");
+    const second = createNode("second");
+    const fixture = createDeletionProject([first, second]);
+    const references = new AIObjectReferenceRegistry(fixture.project as never);
+    const firstRef = references.getOrCreateRef(first);
+    const secondRef = references.getOrCreateRef(second);
+    const tools = AITools.createTools(fixture.project as never, references) as unknown as Record<
+      string,
+      { execute: (data: unknown) => Promise<string> }
+    >;
+
+    const result = await tools.delete_nodes.execute({ refs: [firstRef, secondRef, firstRef] });
+
+    expect(fixture.deleteEntities).toHaveBeenCalledOnce();
+    expect(fixture.deleteEntities).toHaveBeenCalledWith([first, second]);
+    expect(result).toContain("deletedNodeCount: 2");
+  });
+
+  it("deletes all selected nodes through one shared transaction", async () => {
+    const selected = createNode("selected");
+    const remaining = createNode("remaining");
+    selected.isSelected = true;
+    remaining.isSelected = false;
+    const fixture = createDeletionProject([selected, remaining]);
+    const references = new AIObjectReferenceRegistry(fixture.project as never);
+    const tools = AITools.createTools(fixture.project as never, references) as unknown as Record<
+      string,
+      { execute: (data: unknown) => Promise<string> }
+    >;
+
+    const result = await tools.delete_selected_nodes.execute({});
+
+    expect(fixture.deleteEntities).toHaveBeenCalledOnce();
+    expect(fixture.deleteEntities).toHaveBeenCalledWith([selected]);
+    expect(fixture.getEntities()).toEqual([remaining]);
+    expect(result).toContain("deletedNodeCount: 1");
   });
 });
