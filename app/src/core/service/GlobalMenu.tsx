@@ -29,6 +29,7 @@ import { Settings } from "./Settings";
 import { Telemetry } from "./Telemetry";
 
 import GlobalMenuContent from "@/components/global-menu-content";
+import CollaborationWindow from "@/sub/CollaborationWindow";
 
 export function GlobalMenu() {
   return <GlobalMenuContent />;
@@ -67,7 +68,6 @@ export async function onStartCollaboration() {
       return;
     }
     const { inviteCode } = await project.collaboration.createRoom();
-    const { default: CollaborationWindow } = await import("@/sub/CollaborationWindow");
     CollaborationWindow.open();
     await Dialog.buttons("协作房间已创建", `邀请码：${inviteCode}\n把邀请码发给同伴即可加入。`, [
       { id: "ok", label: "确定" },
@@ -76,6 +76,7 @@ export async function onStartCollaboration() {
     if (e instanceof Error && e.message === "forbidden") {
       toast.error("多人协作目前处于早期阶段，为防止滥用，请先在群内联系开发者获取邀请码");
     } else {
+      console.error(e);
       toast.error(e instanceof Error ? e.message : "创建协作房间失败");
     }
   }
