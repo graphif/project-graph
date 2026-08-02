@@ -276,6 +276,7 @@ export const categories = {
     node: [
       "enableTagTextNodesBigDisplay",
       "showTextNodeBorder",
+      "textNodeInitBorderStyle",
       "showTreeDirectionHint",
       "showEditModeHint",
       "textNodeEditModeOutlineOpacity",

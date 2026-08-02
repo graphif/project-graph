@@ -5048,6 +5048,9 @@ declare const settingsSchema: ZodObject<
     showBackgroundCartesian: ZodDefault<ZodBoolean>;
     enableTagTextNodesBigDisplay: ZodDefault<ZodBoolean>;
     showTextNodeBorder: ZodDefault<ZodBoolean>;
+    textNodeInitBorderStyle: ZodDefault<
+      ZodUnion<readonly [ZodLiteral<"solid">, ZodLiteral<"dashed">, ZodLiteral<"none">]>
+    >;
     showTreeDirectionHint: ZodDefault<ZodBoolean>;
     lineStyle: ZodDefault<ZodUnion<readonly [ZodLiteral<"straight">, ZodLiteral<"bezier">, ZodLiteral<"vertical">]>>;
     hideArrowWhenPointingToConnectPoint: ZodDefault<ZodBoolean>;
@@ -8733,6 +8736,10 @@ declare interface TextNode {
    * 自定义字重，空字符串表示使用 normal
    */
   fontWeight: string;
+  /**
+   * 边框样式：实线、虚线、无边框
+   */
+  borderStyle: "solid" | "dashed" | "none";
   /**
    * 节点是否被选中
    */

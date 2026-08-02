@@ -52,6 +52,7 @@ export class NodeAdder {
       collisionBox: new CollisionBox([new Rectangle(clickWorldLocation, Vector.getZero())]),
       color: autoFillColor,
       fontScaleLevel: options?.overrideFontScaleLevel ?? 0,
+      borderStyle: Settings.textNodeInitBorderStyle,
     });
     // 根据摄像机缩放级别自动设置字体大小，使节点视觉大小保持恒定
     if (options?.overrideFontScaleLevel === undefined && Settings.newNodeScaleByCamera) {

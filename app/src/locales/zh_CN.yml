@@ -353,9 +353,21 @@ settings:
       开启后，标签文本节点的显示在摄像机缩小到广袤的全局视野时，
       标签会巨大化显示，以便更容易辨识整个文件的布局分布
   showTextNodeBorder:
-    title: 显示文本节点边框
+    title: 强制隐藏文本节点边框
     description: |
-      控制是否显示文本节点的边框
+      开启后，无论文本节点的边框样式设置了什么格式（如虚线、实线、无边框），都强制不显示任何边框。
+      关闭后，文本节点将按照各自的边框样式设置正常显示边框。
+  textNodeInitBorderStyle:
+    title: 新建文本节点的边框样式
+    description: |
+      创建新文本节点时默认使用的边框样式。
+      实线：标准实线边框
+      虚线：虚线边框
+      无边框：不显示边框
+    options:
+      solid: 实线
+      dashed: 虚线
+      none: 无边框
   defaultFontFamily:
     title: 默认字体
     description: |
@@ -1539,6 +1551,15 @@ keyBinds:
   setSectionBorderNone:
     title: 设置分组框边框为无边框
     description: 将选中的分组框的边框样式设置为无边框
+  setTextNodeBorderSolid:
+    title: 设置文本节点边框为实线
+    description: 将选中的文本节点的边框样式设置为实线
+  setTextNodeBorderDashed:
+    title: 设置文本节点边框为虚线
+    description: 将选中的文本节点的边框样式设置为虚线
+  setTextNodeBorderNone:
+    title: 设置文本节点边框为无边框
+    description: 将选中的文本节点的边框样式设置为无边框
   reverseEdges:
     title: 反转连线的方向
     description: |

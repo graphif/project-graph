@@ -32,21 +32,51 @@ export class TextNodeRenderer {
       color.a = 0.2;
       fillColor = color;
     }
-    const borderColor = Settings.showTextNodeBorder
-      ? this.project.stageStyleManager.currentStyle.StageObjectBorder
-      : Color.Transparent;
 
-    // 渲染节点背景（逻辑节点和非逻辑节点都使用相同的背景）
-    this.project.shapeRenderer.renderRect(
-      new Rectangle(
-        this.project.renderer.transformWorld2View(node.rectangle.location),
-        node.rectangle.size.multiply(this.project.camera.currentScale),
-      ),
-      fillColor,
-      borderColor,
-      node.getBorderWidth() * this.project.camera.currentScale,
-      node.getBorderRadius() * this.project.camera.currentScale,
+    // 强制隐藏开关优先级最高（true = 强制隐藏所有边框）；否则根据节点自身的 borderStyle 决定
+    const effectiveBorderStyle = Settings.showTextNodeBorder ? "none" : node.borderStyle;
+
+    const nodeViewRect = new Rectangle(
+      this.project.renderer.transformWorld2View(node.rectangle.location),
+      node.rectangle.size.multiply(this.project.camera.currentScale),
     );
+
+    if (effectiveBorderStyle === "none") {
+      // 无边框：只渲染背景填充，不绘制边框
+      this.project.shapeRenderer.renderRect(
+        nodeViewRect,
+        fillColor,
+        Color.Transparent,
+        0,
+        node.getBorderRadius() * this.project.camera.currentScale,
+      );
+    } else if (effectiveBorderStyle === "dashed") {
+      // 虚线边框：先渲染背景，再渲染虚线边框
+      this.project.shapeRenderer.renderRect(
+        nodeViewRect,
+        fillColor,
+        Color.Transparent,
+        0,
+        node.getBorderRadius() * this.project.camera.currentScale,
+      );
+      this.project.shapeRenderer.renderDashedRect(
+        nodeViewRect,
+        Color.Transparent,
+        this.project.stageStyleManager.currentStyle.StageObjectBorder,
+        node.getBorderWidth() * this.project.camera.currentScale,
+        node.getBorderRadius() * this.project.camera.currentScale,
+        12 * this.project.camera.currentScale,
+      );
+    } else {
+      // 实线边框（默认）
+      this.project.shapeRenderer.renderRect(
+        nodeViewRect,
+        fillColor,
+        this.project.stageStyleManager.currentStyle.StageObjectBorder,
+        node.getBorderWidth() * this.project.camera.currentScale,
+        node.getBorderRadius() * this.project.camera.currentScale,
+      );
+    }
 
     // 如果是逻辑节点，在内部边缘绘制标记
     if (isLogicNode) {

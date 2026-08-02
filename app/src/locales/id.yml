@@ -341,9 +341,21 @@ settings:
       Saat diaktifkan, saat kamera diperkecil ke tampilan global yang luas,
       tag akan ditampilkan lebih besar untuk memudahkan identifikasi distribusi layout seluruh file
   showTextNodeBorder:
-    title: Tampilkan Batas Node Teks
+    title: Paksa Sembunyikan Batas Node Teks
     description: |
-      Mengontrol apakah menampilkan batas node teks
+      Saat diaktifkan, tidak ada batas yang akan ditampilkan pada node teks apapun, terlepas dari gaya batas yang diatur pada setiap node (solid, putus-putus, atau tidak ada).
+      Saat dinonaktifkan, node teks akan menampilkan batas sesuai dengan pengaturan gaya batas masing-masing.
+  textNodeInitBorderStyle:
+    title: Gaya Batas Node Teks Baru
+    description: |
+      Gaya batas default yang digunakan saat membuat node teks baru.
+      Solid: Batas solid standar
+      Putus-putus: Batas putus-putus
+      Tidak ada: Tanpa batas
+    options:
+      solid: Solid
+      dashed: Putus-putus
+      none: Tidak ada
   defaultFontFamily:
     title: Font Default
     description: |

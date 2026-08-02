@@ -63,6 +63,7 @@ export const settingsSchema = z.object({
   showBackgroundCartesian: z.boolean().default(true),
   enableTagTextNodesBigDisplay: z.boolean().default(true),
   showTextNodeBorder: z.boolean().default(true),
+  textNodeInitBorderStyle: z.union([z.literal("solid"), z.literal("dashed"), z.literal("none")]).default("solid"),
   showTreeDirectionHint: z.boolean().default(true),
   lineStyle: z.union([z.literal("straight"), z.literal("bezier"), z.literal("vertical")]).default("straight"),
   hideArrowWhenPointingToConnectPoint: z.boolean().default(true),
@@ -408,6 +409,17 @@ export const settingsSchema = z.object({
       { type: "item", id: "increaseFontSize", label: "放大字体", icon: "Maximize2" },
       { type: "item", id: "decreaseFontSize", label: "缩小字体", icon: "Minimize2" },
       { type: "item", id: "toggleTextNodeSizeMode", label: "切换换行模式", icon: "ListEnd" },
+      {
+        type: "sub",
+        id: "text-node-border-style",
+        label: "文本节点边框样式",
+        icon: "SquareDashed",
+        children: [
+          { type: "item", id: "setTextNodeBorderSolid", label: "实线", icon: "Square" },
+          { type: "item", id: "setTextNodeBorderDashed", label: "虚线", icon: "SquareDashed" },
+          { type: "item", id: "setTextNodeBorderNone", label: "无边框", icon: "Slash" },
+        ],
+      },
       {
         type: "sub",
         id: "text-node-tools",
@@ -993,9 +1005,11 @@ const mergedContextMenuConfig = mergeGlobalMenuConfig(
   savedSettings.contextMenuConfig as GlobalMenuNode[],
   defaultSettings.contextMenuConfig as GlobalMenuNode[],
 );
-// 检查是否缺少 edge-arrow-type 子菜单（旧版本用户）
+// 检查是否缺少 edge-arrow-type 子菜单或 text-node-border-style 子菜单（旧版本用户）
 // 若缺少，说明是旧配置，直接重置为默认值以保证顺序正确
-const contextMenuNeedsReset = !hasMenuId(mergedContextMenuConfig, "edge-arrow-type");
+const contextMenuNeedsReset =
+  !hasMenuId(mergedContextMenuConfig, "edge-arrow-type") ||
+  !hasMenuId(mergedContextMenuConfig, "text-node-border-style");
 const finalContextMenuConfig = contextMenuNeedsReset
   ? (defaultSettings.contextMenuConfig as GlobalMenuNode[])
   : mergedContextMenuConfig;

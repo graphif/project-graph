@@ -11,7 +11,7 @@ import { DetailsManager } from "./stageObject/tools/entityDetailsManager";
 
 export namespace ProjectUpgrader {
   /** N系列的最新版本 */
-  export const NLatestVersion = "2.6.0";
+  export const NLatestVersion = "2.7.0";
 
   /**
    * 比较两个版本号字符串（格式：x.y.z）
@@ -394,6 +394,11 @@ export namespace ProjectUpgrader {
       [data, metadata] = convertN6toN7(data, metadata);
     }
 
+    // 如果版本小于 2.7.0，需要升级
+    if (compareVersion(currentVersion, "2.7.0") < 0) {
+      [data, metadata] = convertN7toN8(data, metadata);
+    }
+
     return [data, metadata];
   }
 
@@ -502,6 +507,24 @@ export namespace ProjectUpgrader {
       }
     }
     return [data, { ...metadata, version: "2.6.0" }];
+  }
+
+  /**
+   * 将 2.6.0 版本升级到 2.7.0 版本
+   * TextNode 新增 borderStyle 字段（默认 "solid"）。
+   * @param data 2.6.0版本数据
+   * @param metadata 2.6.0版本metadata
+   * @returns 2.7.0版本数据和metadata
+   */
+  function convertN7toN8(data: any[], metadata: any): [any[], PrgMetadata] {
+    for (const item of data) {
+      if (item._ === "TextNode") {
+        if (item.borderStyle === undefined) {
+          item.borderStyle = "solid";
+        }
+      }
+    }
+    return [data, { ...metadata, version: "2.7.0" }];
   }
 
   /**

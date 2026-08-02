@@ -812,6 +812,50 @@ export const allKeyBinds: KeyBindItem[] = [
     },
   },
 
+  /*------- 文本节点边框样式 -------*/
+  {
+    id: "setTextNodeBorderSolid",
+    defaultKey: "",
+    icon: Square,
+    when: whenHasSelectedTextNodes,
+    onPress: (project) => {
+      const selectedNodes = project!.stageManager.getSelectedEntities().filter((it) => it instanceof TextNode);
+      for (const node of selectedNodes) {
+        node.borderStyle = "solid";
+        project!.textNodeRenderer.renderTextNode(node);
+      }
+      project!.historyManager.recordStep();
+    },
+  },
+  {
+    id: "setTextNodeBorderDashed",
+    defaultKey: "",
+    icon: SquareDashed,
+    when: whenHasSelectedTextNodes,
+    onPress: (project) => {
+      const selectedNodes = project!.stageManager.getSelectedEntities().filter((it) => it instanceof TextNode);
+      for (const node of selectedNodes) {
+        node.borderStyle = "dashed";
+        project!.textNodeRenderer.renderTextNode(node);
+      }
+      project!.historyManager.recordStep();
+    },
+  },
+  {
+    id: "setTextNodeBorderNone",
+    defaultKey: "",
+    icon: Slash,
+    when: whenHasSelectedTextNodes,
+    onPress: (project) => {
+      const selectedNodes = project!.stageManager.getSelectedEntities().filter((it) => it instanceof TextNode);
+      for (const node of selectedNodes) {
+        node.borderStyle = "none";
+        project!.textNodeRenderer.renderTextNode(node);
+      }
+      project!.historyManager.recordStep();
+    },
+  },
+
   /*------- 边反向 -------*/
   {
     id: "reverseEdges",

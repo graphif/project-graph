@@ -395,8 +395,21 @@ settings:
 
       標籤會巨大化顯示，以便更容易辨識整個檔案的佈局分佈'
   showTextNodeBorder:
-    title: 顯示文字節點邊框
-    description: 控制是否顯示文字節點的邊框
+    title: 強制隱藏文字節點邊框
+    description: |
+      開啟後，無論文字節點的邊框樣式設定了什麼格式（如虛線、實線、無邊框），都強制不顯示任何邊框。
+      關閉後，文字節點將按照各自的邊框樣式設定正常顯示邊框。
+  textNodeInitBorderStyle:
+    title: 新建文字節點的邊框樣式
+    description: |
+      建立新文字節點時預設使用的邊框樣式。
+      實線：標準實線邊框
+      虛線：虛線邊框
+      無邊框：不顯示邊框
+    options:
+      solid: 實線
+      dashed: 虛線
+      none: 無邊框
   defaultFontFamily:
     title: 預設字型
     description: 設定畫布預設字型，留空則使用系統預設字型

@@ -977,8 +977,21 @@ settings:
       sideBySide: Side-by-side (same folder)
       subfolder: Subfolder ({filename}_backup)
   showTextNodeBorder:
-    title: Show Text Node Border
-    description: "Controls whether to show the text node border or not.\n"
+    title: Force Hide Text Node Border
+    description: |
+      When enabled, no border will be shown on any text node, regardless of the border style set on each node (solid, dashed, or none).
+      When disabled, text nodes will display borders according to their individual border style settings.
+  textNodeInitBorderStyle:
+    title: New Text Node Border Style
+    description: |
+      The default border style used when creating a new text node.
+      Solid: Standard solid border
+      Dashed: Dashed border
+      None: No border
+    options:
+      solid: Solid
+      dashed: Dashed
+      none: None
   defaultFontFamily:
     title: Default Font
     description: "Set the default font for the canvas. Leave empty to use the platform default font.\n"
@@ -1487,6 +1500,24 @@ keyBinds:
   toggleSectionLock:
     title: Lock/Unlock Section Box
     description: Toggle lock state of selected section boxes. Locked sections prevent moving internal objects.
+  setSectionBorderSolid:
+    title: Set Section Border to Solid
+    description: Set the border style of selected section boxes to solid
+  setSectionBorderDashed:
+    title: Set Section Border to Dashed
+    description: Set the border style of selected section boxes to dashed
+  setSectionBorderNone:
+    title: Set Section Border to None
+    description: Remove the border from selected section boxes
+  setTextNodeBorderSolid:
+    title: Set Text Node Border to Solid
+    description: Set the border style of selected text nodes to solid
+  setTextNodeBorderDashed:
+    title: Set Text Node Border to Dashed
+    description: Set the border style of selected text nodes to dashed
+  setTextNodeBorderNone:
+    title: Set Text Node Border to None
+    description: Remove the border from selected text nodes
   reverseEdges:
     title: Reverse Connection Direction
     description: |

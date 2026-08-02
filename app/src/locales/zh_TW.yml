@@ -353,9 +353,21 @@ settings:
       開啟後，標籤文本節點的顯示在攝像機縮小到廣袤的全局視野時，
       標籤會巨大化顯示，以便更容易辨識整個文件的佈局分佈
   showTextNodeBorder:
-    title: 顯示文本節點邊框
+    title: 強制隱藏文本節點邊框
     description: |
-      控制是否顯示文本節點的邊框
+      開啟後，無論文本節點的邊框樣式設置了什麼格式（如虛線、實線、無邊框），都強制不顯示任何邊框。
+      關閉後，文本節點將按照各自的邊框樣式設置正常顯示邊框。
+  textNodeInitBorderStyle:
+    title: 新建文本節點的邊框樣式
+    description: |
+      創建新文本節點時默認使用的邊框樣式。
+      實線：標準實線邊框
+      虛線：虛線邊框
+      無邊框：不顯示邊框
+    options:
+      solid: 實線
+      dashed: 虛線
+      none: 無邊框
   defaultFontFamily:
     title: 默認字體
     description: |
@@ -1539,6 +1551,15 @@ keyBinds:
   setSectionBorderNone:
     title: 設置分組框邊框為無邊框
     description: 將選中的分組框的邊框樣式設置為無邊框
+  setTextNodeBorderSolid:
+    title: 設置文本節點邊框為實線
+    description: 將選中的文本節點的邊框樣式設置為實線
+  setTextNodeBorderDashed:
+    title: 設置文本節點邊框為虛線
+    description: 將選中的文本節點的邊框樣式設置為虛線
+  setTextNodeBorderNone:
+    title: 設置文本節點邊框為無邊框
+    description: 將選中的文本節點的邊框樣式設置為無邊框
   reverseEdges:
     title: 反轉連線的方向
     description: |

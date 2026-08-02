@@ -61,6 +61,12 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
   public fontWeight: string = "";
 
   /**
+   * 边框样式：实线、虚线、无边框
+   */
+  @serializable
+  public borderStyle: "solid" | "dashed" | "none" = "solid";
+
+  /**
    * 节点是否被选中
    */
   _isSelected: boolean = false;
@@ -116,6 +122,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       fontScaleLevel = 0,
       fontFamily = "",
       fontWeight = "",
+      borderStyle = "solid" as "solid" | "dashed" | "none",
     }: {
       uuid?: string;
       text?: string;
@@ -126,6 +133,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       fontScaleLevel?: number;
       fontFamily?: string;
       fontWeight?: string;
+      borderStyle?: "solid" | "dashed" | "none";
     },
     public unknown = false,
   ) {
@@ -139,6 +147,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     this.fontScaleLevel = fontScaleLevel;
     this.fontFamily = fontFamily;
     this.fontWeight = fontWeight;
+    this.borderStyle = borderStyle;
     // 初始化字体大小缓存
     this.updateFontSizeCache();
     // if (this.text.length < TextNode.enableResizeCharCount) {
