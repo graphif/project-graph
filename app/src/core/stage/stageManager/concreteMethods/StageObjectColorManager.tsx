@@ -1,4 +1,6 @@
 import { Project, service } from "@/core/Project";
+import { Edge } from "@/core/stage/stageObject/association/Edge";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { Color } from "@graphif/data-structures";
 
 /**
@@ -26,26 +28,41 @@ export class StageObjectColorManager {
     for (const entity of this.project.stageManager.getPenStrokes()) {
       if (entity.isSelected) {
         entity.color = color;
+        this.project.syncAssociationManager.syncTwinSectionProperty(entity, (c) => {
+          c.color = color;
+        });
       }
     }
     for (const entity of this.project.stageManager.getSvgNodes()) {
       if (entity.isSelected) {
         entity.changeColor(color);
+        this.project.syncAssociationManager.syncTwinSectionProperty(entity, (c) => {
+          c.changeColor(color);
+        });
       }
     }
     for (const node of this.project.stageManager.getLatexNodes()) {
       if (node.isSelected) {
         node.color = color;
+        this.project.syncAssociationManager.syncTwinSectionProperty(node, (c) => {
+          c.color = color;
+        });
       }
     }
     for (const entity of this.project.stageManager.getUrlNodes()) {
       if (entity.isSelected) {
         entity.color = color;
+        this.project.syncAssociationManager.syncTwinSectionProperty(entity, (c) => {
+          c.color = color;
+        });
       }
     }
     for (const edge of this.project.stageManager.getAssociations()) {
-      if (edge.isSelected) {
+      if (edge.isSelected && (edge instanceof Edge || edge instanceof MultiTargetUndirectedEdge)) {
         edge.color = color;
+        this.project.syncAssociationManager.syncTwinSectionAssociationProperty(edge, (c) => {
+          c.color = color;
+        });
       }
     }
     // 特性：统一取消框选

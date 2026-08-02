@@ -30,17 +30,18 @@ export namespace SyncAssociationRenderer {
     const lineWidth = 1.5 * project.camera.currentScale;
     const dashLength = 8 * project.camera.currentScale;
 
-    // 若该对象属于孪生分组框内部，虚线画在两个根分组框之间
+    // 若该对象属于孪生分组框内部，对每对根分组框各画一条虚线
     if (obj instanceof Entity) {
-      const rootPair = project.syncAssociationManager.getTwinSectionRootPairForEntity(obj);
-      if (rootPair) {
-        const [sourceSection, twinSection] = rootPair;
-        const sourceRect = sourceSection.collisionBox.getRectangle();
-        const twinRect = twinSection.collisionBox.getRectangle();
-        const line = new Line(sourceRect.center, twinRect.center);
-        const sourceEdge = project.renderer.transformWorld2View(sourceRect.getLineIntersectionPoint(line));
-        const twinEdge = project.renderer.transformWorld2View(twinRect.getLineIntersectionPoint(line));
-        project.curveRenderer.renderDashedLine(sourceEdge, twinEdge, lineColor, lineWidth, dashLength);
+      const rootPairs = project.syncAssociationManager.getTwinSectionRootPairsForEntity(obj);
+      if (rootPairs.length > 0) {
+        for (const [sourceSection, twinSection] of rootPairs) {
+          const sourceRect = sourceSection.collisionBox.getRectangle();
+          const twinRect = twinSection.collisionBox.getRectangle();
+          const line = new Line(sourceRect.center, twinRect.center);
+          const sourceEdge = project.renderer.transformWorld2View(sourceRect.getLineIntersectionPoint(line));
+          const twinEdge = project.renderer.transformWorld2View(twinRect.getLineIntersectionPoint(line));
+          project.curveRenderer.renderDashedLine(sourceEdge, twinEdge, lineColor, lineWidth, dashLength);
+        }
         return;
       }
     }

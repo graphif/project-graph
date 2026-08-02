@@ -58,6 +58,14 @@ export class ControllerEntityResizeClass extends ControllerClass {
       this.changeSizeEntity instanceof ReferenceBlockNode
     ) {
       this.changeSizeEntity.resizeHandle(diff);
+      // 同步孪生分组框内对应实体的尺寸
+      if (this.changeSizeEntity instanceof ImageNode) {
+        const entity = this.changeSizeEntity;
+        this.project.syncAssociationManager.syncTwinSectionProperty(entity, (counterpart) => {
+          counterpart.scale = entity.scale;
+          counterpart.scaleUpdate(0);
+        });
+      }
     }
 
     this.lastMoveLocation = pressWorldLocation.clone();

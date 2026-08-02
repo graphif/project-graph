@@ -56,26 +56,62 @@ export class StageSyncAssociationManager {
   }
 
   /**
-   * 给定一个实体，如果它属于某个孪生分组框关系的内部（包括根分组框本身），
-   * 则返回对应的两个根分组框 [sourceSection, twinSection]；否则返回 null。
+   * 给定一个实体，返回它所参与的所有孪生分组框关系中对应的根分组框对列表。
    *
-   * 用于渲染时判断：选中框内节点时，虚线应画在两个根分组框之间，而非节点之间。
+   * 由于多次孪生只记录直接配对（A↔A'、A↔A''），A' 和 A'' 之间没有直接映射，
+   * 因此先用 BFS 展开整个等价类，收集所有涉及的根分组框，再以"当前节点所在根框"
+   * 为起点，与其余每个根框各组成一对返回，供渲染器逐对画虚线。
    */
-  public getTwinSectionRootPairForEntity(entity: Entity): [Section, Section] | null {
-    const entities = this.project.stageManager.getEntities();
-    for (const association of this.getTwinSectionAssociations()) {
-      const isInvolved = association.entityUuidPairs.some(
-        ([sourceUuid, twinUuid]) => sourceUuid === entity.uuid || twinUuid === entity.uuid,
-      );
-      if (!isInvolved) continue;
+  public getTwinSectionRootPairsForEntity(entity: Entity): Array<[Section, Section]> {
+    const allEntities = this.project.stageManager.getEntities();
 
-      const sourceSection = entities.find((e) => e.uuid === association.sourceSectionUuid);
-      const twinSection = entities.find((e) => e.uuid === association.twinSectionUuid);
-      if (sourceSection instanceof Section && twinSection instanceof Section) {
-        return [sourceSection, twinSection];
+    // BFS 展开等价类，同时收集每个成员所属的根分组框
+    const visited = new Set<string>([entity.uuid]);
+    const queue: Entity[] = [entity];
+    // uuid → 该实体所在的根分组框（sourceSectionUuid 或 twinSectionUuid）
+    const rootOfEntity = new Map<string, Section>();
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      for (const tsa of this.getTwinSectionAssociations()) {
+        for (const [sourceUuid, twinUuid] of tsa.entityUuidPairs) {
+          let neighborUuid: string | null = null;
+          if (sourceUuid === current.uuid) neighborUuid = twinUuid;
+          else if (twinUuid === current.uuid) neighborUuid = sourceUuid;
+
+          if (!neighborUuid || visited.has(neighborUuid)) continue;
+          visited.add(neighborUuid);
+          const neighbor = allEntities.find((e) => e.uuid === neighborUuid);
+          if (neighbor) {
+            queue.push(neighbor);
+          }
+        }
+
+        // 记录 current 在本 TSA 中所属的根框
+        const isInSource = tsa.entityUuidPairs.some(([s]) => s === current.uuid);
+        const isInTwin = tsa.entityUuidPairs.some(([, t]) => t === current.uuid);
+        if (isInSource || isInTwin) {
+          const rootUuid = isInSource ? tsa.sourceSectionUuid : tsa.twinSectionUuid;
+          if (!rootOfEntity.has(current.uuid)) {
+            const root = allEntities.find((e) => e.uuid === rootUuid);
+            if (root instanceof Section) rootOfEntity.set(current.uuid, root);
+          }
+        }
       }
     }
-    return null;
+
+    // 找出当前 entity 所在的根框，与其余所有根框各组一对
+    const myRoot = rootOfEntity.get(entity.uuid);
+    if (!myRoot) return [];
+
+    const result: Array<[Section, Section]> = [];
+    const seen = new Set<string>();
+    for (const [, root] of rootOfEntity) {
+      if (root === myRoot || seen.has(root.uuid)) continue;
+      seen.add(root.uuid);
+      result.push([myRoot, root]);
+    }
+    return result;
   }
 
   /** 创建一个完整内容副本，并建立分组框内所有实体的一一映射。 */
@@ -103,112 +139,212 @@ export class StageSyncAssociationManager {
     return twin;
   }
 
-  /** 用户移动框内节点时，让对应节点以相同位移移动。 */
+  /** 用户移动框内节点时，让所有对应节点以相同位移移动。 */
   public onEntityMoved(entity: Entity, delta: Vector): void {
     if (this.isApplyingTwinSectionChange) return;
-    const counterpart = this.getTwinSectionCounterpart(entity);
-    if (!counterpart || this.isTwinSectionRoot(entity)) return;
+    if (this.isTwinSectionRoot(entity)) return;
+    const counterparts = this.getTwinSectionCounterparts(entity);
+    if (counterparts.length === 0) return;
 
     this.applyTwinSectionChange(() => {
-      counterpart.move(delta);
-      this.adjustParentSections(counterpart);
-    });
-  }
-
-  /** 当两个孪生分组框内的节点新增连线时，创建端点对应的镜像连线。 */
-  public onAssociationCreated(association: Edge | MultiTargetUndirectedEdge): void {
-    if (this.isApplyingTwinSectionChange) return;
-    const counterpartMembers = association.associationList.map((member) => this.getTwinSectionCounterpart(member));
-    if (counterpartMembers.some((member): member is null => member === null)) return;
-    if (!counterpartMembers.every((member): member is ConnectableEntity => member instanceof ConnectableEntity)) return;
-
-    const twin = (deserialize(serialize([association]), this.project) as Array<Edge | MultiTargetUndirectedEdge>)[0];
-    if (!twin) return;
-    twin.uuid = crypto.randomUUID();
-    twin.associationList = counterpartMembers;
-    twin.isSelected = false;
-
-    this.applyTwinSectionChange(() => this.project.stageManager.add(twin));
-  }
-
-  /** 删除连线时，删除端点一一对应的镜像连线。 */
-  public onAssociationDeleted(association: Edge | MultiTargetUndirectedEdge): void {
-    if (this.isApplyingTwinSectionChange) return;
-    const counterpartMembers = association.associationList.map((member) => this.getTwinSectionCounterpart(member));
-    if (counterpartMembers.some((member): member is null => member === null)) return;
-    if (!counterpartMembers.every((member): member is ConnectableEntity => member instanceof ConnectableEntity)) return;
-
-    const twin = this.project.stageManager.getAssociations().find((candidate) => {
-      if (candidate.constructor !== association.constructor) return false;
-      if (!(candidate instanceof Edge) && !(candidate instanceof MultiTargetUndirectedEdge)) return false;
-      return candidate.associationList.every((member, index) => member === counterpartMembers[index]);
-    });
-    if (!twin) return;
-
-    this.applyTwinSectionChange(() => {
-      this.project.stageManager.delete(twin);
-      this.project.stageManager.updateReferences();
-    });
-  }
-
-  /** 同步有向连线后续调整过的端点位置。 */
-  public onEdgeConnectLocationChanged(edge: Edge): void {
-    if (this.isApplyingTwinSectionChange) return;
-    const counterpartMembers = edge.associationList.map((member) => this.getTwinSectionCounterpart(member));
-    if (counterpartMembers.some((member): member is null => member === null)) return;
-    if (!counterpartMembers.every((member): member is ConnectableEntity => member instanceof ConnectableEntity)) return;
-
-    const twin = this.project.stageManager.getAssociations().find((candidate) => {
-      if (candidate.constructor !== edge.constructor || !(candidate instanceof Edge)) return false;
-      return candidate.associationList.every((member, index) => member === counterpartMembers[index]);
-    }) as Edge | undefined;
-    if (!twin) return;
-
-    this.applyTwinSectionChange(() => {
-      twin.sourceRectangleRate = edge.sourceRectangleRate.clone();
-      twin.targetRectangleRate = edge.targetRectangleRate.clone();
-    });
-  }
-
-  /** 分组框标题、颜色、详情的修改同步到另一侧。 */
-  public onSectionPropertyChanged(section: Section, key: "text" | "color" | "details"): void {
-    if (this.isApplyingTwinSectionChange) return;
-    const counterpart = this.getTwinSectionCounterpart(section);
-    if (!(counterpart instanceof Section)) return;
-
-    this.applyTwinSectionChange(() => {
-      if (key === "text") {
-        counterpart.rename(section.text);
-      } else if (key === "color") {
-        counterpart.color = section.color;
-      } else {
-        counterpart.details = section.details;
+      for (const counterpart of counterparts) {
+        counterpart.move(delta);
+        this.adjustParentSections(counterpart);
       }
     });
   }
 
-  /** 分组框内实体的父级变化：新加入时克隆，离开时删除另一侧对应项。 */
+  /** 当两个孪生分组框内的节点新增连线时，为等价类中所有其他框创建对应的镜像连线。 */
+  public onAssociationCreated(association: Edge | MultiTargetUndirectedEdge): void {
+    if (this.isApplyingTwinSectionChange) return;
+
+    // 对连线每个端点，用 BFS 找出等价类里的全部对应方
+    const memberCounterpartsList = association.associationList.map((member) =>
+      member instanceof Entity ? this.getTwinSectionCounterparts(member) : [],
+    );
+
+    // 所有端点都必须有相同数量的对应方，且数量 > 0
+    const counterpartCount = memberCounterpartsList[0]?.length ?? 0;
+    if (counterpartCount === 0) return;
+    if (!memberCounterpartsList.every((list) => list.length === counterpartCount)) return;
+
+    this.applyTwinSectionChange(() => {
+      // 按索引对齐：第 i 组对应方来自同一个孪生框
+      for (let i = 0; i < counterpartCount; i++) {
+        const counterpartMembers = memberCounterpartsList.map((list) => list[i]);
+        if (!counterpartMembers.every((m): m is ConnectableEntity => m instanceof ConnectableEntity)) continue;
+
+        const twin = (
+          deserialize(serialize([association]), this.project) as Array<Edge | MultiTargetUndirectedEdge>
+        )[0];
+        if (!twin) continue;
+        twin.uuid = crypto.randomUUID();
+        twin.associationList = counterpartMembers;
+        twin.isSelected = false;
+        this.project.stageManager.add(twin);
+      }
+    });
+  }
+
+  /** 删除连线时，删除等价类中所有其他框里端点对应的镜像连线。 */
+  public onAssociationDeleted(association: Edge | MultiTargetUndirectedEdge): void {
+    if (this.isApplyingTwinSectionChange) return;
+
+    const memberCounterpartsList = association.associationList.map((member) =>
+      member instanceof Entity ? this.getTwinSectionCounterparts(member) : [],
+    );
+    const counterpartCount = memberCounterpartsList[0]?.length ?? 0;
+    if (counterpartCount === 0) return;
+    if (!memberCounterpartsList.every((list) => list.length === counterpartCount)) return;
+
+    this.applyTwinSectionChange(() => {
+      for (let i = 0; i < counterpartCount; i++) {
+        const counterpartMembers = memberCounterpartsList.map((list) => list[i]);
+        if (!counterpartMembers.every((m): m is ConnectableEntity => m instanceof ConnectableEntity)) continue;
+
+        const twin = this.project.stageManager.getAssociations().find((candidate) => {
+          if (candidate.constructor !== association.constructor) return false;
+          if (!(candidate instanceof Edge) && !(candidate instanceof MultiTargetUndirectedEdge)) return false;
+          return candidate.associationList.every((member, idx) => member === counterpartMembers[idx]);
+        });
+        if (!twin) continue;
+
+        this.project.stageManager.delete(twin);
+        this.project.stageManager.updateReferences();
+      }
+    });
+  }
+
+  /** 同步有向连线后续调整过的端点位置，覆盖等价类中所有其他框的镜像连线。 */
+  public onEdgeConnectLocationChanged(edge: Edge): void {
+    if (this.isApplyingTwinSectionChange) return;
+
+    const memberCounterpartsList = edge.associationList.map((member) =>
+      member instanceof Entity ? this.getTwinSectionCounterparts(member) : [],
+    );
+    const counterpartCount = memberCounterpartsList[0]?.length ?? 0;
+    if (counterpartCount === 0) return;
+    if (!memberCounterpartsList.every((list) => list.length === counterpartCount)) return;
+
+    this.applyTwinSectionChange(() => {
+      for (let i = 0; i < counterpartCount; i++) {
+        const counterpartMembers = memberCounterpartsList.map((list) => list[i]);
+        if (!counterpartMembers.every((m): m is ConnectableEntity => m instanceof ConnectableEntity)) continue;
+
+        const twin = this.project.stageManager.getAssociations().find((candidate) => {
+          if (candidate.constructor !== edge.constructor || !(candidate instanceof Edge)) return false;
+          return candidate.associationList.every((member, idx) => member === counterpartMembers[idx]);
+        }) as Edge | undefined;
+        if (!twin) continue;
+
+        twin.sourceRectangleRate = edge.sourceRectangleRate.clone();
+        twin.targetRectangleRate = edge.targetRectangleRate.clone();
+      }
+    });
+  }
+
+  /** 分组框标题、颜色、详情的修改同步到所有对应方。 */
+  public onSectionPropertyChanged(section: Section, key: "text" | "color" | "details"): void {
+    if (this.isApplyingTwinSectionChange) return;
+    const counterparts = this.getTwinSectionCounterparts(section);
+    const sectionCounterparts = counterparts.filter((c): c is Section => c instanceof Section);
+    if (sectionCounterparts.length === 0) return;
+
+    this.applyTwinSectionChange(() => {
+      for (const counterpart of sectionCounterparts) {
+        if (key === "text") {
+          counterpart.rename(section.text);
+        } else if (key === "color") {
+          counterpart.color = section.color;
+        } else {
+          counterpart.details = section.details;
+        }
+      }
+    });
+  }
+
+  /** 分组框内实体的父级变化：新加入时克隆，离开时删除另一侧对应项。覆盖所有孪生关系。 */
   public onEntityParentChanged(entity: Entity, previousParent: Section | null, nextParent: Section | null): void {
     if (this.isApplyingTwinSectionChange || previousParent === nextParent) return;
 
-    const previousCounterpart = previousParent ? this.getTwinSectionCounterpart(previousParent) : null;
-    const nextCounterpart = nextParent ? this.getTwinSectionCounterpart(nextParent) : null;
-    const counterpart = this.getTwinSectionCounterpart(entity);
+    for (const tsa of this.getTwinSectionAssociations()) {
+      const previousCounterpart = previousParent ? this.getCounterpartInAssociation(previousParent, tsa) : null;
+      const nextCounterpart = nextParent ? this.getCounterpartInAssociation(nextParent, tsa) : null;
+      const counterpart = this.getCounterpartInAssociation(entity, tsa);
 
-    if (!previousCounterpart && nextCounterpart instanceof Section && !counterpart) {
-      this.applyTwinSectionChange(() => this.cloneEntityIntoTwinSection(entity, nextParent!, nextCounterpart));
-      return;
+      if (!previousCounterpart && nextCounterpart instanceof Section && !counterpart) {
+        this.applyTwinSectionChange(() => this.cloneEntityIntoTwinSection(entity, nextParent!, nextCounterpart));
+        continue;
+      }
+
+      if (previousCounterpart instanceof Section && counterpart) {
+        this.applyTwinSectionChange(() => {
+          if (nextCounterpart instanceof Section) {
+            this.project.sectionInOutManager.attachEntityToSection(counterpart, nextCounterpart);
+          } else {
+            this.removeTwinSectionEntity(counterpart);
+          }
+        });
+      }
     }
+  }
 
-    if (previousCounterpart instanceof Section && counterpart) {
-      this.applyTwinSectionChange(() => {
-        if (nextCounterpart instanceof Section) {
-          this.project.sectionInOutManager.attachEntityToSection(counterpart, nextCounterpart);
-        } else {
-          this.removeTwinSectionEntity(counterpart);
+  /**
+   * 通用属性同步：当孪生分组框内某个实体（或连线）的属性发生变化时，
+   * 对等价类中所有其他对应方执行相同的操作。
+   *
+   * @param entity 发生变化的实体（Entity 或 Association）
+   * @param apply  接受对应方作为参数的同步回调，类型与 entity 相同
+   *
+   * 用法示例（同步 ImageNode 的 scale）：
+   *   syncTwinSectionProperty(imageNode, (counterpart) => {
+   *     counterpart.scale = imageNode.scale;
+   *     counterpart.scaleUpdate(0); // 刷新碰撞箱
+   *   });
+   */
+  public syncTwinSectionProperty<T extends Entity>(entity: T, apply: (counterpart: T) => void): void {
+    if (this.isApplyingTwinSectionChange) return;
+    const counterparts = this.getTwinSectionCounterparts(entity);
+    if (counterparts.length === 0) return;
+    this.applyTwinSectionChange(() => {
+      for (const counterpart of counterparts) {
+        if (counterpart instanceof (entity.constructor as new (...args: unknown[]) => T)) {
+          apply(counterpart as T);
         }
-      });
-    }
+      }
+    });
+  }
+
+  /**
+   * 通用属性同步（连线版本）：当孪生分组框内某条连线的属性发生变化时，
+   * 对等价类中所有其他对应方执行相同的操作。
+   *
+   * 通过 BFS 展开连线端点的等价类，找到每个孪生框里对应的镜像连线，再执行 apply。
+   */
+  public syncTwinSectionAssociationProperty<T extends Edge | MultiTargetUndirectedEdge>(
+    association: T,
+    apply: (counterpart: T) => void,
+  ): void {
+    if (this.isApplyingTwinSectionChange) return;
+
+    const memberCounterpartsList = association.associationList.map((member) =>
+      member instanceof Entity ? this.getTwinSectionCounterparts(member) : [],
+    );
+    const counterpartCount = memberCounterpartsList[0]?.length ?? 0;
+    if (counterpartCount === 0) return;
+    if (!memberCounterpartsList.every((list) => list.length === counterpartCount)) return;
+
+    this.applyTwinSectionChange(() => {
+      for (let i = 0; i < counterpartCount; i++) {
+        const counterpartMembers = memberCounterpartsList.map((list) => list[i]);
+        const twin = this.project.stageManager.getAssociations().find((candidate) => {
+          if (candidate.constructor !== association.constructor) return false;
+          if (!(candidate instanceof Edge) && !(candidate instanceof MultiTargetUndirectedEdge)) return false;
+          return candidate.associationList.every((member, idx) => member === counterpartMembers[idx]);
+        }) as T | undefined;
+        if (twin) apply(twin);
+      }
+    });
   }
 
   /**
@@ -357,9 +493,13 @@ export class StageSyncAssociationManager {
     }
 
     if (!(deleted instanceof Entity) || this.isApplyingTwinSectionChange) return;
-    const counterpart = this.getTwinSectionCounterpart(deleted);
-    if (!counterpart) return;
-    this.applyTwinSectionChange(() => this.removeTwinSectionEntity(counterpart));
+    const counterparts = this.getTwinSectionCounterparts(deleted);
+    if (counterparts.length === 0) return;
+    this.applyTwinSectionChange(() => {
+      for (const counterpart of counterparts) {
+        this.removeTwinSectionEntity(counterpart);
+      }
+    });
   }
 
   private cloneEntityIntoTwinSection(entity: Entity, parent: Section, twinParent: Section): void {
@@ -469,15 +609,54 @@ export class StageSyncAssociationManager {
     }
   }
 
-  private getTwinSectionCounterpart(entity: Entity): Entity | null {
-    for (const association of this.getTwinSectionAssociations()) {
-      for (const [sourceUuid, twinUuid] of association.entityUuidPairs) {
-        if (sourceUuid === entity.uuid) {
-          return this.project.stageManager.getEntities().find((candidate) => candidate.uuid === twinUuid) ?? null;
+  /**
+   * 获取某个实体在所有孪生分组框关系中的全部对应方（等价类中除自身外的所有成员）。
+   *
+   * 由于多次孪生产生的 TwinSectionAssociation 只记录直接配对（A↔A'、A↔A''），
+   * A' 和 A'' 之间没有直接映射，需要通过 A 作为桥梁间接推导。
+   * 因此这里用 BFS 把整个等价类全部展开：从 entity 出发，沿所有 TSA 的直接配对
+   * 不断扩展，直到没有新成员为止，最终返回除自身外的全部成员。
+   */
+  private getTwinSectionCounterparts(entity: Entity): Entity[] {
+    const allEntities = this.project.stageManager.getEntities();
+    const visited = new Set<string>([entity.uuid]);
+    const queue: Entity[] = [entity];
+    const result: Entity[] = [];
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      for (const association of this.getTwinSectionAssociations()) {
+        for (const [sourceUuid, twinUuid] of association.entityUuidPairs) {
+          let neighborUuid: string | null = null;
+          if (sourceUuid === current.uuid) neighborUuid = twinUuid;
+          else if (twinUuid === current.uuid) neighborUuid = sourceUuid;
+
+          if (neighborUuid && !visited.has(neighborUuid)) {
+            visited.add(neighborUuid);
+            const neighbor = allEntities.find((e) => e.uuid === neighborUuid);
+            if (neighbor) {
+              result.push(neighbor);
+              queue.push(neighbor);
+            }
+          }
         }
-        if (twinUuid === entity.uuid) {
-          return this.project.stageManager.getEntities().find((candidate) => candidate.uuid === sourceUuid) ?? null;
-        }
+      }
+    }
+    return result;
+  }
+
+  /**
+   * 在指定的单个 TwinSectionAssociation 中查找某实体的对应方。
+   * 用于连线/父级变化等需要按关系逐一处理的场景。
+   */
+  private getCounterpartInAssociation(entity: Entity, tsa: TwinSectionAssociation): Entity | null {
+    const allEntities = this.project.stageManager.getEntities();
+    for (const [sourceUuid, twinUuid] of tsa.entityUuidPairs) {
+      if (sourceUuid === entity.uuid) {
+        return allEntities.find((candidate) => candidate.uuid === twinUuid) ?? null;
+      }
+      if (twinUuid === entity.uuid) {
+        return allEntities.find((candidate) => candidate.uuid === sourceUuid) ?? null;
       }
     }
     return null;

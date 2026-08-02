@@ -106,6 +106,9 @@ LatexEditWindowContent.open = (project: Project, node: LatexNode) => {
         initialLatex={node.latexSource}
         onConfirm={(newLatex: string) => {
           node.updateLatex(newLatex).then(() => {
+            project.syncAssociationManager.syncTwinSectionProperty(node, (counterpart) => {
+              void counterpart.updateLatex(newLatex);
+            });
             project.historyManager.recordStep();
           });
           void TabWorkspace.close(tabId);

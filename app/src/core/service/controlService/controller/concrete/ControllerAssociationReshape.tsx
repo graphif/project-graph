@@ -144,6 +144,9 @@ export class ControllerAssociationReshapeClass extends ControllerClass {
               // 将鼠标移动投影到 AB 方向
               const delta = dragDelta.dot(abDir);
               arcEdge.textPosition = Math.max(0, Math.min(1, arcEdge.textPosition + delta / abLen));
+              this.project.syncAssociationManager.syncTwinSectionAssociationProperty(arcEdge, (c) => {
+                c.textPosition = arcEdge.textPosition;
+              });
             }
           }
         }
@@ -165,6 +168,9 @@ export class ControllerAssociationReshapeClass extends ControllerClass {
             // diffLocation 在 perp 方向上的投影
             const delta = diffLocation.dot(perp);
             arcEdge.offset += delta;
+            this.project.syncAssociationManager.syncTwinSectionAssociationProperty(arcEdge, (c) => {
+              c.offset = arcEdge.offset;
+            });
           }
         } else {
           this.project.stageNodeRotate.moveEdges(this.lastMoveLocation, diffLocation);

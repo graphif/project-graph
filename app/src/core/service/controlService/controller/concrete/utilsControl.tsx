@@ -210,6 +210,9 @@ export class ControllerUtils {
         edge.text,
         (text) => {
           edge.rename(text);
+          this.project.syncAssociationManager.syncTwinSectionAssociationProperty(edge, (c) => {
+            c.rename(text);
+          });
         },
         {
           position: "fixed",
