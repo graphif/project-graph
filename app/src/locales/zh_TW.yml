@@ -352,7 +352,7 @@ settings:
     description: |
       開啟後，標籤文本節點的顯示在攝像機縮小到廣袤的全局視野時，
       標籤會巨大化顯示，以便更容易辨識整個文件的佈局分佈
-  showTextNodeBorder:
+  forceHideTextNodeBorder:
     title: 強制隱藏文本節點邊框
     description: |
       開啟後，無論文本節點的邊框樣式設置了什麼格式（如虛線、實線、無邊框），都強制不顯示任何邊框。

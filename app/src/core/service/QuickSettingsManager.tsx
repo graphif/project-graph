@@ -31,7 +31,7 @@ export namespace QuickSettingsManager {
   const DEFAULT_QUICK_SETTINGS: QuickSettingItem[] = [
     { settingKey: "isStealthModeEnabled" },
     { settingKey: "stealthModeReverseMask" },
-    { settingKey: "showTextNodeBorder" },
+    { settingKey: "forceHideTextNodeBorder" },
     { settingKey: "alwaysShowDetails" },
     { settingKey: "showDebug" },
     { settingKey: "enableDragAutoAlign" },

@@ -976,7 +976,7 @@ settings:
       default: Default (backup folder)
       sideBySide: Side-by-side (same folder)
       subfolder: Subfolder ({filename}_backup)
-  showTextNodeBorder:
+  forceHideTextNodeBorder:
     title: Force Hide Text Node Border
     description: |
       When enabled, no border will be shown on any text node, regardless of the border style set on each node (solid, dashed, or none).

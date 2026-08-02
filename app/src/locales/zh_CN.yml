@@ -352,7 +352,7 @@ settings:
     description: |
       开启后，标签文本节点的显示在摄像机缩小到广袤的全局视野时，
       标签会巨大化显示，以便更容易辨识整个文件的布局分布
-  showTextNodeBorder:
+  forceHideTextNodeBorder:
     title: 强制隐藏文本节点边框
     description: |
       开启后，无论文本节点的边框样式设置了什么格式（如虚线、实线、无边框），都强制不显示任何边框。

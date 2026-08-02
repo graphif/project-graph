@@ -340,7 +340,7 @@ settings:
     description: |
       Saat diaktifkan, saat kamera diperkecil ke tampilan global yang luas,
       tag akan ditampilkan lebih besar untuk memudahkan identifikasi distribusi layout seluruh file
-  showTextNodeBorder:
+  forceHideTextNodeBorder:
     title: Paksa Sembunyikan Batas Node Teks
     description: |
       Saat diaktifkan, tidak ada batas yang akan ditampilkan pada node teks apapun, terlepas dari gaya batas yang diatur pada setiap node (solid, putus-putus, atau tidak ada).

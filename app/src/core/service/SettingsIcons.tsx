@@ -215,7 +215,7 @@ export const settingsIcons = {
   showBackgroundDots: Grip,
   showBackgroundCartesian: Move3d,
   enableTagTextNodesBigDisplay: Tag,
-  showTextNodeBorder: Square,
+  forceHideTextNodeBorder: Square,
   newNodeScaleByCamera: Scaling,
   newNodeScaleByCameraOffset: Scaling,
   showTreeDirectionHint: TrendingUpDown,

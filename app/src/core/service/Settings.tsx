@@ -62,7 +62,7 @@ export const settingsSchema = z.object({
   showBackgroundDots: z.boolean().default(false),
   showBackgroundCartesian: z.boolean().default(true),
   enableTagTextNodesBigDisplay: z.boolean().default(true),
-  showTextNodeBorder: z.boolean().default(true),
+  forceHideTextNodeBorder: z.boolean().default(false),
   textNodeInitBorderStyle: z.union([z.literal("solid"), z.literal("dashed"), z.literal("none")]).default("solid"),
   showTreeDirectionHint: z.boolean().default(true),
   lineStyle: z.union([z.literal("straight"), z.literal("bezier"), z.literal("vertical")]).default("straight"),

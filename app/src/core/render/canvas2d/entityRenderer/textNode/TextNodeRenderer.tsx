@@ -34,7 +34,7 @@ export class TextNodeRenderer {
     }
 
     // 强制隐藏开关优先级最高（true = 强制隐藏所有边框）；否则根据节点自身的 borderStyle 决定
-    const effectiveBorderStyle = Settings.showTextNodeBorder ? "none" : node.borderStyle;
+    const effectiveBorderStyle = Settings.forceHideTextNodeBorder ? "none" : node.borderStyle;
 
     const nodeViewRect = new Rectangle(
       this.project.renderer.transformWorld2View(node.rectangle.location),
