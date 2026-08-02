@@ -3020,6 +3020,15 @@ export const allKeyBinds: KeyBindItem[] = [
     },
   },
   {
+    id: "createTwinSection",
+    defaultKey: "S-y",
+    icon: GitBranch,
+    when: whenHasSelectedSections,
+    onPress: (project) => {
+      project!.syncAssociationManager.createTwinsFromSelectedEntities();
+    },
+  },
+  {
     id: "changeTextNodeToReferenceBlock",
     defaultKey: "r e f",
     icon: SquareDashedBottomCode,

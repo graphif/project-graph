@@ -2409,6 +2409,9 @@ keyBinds:
   createTwinTextNode:
     title: Buat Node Teks Kembar
     description: Buat node kembar untuk semua node teks yang dipilih. Node baru akan menyinkronkan konten dengan node asli. Tekan Shift+Y untuk memicu.
+  createTwinSection:
+    title: Buat Grup Kembar
+    description: Buat grup kembar untuk grup yang dipilih. Grup kembar menyinkronkan isi, penambahan, penghapusan, dan posisi. Tekan Shift+Y untuk memicu.
   reverseImageColors:
     title: Balikkan Warna Gambar
     description: Balikkan warna gambar yang dipilih (ubah latar belakang putih menjadi hitam, atau sebaliknya)

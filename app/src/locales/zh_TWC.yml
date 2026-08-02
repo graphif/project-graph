@@ -2368,6 +2368,9 @@ keyBinds:
   createTwinTextNode:
     title: 建立孿生節點
     description: 為所有選取的文字節點分別建立孿生節點，新節點與原節點內容同步，按 Shift+Y 觸發
+  createTwinSection:
+    title: 建立孿生分組框
+    description: 為選取的分組框建立孿生分組框。兩個分組框會同步內部節點的增刪、位置和內容，按 Shift+Y 觸發
   reverseImageColors:
     title: 反轉圖片顏色
     description: 反轉選取圖片的顏色（將白色背景變為黑色，反之亦然）

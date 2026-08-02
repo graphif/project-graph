@@ -2157,6 +2157,10 @@ keyBinds:
     description: |
       为所有选中的文本节点分别创建孪生节点，新节点与原节点内容同步，按 Shift+Y 触发
       默认快捷键说明：Y 形状像一个分叉，象征一个节点分裂成两个孪生节点
+  createTwinSection:
+    title: 创建孪生分组框
+    description: |
+      为选中的分组框创建孪生分组框。两个分组框会同步内部节点的增删、位置及内容，按 Shift+Y 触发
   reverseImageColors:
     title: 反转图片颜色
     description: 反转选中图片的颜色（将白色背景变为黑色，反之亦然）

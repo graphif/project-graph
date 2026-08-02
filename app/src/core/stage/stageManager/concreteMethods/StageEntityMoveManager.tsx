@@ -113,6 +113,7 @@ export class EntityMoveManager {
     }
     // 让自己移动
     entity.move(delta);
+    this.project.syncAssociationManager.onEntityMoved(entity, delta);
 
     if (isAutoAdjustSection) {
       let current = entity.parentSection;
@@ -179,7 +180,9 @@ export class EntityMoveManager {
     if (!this.canMoveEntity(entity)) {
       return;
     }
+    const delta = location.clone().subtract(entity.collisionBox.getRectangle().location);
     entity.moveTo(location);
+    this.project.syncAssociationManager.onEntityMoved(entity, delta);
     let current = entity.parentSection;
     while (current) {
       current.adjustLocationAndSize();

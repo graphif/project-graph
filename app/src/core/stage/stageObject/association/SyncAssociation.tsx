@@ -113,3 +113,56 @@ export class SyncAssociation extends Association {
     }
   }
 }
+
+/**
+ * 孪生分组框关系。
+ *
+ * 与 SyncAssociation 不同，分组框中的对象需要一一对应，因此这里保存 UUID
+ * 映射而非对象引用；这样在文件反序列化后也无需依赖运行时对象引用修复。
+ */
+@passExtraAtArg1
+@passObject
+export class TwinSectionAssociation extends Association {
+  @id
+  @serializable
+  public uuid: string;
+
+  @serializable
+  public sourceSectionUuid: string;
+
+  @serializable
+  public twinSectionUuid: string;
+
+  @serializable
+  public entityUuidPairs: Array<[string, string]>;
+
+  public get collisionBox(): CollisionBox {
+    return new CollisionBox([new Rectangle(Vector.getZero(), Vector.getZero())]);
+  }
+
+  public override get isPhysical(): boolean {
+    return false;
+  }
+
+  constructor(
+    protected readonly project: Project,
+    {
+      uuid = crypto.randomUUID() as string,
+      sourceSectionUuid,
+      twinSectionUuid,
+      entityUuidPairs = [] as Array<[string, string]>,
+    }: {
+      uuid?: string;
+      sourceSectionUuid: string;
+      twinSectionUuid: string;
+      entityUuidPairs?: Array<[string, string]>;
+    },
+    public unknown = false,
+  ) {
+    super();
+    this.uuid = uuid;
+    this.sourceSectionUuid = sourceSectionUuid;
+    this.twinSectionUuid = twinSectionUuid;
+    this.entityUuidPairs = entityUuidPairs;
+  }
+}

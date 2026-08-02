@@ -767,6 +767,9 @@ export class StageManager {
       return this.deleteEdge(deleteAssociation);
     } else if (deleteAssociation instanceof MultiTargetUndirectedEdge) {
       const res = this.project.deleteManager.deleteMultiTargetUndirectedEdge(deleteAssociation);
+      if (res) {
+        this.project.syncAssociationManager.onAssociationDeleted(deleteAssociation);
+      }
       this.project.historyManager.recordStep();
       return res;
     }
@@ -776,6 +779,9 @@ export class StageManager {
 
   deleteEdge(deleteEdge: Edge): boolean {
     const res = this.project.deleteManager.deleteEdge(deleteEdge);
+    if (res) {
+      this.project.syncAssociationManager.onAssociationDeleted(deleteEdge);
+    }
     this.project.historyManager.recordStep();
     return res;
   }
@@ -997,6 +1003,7 @@ export class StageManager {
       } else {
         edge.targetRectangleRate = newLocationRate;
       }
+      this.project.syncAssociationManager.onEdgeConnectLocationChanged(edge);
     }
     // 播放连线调整音效
     SoundService.play.associationAdjustSoundFile();

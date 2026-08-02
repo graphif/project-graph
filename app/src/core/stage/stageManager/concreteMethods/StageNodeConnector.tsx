@@ -65,6 +65,7 @@ export class NodeConnector {
     });
 
     this.project.stageManager.add(newEdge);
+    this.project.syncAssociationManager.onAssociationCreated(newEdge);
   }
 
   connectEntityFast(fromNode: ConnectableEntity, toNode: ConnectableEntity, text: string = ""): void {
@@ -76,6 +77,7 @@ export class NodeConnector {
     });
 
     this.project.stageManager.add(newEdge);
+    this.project.syncAssociationManager.onAssociationCreated(newEdge);
   }
 
   addCrEdge(fromNode: ConnectableEntity, toNode: ConnectableEntity): void {
@@ -84,6 +86,7 @@ export class NodeConnector {
     }
     const newEdge = CubicCatmullRomSplineEdge.fromTwoEntity(this.project, fromNode, toNode);
     this.project.stageManager.add(newEdge);
+    this.project.syncAssociationManager.onAssociationCreated(newEdge);
   }
 
   addArcEdge(fromNode: ConnectableEntity, toNode: ConnectableEntity): void {
@@ -97,6 +100,7 @@ export class NodeConnector {
       arrowType: Settings.defaultEdgeArrowType,
     });
     this.project.stageManager.add(newEdge);
+    this.project.syncAssociationManager.onAssociationCreated(newEdge);
   }
 
   // 将多个节点之间全连接

@@ -755,7 +755,14 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
   {
     title: "section",
     icon: <SquareDashed />,
-    keys: ["folderSection", "packEntityToSection", "unpackEntityFromSection", "textNodeToSection", "toggleSectionLock"],
+    keys: [
+      "folderSection",
+      "packEntityToSection",
+      "unpackEntityFromSection",
+      "textNodeToSection",
+      "toggleSectionLock",
+      "createTwinSection",
+    ],
   },
   {
     title: "leftMouseModeCheckout",

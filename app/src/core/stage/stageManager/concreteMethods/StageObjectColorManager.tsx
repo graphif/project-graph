@@ -20,6 +20,7 @@ export class StageObjectColorManager {
     for (const node of this.project.stageManager.getSections()) {
       if (node.isSelected) {
         node.color = color;
+        this.project.syncAssociationManager.onSectionPropertyChanged(node, "color");
       }
     }
     for (const entity of this.project.stageManager.getPenStrokes()) {

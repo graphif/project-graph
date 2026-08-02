@@ -252,6 +252,9 @@ export class ControllerUtils {
       clickedNode.details = value;
       // 向孪生兄弟同步 details
       this.project.syncAssociationManager.syncFrom(clickedNode, "details");
+      if (clickedNode instanceof Section) {
+        this.project.syncAssociationManager.onSectionPropertyChanged(clickedNode, "details");
+      }
     });
   }
 

@@ -1,9 +1,21 @@
 import { Project, service } from "@/core/Project";
+import { CopyEngineUtils } from "@/core/service/dataManageService/copyEngine/copyEngineUtils";
+import { ConnectableAssociation } from "@/core/stage/stageObject/abstract/Association";
+import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import { Edge } from "@/core/stage/stageObject/association/Edge";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { SyncAssociation, SyncableKey } from "@/core/stage/stageObject/association/SyncAssociation";
+import {
+  SyncAssociation,
+  SyncableKey,
+  TwinSectionAssociation,
+} from "@/core/stage/stageObject/association/SyncAssociation";
 import { Vector } from "@graphif/data-structures";
+import { deserialize, serialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 
 /**
@@ -16,6 +28,8 @@ import { Rectangle } from "@graphif/shapes";
  */
 @service("syncAssociationManager")
 export class StageSyncAssociationManager {
+  private isApplyingTwinSectionChange = false;
+
   constructor(private readonly project: Project) {}
 
   public createTwinsFromSelectedEntities(): void {
@@ -24,6 +38,8 @@ export class StageSyncAssociationManager {
     for (const entity of selectedEntities) {
       if (entity instanceof TextNode) {
         createdTwins.push(this.createTwinTextNode(entity));
+      } else if (entity instanceof Section) {
+        createdTwins.push(this.createTwinSection(entity));
       }
     }
 
@@ -32,6 +48,143 @@ export class StageSyncAssociationManager {
     this.project.stageManager.clearSelectAll();
     for (const twin of createdTwins) {
       twin.isSelected = true;
+    }
+  }
+
+  public getTwinSectionAssociations(): TwinSectionAssociation[] {
+    return this.project.stage.filter((obj) => obj instanceof TwinSectionAssociation) as TwinSectionAssociation[];
+  }
+
+  /** 创建一个完整内容副本，并建立分组框内所有实体的一一映射。 */
+  public createTwinSection(source: Section): Section {
+    const sourceObjects = CopyEngineUtils.getAllStageObjectFromEntities(this.project, [source]);
+    const { stageObjects: twinObjects, entityPairs } = this.cloneStageObjects(sourceObjects);
+    const twin = entityPairs.get(source.uuid);
+    if (!(twin instanceof Section)) {
+      throw new Error("Unable to create the twin section.");
+    }
+
+    const offset = new Vector(source.rectangle.size.x + 60, 0);
+    twin.move(offset);
+    this.project.stage.push(...twinObjects);
+    this.connectTwinTextNodes(entityPairs);
+
+    const association = new TwinSectionAssociation(this.project, {
+      sourceSectionUuid: source.uuid,
+      twinSectionUuid: twin.uuid,
+      entityUuidPairs: this.toEntityUuidPairs(entityPairs),
+    });
+    this.project.stage.push(association);
+    this.project.stageManager.updateReferences();
+    this.project.historyManager.recordStep();
+    return twin;
+  }
+
+  /** 用户移动框内节点时，让对应节点以相同位移移动。 */
+  public onEntityMoved(entity: Entity, delta: Vector): void {
+    if (this.isApplyingTwinSectionChange) return;
+    const counterpart = this.getTwinSectionCounterpart(entity);
+    if (!counterpart || this.isTwinSectionRoot(entity)) return;
+
+    this.applyTwinSectionChange(() => {
+      counterpart.move(delta);
+      this.adjustParentSections(counterpart);
+    });
+  }
+
+  /** 当两个孪生分组框内的节点新增连线时，创建端点对应的镜像连线。 */
+  public onAssociationCreated(association: Edge | MultiTargetUndirectedEdge): void {
+    if (this.isApplyingTwinSectionChange) return;
+    const counterpartMembers = association.associationList.map((member) => this.getTwinSectionCounterpart(member));
+    if (counterpartMembers.some((member): member is null => member === null)) return;
+    if (!counterpartMembers.every((member): member is ConnectableEntity => member instanceof ConnectableEntity)) return;
+
+    const twin = (deserialize(serialize([association]), this.project) as Array<Edge | MultiTargetUndirectedEdge>)[0];
+    if (!twin) return;
+    twin.uuid = crypto.randomUUID();
+    twin.associationList = counterpartMembers;
+    twin.isSelected = false;
+
+    this.applyTwinSectionChange(() => this.project.stageManager.add(twin));
+  }
+
+  /** 删除连线时，删除端点一一对应的镜像连线。 */
+  public onAssociationDeleted(association: Edge | MultiTargetUndirectedEdge): void {
+    if (this.isApplyingTwinSectionChange) return;
+    const counterpartMembers = association.associationList.map((member) => this.getTwinSectionCounterpart(member));
+    if (counterpartMembers.some((member): member is null => member === null)) return;
+    if (!counterpartMembers.every((member): member is ConnectableEntity => member instanceof ConnectableEntity)) return;
+
+    const twin = this.project.stageManager.getAssociations().find((candidate) => {
+      if (candidate.constructor !== association.constructor) return false;
+      if (!(candidate instanceof Edge) && !(candidate instanceof MultiTargetUndirectedEdge)) return false;
+      return candidate.associationList.every((member, index) => member === counterpartMembers[index]);
+    });
+    if (!twin) return;
+
+    this.applyTwinSectionChange(() => {
+      this.project.stageManager.delete(twin);
+      this.project.stageManager.updateReferences();
+    });
+  }
+
+  /** 同步有向连线后续调整过的端点位置。 */
+  public onEdgeConnectLocationChanged(edge: Edge): void {
+    if (this.isApplyingTwinSectionChange) return;
+    const counterpartMembers = edge.associationList.map((member) => this.getTwinSectionCounterpart(member));
+    if (counterpartMembers.some((member): member is null => member === null)) return;
+    if (!counterpartMembers.every((member): member is ConnectableEntity => member instanceof ConnectableEntity)) return;
+
+    const twin = this.project.stageManager.getAssociations().find((candidate) => {
+      if (candidate.constructor !== edge.constructor || !(candidate instanceof Edge)) return false;
+      return candidate.associationList.every((member, index) => member === counterpartMembers[index]);
+    }) as Edge | undefined;
+    if (!twin) return;
+
+    this.applyTwinSectionChange(() => {
+      twin.sourceRectangleRate = edge.sourceRectangleRate.clone();
+      twin.targetRectangleRate = edge.targetRectangleRate.clone();
+    });
+  }
+
+  /** 分组框标题、颜色、详情的修改同步到另一侧。 */
+  public onSectionPropertyChanged(section: Section, key: "text" | "color" | "details"): void {
+    if (this.isApplyingTwinSectionChange) return;
+    const counterpart = this.getTwinSectionCounterpart(section);
+    if (!(counterpart instanceof Section)) return;
+
+    this.applyTwinSectionChange(() => {
+      if (key === "text") {
+        counterpart.rename(section.text);
+      } else if (key === "color") {
+        counterpart.color = section.color;
+      } else {
+        counterpart.details = section.details;
+      }
+    });
+  }
+
+  /** 分组框内实体的父级变化：新加入时克隆，离开时删除另一侧对应项。 */
+  public onEntityParentChanged(entity: Entity, previousParent: Section | null, nextParent: Section | null): void {
+    if (this.isApplyingTwinSectionChange || previousParent === nextParent) return;
+
+    const previousCounterpart = previousParent ? this.getTwinSectionCounterpart(previousParent) : null;
+    const nextCounterpart = nextParent ? this.getTwinSectionCounterpart(nextParent) : null;
+    const counterpart = this.getTwinSectionCounterpart(entity);
+
+    if (!previousCounterpart && nextCounterpart instanceof Section && !counterpart) {
+      this.applyTwinSectionChange(() => this.cloneEntityIntoTwinSection(entity, nextParent!, nextCounterpart));
+      return;
+    }
+
+    if (previousCounterpart instanceof Section && counterpart) {
+      this.applyTwinSectionChange(() => {
+        if (nextCounterpart instanceof Section) {
+          this.project.sectionInOutManager.attachEntityToSection(counterpart, nextCounterpart);
+        } else {
+          this.removeTwinSectionEntity(counterpart);
+        }
+      });
     }
   }
 
@@ -178,6 +331,187 @@ export class StageSyncAssociationManager {
 
     for (const sa of toDeleteSyncAssociations) {
       this.project.stageManager.delete(sa);
+    }
+
+    if (!(deleted instanceof Entity) || this.isApplyingTwinSectionChange) return;
+    const counterpart = this.getTwinSectionCounterpart(deleted);
+    if (!counterpart) return;
+    this.applyTwinSectionChange(() => this.removeTwinSectionEntity(counterpart));
+  }
+
+  private cloneEntityIntoTwinSection(entity: Entity, parent: Section, twinParent: Section): void {
+    const sourceObjects = CopyEngineUtils.getAllStageObjectFromEntities(this.project, [entity]);
+    const { stageObjects, entityPairs } = this.cloneStageObjects(sourceObjects);
+    const twin = entityPairs.get(entity.uuid);
+    if (!twin) return;
+
+    const offset = twinParent.rectangle.location.clone().subtract(parent.rectangle.location);
+    twin.move(offset);
+    this.project.stage.push(...stageObjects);
+    this.connectTwinTextNodes(entityPairs);
+    this.project.sectionInOutManager.attachEntityToSection(twin, twinParent);
+
+    const relation = this.getTwinSectionAssociationBySection(parent);
+    if (relation) {
+      relation.entityUuidPairs.push(...this.toEntityUuidPairs(entityPairs));
+    }
+    this.project.stageManager.updateReferences();
+  }
+
+  private cloneStageObjects(sourceObjects: StageObject[]): {
+    stageObjects: StageObject[];
+    entityPairs: Map<string, Entity>;
+  } {
+    const stageObjects = deserialize(serialize(sourceObjects), this.project) as StageObject[];
+    const sourceEntities = sourceObjects.filter((object): object is Entity => object instanceof Entity);
+    const clonedEntitiesByOldUuid = new Map(
+      stageObjects
+        .filter((object): object is Entity => object instanceof Entity)
+        .map((entity) => [entity.uuid, entity]),
+    );
+    const entityPairs = new Map<string, Entity>();
+
+    for (const source of sourceEntities) {
+      const twin = clonedEntitiesByOldUuid.get(source.uuid);
+      if (twin) entityPairs.set(source.uuid, twin);
+    }
+
+    for (const section of stageObjects.filter((object): object is Section => object instanceof Section)) {
+      section.children = section.children.map((child) => clonedEntitiesByOldUuid.get(child.uuid) ?? child);
+    }
+    for (const association of stageObjects.filter(
+      (object): object is ConnectableAssociation => object instanceof ConnectableAssociation,
+    )) {
+      association.uuid = crypto.randomUUID();
+      if (association instanceof Edge) {
+        association.source = clonedEntitiesByOldUuid.get(association.source.uuid) as typeof association.source;
+        association.target = clonedEntitiesByOldUuid.get(association.target.uuid) as typeof association.target;
+      } else if (association instanceof MultiTargetUndirectedEdge) {
+        association.associationList = association.associationList.map(
+          (member) => clonedEntitiesByOldUuid.get(member.uuid) as typeof member,
+        );
+      }
+    }
+    for (const twin of clonedEntitiesByOldUuid.values()) {
+      twin.uuid = crypto.randomUUID();
+      twin.isSelected = false;
+    }
+    return { stageObjects, entityPairs };
+  }
+
+  private toEntityUuidPairs(entityPairs: Map<string, Entity>): Array<[string, string]> {
+    return [...entityPairs.entries()].map(([sourceUuid, twin]) => [sourceUuid, twin.uuid]);
+  }
+
+  private connectTwinTextNodes(entityPairs: Map<string, Entity>): void {
+    for (const [sourceUuid, twin] of entityPairs) {
+      const source = this.project.stageManager.getEntities().find((entity) => entity.uuid === sourceUuid);
+      if (!(source instanceof TextNode) || !(twin instanceof TextNode)) continue;
+
+      const existingAssociation = this.getSyncAssociationsByMember(source)[0];
+      if (existingAssociation) {
+        existingAssociation.associationList.push(twin);
+      } else {
+        this.project.stage.push(
+          new SyncAssociation(this.project, {
+            associationList: [source, twin],
+            keys: ["text", "color", "details"],
+          }),
+        );
+      }
+    }
+  }
+
+  private getTwinSectionAssociationBySection(section: Section): TwinSectionAssociation | null {
+    return (
+      this.getTwinSectionAssociations().find((association) =>
+        association.entityUuidPairs.some(
+          ([sourceUuid, twinUuid]) => sourceUuid === section.uuid || twinUuid === section.uuid,
+        ),
+      ) ?? null
+    );
+  }
+
+  private isTwinSectionRoot(entity: Entity): boolean {
+    return this.getTwinSectionAssociations().some(
+      (association) => entity.uuid === association.sourceSectionUuid || entity.uuid === association.twinSectionUuid,
+    );
+  }
+
+  private adjustParentSections(entity: Entity): void {
+    let current = entity.parentSection;
+    while (current) {
+      current.adjustLocationAndSize();
+      current = current.parentSection;
+    }
+  }
+
+  private getTwinSectionCounterpart(entity: Entity): Entity | null {
+    for (const association of this.getTwinSectionAssociations()) {
+      for (const [sourceUuid, twinUuid] of association.entityUuidPairs) {
+        if (sourceUuid === entity.uuid) {
+          return this.project.stageManager.getEntities().find((candidate) => candidate.uuid === twinUuid) ?? null;
+        }
+        if (twinUuid === entity.uuid) {
+          return this.project.stageManager.getEntities().find((candidate) => candidate.uuid === sourceUuid) ?? null;
+        }
+      }
+    }
+    return null;
+  }
+
+  private removeTwinSectionEntity(entity: Entity): void {
+    const entities = this.collectEntityAndDescendants(entity);
+    const entityUuids = new Set(entities.map((item) => item.uuid));
+    for (const association of this.getTwinSectionAssociations()) {
+      association.entityUuidPairs = association.entityUuidPairs.filter(
+        ([sourceUuid, twinUuid]) => !entityUuids.has(sourceUuid) && !entityUuids.has(twinUuid),
+      );
+      if (
+        !association.entityUuidPairs.some(
+          ([sourceUuid, twinUuid]) =>
+            sourceUuid === association.sourceSectionUuid && twinUuid === association.twinSectionUuid,
+        )
+      ) {
+        this.project.stageManager.delete(association);
+      }
+    }
+    for (const stageObject of [...this.project.stage]) {
+      if (
+        stageObject instanceof Edge &&
+        (entityUuids.has(stageObject.source.uuid) || entityUuids.has(stageObject.target.uuid))
+      ) {
+        this.project.stageManager.delete(stageObject);
+      } else if (
+        stageObject instanceof MultiTargetUndirectedEdge &&
+        stageObject.associationList.some((member) => entityUuids.has(member.uuid))
+      ) {
+        this.project.stageManager.delete(stageObject);
+      }
+    }
+    for (const item of entities) {
+      this.onStageObjectDeleted(item);
+      this.project.stageManager.delete(item);
+    }
+    this.project.stageManager.updateReferences();
+  }
+
+  private collectEntityAndDescendants(entity: Entity): Entity[] {
+    const result: Entity[] = [entity];
+    if (entity instanceof Section) {
+      for (const child of entity.children) {
+        result.push(...this.collectEntityAndDescendants(child));
+      }
+    }
+    return result;
+  }
+
+  private applyTwinSectionChange(action: () => void): void {
+    this.isApplyingTwinSectionChange = true;
+    try {
+      action();
+    } finally {
+      this.isApplyingTwinSectionChange = false;
     }
   }
 }

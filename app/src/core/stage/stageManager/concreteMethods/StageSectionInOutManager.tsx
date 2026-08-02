@@ -47,7 +47,11 @@ export class SectionInOutManager {
   goOutSection(entities: Entity[], section: Section) {
     let changed = false;
     for (const entity of entities) {
-      changed = this.sectionDropChild(section, entity) || changed;
+      const didChange = this.sectionDropChild(section, entity);
+      if (didChange) {
+        this.project.syncAssociationManager.onEntityParentChanged(entity, section, null);
+      }
+      changed = didChange || changed;
     }
     if (changed) {
       this.project.stageManager.updateReferences();
@@ -62,12 +66,16 @@ export class SectionInOutManager {
     if (entity === section) {
       return false;
     }
+    const previousParent = entity.parentSection;
     let changed = false;
-    changed = this.entityDropParent(entity, false, section) || changed;
+    changed = this.entityDropParent(entity, false, section, false) || changed;
     if (!section.children.includes(entity)) {
       section.children.push(entity);
       entity.parentSection = section;
       changed = true;
+    }
+    if (changed) {
+      this.project.syncAssociationManager.onEntityParentChanged(entity, previousParent, section);
     }
     return changed;
   }
@@ -79,10 +87,15 @@ export class SectionInOutManager {
     entity: Entity,
     convertEmptySectionToTextNode: boolean = false,
     excludeSection: Section | null = null,
+    notifyParentChange: boolean = true,
   ): boolean {
     const currentParent = entity.parentSection;
     if (currentParent && currentParent !== excludeSection) {
-      return this.sectionDropChild(currentParent, entity, convertEmptySectionToTextNode);
+      const changed = this.sectionDropChild(currentParent, entity, convertEmptySectionToTextNode);
+      if (changed && notifyParentChange) {
+        this.project.syncAssociationManager.onEntityParentChanged(entity, currentParent, null);
+      }
+      return changed;
     }
 
     let changed = false;
@@ -93,6 +106,9 @@ export class SectionInOutManager {
       if (section.children.includes(entity)) {
         changed = this.sectionDropChild(section, entity, convertEmptySectionToTextNode) || changed;
       }
+    }
+    if (changed && notifyParentChange) {
+      this.project.syncAssociationManager.onEntityParentChanged(entity, null, null);
     }
     return changed;
   }

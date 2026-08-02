@@ -144,6 +144,7 @@ export class Section extends ConnectableEntity {
   rename(newName: string) {
     this.text = newName;
     this.adjustLocationAndSize();
+    this.project.syncAssociationManager.onSectionPropertyChanged(this, "text");
   }
 
   /**

@@ -1727,6 +1727,9 @@ keyBinds:
   createTwinTextNode:
     title: Create Twin Text Node
     description: Create twin nodes for all selected text nodes. New nodes will sync content with original nodes. Press Shift+Y to trigger.
+  createTwinSection:
+    title: Create Twin Section
+    description: Create a twin section for a selected section. Twin sections synchronize their contents, additions, removals, and positions. Press Shift+Y to trigger.
   checkoutProtectPrivacy:
     title: Enter/Exit Privacy Protection Mode
     description: |
