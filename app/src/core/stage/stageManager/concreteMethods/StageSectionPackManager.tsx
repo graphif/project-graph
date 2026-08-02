@@ -141,10 +141,11 @@ export class SectionPackManager {
 
         const edges = this.project.graphMethods.getEdgesBetween(node, childNode);
         for (const edge of edges) {
-          this.project.stageManager.deleteEdge(edge);
+          // 直接调用底层方法，避免每次 deleteEdge 都触发 recordStep
+          this.project.deleteManager.deleteEdge(edge);
         }
       }
-      const section = this.targetTextNodeToSection(node, !isRoot);
+      const section = this.targetTextNodeToSection(node, !isRoot, false, true);
 
       this.project.sectionInOutManager.goInSection(childEntityList, section);
       return section;
@@ -171,10 +172,11 @@ export class SectionPackManager {
     for (const childNode of childNodes) {
       const edges = this.project.graphMethods.getEdgesBetween(rootNode, childNode);
       for (const edge of edges) {
-        this.project.stageManager.deleteEdge(edge);
+        // 直接调用底层方法，避免每次 deleteEdge 都触发 recordStep
+        this.project.deleteManager.deleteEdge(edge);
       }
     }
-    const section = this.targetTextNodeToSection(rootNode, false);
+    const section = this.targetTextNodeToSection(rootNode, false, false, true);
     const rootNodeFatherSection = rootNode.parentSection;
     if (rootNodeFatherSection) {
       this.project.sectionInOutManager.goOutSection(childSets, rootNodeFatherSection);
@@ -188,11 +190,13 @@ export class SectionPackManager {
    * @param textNode 要转换的节点
    * @param ignoreEdges 是否忽略边的影响
    * @param addConnectPoints 是否添加质点
+   * @param skipHistory 是否跳过历史记录（由调用方统一记录，避免产生多个历史步骤）
    */
   targetTextNodeToSection(
     textNode: TextNode,
     ignoreEdges: boolean = false,
     addConnectPoints: boolean = false,
+    skipHistory: boolean = false,
   ): Section {
     // 获取这个节点的父级Section
     const fatherSection = textNode.parentSection;
@@ -253,7 +257,12 @@ export class SectionPackManager {
       }
     }
     // 删除原来的textNode
-    this.project.stageManager.deleteEntities([textNode]);
+    if (skipHistory) {
+      // 直接调用底层方法，避免触发 recordStep（由调用方统一记录）
+      this.project.deleteManager.deleteEntities([textNode]);
+    } else {
+      this.project.stageManager.deleteEntities([textNode]);
+    }
     // 更新section的碰撞箱
     newSection.adjustLocationAndSize();
     return newSection;
