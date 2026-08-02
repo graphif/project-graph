@@ -55,6 +55,29 @@ export class StageSyncAssociationManager {
     return this.project.stage.filter((obj) => obj instanceof TwinSectionAssociation) as TwinSectionAssociation[];
   }
 
+  /**
+   * 给定一个实体，如果它属于某个孪生分组框关系的内部（包括根分组框本身），
+   * 则返回对应的两个根分组框 [sourceSection, twinSection]；否则返回 null。
+   *
+   * 用于渲染时判断：选中框内节点时，虚线应画在两个根分组框之间，而非节点之间。
+   */
+  public getTwinSectionRootPairForEntity(entity: Entity): [Section, Section] | null {
+    const entities = this.project.stageManager.getEntities();
+    for (const association of this.getTwinSectionAssociations()) {
+      const isInvolved = association.entityUuidPairs.some(
+        ([sourceUuid, twinUuid]) => sourceUuid === entity.uuid || twinUuid === entity.uuid,
+      );
+      if (!isInvolved) continue;
+
+      const sourceSection = entities.find((e) => e.uuid === association.sourceSectionUuid);
+      const twinSection = entities.find((e) => e.uuid === association.twinSectionUuid);
+      if (sourceSection instanceof Section && twinSection instanceof Section) {
+        return [sourceSection, twinSection];
+      }
+    }
+    return null;
+  }
+
   /** 创建一个完整内容副本，并建立分组框内所有实体的一一映射。 */
   public createTwinSection(source: Section): Section {
     const sourceObjects = CopyEngineUtils.getAllStageObjectFromEntities(this.project, [source]);

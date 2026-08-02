@@ -1,5 +1,6 @@
 import { Project, service } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
+import { SyncAssociationRenderer } from "@/core/render/canvas2d/utilsRenderer/SyncAssociationRenderer";
 import { Settings } from "@/core/service/Settings";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { getTextSize } from "@/utils/font";
@@ -282,6 +283,8 @@ export class SectionRenderer {
         const fillColor = this.project.stageStyleManager.currentStyle.CollideBoxSelected.toNewAlpha(0.35);
         this.project.shapeRenderer.renderPolygonAndFill(pointsView, fillColor, fillColor, 0, "round");
       }
+      // 渲染孪生同步关系的虚线提示
+      SyncAssociationRenderer.renderSyncLines(this.project, section);
     }
     // debug: 绿色虚线 观察父子关系
     if (Settings.showDebug) {
