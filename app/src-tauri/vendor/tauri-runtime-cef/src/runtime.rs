@@ -735,10 +735,34 @@ mod imp {
         let mut app = create_cef_app();
         // 子进程在这里退出；browser 得到 -1 后继续初始化。
         maybe_exit_as_cef_subprocess(&mut app);
+        // 守卫必须在子进程分流之后：gpu/renderer 等子进程 exec 时 browser 已持有
+        // 单实例锁，若提前检测会误杀所有子进程。
+        guard_single_instance();
         eprintln!("[cef-runtime] browser initialization (CEF Views/windowed)");
         initialize_cef(&mut app).expect("failed to initialize CEF before Tauri startup");
         PREPARED_CEF_APP.with(|prepared| prepared.replace(Some(app)));
         CEF_INITIALIZED.with(|initialized| initialized.set(true));
+    }
+
+    /// 单实例守卫：release 模式 cache 目录固定，两个实例并发时后启动者的
+    /// `CefInitialize` 会因 Chromium 单实例锁（SingletonSocket）返回 0，
+    /// 被上层当作初始化失败而 panic。这里在 CEF 初始化前探测已有实例，
+    /// 存在则提示并优雅退出（与 Chromium 单实例语义一致）。
+    ///
+    /// dev 模式 cache 目录随机化（见 `cef_cache_dir_name`），不会冲突，跳过。
+    /// Windows 的 Chromium 单实例用 named mutex，此处暂未覆盖。
+    #[cfg(target_os = "linux")]
+    fn guard_single_instance() {
+        if cfg!(debug_assertions) {
+            return;
+        }
+        let socket = cef_root_cache_dir().join("SingletonSocket");
+        // socket 由活跃 browser 进程持有：能连上即已有实例（进程崩溃后内核自动
+        // 回收 socket，不会残留误判）；连不上说明没有实例，继续正常初始化。
+        if std::os::unix::net::UnixStream::connect(&socket).is_ok() {
+            eprintln!("[cef-runtime] 已有 Project Graph 实例在运行，本实例退出");
+            std::process::exit(0);
+        }
     }
 
     wrap_app! {
