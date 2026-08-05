@@ -1498,6 +1498,10 @@ keyBinds:
     title: 協作面板
     description: |
       打開協作側欄，查看房間信息與成員列表
+  openCursorChat:
+    title: 光標聊天
+    description: |
+      在當前鼠標位置輸入一條會自動消失的協作消息
   newFileAtCurrentProjectDir:
     title: 在當前項目目錄下新建文件
     description: |

@@ -4,7 +4,13 @@ import { UserState } from "@/core/service/UserState";
 import { Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
 import { toast } from "sonner";
-import { createCollabRoom, joinCollabRoom } from "./CollabApi";
+import {
+  createCollabRoom,
+  downloadCollabAttachment,
+  joinCollabRoom,
+  listCollabAttachments,
+  uploadCollabAttachment,
+} from "./CollabApi";
 import type { CollabMember, CollabPresence, CollabRole, ServerToClientMessage } from "./CollabProtocol";
 import { CollabTransport } from "./CollabTransport";
 import {
@@ -68,10 +74,19 @@ export class CollaborationService implements Service {
   private lastLocalCursor: RemoteCursor | null = null;
   private cursorChatInput: HTMLInputElement | null = null;
   private cursorChatTimeout: ReturnType<typeof setTimeout> | null = null;
+  private sessionToken: string | null = null;
+  private attachmentSync: Promise<void> = Promise.resolve();
+  private readonly syncedAttachments = new Map<string, Blob>();
 
   constructor(private readonly project: Project) {
     this.project.on("stage-commit", () => {
       void this.onLocalCommit();
+    });
+    this.project.on("attachment-add", () => {
+      if (!this.isActive) return;
+      void this.queueAttachmentSync().catch((error) => {
+        toast.error(`上传附件失败：${error instanceof Error ? error.message : String(error)}`);
+      });
     });
     this.project.canvas.element.addEventListener("pointermove", this.handlePointerMove);
     this.project.canvas.element.addEventListener("pointerleave", this.handlePointerLeave);
@@ -188,6 +203,55 @@ export class CollaborationService implements Service {
     return stageArrayToMap(serialize(this.project.stage) as unknown[]);
   }
 
+  private attachmentIdsInStage(doc: StageMapDoc): Set<string> {
+    const attachmentIds = new Set<string>();
+    const visit = (value: unknown) => {
+      if (Array.isArray(value)) {
+        value.forEach(visit);
+      } else if (value && typeof value === "object") {
+        for (const [key, item] of Object.entries(value)) {
+          if (key === "attachmentId" && typeof item === "string" && item) attachmentIds.add(item);
+          else visit(item);
+        }
+      }
+    };
+    visit(doc);
+    return attachmentIds;
+  }
+
+  private async syncAttachments() {
+    if (!this.roomId || !this.sessionToken) return;
+    const pending = [...this.project.attachments.entries()].filter(
+      ([id, blob]) => this.syncedAttachments.get(id) !== blob,
+    );
+    await Promise.all(
+      pending.map(async ([attachmentId, blob]) => {
+        await uploadCollabAttachment(this.sessionToken!, this.roomId!, attachmentId, blob);
+        this.syncedAttachments.set(attachmentId, blob);
+      }),
+    );
+  }
+
+  private queueAttachmentSync(): Promise<void> {
+    const next = this.attachmentSync.then(() => this.syncAttachments());
+    this.attachmentSync = next.catch(() => undefined);
+    return next;
+  }
+
+  private async downloadAttachments(attachmentIds: Iterable<string>) {
+    if (!this.roomId || !this.sessionToken) return;
+    await Promise.all(
+      [...attachmentIds]
+        .filter((attachmentId) => !this.project.attachments.has(attachmentId))
+        .map(async (attachmentId) => {
+          const blob = await downloadCollabAttachment(this.sessionToken!, this.roomId!, attachmentId);
+          this.project.attachments.set(attachmentId, blob);
+          this.syncedAttachments.set(attachmentId, blob);
+        }),
+    );
+    this.project.loop();
+  }
+
   private applyStageMap(doc: StageMapDoc, tags?: string[], references?: Project["references"]) {
     this.applyingRemote = true;
     try {
@@ -221,8 +285,10 @@ export class CollaborationService implements Service {
     this.members = created.members;
     this.role = created.members.find((m) => m.userId === session.user.id)?.role ?? "owner";
     this.userId = session.user.id;
+    this.sessionToken = session.token;
     this.emitState();
 
+    await this.queueAttachmentSync();
     await this.connectWs(session.token, created.roomId);
     toast.success(`协作房间已创建，邀请码：${created.inviteCode}`);
     return { roomId: created.roomId, inviteCode: created.inviteCode };
@@ -239,7 +305,13 @@ export class CollaborationService implements Service {
     this.members = joined.members;
     this.role = joined.you.role;
     this.userId = session.user.id;
+    this.sessionToken = session.token;
     this.applyStageMap(joined.stage, joined.tags, joined.references);
+    const attachments = await listCollabAttachments(session.token, joined.roomId);
+    await this.downloadAttachments([
+      ...this.attachmentIdsInStage(joined.stage),
+      ...attachments.map((attachment) => attachment.attachmentId),
+    ]);
     this.emitState();
 
     await this.connectWs(session.token, joined.roomId);
@@ -294,6 +366,11 @@ export class CollaborationService implements Service {
     switch (msg.type) {
       case "op":
         this.handleRemoteOp(msg);
+        break;
+      case "attachment":
+        void this.downloadAttachments([msg.attachmentId]).catch((error) => {
+          toast.error(`同步附件失败：${error instanceof Error ? error.message : String(error)}`);
+        });
         break;
       case "reject":
         this.handleReject(msg);
@@ -372,6 +449,9 @@ export class CollaborationService implements Service {
       }
       const next = patchStageMap(this.ackMap, msg.delta);
       this.applyStageMap(next);
+      void this.downloadAttachments(this.attachmentIdsInStage(next)).catch((error) => {
+        toast.error(`同步附件失败：${error instanceof Error ? error.message : String(error)}`);
+      });
       this.version = msg.version;
       this.setStatus("synced");
       this.flushIfDirty();
@@ -395,7 +475,7 @@ export class CollaborationService implements Service {
     }
   }
 
-  private onLocalCommit() {
+  private async onLocalCommit() {
     if (!this.isActive || this.applyingRemote) return;
     if (!this.canEdit) {
       toast.error("当前为只读权限，无法编辑");
@@ -408,6 +488,13 @@ export class CollaborationService implements Service {
     }
 
     this.dirty = true;
+    try {
+      await this.queueAttachmentSync();
+    } catch (error) {
+      this.setStatus("error");
+      toast.error(`上传附件失败：${error instanceof Error ? error.message : String(error)}`);
+      return;
+    }
     this.flushIfDirty();
   }
 
@@ -509,6 +596,8 @@ export class CollaborationService implements Service {
     this.version = 0;
     this.userId = null;
     this.sessionId = null;
+    this.sessionToken = null;
+    this.syncedAttachments.clear();
     this.ackMap = emptyStageMap();
     this.setStatus("idle");
   }

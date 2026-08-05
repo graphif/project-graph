@@ -55,6 +55,7 @@ export type ServerToClientMessage =
   | { type: "cursor_chat"; sessionId: string; x: number | null; y: number | null; text: string }
   /** @deprecated 兼容旧服务端，按 userId 处理 */
   | { type: "member"; event: "join" | "leave" | "role"; member: CollabMember }
+  | { type: "attachment"; attachmentId: string; contentType: string }
   | { type: "error"; message: string }
   | { type: "pong" }
   | { type: "auth_ok"; user: { id: string; email: string; name: string } };

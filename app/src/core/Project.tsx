@@ -461,9 +461,10 @@ export class Project extends Tab {
    * @param scheme 目前有 "file" | "draft"， 以后可能有其他的协议
    */
 
-  addAttachment(data: Blob): string {
-    const uuid = crypto.randomUUID();
+  addAttachment(data: Blob, id = crypto.randomUUID()): string {
+    const uuid = id;
     this.attachments.set(uuid, data);
+    this.emit("attachment-add", { id: uuid, data });
     return uuid;
   }
 
