@@ -1,6 +1,7 @@
 import { Project, service } from "@/core/Project";
 import type { Service } from "@/core/interfaces/Service";
 import { UserState } from "@/core/service/UserState";
+import { Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
 import { toast } from "sonner";
 import { createCollabRoom, joinCollabRoom } from "./CollabApi";
@@ -32,6 +33,19 @@ export type CollabStateSnapshot = {
   sessionId: string | null;
 };
 
+export type RemoteCursor = {
+  sessionId: string;
+  x: number;
+  y: number;
+};
+
+export type RemoteCursorChat = RemoteCursor & {
+  text: string;
+};
+
+const CURSOR_SEND_INTERVAL_MS = 33;
+const CURSOR_CHAT_TIMEOUT_MS = 5_000;
+
 @service("collaboration")
 export class CollaborationService implements Service {
   private transport = new CollabTransport();
@@ -48,11 +62,19 @@ export class CollaborationService implements Service {
   private dirty = false;
   private userId: string | null = null;
   private sessionId: string | null = null;
+  private readonly remoteCursors = new Map<string, RemoteCursor>();
+  private readonly remoteCursorChats = new Map<string, RemoteCursorChat>();
+  private lastCursorSentAt = 0;
+  private lastLocalCursor: RemoteCursor | null = null;
+  private cursorChatInput: HTMLInputElement | null = null;
+  private cursorChatTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private readonly project: Project) {
     this.project.on("stage-commit", () => {
       void this.onLocalCommit();
     });
+    this.project.canvas.element.addEventListener("pointermove", this.handlePointerMove);
+    this.project.canvas.element.addEventListener("pointerleave", this.handlePointerLeave);
   }
 
   get isActive() {
@@ -93,6 +115,45 @@ export class CollaborationService implements Service {
 
   get currentSessionId() {
     return this.sessionId;
+  }
+
+  getRemoteCursors(): RemoteCursor[] {
+    return [...this.remoteCursors.values()];
+  }
+
+  getRemoteCursorChats(): RemoteCursorChat[] {
+    return [...this.remoteCursorChats.values()];
+  }
+
+  openCursorChat() {
+    if (!this.isActive || !this.transport.connected || this.cursorChatInput) return;
+    const location = this.lastLocalCursor ?? this.project.renderer.transformView2World(new Vector(0, 0));
+    const input = document.createElement("input");
+    input.type = "text";
+    input.maxLength = 200;
+    input.placeholder = "说点什么...";
+    input.setAttribute("aria-label", "协作光标聊天");
+    Object.assign(input.style, {
+      position: "fixed",
+      zIndex: "60",
+      width: "180px",
+      height: "28px",
+      padding: "0 8px",
+      border: "2px solid currentColor",
+      borderRadius: "4px",
+      color: this.selfPresence?.color ?? "#3b82f6",
+      background: "var(--background)",
+      outline: "none",
+      fontSize: "12px",
+    });
+    document.body.append(input);
+    this.cursorChatInput = input;
+    this.positionCursorChatInput(location);
+    input.addEventListener("input", this.handleCursorChatInput);
+    input.addEventListener("keydown", this.handleCursorChatKeydown);
+    this.sendCursorChat(input.value, location);
+    this.resetCursorChatTimeout();
+    requestAnimationFrame(() => input.focus());
   }
 
   get canEdit() {
@@ -240,6 +301,8 @@ export class CollaborationService implements Service {
       case "presence":
         if (msg.event === "leave") {
           this.presences = this.presences.filter((p) => p.sessionId !== msg.presence.sessionId);
+          this.remoteCursors.delete(msg.presence.sessionId);
+          this.remoteCursorChats.delete(msg.presence.sessionId);
         } else {
           const idx = this.presences.findIndex((p) => p.sessionId === msg.presence.sessionId);
           if (idx >= 0) this.presences[idx] = msg.presence;
@@ -247,6 +310,19 @@ export class CollaborationService implements Service {
         }
         this.project.emit("collab-presences", this.presences);
         this.emitState();
+        break;
+      case "cursor":
+        if (msg.sessionId === this.sessionId) break;
+        if (msg.x === null || msg.y === null) this.remoteCursors.delete(msg.sessionId);
+        else this.remoteCursors.set(msg.sessionId, { sessionId: msg.sessionId, x: msg.x, y: msg.y });
+        this.project.loop();
+        break;
+      case "cursor_chat":
+        if (msg.sessionId === this.sessionId) break;
+        if (msg.x === null || msg.y === null || !msg.text) this.remoteCursorChats.delete(msg.sessionId);
+        else
+          this.remoteCursorChats.set(msg.sessionId, { sessionId: msg.sessionId, x: msg.x, y: msg.y, text: msg.text });
+        this.project.loop();
         break;
       case "member":
         // 兼容旧服务端：仅更新账号级 members，不代替 presence
@@ -335,6 +411,69 @@ export class CollaborationService implements Service {
     this.flushIfDirty();
   }
 
+  private readonly handlePointerMove = (event: PointerEvent) => {
+    if (!this.isActive || !this.transport.connected) return;
+    const now = performance.now();
+    if (now - this.lastCursorSentAt < CURSOR_SEND_INTERVAL_MS) return;
+    this.lastCursorSentAt = now;
+    const viewLocation = this.project.canvas.clientToView(event.clientX, event.clientY);
+    const worldLocation = this.project.renderer.transformView2World(viewLocation);
+    this.lastLocalCursor = { sessionId: this.sessionId ?? "", x: worldLocation.x, y: worldLocation.y };
+    this.transport.send({ type: "cursor", x: worldLocation.x, y: worldLocation.y });
+    if (this.cursorChatInput) {
+      this.positionCursorChatInput(this.lastLocalCursor);
+      this.sendCursorChat(this.cursorChatInput.value, this.lastLocalCursor);
+    }
+  };
+
+  private readonly handlePointerLeave = () => {
+    if (this.isActive && this.transport.connected) this.transport.send({ type: "cursor", x: null, y: null });
+  };
+
+  private get selfPresence() {
+    return this.presences.find((presence) => presence.sessionId === this.sessionId);
+  }
+
+  private readonly handleCursorChatInput = () => {
+    if (!this.cursorChatInput || !this.lastLocalCursor) return;
+    this.sendCursorChat(this.cursorChatInput.value, this.lastLocalCursor);
+    this.resetCursorChatTimeout();
+  };
+
+  private readonly handleCursorChatKeydown = (event: KeyboardEvent) => {
+    if (event.key === "Escape" || event.key === "Enter") {
+      event.preventDefault();
+      this.closeCursorChat();
+    }
+  };
+
+  private positionCursorChatInput(location: Pick<RemoteCursor, "x" | "y">) {
+    if (!this.cursorChatInput) return;
+    const clientLocation = this.project.canvas.viewToClient(
+      this.project.renderer.transformWorld2View(new Vector(location.x, location.y)),
+    );
+    this.cursorChatInput.style.left = `${clientLocation.x + 14}px`;
+    this.cursorChatInput.style.top = `${clientLocation.y + 14}px`;
+  }
+
+  private sendCursorChat(text: string, location: Pick<RemoteCursor, "x" | "y">) {
+    this.transport.send({ type: "cursor_chat", x: location.x, y: location.y, text });
+  }
+
+  private resetCursorChatTimeout() {
+    if (this.cursorChatTimeout) clearTimeout(this.cursorChatTimeout);
+    this.cursorChatTimeout = setTimeout(() => this.closeCursorChat(), CURSOR_CHAT_TIMEOUT_MS);
+  }
+
+  private closeCursorChat() {
+    if (this.cursorChatTimeout) clearTimeout(this.cursorChatTimeout);
+    this.cursorChatTimeout = null;
+    const input = this.cursorChatInput;
+    this.cursorChatInput = null;
+    input?.remove();
+    this.transport.send({ type: "cursor_chat", x: null, y: null, text: "" });
+  }
+
   private flushIfDirty() {
     if (!this.dirty || this.inFlightOpId || !this.transport.connected || !this.isActive) return;
     const nextMap = this.snapshotMap();
@@ -361,6 +500,10 @@ export class CollaborationService implements Service {
     this.role = null;
     this.members = [];
     this.presences = [];
+    this.remoteCursors.clear();
+    this.remoteCursorChats.clear();
+    this.lastLocalCursor = null;
+    this.closeCursorChat();
     this.inFlightOpId = null;
     this.dirty = false;
     this.version = 0;
@@ -372,5 +515,7 @@ export class CollaborationService implements Service {
 
   dispose() {
     this.leave();
+    this.project.canvas.element.removeEventListener("pointermove", this.handlePointerMove);
+    this.project.canvas.element.removeEventListener("pointerleave", this.handlePointerLeave);
   }
 }

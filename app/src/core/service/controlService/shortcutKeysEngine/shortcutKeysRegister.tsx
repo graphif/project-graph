@@ -1581,6 +1581,13 @@ export const allKeyBinds: KeyBindItem[] = [
     },
   },
   {
+    id: "openCursorChat",
+    defaultKey: "/",
+    icon: MessageCircleWarning,
+    when: (project) => !!project?.collaboration.isActive,
+    onPress: (project) => project!.collaboration.openCursorChat(),
+  },
+  {
     id: "leaveCollaboration",
     defaultKey: "",
     icon: UserMinus,

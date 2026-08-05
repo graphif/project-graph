@@ -96,12 +96,63 @@ export class Renderer {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private renderViewElements(_viewRectangle: Rectangle) {
+    this.renderRemoteCursors();
     this.project.keyBindHintEngine.update();
     this.project.keyBindHintEngine.render();
     this.renderSpecialKeys();
     this.renderCenterPointer();
     this.renderZoomLevelStage();
     this.renderDebugDetails();
+  }
+
+  private renderRemoteCursors() {
+    const presences = new Map(
+      this.project.collaboration.currentPresences.map((presence) => [presence.sessionId, presence]),
+    );
+    const ctx = this.project.canvas.ctx;
+    for (const cursor of this.project.collaboration.getRemoteCursors()) {
+      const presence = presences.get(cursor.sessionId);
+      if (!presence) continue;
+      const location = this.transformWorld2View(new Vector(cursor.x, cursor.y));
+      const label = presence.name || presence.email;
+      ctx.save();
+      ctx.translate(location.x, location.y);
+      ctx.fillStyle = presence.color;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, 17);
+      ctx.lineTo(4.5, 12.5);
+      ctx.lineTo(8, 20);
+      ctx.lineTo(11.5, 18.5);
+      ctx.lineTo(8, 11.5);
+      ctx.lineTo(14, 11.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.font = "12px sans-serif";
+      ctx.textBaseline = "middle";
+      const width = ctx.measureText(label).width + 12;
+      ctx.fillRect(13, 18, width, 20);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(label, 19, 28);
+      ctx.restore();
+    }
+    for (const chat of this.project.collaboration.getRemoteCursorChats()) {
+      const presence = presences.get(chat.sessionId);
+      if (!presence) continue;
+      const location = this.transformWorld2View(new Vector(chat.x, chat.y));
+      ctx.save();
+      ctx.font = "12px sans-serif";
+      ctx.textBaseline = "middle";
+      const width = Math.min(ctx.measureText(chat.text).width + 16, 240);
+      ctx.fillStyle = presence.color;
+      ctx.fillRect(location.x + 13, location.y + 18, width, 22);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(chat.text, location.x + 21, location.y + 29);
+      ctx.restore();
+    }
   }
 
   private renderZoomLevelStage() {

@@ -86,13 +86,20 @@ function PresenceRow({
   const deviceLabel = indexAmongSameUser > 0 ? ` #${indexAmongSameUser}` : "";
   return (
     <div className="flex items-start justify-between gap-2 rounded-md border px-2 py-1.5 text-sm">
-      <div className="min-w-0 flex-1">
-        <div className="truncate font-medium">
-          {presence.name || presence.email}
-          {deviceLabel}
-          {isSelf ? <span className="text-muted-foreground ml-1 text-xs">(本端)</span> : null}
+      <div className="flex min-w-0 flex-1 gap-2">
+        <span
+          className="ring-background mt-1 size-3 shrink-0 rounded-full ring-2"
+          style={{ backgroundColor: presence.color }}
+          title={`协作颜色：${presence.color}`}
+        />
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-medium">
+            {presence.name || presence.email}
+            {deviceLabel}
+            {isSelf ? <span className="text-muted-foreground ml-1 text-xs">(本端)</span> : null}
+          </div>
+          <div className="text-muted-foreground truncate text-xs">{presence.email}</div>
         </div>
-        <div className="text-muted-foreground truncate text-xs">{presence.email}</div>
       </div>
       <Badge variant="outline" className="shrink-0">
         {roleLabel(presence.role)}

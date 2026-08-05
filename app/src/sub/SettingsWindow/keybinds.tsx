@@ -591,6 +591,7 @@ export const shortcutKeysGroups: ShortcutKeysGroup[] = [
       "paste",
       "pasteWithOriginLocation",
       "deleteSelectedStageObjects",
+      "openCursorChat",
     ],
   },
   {

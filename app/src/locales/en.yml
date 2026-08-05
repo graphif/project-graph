@@ -1928,6 +1928,9 @@ keyBinds:
   openCollaborationPanel:
     title: Collaboration Panel
     description: "Open the collaboration side panel showing room info and members.\n"
+  openCursorChat:
+    title: Cursor Chat
+    description: "Type a temporary collaboration message at the current cursor location.\n"
   newFileAtCurrentProjectDir:
     title: Create New File at Current Project Directory
     description: "Create a new project file in the current project directory and

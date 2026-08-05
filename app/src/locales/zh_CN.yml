@@ -1498,6 +1498,10 @@ keyBinds:
     title: 协作面板
     description: |
       打开协作侧栏，查看房间信息与成员列表
+  openCursorChat:
+    title: 光标聊天
+    description: |
+      在当前鼠标位置输入一条会自动消失的协作消息
   newFileAtCurrentProjectDir:
     title: 在当前项目目录下新建文件
     description: |

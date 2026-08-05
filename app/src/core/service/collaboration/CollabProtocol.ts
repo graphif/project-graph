@@ -17,12 +17,15 @@ export type CollabPresence = {
   role: CollabRole;
   name: string;
   email: string;
+  color: string;
 };
 
 export type ClientToServerMessage =
   | { type: "auth"; token: string }
   | { type: "join"; roomId: string }
   | { type: "op"; baseVersion: number; delta: unknown; opId: string }
+  | { type: "cursor"; x: number | null; y: number | null }
+  | { type: "cursor_chat"; x: number | null; y: number | null; text: string }
   | { type: "ping" };
 
 export type ServerToClientMessage =
@@ -48,6 +51,8 @@ export type ServerToClientMessage =
       references?: { sections: Record<string, string[]>; files: string[] };
     }
   | { type: "presence"; event: "join" | "leave"; presence: CollabPresence }
+  | { type: "cursor"; sessionId: string; x: number | null; y: number | null }
+  | { type: "cursor_chat"; sessionId: string; x: number | null; y: number | null; text: string }
   /** @deprecated 兼容旧服务端，按 userId 处理 */
   | { type: "member"; event: "join" | "leave" | "role"; member: CollabMember }
   | { type: "error"; message: string }
