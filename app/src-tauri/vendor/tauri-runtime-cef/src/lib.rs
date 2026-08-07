@@ -101,3 +101,9 @@ pub use runtime::run_cef_subprocess;
 /// 为 macOS 裸 executable 准备与 helper bundle id 一致的最小 main bundle。
 #[cfg(target_os = "macos")]
 pub use runtime::macos_unbundled_main_bundle;
+
+/// 本进程实际启用的 CDP 远程调试端口(dev-only;未启用时 `None`)。
+///
+/// `PROJECT_GRAPH_CEF_DEBUG_PORT=random` 时是内核分配的随机号,已 memoize,与
+/// `CefSettings::remote_debugging_port` 是同一个值。
+pub use runtime::remote_debugging_port;

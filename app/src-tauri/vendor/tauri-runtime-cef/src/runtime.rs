@@ -78,6 +78,25 @@ mod imp {
             .clone()
     }
 
+    /// Linux 下 CEF Views 窗口的 X11 WM_CLASS / Wayland app_id。
+    ///
+    /// CEF 只在 `WindowDelegate::get_linux_window_properties` 提供时才设置
+    /// WM_CLASS;不提供则窗口完全没有该属性,桌面环境无法把窗口关联到
+    /// `.desktop`(任务栏出现游离的第二条目,StartupNotify 反馈转圈到超时)。
+    /// 优先取可执行文件名,与 `.desktop` 的 `Exec`/`StartupWMClass` 对应。
+    #[cfg(target_os = "linux")]
+    static LINUX_WINDOW_CLASS: OnceLock<String> = OnceLock::new();
+
+    #[cfg(target_os = "linux")]
+    fn linux_window_class() -> &'static str {
+        LINUX_WINDOW_CLASS.get_or_init(|| {
+            std::env::current_exe()
+                .ok()
+                .and_then(|exe| exe.file_stem().map(|s| s.to_string_lossy().into_owned()))
+                .unwrap_or_default()
+        })
+    }
+
     fn disable_chrome_only_features(command_line: &CommandLine) {
         let switch = CefString::from("disable-features");
         let mut value = if command_line.has_switch(Some(&switch)) == 1 {
@@ -98,6 +117,78 @@ mod imp {
 
         command_line
             .append_switch_with_value(Some(&switch), Some(&CefString::from(value.as_str())));
+    }
+
+    /// CDP 调试端口是否被请求——**纯 env 判断,不分配端口**。
+    ///
+    /// command-line hook 在每个 CEF 进程(含 renderer/GPU/utility helper)里都会跑,
+    /// 那里只需要知道"要不要放行 CDP origin",不能去调
+    /// [`remote_debugging_port`]：`random` 模式下那会让每个子进程各自 bind 一个空闲
+    /// 端口来探号,理论上可能抢掉 browser 进程正要 bind 的那个。
+    fn remote_debugging_requested() -> bool {
+        match std::env::var("PROJECT_GRAPH_CEF_DEBUG_PORT") {
+            Ok(raw) => !matches!(raw.trim(), "" | "0" | "off" | "false"),
+            Err(_) => false,
+        }
+    }
+
+    static RESOLVED_REMOTE_DEBUGGING_PORT: OnceLock<Option<u16>> = OnceLock::new();
+
+    /// 解析开发期 CDP(Chrome DevTools Protocol)远程调试端口。
+    ///
+    /// 取值：`random` / `auto` → 内核分配的随机空闲端口；其它按整数端口解析；
+    /// `0` / `off` / `false` / 未设置 → 不启用。
+    ///
+    /// 端口一旦监听,本机任意进程都能完全控制该 browser(读 cookie、执行任意 JS),
+    /// 因此**发布包默认不监听任何调试端口**：只有开发期显式设置
+    /// `PROJECT_GRAPH_CEF_DEBUG_PORT` 才启用；随机端口也比固定 9222 少一点被
+    /// 守株待兔的面。
+    ///
+    /// 结果 memoize 在 `OnceLock` 里：`random` 每次调用都重算会让 `CefSettings` 里
+    /// 真正 bind 的端口和事后上报的端口对不上。
+    pub fn remote_debugging_port() -> Option<u16> {
+        *RESOLVED_REMOTE_DEBUGGING_PORT.get_or_init(|| {
+            let raw = std::env::var("PROJECT_GRAPH_CEF_DEBUG_PORT").ok()?;
+            let raw = raw.trim();
+            if !remote_debugging_requested() {
+                return None;
+            }
+            if matches!(raw, "random" | "auto") {
+                return pick_free_loopback_port();
+            }
+            match raw.parse::<u16>() {
+                // 0 已被 remote_debugging_requested 挡掉,这里兜底保持同一语义。
+                Ok(0) => None,
+                Ok(port) => Some(port),
+                Err(_) => {
+                    eprintln!(
+                        "[cef-runtime] WARN: PROJECT_GRAPH_CEF_DEBUG_PORT={raw:?} is not a valid port \
+                         (expected an integer, `random` or `auto`); \
+                         remote debugging stays disabled"
+                    );
+                    None
+                }
+            }
+        })
+    }
+
+    /// 让内核分配一个空闲回环端口,读到号后立刻释放,把号交给 CEF 去 bind。
+    ///
+    /// 释放与 CEF 真正 bind 之间有极小的 TOCTOU 窗口(别的进程可能抢先占上),
+    /// dev-only 场景可接受；真撞上了表现为 CDP 起不来,重启 dev 换个号即可。
+    fn pick_free_loopback_port() -> Option<u16> {
+        let listener = std::net::TcpListener::bind(("127.0.0.1", 0))
+            .inspect_err(|error| {
+                eprintln!("[cef-runtime] WARN: cannot allocate a free CDP port: {error}");
+            })
+            .ok()?;
+        listener
+            .local_addr()
+            .inspect_err(|error| {
+                eprintln!("[cef-runtime] WARN: cannot read probe socket addr: {error}");
+            })
+            .ok()
+            .map(|addr| addr.port())
     }
 
     fn apply_windowed_gpu_mode(command_line: &CommandLine) {
@@ -811,6 +902,16 @@ mod imp {
                 cl.append_switch(Some(&CefString::from("no-sandbox")));
                 #[cfg(target_os = "macos")]
                 cl.append_switch(Some(&CefString::from("use-mock-keychain")));
+                // Chromium 111+ 要求 CDP WebSocket 握手带白名单 origin;Playwright /
+                // puppeteer 的 connectOverCDP 会带 origin 头,不放行会被 403。
+                // 仅在调试端口确实开启时追加。用纯 env 判断而不是解析端口——见
+                // remote_debugging_requested 的注释(子进程别去抢随机端口号)。
+                if remote_debugging_requested() {
+                    cl.append_switch_with_value(
+                        Some(&CefString::from("remote-allow-origins")),
+                        Some(&CefString::from("*")),
+                    );
+                }
                 apply_windowed_gpu_mode(cl);
                 // CEF WebContents are not Chrome browser tabs. Some Chrome UI
                 // features assume tabs::TabInterface exists and crash on SPA
@@ -846,6 +947,13 @@ mod imp {
             shared: Arc<Mutex<WindowedWindowShared>>,
             initial_bounds: cef::Rect,
             initial_show_state: ShowState,
+            // Tauri `visible: false`。**不能**用 `ShowState::HIDDEN` 表达:
+            // `CEF_SHOW_STATE_HIDDEN` 只在 macOS 有效,其他平台 CEF 会把它翻译成
+            // `kMinimized`(`libcef/browser/views/window_view.cc`),窗口会以最小化
+            // 状态创建 —— WS_MINIMIZE、残留 stub 尺寸、渲染控件 0x0、永不出帧,
+            // 且事后 `ShowWindow(SW_SHOW)` 不还原最小化窗口(需 SW_RESTORE)。
+            // 故几何状态与"是否显示"拆成两个字段,由本字段单独门控 `show()`。
+            initially_visible: bool,
             frameless: bool,
             resizable: bool,
             maximizable: bool,
@@ -917,10 +1025,12 @@ mod imp {
                     }));
                 }
 
-                if self.initial_show_state != ShowState::HIDDEN {
+                if self.initially_visible {
                     window.show();
+                    eprintln!("[cef-runtime] windowed top-level CEF window shown");
+                } else {
+                    eprintln!("[cef-runtime] windowed top-level CEF window created (not shown)");
                 }
-                eprintln!("[cef-runtime] windowed top-level CEF window shown");
             }
 
             fn on_window_destroyed(&self, _window: Option<&mut cef::Window>) {
@@ -1049,6 +1159,32 @@ mod imp {
 
             fn window_runtime_style(&self) -> RuntimeStyle {
                 RuntimeStyle::ALLOY
+            }
+
+            // CEF Views 默认不设置 X11 WM_CLASS / Wayland app_id,窗口会以
+            // “无类名”状态 map,桌面环境无法关联 `.desktop`。返回 1 表示采用。
+            #[cfg(target_os = "linux")]
+            fn linux_window_properties(
+                &self,
+                _window: Option<&mut cef::Window>,
+                properties: Option<&mut LinuxWindowProperties>,
+            ) -> ::std::os::raw::c_int {
+                let Some(properties) = properties else { return 0 };
+                let class = linux_window_class();
+                if class.is_empty() {
+                    return 0;
+                }
+                // res_name 与 `Exec`/`StartupWMClass` 一致;res_class 按 X11
+                // 惯例首字母大写(KDE/GNOME 匹配均不区分大小写)。
+                let mut chars = class.chars();
+                let capitalized = chars
+                    .next()
+                    .map(|c| c.to_uppercase().collect::<String>() + chars.as_str())
+                    .unwrap_or_default();
+                properties.wm_class_name = CefString::from(class);
+                properties.wm_class_class = CefString::from(capitalized.as_str());
+                properties.wayland_app_id = CefString::from(class);
+                1
             }
         }
     }
@@ -1264,6 +1400,8 @@ mod imp {
                             height: 768,
                         },
                         ShowState::NORMAL,
+                        // bootstrap 窗口创建后即显示。
+                        true,
                         false,
                         true,
                         true,
@@ -1487,6 +1625,15 @@ mod imp {
             root_cache_path: CefString::from(cef_root_cache_dir().to_string_lossy().as_ref()),
             ..Default::default()
         };
+        // 开发期 CDP：仅在显式设置 PROJECT_GRAPH_CEF_DEBUG_PORT 时监听（`random`
+        // 由内核分配随机端口）。
+        if let Some(port) = remote_debugging_port() {
+            settings.remote_debugging_port = port as i32;
+            eprintln!(
+                "[cef-runtime] remote debugging (CDP) listening on 127.0.0.1:{port} \
+                 — anyone on this machine can drive this browser"
+            );
+        }
         #[cfg(not(target_os = "macos"))]
         match resolve_cef_resource_dir() {
             Some(dir) => {
@@ -2112,6 +2259,7 @@ mod imp {
                     height: size.height as i32,
                 },
                 initial_show_state(attrs.visible, attrs.maximized, attrs.fullscreen.is_some()),
+                attrs.visible,
                 !attrs.decorations,
                 attrs.resizable,
                 attrs.maximizable,
@@ -2993,10 +3141,21 @@ mod imp {
         }
     }
 
+    /// 窗口的**几何**初始状态。与"是否显示"无关 —— 后者见
+    /// `WindowedTopLevelWindowDelegate::initially_visible`。
+    ///
+    /// `ShowState::HIDDEN` 只在 macOS 表示"隐藏(无 dock 缩略图)";其他平台 CEF 的
+    /// `window_view.cc` 会把 `CEF_SHOW_STATE_HIDDEN` 翻译成 `kMinimized`,窗口以
+    /// 最小化状态创建后再也画不出东西。所以这里只在 macOS 上报 HIDDEN。
     fn initial_show_state(visible: bool, maximized: bool, fullscreen: bool) -> ShowState {
+        #[cfg(target_os = "macos")]
         if !visible {
-            ShowState::HIDDEN
-        } else if fullscreen {
+            return ShowState::HIDDEN;
+        }
+        #[cfg(not(target_os = "macos"))]
+        let _ = visible;
+
+        if fullscreen {
             ShowState::FULLSCREEN
         } else if maximized {
             ShowState::MAXIMIZED
