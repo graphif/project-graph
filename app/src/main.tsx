@@ -42,12 +42,19 @@ if (import.meta.env.DEV && isMobile) {
 
 const el = document.getElementById("root")!;
 
+// 兜底：任何原因导致 React 渲染中断时，窗口也要可见，避免应用"隐形"
+let cliMode = false;
+setTimeout(() => {
+  if (!cliMode && !isWeb) void getCurrentWindow().show();
+}, 5000);
+
 // 建议挂载根节点前的一系列操作统一写成函数，
 // 在这里看着清爽一些，像一个列表清单一样。也方便调整顺序
 
 (async () => {
   const matches = !isWeb && isDesktop ? await getMatches() : null;
   const isCliMode = isDesktop && matches?.args.output?.occurrences === 1;
+  cliMode = isCliMode;
   await Promise.all([
     RecentFileManager.init(),
     StartFilesManager.init(),
