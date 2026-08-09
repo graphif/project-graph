@@ -1,4 +1,6 @@
 mod cmd;
+#[allow(dead_code)]
+mod project_ownership;
 
 use std::sync::{Mutex, OnceLock};
 use tauri::{Emitter, Listener, Manager, State};
