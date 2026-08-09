@@ -619,7 +619,8 @@ mod imp {
 
     wrap_request_handler! {
         pub(crate) struct TauriCefRequestHandler {
-            handler: TauriNavigationFn,
+            label: String,
+            handler: Option<TauriNavigationFn>,
         }
         impl RequestHandler {
             // 纯导航闸门,语义与 wry 的 with_navigation_handler 对齐:仅裁决主框架
@@ -633,6 +634,7 @@ mod imp {
                 _user_gesture: ::std::os::raw::c_int,
                 _is_redirect: ::std::os::raw::c_int,
             ) -> ::std::os::raw::c_int {
+                let Some(handler) = self.handler.as_ref() else { return 0 };
                 let Some(frame) = frame else { return 0 };
                 let is_main = frame.is_main() == 1;
                 let Some(req) = request else { return 0 };
@@ -642,13 +644,57 @@ mod imp {
                 }
                 let Ok(url) = Url::parse(&url_str) else { return 0 };
                 // true = 允许导航, false = 取消并改为原生下载
-                if (self.handler)(&url) {
+                if (handler)(&url) {
                     return 0;
                 }
                 if let Some(host) = browser.and_then(|b| b.host()) {
                     host.start_download(Some(&CefString::from(url_str.as_str())));
                 }
                 1
+            }
+
+            // 渲染进程约 15s 未回执输入事件(Chromium hung-renderer 判定,只有可见
+            // 窗口会有输入)。隐藏任务窗口的卡死由业务层看门狗负责,不在此处理
+            // ("crawler-" 前缀的隐藏爬虫窗口约定与上游 kabegame 一致)。
+            fn on_render_process_unresponsive(
+                &self,
+                _browser: Option<&mut Browser>,
+                callback: Option<&mut UnresponsiveProcessCallback>,
+            ) -> ::std::os::raw::c_int {
+                if self.label.starts_with("crawler-") {
+                    return 0;
+                }
+                let Some(callback) = callback else { return 0 };
+                eprintln!(
+                    "[CEF] renderer unresponsive for webview '{}', terminating for reload",
+                    self.label
+                );
+                // 杀掉渲染进程 → 触发 on_render_process_terminated → reload 恢复
+                callback.terminate();
+                1
+            }
+
+            // 渲染进程终止(被上面 terminate 或真崩溃)。可见窗口直接重载重新拉起
+            // 渲染进程;隐藏任务窗口不重载(刷新会导致任务状态不稳定),由业务层
+            // 心跳超时结束任务。
+            fn on_render_process_terminated(
+                &self,
+                browser: Option<&mut Browser>,
+                status: TerminationStatus,
+                error_code: ::std::os::raw::c_int,
+                error_string: Option<&CefString>,
+            ) {
+                eprintln!(
+                    "[CEF] renderer terminated for webview '{}': {status:?} ({error_code}) {}",
+                    self.label,
+                    error_string.map(|s| s.to_string()).unwrap_or_default()
+                );
+                if self.label.starts_with("crawler-") {
+                    return;
+                }
+                if let Some(browser) = browser {
+                    browser.reload();
+                }
             }
 
             // start_download 发起的是「无来源页」的程序化下载,默认不带 Referer,
@@ -997,10 +1043,13 @@ mod imp {
             .download_handler
             .take()
             .map(TauriCefDownloadHandler::new);
-        let navigation_handler = pending
-            .navigation_handler
-            .take()
-            .map(|h| TauriCefRequestHandler::new(Rc::new(h)));
+        let navigation_handler = pending.navigation_handler.take().map(Rc::new);
+        // 无条件挂载 RequestHandler(导航闸门可选):渲染进程看门狗对所有 webview
+        // 生效,隐藏任务窗口按 label 前缀排除。
+        let request_handler = Some(TauriCefRequestHandler::new(
+            pending.label.clone(),
+            navigation_handler,
+        ));
         // 无法在 Linux 上调用 new_window_handler 本体(见 PopupToNavigationLifeSpanHandler
         // 注释),仅以其存在与否作为「取消 popup 改本页导航」的开关。
         let redirect_tab_popups = pending.new_window_handler.take().is_some();
@@ -1013,7 +1062,7 @@ mod imp {
             DevToolsKeyboardHandler::new(),
             DisabledContextMenuHandler::new(),
             download_handler,
-            navigation_handler,
+            request_handler,
             life_span_handler,
         );
         let mut delegate = ViewsBrowserViewDelegate::new(webview_label, pending_protocols);

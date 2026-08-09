@@ -19,7 +19,23 @@ on:
         default: false
 
 jobs:
+  validate-cloud-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate ENV_API_BASE_URL
+        run: |
+          url='${{ secrets.ENV_API_BASE_URL }}'
+          if [ -z "$url" ]; then
+            echo "::error::ENV_API_BASE_URL 未配置：空值会被注入构建产物（LR_API_BASE_URL=''），导致前端启动崩溃、窗口不显示"
+            exit 1
+          fi
+          case "$url" in
+            http://*|https://*) ;;
+            *) echo "::error::ENV_API_BASE_URL 必须是绝对 http(s) URL，当前值: $url"; exit 1 ;;
+          esac
+
   build:
+    needs: [validate-cloud-secrets]
     permissions:
       contents: write
     uses: ./.github/workflows/publish.yml

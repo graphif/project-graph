@@ -6197,8 +6197,6 @@ dependencies = [
 [[package]]
 name = "sentencepiece-sys"
 version = "0.13.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa4f9b54dc005df8ec1c3f9e2347cea6b6657ec5460977a982e7a4e09ef49411"
 dependencies = [
  "cc",
  "cmake",

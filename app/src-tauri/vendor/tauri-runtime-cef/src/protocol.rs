@@ -157,12 +157,12 @@ wrap_resource_handler! {
                 state.open_in_progress = false;
                 state.response.is_some()
             };
-            if response_is_ready {
-                *handle_request = 1;
-                1
-            } else {
-                0
-            }
+            // 异步响应(invoke 命令、tauri/asset 资源等)必须**仍返回 1**(已处理),
+            // 仅把 handle_request 置 0 表示稍后经克隆的 callback cont() 恢复;
+            // 返回 0 的语义是"取消请求",导航会 UNKNOWN_URL_SCHEME、fetch 会
+            // TypeError: Failed to fetch。
+            *handle_request = i32::from(response_is_ready);
+            1
         }
 
         fn response_headers(
