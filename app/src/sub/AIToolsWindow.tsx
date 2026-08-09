@@ -19,7 +19,7 @@ import {
   type AIMCPToolDescriptor,
 } from "@/core/service/dataManageService/aiEngine/AIMCPConfig";
 import { AISkillTrustStore, discoverSkills, type AISkill } from "@/core/service/dataManageService/aiEngine/AISkills";
-import { AITools } from "@/core/service/dataManageService/aiEngine/AITools";
+import { getBuiltInToolWindowEntries } from "@/core/service/dataManageService/aiEngine/BuiltInToolWindowAdapter";
 import { createSubWindow } from "@/core/subWindowOpen";
 import { activeTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
@@ -60,7 +60,7 @@ function ToolHeading({ name }: { name: string }) {
 }
 
 function BuiltInToolsSection() {
-  const tools = AITools.tools;
+  const tools = getBuiltInToolWindowEntries();
   return (
     <section className="flex flex-col gap-2">
       <div>

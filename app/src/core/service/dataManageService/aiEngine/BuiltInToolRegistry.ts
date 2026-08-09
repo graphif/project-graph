@@ -26,6 +26,29 @@ export type BuiltInToolCapability =
   | "model"
   | "abort-signal";
 
+export type AcquiredBuiltInToolCapabilities = Readonly<
+  Partial<{
+    project: Project;
+    references: AIObjectReferenceRegistry;
+    history: true;
+    dom: true;
+    viewport: true;
+    selection: true;
+    image: true;
+    settings: true;
+    network: true;
+    model: true;
+    "abort-signal": AbortSignal | undefined;
+  }>
+>;
+
+export type BuiltInToolRuntimeHost = {
+  acquireCapabilities(
+    capabilities: readonly BuiltInToolCapability[],
+    context: BuiltInToolExecutionContext,
+  ): AcquiredBuiltInToolCapabilities | Promise<AcquiredBuiltInToolCapabilities>;
+};
+
 export type BuiltInToolDefinition = Readonly<{
   name: string;
   description: string;
@@ -77,10 +100,8 @@ function defineTool(source: DefinitionSource): BuiltInToolDefinition {
     ...source,
     output,
     loadExecutor: async () => {
-      const { builtInToolExecutors } = await import("./BuiltInToolExecutors");
-      const executor = builtInToolExecutors[source.name];
-      if (!executor) throw new Error(`Missing built-in tool executor: ${source.name}`);
-      return executor;
+      const { loadBuiltInToolExecutor } = await import("./BuiltInToolExecutors");
+      return loadBuiltInToolExecutor(source.name);
     },
   };
 }
@@ -551,13 +572,28 @@ export function getBuiltInToolDefinition(name: string): BuiltInToolDefinition | 
 export async function invokeBuiltInTool(
   name: string,
   input: unknown,
-  project: Project,
-  references: AIObjectReferenceRegistry,
+  host: BuiltInToolRuntimeHost,
   context: BuiltInToolExecutionContext = {},
 ): Promise<any> {
   const definition = getBuiltInToolDefinition(name);
   if (!definition) throw new Error(`Unknown built-in tool: ${name}`);
   const parsedInput = definition.inputSchema.parse(input);
+  const executionContext = definition.capabilities.includes("abort-signal") ? context : {};
+  const acquired = await host.acquireCapabilities(definition.capabilities, executionContext);
+  for (const capability of Object.keys(acquired) as BuiltInToolCapability[]) {
+    if (!definition.capabilities.includes(capability)) {
+      throw new Error(`Runtime host acquired undeclared capability: ${capability}`);
+    }
+  }
+  for (const capability of definition.capabilities) {
+    if (!Object.hasOwn(acquired, capability)) {
+      throw new Error(`Runtime host did not acquire required capability: ${capability}`);
+    }
+  }
+  if (!acquired.project) throw new Error("Runtime host did not provide the Project capability");
+  if (definition.capabilities.includes("references") && !acquired.references) {
+    throw new Error("Runtime host did not provide the Project Object Reference capability");
+  }
   const executor = await definition.loadExecutor();
-  return executor(project, parsedInput, references, context);
+  return executor(acquired.project, parsedInput, acquired.references as AIObjectReferenceRegistry, executionContext);
 }

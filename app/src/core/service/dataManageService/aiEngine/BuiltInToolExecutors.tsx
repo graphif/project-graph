@@ -1,8 +1,5 @@
 import type { Project } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
-import { AIObjectReferenceRegistry } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
-import { blobToCompressedDataUrl, prepareImageBlobForImport } from "@/core/service/dataManageService/imageUtils";
-import { calculateImageDisplaySize, createImageNodeFromBlob } from "@/core/service/dataManageService/imageNodeFactory";
+import type { AIObjectReferenceRegistry } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
@@ -11,25 +8,23 @@ import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { fetch } from "@tauri-apps/plugin-http";
-import { generateText } from "ai";
 import type { BuiltInToolExecutor } from "./BuiltInToolRegistry";
 import { findFirstImageInChildren } from "./imageNodeFinder";
-import {
-  findDownloadableOpenverseImage,
-  type ImageOrientation,
-  type OpenverseImageCandidate,
-} from "./OpenverseImageSearch";
+import type { ImageOrientation, OpenverseImageCandidate } from "./OpenverseImageSearch";
 
-export const builtInToolExecutors: Record<string, BuiltInToolExecutor> = {};
+const builtInToolExecutorLoaders: Record<string, () => BuiltInToolExecutor> = {};
 
-function addExecutor(name: string, executor: BuiltInToolExecutor) {
-  if (name in builtInToolExecutors) throw new Error(`Duplicate built-in tool executor: ${name}`);
-  builtInToolExecutors[name] = executor;
+function addExecutor(name: string, loadExecutor: () => BuiltInToolExecutor) {
+  if (name in builtInToolExecutorLoaders) throw new Error(`Duplicate built-in tool executor: ${name}`);
+  builtInToolExecutorLoaders[name] = loadExecutor;
+}
+
+export function loadBuiltInToolExecutor(name: string): BuiltInToolExecutor {
+  const loadExecutor = builtInToolExecutorLoaders[name];
+  if (!loadExecutor) throw new Error(`Missing built-in tool executor: ${name}`);
+  return loadExecutor();
 }
 
 function toAgentObjectInfo(object: StageObject, references: AIObjectReferenceRegistry) {
@@ -73,7 +68,7 @@ function sanitizeImageSourceUrl(value: string | null | undefined): string | unde
   return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : undefined;
 }
 
-function createOpenverseImageDetails(candidate: OpenverseImageCandidate) {
+function createOpenverseImageDetails(candidate: OpenverseImageCandidate, markdownToDetails: (markdown: string) => any) {
   const lines = ["## 网络图片来源"];
   const title = sanitizeImageSourceText(candidate.title);
   const creator = sanitizeImageSourceText(candidate.creator);
@@ -86,7 +81,7 @@ function createOpenverseImageDetails(candidate: OpenverseImageCandidate) {
   if (sourceUrl) lines.push(`来源页面：<${sourceUrl}>`);
   if (licenseUrl) lines.push(`许可证页面：<${licenseUrl}>`);
   lines.push("搜索服务：Openverse");
-  return DetailsManager.markdownToDetails(lines.join("\n\n"));
+  return markdownToDetails(lines.join("\n\n"));
 }
 
 function getViewportCenteredLocation(project: Project, size: Vector): Vector {
@@ -115,19 +110,19 @@ function deleteEntities(project: Project, entities: Entity[]) {
   };
 }
 
-addExecutor("get_all_nodes", (project, _data, references) => ({
+addExecutor("get_all_nodes", () => (project, _data, references) => ({
   objects: project.stage.map((object) => toAgentObjectInfo(object, references)),
 }));
-addExecutor("delete_node", (project, { ref }, references) => {
+addExecutor("delete_node", () => (project, { ref }, references) => {
   return deleteEntities(project, resolveEntityRefs([ref], references));
 });
-addExecutor("delete_nodes", (project, { refs }, references) => {
+addExecutor("delete_nodes", () => (project, { refs }, references) => {
   return deleteEntities(project, resolveEntityRefs(refs, references));
 });
-addExecutor("delete_selected_nodes", (project) => {
+addExecutor("delete_selected_nodes", () => (project) => {
   return deleteEntities(project, [...project.stageManager.getSelectedEntities()]);
 });
-addExecutor("delete_all_nodes", (project) => {
+addExecutor("delete_all_nodes", () => (project) => {
   const entities = [...project.stageManager.getEntities()];
   const associations = [...project.stageManager.getAssociations()];
   for (const assoc of associations) {
@@ -142,7 +137,7 @@ addExecutor("delete_all_nodes", (project) => {
   }
   return { deletedEntities: entities.length, deletedAssociations: associations.length };
 });
-addExecutor("edit_text_node", (project, { ref, data }, references) => {
+addExecutor("edit_text_node", () => (project, { ref, data }, references) => {
   const node = references.resolve(ref, "node");
   if (!(node instanceof TextNode)) {
     return {
@@ -203,7 +198,7 @@ addExecutor("edit_text_node", (project, { ref, data }, references) => {
     throw error;
   }
 });
-addExecutor("edit_image_node", (project, { ref, data }, references) => {
+addExecutor("edit_image_node", () => (project, { ref, data }, references) => {
   const node = references.resolve(ref, "node");
   if (!(node instanceof ImageNode)) {
     return {
@@ -281,7 +276,7 @@ addExecutor("edit_image_node", (project, { ref, data }, references) => {
     throw error;
   }
 });
-addExecutor("auto_layout_dag", (project, { refs }, references) => {
+addExecutor("auto_layout_dag", () => (project, { refs }, references) => {
   const uniqueRefs = [...new Set<string>(refs)];
   if (uniqueRefs.length !== refs.length) {
     return { success: false, error: { code: "duplicate_refs", message: "refs 不能包含重复节点引用" } };
@@ -326,7 +321,7 @@ addExecutor("auto_layout_dag", (project, { refs }, references) => {
   const result = project.autoLayout.autoLayoutDAG(entities);
   return { success: true, ...result };
 });
-addExecutor("create_text_node", (project, { text, color, width, sizeAdjust }, references) => {
+addExecutor("create_text_node", () => (project, { text, color, width, sizeAdjust }, references) => {
   if (width !== undefined && sizeAdjust === "auto") {
     return {
       success: false,
@@ -358,10 +353,10 @@ addExecutor("create_text_node", (project, { text, color, width, sizeAdjust }, re
     sizeAdjust: node.sizeAdjust,
   };
 });
-addExecutor("generate_node_tree_by_text", (project, { text }) => {
+addExecutor("generate_node_tree_by_text", () => (project, { text }) => {
   project.stageManager.generateNodeTreeByText(text, 2);
 });
-addExecutor("expand_node_tree_from_node", (project, { ref, text }, references) => {
+addExecutor("expand_node_tree_from_node", () => (project, { ref, text }, references) => {
   const root = references.resolve(ref, "node");
   const result = project.stageImport.addNodeTreeByTextFromNode(root.uuid, text, 2);
   if (result.success && result.nodeCount && result.nodeCount > 0) {
@@ -369,7 +364,7 @@ addExecutor("expand_node_tree_from_node", (project, { ref, text }, references) =
   }
   return result;
 });
-addExecutor("search_text_nodes_by_regex", (project, { regex }, references) => {
+addExecutor("search_text_nodes_by_regex", () => (project, { regex }, references) => {
   const results: { text: string; ref: string }[] = [];
   const regexObj = new RegExp(regex);
   for (const entity of project.stageManager.getEntities()) {
@@ -379,7 +374,7 @@ addExecutor("search_text_nodes_by_regex", (project, { regex }, references) => {
   }
   return results;
 });
-addExecutor("get_children", (project, { ref }, references) => {
+addExecutor("get_children", () => (project, { ref }, references) => {
   const object = references.resolve(ref, "node");
   const node = project.stageManager.getConnectableEntityByUUID(object.uuid);
   if (!node) return [];
@@ -392,7 +387,7 @@ addExecutor("get_children", (project, { ref }, references) => {
   }
   return results;
 });
-addExecutor("get_parents", (project, { ref }, references) => {
+addExecutor("get_parents", () => (project, { ref }, references) => {
   const object = references.resolve(ref, "node");
   const node = project.stageManager.getConnectableEntityByUUID(object.uuid);
   if (!node) return [];
@@ -405,7 +400,7 @@ addExecutor("get_parents", (project, { ref }, references) => {
   }
   return results;
 });
-addExecutor("batch_change_color", (project, { refs, color }, references) => {
+addExecutor("batch_change_color", () => (project, { refs, color }, references) => {
   const colorObj = new Color(...(color as [number, number, number, number]));
   let changedCount = 0;
   for (const ref of refs) {
@@ -420,10 +415,13 @@ addExecutor("batch_change_color", (project, { refs, color }, references) => {
   }
   return { changedCount };
 });
-addExecutor("get_object_details", (_project, { refs }, references) =>
-  refs.map((ref: string) => toAgentObjectInfo(references.resolve(ref), references)),
+addExecutor(
+  "get_object_details",
+  () =>
+    (_project, { refs }, references) =>
+      refs.map((ref: string) => toAgentObjectInfo(references.resolve(ref), references)),
 );
-addExecutor("check_connections", (project, { pairs }, references) => {
+addExecutor("check_connections", () => (project, { pairs }, references) => {
   const results: { fromRef: string; toRef: string; connected: boolean }[] = [];
   for (const [fromRef, toRef] of pairs) {
     const fromObject = references.resolve(fromRef, "node");
@@ -439,7 +437,7 @@ addExecutor("check_connections", (project, { pairs }, references) => {
   }
   return results;
 });
-addExecutor("create_edges", (project, { edges }, references) => {
+addExecutor("create_edges", () => (project, { edges }, references) => {
   const results: Array<{
     sourceRef: string;
     targetRef: string;
@@ -505,7 +503,7 @@ addExecutor("create_edges", (project, { edges }, references) => {
   }
   return results;
 });
-addExecutor("change_edge_text", (project, { edgeRef, text }, references) => {
+addExecutor("change_edge_text", () => (project, { edgeRef, text }, references) => {
   const edge = references.resolve(edgeRef, "edge");
   if (!(edge instanceof Edge)) {
     return { success: false, error: "连线不存在或不是Edge类型" };
@@ -514,7 +512,7 @@ addExecutor("change_edge_text", (project, { edgeRef, text }, references) => {
   project.historyManager.recordStep();
   return { success: true };
 });
-addExecutor("select_objects", (project, { refs, clearOthers }, references) => {
+addExecutor("select_objects", () => (project, { refs, clearOthers }, references) => {
   if (clearOthers) {
     // 清除所有对象的选中状态
     for (const obj of project.stageManager.getEntities()) {
@@ -535,13 +533,13 @@ addExecutor("select_objects", (project, { refs, clearOthers }, references) => {
   }
   return { selectedCount };
 });
-addExecutor("get_selected_nodes", (project, _data, references) => ({
+addExecutor("get_selected_nodes", () => (project, _data, references) => ({
   objects: [...project.stageManager.getSelectedEntities(), ...project.stageManager.getSelectedAssociations()].map(
     (object) => toAgentObjectInfo(object, references),
   ),
 }));
 
-addExecutor("get_nodes_in_viewport", (project, _data, references) => {
+addExecutor("get_nodes_in_viewport", () => (project, _data, references) => {
   const viewRect = project.renderer.getCoverWorldRectangle();
   const results: Array<Record<string, unknown>> = [];
 
@@ -554,14 +552,14 @@ addExecutor("get_nodes_in_viewport", (project, _data, references) => {
 
   return { nodes: results };
 });
-addExecutor("get_selected_refs", (project, _data, references) => {
+addExecutor("get_selected_refs", () => (project, _data, references) => {
   const selectedEntities = project.stageManager.getSelectedEntities();
   const selectedAssociations = project.stageManager.getSelectedAssociations();
   const refs = [...selectedEntities, ...selectedAssociations].map((object) => references.getOrCreateRef(object));
   return { refs };
 });
 
-addExecutor("breadth_expand_node", (project, { ref, texts }, references) => {
+addExecutor("breadth_expand_node", () => (project, { ref, texts }, references) => {
   const sourceObject = references.resolve(ref, "node");
   const sourceNode = project.stageManager.getConnectableEntityByUUID(sourceObject.uuid);
   if (!sourceNode) {
@@ -608,7 +606,7 @@ addExecutor("breadth_expand_node", (project, { ref, texts }, references) => {
   return { results };
 });
 
-addExecutor("depth_expand_node", (project, { ref, texts }, references) => {
+addExecutor("depth_expand_node", () => (project, { ref, texts }, references) => {
   const rootObject = references.resolve(ref, "node");
   const rootNode = project.stageManager.getConnectableEntityByUUID(rootObject.uuid);
   if (!rootNode) {
@@ -658,7 +656,7 @@ addExecutor("depth_expand_node", (project, { ref, texts }, references) => {
   return { results };
 });
 
-addExecutor("sort_selected_nodes_by_y", (project, { current_order, desired_order }) => {
+addExecutor("sort_selected_nodes_by_y", () => (project, { current_order, desired_order }) => {
   // 获取所有选中的TextNode
   const selectedTextNodes = project.stageManager
     .getSelectedEntities()
@@ -715,7 +713,7 @@ addExecutor("sort_selected_nodes_by_y", (project, { current_order, desired_order
   return { success: true, movedCount: desired_order.length };
 });
 
-addExecutor("sort_selected_nodes_by_x", (project, { current_order, desired_order }) => {
+addExecutor("sort_selected_nodes_by_x", () => (project, { current_order, desired_order }) => {
   // 获取所有选中的TextNode
   const selectedTextNodes = project.stageManager
     .getSelectedEntities()
@@ -773,31 +771,46 @@ addExecutor("sort_selected_nodes_by_x", (project, { current_order, desired_order
 });
 addExecutor(
   "search_and_add_image_node",
-  async (project, { query, preferredOrientation, maxDisplaySize }, references, { abortSignal }) => {
-    const { candidate, image: prepared } = await findDownloadableOpenverseImage(query, {
-      orientation: preferredOrientation as ImageOrientation | undefined,
-      abortSignal,
-      transform: prepareImageBlobForImport,
-    });
-    const targetDisplaySize = calculateImageDisplaySize(prepared.width, prepared.height, maxDisplaySize ?? 480);
-    const { node, width, height } = await createImageNodeFromBlob(project, prepared.blob, {
-      location: getViewportCenteredLocation(project, new Vector(targetDisplaySize.width, targetDisplaySize.height)),
-      intrinsicSize: prepared,
-      maxDisplaySize: maxDisplaySize ?? 480,
-      details: createOpenverseImageDetails(candidate),
-    });
-    project.historyManager.recordStep();
-    const license = candidate.license?.match(/^[a-z0-9-]{1,32}$/i) ? candidate.license.toLowerCase() : undefined;
-    return {
-      ref: references.getOrCreateRef(node),
-      intrinsicSize: { width, height },
-      displaySize: { width: targetDisplaySize.width, height: targetDisplaySize.height },
-      source: "openverse",
-      license,
-    };
-  },
+  () =>
+    async (project, { query, preferredOrientation, maxDisplaySize }, references, { abortSignal }) => {
+      const [imageUtils, imageNodeFactory, entityDetailsManager, openverseImageSearch] = await Promise.all([
+        import("@/core/service/dataManageService/imageUtils"),
+        import("@/core/service/dataManageService/imageNodeFactory"),
+        import("@/core/stage/stageObject/tools/entityDetailsManager"),
+        import("./OpenverseImageSearch"),
+      ]);
+      const { prepareImageBlobForImport } = imageUtils;
+      const { calculateImageDisplaySize, createImageNodeFromBlob } = imageNodeFactory;
+      const { DetailsManager } = entityDetailsManager;
+      const { findDownloadableOpenverseImage } = openverseImageSearch;
+      const { candidate, image: prepared } = await findDownloadableOpenverseImage(query, {
+        orientation: preferredOrientation as ImageOrientation | undefined,
+        abortSignal,
+        transform: prepareImageBlobForImport,
+      });
+      const targetDisplaySize = calculateImageDisplaySize(prepared.width, prepared.height, maxDisplaySize ?? 480);
+      const { node, width, height } = await createImageNodeFromBlob(project, prepared.blob, {
+        location: getViewportCenteredLocation(project, new Vector(targetDisplaySize.width, targetDisplaySize.height)),
+        intrinsicSize: prepared,
+        maxDisplaySize: maxDisplaySize ?? 480,
+        details: createOpenverseImageDetails(candidate, DetailsManager.markdownToDetails),
+      });
+      project.historyManager.recordStep();
+      const license = candidate.license?.match(/^[a-z0-9-]{1,32}$/i) ? candidate.license.toLowerCase() : undefined;
+      return {
+        ref: references.getOrCreateRef(node),
+        intrinsicSize: { width, height },
+        displaySize: { width: targetDisplaySize.width, height: targetDisplaySize.height },
+        source: "openverse",
+        license,
+      };
+    },
 );
-addExecutor("recognize_image", async (project, { ref, prompt }, references) => {
+addExecutor("recognize_image", () => async (project, { ref, prompt }, references) => {
+  const [{ blobToCompressedDataUrl }, { Settings }] = await Promise.all([
+    import("@/core/service/dataManageService/imageUtils"),
+    import("@/core/service/Settings"),
+  ]);
   const obj = references.resolve(ref, "node");
   const imageNode = (
     obj instanceof ImageNode
@@ -824,9 +837,15 @@ addExecutor("recognize_image", async (project, { ref, prompt }, references) => {
   }
 });
 
-Object.freeze(builtInToolExecutors);
+Object.freeze(builtInToolExecutorLoaders);
 
 async function recognizeImage(dataUrl: string, prompt: string): Promise<string> {
+  const [{ Settings }, { createOpenAICompatible }, { fetch }, { generateText }] = await Promise.all([
+    import("@/core/service/Settings"),
+    import("@ai-sdk/openai-compatible"),
+    import("@tauri-apps/plugin-http"),
+    import("ai"),
+  ]);
   const provider = createOpenAICompatible({
     name: "project-graph",
     baseURL: Settings.aiApiBaseUrl,

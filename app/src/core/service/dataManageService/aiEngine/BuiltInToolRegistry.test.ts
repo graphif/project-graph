@@ -4,7 +4,7 @@ const executorModule = vi.hoisted(() => ({ loaded: false }));
 
 vi.mock("./BuiltInToolExecutors", () => {
   executorModule.loaded = true;
-  return { builtInToolExecutors: {} };
+  return { loadBuiltInToolExecutor: () => undefined };
 });
 
 import { builtInToolCatalog } from "./BuiltInToolRegistry";

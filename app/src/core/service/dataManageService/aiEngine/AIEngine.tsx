@@ -7,7 +7,7 @@ import {
   formatSessionMemoryTranscript,
   getSessionMemoryWorkingMessages,
 } from "@/core/service/dataManageService/aiEngine/AIChatSessionMemory";
-import { AITools } from "@/core/service/dataManageService/aiEngine/AITools";
+import { createBuiltInToolAgentTools } from "@/core/service/dataManageService/aiEngine/BuiltInToolAgentAdapter";
 import { AIMCPStore, materializeMCPServers, prepareMCPTools } from "@/core/service/dataManageService/aiEngine/AIMCP";
 import { AIObjectReferenceRegistry } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
 import {
@@ -212,7 +212,11 @@ export class AIEngine {
       });
 
       try {
-        const tools = mergeAgentToolSets(AITools.createTools(project, references), mcpRuntime.tools, skillTools);
+        const tools = mergeAgentToolSets(
+          createBuiltInToolAgentTools(project, references),
+          mcpRuntime.tools,
+          skillTools,
+        );
         const skillContext = buildSkillSystemContext(skillCatalog, activatedSkills);
         const memoryContext = sessionMemory
           ? `以下是当前会话的压缩记忆，仅用于保持对话连续性。当前用户消息和工具读取到的项目状态优先。\n${sessionMemory.summary}`
