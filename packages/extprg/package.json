@@ -33,7 +33,6 @@
     "@zip.js/zip.js": "^2.8.26",
     "cac": "^7.0.0",
     "chokidar": "^5.0.0",
-    "env-paths": "^4.0.0",
     "esbuild": "^0.28.0",
     "pino": "^10.3.1",
     "pino-pretty": "^13.1.3"

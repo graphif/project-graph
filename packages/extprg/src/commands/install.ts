@@ -1,4 +1,3 @@
-import envPaths from "env-paths";
 import { access, cp, mkdir, readFile } from "fs/promises";
 import { join } from "path";
 import { logger } from "../logger";
@@ -11,7 +10,12 @@ export async function runInstall({ appId, dist: distDir }: { appId: string; dist
     logger.error("Build artifacts not found. Please run 'extprg build' first.");
     process.exit(1);
   }
-  const dataDir = envPaths(appId, { suffix: "" }).data;
+  const dataDir =
+    process.platform === "win32"
+      ? join(process.env.APPDATA || "", appId)
+      : process.platform === "darwin"
+        ? join(process.env.HOME || "", "Library", "Application Support", appId)
+        : join(process.env.HOME || "", ".local", "share", appId);
   await mkdir(join(dataDir, "extensions"), { recursive: true });
   const manifest = JSON.parse(await readFile("package.json", "utf-8"));
   const targetDir = join(dataDir, "extensions", manifest.name);
