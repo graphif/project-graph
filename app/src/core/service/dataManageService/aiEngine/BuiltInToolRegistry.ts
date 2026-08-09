@@ -113,7 +113,7 @@ const definitions: BuiltInToolDefinition[] = [
     inputSchema: z.object({}),
     effect: { project: "read", selection: "none", external: "none" },
     risk: "none",
-    capabilities: ["project", "references", "image"],
+    capabilities: ["project", "references", "dom", "image", "settings"],
     projectReferences: { reads: false, allocates: true },
     cancellation: "none",
     transaction: "none",

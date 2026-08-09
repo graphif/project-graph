@@ -76,10 +76,10 @@ import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import type { StageManager } from "@/core/stage/stageManager/StageManager";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { nextProjectIdAtom, store, tabsAtom } from "@/state";
-import { createDefaultMetadata, isValidMetadata, PrgMetadata } from "@/types/metadata";
+import { createDefaultMetadata, PrgMetadata } from "@/types/metadata";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Decoder, Encoder } from "@msgpack/msgpack";
-import { BlobReader, BlobWriter, Uint8ArrayReader, Uint8ArrayWriter, ZipReader, ZipWriter } from "@zip.js/zip.js";
+import { BlobReader, Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
 import { File } from "lucide-react";
 import md5 from "md5";
 import mime from "mime";
@@ -89,6 +89,7 @@ import { CollaborationService } from "./service/collaboration/CollaborationServi
 import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
 import { generateThumbnail } from "./service/dataGenerateService/generateThumbnail";
 import { ProjectOwnershipLease, releaseProjectOwnershipWithRetry } from "./ProjectOwnership";
+import { compareProjectVersions, parseProjectFile } from "./ProjectFile";
 import { ProjectUpgrader } from "./stage/ProjectUpgrader";
 import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageReferenceManager";
 import { Tab } from "./Tab";
@@ -187,32 +188,12 @@ export class Project extends Tab {
   }
 
   /**
-   * 比较两个版本号字符串（格式：x.y.z）
-   * @param version1 版本1
-   * @param version2 版本2
-   * @returns 如果 version1 < version2 返回 -1，如果 version1 > version2 返回 1，如果相等返回 0
-   */
-  private compareVersion(version1: string, version2: string): number {
-    const v1Parts = version1.split(".").map(Number);
-    const v2Parts = version2.split(".").map(Number);
-    const maxLength = Math.max(v1Parts.length, v2Parts.length);
-
-    for (let i = 0; i < maxLength; i++) {
-      const v1Part = v1Parts[i] || 0;
-      const v2Part = v2Parts[i] || 0;
-      if (v1Part < v2Part) return -1;
-      if (v1Part > v2Part) return 1;
-    }
-    return 0;
-  }
-
-  /**
    * 检查是否需要升级，如果需要则显示确认对话框
    * @param currentVersion 当前文件版本
    * @param latestVersion 最新版本
    */
   private async checkAndConfirmUpgrade(currentVersion: string, latestVersion: string): Promise<boolean> {
-    const versionDiff = this.compareVersion(currentVersion, latestVersion);
+    const versionDiff = compareProjectVersions(currentVersion, latestVersion);
 
     // 文件版本 > 软件版本：文件来自更新版本的软件，当前软件无法安全解析，拒绝打开
     if (versionDiff > 0) {
@@ -250,69 +231,6 @@ export class Project extends Tab {
   }
 
   /**
-   * 解析项目文件（ZIP格式），提取所有数据
-   * @returns 解析后的数据对象
-   */
-  private async parseProjectFile(): Promise<{
-    serializedStageObjects: any[];
-    tags: string[];
-    references: { sections: Record<string, string[]>; files: string[] };
-    metadata: PrgMetadata;
-    readme?: string;
-  }> {
-    const fileContent = await this.fs.read(this.uri);
-    const reader = new ZipReader(new Uint8ArrayReader(fileContent));
-    const entries = await reader.getEntries();
-
-    let serializedStageObjects: any[] = [];
-    let tags: string[] = [];
-    let references: { sections: Record<string, string[]>; files: string[] } = { sections: {}, files: [] };
-    let metadata: PrgMetadata = createDefaultMetadata("2.0.0");
-    let readme: string | undefined = undefined;
-
-    for (const entry of entries) {
-      if (!entry.directory) {
-        if (entry.filename === "stage.msgpack") {
-          const stageRawData = await entry.getData!(new Uint8ArrayWriter());
-          serializedStageObjects = this.decoder.decode(stageRawData) as any[];
-        } else if (entry.filename === "tags.msgpack") {
-          const tagsRawData = await entry.getData!(new Uint8ArrayWriter());
-          tags = this.decoder.decode(tagsRawData) as string[];
-        } else if (entry.filename === "reference.msgpack") {
-          const referenceRawData = await entry.getData!(new Uint8ArrayWriter());
-          references = this.decoder.decode(referenceRawData) as { sections: Record<string, string[]>; files: string[] };
-        } else if (entry.filename === "metadata.msgpack") {
-          const metadataRawData = await entry.getData!(new Uint8ArrayWriter());
-          const decodedMetadata = this.decoder.decode(metadataRawData) as any;
-          // 验证并规范化 metadata
-          if (isValidMetadata(decodedMetadata)) {
-            metadata = decodedMetadata;
-          } else {
-            // 如果格式不正确，使用默认值
-            metadata = createDefaultMetadata("2.0.0");
-          }
-        } else if (entry.filename === "README.md") {
-          const readmeRawData = await entry.getData!(new Uint8ArrayWriter());
-          readme = new TextDecoder().decode(readmeRawData);
-        } else if (entry.filename.startsWith("attachments/")) {
-          const match = entry.filename.trim().match(/^attachments\/([a-zA-Z0-9-]+)\.([a-zA-Z0-9]+)$/);
-          if (!match) {
-            console.warn("[Project] 附件文件名不符合规范: %s", entry.filename);
-            continue;
-          }
-          const uuid = match[1];
-          const ext = match[2];
-          const type = mime.getType(ext) || "application/octet-stream";
-          const attachment = await entry.getData!(new BlobWriter(type));
-          this.attachments.set(uuid, attachment);
-        }
-      }
-    }
-
-    return { serializedStageObjects, tags, references, metadata, readme };
-  }
-
-  /**
    * 服务加载完成后再调用
    */
   async init() {
@@ -321,7 +239,11 @@ export class Project extends Tab {
     }
     try {
       // 解析项目文件
-      const { serializedStageObjects, tags, references, metadata, readme } = await this.parseProjectFile();
+      const { serializedStageObjects, tags, references, metadata, readme } = await parseProjectFile(
+        await this.fs.read(this.uri),
+        this.decoder,
+        this.attachments,
+      );
 
       // 检查并确认升级
       const currentVersion = metadata?.version || "2.0.0";

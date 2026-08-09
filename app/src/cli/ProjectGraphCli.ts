@@ -10,7 +10,7 @@ const help = `Usage: project-graph <command>
 Commands:
   tool list
   tool describe <tool>
-  tool invoke <tool> --project <path> --input <JSON>
+  tool invoke <tool> --project <path> --input <JSON> [--allow-upgrade]
 
 Options:
   --help     Show help
@@ -22,13 +22,20 @@ type ProjectGraphCliErrorCode =
   | "UNKNOWN_TOOL"
   | "INVALID_JSON"
   | "TOOL_INPUT_INVALID"
-  | "TOOL_EXECUTION_FAILED";
+  | "PROJECT_NOT_FOUND"
+  | "PROJECT_BUSY"
+  | "PROJECT_UPGRADE_REQUIRED"
+  | "PROJECT_VERSION_UNSUPPORTED"
+  | "PROJECT_LOAD_FAILED"
+  | "TOOL_EXECUTION_FAILED"
+  | "PROJECT_REFERENCE_SAVE_FAILED"
+  | "RUNTIME_CLEANUP_FAILED";
 
 function writeError(code: ProjectGraphCliErrorCode, message: string): void {
   process.stderr.write(`${JSON.stringify({ code, message })}\n`);
 }
 
-export function runProjectGraphCli(args: readonly string[]): number {
+export async function runProjectGraphCli(args: readonly string[]): Promise<number> {
   if (args.length === 1 && args[0] === "--help") {
     process.stdout.write(help);
     return 0;
@@ -51,7 +58,8 @@ export function runProjectGraphCli(args: readonly string[]): number {
     return 0;
   }
   if (args[0] === "tool" && args[1] === "invoke") {
-    if (args.length !== 7 || args[3] !== "--project" || args[5] !== "--input") {
+    const allowUpgrade = args.length === 8 && args[7] === "--allow-upgrade";
+    if ((args.length !== 7 && !allowUpgrade) || args[3] !== "--project" || args[5] !== "--input") {
       writeError("INVALID_COMMAND", "Invalid Project Graph CLI command.");
       return 2;
     }
@@ -76,8 +84,20 @@ export function runProjectGraphCli(args: readonly string[]): number {
       return 2;
     }
 
-    writeError("TOOL_EXECUTION_FAILED", "The Project Runtime Host is not available yet.");
-    return 1;
+    const { runPathRoutedInvocation } = await import("./ProjectGraphCliRuntime");
+    const result = await runPathRoutedInvocation({
+      toolName,
+      input,
+      projectPath: args[4],
+      allowUpgrade,
+    });
+    if ("forwarded" in result) return result.exitCode;
+    if (!result.ok) {
+      writeError(result.error.code, result.error.message);
+      return 1;
+    }
+    process.stdout.write(`${JSON.stringify(result.value)}\n`);
+    return 0;
   }
   writeError("INVALID_COMMAND", "Invalid Project Graph CLI command.");
   return 2;

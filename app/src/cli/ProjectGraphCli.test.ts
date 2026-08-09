@@ -1,14 +1,53 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import { chmodSync, existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { Encoder } from "@msgpack/msgpack";
+import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
+import { afterEach, describe, expect, it } from "vitest";
+import { URI } from "vscode-uri";
 
 const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
+const temporaryDirectories: string[] = [];
+let referenceStorePath: string | undefined;
+
+afterEach(() => {
+  for (const directory of temporaryDirectories.splice(0)) rmSync(directory, { recursive: true, force: true });
+  referenceStorePath = undefined;
+});
+
+function getReferenceStorePath(): string {
+  if (referenceStorePath) return referenceStorePath;
+  const directory = mkdtempSync(join(tmpdir(), "project-graph-cli-references-"));
+  temporaryDirectories.push(directory);
+  referenceStorePath = join(directory, "ai-project-references.json");
+  return referenceStorePath;
+}
+
+async function createProjectFixture(version = "2.7.0", stage: unknown[] = []): Promise<string> {
+  const directory = mkdtempSync(join(tmpdir(), "project-graph-cli-"));
+  temporaryDirectories.push(directory);
+  const projectPath = join(directory, "fixture.prg");
+  const encoder = new Encoder();
+  const archive = new Uint8ArrayWriter();
+  const writer = new ZipWriter(archive, { level: 0 });
+  await writer.add("stage.msgpack", new Uint8ArrayReader(encoder.encode(stage)), { level: 0 });
+  await writer.add("tags.msgpack", new Uint8ArrayReader(encoder.encode([])), { level: 0 });
+  await writer.add("reference.msgpack", new Uint8ArrayReader(encoder.encode({ sections: {}, files: [] })), {
+    level: 0,
+  });
+  await writer.add("metadata.msgpack", new Uint8ArrayReader(encoder.encode({ version })), { level: 0 });
+  await writer.close();
+  writeFileSync(projectPath, await archive.getData());
+  return projectPath;
+}
 
 function runCli(...args: string[]) {
   return spawnSync("pnpm", ["cli", "--", ...args], {
     cwd: repositoryRoot,
     encoding: "utf8",
-    env: { ...process.env, NO_COLOR: "1" },
+    env: { ...process.env, NO_COLOR: "1", PROJECT_GRAPH_REFERENCE_STORE_PATH: getReferenceStorePath() },
   });
 }
 
@@ -108,14 +147,220 @@ describe("Project Graph CLI process contract", () => {
     });
   });
 
-  it("keeps a validated invocation machine-framed before a Runtime Host is connected", () => {
+  it("reports a missing explicit Project Path without opening a Project", () => {
     expectCliError(
       ["tool", "invoke", "get_all_nodes", "--project", "/does/not/exist.prg", "--input", "{}"],
-      {
-        code: "TOOL_EXECUTION_FAILED",
-        message: "The Project Runtime Host is not available yet.",
-      },
+      { code: "PROJECT_NOT_FOUND", message: "Project file was not found." },
       1,
     );
   });
+
+  it("reports a corrupt Project as a stable load failure", () => {
+    const directory = mkdtempSync(join(tmpdir(), "project-graph-cli-corrupt-"));
+    temporaryDirectories.push(directory);
+    const projectPath = join(directory, "corrupt.prg");
+    writeFileSync(projectPath, "not a Project archive");
+
+    expectCliError(
+      ["tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}"],
+      { code: "PROJECT_LOAD_FAILED", message: "Project file could not be loaded." },
+      1,
+    );
+  });
+
+  it("frames ownership-sidecar failures as a stable load error", async () => {
+    const projectPath = await createProjectFixture();
+    const directory = dirname(projectPath);
+    chmodSync(directory, 0o555);
+
+    try {
+      expectCliError(
+        ["tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}"],
+        { code: "PROJECT_LOAD_FAILED", message: "Project file could not be loaded." },
+        1,
+      );
+    } finally {
+      chmodSync(directory, 0o755);
+    }
+  });
+
+  it("invokes get_all_nodes against a closed current-schema Project without rewriting it", async () => {
+    const projectPath = await createProjectFixture();
+    const before = readFileSync(projectPath);
+
+    const result = runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}");
+
+    expect(result).toMatchObject({ status: 0, stdout: '{"objects":[]}\n', stderr: "" });
+    expect(readFileSync(projectPath)).toEqual(before);
+  });
+
+  it("keeps the Closed Project Runtime Host limited to get_all_nodes", async () => {
+    const projectPath = await createProjectFixture();
+    const before = readFileSync(projectPath);
+
+    expectCliError(
+      ["tool", "invoke", "get_object_details", "--project", projectPath, "--input", '{"refs":[]}'],
+      { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
+      1,
+    );
+    expect(readFileSync(projectPath)).toEqual(before);
+  });
+
+  it("rejects newer and implicit legacy formats without rewriting the Project", async () => {
+    const newerProjectPath = await createProjectFixture("99.0.0");
+    const legacyProjectPath = await createProjectFixture("2.6.0");
+    const newerBefore = readFileSync(newerProjectPath);
+    const legacyBefore = readFileSync(legacyProjectPath);
+
+    expectCliError(
+      ["tool", "invoke", "get_all_nodes", "--project", newerProjectPath, "--input", "{}"],
+      {
+        code: "PROJECT_VERSION_UNSUPPORTED",
+        message: "Project version is newer than this Project Graph runtime.",
+      },
+      1,
+    );
+    expectCliError(
+      ["tool", "invoke", "get_all_nodes", "--project", legacyProjectPath, "--input", "{}"],
+      { code: "PROJECT_UPGRADE_REQUIRED", message: "Project must be upgraded before it can be invoked." },
+      1,
+    );
+    expect(readFileSync(newerProjectPath)).toEqual(newerBefore);
+    expect(readFileSync(legacyProjectPath)).toEqual(legacyBefore);
+  });
+
+  it("allows a legacy read-only invocation to upgrade only in memory", async () => {
+    const projectPath = await createProjectFixture("2.6.0");
+    const before = readFileSync(projectPath);
+
+    const result = runCli(
+      "tool",
+      "invoke",
+      "get_all_nodes",
+      "--project",
+      projectPath,
+      "--input",
+      "{}",
+      "--allow-upgrade",
+    );
+
+    expect(result).toMatchObject({ status: 0, stdout: '{"objects":[]}\n', stderr: "" });
+    expect(readFileSync(projectPath)).toEqual(before);
+  });
+
+  it("restores stable Project Object References across independent CLI processes", async () => {
+    const projectPath = await createProjectFixture("2.7.0", [
+      {
+        _: "TextNode",
+        uuid: "11111111-1111-4111-8111-111111111111",
+        text: "Persisted node",
+        collisionBox: {
+          _: "CollisionBox",
+          shapes: [
+            {
+              _: "Rectangle",
+              location: { _: "Vector", x: 10, y: 20 },
+              size: { _: "Vector", x: 100, y: 50 },
+            },
+          ],
+        },
+      },
+    ]);
+
+    const first = runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}");
+    const second = runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}");
+
+    expect(first).toMatchObject({ status: 0, stderr: "" });
+    expect(second).toMatchObject({ status: 0, stderr: "" });
+    expect(JSON.parse(first.stdout)).toEqual(JSON.parse(second.stdout));
+    expect(JSON.parse(first.stdout)).toMatchObject({
+      objects: [
+        {
+          ref: "n1",
+          type: "TextNode",
+          position: { x: 10, y: 20 },
+          size: { width: expect.any(Number), height: expect.any(Number) },
+          text: "Persisted node",
+          color: [0, 0, 0, 0],
+        },
+      ],
+    });
+  });
+
+  it("fails explicitly when a Project Object Reference snapshot is invalid", async () => {
+    const projectPath = await createProjectFixture();
+    const key = `project:${URI.file(realpathSync(projectPath)).toString()}:references`;
+    writeFileSync(
+      getReferenceStorePath(),
+      JSON.stringify({
+        [key]: {
+          version: 1,
+          updatedAt: Date.now(),
+          references: { entries: [{ ref: "bad", uuid: "node-1" }], nextNodeRef: 1, nextEdgeRef: 1 },
+        },
+      }),
+    );
+
+    expectCliError(
+      ["tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}"],
+      { code: "PROJECT_LOAD_FAILED", message: "Project file could not be loaded." },
+      1,
+    );
+  });
+
+  it("reports a read-only Project Object Reference save failure", async () => {
+    const projectPath = await createProjectFixture("2.7.0", [
+      {
+        _: "TextNode",
+        uuid: "22222222-2222-4222-8222-222222222222",
+        text: "Unsaved reference",
+        collisionBox: {
+          _: "CollisionBox",
+          shapes: [
+            {
+              _: "Rectangle",
+              location: { _: "Vector", x: 0, y: 0 },
+              size: { _: "Vector", x: 10, y: 10 },
+            },
+          ],
+        },
+      },
+    ]);
+    writeFileSync(getReferenceStorePath(), "{}");
+    chmodSync(getReferenceStorePath(), 0o444);
+
+    try {
+      expectCliError(
+        ["tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}"],
+        {
+          code: "PROJECT_REFERENCE_SAVE_FAILED",
+          message: "Project Object References could not be saved.",
+        },
+        1,
+      );
+    } finally {
+      chmodSync(getReferenceStorePath(), 0o644);
+    }
+  }, 15_000);
+
+  it("returns PROJECT_BUSY instead of reading a Project held by an unconnectable owner", async () => {
+    const projectPath = await createProjectFixture();
+    const lockPath = `${realpathSync(projectPath)}.project-graph.lock`;
+    const holder = spawn("/usr/bin/lockf", ["-k", lockPath, "/bin/sleep", "8"]);
+    const deadline = Date.now() + 1000;
+    while (!existsSync(lockPath) && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    try {
+      expectCliError(
+        ["tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}"],
+        { code: "PROJECT_BUSY", message: "Project is already owned by another runtime." },
+        1,
+      );
+    } finally {
+      holder.kill("SIGTERM");
+    }
+  }, 15_000);
 });
