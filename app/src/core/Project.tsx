@@ -88,6 +88,7 @@ import { URI } from "vscode-uri";
 import { CollaborationService } from "./service/collaboration/CollaborationService";
 import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
 import { generateThumbnail } from "./service/dataGenerateService/generateThumbnail";
+import { ProjectOwnershipLease, releaseProjectOwnershipWithRetry } from "./ProjectOwnership";
 import { ProjectUpgrader } from "./stage/ProjectUpgrader";
 import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageReferenceManager";
 import { Tab } from "./Tab";
@@ -133,6 +134,7 @@ export class Project extends Tab {
   private _uri: URI;
   private _projectState: ProjectState = ProjectState.Unsaved;
   private _isSaving = false;
+  private projectOwnership?: ProjectOwnershipLease;
   public stage: StageObject[] = [];
   public tags: string[] = [];
   /**
@@ -158,6 +160,18 @@ export class Project extends Tab {
   constructor(uri: URI) {
     super({});
     this._uri = uri;
+  }
+
+  attachProjectOwnership(ownership: ProjectOwnershipLease) {
+    this.projectOwnership = ownership;
+  }
+
+  get projectOwnerIdentity() {
+    return this.projectOwnership?.ownershipId;
+  }
+
+  get canonicalProjectPath() {
+    return this.projectOwnership?.canonicalPath;
   }
   /**
    * 创建一个草稿工程
@@ -557,6 +571,18 @@ export class Project extends Tab {
         {Settings.showQuickSettingsToolbar && <RightToolbar />}
       </div>
     );
+  }
+
+  override async dispose() {
+    const ownership = this.projectOwnership;
+    try {
+      await super.dispose();
+    } finally {
+      if (ownership) {
+        await releaseProjectOwnershipWithRetry(ownership);
+        if (this.projectOwnership === ownership) this.projectOwnership = undefined;
+      }
+    }
   }
 }
 

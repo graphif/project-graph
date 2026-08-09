@@ -2,7 +2,7 @@ mod cmd;
 #[allow(dead_code)]
 mod project_ownership;
 
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 use tauri::{Emitter, Listener, Manager, State};
 
 // 这两行可能不能去掉，否则会导致linux打包软件报错
@@ -57,6 +57,9 @@ pub fn run() {
 
     builder
         .manage(PendingOpenFiles::default())
+        .manage(Arc::new(
+            project_ownership::DesktopProjectOwnershipManager::default(),
+        ))
         .manage(cmd::mcp::McpStdioManager::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -94,6 +97,8 @@ pub fn run() {
             write_stderr,
             exit,
             take_pending_open_files,
+            project_ownership::acquire_desktop_project_ownership,
+            project_ownership::release_desktop_project_ownership,
             #[cfg(desktop)]
             cmd::paddle::get_aha_directory,
             #[cfg(desktop)]

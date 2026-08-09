@@ -1,18 +1,22 @@
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 use std::fs::{self, File, OpenOptions, TryLockError};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 use std::time::Duration;
 
 const OWNERSHIP_RETRY_DELAY: Duration = Duration::from_secs(5);
+static NEXT_DESKTOP_OWNERSHIP_ID: AtomicU64 = AtomicU64::new(1);
 
 enum ExclusiveLockAttempt {
     Acquired { used_retry: bool },
     Contended,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct CanonicalProjectPath(PathBuf);
 
 impl CanonicalProjectPath {
@@ -59,6 +63,165 @@ pub(crate) struct ProjectOwnership {
     connectable_owner_lock: Option<File>,
 }
 
+#[derive(Debug, PartialEq, Eq, Serialize)]
+#[serde(
+    tag = "status",
+    rename_all = "snake_case",
+    rename_all_fields = "camelCase"
+)]
+pub(crate) enum DesktopOwnershipAcquisition {
+    Acquired {
+        ownership_id: String,
+        canonical_path: String,
+    },
+    AlreadyOwned {
+        ownership_id: String,
+        canonical_path: String,
+    },
+}
+
+#[derive(Default)]
+struct DesktopOwnershipState {
+    ownership_by_id: HashMap<String, ProjectOwnership>,
+    ownership_id_by_path: HashMap<PathBuf, String>,
+    acquiring_paths: HashSet<PathBuf>,
+}
+
+#[derive(Default)]
+pub(crate) struct DesktopProjectOwnershipManager {
+    state: Mutex<DesktopOwnershipState>,
+    acquisition_finished: Condvar,
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct DesktopProjectOwnershipError {
+    code: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    owner: Option<ProjectOwner>,
+}
+
+impl From<ProjectOwnershipError> for DesktopProjectOwnershipError {
+    fn from(error: ProjectOwnershipError) -> Self {
+        let code = error.code();
+        let owner = error.owner().cloned();
+        Self { code, owner }
+    }
+}
+
+impl DesktopProjectOwnershipManager {
+    pub(crate) fn acquire(
+        &self,
+        project_path: &Path,
+    ) -> Result<DesktopOwnershipAcquisition, ProjectOwnershipError> {
+        self.acquire_with_retry_delay(project_path, OWNERSHIP_RETRY_DELAY)
+    }
+
+    fn acquire_with_retry_delay(
+        &self,
+        project_path: &Path,
+        retry_delay: Duration,
+    ) -> Result<DesktopOwnershipAcquisition, ProjectOwnershipError> {
+        let canonical_path = canonicalize_project_path(project_path)?;
+        {
+            let mut state = self
+                .state
+                .lock()
+                .map_err(|_| ProjectOwnershipError::LoadFailed)?;
+            loop {
+                if let Some(ownership_id) = state
+                    .ownership_id_by_path
+                    .get(canonical_path.as_path())
+                    .cloned()
+                {
+                    return Ok(DesktopOwnershipAcquisition::AlreadyOwned {
+                        ownership_id,
+                        canonical_path: canonical_path.as_path().to_string_lossy().into_owned(),
+                    });
+                }
+                if state.acquiring_paths.insert(canonical_path.0.clone()) {
+                    break;
+                }
+                state = self
+                    .acquisition_finished
+                    .wait(state)
+                    .map_err(|_| ProjectOwnershipError::LoadFailed)?;
+            }
+        }
+
+        let ownership_result = acquire_project_ownership_with_retry_delay(
+            canonical_path.as_path(),
+            ProjectOwner::UnconnectableHolder,
+            retry_delay,
+        );
+        let mut state = self
+            .state
+            .lock()
+            .map_err(|_| ProjectOwnershipError::LoadFailed)?;
+        state.acquiring_paths.remove(canonical_path.as_path());
+        let ownership = match ownership_result {
+            Ok(ownership) => ownership,
+            Err(error) => {
+                self.acquisition_finished.notify_all();
+                return Err(error);
+            }
+        };
+        let ownership_id = format!(
+            "desktop-{}-{}",
+            std::process::id(),
+            NEXT_DESKTOP_OWNERSHIP_ID.fetch_add(1, Ordering::Relaxed)
+        );
+        let canonical_path_string = canonical_path.as_path().to_string_lossy().into_owned();
+        state
+            .ownership_id_by_path
+            .insert(canonical_path.0, ownership_id.clone());
+        state
+            .ownership_by_id
+            .insert(ownership_id.clone(), ownership);
+        self.acquisition_finished.notify_all();
+        Ok(DesktopOwnershipAcquisition::Acquired {
+            ownership_id,
+            canonical_path: canonical_path_string,
+        })
+    }
+
+    pub(crate) fn release(&self, ownership_id: &str) -> Result<(), ProjectOwnershipError> {
+        let mut state = self
+            .state
+            .lock()
+            .map_err(|_| ProjectOwnershipError::LoadFailed)?;
+        let Some(ownership) = state.ownership_by_id.remove(ownership_id) else {
+            return Ok(());
+        };
+        state
+            .ownership_id_by_path
+            .remove(ownership.canonical_path().as_path());
+        drop(ownership);
+        Ok(())
+    }
+}
+
+#[tauri::command]
+pub(crate) async fn acquire_desktop_project_ownership(
+    manager: tauri::State<'_, Arc<DesktopProjectOwnershipManager>>,
+    project_path: String,
+) -> Result<DesktopOwnershipAcquisition, DesktopProjectOwnershipError> {
+    let manager = Arc::clone(manager.inner());
+    tauri::async_runtime::spawn_blocking(move || manager.acquire(Path::new(&project_path)))
+        .await
+        .map_err(|_| DesktopProjectOwnershipError::from(ProjectOwnershipError::LoadFailed))?
+        .map_err(DesktopProjectOwnershipError::from)
+}
+
+#[tauri::command]
+pub(crate) fn release_desktop_project_ownership(
+    manager: tauri::State<'_, Arc<DesktopProjectOwnershipManager>>,
+    ownership_id: String,
+) -> Result<(), DesktopProjectOwnershipError> {
+    manager
+        .release(&ownership_id)
+        .map_err(DesktopProjectOwnershipError::from)
+}
+
 impl ProjectOwnership {
     pub(crate) fn canonical_path(&self) -> &CanonicalProjectPath {
         &self.canonical_path
@@ -87,7 +250,8 @@ pub(crate) fn canonicalize_project_path(
     let is_project = canonical_path.is_file()
         && canonical_path
             .extension()
-            .is_some_and(|extension| extension == "prg");
+            .and_then(|extension| extension.to_str())
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("prg"));
     if !is_project {
         return Err(ProjectOwnershipError::LoadFailed);
     }
@@ -252,6 +416,7 @@ mod tests {
     use std::io::{BufRead, BufReader};
     use std::process::{Child, ChildStdout, Command, ExitStatus, Stdio};
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::Arc;
     use std::time::Instant;
 
     static NEXT_TEST_DIRECTORY: AtomicU64 = AtomicU64::new(0);
@@ -351,6 +516,18 @@ mod tests {
                 .unwrap_err()
                 .code(),
             "PROJECT_LOAD_FAILED"
+        );
+    }
+
+    #[test]
+    fn canonical_project_path_accepts_case_insensitive_project_extensions() {
+        let directory = TestDirectory::new();
+        let project = directory.path().join("graph.PRG");
+        fs::write(&project, []).unwrap();
+
+        assert_eq!(
+            canonicalize_project_path(&project).unwrap().as_path(),
+            fs::canonicalize(&project).unwrap()
         );
     }
 
@@ -561,6 +738,170 @@ mod tests {
                 thread::park();
             }
         }
+    }
+
+    #[test]
+    fn desktop_manager_reuses_the_live_owner_for_canonical_path_and_releases_on_close() {
+        let directory = TestDirectory::new();
+        let project = directory.path().join("graph.prg");
+        fs::write(&project, []).unwrap();
+        let symlink = directory.path().join("graph-link.prg");
+        create_file_symlink(&project, &symlink);
+        let manager = DesktopProjectOwnershipManager::default();
+
+        let DesktopOwnershipAcquisition::Acquired {
+            ownership_id,
+            canonical_path,
+        } = manager.acquire(&project).unwrap()
+        else {
+            panic!("first open must acquire ownership");
+        };
+        let duplicate = manager.acquire(&symlink).unwrap();
+
+        assert_eq!(
+            duplicate,
+            DesktopOwnershipAcquisition::AlreadyOwned {
+                ownership_id: ownership_id.clone(),
+                canonical_path: canonical_path.clone(),
+            }
+        );
+        manager.release(&ownership_id).unwrap();
+        acquire_project_ownership_with_retry_delay(
+            &project,
+            ProjectOwner::UnconnectableHolder,
+            Duration::from_millis(1),
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn contended_acquisition_does_not_block_unrelated_desktop_release() {
+        let directory = TestDirectory::new();
+        let first_project = directory.path().join("first.prg");
+        let contended_project = directory.path().join("contended.prg");
+        fs::write(&first_project, []).unwrap();
+        fs::write(&contended_project, []).unwrap();
+        let manager = Arc::new(DesktopProjectOwnershipManager::default());
+        let DesktopOwnershipAcquisition::Acquired { ownership_id, .. } =
+            manager.acquire(&first_project).unwrap()
+        else {
+            panic!("first Project must be owned");
+        };
+        let _contended_ownership = acquire_project_ownership_with_retry_delay(
+            &contended_project,
+            ProjectOwner::UnconnectableHolder,
+            Duration::from_millis(1),
+        )
+        .unwrap();
+        let acquiring_manager = Arc::clone(&manager);
+        let acquisition = thread::spawn(move || {
+            acquiring_manager
+                .acquire_with_retry_delay(&contended_project, Duration::from_millis(100))
+        });
+        thread::sleep(Duration::from_millis(10));
+
+        let started = Instant::now();
+        manager.release(&ownership_id).unwrap();
+
+        assert!(started.elapsed() < Duration::from_millis(50));
+        assert_eq!(
+            acquisition.join().unwrap().unwrap_err().code(),
+            "PROJECT_BUSY"
+        );
+    }
+
+    #[test]
+    fn concurrent_same_project_acquisition_reuses_the_first_desktop_owner() {
+        let directory = TestDirectory::new();
+        let project = directory.path().join("graph.prg");
+        fs::write(&project, []).unwrap();
+        let manager = Arc::new(DesktopProjectOwnershipManager::default());
+        let external_owner = acquire_project_ownership_with_retry_delay(
+            &project,
+            ProjectOwner::UnconnectableHolder,
+            Duration::from_millis(1),
+        )
+        .unwrap();
+        let first_manager = Arc::clone(&manager);
+        let first_project = project.clone();
+        let first = thread::spawn(move || {
+            first_manager.acquire_with_retry_delay(&first_project, Duration::from_millis(50))
+        });
+        thread::sleep(Duration::from_millis(10));
+        let second_manager = Arc::clone(&manager);
+        let second_project = project.clone();
+        let second = thread::spawn(move || {
+            second_manager.acquire_with_retry_delay(&second_project, Duration::from_millis(50))
+        });
+        thread::sleep(Duration::from_millis(10));
+        drop(external_owner);
+
+        let DesktopOwnershipAcquisition::Acquired { ownership_id, .. } =
+            first.join().unwrap().unwrap()
+        else {
+            panic!("first open must acquire ownership");
+        };
+        assert!(matches!(
+            second.join().unwrap().unwrap(),
+            DesktopOwnershipAcquisition::AlreadyOwned {
+                ownership_id: duplicate_id,
+                ..
+            } if duplicate_id == ownership_id
+        ));
+    }
+
+    #[test]
+    fn desktop_command_error_keeps_the_stable_code_and_current_owner() {
+        let error = DesktopProjectOwnershipError::from(ProjectOwnershipError::Busy {
+            owner: ProjectOwner::Connectable {
+                endpoint: "ipc://runtime-host".to_owned(),
+            },
+        });
+
+        assert_eq!(
+            serde_json::to_value(error).unwrap(),
+            serde_json::json!({
+                "code": "PROJECT_BUSY",
+                "owner": {
+                    "kind": "connectable",
+                    "endpoint": "ipc://runtime-host"
+                }
+            })
+        );
+    }
+
+    #[test]
+    fn desktop_acquisition_serializes_the_frontend_lifecycle_contract() {
+        let acquisition = DesktopOwnershipAcquisition::Acquired {
+            ownership_id: "desktop-123-1".to_owned(),
+            canonical_path: "/projects/graph.prg".to_owned(),
+        };
+
+        assert_eq!(
+            serde_json::to_value(acquisition).unwrap(),
+            serde_json::json!({
+                "status": "acquired",
+                "ownershipId": "desktop-123-1",
+                "canonicalPath": "/projects/graph.prg"
+            })
+        );
+    }
+
+    #[test]
+    fn desktop_manager_acquires_after_the_owner_process_exits() {
+        let directory = TestDirectory::new();
+        let project = directory.path().join("graph.prg");
+        fs::write(&project, []).unwrap();
+        let mut holder = spawn_holder(&project, Some(100));
+        let manager = DesktopProjectOwnershipManager::default();
+
+        let acquisition = manager.acquire(&project).unwrap();
+
+        assert!(matches!(
+            acquisition,
+            DesktopOwnershipAcquisition::Acquired { .. }
+        ));
+        assert!(holder.wait().success());
     }
 
     fn spawn_holder(project_path: &Path, exit_after_millis: Option<u64>) -> HolderProcess {
