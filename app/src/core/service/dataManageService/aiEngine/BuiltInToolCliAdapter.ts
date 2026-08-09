@@ -4,7 +4,7 @@ import { builtInToolCatalog, getBuiltInToolDefinition, type BuiltInToolDefinitio
 export type BuiltInToolCliEntry = {
   name: string;
   description: string;
-  inputSchema: ReturnType<typeof z.toJSONSchema>;
+  inputSchema: object;
 };
 
 function toCliEntry({ name, description, inputSchema }: BuiltInToolDefinition): BuiltInToolCliEntry {
