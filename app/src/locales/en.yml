@@ -189,6 +189,11 @@ settings:
     title: Auto Adjust Line Endpoints by Mouse Track
     description: |
       When enabled, the endpoints of the generated lines will be automatically adjusted based on the mouse drag track.
+  autoAdjustLineEndpointsWhenRightDragToBlank:
+    title: Auto-adjust endpoints when a right-dragged connection is released on empty space
+    description: |
+      When enabled, right-dragging a connection to empty space keeps the source node's exit edge and connects to the opposite edge of the new text node.
+      When disabled, both endpoints of these connections remain at their entities' centers.
   lineStyle:
     title: Line Style
     options:

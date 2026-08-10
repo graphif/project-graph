@@ -417,6 +417,13 @@ export class ControllerNodeConnectionClass extends ControllerClass {
       // 鼠标在空白位置抬起
       // 额外复制一个数组，因为回调函数执行前，这个数组已经被清空了
       const newConnectFromEntities = this.connectFromEntities;
+      const isSingleImageOrReferenceSource =
+        newConnectFromEntities.length === 1 &&
+        (newConnectFromEntities[0] instanceof ImageNode ||
+          newConnectFromEntities[0].constructor.name === "ReferenceBlockNode");
+      const sourceImageLocation = isSingleImageOrReferenceSource
+        ? this._startImageLocation.get(newConnectFromEntities[0].uuid)?.clone()
+        : undefined;
 
       this.project.controllerUtils.addTextNodeByLocation(releaseWorldLocation, true).then((uuid) => {
         const createdNode = this.project.stageManager.getTextNodeByUUID(uuid) as ConnectableEntity;
@@ -424,11 +431,23 @@ export class ControllerNodeConnectionClass extends ControllerClass {
         // 让这个新建的节点进入编辑状态
         this.project.controllerUtils.textNodeInEditModeByUUID(uuid);
 
+        const sourceRectangleRate = Settings.autoAdjustLineEndpointsWhenRightDragToBlank
+          ? (sourceImageLocation ?? this.directionToRate(sourceDirection))
+          : Vector.same(0.5);
+        const targetRectangleRate =
+          Settings.autoAdjustLineEndpointsWhenRightDragToBlank && !isSingleImageOrReferenceSource
+            ? this.directionToRate(sourceDirection !== null ? this.getOppositeDirection(sourceDirection) : null)
+            : Vector.same(0.5);
+
+        this.project.stageManager.connectMultipleEntities(
+          newConnectFromEntities,
+          createdNode,
+          false,
+          [sourceRectangleRate.x, sourceRectangleRate.y],
+          [targetRectangleRate.x, targetRectangleRate.y],
+        );
         for (const fromEntity of newConnectFromEntities) {
-          const connectResult = this.project.stageManager.connectEntity(fromEntity, createdNode);
-          if (connectResult) {
-            this.addConnectEffect(fromEntity, createdNode);
-          }
+          this.addConnectEffect(fromEntity, createdNode, sourceRectangleRate, targetRectangleRate);
         }
       });
     }

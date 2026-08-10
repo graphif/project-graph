@@ -254,6 +254,11 @@ settings:
     description: |
       开启后，在拖拽连线时会根据鼠标移动轨迹自动调整连线端点在实体上的位置
       关闭后，连线端点将始终位于实体中心
+  autoAdjustLineEndpointsWhenRightDragToBlank:
+    title: 右键拖拽式连线在空白位置释放时，自动调整连线端点位置
+    description: |
+      开启后，右键拖拽连线到空白位置创建文本节点时，会保留源节点的划出边缘，并让新节点从相对边缘接收连线。
+      关闭后，这类连线的两端端点都位于实体中心。
   enableRightClickConnect:
     title: 启用右键点击式连线功能
     description: |

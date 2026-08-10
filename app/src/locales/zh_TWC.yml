@@ -300,6 +300,11 @@ settings:
     description: '開啟後，在拖曳連線時會根據滑鼠移動軌跡自動調整連線端點在實體上的位置
 
       關閉後，連線端點將始終位於實體中心'
+  autoAdjustLineEndpointsWhenRightDragToBlank:
+    title: 右鍵拖曳連線到空白位放開時，自動調整連線端點位置
+    description: '開啟後，右鍵拖曳連線到空白位建立文字節點時，會保留源節點劃出嘅邊緣，新節點就會由相對邊緣接收連線。
+
+      關閉後，呢類連線兩端嘅端點都會放喺實體正中間。'
   enableRightClickConnect:
     title: 啟用右鍵點擊式連線功能
     description: '開啟後，選取實體並右鍵點擊其他實體時會自動建立連線，且右鍵選單僅在空白處顯示

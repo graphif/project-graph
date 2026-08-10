@@ -239,6 +239,7 @@ export const settingsIcons = {
   windowCollapsingWidth: MoveHorizontal,
   windowCollapsingHeight: MoveVertical,
   autoAdjustLineEndpointsByMouseTrack: LineSquiggle,
+  autoAdjustLineEndpointsWhenRightDragToBlank: Spline,
   enableRightClickConnect: MousePointerClick,
   rightClickConnectEdgeType: Spline,
   defaultEdgeLineType: Slash,

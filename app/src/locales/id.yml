@@ -242,6 +242,11 @@ settings:
     description: |
       Saat diaktifkan, posisi ujung garis pada entitas akan disesuaikan secara otomatis berdasarkan jejak gerakan mouse saat menyeret garis
       Saat dimatikan, ujung garis akan selalu berada di tengah entitas
+  autoAdjustLineEndpointsWhenRightDragToBlank:
+    title: Sesuaikan Ujung Garis Otomatis Saat Koneksi Seret Klik Kanan Dilepas di Area Kosong
+    description: |
+      Saat diaktifkan, menyeret koneksi dengan klik kanan ke area kosong mempertahankan sisi keluarnya node sumber dan menghubungkannya ke sisi berlawanan node teks baru.
+      Saat dimatikan, kedua ujung koneksi ini berada di tengah entitas.
   enableRightClickConnect:
     title: Aktifkan Fungsi Koneksi Klik Kanan
     description: |

@@ -382,6 +382,7 @@ export const categories = {
       "allowAddCycleEdge",
       "enableDragNodeShakeDetachFromEdge",
       "autoAdjustLineEndpointsByMouseTrack",
+      "autoAdjustLineEndpointsWhenRightDragToBlank",
       "enableRightClickConnect",
       "rightClickConnectEdgeType",
       "defaultEdgeLineType",

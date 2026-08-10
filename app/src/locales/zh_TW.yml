@@ -254,6 +254,11 @@ settings:
     description: |
       開啟後，在拖拽連線時會根據鼠標移動軌跡自動調整連線端點在實體上的位置
       關閉後，連線端點將始終位於實體中心
+  autoAdjustLineEndpointsWhenRightDragToBlank:
+    title: 右鍵拖拽式連線在空白位置釋放時，自動調整連線端點位置
+    description: |
+      開啟後，右鍵拖拽連線到空白位置創建文本節點時，會保留源節點的劃出邊緣，並讓新節點從相對邊緣接收連線。
+      關閉後，這類連線的兩端端點都位於實體中心。
   enableRightClickConnect:
     title: 啟用右鍵點擊式連線功能
     description: |
