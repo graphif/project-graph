@@ -194,6 +194,70 @@ describe("Project Graph CLI process contract", () => {
     expect(readFileSync(projectPath)).toEqual(before);
   });
 
+  it("reports executor readiness on the benchmark timing channel", async () => {
+    const projectPath = await createProjectFixture();
+    const executorReadyPath = join(dirname(projectPath), "executor-ready.txt");
+    const startedAt = process.hrtime.bigint();
+    const result = spawnSync(
+      "pnpm",
+      ["cli", "--", "tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}"],
+      {
+        cwd: repositoryRoot,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          NO_COLOR: "1",
+          PROJECT_GRAPH_CLI_EXECUTOR_READY_PATH: executorReadyPath,
+          PROJECT_GRAPH_REFERENCE_STORE_PATH: getReferenceStorePath(),
+        },
+      },
+    );
+    const finishedAt = process.hrtime.bigint();
+    const executorReadyAt = BigInt(readFileSync(executorReadyPath, "utf8"));
+
+    expect(result).toMatchObject({ status: 0, stdout: '{"objects":[]}\n', stderr: "" });
+    expect(executorReadyAt).toBeGreaterThanOrEqual(startedAt);
+    expect(executorReadyAt).toBeLessThanOrEqual(finishedAt);
+  });
+
+  it("loads current-schema LineEdges in the closed Project Runtime Host", async () => {
+    const nodes = [0, 1].map((index) => ({
+      _: "TextNode",
+      uuid: `33333333-3333-4333-8333-33333333333${index}`,
+      text: `Node ${index}`,
+      collisionBox: {
+        _: "CollisionBox",
+        shapes: [
+          {
+            _: "Rectangle",
+            location: { _: "Vector", x: index * 100, y: 0 },
+            size: { _: "Vector", x: 80, y: 40 },
+          },
+        ],
+      },
+    }));
+    const projectPath = await createProjectFixture("2.7.0", [
+      ...nodes,
+      {
+        _: "LineEdge",
+        uuid: "44444444-4444-4444-8444-444444444444",
+        associationList: [{ $: "/0" }, { $: "/1" }],
+      },
+    ]);
+
+    const result = runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}");
+    const value = JSON.parse(result.stdout) as { objects: Array<Record<string, unknown>> };
+
+    expect(result).toMatchObject({ status: 0, stderr: "" });
+    expect(value.objects).toHaveLength(3);
+    expect(value.objects[2]).toMatchObject({
+      ref: "e1",
+      type: "LineEdge",
+      sourceRef: "n1",
+      targetRef: "n2",
+    });
+  });
+
   it("keeps the Closed Project Runtime Host limited to get_all_nodes", async () => {
     const projectPath = await createProjectFixture();
     const before = readFileSync(projectPath);

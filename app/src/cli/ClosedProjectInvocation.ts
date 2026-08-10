@@ -13,6 +13,8 @@ import {
   type BuiltInToolCapability,
   type BuiltInToolRuntimeHost,
 } from "@/core/service/dataManageService/aiEngine/BuiltInToolRegistry";
+// The serializer registers decorated classes when their modules load.
+import "@/core/stage/stageObject/association/LineEdge";
 import type { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { deserialize } from "@graphif/serializer";
 import { Decoder } from "@msgpack/msgpack";
@@ -138,8 +140,10 @@ function createClosedReadProject(
 function createGetAllNodesRuntimeHost(
   project: ClosedReadProject,
   references: AIObjectReferenceRegistry,
+  beforeExecutorInvoke?: () => void | Promise<void>,
 ): BuiltInToolRuntimeHost {
   return {
+    beforeExecutorInvoke,
     acquireCapabilities(capabilities): AcquiredBuiltInToolCapabilities {
       if (capabilities.some((capability) => !supportedCapabilities.has(capability))) {
         throw new Error("The closed Project Runtime Host cannot provide all declared capabilities for this tool");
@@ -222,12 +226,17 @@ export async function invokeClosedProjectTool(options: {
       return { ok: false, error: { code: "PROJECT_LOAD_FAILED", message: "Project file could not be loaded." } };
     }
 
+    const executorReadyPath = process.env.PROJECT_GRAPH_CLI_EXECUTOR_READY_PATH;
     let value: unknown;
     try {
       value = await invokeBuiltInTool(
         options.toolName,
         options.input,
-        createGetAllNodesRuntimeHost(project, references),
+        createGetAllNodesRuntimeHost(
+          project,
+          references,
+          executorReadyPath ? () => writeFile(executorReadyPath, process.hrtime.bigint().toString()) : undefined,
+        ),
       );
     } catch {
       return { ok: false, error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." } };

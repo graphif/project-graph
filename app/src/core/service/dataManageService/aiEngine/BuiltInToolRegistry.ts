@@ -47,6 +47,7 @@ export type BuiltInToolRuntimeHost = {
     capabilities: readonly BuiltInToolCapability[],
     context: BuiltInToolExecutionContext,
   ): AcquiredBuiltInToolCapabilities | Promise<AcquiredBuiltInToolCapabilities>;
+  beforeExecutorInvoke?(): void | Promise<void>;
 };
 
 export type BuiltInToolDefinition = Readonly<{
@@ -595,5 +596,6 @@ export async function invokeBuiltInTool(
     throw new Error("Runtime host did not provide the Project Object Reference capability");
   }
   const executor = await definition.loadExecutor();
+  if (host.beforeExecutorInvoke) await host.beforeExecutorInvoke();
   return executor(acquired.project, parsedInput, acquired.references as AIObjectReferenceRegistry, executionContext);
 }
