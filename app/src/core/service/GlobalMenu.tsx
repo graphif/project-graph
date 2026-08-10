@@ -290,6 +290,7 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
               throw new Error("USER_CANCELLED");
             }
             loadAllServicesAfterInit(tab);
+            tab.activateOpenRuntimeHost();
             if (tab.wasUpgraded) {
               tab.projectState = ProjectState.Unsaved;
             }

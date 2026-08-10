@@ -7,28 +7,13 @@ import { encode } from "@toon-format/toon";
 import { tool, type ToolSet } from "ai";
 import {
   builtInToolCatalog,
+  createLiveProjectBuiltInToolRuntimeHost,
   invokeBuiltInTool,
-  type AcquiredBuiltInToolCapabilities,
   type BuiltInToolExecutionContext,
-  type BuiltInToolRuntimeHost,
 } from "./BuiltInToolRegistry";
 
 export function createBuiltInToolAgentTools(project: Project, references: AIObjectReferenceRegistry): ToolSet {
-  const host: BuiltInToolRuntimeHost = {
-    acquireCapabilities: (capabilities, context) =>
-      Object.fromEntries(
-        capabilities.map((capability) => [
-          capability,
-          capability === "project"
-            ? project
-            : capability === "references"
-              ? references
-              : capability === "abort-signal"
-                ? context.abortSignal
-                : true,
-        ]),
-      ) as AcquiredBuiltInToolCapabilities,
-  };
+  const host = createLiveProjectBuiltInToolRuntimeHost(project, references);
   return Object.fromEntries(
     builtInToolCatalog.map((definition) => [
       definition.name,

@@ -4,6 +4,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadWithProjectOwnership, ProjectOwnershipError } from "./ProjectOwnership";
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn(), isTauri: vi.fn() }));
+vi.mock("@/core/OpenProjectRuntimeHost", () => ({
+  ensureOpenProjectRuntimeBridgeListener: vi.fn(async () => undefined),
+}));
 vi.mock("@/components/ui/dialog", () => ({ Dialog: { buttons: vi.fn(async () => "retry") } }));
 vi.mock("i18next", () => ({
   default: {

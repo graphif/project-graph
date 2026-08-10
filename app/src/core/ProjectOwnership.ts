@@ -1,4 +1,5 @@
 import { Dialog } from "@/components/ui/dialog";
+import { ensureOpenProjectRuntimeBridgeListener } from "@/core/OpenProjectRuntimeHost";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import i18next from "i18next";
 
@@ -81,6 +82,7 @@ export async function loadWithProjectOwnership<T>(
 
   let acquisition: DesktopOwnershipAcquisition;
   try {
+    await ensureOpenProjectRuntimeBridgeListener();
     acquisition = await invoke<DesktopOwnershipAcquisition>("acquire_desktop_project_ownership", {
       projectPath,
     });

@@ -29,7 +29,8 @@ type ProjectGraphCliErrorCode =
   | "PROJECT_LOAD_FAILED"
   | "TOOL_EXECUTION_FAILED"
   | "PROJECT_REFERENCE_SAVE_FAILED"
-  | "RUNTIME_CLEANUP_FAILED";
+  | "RUNTIME_CLEANUP_FAILED"
+  | "RUNTIME_HOST_UNAVAILABLE";
 
 function writeError(code: ProjectGraphCliErrorCode, message: string): void {
   process.stderr.write(`${JSON.stringify({ code, message })}\n`);

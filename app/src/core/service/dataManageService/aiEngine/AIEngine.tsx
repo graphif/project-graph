@@ -10,6 +10,7 @@ import {
 import { createBuiltInToolAgentTools } from "@/core/service/dataManageService/aiEngine/BuiltInToolAgentAdapter";
 import { AIMCPStore, materializeMCPServers, prepareMCPTools } from "@/core/service/dataManageService/aiEngine/AIMCP";
 import { AIObjectReferenceRegistry } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
+import { AIProjectReferenceStore } from "@/core/service/dataManageService/aiEngine/AIProjectReferenceStore";
 import {
   AIRequestTraceBuffer,
   type AIRequestTraceCallKind,
@@ -35,6 +36,7 @@ import {
   type UIMessage,
   wrapLanguageModel,
 } from "ai";
+import { URI } from "vscode-uri";
 
 const SYSTEM_PROMPT =
   "尽可能尝试使用工具解决问题，如果实在不行才能问用户。TextNode正常情况下高度为75，多个节点叠起来时需要适当留padding。节点正常情况下的颜色应该是透明[0,0,0,0]，注意透明色并非是“看不见文本”。工具使用n1、n2、e1等当前项目对象引用，这些引用在项目的不同会话间保持一致；不要猜测引用，提及对象时用反引号包裹引用，以便用户点击定位。MCP 工具被用户拒绝后，不要在当前任务中重新尝试该调用，也不要用等价参数绕过拒绝。";
@@ -50,11 +52,32 @@ export type AIMessageMetadata = {
 @service("aiEngine")
 export class AIEngine {
   private references: AIObjectReferenceRegistry | undefined;
+  private referencesInitialization: Promise<AIObjectReferenceRegistry> | undefined;
   private readonly requestTraceBuffer = new AIRequestTraceBuffer(20);
 
   getProjectReferences(project: Project) {
     this.references ??= new AIObjectReferenceRegistry(project);
     return this.references;
+  }
+
+  getProjectReferenceStoreUri(project: Project): string {
+    return project.canonicalProjectPath ? URI.file(project.canonicalProjectPath).toString() : project.uri.toString();
+  }
+
+  prepareProjectReferences(project: Project): Promise<AIObjectReferenceRegistry> {
+    const references = this.getProjectReferences(project);
+    const referenceStoreUri = this.getProjectReferenceStoreUri(project);
+    const legacyStoreUri = project.uri.toString();
+    this.referencesInitialization ??= AIProjectReferenceStore.load(referenceStoreUri)
+      .then((snapshot) => {
+        if (snapshot || referenceStoreUri === legacyStoreUri) return snapshot;
+        return AIProjectReferenceStore.load(legacyStoreUri);
+      })
+      .then((snapshot) => {
+        if (snapshot) references.restoreSnapshot(snapshot);
+        return references;
+      });
+    return this.referencesInitialization;
   }
 
   getRequestTraceBuffer() {

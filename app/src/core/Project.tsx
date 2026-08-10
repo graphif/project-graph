@@ -88,6 +88,7 @@ import { URI } from "vscode-uri";
 import { CollaborationService } from "./service/collaboration/CollaborationService";
 import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
 import { generateThumbnail } from "./service/dataGenerateService/generateThumbnail";
+import { registerOpenProjectRuntimeHost } from "./OpenProjectRuntimeHost";
 import { ProjectOwnershipLease, releaseProjectOwnershipWithRetry } from "./ProjectOwnership";
 import { compareProjectVersions, parseProjectFile } from "./ProjectFile";
 import { ProjectUpgrader } from "./stage/ProjectUpgrader";
@@ -136,6 +137,7 @@ export class Project extends Tab {
   private _projectState: ProjectState = ProjectState.Unsaved;
   private _isSaving = false;
   private projectOwnership?: ProjectOwnershipLease;
+  private openRuntimeHost?: { dispose(): Promise<void> };
   public stage: StageObject[] = [];
   public tags: string[] = [];
   /**
@@ -173,6 +175,10 @@ export class Project extends Tab {
 
   get canonicalProjectPath() {
     return this.projectOwnership?.canonicalPath;
+  }
+
+  activateOpenRuntimeHost() {
+    if (this.projectOwnership) this.openRuntimeHost ??= registerOpenProjectRuntimeHost(this);
   }
   /**
    * 创建一个草稿工程
@@ -498,7 +504,12 @@ export class Project extends Tab {
   override async dispose() {
     const ownership = this.projectOwnership;
     try {
-      await super.dispose();
+      try {
+        await this.openRuntimeHost?.dispose();
+      } finally {
+        this.openRuntimeHost = undefined;
+        await super.dispose();
+      }
     } finally {
       if (ownership) {
         await releaseProjectOwnershipWithRetry(ownership);

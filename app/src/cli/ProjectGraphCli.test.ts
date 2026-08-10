@@ -1,5 +1,15 @@
 import { spawn, spawnSync } from "node:child_process";
-import { chmodSync, existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -51,6 +61,28 @@ function runCli(...args: string[]) {
   });
 }
 
+function runCliAsync(...args: string[]): Promise<{ status: number | null; stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn("pnpm", ["cli", "--", ...args], {
+      cwd: repositoryRoot,
+      env: { ...process.env, NO_COLOR: "1", PROJECT_GRAPH_REFERENCE_STORE_PATH: getReferenceStorePath() },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk;
+    });
+    child.once("error", reject);
+    child.once("close", (status) => resolve({ status, stdout, stderr }));
+  });
+}
+
 function expectCliError(args: string[], expected: { code: string; message: string }, exitCode = 2): void {
   const result = runCli(...args);
   const error = JSON.parse(result.stderr) as Record<string, unknown>;
@@ -58,6 +90,73 @@ function expectCliError(args: string[], expected: { code: string; message: strin
   expect(result).toMatchObject({ status: exitCode, stdout: "" });
   expect(error).toEqual(expected);
   expect(result.stderr).toBe(`${JSON.stringify(error)}\n`);
+}
+
+async function waitForProjectLock(lockPath: string): Promise<void> {
+  const deadline = Date.now() + 1000;
+  while (Date.now() < deadline) {
+    const probe = spawnSync("/usr/bin/lockf", ["-k", "-s", "-t", "0", lockPath, "/usr/bin/true"]);
+    if (probe.status === 75) return;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  throw new Error(`Timed out waiting for Project lock: ${lockPath}`);
+}
+
+async function createOpenProjectHost(projectPath: string, value: unknown) {
+  const requests: unknown[] = [];
+  const server = createServer((socket) => {
+    socket.setEncoding("utf8");
+    let request = "";
+    socket.on("data", (chunk) => {
+      request += chunk;
+      const newline = request.indexOf("\n");
+      if (newline === -1) return;
+      requests.push(JSON.parse(request.slice(0, newline)));
+      socket.end(`${JSON.stringify({ ok: true, value })}\n`);
+    });
+  });
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      server.off("error", reject);
+      resolve();
+    });
+  });
+  const address = server.address();
+  if (!address || typeof address === "string") throw new Error("Expected a TCP Runtime Host address");
+
+  const canonicalPath = realpathSync(projectPath);
+  const ownershipLockPath = `${canonicalPath}.project-graph.lock`;
+  const connectableLockPath = `${canonicalPath}.project-graph.connectable`;
+  writeFileSync(
+    connectableLockPath,
+    JSON.stringify({ kind: "connectable", endpoint: `tcp://127.0.0.1:${address.port}` }),
+  );
+  const holder = spawn("/usr/bin/lockf", [
+    "-k",
+    "-s",
+    ownershipLockPath,
+    "/usr/bin/lockf",
+    "-k",
+    "-s",
+    connectableLockPath,
+    "/bin/sleep",
+    "20",
+  ]);
+  await Promise.all([waitForProjectLock(ownershipLockPath), waitForProjectLock(connectableLockPath)]);
+
+  return {
+    requests,
+    disconnect() {
+      return new Promise<void>((resolve, reject) => {
+        server.close((error) => (error ? reject(error) : resolve()));
+      });
+    },
+    close() {
+      holder.kill("SIGTERM");
+      if (server.listening) server.close();
+    },
+  };
 }
 
 describe("Project Graph CLI process contract", () => {
@@ -427,4 +526,58 @@ describe("Project Graph CLI process contract", () => {
       holder.kill("SIGTERM");
     }
   }, 15_000);
+
+  it("attaches an equivalent Project Path to the live Open Project without reading the persisted fallback", async () => {
+    const projectPath = await createProjectFixture();
+    const symlinkPath = join(dirname(projectPath), "fixture-link.prg");
+    symlinkSync(projectPath, symlinkPath);
+    const before = readFileSync(projectPath);
+    const liveResult = {
+      objects: [
+        {
+          ref: "n1",
+          type: "TextNode",
+          position: { x: 10, y: 20 },
+          size: { width: 100, height: 75 },
+          text: "Unsaved live node",
+          color: [0, 0, 0, 0],
+        },
+      ],
+    };
+    const host = await createOpenProjectHost(projectPath, liveResult);
+
+    try {
+      const result = await runCliAsync("tool", "invoke", "get_all_nodes", "--project", symlinkPath, "--input", "{}");
+
+      expect(result).toMatchObject({ status: 0, stdout: `${JSON.stringify(liveResult)}\n`, stderr: "" });
+      expect(host.requests).toEqual([
+        {
+          projectPath: realpathSync(projectPath),
+          toolName: "get_all_nodes",
+          input: {},
+        },
+      ]);
+      expect(readFileSync(projectPath)).toEqual(before);
+    } finally {
+      host.close();
+    }
+  }, 15_000);
+
+  it("returns a structured error when a connectable Open Project host disconnects without using the closed route", async () => {
+    const projectPath = await createProjectFixture();
+    const before = readFileSync(projectPath);
+    const host = await createOpenProjectHost(projectPath, { objects: [] });
+    await host.disconnect();
+
+    try {
+      expectCliError(
+        ["tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}"],
+        { code: "RUNTIME_HOST_UNAVAILABLE", message: "Open Project Runtime Host is unavailable." },
+        1,
+      );
+      expect(readFileSync(projectPath)).toEqual(before);
+    } finally {
+      host.close();
+    }
+  });
 });

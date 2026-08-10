@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
-import { realpathSync, statSync } from "node:fs";
+import { readFileSync, realpathSync, statSync } from "node:fs";
+import { createConnection } from "node:net";
 import { fileURLToPath } from "node:url";
 import { JSDOM } from "jsdom";
 import { createServer, type Plugin } from "vite";
@@ -11,9 +12,14 @@ type RuntimeResult =
       ok: false;
       error:
         | ProjectGraphCliOperationalError
-        | { code: "PROJECT_NOT_FOUND" | "PROJECT_BUSY" | "RUNTIME_CLEANUP_FAILED"; message: string };
+        | {
+            code: "PROJECT_NOT_FOUND" | "PROJECT_BUSY" | "RUNTIME_CLEANUP_FAILED" | "RUNTIME_HOST_UNAVAILABLE";
+            message: string;
+          };
     }
   | { forwarded: true; exitCode: number };
+
+const RUNTIME_HOST_RESPONSE_TIMEOUT_MS = 7000;
 
 function canonicalizeProjectPath(
   projectPath: string,
@@ -158,6 +164,106 @@ function runOwnedWorker(args: readonly string[], canonicalPath: string) {
   );
 }
 
+function readConnectableOwner(canonicalPath: string): { endpoint: string } | undefined {
+  const ownerPath = `${canonicalPath}.project-graph.connectable`;
+  const ownerLock = spawnSync("/usr/bin/lockf", ["-k", "-s", "-t", "0", ownerPath, "/usr/bin/true"]);
+  if (ownerLock.status !== 75) return undefined;
+  try {
+    const owner: unknown = JSON.parse(readFileSync(ownerPath, "utf8"));
+    if (
+      owner &&
+      typeof owner === "object" &&
+      "kind" in owner &&
+      owner.kind === "connectable" &&
+      "endpoint" in owner &&
+      typeof owner.endpoint === "string"
+    ) {
+      return { endpoint: owner.endpoint };
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
+function invokeOpenProjectTool(
+  endpoint: string,
+  request: { projectPath: string; toolName: string; input: unknown },
+): Promise<RuntimeResult> {
+  return new Promise((resolve) => {
+    let address: URL;
+    try {
+      address = new URL(endpoint);
+      if (address.protocol !== "tcp:" || !address.hostname || !address.port) throw new Error("Invalid endpoint");
+    } catch {
+      resolve({
+        ok: false,
+        error: { code: "RUNTIME_HOST_UNAVAILABLE", message: "Open Project Runtime Host is unavailable." },
+      });
+      return;
+    }
+
+    let output = "";
+    let settled = false;
+    const finish = (result: RuntimeResult) => {
+      if (settled) return;
+      settled = true;
+      resolve(result);
+    };
+    const unavailable = () =>
+      finish({
+        ok: false,
+        error: { code: "RUNTIME_HOST_UNAVAILABLE", message: "Open Project Runtime Host is unavailable." },
+      });
+    const socket = createConnection({ host: address.hostname, port: Number(address.port) });
+    socket.setEncoding("utf8");
+    socket.setTimeout(RUNTIME_HOST_RESPONSE_TIMEOUT_MS, () => {
+      socket.destroy();
+      unavailable();
+    });
+    socket.once("connect", () => socket.end(`${JSON.stringify(request)}\n`));
+    socket.on("data", (chunk) => {
+      output += chunk;
+    });
+    socket.once("error", unavailable);
+    socket.once("end", () => {
+      try {
+        const response: unknown = JSON.parse(output);
+        if (!response || typeof response !== "object" || !("ok" in response)) return unavailable();
+        if (response.ok === true && "value" in response) return finish({ ok: true, value: response.value });
+        if (
+          response.ok === false &&
+          "error" in response &&
+          response.error &&
+          typeof response.error === "object" &&
+          "code" in response.error &&
+          typeof response.error.code === "string" &&
+          "message" in response.error &&
+          typeof response.error.message === "string"
+        ) {
+          return finish({ ok: false, error: response.error as ProjectGraphCliOperationalError });
+        }
+        unavailable();
+      } catch {
+        unavailable();
+      }
+    });
+  });
+}
+
+function invokeConnectableOwnerIfPresent(
+  canonicalPath: string,
+  options: { toolName: string; input: unknown },
+): Promise<RuntimeResult> | undefined {
+  const owner = readConnectableOwner(canonicalPath);
+  if (!owner) return undefined;
+  return invokeOpenProjectTool(owner.endpoint, {
+    projectPath: canonicalPath,
+    toolName: options.toolName,
+    input: options.input,
+  });
+}
+
 export async function runPathRoutedInvocation(options: {
   toolName: string;
   input: unknown;
@@ -190,10 +296,14 @@ export async function runPathRoutedInvocation(options: {
   ];
   let worker = runOwnedWorker(args, projectPathResult.canonicalPath);
   if (worker.status === 75) {
+    const openResult = invokeConnectableOwnerIfPresent(projectPathResult.canonicalPath, options);
+    if (openResult) return openResult;
     await new Promise((resolve) => setTimeout(resolve, 5000));
     worker = runOwnedWorker(args, projectPathResult.canonicalPath);
   }
   if (worker.status === 75) {
+    const openResult = invokeConnectableOwnerIfPresent(projectPathResult.canonicalPath, options);
+    if (openResult) return openResult;
     return { ok: false, error: { code: "PROJECT_BUSY", message: "Project is already owned by another runtime." } };
   }
   if (worker.error || worker.status === null) {

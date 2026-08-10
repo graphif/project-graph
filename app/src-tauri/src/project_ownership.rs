@@ -1,3 +1,4 @@
+use crate::project_runtime_bridge::ProjectRuntimeBridgeManager;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs::{self, File, OpenOptions, TryLockError};
@@ -116,9 +117,36 @@ impl DesktopProjectOwnershipManager {
         self.acquire_with_retry_delay(project_path, OWNERSHIP_RETRY_DELAY)
     }
 
+    pub(crate) fn acquire_connectable(
+        &self,
+        project_path: &Path,
+        endpoint: &str,
+    ) -> Result<DesktopOwnershipAcquisition, ProjectOwnershipError> {
+        self.acquire_with_owner_and_retry_delay(
+            project_path,
+            ProjectOwner::Connectable {
+                endpoint: endpoint.to_owned(),
+            },
+            OWNERSHIP_RETRY_DELAY,
+        )
+    }
+
     fn acquire_with_retry_delay(
         &self,
         project_path: &Path,
+        retry_delay: Duration,
+    ) -> Result<DesktopOwnershipAcquisition, ProjectOwnershipError> {
+        self.acquire_with_owner_and_retry_delay(
+            project_path,
+            ProjectOwner::UnconnectableHolder,
+            retry_delay,
+        )
+    }
+
+    fn acquire_with_owner_and_retry_delay(
+        &self,
+        project_path: &Path,
+        owner: ProjectOwner,
         retry_delay: Duration,
     ) -> Result<DesktopOwnershipAcquisition, ProjectOwnershipError> {
         let canonical_path = canonicalize_project_path(project_path)?;
@@ -150,7 +178,7 @@ impl DesktopProjectOwnershipManager {
 
         let ownership_result = acquire_project_ownership_with_retry_delay(
             canonical_path.as_path(),
-            ProjectOwner::UnconnectableHolder,
+            owner,
             retry_delay,
         );
         let mut state = self
@@ -203,13 +231,17 @@ impl DesktopProjectOwnershipManager {
 #[tauri::command]
 pub(crate) async fn acquire_desktop_project_ownership(
     manager: tauri::State<'_, Arc<DesktopProjectOwnershipManager>>,
+    runtime_bridge: tauri::State<'_, Arc<ProjectRuntimeBridgeManager>>,
     project_path: String,
 ) -> Result<DesktopOwnershipAcquisition, DesktopProjectOwnershipError> {
     let manager = Arc::clone(manager.inner());
-    tauri::async_runtime::spawn_blocking(move || manager.acquire(Path::new(&project_path)))
-        .await
-        .map_err(|_| DesktopProjectOwnershipError::from(ProjectOwnershipError::LoadFailed))?
-        .map_err(DesktopProjectOwnershipError::from)
+    let endpoint = runtime_bridge.endpoint().to_owned();
+    tauri::async_runtime::spawn_blocking(move || {
+        manager.acquire_connectable(Path::new(&project_path), &endpoint)
+    })
+    .await
+    .map_err(|_| DesktopProjectOwnershipError::from(ProjectOwnershipError::LoadFailed))?
+    .map_err(DesktopProjectOwnershipError::from)
 }
 
 #[tauri::command]
@@ -772,6 +804,34 @@ mod tests {
             Duration::from_millis(1),
         )
         .unwrap();
+    }
+
+    #[test]
+    fn desktop_manager_advertises_the_live_runtime_host_to_cli_contenders() {
+        let directory = TestDirectory::new();
+        let project = directory.path().join("graph.prg");
+        fs::write(&project, []).unwrap();
+        let manager = DesktopProjectOwnershipManager::default();
+        let endpoint = "tcp://127.0.0.1:41234";
+
+        let acquisition = manager.acquire_connectable(&project, endpoint).unwrap();
+        let error = acquire_project_ownership_with_retry_delay(
+            &project,
+            ProjectOwner::UnconnectableHolder,
+            Duration::from_millis(1),
+        )
+        .unwrap_err();
+
+        assert!(matches!(
+            error,
+            ProjectOwnershipError::Busy {
+                owner: ProjectOwner::Connectable { endpoint: owner_endpoint }
+            } if owner_endpoint == endpoint
+        ));
+        let DesktopOwnershipAcquisition::Acquired { ownership_id, .. } = acquisition else {
+            panic!("first desktop open must acquire ownership");
+        };
+        manager.release(&ownership_id).unwrap();
     }
 
     #[test]

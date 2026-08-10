@@ -50,6 +50,27 @@ export type BuiltInToolRuntimeHost = {
   beforeExecutorInvoke?(): void | Promise<void>;
 };
 
+export function createLiveProjectBuiltInToolRuntimeHost(
+  project: Project,
+  references: AIObjectReferenceRegistry,
+): BuiltInToolRuntimeHost {
+  return {
+    acquireCapabilities: (capabilities, context) =>
+      Object.fromEntries(
+        capabilities.map((capability) => [
+          capability,
+          capability === "project"
+            ? project
+            : capability === "references"
+              ? references
+              : capability === "abort-signal"
+                ? context.abortSignal
+                : true,
+        ]),
+      ) as AcquiredBuiltInToolCapabilities,
+  };
+}
+
 export type BuiltInToolDefinition = Readonly<{
   name: string;
   description: string;

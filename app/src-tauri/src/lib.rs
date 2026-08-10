@@ -1,6 +1,7 @@
 mod cmd;
 #[allow(dead_code)]
 mod project_ownership;
+mod project_runtime_bridge;
 
 use std::sync::{Arc, Mutex, OnceLock};
 use tauri::{Emitter, Listener, Manager, State};
@@ -70,6 +71,9 @@ pub fn run() {
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
+            app.manage(project_runtime_bridge::ProjectRuntimeBridgeManager::start(
+                app.handle().clone(),
+            )?);
             #[cfg(debug_assertions)]
             {
                 app.handle().plugin(tauri_plugin_devtools::init())?;
@@ -99,6 +103,7 @@ pub fn run() {
             take_pending_open_files,
             project_ownership::acquire_desktop_project_ownership,
             project_ownership::release_desktop_project_ownership,
+            project_runtime_bridge::respond_project_runtime_bridge,
             #[cfg(desktop)]
             cmd::paddle::get_aha_directory,
             #[cfg(desktop)]

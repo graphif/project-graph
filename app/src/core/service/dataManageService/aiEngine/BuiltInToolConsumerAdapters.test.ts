@@ -17,6 +17,7 @@ vi.mock("ai", () => ({ tool: (definition: unknown) => definition }));
 vi.mock("zod/v4", () => ({ default: { toJSONSchema: (schema: unknown) => ({ schema }) } }));
 vi.mock("./BuiltInToolRegistry", () => ({
   builtInToolCatalog: [fixture.definition],
+  createLiveProjectBuiltInToolRuntimeHost: vi.fn(() => ({})),
   invokeBuiltInTool: vi.fn(),
 }));
 

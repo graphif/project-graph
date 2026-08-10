@@ -172,6 +172,7 @@ function formatSessionUpdatedAt(timestamp: number): string {
 
 function AIChatWorkspace({ project, tabId }: { project: Project; tabId: string }) {
   const projectUri = project.uri.toString();
+  const referenceStoreUri = project.aiEngine.getProjectReferenceStoreUri(project);
   const [model] = Settings.use("aiModel");
   const [sessionState, setSessionState] = useState<AIChatSessionProjectState | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -188,21 +189,20 @@ function AIChatWorkspace({ project, tabId }: { project: Project; tabId: string }
   useEffect(
     () =>
       references.subscribe((snapshot) => {
-        void AIProjectReferenceStore.save(projectUri, snapshot).catch((saveError) => {
+        void AIProjectReferenceStore.save(referenceStoreUri, snapshot).catch((saveError) => {
           toast.error(`AI 项目引用保存失败: ${saveError instanceof Error ? saveError.message : String(saveError)}`);
         });
       }),
-    [projectUri, references],
+    [referenceStoreUri, references],
   );
 
   useEffect(() => {
     let cancelled = false;
     setSessionState(null);
     setLoadError(null);
-    Promise.all([AIProjectReferenceStore.load(projectUri), AIChatSessionStore.initializeProject(projectUri)])
-      .then(([referenceSnapshot, initialSessionState]) => {
+    Promise.all([project.aiEngine.prepareProjectReferences(project), AIChatSessionStore.initializeProject(projectUri)])
+      .then(([, initialSessionState]) => {
         if (cancelled) return;
-        if (referenceSnapshot) references.restoreSnapshot(referenceSnapshot);
         setSessionState(initialSessionState);
       })
       .catch((error) => {
@@ -212,7 +212,7 @@ function AIChatWorkspace({ project, tabId }: { project: Project; tabId: string }
     return () => {
       cancelled = true;
     };
-  }, [projectUri, references]);
+  }, [project, projectUri]);
 
   async function saveCurrentSession() {
     await activeChatController.current?.save();
@@ -511,17 +511,18 @@ function AIChatPanel({
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [contextWindowState, setContextWindowState] = useState<ContextWindowState>({ status: "loading" });
   const projectUri = project.uri.toString();
+  const referenceStoreUri = project.aiEngine.getProjectReferenceStoreUri(project);
   const messagesRef = useRef<UIMessage<AIMessageMetadata>[]>(session.messages);
   const lastSavedMessagesRef = useRef<UIMessage<AIMessageMetadata>[]>(session.messages);
 
   const persistMessages = useCallback(
     async (nextMessages: UIMessage<AIMessageMetadata>[]) => {
-      await AIProjectReferenceStore.save(projectUri, references.exportSnapshot());
+      await AIProjectReferenceStore.save(referenceStoreUri, references.exportSnapshot());
       const nextState = await AIChatSessionStore.saveSession(projectUri, session.id, nextMessages);
       lastSavedMessagesRef.current = nextMessages;
       onSessionSaved(nextState);
     },
-    [onSessionSaved, projectUri, references, session.id],
+    [onSessionSaved, projectUri, referenceStoreUri, references, session.id],
   );
 
   const { messages, setMessages, sendMessage, stop, status, addToolApprovalResponse } = useChat<
