@@ -332,10 +332,12 @@ export class Project extends Tab {
   async stash() {
     // TODO: stash
   }
-  async save(options: { includeThumbnail?: boolean } = {}) {
+  async save(options: { includeThumbnail?: boolean; abortSignal?: AbortSignal } = {}) {
     try {
       this.isSaving = true;
-      await this.fs.write(this.uri, await this.getFileContent(options));
+      const content = await this.getFileContent(options);
+      options.abortSignal?.throwIfAborted();
+      await this.fs.write(this.uri, content, { abortSignal: options.abortSignal });
       this.projectState = ProjectState.Saved;
     } finally {
       this.isSaving = false;
@@ -503,19 +505,41 @@ export class Project extends Tab {
 
   override async dispose() {
     const ownership = this.projectOwnership;
+    const cleanupErrors: unknown[] = [];
     try {
       try {
         await this.openRuntimeHost?.dispose();
+      } catch (error) {
+        cleanupErrors.push(error);
       } finally {
         this.openRuntimeHost = undefined;
-        await super.dispose();
       }
+      try {
+        await super.dispose();
+      } catch (error) {
+        cleanupErrors.push(error);
+      }
+      const stageCleanupTasks = this.stage.map((stageObject) => {
+        try {
+          return Promise.resolve(stageObject.dispose?.());
+        } catch (error) {
+          return Promise.reject(error);
+        }
+      });
+      const stageCleanupResults = await Promise.allSettled(stageCleanupTasks);
+      cleanupErrors.push(
+        ...stageCleanupResults
+          .filter((result): result is PromiseRejectedResult => result.status === "rejected")
+          .map(({ reason }) => reason),
+      );
+      this.stage.length = 0;
     } finally {
       if (ownership) {
         await releaseProjectOwnershipWithRetry(ownership);
         if (this.projectOwnership === ownership) this.projectOwnership = undefined;
       }
     }
+    if (cleanupErrors.length > 0) throw new AggregateError(cleanupErrors, "Project cleanup failed");
   }
 }
 

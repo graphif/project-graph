@@ -1,5 +1,9 @@
 import { access, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { constants } from "node:fs";
+import { basename, dirname, join } from "node:path";
 import type { FileSystemProvider } from "@/core/interfaces/Service";
+import { RuntimeCleanupError } from "@/core/RuntimeCleanup";
 import type { DirEntry } from "@tauri-apps/plugin-fs";
 import type { URI } from "vscode-uri";
 
@@ -18,8 +22,8 @@ export class FileSystemProviderFile implements FileSystemProvider {
     }));
   }
 
-  async write(uri: URI, content: Uint8Array): Promise<void> {
-    await writeFile(uri.fsPath, content);
+  async write(uri: URI, content: Uint8Array, options?: { abortSignal?: AbortSignal }): Promise<void> {
+    await writeClosedProjectFileAtomically(uri.fsPath, content, options?.abortSignal);
   }
 
   async remove(uri: URI): Promise<void> {
@@ -43,4 +47,40 @@ export class FileSystemProviderFile implements FileSystemProvider {
   async rename(oldUri: URI, newUri: URI): Promise<void> {
     await rename(oldUri.fsPath, newUri.fsPath);
   }
+}
+
+export async function writeClosedProjectFileAtomically(
+  path: string,
+  content: Uint8Array | string,
+  abortSignal?: AbortSignal,
+): Promise<void> {
+  const temporaryPath = join(dirname(path), `.${basename(path)}.${randomUUID()}.tmp`);
+  let operationError: unknown;
+  let failed = false;
+  let committed = false;
+  try {
+    abortSignal?.throwIfAborted();
+    try {
+      await access(path, constants.W_OK);
+    } catch (error) {
+      if (!(typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT")) throw error;
+    }
+    await writeFile(temporaryPath, content, { signal: abortSignal });
+    abortSignal?.throwIfAborted();
+    await rename(temporaryPath, path);
+    committed = true;
+  } catch (error) {
+    failed = true;
+    operationError = error;
+  }
+  if (!committed) {
+    try {
+      await rm(temporaryPath, { force: true });
+    } catch (cleanupError) {
+      throw new RuntimeCleanupError("Closed Project temporary file cleanup failed", {
+        cause: new AggregateError([operationError, cleanupError]),
+      });
+    }
+  }
+  if (failed) throw operationError;
 }

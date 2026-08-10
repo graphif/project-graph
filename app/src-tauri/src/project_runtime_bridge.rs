@@ -2,35 +2,47 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Write};
-use std::net::{TcpListener, TcpStream};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::net::{Shutdown, TcpListener, TcpStream};
 use std::sync::mpsc::{self, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::Duration;
 use tauri::{AppHandle, Emitter, Runtime, State};
 
 pub(crate) const PROJECT_RUNTIME_INVOCATION_EVENT: &str = "project-runtime-invocation";
-const RUNTIME_RESPONSE_TIMEOUT: Duration = Duration::from_secs(5);
 
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct ProjectRuntimeRequest {
-    project_path: String,
-    tool_name: String,
-    input: Value,
+#[serde(untagged, rename_all_fields = "camelCase")]
+enum ProjectRuntimeRequest {
+    Invocation {
+        request_id: String,
+        project_path: String,
+        tool_name: String,
+        input: Value,
+    },
+    Cancellation {
+        cancel_request_id: String,
+    },
 }
 
 #[derive(Clone, Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct ProjectRuntimeInvocation {
-    pub(crate) request_id: String,
-    pub(crate) project_path: String,
-    pub(crate) tool_name: String,
-    pub(crate) input: Value,
+#[serde(
+    tag = "kind",
+    rename_all = "snake_case",
+    rename_all_fields = "camelCase"
+)]
+pub(crate) enum ProjectRuntimeEvent {
+    Invoke {
+        request_id: String,
+        project_path: String,
+        tool_name: String,
+        input: Value,
+    },
+    Cancel {
+        request_id: String,
+    },
 }
 
-type InvocationEmitter = dyn Fn(ProjectRuntimeInvocation) -> Result<(), ()> + Send + Sync;
+type InvocationEmitter = dyn Fn(ProjectRuntimeEvent) -> Result<(), ()> + Send + Sync;
 
 pub(crate) struct ProjectRuntimeBridgeManager {
     endpoint: String,
@@ -46,7 +58,7 @@ impl ProjectRuntimeBridgeManager {
     }
 
     fn start_with_emitter(
-        emit: impl Fn(ProjectRuntimeInvocation) -> Result<(), ()> + Send + Sync + 'static,
+        emit: impl Fn(ProjectRuntimeEvent) -> Result<(), ()> + Send + Sync + 'static,
     ) -> std::io::Result<Arc<Self>> {
         let listener = TcpListener::bind(("127.0.0.1", 0))?;
         let endpoint = format!("tcp://{}", listener.local_addr()?);
@@ -55,7 +67,6 @@ impl ProjectRuntimeBridgeManager {
             endpoint,
             pending: Arc::clone(&pending),
         });
-        let next_request_id = Arc::new(AtomicU64::new(1));
         let emit: Arc<InvocationEmitter> = Arc::new(emit);
         thread::spawn(move || {
             for stream in listener.incoming() {
@@ -63,9 +74,8 @@ impl ProjectRuntimeBridgeManager {
                     break;
                 };
                 let pending = Arc::clone(&pending);
-                let next_request_id = Arc::clone(&next_request_id);
                 let emit = Arc::clone(&emit);
-                thread::spawn(move || handle_connection(stream, pending, next_request_id, emit));
+                thread::spawn(move || handle_connection(stream, pending, emit));
             }
         });
         Ok(manager)
@@ -88,51 +98,82 @@ impl ProjectRuntimeBridgeManager {
 fn handle_connection(
     mut stream: TcpStream,
     pending: Arc<Mutex<HashMap<String, Sender<Value>>>>,
-    next_request_id: Arc<AtomicU64>,
     emit: Arc<InvocationEmitter>,
 ) {
-    let response = read_request(&mut stream).and_then(|request| {
-        let request_id = format!(
-            "runtime-{}-{}",
-            std::process::id(),
-            next_request_id.fetch_add(1, Ordering::Relaxed)
-        );
-        let (response_sender, response_receiver) = mpsc::channel();
-        pending
-            .lock()
-            .map_err(|_| ())?
-            .insert(request_id.clone(), response_sender);
-        let invocation = ProjectRuntimeInvocation {
-            request_id: request_id.clone(),
-            project_path: request.project_path,
-            tool_name: request.tool_name,
-            input: request.input,
-        };
-        if emit(invocation).is_err() {
-            if let Ok(mut pending) = pending.lock() {
-                pending.remove(&request_id);
-            }
-            return Err(());
-        }
-        let response = response_receiver
-            .recv_timeout(RUNTIME_RESPONSE_TIMEOUT)
-            .map_err(|_| ());
-        if let Ok(mut pending) = pending.lock() {
-            pending.remove(&request_id);
-        }
-        response
-    });
+    let response = stream
+        .try_clone()
+        .map_err(|_| ())
+        .map(BufReader::new)
+        .and_then(|mut reader| {
+            read_request(&mut reader).and_then(|request| match request {
+                ProjectRuntimeRequest::Cancellation { cancel_request_id } => {
+                    emit(ProjectRuntimeEvent::Cancel {
+                        request_id: cancel_request_id,
+                    })?;
+                    Ok(json!({ "ok": true, "value": null }))
+                }
+                ProjectRuntimeRequest::Invocation {
+                    request_id,
+                    project_path,
+                    tool_name,
+                    input,
+                } => {
+                    if request_id.is_empty() {
+                        return Err(());
+                    }
+                    let (response_sender, response_receiver) = mpsc::channel();
+                    {
+                        let mut pending = pending.lock().map_err(|_| ())?;
+                        if pending.contains_key(&request_id) {
+                            return Err(());
+                        }
+                        pending.insert(request_id.clone(), response_sender);
+                    }
+                    let invocation = ProjectRuntimeEvent::Invoke {
+                        request_id: request_id.clone(),
+                        project_path,
+                        tool_name,
+                        input,
+                    };
+                    if emit(invocation).is_err() {
+                        if let Ok(mut pending) = pending.lock() {
+                            pending.remove(&request_id);
+                        }
+                        return Err(());
+                    }
+                    let cancellation_emit = Arc::clone(&emit);
+                    let cancellation_request_id = request_id.clone();
+                    let cancellation_listener = thread::spawn(move || {
+                        if let Ok(ProjectRuntimeRequest::Cancellation { cancel_request_id }) =
+                            read_request(&mut reader)
+                        {
+                            if cancel_request_id == cancellation_request_id {
+                                let _ = cancellation_emit(ProjectRuntimeEvent::Cancel {
+                                    request_id: cancellation_request_id,
+                                });
+                            }
+                        }
+                    });
+                    let response = response_receiver.recv().map_err(|_| ());
+                    if let Ok(mut pending) = pending.lock() {
+                        pending.remove(&request_id);
+                    }
+                    let _ = stream.shutdown(Shutdown::Read);
+                    let _ = cancellation_listener.join();
+                    response
+                }
+            })
+        });
     let response = response.unwrap_or_else(|_| runtime_host_unavailable());
     if let Ok(serialized) = serde_json::to_string(&response) {
         let _ = writeln!(stream, "{serialized}");
     }
+    let _ = stream.shutdown(Shutdown::Both);
 }
 
-fn read_request(stream: &mut TcpStream) -> Result<ProjectRuntimeRequest, ()> {
+fn read_request(reader: &mut impl BufRead) -> Result<ProjectRuntimeRequest, ()> {
     let mut request = String::new();
-    BufReader::new(stream)
-        .read_line(&mut request)
-        .map_err(|_| ())?;
+    reader.read_line(&mut request).map_err(|_| ())?;
     serde_json::from_str(&request).map_err(|_| ())
 }
 
@@ -210,6 +251,7 @@ mod tests {
                 stream,
                 "{}",
                 json!({
+                    "requestId": "request-1",
                     "projectPath": "/projects/graph.prg",
                     "toolName": "get_all_nodes",
                     "input": {}
@@ -221,11 +263,19 @@ mod tests {
             serde_json::from_str::<serde_json::Value>(&response).unwrap()
         });
 
-        let invocation = event_receiver.recv().unwrap();
-        assert_eq!(invocation.project_path, "/projects/graph.prg");
-        assert_eq!(invocation.tool_name, "get_all_nodes");
+        let ProjectRuntimeEvent::Invoke {
+            request_id,
+            project_path,
+            tool_name,
+            ..
+        } = event_receiver.recv().unwrap()
+        else {
+            panic!("expected invocation event");
+        };
+        assert_eq!(project_path, "/projects/graph.prg");
+        assert_eq!(tool_name, "get_all_nodes");
         assert!(bridge.respond(
-            &invocation.request_id,
+            &request_id,
             json!({ "ok": true, "value": { "objects": [{ "ref": "n1" }] } }),
         ));
 
@@ -236,14 +286,15 @@ mod tests {
     }
 
     #[test]
-    fn loopback_bridge_returns_a_structured_error_when_the_frontend_does_not_respond() {
-        let bridge = ProjectRuntimeBridgeManager::start_with_emitter(|_| Ok(())).unwrap();
+    fn loopback_bridge_returns_a_structured_error_when_the_frontend_rejects_the_invocation() {
+        let bridge = ProjectRuntimeBridgeManager::start_with_emitter(|_| Err(())).unwrap();
         let address = bridge.endpoint().strip_prefix("tcp://").unwrap();
         let mut stream = TcpStream::connect(address).unwrap();
         writeln!(
             stream,
             "{}",
             json!({
+                "requestId": "request-rejected",
                 "projectPath": "/projects/graph.prg",
                 "toolName": "get_all_nodes",
                 "input": {}
@@ -256,6 +307,65 @@ mod tests {
         assert_eq!(
             serde_json::from_str::<Value>(&response).unwrap(),
             runtime_host_unavailable()
+        );
+    }
+
+    #[test]
+    fn loopback_bridge_forwards_cancellation_for_the_matching_invocation() {
+        let (event_sender, event_receiver) = mpsc::channel();
+        let bridge = ProjectRuntimeBridgeManager::start_with_emitter(move |event| {
+            event_sender.send(event).map_err(|_| ())
+        })
+        .unwrap();
+        let address = bridge.endpoint().strip_prefix("tcp://").unwrap();
+        let mut invocation = TcpStream::connect(address).unwrap();
+        writeln!(
+            invocation,
+            "{}",
+            json!({
+                "requestId": "request-cancel",
+                "projectPath": "/projects/graph.prg",
+                "toolName": "get_all_nodes",
+                "input": {}
+            })
+        )
+        .unwrap();
+
+        assert!(matches!(
+            event_receiver.recv().unwrap(),
+            ProjectRuntimeEvent::Invoke { request_id, .. } if request_id == "request-cancel"
+        ));
+        writeln!(
+            invocation,
+            "{}",
+            json!({ "cancelRequestId": "request-cancel" })
+        )
+        .unwrap();
+        assert!(matches!(
+            event_receiver.recv().unwrap(),
+            ProjectRuntimeEvent::Cancel { request_id } if request_id == "request-cancel"
+        ));
+        assert!(bridge.respond(
+            "request-cancel",
+            json!({
+                "ok": false,
+                "error": {
+                    "code": "CANCELLED",
+                    "message": "Project Graph CLI invocation was cancelled."
+                }
+            }),
+        ));
+        let mut response = String::new();
+        BufReader::new(invocation).read_line(&mut response).unwrap();
+        assert_eq!(
+            serde_json::from_str::<Value>(&response).unwrap(),
+            json!({
+                "ok": false,
+                "error": {
+                    "code": "CANCELLED",
+                    "message": "Project Graph CLI invocation was cancelled."
+                }
+            })
         );
     }
 
@@ -291,13 +401,20 @@ mod tests {
                 .unwrap()
         });
 
-        let invocation = event_receiver.recv().unwrap();
+        let ProjectRuntimeEvent::Invoke {
+            request_id,
+            project_path: invocation_project_path,
+            ..
+        } = event_receiver.recv().unwrap()
+        else {
+            panic!("expected invocation event");
+        };
         assert_eq!(
-            invocation.project_path,
+            invocation_project_path,
             fs::canonicalize(&project_path).unwrap().to_string_lossy()
         );
         assert!(bridge.respond(
-            &invocation.request_id,
+            &request_id,
             json!({
                 "ok": true,
                 "value": {

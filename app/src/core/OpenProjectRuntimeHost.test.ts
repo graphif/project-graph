@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 let bridgeListener: ((event: { payload: unknown }) => Promise<void>) | undefined;
+const openverseImageSearch = vi.hoisted(() => ({ findDownloadableOpenverseImage: vi.fn() }));
 
 vi.mock("@tauri-apps/api/event", () => ({
   listen: vi.fn(async (_event: string, listener: (event: { payload: unknown }) => Promise<void>) => {
@@ -66,7 +67,7 @@ vi.mock("@/core/service/dataManageService/aiEngine/imageNodeFinder", () => ({
   findFirstImageInChildren: () => undefined,
 }));
 vi.mock("@/core/service/dataManageService/aiEngine/OpenverseImageSearch", () => ({
-  findDownloadableOpenverseImage: async () => undefined,
+  findDownloadableOpenverseImage: openverseImageSearch.findDownloadableOpenverseImage,
 }));
 vi.mock("@/core/service/dataManageService/aiEngine/AIProjectReferenceStore", () => ({
   AIProjectReferenceStore: { load: vi.fn(async () => null), save: vi.fn(async () => undefined) },
@@ -257,6 +258,7 @@ describe("Open Project Runtime Host", () => {
     vi.mocked(invoke).mockClear();
     vi.mocked(AIProjectReferenceStore.load).mockReset().mockResolvedValue(null);
     vi.mocked(AIProjectReferenceStore.save).mockReset().mockResolvedValue(undefined);
+    openverseImageSearch.findDownloadableOpenverseImage.mockReset();
   });
 
   it("serves the live unsaved graph with stable Project Object References until the Project closes", async () => {
@@ -328,6 +330,158 @@ describe("Open Project Runtime Host", () => {
         error: { code: "RUNTIME_HOST_UNAVAILABLE", message: "Open Project Runtime Host is unavailable." },
       },
     });
+  });
+
+  it("cancels one live Registry invocation through the bridge without rolling back existing Project state", async () => {
+    await ensureOpenProjectRuntimeBridgeListener();
+    const fixture = createLiveProject();
+    const registration = registerOpenProjectRuntimeHost(fixture.project as never);
+    let receivedSignal: AbortSignal | undefined;
+    openverseImageSearch.findDownloadableOpenverseImage.mockImplementation(
+      async (_query: string, options: { abortSignal?: AbortSignal }) =>
+        new Promise((_resolve, reject) => {
+          receivedSignal = options.abortSignal;
+          options.abortSignal?.addEventListener(
+            "abort",
+            () => reject(new DOMException("The operation was aborted", "AbortError")),
+            { once: true },
+          );
+        }),
+    );
+    if (!bridgeListener) throw new Error("Runtime bridge listener was not registered");
+
+    const invocation = bridgeListener({
+      payload: {
+        kind: "invoke",
+        requestId: "request-cancel",
+        projectPath: "/projects/graph.prg",
+        toolName: "search_and_add_image_node",
+        input: { query: "diagram" },
+      },
+    });
+    await vi.waitFor(() => expect(receivedSignal).toBeInstanceOf(AbortSignal));
+    fixture.project.projectState = ProjectState.Unsaved;
+    await bridgeListener({ payload: { kind: "cancel", requestId: "request-cancel" } });
+    await invocation;
+
+    expect(receivedSignal?.aborted).toBe(true);
+    expect(invoke).toHaveBeenLastCalledWith("respond_project_runtime_bridge", {
+      requestId: "request-cancel",
+      response: {
+        ok: false,
+        error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." },
+      },
+    });
+    expect(fixture.project.projectState).toBe(ProjectState.Unsaved);
+    expect(fixture.project.save).not.toHaveBeenCalled();
+    await registration.dispose();
+  });
+
+  it("does not retain an unmatched bridge cancellation", async () => {
+    await ensureOpenProjectRuntimeBridgeListener();
+    const fixture = createLiveProject();
+    const registration = registerOpenProjectRuntimeHost(fixture.project as never);
+    if (!bridgeListener) throw new Error("Runtime bridge listener was not registered");
+
+    await bridgeListener({ payload: { kind: "cancel", requestId: "request-cancel-first" } });
+    await bridgeListener({
+      payload: {
+        kind: "invoke",
+        requestId: "request-cancel-first",
+        projectPath: "/projects/graph.prg",
+        toolName: "get_all_nodes",
+        input: {},
+      },
+    });
+
+    expect(invoke).toHaveBeenLastCalledWith("respond_project_runtime_bridge", {
+      requestId: "request-cancel-first",
+      response: { ok: true, value: { objects: [expect.objectContaining({ ref: "n7" })] } },
+    });
+    await registration.dispose();
+  });
+
+  it("classifies live subscription release failure as Runtime Host cleanup failure", async () => {
+    const fixture = createLiveProject();
+    const references = fixture.project.aiEngine.getProjectReferences(fixture.project);
+    vi.spyOn(references, "subscribe").mockReturnValue(() => {
+      throw new Error("unsubscribe failed");
+    });
+    const host = new OpenProjectRuntimeHost(fixture.project);
+
+    await expect(host.invoke("get_all_nodes", {})).resolves.toEqual({
+      ok: false,
+      error: {
+        code: "RUNTIME_CLEANUP_FAILED",
+        message: "Project Runtime Host cleanup failed.",
+      },
+    });
+    await host.dispose();
+  });
+
+  it("preserves the execution diagnostic when live subscription release also fails", async () => {
+    const fixture = createLiveProject("/projects/cleanup-and-execution.prg", false);
+    fixture.project.stage.push({
+      uuid: "33333333-3333-4333-8333-333333333333",
+      collisionBox: {
+        getRectangle() {
+          throw new Error("broken live object");
+        },
+      },
+    } as never);
+    const references = fixture.project.aiEngine.getProjectReferences(fixture.project);
+    vi.spyOn(references, "subscribe").mockReturnValue(() => {
+      throw new Error("unsubscribe failed");
+    });
+    const host = new OpenProjectRuntimeHost(fixture.project);
+
+    await expect(host.invoke("get_all_nodes", {})).resolves.toEqual({
+      ok: false,
+      error: {
+        code: "RUNTIME_CLEANUP_FAILED",
+        message: "Project Runtime Host cleanup failed.",
+        details: {
+          executionError: {
+            code: "TOOL_EXECUTION_FAILED",
+            message: "Built-in tool execution failed.",
+          },
+        },
+      },
+    });
+    await host.dispose();
+  });
+
+  it("does not write a closed Project when cancellation arrives while its save is being prepared", async () => {
+    const project = new Project(URI.parse("draft:cancel-save"));
+    const write = vi.fn(async () => undefined);
+    Object.defineProperty(project, "fs", { configurable: true, value: { write } });
+    let finishPreparing: ((content: Awaited<ReturnType<Project["getFileContent"]>>) => void) | undefined;
+    vi.spyOn(project, "getFileContent").mockReturnValue(
+      new Promise<Awaited<ReturnType<Project["getFileContent"]>>>((resolve) => {
+        finishPreparing = resolve;
+      }),
+    );
+    const controller = new AbortController();
+
+    const saving = project.save({ includeThumbnail: false, abortSignal: controller.signal } as never);
+    controller.abort();
+    finishPreparing?.(new Uint8Array([1, 2, 3]));
+
+    await expect(saving).rejects.toMatchObject({ name: "AbortError" });
+    expect(write).not.toHaveBeenCalled();
+  });
+
+  it("releases stage-owned resources when the Project closes", async () => {
+    const project = new Project(URI.parse("draft:cleanup"));
+    const disposeFirst = vi.fn(async () => undefined);
+    const disposeSecond = vi.fn(async () => undefined);
+    project.stage = [{ dispose: disposeFirst }, { dispose: disposeSecond }] as never;
+
+    await project.dispose();
+
+    expect(disposeFirst).toHaveBeenCalledOnce();
+    expect(disposeSecond).toHaveBeenCalledOnce();
+    expect(project.stage).toEqual([]);
   });
 
   it("returns a structured reference persistence error without saving the Project", async () => {

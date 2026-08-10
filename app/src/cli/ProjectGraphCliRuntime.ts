@@ -1,4 +1,5 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { readFileSync, realpathSync, statSync } from "node:fs";
 import { createConnection } from "node:net";
 import { fileURLToPath } from "node:url";
@@ -8,6 +9,7 @@ import {
   classifyBuiltInToolProjectContext,
   getBuiltInToolDefinition,
 } from "../core/service/dataManageService/aiEngine/BuiltInToolRegistry";
+import { finalizeRuntimeCleanup } from "../core/RuntimeCleanup";
 import type { ClosedProjectInvocationResult, ProjectGraphCliOperationalError } from "./ClosedProjectInvocation";
 
 type RuntimeResult =
@@ -22,13 +24,17 @@ type RuntimeResult =
               | "PROJECT_BUSY"
               | "PROJECT_MUST_BE_OPEN"
               | "RUNTIME_CLEANUP_FAILED"
-              | "RUNTIME_HOST_UNAVAILABLE";
+              | "RUNTIME_HOST_UNAVAILABLE"
+              | "CANCELLED";
             message: string;
           };
     }
   | { forwarded: true; exitCode: number };
 
-const RUNTIME_HOST_RESPONSE_TIMEOUT_MS = 7000;
+const cancelledResult = (): RuntimeResult => ({
+  ok: false,
+  error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." },
+});
 
 function canonicalizeProjectPath(
   projectPath: string,
@@ -116,6 +122,7 @@ async function invokeInRenderer(options: {
   input: unknown;
   canonicalPath: string;
   allowUpgrade: boolean;
+  abortSignal?: AbortSignal;
 }): Promise<RuntimeResult> {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", { url: "http://localhost" });
   const previousWindow = globalThis.window;
@@ -181,35 +188,73 @@ async function invokeInRenderer(options: {
       ok: false,
       error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
     };
-  } finally {
-    let cleanupFailed = false;
-    try {
-      await server?.close();
-    } catch {
-      cleanupFailed = true;
-    }
-    dom.window.close();
-    Object.assign(globalThis, { window: previousWindow, document: previousDocument });
-    if (cleanupFailed) {
-      result = {
-        ok: false,
-        error: { code: "RUNTIME_CLEANUP_FAILED", message: "Project Runtime Host cleanup failed." },
-      };
-    }
   }
-  return result;
+  return finalizeRuntimeCleanup(result, [
+    async () => server?.close(),
+    () => dom.window.close(),
+    () => Object.assign(globalThis, { window: previousWindow, document: previousDocument }),
+  ]);
 }
 
-function runOwnedWorker(args: readonly string[], canonicalPath: string) {
-  return spawnSync(
-    "/usr/bin/lockf",
-    ["-k", "-s", "-t", "0", `${canonicalPath}.project-graph.lock`, process.execPath, process.argv[1], "--", ...args],
-    {
-      encoding: "utf8",
-      maxBuffer: 128 * 1024 * 1024,
-      env: { ...process.env, PROJECT_GRAPH_CLI_OWNERSHIP_ACQUIRED: "1" },
-    },
-  );
+function runOwnedWorker(args: readonly string[], canonicalPath: string, abortSignal?: AbortSignal) {
+  return new Promise<{ status: number | null; stdout: string; stderr: string; error?: Error }>((resolve) => {
+    if (abortSignal?.aborted) {
+      resolve({ status: null, stdout: "", stderr: "" });
+      return;
+    }
+    const worker = spawn(
+      "/usr/bin/lockf",
+      ["-k", "-s", "-t", "0", `${canonicalPath}.project-graph.lock`, process.execPath, process.argv[1], "--", ...args],
+      {
+        detached: true,
+        env: { ...process.env, PROJECT_GRAPH_CLI_OWNERSHIP_ACQUIRED: "1" },
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+    );
+    let stdout = "";
+    let stderr = "";
+    let error: Error | undefined;
+    worker.stdout.setEncoding("utf8");
+    worker.stderr.setEncoding("utf8");
+    worker.stdout.on("data", (chunk) => {
+      stdout += chunk;
+    });
+    worker.stderr.on("data", (chunk) => {
+      stderr += chunk;
+    });
+    worker.once("error", (workerError) => {
+      error = workerError;
+    });
+    const cancelWorker = () => {
+      const signal = abortSignal?.reason === "SIGINT" ? "SIGINT" : "SIGTERM";
+      if (worker.pid) {
+        try {
+          process.kill(-worker.pid, signal);
+        } catch (workerError) {
+          if ((workerError as NodeJS.ErrnoException).code !== "ESRCH") error = workerError as Error;
+        }
+      }
+    };
+    abortSignal?.addEventListener("abort", cancelWorker, { once: true });
+    worker.once("close", (status) => {
+      abortSignal?.removeEventListener("abort", cancelWorker);
+      resolve({ status, stdout, stderr, ...(error ? { error } : {}) });
+    });
+    if (abortSignal?.aborted) cancelWorker();
+  });
+}
+
+function waitForOwnerRetry(abortSignal?: AbortSignal): Promise<void> {
+  if (abortSignal?.aborted) return Promise.resolve();
+  return new Promise((resolve) => {
+    const finish = () => {
+      clearTimeout(timeout);
+      abortSignal?.removeEventListener("abort", finish);
+      resolve();
+    };
+    const timeout = setTimeout(finish, 5000);
+    abortSignal?.addEventListener("abort", finish, { once: true });
+  });
 }
 
 function readConnectableOwner(canonicalPath: string): { endpoint: string } | undefined {
@@ -237,6 +282,7 @@ function readConnectableOwner(canonicalPath: string): { endpoint: string } | und
 function invokeOpenProjectTool(
   endpoint: string,
   request: { projectPath: string; toolName: string; input: unknown },
+  abortSignal?: AbortSignal,
 ): Promise<RuntimeResult> {
   return new Promise((resolve) => {
     let address: URL;
@@ -253,10 +299,17 @@ function invokeOpenProjectTool(
 
     let output = "";
     let settled = false;
+    const requestId = randomUUID();
+    const cancellationRequest = `${JSON.stringify({ cancelRequestId: requestId })}\n`;
+    let connected = false;
+    const sendCancellation = () => {
+      if (connected) socket.write(cancellationRequest);
+    };
     const finish = (result: RuntimeResult) => {
       if (settled) return;
       settled = true;
-      resolve(result);
+      abortSignal?.removeEventListener("abort", sendCancellation);
+      resolve(abortSignal?.aborted ? cancelledResult() : result);
     };
     const unavailable = () =>
       finish({
@@ -265,11 +318,12 @@ function invokeOpenProjectTool(
       });
     const socket = createConnection({ host: address.hostname, port: Number(address.port) });
     socket.setEncoding("utf8");
-    socket.setTimeout(RUNTIME_HOST_RESPONSE_TIMEOUT_MS, () => {
-      socket.destroy();
-      unavailable();
+    socket.once("connect", () => {
+      connected = true;
+      socket.write(`${JSON.stringify({ requestId, ...request })}\n`);
+      if (abortSignal?.aborted) sendCancellation();
     });
-    socket.once("connect", () => socket.end(`${JSON.stringify(request)}\n`));
+    abortSignal?.addEventListener("abort", sendCancellation, { once: true });
     socket.on("data", (chunk) => {
       output += chunk;
     });
@@ -301,15 +355,19 @@ function invokeOpenProjectTool(
 
 function invokeConnectableOwnerIfPresent(
   canonicalPath: string,
-  options: { toolName: string; input: unknown },
+  options: { toolName: string; input: unknown; abortSignal?: AbortSignal },
 ): Promise<RuntimeResult> | undefined {
   const owner = readConnectableOwner(canonicalPath);
   if (!owner) return undefined;
-  return invokeOpenProjectTool(owner.endpoint, {
-    projectPath: canonicalPath,
-    toolName: options.toolName,
-    input: options.input,
-  });
+  return invokeOpenProjectTool(
+    owner.endpoint,
+    {
+      projectPath: canonicalPath,
+      toolName: options.toolName,
+      input: options.input,
+    },
+    options.abortSignal,
+  );
 }
 
 export async function runPathRoutedInvocation(options: {
@@ -317,7 +375,9 @@ export async function runPathRoutedInvocation(options: {
   input: unknown;
   projectPath: string;
   allowUpgrade: boolean;
+  abortSignal?: AbortSignal;
 }): Promise<RuntimeResult> {
+  if (options.abortSignal?.aborted) return cancelledResult();
   const definition = getBuiltInToolDefinition(options.toolName);
   if (!definition) {
     return {
@@ -350,12 +410,13 @@ export async function runPathRoutedInvocation(options: {
     JSON.stringify(options.input),
     ...(options.allowUpgrade ? ["--allow-upgrade"] : []),
   ];
-  let worker = runOwnedWorker(args, projectPathResult.canonicalPath);
+  let worker = await runOwnedWorker(args, projectPathResult.canonicalPath, options.abortSignal);
   if (worker.status === 75) {
     const openResult = invokeConnectableOwnerIfPresent(projectPathResult.canonicalPath, options);
     if (openResult) return openResult;
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    worker = runOwnedWorker(args, projectPathResult.canonicalPath);
+    await waitForOwnerRetry(options.abortSignal);
+    if (options.abortSignal?.aborted) return cancelledResult();
+    worker = await runOwnedWorker(args, projectPathResult.canonicalPath, options.abortSignal);
   }
   if (worker.status === 75) {
     const openResult = invokeConnectableOwnerIfPresent(projectPathResult.canonicalPath, options);
@@ -363,6 +424,7 @@ export async function runPathRoutedInvocation(options: {
     return { ok: false, error: { code: "PROJECT_BUSY", message: "Project is already owned by another runtime." } };
   }
   if (worker.error || worker.status === null) {
+    if (options.abortSignal?.aborted) return cancelledResult();
     return { ok: false, error: { code: "PROJECT_LOAD_FAILED", message: "Project file could not be loaded." } };
   }
   if (worker.status !== 0 && !isStructuredCliError(worker.stderr)) {

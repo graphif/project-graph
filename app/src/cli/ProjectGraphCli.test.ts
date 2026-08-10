@@ -11,7 +11,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { createServer as createHttpServer } from "node:http";
-import { createServer } from "node:net";
+import { createServer, type Socket } from "node:net";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,6 +22,7 @@ import { URI } from "vscode-uri";
 import sharp from "sharp";
 
 const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
+const cliEntryPath = fileURLToPath(new URL("../../../packages/project-graph-cli/src/cli.mjs", import.meta.url));
 const temporaryDirectories: string[] = [];
 let referenceStorePath: string | undefined;
 
@@ -117,8 +118,21 @@ function runCliAsyncWithEnvironment(
   environment: Record<string, string>,
   ...args: string[]
 ): Promise<{ status: number | null; stdout: string; stderr: string }> {
-  return new Promise((resolve, reject) => {
-    const child = spawn("pnpm", ["cli", "--", ...args], {
+  return spawnCliProcess(environment, ...args).result;
+}
+
+function spawnCliProcess(environment: Record<string, string>, ...args: string[]) {
+  return spawnCapturedProcess("pnpm", ["cli", "--", ...args], environment);
+}
+
+function spawnCliEntryProcess(environment: Record<string, string>, ...args: string[]) {
+  return spawnCapturedProcess(process.execPath, [cliEntryPath, "--", ...args], environment);
+}
+
+function spawnCapturedProcess(command: string, args: string[], environment: Record<string, string>) {
+  let child: ReturnType<typeof spawn>;
+  const result = new Promise<{ status: number | null; stdout: string; stderr: string }>((resolve, reject) => {
+    child = spawn(command, args, {
       cwd: repositoryRoot,
       env: {
         ...process.env,
@@ -130,17 +144,18 @@ function runCliAsyncWithEnvironment(
     });
     let stdout = "";
     let stderr = "";
-    child.stdout.setEncoding("utf8");
-    child.stderr.setEncoding("utf8");
-    child.stdout.on("data", (chunk) => {
+    child.stdout!.setEncoding("utf8");
+    child.stderr!.setEncoding("utf8");
+    child.stdout!.on("data", (chunk) => {
       stdout += chunk;
     });
-    child.stderr.on("data", (chunk) => {
+    child.stderr!.on("data", (chunk) => {
       stderr += chunk;
     });
     child.once("error", reject);
     child.once("close", (status) => resolve({ status, stdout, stderr }));
   });
+  return { child: child!, result };
 }
 
 function runCliAsync(...args: string[]): Promise<{ status: number | null; stdout: string; stderr: string }> {
@@ -192,7 +207,7 @@ function expectCliError(args: string[], expected: Record<string, unknown>, exitC
 }
 
 async function waitForProjectLock(lockPath: string): Promise<void> {
-  const deadline = Date.now() + 1000;
+  const deadline = Date.now() + 15_000;
   while (Date.now() < deadline) {
     const probe = spawnSync("/usr/bin/lockf", ["-k", "-s", "-t", "0", lockPath, "/usr/bin/true"]);
     if (probe.status === 75) return;
@@ -201,17 +216,105 @@ async function waitForProjectLock(lockPath: string): Promise<void> {
   throw new Error(`Timed out waiting for Project lock: ${lockPath}`);
 }
 
-async function createOpenProjectHost(projectPath: string, value: unknown) {
+async function createOpenProjectHost(projectPath: string, value: unknown, responseDelayMs = 0) {
   const requests: unknown[] = [];
-  const server = createServer((socket) => {
+  const server = createServer({ allowHalfOpen: true }, (socket) => {
     socket.setEncoding("utf8");
     let request = "";
     socket.on("data", (chunk) => {
       request += chunk;
       const newline = request.indexOf("\n");
       if (newline === -1) return;
-      requests.push(JSON.parse(request.slice(0, newline)));
-      socket.end(`${JSON.stringify({ ok: true, value })}\n`);
+      const { projectPath, toolName, input } = JSON.parse(request.slice(0, newline)) as {
+        projectPath: string;
+        toolName: string;
+        input: unknown;
+      };
+      requests.push({ projectPath, toolName, input });
+      const respond = () => socket.end(`${JSON.stringify({ ok: true, value })}\n`);
+      if (responseDelayMs > 0) setTimeout(respond, responseDelayMs);
+      else respond();
+    });
+  });
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      server.off("error", reject);
+      resolve();
+    });
+  });
+  const address = server.address();
+  if (!address || typeof address === "string") throw new Error("Expected a TCP Runtime Host address");
+
+  const canonicalPath = realpathSync(projectPath);
+  const ownershipLockPath = `${canonicalPath}.project-graph.lock`;
+  const connectableLockPath = `${canonicalPath}.project-graph.connectable`;
+  writeFileSync(
+    connectableLockPath,
+    JSON.stringify({ kind: "connectable", endpoint: `tcp://127.0.0.1:${address.port}` }),
+  );
+  const holder = spawn("/usr/bin/lockf", [
+    "-k",
+    "-s",
+    ownershipLockPath,
+    "/usr/bin/lockf",
+    "-k",
+    "-s",
+    connectableLockPath,
+    "/bin/sleep",
+    "90",
+  ]);
+  await Promise.all([waitForProjectLock(ownershipLockPath), waitForProjectLock(connectableLockPath)]);
+
+  return {
+    requests,
+    disconnect() {
+      return new Promise<void>((resolve, reject) => {
+        server.close((error) => (error ? reject(error) : resolve()));
+      });
+    },
+    close() {
+      holder.kill("SIGTERM");
+      if (server.listening) server.close();
+    },
+  };
+}
+
+async function createCancellableOpenProjectHost(projectPath: string) {
+  let invocationSocket: Socket | undefined;
+  let invocationRequestId: string | undefined;
+  let usedSingleConnection = false;
+  let resolveInvocationReceived: (() => void) | undefined;
+  const invocationReceived = new Promise<void>((resolve) => {
+    resolveInvocationReceived = resolve;
+  });
+  const server = createServer({ allowHalfOpen: true }, (socket) => {
+    socket.setEncoding("utf8");
+    let request = "";
+    socket.on("data", (chunk) => {
+      request += chunk;
+      let newline = request.indexOf("\n");
+      while (newline !== -1) {
+        const parsed = JSON.parse(request.slice(0, newline)) as {
+          requestId?: string;
+          cancelRequestId?: string;
+        };
+        request = request.slice(newline + 1);
+        if (parsed.cancelRequestId) {
+          usedSingleConnection = socket === invocationSocket;
+          if (parsed.cancelRequestId === invocationRequestId) {
+            invocationSocket?.end(
+              '{"ok":false,"error":{"code":"CANCELLED","message":"Project Graph CLI invocation was cancelled."}}\n',
+            );
+          }
+          if (!usedSingleConnection) socket.end();
+        } else {
+          invocationSocket = socket;
+          invocationRequestId = parsed.requestId;
+          resolveInvocationReceived?.();
+        }
+        newline = request.indexOf("\n");
+      }
     });
   });
   await new Promise<void>((resolve, reject) => {
@@ -245,14 +348,13 @@ async function createOpenProjectHost(projectPath: string, value: unknown) {
   await Promise.all([waitForProjectLock(ownershipLockPath), waitForProjectLock(connectableLockPath)]);
 
   return {
-    requests,
-    disconnect() {
-      return new Promise<void>((resolve, reject) => {
-        server.close((error) => (error ? reject(error) : resolve()));
-      });
+    invocationReceived,
+    get usedSingleConnection() {
+      return usedSingleConnection;
     },
     close() {
       holder.kill("SIGTERM");
+      invocationSocket?.destroy();
       if (server.listening) server.close();
     },
   };
@@ -792,7 +894,7 @@ describe("Project Graph CLI process contract", () => {
     );
     expect(readFileSync(newerProjectPath)).toEqual(newerBefore);
     expect(readFileSync(legacyProjectPath)).toEqual(legacyBefore);
-  });
+  }, 15_000);
 
   it("allows a legacy read-only invocation to upgrade only in memory", async () => {
     const projectPath = await createProjectFixture("2.6.0");
@@ -850,7 +952,7 @@ describe("Project Graph CLI process contract", () => {
         },
       ],
     });
-  });
+  }, 15_000);
 
   it("fails explicitly when a Project Object Reference snapshot is invalid", async () => {
     const projectPath = await createProjectFixture();
@@ -1307,4 +1409,74 @@ describe("Project Graph CLI process contract", () => {
       host.close();
     }
   });
+
+  it("waits for a long-running Open Project invocation without imposing a timeout", async () => {
+    const projectPath = await createProjectFixture();
+    const host = await createOpenProjectHost(projectPath, { completed: true }, 7200);
+
+    try {
+      await expect(
+        runCliAsync("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}"),
+      ).resolves.toEqual({ status: 0, stdout: '{"completed":true}\n', stderr: "" });
+    } finally {
+      host.close();
+    }
+  }, 15_000);
+
+  it.each(["SIGINT", "SIGTERM"] as const)(
+    "reports handled %s cancellation without stdout or protocol noise",
+    async (signal) => {
+      const projectPath = await createProjectFixture();
+      const host = await createCancellableOpenProjectHost(projectPath);
+      const invocation = spawnCliEntryProcess(
+        {},
+        "tool",
+        "invoke",
+        "get_all_nodes",
+        "--project",
+        projectPath,
+        "--input",
+        "{}",
+      );
+
+      try {
+        await host.invocationReceived;
+        invocation.child.kill(signal);
+        await expect(invocation.result).resolves.toEqual({
+          status: 130,
+          stdout: "",
+          stderr: '{"code":"CANCELLED","message":"Project Graph CLI invocation was cancelled."}\n',
+        });
+        expect(host.usedSingleConnection).toBe(true);
+      } finally {
+        host.close();
+      }
+    },
+    15_000,
+  );
+
+  it("does not save a closed Project or print partial success after handled cancellation", async () => {
+    const projectPath = await createProjectFixture("2.7.0", createMutationStage());
+    const projectBefore = readFileSync(projectPath);
+    const invocation = spawnCliEntryProcess(
+      {},
+      "tool",
+      "invoke",
+      "create_edges",
+      "--project",
+      projectPath,
+      "--input",
+      JSON.stringify({ edges: [{ sourceRef: "n1", targetRef: "n2" }] }),
+    );
+
+    await waitForProjectLock(`${realpathSync(projectPath)}.project-graph.lock`);
+    invocation.child.kill("SIGTERM");
+
+    await expect(invocation.result).resolves.toEqual({
+      status: 130,
+      stdout: "",
+      stderr: '{"code":"CANCELLED","message":"Project Graph CLI invocation was cancelled."}\n',
+    });
+    expect(readFileSync(projectPath)).toEqual(projectBefore);
+  }, 15_000);
 });

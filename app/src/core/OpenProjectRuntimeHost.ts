@@ -1,4 +1,5 @@
 import type { Project } from "@/core/Project";
+import { finalizeRuntimeCleanup } from "@/core/RuntimeCleanup";
 import { AIProjectReferenceStore } from "@/core/service/dataManageService/aiEngine/AIProjectReferenceStore";
 import {
   createLiveProjectBuiltInToolRuntimeHost,
@@ -7,20 +8,29 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
-type RuntimeInvocation = {
-  requestId: string;
-  projectPath: string;
-  toolName: string;
-  input: unknown;
-};
+type RuntimeInvocation =
+  | {
+      kind?: "invoke";
+      requestId: string;
+      projectPath: string;
+      toolName: string;
+      input: unknown;
+    }
+  | { kind: "cancel"; requestId: string };
 
 type RuntimeResponse =
   | { ok: true; value: unknown }
   | {
       ok: false;
       error: {
-        code: "RUNTIME_HOST_UNAVAILABLE" | "TOOL_EXECUTION_FAILED" | "PROJECT_REFERENCE_SAVE_FAILED";
+        code:
+          | "RUNTIME_HOST_UNAVAILABLE"
+          | "TOOL_EXECUTION_FAILED"
+          | "PROJECT_REFERENCE_SAVE_FAILED"
+          | "RUNTIME_CLEANUP_FAILED"
+          | "CANCELLED";
         message: string;
+        details?: { executionError: { code: string; message: string; details?: unknown } };
       };
     };
 
@@ -29,46 +39,67 @@ const unavailableResponse = (): RuntimeResponse => ({
   error: { code: "RUNTIME_HOST_UNAVAILABLE", message: "Open Project Runtime Host is unavailable." },
 });
 
+const cancelledResponse = (): RuntimeResponse => ({
+  ok: false,
+  error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." },
+});
+
 export class OpenProjectRuntimeHost {
   private readonly activeInvocations = new Set<Promise<RuntimeResponse>>();
+  private readonly activeAbortControllers = new Set<AbortController>();
   private invocationQueue = Promise.resolve();
   private referencesNeedSave = false;
   private closing = false;
 
   constructor(private readonly project: Project) {}
 
-  invoke(toolName: string, input: unknown): Promise<RuntimeResponse> {
+  invoke(toolName: string, input: unknown, abortSignal?: AbortSignal): Promise<RuntimeResponse> {
     if (this.closing) return Promise.resolve(unavailableResponse());
-    const invocation = this.invocationQueue.then(() => this.invokeLiveProject(toolName, input));
+    const abortController = new AbortController();
+    const abort = () => abortController.abort(abortSignal?.reason);
+    if (abortSignal?.aborted) abort();
+    else abortSignal?.addEventListener("abort", abort, { once: true });
+    this.activeAbortControllers.add(abortController);
+    const invocation = this.invocationQueue.then(() => this.invokeLiveProject(toolName, input, abortController.signal));
     this.invocationQueue = invocation.then(() => undefined);
     this.activeInvocations.add(invocation);
-    void invocation.finally(() => this.activeInvocations.delete(invocation));
+    void invocation.finally(() => {
+      abortSignal?.removeEventListener("abort", abort);
+      this.activeAbortControllers.delete(abortController);
+      this.activeInvocations.delete(invocation);
+    });
     return invocation;
   }
 
   async dispose(): Promise<void> {
     this.closing = true;
+    for (const controller of this.activeAbortControllers) controller.abort();
     await Promise.allSettled(this.activeInvocations);
   }
 
-  private async invokeLiveProject(toolName: string, input: unknown): Promise<RuntimeResponse> {
+  private async invokeLiveProject(
+    toolName: string,
+    input: unknown,
+    abortSignal: AbortSignal,
+  ): Promise<RuntimeResponse> {
+    let unsubscribe: (() => void) | undefined;
+    let response: RuntimeResponse;
     try {
       const references = await this.project.aiEngine.prepareProjectReferences(this.project);
       const host = createLiveProjectBuiltInToolRuntimeHost(this.project, references);
-      const unsubscribe = references.subscribe(() => {
+      unsubscribe = references.subscribe(() => {
         this.referencesNeedSave = true;
       });
-      let response: RuntimeResponse;
       try {
-        const value = await invokeBuiltInTool(toolName, input, host);
-        response = { ok: true, value };
+        const value = await invokeBuiltInTool(toolName, input, host, { abortSignal });
+        response = abortSignal.aborted ? cancelledResponse() : { ok: true, value };
       } catch {
-        response = {
-          ok: false,
-          error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
-        };
-      } finally {
-        unsubscribe();
+        response = abortSignal.aborted
+          ? cancelledResponse()
+          : {
+              ok: false,
+              error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
+            };
       }
       const after = references.exportSnapshot();
       if (this.referencesNeedSave) {
@@ -76,7 +107,7 @@ export class OpenProjectRuntimeHost {
           await AIProjectReferenceStore.save(this.project.aiEngine.getProjectReferenceStoreUri(this.project), after);
           this.referencesNeedSave = false;
         } catch {
-          return {
+          response = {
             ok: false,
             error: {
               code: "PROJECT_REFERENCE_SAVE_FAILED",
@@ -85,24 +116,40 @@ export class OpenProjectRuntimeHost {
           };
         }
       }
-      return response;
     } catch {
-      return {
-        ok: false,
-        error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
-      };
+      response = abortSignal.aborted
+        ? cancelledResponse()
+        : {
+            ok: false,
+            error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
+          };
     }
+    return finalizeRuntimeCleanup(response, [() => unsubscribe?.()]);
   }
 }
 
 const runtimeHosts = new Map<string, OpenProjectRuntimeHost>();
+const bridgeInvocationControllers = new Map<string, AbortController>();
 let bridgeListenerPromise: Promise<void> | undefined;
 
 export function ensureOpenProjectRuntimeBridgeListener(): Promise<void> {
   bridgeListenerPromise ??= listen<RuntimeInvocation>("project-runtime-invocation", async ({ payload }) => {
     try {
+      if (payload.kind === "cancel") {
+        bridgeInvocationControllers.get(payload.requestId)?.abort();
+        return;
+      }
       const host = runtimeHosts.get(payload.projectPath);
-      const response = host ? await host.invoke(payload.toolName, payload.input) : unavailableResponse();
+      const abortController = new AbortController();
+      bridgeInvocationControllers.set(payload.requestId, abortController);
+      let response: RuntimeResponse;
+      try {
+        response = host
+          ? await host.invoke(payload.toolName, payload.input, abortController.signal)
+          : unavailableResponse();
+      } finally {
+        bridgeInvocationControllers.delete(payload.requestId);
+      }
       const delivered = await invoke<boolean>("respond_project_runtime_bridge", {
         requestId: payload.requestId,
         response,

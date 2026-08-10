@@ -27,7 +27,8 @@ type ProjectGraphCliLocalErrorCode =
   | "PROJECT_BUSY"
   | "PROJECT_MUST_BE_OPEN"
   | "RUNTIME_CLEANUP_FAILED"
-  | "RUNTIME_HOST_UNAVAILABLE";
+  | "RUNTIME_HOST_UNAVAILABLE"
+  | "CANCELLED";
 
 type ProjectGraphCliError =
   | ProjectGraphCliOperationalError
@@ -40,7 +41,10 @@ function writeError(error: ProjectGraphCliError): void {
   process.stderr.write(`${JSON.stringify(error)}\n`);
 }
 
-export async function runProjectGraphCli(args: readonly string[]): Promise<number> {
+export async function runProjectGraphCli(
+  args: readonly string[],
+  options: { abortSignal?: AbortSignal } = {},
+): Promise<number> {
   if (args.length === 1 && args[0] === "--help") {
     process.stdout.write(help);
     return 0;
@@ -98,11 +102,12 @@ export async function runProjectGraphCli(args: readonly string[]): Promise<numbe
       input,
       projectPath: args[4],
       allowUpgrade,
+      abortSignal: options.abortSignal,
     });
     if ("forwarded" in result) return result.exitCode;
     if (!result.ok) {
       writeError(result.error);
-      return 1;
+      return result.error.code === "CANCELLED" ? 130 : 1;
     }
     process.stdout.write(`${JSON.stringify(result.value)}\n`);
     return 0;

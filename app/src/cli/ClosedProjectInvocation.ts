@@ -2,8 +2,9 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { Project } from "@/core/Project";
-import { FileSystemProviderFile } from "@/core/fileSystemProvider/FileSystemProviderFile";
+import { FileSystemProviderFile, writeClosedProjectFileAtomically } from "./ClosedProjectFileSystemProvider";
 import { ClosedProjectEffects } from "./ClosedProjectEffects";
+import { finalizeRuntimeCleanup, RuntimeCleanupError } from "@/core/RuntimeCleanup";
 import { compareProjectVersions, LATEST_PROJECT_VERSION, parseProjectFile } from "@/core/ProjectFile";
 import {
   AIObjectReferenceRegistry,
@@ -30,18 +31,41 @@ export type ProjectGraphCliOperationalError =
         | "PROJECT_VERSION_UNSUPPORTED"
         | "PROJECT_LOAD_FAILED"
         | "TOOL_EXECUTION_FAILED"
-        | "PROJECT_SAVE_FAILED";
+        | "PROJECT_SAVE_FAILED"
+        | "CANCELLED";
       message: string;
     }
   | {
       code: "PROJECT_REFERENCE_SAVE_FAILED";
       message: string;
       details?: { projectSaved: true };
+    }
+  | {
+      code: "RUNTIME_CLEANUP_FAILED";
+      message: string;
+      details?: {
+        executionError: { code: string; message: string; details?: unknown };
+      };
     };
 
 export type ClosedProjectInvocationResult =
   | { ok: true; value: unknown }
   | { ok: false; error: ProjectGraphCliOperationalError };
+
+function runtimeCleanupFailed(executionError: {
+  code: string;
+  message: string;
+  details?: unknown;
+}): ClosedProjectInvocationResult {
+  return {
+    ok: false,
+    error: {
+      code: "RUNTIME_CLEANUP_FAILED",
+      message: "Project Runtime Host cleanup failed.",
+      details: { executionError },
+    },
+  };
+}
 
 type StoredProjectReferences = {
   version: 1;
@@ -187,16 +211,23 @@ function parseStoredReferences(value: unknown): AIObjectReferenceSnapshot | null
   return references as AIObjectReferenceSnapshot;
 }
 
-async function saveReferences(canonicalPath: string, references: AIObjectReferenceSnapshot): Promise<void> {
+async function saveReferences(
+  canonicalPath: string,
+  references: AIObjectReferenceSnapshot,
+  abortSignal?: AbortSignal,
+): Promise<void> {
+  abortSignal?.throwIfAborted();
   const path = projectReferenceStorePath();
   const store = await readReferenceStore();
+  abortSignal?.throwIfAborted();
   store[projectReferenceKey(canonicalPath)] = {
     version: 1,
     references,
     updatedAt: Date.now(),
   } satisfies StoredProjectReferences;
   await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, JSON.stringify(store));
+  abortSignal?.throwIfAborted();
+  await writeClosedProjectFileAtomically(path, JSON.stringify(store), abortSignal);
 }
 
 function createClosedProject(
@@ -256,119 +287,185 @@ function createClosedProjectRuntimeHost(
   };
 }
 
+type ClosedProjectLifecycle = {
+  attachments: Map<string, Blob>;
+  disposeProject?: () => Promise<void>;
+};
+
+async function executeClosedProjectTool(
+  options: {
+    toolName: string;
+    input: unknown;
+    canonicalPath: string;
+    allowUpgrade: boolean;
+    abortSignal?: AbortSignal;
+  },
+  loadModule: ClosedProjectModuleLoader,
+  lifecycle: ClosedProjectLifecycle,
+): Promise<ClosedProjectInvocationResult> {
+  const { attachments } = lifecycle;
+  let parsed;
+  try {
+    parsed = await parseProjectFile(new Uint8Array(await readFile(options.canonicalPath)), new Decoder(), attachments);
+  } catch {
+    return { ok: false, error: { code: "PROJECT_LOAD_FAILED", message: "Project file could not be loaded." } };
+  }
+
+  const versionComparison = compareProjectVersions(parsed.metadata.version, LATEST_PROJECT_VERSION);
+  if (versionComparison > 0) {
+    return {
+      ok: false,
+      error: {
+        code: "PROJECT_VERSION_UNSUPPORTED",
+        message: "Project version is newer than this Project Graph runtime.",
+      },
+    };
+  }
+  if (versionComparison < 0 && !options.allowUpgrade) {
+    return {
+      ok: false,
+      error: { code: "PROJECT_UPGRADE_REQUIRED", message: "Project must be upgraded before it can be invoked." },
+    };
+  }
+  if (versionComparison < 0) {
+    try {
+      const { ProjectUpgrader } = await import("@/core/stage/ProjectUpgrader");
+      [parsed.serializedStageObjects, parsed.metadata] = ProjectUpgrader.upgradeNAnyToNLatest(
+        parsed.serializedStageObjects,
+        parsed.metadata,
+      );
+    } catch {
+      return { ok: false, error: { code: "PROJECT_LOAD_FAILED", message: "Project file could not be loaded." } };
+    }
+  }
+
+  const loadedProject = createClosedProject(parsed, attachments, options.canonicalPath);
+  const project = loadedProject.project;
+  lifecycle.disposeProject = loadedProject.dispose;
+  let pendingReferenceSnapshot: AIObjectReferenceSnapshot | undefined;
+  const references = new AIObjectReferenceRegistry(project, (snapshot) => {
+    pendingReferenceSnapshot = snapshot;
+  });
+  try {
+    const storedReferences = parseStoredReferences(
+      (await readReferenceStore())[projectReferenceKey(options.canonicalPath)],
+    );
+    if (storedReferences) references.restoreSnapshot(storedReferences);
+  } catch {
+    return { ok: false, error: { code: "PROJECT_LOAD_FAILED", message: "Project file could not be loaded." } };
+  }
+
+  const executorReadyPath = process.env.PROJECT_GRAPH_CLI_EXECUTOR_READY_PATH;
+  let value: unknown;
+  if (options.abortSignal?.aborted) {
+    return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
+  }
+  try {
+    value = await invokeBuiltInTool(
+      options.toolName,
+      options.input,
+      createClosedProjectRuntimeHost(
+        project,
+        references,
+        loadModule,
+        executorReadyPath ? () => writeFile(executorReadyPath, process.hrtime.bigint().toString()) : undefined,
+      ),
+      { abortSignal: options.abortSignal },
+    );
+  } catch {
+    if (options.abortSignal?.aborted) {
+      return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
+    }
+    return { ok: false, error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." } };
+  }
+  if (options.abortSignal?.aborted) {
+    return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
+  }
+
+  const definition = getBuiltInToolDefinition(options.toolName);
+  let projectSaved = false;
+  let persistenceCommitted = false;
+  if (definition?.effect.project === "mutate") {
+    try {
+      await project.save({ includeThumbnail: false, abortSignal: options.abortSignal });
+      projectSaved = true;
+      persistenceCommitted = true;
+    } catch (error) {
+      if (error instanceof RuntimeCleanupError) {
+        return runtimeCleanupFailed(
+          options.abortSignal?.aborted
+            ? { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." }
+            : { code: "PROJECT_SAVE_FAILED", message: "Project could not be saved." },
+        );
+      }
+      if (!persistenceCommitted && options.abortSignal?.aborted) {
+        return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
+      }
+      return { ok: false, error: { code: "PROJECT_SAVE_FAILED", message: "Project could not be saved." } };
+    }
+  }
+  if (!persistenceCommitted && options.abortSignal?.aborted) {
+    return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
+  }
+
+  if (pendingReferenceSnapshot) {
+    try {
+      await saveReferences(
+        options.canonicalPath,
+        pendingReferenceSnapshot,
+        persistenceCommitted ? undefined : options.abortSignal,
+      );
+      persistenceCommitted = true;
+    } catch (error) {
+      if (error instanceof RuntimeCleanupError) {
+        return runtimeCleanupFailed(
+          options.abortSignal?.aborted && !persistenceCommitted
+            ? { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." }
+            : {
+                code: "PROJECT_REFERENCE_SAVE_FAILED",
+                message: "Project Object References could not be saved.",
+                ...(projectSaved ? { details: { projectSaved: true as const } } : {}),
+              },
+        );
+      }
+      if (!persistenceCommitted && options.abortSignal?.aborted) {
+        return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
+      }
+      return {
+        ok: false,
+        error: {
+          code: "PROJECT_REFERENCE_SAVE_FAILED",
+          message: "Project Object References could not be saved.",
+          ...(projectSaved ? { details: { projectSaved: true as const } } : {}),
+        },
+      };
+    }
+  }
+  if (!persistenceCommitted && options.abortSignal?.aborted) {
+    return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
+  }
+  return { ok: true, value };
+}
+
 export async function invokeClosedProjectTool(
   options: {
     toolName: string;
     input: unknown;
     canonicalPath: string;
     allowUpgrade: boolean;
+    abortSignal?: AbortSignal;
   },
   loadModule: ClosedProjectModuleLoader,
 ): Promise<ClosedProjectInvocationResult> {
-  const attachments = new Map<string, Blob>();
-  let project: Project | undefined;
-  let disposeProject: (() => Promise<void>) | undefined;
+  const lifecycle: ClosedProjectLifecycle = { attachments: new Map() };
+  let result: ClosedProjectInvocationResult;
   try {
-    let parsed;
-    try {
-      parsed = await parseProjectFile(
-        new Uint8Array(await readFile(options.canonicalPath)),
-        new Decoder(),
-        attachments,
-      );
-    } catch {
-      return { ok: false, error: { code: "PROJECT_LOAD_FAILED", message: "Project file could not be loaded." } };
-    }
-
-    const versionComparison = compareProjectVersions(parsed.metadata.version, LATEST_PROJECT_VERSION);
-    if (versionComparison > 0) {
-      return {
-        ok: false,
-        error: {
-          code: "PROJECT_VERSION_UNSUPPORTED",
-          message: "Project version is newer than this Project Graph runtime.",
-        },
-      };
-    }
-    if (versionComparison < 0 && !options.allowUpgrade) {
-      return {
-        ok: false,
-        error: { code: "PROJECT_UPGRADE_REQUIRED", message: "Project must be upgraded before it can be invoked." },
-      };
-    }
-    if (versionComparison < 0) {
-      try {
-        const { ProjectUpgrader } = await import("@/core/stage/ProjectUpgrader");
-        [parsed.serializedStageObjects, parsed.metadata] = ProjectUpgrader.upgradeNAnyToNLatest(
-          parsed.serializedStageObjects,
-          parsed.metadata,
-        );
-      } catch {
-        return { ok: false, error: { code: "PROJECT_LOAD_FAILED", message: "Project file could not be loaded." } };
-      }
-    }
-
-    const loadedProject = createClosedProject(parsed, attachments, options.canonicalPath);
-    project = loadedProject.project;
-    disposeProject = loadedProject.dispose;
-    let pendingReferenceSnapshot: AIObjectReferenceSnapshot | undefined;
-    const references = new AIObjectReferenceRegistry(project, (snapshot) => {
-      pendingReferenceSnapshot = snapshot;
-    });
-    try {
-      const storedReferences = parseStoredReferences(
-        (await readReferenceStore())[projectReferenceKey(options.canonicalPath)],
-      );
-      if (storedReferences) references.restoreSnapshot(storedReferences);
-    } catch {
-      return { ok: false, error: { code: "PROJECT_LOAD_FAILED", message: "Project file could not be loaded." } };
-    }
-
-    const executorReadyPath = process.env.PROJECT_GRAPH_CLI_EXECUTOR_READY_PATH;
-    let value: unknown;
-    try {
-      value = await invokeBuiltInTool(
-        options.toolName,
-        options.input,
-        createClosedProjectRuntimeHost(
-          project,
-          references,
-          loadModule,
-          executorReadyPath ? () => writeFile(executorReadyPath, process.hrtime.bigint().toString()) : undefined,
-        ),
-      );
-    } catch {
-      return { ok: false, error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." } };
-    }
-
-    const definition = getBuiltInToolDefinition(options.toolName);
-    let projectSaved = false;
-    if (definition?.effect.project === "mutate") {
-      try {
-        await project.save({ includeThumbnail: false });
-        projectSaved = true;
-      } catch {
-        return { ok: false, error: { code: "PROJECT_SAVE_FAILED", message: "Project could not be saved." } };
-      }
-    }
-
-    if (pendingReferenceSnapshot) {
-      try {
-        await saveReferences(options.canonicalPath, pendingReferenceSnapshot);
-      } catch {
-        return {
-          ok: false,
-          error: {
-            code: "PROJECT_REFERENCE_SAVE_FAILED",
-            message: "Project Object References could not be saved.",
-            ...(projectSaved ? { details: { projectSaved: true as const } } : {}),
-          },
-        };
-      }
-    }
-    return { ok: true, value };
-  } finally {
-    await disposeProject?.();
-    attachments.clear();
+    result = await executeClosedProjectTool(options, loadModule, lifecycle);
+  } catch {
+    result = { ok: false, error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." } };
   }
+  return finalizeRuntimeCleanup(result, [
+    async () => lifecycle.disposeProject?.(),
+    () => lifecycle.attachments.clear(),
+  ]);
 }

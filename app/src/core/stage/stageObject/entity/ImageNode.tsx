@@ -68,6 +68,8 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
   }
 
   bitmap: ImageBitmap | undefined;
+  private disposed = false;
+  private readonly pendingBitmapTasks = new Set<Promise<void>>();
   state: "loading" | "success" | "notFound" = "loading";
 
   constructor(
@@ -97,13 +99,40 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
       return;
     }
     if (typeof createImageBitmap === "undefined") return;
-    createImageBitmap(blob).then((bitmap) => {
-      this.bitmap = bitmap;
+    this.loadBitmap(createImageBitmap(blob), () => {
       this.state = "success";
       // 设置碰撞箱
       this.scaleUpdate(0);
       this.onReady?.();
     });
+  }
+
+  private loadBitmap(bitmapPromise: Promise<ImageBitmap>, onLoaded: () => void): void {
+    const task = bitmapPromise.then((bitmap) => {
+      if (this.disposed) {
+        bitmap.close();
+        return;
+      }
+      this.bitmap?.close();
+      this.bitmap = bitmap;
+      onLoaded();
+    });
+    this.pendingBitmapTasks.add(task);
+    void task.then(
+      () => this.pendingBitmapTasks.delete(task),
+      (error) => window.dispatchEvent(new ErrorEvent("error", { error })),
+    );
+  }
+
+  async dispose(): Promise<void> {
+    this.disposed = true;
+    const results = await Promise.allSettled(this.pendingBitmapTasks);
+    this.bitmap?.close();
+    this.bitmap = undefined;
+    const errors = results
+      .filter((result): result is PromiseRejectedResult => result.status === "rejected")
+      .map(({ reason }) => reason);
+    if (errors.length > 0) throw new AggregateError(errors, "ImageNode cleanup failed");
   }
 
   public scaleUpdate(scaleDiff: number) {
@@ -182,9 +211,7 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
     ctx.putImageData(imageData, 0, 0);
 
     // 创建新的ImageBitmap并保存到attachments中
-    createImageBitmap(imageData).then((newBitmap) => {
-      this.bitmap = newBitmap;
-
+    this.loadBitmap(createImageBitmap(imageData), () => {
       // 将canvas转换为Blob并保存到project.attachments中
       canvas.toBlob((blob) => {
         if (blob) {
@@ -235,9 +262,7 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
     ctx.putImageData(imageData, 0, 0);
 
     // 创建新的ImageBitmap并保存到attachments中
-    createImageBitmap(imageData).then((newBitmap) => {
-      this.bitmap = newBitmap;
-
+    this.loadBitmap(createImageBitmap(imageData), () => {
       // 将canvas转换为Blob并保存到project.attachments中
       canvas.toBlob((blob) => {
         if (blob) {
@@ -306,8 +331,7 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
           }
           const newAttachmentId = this.project.addAttachment(newBlob);
           this.attachmentId = newAttachmentId;
-          createImageBitmap(newBlob).then((bmp) => {
-            this.bitmap = bmp;
+          this.loadBitmap(createImageBitmap(newBlob), () => {
             this.scaleUpdate(0);
           });
         },
