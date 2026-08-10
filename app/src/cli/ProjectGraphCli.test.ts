@@ -53,6 +53,42 @@ async function createProjectFixture(version = "2.7.0", stage: unknown[] = []): P
   return projectPath;
 }
 
+function createMutationStage(): unknown[] {
+  const textNode = (uuid: string, text: string, x: number) => ({
+    _: "TextNode",
+    uuid,
+    text,
+    collisionBox: {
+      _: "CollisionBox",
+      shapes: [
+        {
+          _: "Rectangle",
+          location: { _: "Vector", x, y: 20 },
+          size: { _: "Vector", x: 100, y: 50 },
+        },
+      ],
+    },
+  });
+  return [
+    textNode("11111111-1111-4111-8111-111111111111", "Source", 10),
+    textNode("22222222-2222-4222-8222-222222222222", "Target", 210),
+    {
+      _: "ConnectPoint",
+      uuid: "33333333-3333-4333-8333-333333333333",
+      collisionBox: {
+        _: "CollisionBox",
+        shapes: [
+          {
+            _: "Rectangle",
+            location: { _: "Vector", x: 410, y: 20 },
+            size: { _: "Vector", x: 20, y: 20 },
+          },
+        ],
+      },
+    },
+  ];
+}
+
 function runCli(...args: string[]) {
   return spawnSync("pnpm", ["cli", "--", ...args], {
     cwd: repositoryRoot,
@@ -83,7 +119,7 @@ function runCliAsync(...args: string[]): Promise<{ status: number | null; stdout
   });
 }
 
-function expectCliError(args: string[], expected: { code: string; message: string }, exitCode = 2): void {
+function expectCliError(args: string[], expected: Record<string, unknown>, exitCode = 2): void {
   const result = runCli(...args);
   const error = JSON.parse(result.stderr) as Record<string, unknown>;
 
@@ -504,6 +540,264 @@ describe("Project Graph CLI process contract", () => {
     } finally {
       chmodSync(getReferenceStorePath(), 0o644);
     }
+  }, 15_000);
+
+  it("persists a representative closed Project mutation through the shared executor", async () => {
+    const projectPath = await createProjectFixture("2.7.0", createMutationStage());
+    const before = readFileSync(projectPath);
+    const discovered = runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}");
+
+    expect(discovered).toMatchObject({ status: 0, stderr: "" });
+
+    const mutation = runCli(
+      "tool",
+      "invoke",
+      "create_edges",
+      "--project",
+      projectPath,
+      "--input",
+      JSON.stringify({ edges: [{ sourceRef: "n1", targetRef: "n2", text: "persisted" }] }),
+    );
+
+    expect(mutation).toMatchObject({
+      status: 0,
+      stdout: `${JSON.stringify([{ sourceRef: "n1", targetRef: "n2", success: true, edgeRef: "e1" }])}\n`,
+      stderr: "",
+    });
+    expect(readFileSync(projectPath)).not.toEqual(before);
+
+    const reloaded = runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}");
+    const value = JSON.parse(reloaded.stdout) as { objects: Array<Record<string, unknown>> };
+
+    expect(reloaded).toMatchObject({ status: 0, stderr: "" });
+    expect(value.objects).toContainEqual(
+      expect.objectContaining({ ref: "e1", type: "LineEdge", sourceRef: "n1", targetRef: "n2", text: "persisted" }),
+    );
+  }, 20_000);
+
+  it("saves a mutating tool's normal semantic failure without reinterpreting its result", async () => {
+    const projectPath = await createProjectFixture("2.7.0", createMutationStage());
+    expect(runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}")).toMatchObject({
+      status: 0,
+      stderr: "",
+    });
+    const beforeMutation = readFileSync(projectPath);
+
+    const result = runCli(
+      "tool",
+      "invoke",
+      "create_edges",
+      "--project",
+      projectPath,
+      "--input",
+      JSON.stringify({ edges: [{ sourceRef: "n3", targetRef: "n3" }] }),
+    );
+    const value = JSON.parse(result.stdout) as Array<Record<string, unknown>>;
+
+    expect(result).toMatchObject({ status: 0, stderr: "" });
+    expect(value).toEqual([
+      {
+        sourceRef: "n3",
+        targetRef: "n3",
+        success: false,
+        error: "连线创建失败，未知原因",
+      },
+    ]);
+    expect(readFileSync(projectPath)).not.toEqual(beforeMutation);
+  }, 15_000);
+
+  it("persists a mutating tool's partial result exactly as returned", async () => {
+    const projectPath = await createProjectFixture("2.7.0", createMutationStage());
+    expect(runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}")).toMatchObject({
+      status: 0,
+      stderr: "",
+    });
+
+    const result = runCli(
+      "tool",
+      "invoke",
+      "create_edges",
+      "--project",
+      projectPath,
+      "--input",
+      JSON.stringify({
+        edges: [
+          { sourceRef: "n1", targetRef: "n2", text: "created" },
+          { sourceRef: "n3", targetRef: "n3" },
+        ],
+      }),
+    );
+    const value = JSON.parse(result.stdout) as Array<Record<string, unknown>>;
+
+    expect(result).toMatchObject({ status: 0, stderr: "" });
+    expect(value).toEqual([
+      { sourceRef: "n1", targetRef: "n2", success: true, edgeRef: "e1" },
+      { sourceRef: "n3", targetRef: "n3", success: false, error: "连线创建失败，未知原因" },
+    ]);
+
+    const reloaded = runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}");
+    expect(JSON.parse(reloaded.stdout)).toMatchObject({
+      objects: expect.arrayContaining([
+        expect.objectContaining({ ref: "e1", type: "LineEdge", sourceRef: "n1", targetRef: "n2" }),
+      ]),
+    });
+  }, 20_000);
+
+  it("does not save the Project or new references when the shared executor throws", async () => {
+    const projectPath = await createProjectFixture("2.7.0", createMutationStage());
+    expect(runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}")).toMatchObject({
+      status: 0,
+      stderr: "",
+    });
+    const projectBefore = readFileSync(projectPath);
+    const referencesBefore = readFileSync(getReferenceStorePath());
+
+    expectCliError(
+      [
+        "tool",
+        "invoke",
+        "create_edges",
+        "--project",
+        projectPath,
+        "--input",
+        JSON.stringify({ edges: [{ sourceRef: "n1", targetRef: "n99" }] }),
+      ],
+      { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
+      1,
+    );
+    expect(readFileSync(projectPath)).toEqual(projectBefore);
+    expect(readFileSync(getReferenceStorePath())).toEqual(referencesBefore);
+  }, 15_000);
+
+  it("does not save new references when Project.save() fails", async () => {
+    const projectPath = await createProjectFixture("2.7.0", createMutationStage());
+    expect(runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}")).toMatchObject({
+      status: 0,
+      stderr: "",
+    });
+    const referencesBefore = readFileSync(getReferenceStorePath());
+    chmodSync(projectPath, 0o444);
+
+    try {
+      expectCliError(
+        [
+          "tool",
+          "invoke",
+          "create_edges",
+          "--project",
+          projectPath,
+          "--input",
+          JSON.stringify({ edges: [{ sourceRef: "n1", targetRef: "n2" }] }),
+        ],
+        { code: "PROJECT_SAVE_FAILED", message: "Project could not be saved." },
+        1,
+      );
+      expect(readFileSync(getReferenceStorePath())).toEqual(referencesBefore);
+    } finally {
+      chmodSync(projectPath, 0o644);
+    }
+  }, 15_000);
+
+  it("reports a saved Project when the following reference snapshot save fails", async () => {
+    const projectPath = await createProjectFixture("2.7.0", createMutationStage());
+    expect(runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}")).toMatchObject({
+      status: 0,
+      stderr: "",
+    });
+    const projectBefore = readFileSync(projectPath);
+    chmodSync(getReferenceStorePath(), 0o444);
+
+    try {
+      expectCliError(
+        [
+          "tool",
+          "invoke",
+          "create_edges",
+          "--project",
+          projectPath,
+          "--input",
+          JSON.stringify({ edges: [{ sourceRef: "n1", targetRef: "n2" }] }),
+        ],
+        {
+          code: "PROJECT_REFERENCE_SAVE_FAILED",
+          message: "Project Object References could not be saved.",
+          details: { projectSaved: true },
+        },
+        1,
+      );
+      expect(readFileSync(projectPath)).not.toEqual(projectBefore);
+    } finally {
+      chmodSync(getReferenceStorePath(), 0o644);
+    }
+
+    const reloaded = runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}");
+    expect(JSON.parse(reloaded.stdout)).toMatchObject({
+      objects: expect.arrayContaining([
+        expect.objectContaining({ type: "LineEdge", sourceRef: "n1", targetRef: "n2" }),
+      ]),
+    });
+  }, 20_000);
+
+  it("upgrades a legacy Project only when a closed mutation explicitly allows it", async () => {
+    const projectPath = await createProjectFixture("2.6.0", createMutationStage());
+    expect(
+      runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}", "--allow-upgrade"),
+    ).toMatchObject({ status: 0, stderr: "" });
+    const before = readFileSync(projectPath);
+
+    expectCliError(
+      [
+        "tool",
+        "invoke",
+        "create_edges",
+        "--project",
+        projectPath,
+        "--input",
+        JSON.stringify({ edges: [{ sourceRef: "n1", targetRef: "n2" }] }),
+      ],
+      { code: "PROJECT_UPGRADE_REQUIRED", message: "Project must be upgraded before it can be invoked." },
+      1,
+    );
+    expect(readFileSync(projectPath)).toEqual(before);
+
+    const mutation = runCli(
+      "tool",
+      "invoke",
+      "create_edges",
+      "--project",
+      projectPath,
+      "--input",
+      JSON.stringify({ edges: [{ sourceRef: "n1", targetRef: "n2" }] }),
+      "--allow-upgrade",
+    );
+    expect(mutation).toMatchObject({ status: 0, stderr: "" });
+
+    const currentFormatReload = runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}");
+    expect(currentFormatReload).toMatchObject({ status: 0, stderr: "" });
+    expect(JSON.parse(currentFormatReload.stdout)).toMatchObject({
+      objects: expect.arrayContaining([expect.objectContaining({ type: "LineEdge" })]),
+    });
+  }, 25_000);
+
+  it("rejects a closed mutation against a newer Project even when upgrade is allowed", async () => {
+    const projectPath = await createProjectFixture("99.0.0", createMutationStage());
+    const before = readFileSync(projectPath);
+
+    expectCliError(
+      [
+        "tool",
+        "invoke",
+        "create_edges",
+        "--project",
+        projectPath,
+        "--input",
+        JSON.stringify({ edges: [{ sourceRef: "n1", targetRef: "n2" }] }),
+        "--allow-upgrade",
+      ],
+      { code: "PROJECT_VERSION_UNSUPPORTED", message: "Project version is newer than this Project Graph runtime." },
+      1,
+    );
+    expect(readFileSync(projectPath)).toEqual(before);
   }, 15_000);
 
   it("returns PROJECT_BUSY instead of reading a Project held by an unconnectable owner", async () => {

@@ -4,6 +4,7 @@ import {
   getBuiltInToolCliEntry,
 } from "../core/service/dataManageService/aiEngine/BuiltInToolCliAdapter";
 import { getBuiltInToolDefinition } from "../core/service/dataManageService/aiEngine/BuiltInToolRegistry";
+import type { ProjectGraphCliOperationalError } from "./ClosedProjectInvocation";
 
 const help = `Usage: project-graph <command>
 
@@ -17,23 +18,25 @@ Options:
   --version  Show version
 `;
 
-type ProjectGraphCliErrorCode =
+type ProjectGraphCliLocalErrorCode =
   | "INVALID_COMMAND"
   | "UNKNOWN_TOOL"
   | "INVALID_JSON"
   | "TOOL_INPUT_INVALID"
   | "PROJECT_NOT_FOUND"
   | "PROJECT_BUSY"
-  | "PROJECT_UPGRADE_REQUIRED"
-  | "PROJECT_VERSION_UNSUPPORTED"
-  | "PROJECT_LOAD_FAILED"
-  | "TOOL_EXECUTION_FAILED"
-  | "PROJECT_REFERENCE_SAVE_FAILED"
   | "RUNTIME_CLEANUP_FAILED"
   | "RUNTIME_HOST_UNAVAILABLE";
 
-function writeError(code: ProjectGraphCliErrorCode, message: string): void {
-  process.stderr.write(`${JSON.stringify({ code, message })}\n`);
+type ProjectGraphCliError =
+  | ProjectGraphCliOperationalError
+  | {
+      code: ProjectGraphCliLocalErrorCode;
+      message: string;
+    };
+
+function writeError(error: ProjectGraphCliError): void {
+  process.stderr.write(`${JSON.stringify(error)}\n`);
 }
 
 export async function runProjectGraphCli(args: readonly string[]): Promise<number> {
@@ -52,7 +55,7 @@ export async function runProjectGraphCli(args: readonly string[]): Promise<numbe
   if (args.length === 3 && args[0] === "tool" && args[1] === "describe") {
     const definition = getBuiltInToolCliEntry(args[2]);
     if (!definition) {
-      writeError("UNKNOWN_TOOL", `Unknown built-in tool: ${args[2]}`);
+      writeError({ code: "UNKNOWN_TOOL", message: `Unknown built-in tool: ${args[2]}` });
       return 2;
     }
     process.stdout.write(`${JSON.stringify(definition)}\n`);
@@ -61,14 +64,14 @@ export async function runProjectGraphCli(args: readonly string[]): Promise<numbe
   if (args[0] === "tool" && args[1] === "invoke") {
     const allowUpgrade = args.length === 8 && args[7] === "--allow-upgrade";
     if ((args.length !== 7 && !allowUpgrade) || args[3] !== "--project" || args[5] !== "--input") {
-      writeError("INVALID_COMMAND", "Invalid Project Graph CLI command.");
+      writeError({ code: "INVALID_COMMAND", message: "Invalid Project Graph CLI command." });
       return 2;
     }
 
     const toolName = args[2];
     const definition = getBuiltInToolDefinition(toolName);
     if (!definition) {
-      writeError("UNKNOWN_TOOL", `Unknown built-in tool: ${toolName}`);
+      writeError({ code: "UNKNOWN_TOOL", message: `Unknown built-in tool: ${toolName}` });
       return 2;
     }
 
@@ -76,12 +79,15 @@ export async function runProjectGraphCli(args: readonly string[]): Promise<numbe
     try {
       input = JSON.parse(args[6]);
     } catch {
-      writeError("INVALID_JSON", "The --input value must be valid JSON.");
+      writeError({ code: "INVALID_JSON", message: "The --input value must be valid JSON." });
       return 2;
     }
 
     if (!definition.inputSchema.safeParse(input).success) {
-      writeError("TOOL_INPUT_INVALID", `Tool input does not match the built-in tool schema: ${toolName}`);
+      writeError({
+        code: "TOOL_INPUT_INVALID",
+        message: `Tool input does not match the built-in tool schema: ${toolName}`,
+      });
       return 2;
     }
 
@@ -94,12 +100,12 @@ export async function runProjectGraphCli(args: readonly string[]): Promise<numbe
     });
     if ("forwarded" in result) return result.exitCode;
     if (!result.ok) {
-      writeError(result.error.code, result.error.message);
+      writeError(result.error);
       return 1;
     }
     process.stdout.write(`${JSON.stringify(result.value)}\n`);
     return 0;
   }
-  writeError("INVALID_COMMAND", "Invalid Project Graph CLI command.");
+  writeError({ code: "INVALID_COMMAND", message: "Invalid Project Graph CLI command." });
   return 2;
 }

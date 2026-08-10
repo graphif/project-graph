@@ -56,16 +56,21 @@ function isStructuredCliError(output: string): boolean {
   }
 }
 
-function runtimeCompatibilityPlugin(stubs: { settings: string; renderer: string; detailsManager: string }): Plugin {
+function runtimeCompatibilityPlugin(stubs: {
+  settings: string;
+  renderer: string;
+  detailsManager: string;
+  fileSystemProvider: string;
+  soundService: string;
+}): Plugin {
   return {
     name: "project-graph-cli-runtime-compatibility",
     enforce: "pre",
     resolveId(id) {
       if (
         id === "@/core/service/Settings" ||
-        id === "./Settings" ||
-        id === "./service/Settings" ||
-        /\/core\/service\/Settings(?:\.tsx)?$/.test(id)
+        id.endsWith("/Settings") ||
+        /\/core\/service\/Settings(?:\.tsx)?(?:\?.*)?$/.test(id)
       ) {
         return stubs.settings;
       }
@@ -79,6 +84,8 @@ function runtimeCompatibilityPlugin(stubs: { settings: string; renderer: string;
       ) {
         return stubs.detailsManager;
       }
+      if (id.includes("/core/fileSystemProvider/FileSystemProviderFile")) return stubs.fileSystemProvider;
+      if (id.includes("/core/service/feedbackService/SoundService")) return stubs.soundService;
       return id === "virtual:original-class-name" ? `\0${id}` : undefined;
     },
     load(id) {
@@ -103,12 +110,13 @@ async function invokeInRenderer(options: {
     configurable: true,
     value: () => ({ measureText: (text: string) => ({ width: text.length * 50 }) }),
   });
-
   const appRoot = fileURLToPath(new URL("../..", import.meta.url));
   const stubs = {
     settings: fileURLToPath(new URL("./ClosedProjectSettings.ts", import.meta.url)),
     renderer: fileURLToPath(new URL("./ClosedProjectRenderer.ts", import.meta.url)),
     detailsManager: fileURLToPath(new URL("./ClosedProjectDetailsManager.ts", import.meta.url)),
+    fileSystemProvider: fileURLToPath(new URL("./ClosedProjectFileSystemProvider.ts", import.meta.url)),
+    soundService: fileURLToPath(new URL("./ClosedProjectSoundService.ts", import.meta.url)),
   };
   let server: Awaited<ReturnType<typeof createServer>> | undefined;
   let result: RuntimeResult;
@@ -119,7 +127,21 @@ async function invokeInRenderer(options: {
       logLevel: "silent",
       optimizeDeps: { noDiscovery: true },
       resolve: {
-        alias: [{ find: "@", replacement: `${appRoot}/src` }],
+        alias: [
+          { find: "@/core/service/Settings", replacement: stubs.settings },
+          { find: /\/core\/service\/Settings(?:\.tsx)?$/, replacement: stubs.settings },
+          { find: "@/core/fileSystemProvider/FileSystemProviderFile", replacement: stubs.fileSystemProvider },
+          {
+            find: /\/core\/fileSystemProvider\/FileSystemProviderFile(?:\.tsx)?$/,
+            replacement: stubs.fileSystemProvider,
+          },
+          { find: "@/core/service/feedbackService/SoundService", replacement: stubs.soundService },
+          {
+            find: /\/core\/service\/feedbackService\/SoundService(?:\.tsx)?$/,
+            replacement: stubs.soundService,
+          },
+          { find: "@", replacement: `${appRoot}/src` },
+        ],
       },
       server: { middlewareMode: true },
       plugins: [runtimeCompatibilityPlugin(stubs)],
@@ -270,7 +292,7 @@ export async function runPathRoutedInvocation(options: {
   projectPath: string;
   allowUpgrade: boolean;
 }): Promise<RuntimeResult> {
-  if (options.toolName !== "get_all_nodes") {
+  if (options.toolName !== "get_all_nodes" && options.toolName !== "create_edges") {
     return {
       ok: false,
       error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },

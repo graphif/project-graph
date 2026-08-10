@@ -1,13 +1,15 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import type { Project } from "@/core/Project";
+import { Project } from "@/core/Project";
+import { FileSystemProviderFile } from "@/core/fileSystemProvider/FileSystemProviderFile";
 import { compareProjectVersions, LATEST_PROJECT_VERSION, parseProjectFile } from "@/core/ProjectFile";
 import {
   AIObjectReferenceRegistry,
   type AIObjectReferenceSnapshot,
 } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
 import {
+  getBuiltInToolDefinition,
   invokeBuiltInTool,
   type AcquiredBuiltInToolCapabilities,
   type BuiltInToolCapability,
@@ -15,20 +17,28 @@ import {
 } from "@/core/service/dataManageService/aiEngine/BuiltInToolRegistry";
 // The serializer registers decorated classes when their modules load.
 import "@/core/stage/stageObject/association/LineEdge";
-import type { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import { NodeConnector } from "@/core/stage/stageManager/concreteMethods/StageNodeConnector";
+import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
+import { StageManager } from "@/core/stage/stageManager/StageManager";
 import { deserialize } from "@graphif/serializer";
 import { Decoder } from "@msgpack/msgpack";
 import { URI } from "vscode-uri";
 
-export type ProjectGraphCliOperationalError = {
-  code:
-    | "PROJECT_UPGRADE_REQUIRED"
-    | "PROJECT_VERSION_UNSUPPORTED"
-    | "PROJECT_LOAD_FAILED"
-    | "TOOL_EXECUTION_FAILED"
-    | "PROJECT_REFERENCE_SAVE_FAILED";
-  message: string;
-};
+export type ProjectGraphCliOperationalError =
+  | {
+      code:
+        | "PROJECT_UPGRADE_REQUIRED"
+        | "PROJECT_VERSION_UNSUPPORTED"
+        | "PROJECT_LOAD_FAILED"
+        | "TOOL_EXECUTION_FAILED"
+        | "PROJECT_SAVE_FAILED";
+      message: string;
+    }
+  | {
+      code: "PROJECT_REFERENCE_SAVE_FAILED";
+      message: string;
+      details?: { projectSaved: true };
+    };
 
 export type ClosedProjectInvocationResult =
   | { ok: true; value: unknown }
@@ -40,14 +50,14 @@ type StoredProjectReferences = {
   updatedAt: number;
 };
 
-const supportedCapabilities = new Set<BuiltInToolCapability>(["project", "references", "dom", "image", "settings"]);
-
-type ClosedReadProject = Pick<
-  Project,
-  "attachments" | "tags" | "references" | "metadata" | "readme" | "uri" | "stage"
-> & {
-  stageManager: Pick<Project["stageManager"], "get">;
-};
+const supportedCapabilities = new Set<BuiltInToolCapability>([
+  "project",
+  "references",
+  "history",
+  "dom",
+  "image",
+  "settings",
+]);
 
 function projectReferenceStorePath(): string {
   return (
@@ -103,42 +113,35 @@ async function saveReferences(canonicalPath: string, references: AIObjectReferen
   await writeFile(path, JSON.stringify(store));
 }
 
-function createClosedReadProject(
+function createClosedProject(
   parsed: Awaited<ReturnType<typeof parseProjectFile>>,
   attachments: Map<string, Blob>,
   canonicalPath: string,
 ): {
-  project: ClosedReadProject;
-  dispose(): void;
+  project: Project;
+  dispose(): Promise<void>;
 } {
-  let stage: StageObject[] | undefined;
-  const project: ClosedReadProject = {
-    attachments,
-    tags: parsed.tags,
-    references: parsed.references,
-    metadata: parsed.metadata,
-    readme: parsed.readme,
-    uri: URI.file(canonicalPath),
-    get stage() {
-      stage ??= deserialize(parsed.serializedStageObjects, project) as StageObject[];
-      return stage;
-    },
-    stageManager: {
-      get(uuid: string) {
-        return project.stage.find((object) => object.uuid === uuid);
-      },
-    },
-  };
+  const project = new Project(URI.file(canonicalPath));
+  project.registerFileSystemProvider("file", FileSystemProviderFile);
+  project.attachments = attachments;
+  project.tags = parsed.tags;
+  project.references = parsed.references;
+  project.metadata = parsed.metadata;
+  project.readme = parsed.readme;
+  project.stage = deserialize(parsed.serializedStageObjects, project);
+  project.loadService(StageManager);
+  project.stageManager.updateReferences();
   return {
     project,
-    dispose() {
-      if (stage) stage.length = 0;
+    async dispose() {
+      await project.dispose();
+      project.stage.length = 0;
     },
   };
 }
 
-function createGetAllNodesRuntimeHost(
-  project: ClosedReadProject,
+function createClosedProjectRuntimeHost(
+  project: Project,
   references: AIObjectReferenceRegistry,
   beforeExecutorInvoke?: () => void | Promise<void>,
 ): BuiltInToolRuntimeHost {
@@ -152,7 +155,11 @@ function createGetAllNodesRuntimeHost(
       for (const capability of capabilities) {
         if (capability === "project") acquired.project = project;
         else if (capability === "references") acquired.references = references;
-        else if (capability === "dom" || capability === "image" || capability === "settings") {
+        else if (capability === "history") {
+          project.loadService(NodeConnector);
+          project.loadService(HistoryManager);
+          acquired.history = true;
+        } else if (capability === "dom" || capability === "image" || capability === "settings") {
           acquired[capability] = true;
         }
       }
@@ -168,8 +175,8 @@ export async function invokeClosedProjectTool(options: {
   allowUpgrade: boolean;
 }): Promise<ClosedProjectInvocationResult> {
   const attachments = new Map<string, Blob>();
-  let project: ClosedReadProject | undefined;
-  let disposeProject: (() => void) | undefined;
+  let project: Project | undefined;
+  let disposeProject: (() => Promise<void>) | undefined;
   try {
     let parsed;
     try {
@@ -210,7 +217,7 @@ export async function invokeClosedProjectTool(options: {
       }
     }
 
-    const loadedProject = createClosedReadProject(parsed, attachments, options.canonicalPath);
+    const loadedProject = createClosedProject(parsed, attachments, options.canonicalPath);
     project = loadedProject.project;
     disposeProject = loadedProject.dispose;
     let pendingReferenceSnapshot: AIObjectReferenceSnapshot | undefined;
@@ -232,7 +239,7 @@ export async function invokeClosedProjectTool(options: {
       value = await invokeBuiltInTool(
         options.toolName,
         options.input,
-        createGetAllNodesRuntimeHost(
+        createClosedProjectRuntimeHost(
           project,
           references,
           executorReadyPath ? () => writeFile(executorReadyPath, process.hrtime.bigint().toString()) : undefined,
@@ -240,6 +247,17 @@ export async function invokeClosedProjectTool(options: {
       );
     } catch {
       return { ok: false, error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." } };
+    }
+
+    const definition = getBuiltInToolDefinition(options.toolName);
+    let projectSaved = false;
+    if (definition?.effect.project === "mutate") {
+      try {
+        await project.save({ includeThumbnail: false });
+        projectSaved = true;
+      } catch {
+        return { ok: false, error: { code: "PROJECT_SAVE_FAILED", message: "Project could not be saved." } };
+      }
     }
 
     if (pendingReferenceSnapshot) {
@@ -251,13 +269,14 @@ export async function invokeClosedProjectTool(options: {
           error: {
             code: "PROJECT_REFERENCE_SAVE_FAILED",
             message: "Project Object References could not be saved.",
+            ...(projectSaved ? { details: { projectSaved: true as const } } : {}),
           },
         };
       }
     }
     return { ok: true, value };
   } finally {
-    disposeProject?.();
+    await disposeProject?.();
     attachments.clear();
   }
 }

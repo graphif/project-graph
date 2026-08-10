@@ -1,5 +1,11 @@
 const availableSettings: Record<string, unknown> = {
   defaultFontFamily: "PingFang SC, PingFang TC, -apple-system",
+  defaultEdgeLineType: "solid",
+  defaultEdgeArrowType: "default",
+  historyManagerMode: "timeEfficient",
+  historySize: 150,
+  showDebug: false,
+  watch: () => () => {},
 };
 
 export const Settings = new Proxy(availableSettings, {
