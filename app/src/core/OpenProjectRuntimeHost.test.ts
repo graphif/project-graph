@@ -20,6 +20,7 @@ vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn(async () => true), isTaur
 vi.mock("@/core/Tab", () => ({
   Tab: class Tab {
     private readonly services = new Map<string, unknown>();
+    private readonly fileSystemProviders = new Map<string, unknown>();
 
     loadService(service: { id?: string; new (project: unknown): unknown }) {
       if (!service.id) throw new Error("Test service requires an id");
@@ -30,8 +31,17 @@ vi.mock("@/core/Tab", () => ({
 
     emit() {}
 
+    registerFileSystemProvider(scheme: string, provider: { new (project: unknown): unknown }) {
+      this.fileSystemProviders.set(scheme, new provider(this));
+    }
+
+    get fs() {
+      return this.fileSystemProviders.get((this as unknown as { uri: URI }).uri.scheme);
+    }
+
     async dispose() {
       this.services.clear();
+      this.fileSystemProviders.clear();
     }
   },
   isResourceTab: () => false,
@@ -126,6 +136,10 @@ class LiveStageManager {
       if (index !== -1) this.project.stage.splice(index, 1);
     }
     this.project.historyManager.recordStep();
+  }
+
+  generateNodeTreeByText() {
+    return undefined;
   }
 }
 
@@ -401,6 +415,61 @@ describe("Open Project Runtime Host", () => {
     await registration.dispose();
   });
 
+  it("does not execute a queued destructive invocation cancelled before dequeue", async () => {
+    const fixture = createLiveProject();
+    const references = fixture.project.aiEngine.getProjectReferences(fixture.project);
+    let releasePreparation: ((value: typeof references) => void) | undefined;
+    vi.spyOn(fixture.project.aiEngine, "prepareProjectReferences")
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          releasePreparation = resolve;
+        }),
+      )
+      .mockResolvedValue(references);
+    const host = new OpenProjectRuntimeHost(fixture.project);
+
+    const firstInvocation = host.invoke("get_all_nodes", {});
+    const controller = new AbortController();
+    const cancelledInvocation = host.invoke("delete_node", { ref: "n7" }, controller.signal);
+    controller.abort();
+    releasePreparation?.(references);
+
+    await expect(firstInvocation).resolves.toMatchObject({ ok: true });
+    await expect(cancelledInvocation).resolves.toEqual({
+      ok: false,
+      error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." },
+    });
+    expect(fixture.project.stage).toContain(fixture.node);
+    await host.dispose();
+  });
+
+  it("preserves structured Project Object Reference errors", async () => {
+    const fixture = createLiveProject();
+    const host = new OpenProjectRuntimeHost(fixture.project);
+
+    await expect(host.invoke("delete_node", { ref: "n7" })).resolves.toMatchObject({ ok: true });
+    await expect(host.invoke("edit_text_node", { ref: "n7", data: { text: "updated" } })).resolves.toEqual({
+      ok: false,
+      error: {
+        code: "stale_ref",
+        message: "Project Object Reference points to a deleted object.",
+        details: { ref: "n7" },
+      },
+    });
+    await host.dispose();
+  });
+
+  it("normalizes an undefined handler result before crossing the Tauri bridge", async () => {
+    const fixture = createLiveProject();
+    const host = new OpenProjectRuntimeHost(fixture.project);
+
+    await expect(host.invoke("generate_node_tree_by_text", { text: "Root" })).resolves.toEqual({
+      ok: true,
+      value: null,
+    });
+    await host.dispose();
+  });
+
   it("classifies live subscription release failure as Runtime Host cleanup failure", async () => {
     const fixture = createLiveProject();
     const references = fixture.project.aiEngine.getProjectReferences(fixture.project);
@@ -451,26 +520,6 @@ describe("Open Project Runtime Host", () => {
     await host.dispose();
   });
 
-  it("does not write a closed Project when cancellation arrives while its save is being prepared", async () => {
-    const project = new Project(URI.parse("draft:cancel-save"));
-    const write = vi.fn(async () => undefined);
-    Object.defineProperty(project, "fs", { configurable: true, value: { write } });
-    let finishPreparing: ((content: Awaited<ReturnType<Project["getFileContent"]>>) => void) | undefined;
-    vi.spyOn(project, "getFileContent").mockReturnValue(
-      new Promise<Awaited<ReturnType<Project["getFileContent"]>>>((resolve) => {
-        finishPreparing = resolve;
-      }),
-    );
-    const controller = new AbortController();
-
-    const saving = project.save({ includeThumbnail: false, abortSignal: controller.signal } as never);
-    controller.abort();
-    finishPreparing?.(new Uint8Array([1, 2, 3]));
-
-    await expect(saving).rejects.toMatchObject({ name: "AbortError" });
-    expect(write).not.toHaveBeenCalled();
-  });
-
   it("releases stage-owned resources when the Project closes", async () => {
     const project = new Project(URI.parse("draft:cleanup"));
     const disposeFirst = vi.fn(async () => undefined);
@@ -482,6 +531,40 @@ describe("Open Project Runtime Host", () => {
     expect(disposeFirst).toHaveBeenCalledOnce();
     expect(disposeSecond).toHaveBeenCalledOnce();
     expect(project.stage).toEqual([]);
+  });
+
+  it("keeps Project.save on the original two-argument FileSystemProvider.write contract", async () => {
+    const write = vi.fn<(uri: URI, content: Uint8Array) => Promise<void>>().mockResolvedValue(undefined);
+    class TestFileSystemProvider {
+      async read() {
+        return new Uint8Array();
+      }
+      async readDir() {
+        return [];
+      }
+      async write(uri: URI, content: Uint8Array) {
+        await write(uri, content);
+      }
+      async remove() {}
+      async exists() {
+        return true;
+      }
+      async mkdir() {}
+      async rename() {
+        return undefined;
+      }
+    }
+    const project = new Project(URI.parse("test:save-contract"));
+    project.registerFileSystemProvider("test", TestFileSystemProvider);
+    const content = new Uint8Array([1, 2, 3]);
+    const getFileContent = vi.spyOn(project, "getFileContent").mockResolvedValue(content);
+
+    await project.save({ includeThumbnail: false });
+
+    expect(getFileContent).toHaveBeenCalledWith({ includeThumbnail: false });
+    expect(write).toHaveBeenCalledOnce();
+    expect(write).toHaveBeenCalledWith(project.uri, content);
+    expect(write.mock.calls[0]).toHaveLength(2);
   });
 
   it("returns a structured reference persistence error without saving the Project", async () => {
@@ -647,7 +730,7 @@ describe("Open Project Runtime Host", () => {
       expect(partialFailure).toMatchObject({
         status: 1,
         stdout: "",
-        stderr: '{"code":"TOOL_EXECUTION_FAILED","message":"Built-in tool execution failed."}\n',
+        stderr: '{"code":"unknown_ref","message":"Project Object Reference does not exist.","details":{"ref":"n99"}}\n',
       });
       expect(mutation).toMatchObject({
         status: 0,

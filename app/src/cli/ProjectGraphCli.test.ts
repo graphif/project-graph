@@ -447,6 +447,25 @@ describe("Project Graph CLI process contract", () => {
     });
   });
 
+  it("rejects a live-only tool in an acquired closed worker before resolving the Project Path", async () => {
+    const result = await runCliAsyncWithEnvironment(
+      { PROJECT_GRAPH_CLI_OWNERSHIP_ACQUIRED: "1" },
+      "tool",
+      "invoke",
+      "get_nodes_in_viewport",
+      "--project",
+      "/does/not/exist.prg",
+      "--input",
+      "{}",
+    );
+
+    expect(result).toEqual({
+      status: 1,
+      stdout: "",
+      stderr: '{"code":"PROJECT_MUST_BE_OPEN","message":"This tool requires a matching Open Project."}\n',
+    });
+  });
+
   it("reports a missing explicit Project Path without opening a Project", () => {
     expectCliError(
       ["tool", "invoke", "get_all_nodes", "--project", "/does/not/exist.prg", "--input", "{}"],
@@ -954,6 +973,28 @@ describe("Project Graph CLI process contract", () => {
     });
   }, 15_000);
 
+  it("keeps snapshots for two different Projects updated concurrently", async () => {
+    const firstProjectPath = await createProjectFixture("2.7.0", createMutationStage().slice(0, 1));
+    const secondProjectPath = await createProjectFixture("2.7.0", createMutationStage().slice(1, 2));
+
+    const [first, second] = await Promise.all(
+      [firstProjectPath, secondProjectPath].map((projectPath) =>
+        runCliAsync("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}"),
+      ),
+    );
+
+    expect(first).toMatchObject({ status: 0, stderr: "" });
+    expect(second).toMatchObject({ status: 0, stderr: "" });
+    const store = JSON.parse(readFileSync(getReferenceStorePath(), "utf8")) as Record<string, unknown>;
+    expect(Object.keys(store)).toEqual(
+      expect.arrayContaining(
+        [firstProjectPath, secondProjectPath].map(
+          (projectPath) => `project:${URI.file(realpathSync(projectPath)).toString()}:references`,
+        ),
+      ),
+    );
+  }, 30_000);
+
   it("fails explicitly when a Project Object Reference snapshot is invalid", async () => {
     const projectPath = await createProjectFixture();
     const key = `project:${URI.file(realpathSync(projectPath)).toString()}:references`;
@@ -1040,6 +1081,36 @@ describe("Project Graph CLI process contract", () => {
     expect(reloaded).toMatchObject({ status: 0, stderr: "" });
     expect(value.objects).toContainEqual(
       expect.objectContaining({ ref: "e1", type: "LineEdge", sourceRef: "n1", targetRef: "n2", text: "persisted" }),
+    );
+  }, 20_000);
+
+  it("preserves a stale Project Object Reference error after a deleted object is saved", async () => {
+    const projectPath = await createProjectFixture("2.7.0", createMutationStage());
+    expect(runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}")).toMatchObject({
+      status: 0,
+      stderr: "",
+    });
+    expect(runCli("tool", "invoke", "delete_node", "--project", projectPath, "--input", '{"ref":"n1"}')).toMatchObject({
+      status: 0,
+      stderr: "",
+    });
+
+    expectCliError(
+      [
+        "tool",
+        "invoke",
+        "edit_text_node",
+        "--project",
+        projectPath,
+        "--input",
+        '{"ref":"n1","data":{"text":"updated"}}',
+      ],
+      {
+        code: "stale_ref",
+        message: "Project Object Reference points to a deleted object.",
+        details: { ref: "n1" },
+      },
+      1,
     );
   }, 20_000);
 
@@ -1130,7 +1201,11 @@ describe("Project Graph CLI process contract", () => {
         "--input",
         JSON.stringify({ edges: [{ sourceRef: "n1", targetRef: "n99" }] }),
       ],
-      { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
+      {
+        code: "unknown_ref",
+        message: "Project Object Reference does not exist.",
+        details: { ref: "n99" },
+      },
       1,
     );
     expect(readFileSync(projectPath)).toEqual(projectBefore);

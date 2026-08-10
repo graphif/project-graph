@@ -1,6 +1,9 @@
+#[cfg(debug_assertions)]
+mod cli_desktop_acceptance;
 mod cmd;
 #[allow(dead_code)]
 mod project_ownership;
+mod project_reference_store;
 mod project_runtime_bridge;
 
 use std::sync::{Arc, Mutex, OnceLock};
@@ -97,12 +100,20 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             cmd::device::get_device_id,
+            #[cfg(debug_assertions)]
+            cli_desktop_acceptance::load_cli_desktop_acceptance_manifest,
+            #[cfg(debug_assertions)]
+            cli_desktop_acceptance::write_cli_desktop_acceptance_state,
+            #[cfg(debug_assertions)]
+            cli_desktop_acceptance::wait_for_cli_desktop_acceptance_completion,
             write_stdout,
             write_stderr,
             exit,
             take_pending_open_files,
             project_ownership::acquire_desktop_project_ownership,
             project_ownership::release_desktop_project_ownership,
+            project_reference_store::load_project_reference_snapshot,
+            project_reference_store::save_project_reference_snapshot,
             project_runtime_bridge::respond_project_runtime_bridge,
             #[cfg(desktop)]
             cmd::paddle::get_aha_directory,

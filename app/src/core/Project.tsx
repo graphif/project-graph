@@ -332,12 +332,10 @@ export class Project extends Tab {
   async stash() {
     // TODO: stash
   }
-  async save(options: { includeThumbnail?: boolean; abortSignal?: AbortSignal } = {}) {
+  async save(options: { includeThumbnail?: boolean } = {}) {
     try {
       this.isSaving = true;
-      const content = await this.getFileContent(options);
-      options.abortSignal?.throwIfAborted();
-      await this.fs.write(this.uri, content, { abortSignal: options.abortSignal });
+      await this.fs.write(this.uri, await this.getFileContent(options));
       this.projectState = ProjectState.Saved;
     } finally {
       this.isSaving = false;

@@ -22,8 +22,8 @@ export class FileSystemProviderFile implements FileSystemProvider {
     }));
   }
 
-  async write(uri: URI, content: Uint8Array, options?: { abortSignal?: AbortSignal }): Promise<void> {
-    await writeClosedProjectFileAtomically(uri.fsPath, content, options?.abortSignal);
+  async write(uri: URI, content: Uint8Array): Promise<void> {
+    await writeClosedProjectFileAtomically(uri.fsPath, content);
   }
 
   async remove(uri: URI): Promise<void> {

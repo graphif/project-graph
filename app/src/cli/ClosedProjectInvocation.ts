@@ -1,4 +1,5 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { mkdir, open, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { Project } from "@/core/Project";
@@ -11,12 +12,15 @@ import {
   type AIObjectReferenceSnapshot,
 } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
 import {
-  getBuiltInToolDefinition,
-  invokeBuiltInTool,
+  BuiltInToolCapabilityUnavailableError,
+  executePreparedBuiltInTool,
+  prepareBuiltInToolInvocation,
   type AcquiredBuiltInToolCapabilities,
   type BuiltInToolCapability,
   type BuiltInToolRuntimeHost,
 } from "@/core/service/dataManageService/aiEngine/BuiltInToolRegistry";
+import { classifyBuiltInToolRuntimeError } from "@/core/service/dataManageService/aiEngine/BuiltInToolRuntimeError";
+import { canClosedProjectProvideCapabilities } from "@/core/service/dataManageService/aiEngine/BuiltInToolRuntimeProfiles";
 // The serializer registers decorated classes when their modules load.
 import "@/core/stage/stageObject/association/LineEdge";
 import { StageManager } from "@/core/stage/stageManager/StageManager";
@@ -30,10 +34,16 @@ export type ProjectGraphCliOperationalError =
         | "PROJECT_UPGRADE_REQUIRED"
         | "PROJECT_VERSION_UNSUPPORTED"
         | "PROJECT_LOAD_FAILED"
+        | "PROJECT_MUST_BE_OPEN"
         | "TOOL_EXECUTION_FAILED"
         | "PROJECT_SAVE_FAILED"
         | "CANCELLED";
       message: string;
+    }
+  | {
+      code: "invalid_ref_format" | "unknown_ref" | "stale_ref" | "wrong_ref_kind";
+      message: string;
+      details: { ref: string };
     }
   | {
       code: "PROJECT_REFERENCE_SAVE_FAILED";
@@ -72,26 +82,6 @@ type StoredProjectReferences = {
   references: AIObjectReferenceSnapshot;
   updatedAt: number;
 };
-
-const supportedCapabilities = new Set<BuiltInToolCapability>([
-  "project",
-  "references",
-  "history",
-  "effects",
-  "delete",
-  "text",
-  "graph",
-  "layout",
-  "tree-import",
-  "node-connect",
-  "attachments",
-  "dom",
-  "image",
-  "settings",
-  "network",
-  "model",
-  "abort-signal",
-]);
 
 type ServiceConstructor = { id?: string; new (...args: any[]): any };
 type ClosedProjectModuleLoader = (id: string) => Promise<Record<string, unknown>>;
@@ -180,9 +170,9 @@ function projectReferenceKey(canonicalPath: string): string {
   return `project:${URI.file(canonicalPath).toString()}:references`;
 }
 
-async function readReferenceStore(): Promise<Record<string, unknown>> {
+async function readReferenceStore(path = projectReferenceStorePath()): Promise<Record<string, unknown>> {
   try {
-    const value: unknown = JSON.parse(await readFile(projectReferenceStorePath(), "utf8"));
+    const value: unknown = JSON.parse(await readFile(path, "utf8"));
     if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid reference store");
     return value as Record<string, unknown>;
   } catch (error) {
@@ -211,23 +201,27 @@ function parseStoredReferences(value: unknown): AIObjectReferenceSnapshot | null
   return references as AIObjectReferenceSnapshot;
 }
 
-async function saveReferences(
-  canonicalPath: string,
-  references: AIObjectReferenceSnapshot,
-  abortSignal?: AbortSignal,
-): Promise<void> {
-  abortSignal?.throwIfAborted();
+async function saveReferences(canonicalPath: string, references: AIObjectReferenceSnapshot): Promise<void> {
   const path = projectReferenceStorePath();
-  const store = await readReferenceStore();
-  abortSignal?.throwIfAborted();
-  store[projectReferenceKey(canonicalPath)] = {
-    version: 1,
-    references,
-    updatedAt: Date.now(),
-  } satisfies StoredProjectReferences;
   await mkdir(dirname(path), { recursive: true });
-  abortSignal?.throwIfAborted();
-  await writeClosedProjectFileAtomically(path, JSON.stringify(store), abortSignal);
+  const lock = await open(`${path}.lock`, "a+");
+  try {
+    const acquired = spawnSync("/usr/bin/lockf", ["-s", "3"], {
+      stdio: ["ignore", "ignore", "ignore", lock.fd],
+    });
+    if (acquired.error || acquired.status !== 0) {
+      throw acquired.error ?? new Error("Project Object Reference store lock could not be acquired");
+    }
+    const store = await readReferenceStore(path);
+    store[projectReferenceKey(canonicalPath)] = {
+      version: 1,
+      references,
+      updatedAt: Date.now(),
+    } satisfies StoredProjectReferences;
+    await writeClosedProjectFileAtomically(path, JSON.stringify(store));
+  } finally {
+    await lock.close();
+  }
 }
 
 function createClosedProject(
@@ -265,13 +259,8 @@ function createClosedProjectRuntimeHost(
 ): BuiltInToolRuntimeHost {
   return {
     beforeExecutorInvoke,
+    canProvideCapabilities: canClosedProjectProvideCapabilities,
     async acquireCapabilities(capabilities, context): Promise<AcquiredBuiltInToolCapabilities> {
-      const unsupportedCapabilities = capabilities.filter((capability) => !supportedCapabilities.has(capability));
-      if (unsupportedCapabilities.length > 0) {
-        throw new Error(
-          `The closed Project Runtime Host cannot provide capabilities: ${unsupportedCapabilities.join(", ")}`,
-        );
-      }
       const acquired: Record<string, unknown> = {};
       for (const capability of capabilities) {
         if (capability === "project") acquired.project = project;
@@ -304,6 +293,18 @@ async function executeClosedProjectTool(
   lifecycle: ClosedProjectLifecycle,
 ): Promise<ClosedProjectInvocationResult> {
   const { attachments } = lifecycle;
+  let prepared;
+  try {
+    prepared = prepareBuiltInToolInvocation(options.toolName, options.input, canClosedProjectProvideCapabilities);
+  } catch (error) {
+    if (error instanceof BuiltInToolCapabilityUnavailableError) {
+      return {
+        ok: false,
+        error: { code: "PROJECT_MUST_BE_OPEN", message: "This tool requires a matching Open Project." },
+      };
+    }
+    return { ok: false, error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." } };
+  }
   let parsed;
   try {
     parsed = await parseProjectFile(new Uint8Array(await readFile(options.canonicalPath)), new Decoder(), attachments);
@@ -361,9 +362,8 @@ async function executeClosedProjectTool(
     return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
   }
   try {
-    value = await invokeBuiltInTool(
-      options.toolName,
-      options.input,
+    value = await executePreparedBuiltInTool(
+      prepared,
       createClosedProjectRuntimeHost(
         project,
         references,
@@ -372,64 +372,45 @@ async function executeClosedProjectTool(
       ),
       { abortSignal: options.abortSignal },
     );
-  } catch {
+  } catch (error) {
     if (options.abortSignal?.aborted) {
       return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
     }
+    const referenceError = classifyBuiltInToolRuntimeError(error);
+    if (referenceError) return { ok: false, error: referenceError };
     return { ok: false, error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." } };
   }
   if (options.abortSignal?.aborted) {
     return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
   }
 
-  const definition = getBuiltInToolDefinition(options.toolName);
+  const definition = prepared.definition;
   let projectSaved = false;
-  let persistenceCommitted = false;
-  if (definition?.effect.project === "mutate") {
+  if (definition.effect.project === "mutate") {
     try {
-      await project.save({ includeThumbnail: false, abortSignal: options.abortSignal });
+      await project.save({ includeThumbnail: false });
       projectSaved = true;
-      persistenceCommitted = true;
     } catch (error) {
       if (error instanceof RuntimeCleanupError) {
-        return runtimeCleanupFailed(
-          options.abortSignal?.aborted
-            ? { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." }
-            : { code: "PROJECT_SAVE_FAILED", message: "Project could not be saved." },
-        );
-      }
-      if (!persistenceCommitted && options.abortSignal?.aborted) {
-        return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
+        return runtimeCleanupFailed({ code: "PROJECT_SAVE_FAILED", message: "Project could not be saved." });
       }
       return { ok: false, error: { code: "PROJECT_SAVE_FAILED", message: "Project could not be saved." } };
     }
   }
-  if (!persistenceCommitted && options.abortSignal?.aborted) {
+  if (!projectSaved && options.abortSignal?.aborted) {
     return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
   }
 
   if (pendingReferenceSnapshot) {
     try {
-      await saveReferences(
-        options.canonicalPath,
-        pendingReferenceSnapshot,
-        persistenceCommitted ? undefined : options.abortSignal,
-      );
-      persistenceCommitted = true;
+      await saveReferences(options.canonicalPath, pendingReferenceSnapshot);
     } catch (error) {
       if (error instanceof RuntimeCleanupError) {
-        return runtimeCleanupFailed(
-          options.abortSignal?.aborted && !persistenceCommitted
-            ? { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." }
-            : {
-                code: "PROJECT_REFERENCE_SAVE_FAILED",
-                message: "Project Object References could not be saved.",
-                ...(projectSaved ? { details: { projectSaved: true as const } } : {}),
-              },
-        );
-      }
-      if (!persistenceCommitted && options.abortSignal?.aborted) {
-        return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
+        return runtimeCleanupFailed({
+          code: "PROJECT_REFERENCE_SAVE_FAILED",
+          message: "Project Object References could not be saved.",
+          ...(projectSaved ? { details: { projectSaved: true as const } } : {}),
+        });
       }
       return {
         ok: false,
@@ -440,9 +421,6 @@ async function executeClosedProjectTool(
         },
       };
     }
-  }
-  if (!persistenceCommitted && options.abortSignal?.aborted) {
-    return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
   }
   return { ok: true, value };
 }

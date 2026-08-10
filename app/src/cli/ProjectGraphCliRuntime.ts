@@ -1,14 +1,15 @@
 import { spawn, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { readFileSync, realpathSync, statSync } from "node:fs";
+import { closeSync, openSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { createConnection } from "node:net";
 import { fileURLToPath } from "node:url";
 import { JSDOM } from "jsdom";
 import { createServer, type Plugin } from "vite";
+import { prepareBuiltInToolInvocation } from "../core/service/dataManageService/aiEngine/BuiltInToolRegistry";
 import {
-  classifyBuiltInToolProjectContext,
-  getBuiltInToolDefinition,
-} from "../core/service/dataManageService/aiEngine/BuiltInToolRegistry";
+  canClosedProjectProvideCapabilities,
+  canOpenProjectProvideCapabilities,
+} from "../core/service/dataManageService/aiEngine/BuiltInToolRuntimeProfiles";
 import { finalizeRuntimeCleanup } from "../core/RuntimeCleanup";
 import type { ClosedProjectInvocationResult, ProjectGraphCliOperationalError } from "./ClosedProjectInvocation";
 
@@ -71,7 +72,7 @@ function isStructuredCliError(output: string): boolean {
   }
 }
 
-function runtimeCompatibilityPlugin(stubs: {
+type RuntimeStubs = {
   settings: string;
   renderer: string;
   detailsManager: string;
@@ -79,34 +80,47 @@ function runtimeCompatibilityPlugin(stubs: {
   soundService: string;
   http: string;
   modelImageEncoder: string;
-}): Plugin {
+};
+
+const runtimeStubDescriptors: readonly {
+  matcher: string | RegExp;
+  stubKey: keyof RuntimeStubs;
+}[] = [
+  { matcher: "@/core/service/Settings", stubKey: "settings" },
+  { matcher: /^(?:.*\/)?core\/service\/Settings(?:\.tsx)?(?:\?.*)?$/, stubKey: "settings" },
+  { matcher: /^(?:.*\/)?Settings$/, stubKey: "settings" },
+  { matcher: "@/core/render/canvas2d/renderer", stubKey: "renderer" },
+  { matcher: /^(?:.*\/)?core\/render\/canvas2d\/renderer(?:\.tsx)?$/, stubKey: "renderer" },
+  { matcher: /^(?:.*\/)?stageObject\/tools\/entityDetailsManager$/, stubKey: "detailsManager" },
+  { matcher: "../tools/entityDetailsManager", stubKey: "detailsManager" },
+  {
+    matcher: /^(?:.*\/)?core\/fileSystemProvider\/FileSystemProviderFile(?:\.tsx)?$/,
+    stubKey: "fileSystemProvider",
+  },
+  { matcher: "@/core/fileSystemProvider/FileSystemProviderFile", stubKey: "fileSystemProvider" },
+  {
+    matcher: /^(?:.*\/)?core\/service\/feedbackService\/SoundService(?:\.tsx)?$/,
+    stubKey: "soundService",
+  },
+  { matcher: /^(?:.*\/)?feedbackService\/SoundService$/, stubKey: "soundService" },
+  { matcher: "@/core/service/feedbackService/SoundService", stubKey: "soundService" },
+  { matcher: "@tauri-apps/plugin-http", stubKey: "http" },
+  {
+    matcher: /^(?:.*\/)?core\/service\/dataManageService\/aiEngine\/ModelImageEncoder(?:\.tsx)?$/,
+    stubKey: "modelImageEncoder",
+  },
+  { matcher: "@/core/service/dataManageService/aiEngine/ModelImageEncoder", stubKey: "modelImageEncoder" },
+];
+
+function runtimeCompatibilityPlugin(stubs: RuntimeStubs): Plugin {
   return {
     name: "project-graph-cli-runtime-compatibility",
     enforce: "pre",
     resolveId(id) {
-      if (
-        id === "@/core/service/Settings" ||
-        id.endsWith("/Settings") ||
-        /\/core\/service\/Settings(?:\.tsx)?(?:\?.*)?$/.test(id)
-      ) {
-        return stubs.settings;
-      }
-      if (id === "@/core/render/canvas2d/renderer" || /\/core\/render\/canvas2d\/renderer(?:\.tsx)?$/.test(id)) {
-        return stubs.renderer;
-      }
-      if (
-        id.endsWith("/stageObject/tools/entityDetailsManager") ||
-        id === "../tools/entityDetailsManager" ||
-        id === "./stageObject/tools/entityDetailsManager"
-      ) {
-        return stubs.detailsManager;
-      }
-      if (id.includes("/core/fileSystemProvider/FileSystemProviderFile")) return stubs.fileSystemProvider;
-      if (id.includes("/core/service/feedbackService/SoundService") || id.endsWith("/feedbackService/SoundService")) {
-        return stubs.soundService;
-      }
-      if (id === "@tauri-apps/plugin-http") return stubs.http;
-      if (id.includes("/core/service/dataManageService/aiEngine/ModelImageEncoder")) return stubs.modelImageEncoder;
+      const descriptor = runtimeStubDescriptors.find(({ matcher }) =>
+        typeof matcher === "string" ? id === matcher : matcher.test(id),
+      );
+      if (descriptor) return stubs[descriptor.stubKey];
       return id === "virtual:original-class-name" ? `\0${id}` : undefined;
     },
     load(id) {
@@ -153,23 +167,10 @@ async function invokeInRenderer(options: {
       ssr: { noExternal: ["@platejs/math"] },
       resolve: {
         alias: [
-          { find: "@/core/service/Settings", replacement: stubs.settings },
-          { find: /\/core\/service\/Settings(?:\.tsx)?$/, replacement: stubs.settings },
-          { find: "@/core/fileSystemProvider/FileSystemProviderFile", replacement: stubs.fileSystemProvider },
-          {
-            find: /\/core\/fileSystemProvider\/FileSystemProviderFile(?:\.tsx)?$/,
-            replacement: stubs.fileSystemProvider,
-          },
-          { find: "@/core/service/feedbackService/SoundService", replacement: stubs.soundService },
-          { find: "@tauri-apps/plugin-http", replacement: stubs.http },
-          {
-            find: "@/core/service/dataManageService/aiEngine/ModelImageEncoder",
-            replacement: stubs.modelImageEncoder,
-          },
-          {
-            find: /\/core\/service\/feedbackService\/SoundService(?:\.tsx)?$/,
-            replacement: stubs.soundService,
-          },
+          ...runtimeStubDescriptors.map(({ matcher, stubKey }) => ({
+            find: matcher,
+            replacement: stubs[stubKey],
+          })),
           { find: "@", replacement: `${appRoot}/src` },
         ],
       },
@@ -202,24 +203,47 @@ function runOwnedWorker(args: readonly string[], canonicalPath: string, abortSig
       resolve({ status: null, stdout: "", stderr: "" });
       return;
     }
-    const worker = spawn(
-      "/usr/bin/lockf",
-      ["-k", "-s", "-t", "0", `${canonicalPath}.project-graph.lock`, process.execPath, process.argv[1], "--", ...args],
-      {
-        detached: true,
-        env: { ...process.env, PROJECT_GRAPH_CLI_OWNERSHIP_ACQUIRED: "1" },
-        stdio: ["ignore", "pipe", "pipe"],
-      },
-    );
+    let lockFd: number;
+    try {
+      lockFd = openSync(`${canonicalPath}.project-graph.lock`, "a+");
+    } catch (error) {
+      resolve({ status: null, stdout: "", stderr: "", error: error as Error });
+      return;
+    }
+    const lock = spawnSync("/usr/bin/lockf", ["-s", "-t", "0", "3"], {
+      stdio: ["ignore", "ignore", "ignore", lockFd],
+    });
+    if (lock.error || lock.status !== 0) {
+      closeSync(lockFd);
+      resolve({
+        status: lock.status,
+        stdout: "",
+        stderr: "",
+        ...(lock.error ? { error: lock.error } : {}),
+      });
+      return;
+    }
+    const worker = spawn(process.execPath, [process.argv[1], "--", ...args], {
+      env: { ...process.env, PROJECT_GRAPH_CLI_OWNERSHIP_ACQUIRED: "1" },
+      stdio: ["ignore", "pipe", "pipe", lockFd],
+    });
+    closeSync(lockFd);
+    const stdoutStream = worker.stdout;
+    const stderrStream = worker.stderr;
+    if (!stdoutStream || !stderrStream) {
+      worker.kill();
+      resolve({ status: null, stdout: "", stderr: "", error: new Error("CLI worker pipes are unavailable") });
+      return;
+    }
     let stdout = "";
     let stderr = "";
     let error: Error | undefined;
-    worker.stdout.setEncoding("utf8");
-    worker.stderr.setEncoding("utf8");
-    worker.stdout.on("data", (chunk) => {
+    stdoutStream.setEncoding("utf8");
+    stderrStream.setEncoding("utf8");
+    stdoutStream.on("data", (chunk) => {
       stdout += chunk;
     });
-    worker.stderr.on("data", (chunk) => {
+    stderrStream.on("data", (chunk) => {
       stderr += chunk;
     });
     worker.once("error", (workerError) => {
@@ -227,12 +251,10 @@ function runOwnedWorker(args: readonly string[], canonicalPath: string, abortSig
     });
     const cancelWorker = () => {
       const signal = abortSignal?.reason === "SIGINT" ? "SIGINT" : "SIGTERM";
-      if (worker.pid) {
-        try {
-          process.kill(-worker.pid, signal);
-        } catch (workerError) {
-          if ((workerError as NodeJS.ErrnoException).code !== "ESRCH") error = workerError as Error;
-        }
+      try {
+        worker.kill(signal);
+      } catch (workerError) {
+        if ((workerError as NodeJS.ErrnoException).code !== "ESRCH") error = workerError as Error;
       }
     };
     abortSignal?.addEventListener("abort", cancelWorker, { once: true });
@@ -378,25 +400,33 @@ export async function runPathRoutedInvocation(options: {
   abortSignal?: AbortSignal;
 }): Promise<RuntimeResult> {
   if (options.abortSignal?.aborted) return cancelledResult();
-  const definition = getBuiltInToolDefinition(options.toolName);
-  if (!definition) {
+  let prepared;
+  try {
+    prepared = prepareBuiltInToolInvocation(
+      options.toolName,
+      options.input,
+      (capabilities) =>
+        canClosedProjectProvideCapabilities(capabilities) || canOpenProjectProvideCapabilities(capabilities),
+    );
+  } catch {
     return {
       ok: false,
       error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
     };
   }
-  const requiresOpenProject = classifyBuiltInToolProjectContext(definition) !== "closed-capable";
+  const requiresOpenProject = !canClosedProjectProvideCapabilities(prepared.definition.capabilities);
+
+  if (process.env.PROJECT_GRAPH_CLI_OWNERSHIP_ACQUIRED === "1" && requiresOpenProject) {
+    return {
+      ok: false,
+      error: { code: "PROJECT_MUST_BE_OPEN", message: "This tool requires a matching Open Project." },
+    };
+  }
 
   const projectPathResult = canonicalizeProjectPath(options.projectPath);
   if (!projectPathResult.ok) return projectPathResult;
 
   if (process.env.PROJECT_GRAPH_CLI_OWNERSHIP_ACQUIRED === "1") {
-    if (requiresOpenProject) {
-      return {
-        ok: false,
-        error: { code: "PROJECT_MUST_BE_OPEN", message: "This tool requires a matching Open Project." },
-      };
-    }
     return invokeInRenderer({ ...options, canonicalPath: projectPathResult.canonicalPath });
   }
 

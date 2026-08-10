@@ -1,12 +1,10 @@
 import type { Project } from "@/core/Project";
-import {
-  AIObjectReferenceError,
-  AIObjectReferenceRegistry,
-} from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
+import { AIObjectReferenceRegistry } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
 import { encode } from "@toon-format/toon";
 import { tool, type ToolSet } from "ai";
 import {
   builtInToolCatalog,
+  classifyBuiltInToolException,
   createLiveProjectBuiltInToolRuntimeHost,
   invokeBuiltInTool,
   type BuiltInToolExecutionContext,
@@ -27,10 +25,11 @@ export function createBuiltInToolAgentTools(project: Project, references: AIObje
             });
             return result ? encode(result) : "ok";
           } catch (error) {
-            if (error instanceof AIObjectReferenceError) {
+            const classified = classifyBuiltInToolException(error);
+            if (classified) {
               return encode({
                 success: false,
-                error: { code: error.code, ref: error.ref, message: error.message },
+                error: classified,
               });
             }
             throw error;

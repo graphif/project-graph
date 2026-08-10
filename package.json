@@ -19,6 +19,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "benchmark:cli:cold-start": "pnpm --filter @graphif/project-graph exec tsx ./src/cli/ProjectGraphCliBenchmark.ts",
+    "test:cli:desktop": "pnpm --filter @graphif/project-graph exec tsx ./src/cli/ProjectGraphCliDesktopAcceptance.ts",
     "format": "prettier --write .",
     "test": "vitest",
     "tauri": "pnpm --filter @graphif/project-graph tauri",

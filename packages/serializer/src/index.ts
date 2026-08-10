@@ -70,7 +70,7 @@ export function serialize(originalObj: any): any {
     } else if (typeof obj === "object") {
       const className = getOriginalNameOf(obj.constructor);
       if (!className) {
-        throw TypeError("[Serializer] Cannot find class name of", obj);
+        throw TypeError("[Serializer] Cannot determine serialized type for", obj);
       }
       if (className === "Object") {
         return obj;

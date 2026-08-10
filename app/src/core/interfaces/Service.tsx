@@ -9,7 +9,7 @@ export interface Service {
 export interface FileSystemProvider {
   read(uri: URI): Promise<Uint8Array>;
   readDir(uri: URI): Promise<DirEntry[]>;
-  write(uri: URI, content: Uint8Array, options?: { abortSignal?: AbortSignal }): Promise<void>;
+  write(uri: URI, content: Uint8Array): Promise<void>;
   remove(uri: URI): Promise<void>;
   exists(uri: URI): Promise<boolean>;
   mkdir(uri: URI): Promise<void>;

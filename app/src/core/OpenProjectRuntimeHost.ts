@@ -5,6 +5,8 @@ import {
   createLiveProjectBuiltInToolRuntimeHost,
   invokeBuiltInTool,
 } from "@/core/service/dataManageService/aiEngine/BuiltInToolRegistry";
+import { classifyBuiltInToolRuntimeError } from "@/core/service/dataManageService/aiEngine/BuiltInToolRuntimeError";
+import type { AIObjectReferenceErrorCode } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
@@ -28,9 +30,10 @@ type RuntimeResponse =
           | "TOOL_EXECUTION_FAILED"
           | "PROJECT_REFERENCE_SAVE_FAILED"
           | "RUNTIME_CLEANUP_FAILED"
-          | "CANCELLED";
+          | "CANCELLED"
+          | AIObjectReferenceErrorCode;
         message: string;
-        details?: { executionError: { code: string; message: string; details?: unknown } };
+        details?: { ref: string } | { executionError: { code: string; message: string; details?: unknown } };
       };
     };
 
@@ -60,7 +63,11 @@ export class OpenProjectRuntimeHost {
     if (abortSignal?.aborted) abort();
     else abortSignal?.addEventListener("abort", abort, { once: true });
     this.activeAbortControllers.add(abortController);
-    const invocation = this.invocationQueue.then(() => this.invokeLiveProject(toolName, input, abortController.signal));
+    const invocation = this.invocationQueue.then(() =>
+      abortController.signal.aborted
+        ? cancelledResponse()
+        : this.invokeLiveProject(toolName, input, abortController.signal),
+    );
     this.invocationQueue = invocation.then(() => undefined);
     this.activeInvocations.add(invocation);
     void invocation.finally(() => {
@@ -85,21 +92,26 @@ export class OpenProjectRuntimeHost {
     let unsubscribe: (() => void) | undefined;
     let response: RuntimeResponse;
     try {
+      if (abortSignal.aborted) return cancelledResponse();
       const references = await this.project.aiEngine.prepareProjectReferences(this.project);
+      if (abortSignal.aborted) return cancelledResponse();
       const host = createLiveProjectBuiltInToolRuntimeHost(this.project, references);
       unsubscribe = references.subscribe(() => {
         this.referencesNeedSave = true;
       });
       try {
         const value = await invokeBuiltInTool(toolName, input, host, { abortSignal });
-        response = abortSignal.aborted ? cancelledResponse() : { ok: true, value };
-      } catch {
+        response = abortSignal.aborted ? cancelledResponse() : { ok: true, value: value === undefined ? null : value };
+      } catch (error) {
+        const referenceError = classifyBuiltInToolRuntimeError(error);
         response = abortSignal.aborted
           ? cancelledResponse()
-          : {
-              ok: false,
-              error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
-            };
+          : referenceError
+            ? { ok: false, error: referenceError }
+            : {
+                ok: false,
+                error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
+              };
       }
       const after = references.exportSnapshot();
       if (this.referencesNeedSave) {
@@ -116,13 +128,16 @@ export class OpenProjectRuntimeHost {
           };
         }
       }
-    } catch {
+    } catch (error) {
+      const referenceError = classifyBuiltInToolRuntimeError(error);
       response = abortSignal.aborted
         ? cancelledResponse()
-        : {
-            ok: false,
-            error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
-          };
+        : referenceError
+          ? { ok: false, error: referenceError }
+          : {
+              ok: false,
+              error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
+            };
     }
     return finalizeRuntimeCleanup(response, [() => unsubscribe?.()]);
   }

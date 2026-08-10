@@ -3,6 +3,8 @@ import z from "zod/v4";
 
 const mocks = vi.hoisted(() => {
   class ReferenceError extends Error {
+    readonly name = "AIObjectReferenceError";
+
     constructor(
       readonly code: string,
       readonly ref: string,
@@ -63,6 +65,7 @@ function createRuntimeHost() {
     project,
     references,
     host: {
+      canProvideCapabilities: vi.fn(() => true),
       acquireCapabilities: vi.fn(async (capabilities: string[], context: { abortSignal?: AbortSignal }) =>
         Object.fromEntries(
           capabilities.map((capability) => [
@@ -123,6 +126,47 @@ describe("Built-in Tool consumer adapters", () => {
 
     expect(host.acquireCapabilities).not.toHaveBeenCalled();
     expect(mocks.executorModuleLoaded).toBe(false);
+  });
+
+  it("rejects unavailable capabilities before acquiring them or loading an executor", async () => {
+    const { host } = createRuntimeHost();
+    host.canProvideCapabilities.mockReturnValue(false);
+
+    await expect(invokeBuiltInTool("get_all_nodes", {}, host as never)).rejects.toThrow(
+      "Runtime host cannot provide required capabilities",
+    );
+
+    expect(host.canProvideCapabilities).toHaveBeenCalledWith(builtInToolCatalog[0].capabilities);
+    expect(host.acquireCapabilities).not.toHaveBeenCalled();
+    expect(mocks.loaderCalls).toEqual([]);
+  });
+
+  it("does not acquire capabilities or load an executor after cancellation", async () => {
+    const { host } = createRuntimeHost();
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(
+      invokeBuiltInTool("search_and_add_image_node", { query: "diagram" }, host as never, {
+        abortSignal: controller.signal,
+      }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+
+    expect(host.acquireCapabilities).not.toHaveBeenCalled();
+    expect(mocks.loaderCalls).toEqual([]);
+  });
+
+  it("does not enter the executor when cancellation wins after lazy loading", async () => {
+    const { host } = createRuntimeHost();
+    const controller = new AbortController();
+    Object.assign(host, { beforeExecutorInvoke: () => controller.abort() });
+
+    await expect(
+      invokeBuiltInTool("get_all_nodes", {}, host as never, { abortSignal: controller.signal }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+
+    expect(mocks.loaderCalls).toEqual(["get_all_nodes"]);
+    expect(mocks.executorCalls).toEqual([]);
   });
 
   it("acquires only the selected tool capabilities and preserves its raw result", async () => {

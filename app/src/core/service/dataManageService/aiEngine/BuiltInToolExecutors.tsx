@@ -840,6 +840,9 @@ addExecutor("recognize_image", () => async (project, { ref, prompt }, references
 Object.freeze(builtInToolExecutorLoaders);
 
 async function recognizeImage(dataUrl: string, prompt: string): Promise<string> {
+  const { getCliDesktopAcceptanceRecognition } = await import("./CliDesktopAcceptanceAdapter");
+  const acceptanceRecognition = getCliDesktopAcceptanceRecognition();
+  if (acceptanceRecognition) return acceptanceRecognition;
   const [{ Settings }, { createOpenAICompatible }, { fetch }, { generateText }] = await Promise.all([
     import("@/core/service/Settings"),
     import("@ai-sdk/openai-compatible"),

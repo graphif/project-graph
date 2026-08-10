@@ -3,7 +3,14 @@ import {
   getBuiltInToolCliEntries,
   getBuiltInToolCliEntry,
 } from "../core/service/dataManageService/aiEngine/BuiltInToolCliAdapter";
-import { getBuiltInToolDefinition } from "../core/service/dataManageService/aiEngine/BuiltInToolRegistry";
+import {
+  getBuiltInToolDefinition,
+  prepareBuiltInToolInvocation,
+} from "../core/service/dataManageService/aiEngine/BuiltInToolRegistry";
+import {
+  canClosedProjectProvideCapabilities,
+  canOpenProjectProvideCapabilities,
+} from "../core/service/dataManageService/aiEngine/BuiltInToolRuntimeProfiles";
 import type { ProjectGraphCliOperationalError } from "./ClosedProjectInvocation";
 
 const help = `Usage: project-graph <command>
@@ -88,7 +95,14 @@ export async function runProjectGraphCli(
       return 2;
     }
 
-    if (!definition.inputSchema.safeParse(input).success) {
+    try {
+      prepareBuiltInToolInvocation(
+        toolName,
+        input,
+        (capabilities) =>
+          canClosedProjectProvideCapabilities(capabilities) || canOpenProjectProvideCapabilities(capabilities),
+      );
+    } catch {
       writeError({
         code: "TOOL_INPUT_INVALID",
         message: `Tool input does not match the built-in tool schema: ${toolName}`,
@@ -109,7 +123,7 @@ export async function runProjectGraphCli(
       writeError(result.error);
       return result.error.code === "CANCELLED" ? 130 : 1;
     }
-    process.stdout.write(`${JSON.stringify(result.value)}\n`);
+    process.stdout.write(`${JSON.stringify(result.value === undefined ? null : result.value)}\n`);
     return 0;
   }
   writeError({ code: "INVALID_COMMAND", message: "Invalid Project Graph CLI command." });

@@ -1,5 +1,5 @@
 import type { Project } from "@/core/Project";
-import type { AIObjectReferenceRegistry } from "./AIObjectReferenceRegistry";
+import type { AIObjectReferenceErrorCode, AIObjectReferenceRegistry } from "./AIObjectReferenceRegistry";
 import z from "zod/v4";
 
 export type BuiltInToolExecutionContext = {
@@ -59,6 +59,7 @@ export type AcquiredBuiltInToolCapabilities = Readonly<
 >;
 
 export type BuiltInToolRuntimeHost = {
+  canProvideCapabilities(capabilities: readonly BuiltInToolCapability[]): boolean;
   acquireCapabilities(
     capabilities: readonly BuiltInToolCapability[],
     context: BuiltInToolExecutionContext,
@@ -71,6 +72,7 @@ export function createLiveProjectBuiltInToolRuntimeHost(
   references: AIObjectReferenceRegistry,
 ): BuiltInToolRuntimeHost {
   return {
+    canProvideCapabilities: () => true,
     acquireCapabilities: (capabilities, context) =>
       Object.fromEntries(
         capabilities.map((capability) => [
@@ -609,21 +611,76 @@ export function getBuiltInToolDefinition(name: string): BuiltInToolDefinition | 
 
 export type BuiltInToolProjectContext = "closed-capable" | "live-selection" | "live-viewport";
 
+export type PreparedBuiltInToolInvocation = Readonly<{
+  definition: BuiltInToolDefinition;
+  input: unknown;
+}>;
+
+export type ClassifiedBuiltInToolException = Readonly<{
+  code: AIObjectReferenceErrorCode;
+  ref: string;
+  message: string;
+}>;
+
+export class BuiltInToolCapabilityUnavailableError extends Error {
+  readonly name = "BuiltInToolCapabilityUnavailableError";
+
+  constructor(readonly capabilities: readonly BuiltInToolCapability[]) {
+    super("Runtime host cannot provide required capabilities");
+  }
+}
+
+export function classifyBuiltInToolException(error: unknown): ClassifiedBuiltInToolException | undefined {
+  if (!(error instanceof Error) || error.name !== "AIObjectReferenceError") return undefined;
+  const candidate = error as Error & { code?: unknown; ref?: unknown };
+  if (
+    candidate.code !== "invalid_ref_format" &&
+    candidate.code !== "unknown_ref" &&
+    candidate.code !== "stale_ref" &&
+    candidate.code !== "wrong_ref_kind"
+  ) {
+    return undefined;
+  }
+  if (typeof candidate.ref !== "string") return undefined;
+  return { code: candidate.code, ref: candidate.ref, message: candidate.message };
+}
+
 export function classifyBuiltInToolProjectContext(definition: BuiltInToolDefinition): BuiltInToolProjectContext {
   if (definition.capabilities.includes("selection")) return "live-selection";
   if (definition.capabilities.includes("viewport")) return "live-viewport";
   return "closed-capable";
 }
 
-export async function invokeBuiltInTool(
+export function prepareBuiltInToolInvocation(
   name: string,
   input: unknown,
-  host: BuiltInToolRuntimeHost,
-  context: BuiltInToolExecutionContext = {},
-): Promise<any> {
+  canProvideCapabilities: (capabilities: readonly BuiltInToolCapability[]) => boolean,
+): PreparedBuiltInToolInvocation {
   const definition = getBuiltInToolDefinition(name);
   if (!definition) throw new Error(`Unknown built-in tool: ${name}`);
   const parsedInput = definition.inputSchema.parse(input);
+  if (!canProvideCapabilities(definition.capabilities)) {
+    throw new BuiltInToolCapabilityUnavailableError(definition.capabilities);
+  }
+  return { definition, input: parsedInput };
+}
+
+function throwIfInvocationAborted(abortSignal?: AbortSignal): void {
+  if (!abortSignal?.aborted) return;
+  if (typeof abortSignal.throwIfAborted === "function") abortSignal.throwIfAborted();
+  throw abortSignal.reason ?? new DOMException("The operation was aborted", "AbortError");
+}
+
+export async function executePreparedBuiltInTool(
+  prepared: PreparedBuiltInToolInvocation,
+  host: BuiltInToolRuntimeHost,
+  context: BuiltInToolExecutionContext = {},
+): Promise<any> {
+  const { definition, input } = prepared;
+  throwIfInvocationAborted(context.abortSignal);
+  if (!host.canProvideCapabilities(definition.capabilities)) {
+    throw new BuiltInToolCapabilityUnavailableError(definition.capabilities);
+  }
   const executionContext = definition.capabilities.includes("abort-signal") ? context : {};
   const acquired = await host.acquireCapabilities(definition.capabilities, executionContext);
   for (const capability of Object.keys(acquired) as BuiltInToolCapability[]) {
@@ -641,6 +698,20 @@ export async function invokeBuiltInTool(
     throw new Error("Runtime host did not provide the Project Object Reference capability");
   }
   const executor = await definition.loadExecutor();
+  throwIfInvocationAborted(context.abortSignal);
   if (host.beforeExecutorInvoke) await host.beforeExecutorInvoke();
-  return executor(acquired.project, parsedInput, acquired.references as AIObjectReferenceRegistry, executionContext);
+  throwIfInvocationAborted(context.abortSignal);
+  return executor(acquired.project, input, acquired.references as AIObjectReferenceRegistry, executionContext);
+}
+
+export async function invokeBuiltInTool(
+  name: string,
+  input: unknown,
+  host: BuiltInToolRuntimeHost,
+  context: BuiltInToolExecutionContext = {},
+): Promise<any> {
+  const prepared = prepareBuiltInToolInvocation(name, input, (capabilities) =>
+    host.canProvideCapabilities(capabilities),
+  );
+  return executePreparedBuiltInTool(prepared, host, context);
 }
