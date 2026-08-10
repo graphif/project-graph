@@ -727,7 +727,7 @@ describe("Project Graph CLI process contract", () => {
     expect(JSON.parse(tree.stdout)).toEqual({ success: true, nodeCount: 1 });
   }, 45_000);
 
-  it("preserves recognize_image dependency failure as its normal external-effect result", async () => {
+  it("preserves recognize_image dependency failure as its normal result", async () => {
     const projectPath = await createProjectFixture("2.7.0", [
       {
         _: "ImageNode",
@@ -1114,7 +1114,7 @@ describe("Project Graph CLI process contract", () => {
     );
   }, 20_000);
 
-  it("saves a mutating tool's normal semantic failure without reinterpreting its result", async () => {
+  it("does not save a normal semantic failure when the Project remains unchanged", async () => {
     const projectPath = await createProjectFixture("2.7.0", createMutationStage());
     expect(runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}")).toMatchObject({
       status: 0,
@@ -1142,7 +1142,7 @@ describe("Project Graph CLI process contract", () => {
         error: "连线创建失败，未知原因",
       },
     ]);
-    expect(readFileSync(projectPath)).not.toEqual(beforeMutation);
+    expect(readFileSync(projectPath)).toEqual(beforeMutation);
   }, 15_000);
 
   it("persists a mutating tool's partial result exactly as returned", async () => {

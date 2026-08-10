@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { mkdir, open, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import { Project } from "@/core/Project";
+import { Project, ProjectState } from "@/core/Project";
 import { FileSystemProviderFile, writeClosedProjectFileAtomically } from "./ClosedProjectFileSystemProvider";
 import { ClosedProjectEffects } from "./ClosedProjectEffects";
 import { finalizeRuntimeCleanup, RuntimeCleanupError } from "@/core/RuntimeCleanup";
@@ -242,6 +242,7 @@ function createClosedProject(
   project.stage = deserialize(parsed.serializedStageObjects, project);
   project.loadService(StageManager);
   project.stageManager.updateReferences();
+  project.projectState = ProjectState.Saved;
   return {
     project,
     async dispose() {
@@ -384,9 +385,8 @@ async function executeClosedProjectTool(
     return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
   }
 
-  const definition = prepared.definition;
   let projectSaved = false;
-  if (definition.effect.project === "mutate") {
+  if (project.projectState === ProjectState.Unsaved) {
     try {
       await project.save({ includeThumbnail: false });
       projectSaved = true;

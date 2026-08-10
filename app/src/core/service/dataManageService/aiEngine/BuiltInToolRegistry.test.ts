@@ -62,7 +62,6 @@ describe("Built-in Tool Registry catalog", () => {
 
     for (const definition of builtInToolCatalog) {
       expect(Object.isFrozen(definition)).toBe(true);
-      expect(Object.isFrozen(definition.effect)).toBe(true);
       expect(Object.isFrozen(definition.capabilities)).toBe(true);
       expect(Object.isFrozen(definition.projectReferences)).toBe(true);
       expectDeepFrozen(definition.inputSchema);
@@ -71,12 +70,6 @@ describe("Built-in Tool Registry catalog", () => {
       expect(definition.description.length).toBeGreaterThan(0);
       expect(definition.inputSchema).toBeDefined();
       expect(definition.output).toEqual({ contract: "existing-handler-result" });
-      expect(definition.effect).toEqual({
-        project: expect.stringMatching(/^(read|mutate)$/),
-        selection: expect.stringMatching(/^(none|read|mutate)$/),
-        external: expect.stringMatching(/^(none|network|model)$/),
-      });
-      expect(definition.risk).toMatch(/^(none|project-mutation|destructive|external-communication)$/);
       expect(definition.capabilities.length).toBeGreaterThan(0);
       expect(definition.projectReferences).toEqual({
         reads: expect.any(Boolean),
@@ -89,7 +82,7 @@ describe("Built-in Tool Registry catalog", () => {
     }
   });
 
-  it("declares the established live-runtime, destructive, and cancellation boundaries", () => {
+  it("declares the established live-runtime and cancellation boundaries", () => {
     expect(
       builtInToolCatalog
         .filter(({ capabilities }) => capabilities.includes("selection") || capabilities.includes("viewport"))
@@ -105,12 +98,6 @@ describe("Built-in Tool Registry catalog", () => {
       "sort_selected_nodes_by_y",
       "sort_selected_nodes_by_x",
       "search_and_add_image_node",
-    ]);
-    expect(builtInToolCatalog.filter(({ risk }) => risk === "destructive").map(({ name }) => name)).toEqual([
-      "delete_node",
-      "delete_nodes",
-      "delete_selected_nodes",
-      "delete_all_nodes",
     ]);
     expect(
       builtInToolCatalog.filter(({ cancellation }) => cancellation === "cooperative").map(({ name }) => name),
@@ -176,11 +163,10 @@ describe("Built-in Tool Registry catalog", () => {
     );
   });
 
-  it("declares the closed external-effect dependencies on recognize_image", () => {
+  it("declares the closed external dependencies on recognize_image", () => {
     const definition = builtInToolCatalog.find(({ name }) => name === "recognize_image");
 
     expect(definition).toMatchObject({
-      effect: { project: "read", selection: "none", external: "model" },
       capabilities: expect.arrayContaining([
         "project",
         "references",
