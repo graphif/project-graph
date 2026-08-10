@@ -7,7 +7,7 @@ vi.mock("./BuiltInToolExecutors", () => {
   return { loadBuiltInToolExecutor: () => undefined };
 });
 
-import { builtInToolCatalog } from "./BuiltInToolRegistry";
+import { builtInToolCatalog, classifyBuiltInToolProjectContext } from "./BuiltInToolRegistry";
 
 const expectedToolNames = [
   "get_all_nodes",
@@ -115,5 +115,82 @@ describe("Built-in Tool Registry catalog", () => {
     expect(
       builtInToolCatalog.filter(({ cancellation }) => cancellation === "cooperative").map(({ name }) => name),
     ).toEqual(["search_and_add_image_node"]);
+  });
+
+  it("classifies the complete catalog into 19 closed, 6 live-selection, and 4 live-viewport tools", () => {
+    const namesFor = (projectContext: ReturnType<typeof classifyBuiltInToolProjectContext>) =>
+      builtInToolCatalog
+        .filter((definition) => classifyBuiltInToolProjectContext(definition) === projectContext)
+        .map(({ name }) => name);
+
+    expect(namesFor("closed-capable")).toEqual([
+      "get_all_nodes",
+      "delete_node",
+      "delete_nodes",
+      "delete_all_nodes",
+      "edit_text_node",
+      "edit_image_node",
+      "auto_layout_dag",
+      "expand_node_tree_from_node",
+      "search_text_nodes_by_regex",
+      "get_children",
+      "get_parents",
+      "batch_change_color",
+      "get_object_details",
+      "check_connections",
+      "create_edges",
+      "change_edge_text",
+      "breadth_expand_node",
+      "depth_expand_node",
+      "recognize_image",
+    ]);
+    expect(namesFor("live-selection")).toEqual([
+      "delete_selected_nodes",
+      "select_objects",
+      "get_selected_nodes",
+      "get_selected_refs",
+      "sort_selected_nodes_by_y",
+      "sort_selected_nodes_by_x",
+    ]);
+    expect(namesFor("live-viewport")).toEqual([
+      "create_text_node",
+      "generate_node_tree_by_text",
+      "get_nodes_in_viewport",
+      "search_and_add_image_node",
+    ]);
+  });
+
+  it("routes a Registry-only fixture from its declared capabilities", () => {
+    const fixture = {
+      ...builtInToolCatalog[0],
+      name: "fixture_tool",
+      capabilities: ["project", "references"] as const,
+    };
+
+    expect(classifyBuiltInToolProjectContext(fixture)).toBe("closed-capable");
+    expect(
+      classifyBuiltInToolProjectContext({ ...fixture, capabilities: [...fixture.capabilities, "selection"] }),
+    ).toBe("live-selection");
+    expect(classifyBuiltInToolProjectContext({ ...fixture, capabilities: [...fixture.capabilities, "viewport"] })).toBe(
+      "live-viewport",
+    );
+  });
+
+  it("declares the closed external-effect dependencies on recognize_image", () => {
+    const definition = builtInToolCatalog.find(({ name }) => name === "recognize_image");
+
+    expect(definition).toMatchObject({
+      effect: { project: "read", selection: "none", external: "model" },
+      capabilities: expect.arrayContaining([
+        "project",
+        "references",
+        "attachments",
+        "dom",
+        "image",
+        "settings",
+        "network",
+        "model",
+      ]),
+    });
   });
 });

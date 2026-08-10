@@ -52,19 +52,25 @@ export class OpenProjectRuntimeHost {
   }
 
   private async invokeLiveProject(toolName: string, input: unknown): Promise<RuntimeResponse> {
-    if (toolName !== "get_all_nodes") {
-      return {
-        ok: false,
-        error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
-      };
-    }
     try {
       const references = await this.project.aiEngine.prepareProjectReferences(this.project);
-      const before = references.exportSnapshot();
       const host = createLiveProjectBuiltInToolRuntimeHost(this.project, references);
-      const value = await invokeBuiltInTool(toolName, input, host);
+      const unsubscribe = references.subscribe(() => {
+        this.referencesNeedSave = true;
+      });
+      let response: RuntimeResponse;
+      try {
+        const value = await invokeBuiltInTool(toolName, input, host);
+        response = { ok: true, value };
+      } catch {
+        response = {
+          ok: false,
+          error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
+        };
+      } finally {
+        unsubscribe();
+      }
       const after = references.exportSnapshot();
-      if (after.entries.length !== before.entries.length) this.referencesNeedSave = true;
       if (this.referencesNeedSave) {
         try {
           await AIProjectReferenceStore.save(this.project.aiEngine.getProjectReferenceStoreUri(this.project), after);
@@ -79,7 +85,7 @@ export class OpenProjectRuntimeHost {
           };
         }
       }
-      return { ok: true, value };
+      return response;
     } catch {
       return {
         ok: false,

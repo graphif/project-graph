@@ -1,4 +1,9 @@
 import { Dialog } from "@/components/ui/dialog";
+import {
+  createProjectToolSettingSchemas,
+  DEFAULT_FONT_FAMILY,
+  MAC_DEFAULT_FONT_FAMILY,
+} from "@/core/service/ProjectToolSettingsSchema";
 import { DEFAULT_SUB_WINDOW_OPEN_MODES, subWindowOpenModesSchema } from "@/core/subWindowOpenModes";
 import { isMac } from "@/utils/platform";
 import { LazyStore } from "@tauri-apps/plugin-store";
@@ -33,6 +38,10 @@ function mergeGlobalMenuConfig(current: GlobalMenuNode[], defaults: GlobalMenuNo
   }
   return merged;
 }
+
+const projectToolSettingSchemas = createProjectToolSettingSchemas(
+  isMac ? MAC_DEFAULT_FONT_FAMILY : DEFAULT_FONT_FAMILY,
+);
 
 export const settingsSchema = z.object({
   language: z
@@ -73,13 +82,13 @@ export const settingsSchema = z.object({
   entityDetailsFontSize: z.number().int().min(18).max(36).default(18),
   entityDetailsLinesLimit: z.number().int().min(1).max(200).default(4),
   entityDetailsWidthLimit: z.number().int().min(200).max(2000).default(200),
-  showDebug: z.boolean().default(false),
-  protectingPrivacy: z.boolean().default(false),
+  showDebug: projectToolSettingSchemas.showDebug,
+  protectingPrivacy: projectToolSettingSchemas.protectingPrivacy,
   protectingPrivacyMode: z.union([z.literal("secretWord"), z.literal("caesar")]).default("secretWord"),
   windowCollapsingWidth: z.number().int().min(50).max(2000).default(300),
   windowCollapsingHeight: z.number().int().min(25).max(2000).default(300),
   limitCameraInCycleSpace: z.boolean().default(false),
-  historySize: z.number().int().min(1).max(5000).default(150),
+  historySize: projectToolSettingSchemas.historySize,
   autoRefreshStageByMouseAction: z.boolean().default(true),
   isPauseRenderWhenManipulateOvertime: z.boolean().default(false),
   pauseRenderWhenTabUnfocused: z.boolean().default(true),
@@ -95,10 +104,10 @@ export const settingsSchema = z.object({
   antialiasing: z
     .union([z.literal("disabled"), z.literal("low"), z.literal("medium"), z.literal("high")])
     .default("low"),
-  textIntegerLocationAndSizeRender: z.boolean().default(false),
+  textIntegerLocationAndSizeRender: projectToolSettingSchemas.textIntegerLocationAndSizeRender,
   compatibilityMode: z.boolean().default(false),
-  isEnableEntityCollision: z.boolean().default(false),
-  isEnableSectionCollision: z.boolean().default(false),
+  isEnableEntityCollision: projectToolSettingSchemas.isEnableEntityCollision,
+  isEnableSectionCollision: projectToolSettingSchemas.isEnableSectionCollision,
   autoNamerTemplate: z.string().default("..."),
   autoNamerSectionTemplate: z.string().default("Section_{{i}}"),
   autoNamerDetailsTemplate: z.string().default(""),
@@ -116,9 +125,9 @@ export const settingsSchema = z.object({
     .default("default"),
   enableDragEdgeRotateStructure: z.boolean().default(true),
   enableCtrlWheelRotateStructure: z.boolean().default(false),
-  aiApiBaseUrl: z.string().default("https://generativelanguage.googleapis.com/v1beta/openai/"),
-  aiApiKey: z.string().default(""),
-  aiModel: z.string().default("gemini-2.5-flash"),
+  aiApiBaseUrl: projectToolSettingSchemas.aiApiBaseUrl,
+  aiApiKey: projectToolSettingSchemas.aiApiKey,
+  aiModel: projectToolSettingSchemas.aiModel,
   aiContextWindow: z.number().int().nonnegative().default(0),
   aiShowTokenCount: z.boolean().default(false),
   enableOCR: z.boolean().default(true),
@@ -169,8 +178,8 @@ export const settingsSchema = z.object({
   allowGlobalHotKeys: z.boolean().default(true),
   cameraFollowsSelectedNodeOnArrowKeys: z.boolean().default(false),
   arrowKeySelectOnlyInViewport: z.boolean().default(false),
-  moveAmplitude: z.number().min(0).max(10).default(2),
-  moveFriction: z.number().min(0).max(1).default(0.1),
+  moveAmplitude: projectToolSettingSchemas.moveAmplitude,
+  moveFriction: projectToolSettingSchemas.moveFriction,
   scaleExponent: z.number().min(0).max(1).default(0.11),
   cameraZoomInLimitBehavior: z.union([z.literal("macro"), z.literal("micro"), z.literal("reset")]).default("micro"),
   cameraZoomOutLimitBehavior: z.union([z.literal("macro"), z.literal("micro"), z.literal("reset")]).default("macro"),
@@ -182,16 +191,8 @@ export const settingsSchema = z.object({
   rectangleSelectWhenLeft: z.union([z.literal("intersect"), z.literal("contain")]).default("contain"),
   enableRightClickConnect: z.boolean().default(true),
   rightClickConnectEdgeType: z.union([z.literal("normal"), z.literal("arc")]).default("arc"),
-  defaultEdgeLineType: z.union([z.literal("solid"), z.literal("dashed"), z.literal("double")]).default("solid"),
-  defaultEdgeArrowType: z
-    .union([
-      z.literal("default"),
-      z.literal("hollow-triangle"),
-      z.literal("filled-triangle"),
-      z.literal("hollow-diamond"),
-      z.literal("filled-diamond"),
-    ])
-    .default("default"),
+  defaultEdgeLineType: projectToolSettingSchemas.defaultEdgeLineType,
+  defaultEdgeArrowType: projectToolSettingSchemas.defaultEdgeArrowType,
   textNodeStartEditMode: z
     .union([
       z.literal("enter"),
@@ -217,7 +218,7 @@ export const settingsSchema = z.object({
     .default("autoByLength"),
   clipboardPasteMode: z.union([z.literal("auto"), z.literal("webview"), z.literal("tauri")]).default("auto"),
   resizePastedImages: z.boolean().default(true),
-  maxPastedImageSize: z.number().int().min(256).max(8192).default(1920),
+  maxPastedImageSize: projectToolSettingSchemas.maxPastedImageSize,
   compressImageToWebp: z.boolean().default(true),
   webpQuality: z.number().min(0.01).max(1).default(0.85),
   compressImageToBlackAndWhite: z.boolean().default(false),
@@ -240,7 +241,7 @@ export const settingsSchema = z.object({
   showGrid: z.boolean().default(true),
   maxFps: z.number().default(60),
   maxFpsUnfocused: z.number().default(30),
-  effectsPerferences: z.record(z.string(), z.boolean()).default({}),
+  effectsPerferences: projectToolSettingSchemas.effectsPerferences,
   autoFillNodeColor: z.tuple([z.number(), z.number(), z.number(), z.number()]).default([0, 0, 0, 0]),
   autoFillNodeColorEnable: z.boolean().default(true),
   autoFillPenStrokeColor: z.tuple([z.number(), z.number(), z.number(), z.number()]).default([0, 0, 0, 0]),
@@ -279,7 +280,7 @@ export const settingsSchema = z.object({
   lightTheme: z.string().default("morandi"),
   darkTheme: z.string().default("dark"),
   telemetry: z.boolean().default(true),
-  historyManagerMode: z.union([z.literal("memoryEfficient"), z.literal("timeEfficient")]).default("timeEfficient"),
+  historyManagerMode: projectToolSettingSchemas.historyManagerMode,
   isStealthModeEnabled: z.boolean().default(false),
   stealthModeScopeRadius: z.number().int().min(10).max(500).default(150),
   stealthModeReverseMask: z.boolean().default(false),
@@ -584,13 +585,7 @@ export const settingsSchema = z.object({
     ] as any),
   disabledExtensions: z.array(z.string()).default([]),
   extensionSettings: z.record(z.string(), z.record(z.string(), z.unknown())).default({}),
-  defaultFontFamily: z
-    .string()
-    .default(
-      isMac
-        ? "PingFang SC, PingFang TC, -apple-system"
-        : "-apple-system, BlinkMacSystemFont, MiSans, system-ui, sans-serif",
-    ),
+  defaultFontFamily: projectToolSettingSchemas.defaultFontFamily,
   hideCursorInPenMode: z.boolean().default(false),
   penPressureCurve: z
     .union([

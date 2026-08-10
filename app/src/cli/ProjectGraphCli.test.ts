@@ -93,7 +93,11 @@ function runCli(...args: string[]) {
   return spawnSync("pnpm", ["cli", "--", ...args], {
     cwd: repositoryRoot,
     encoding: "utf8",
-    env: { ...process.env, NO_COLOR: "1", PROJECT_GRAPH_REFERENCE_STORE_PATH: getReferenceStorePath() },
+    env: {
+      ...process.env,
+      NO_COLOR: "1",
+      PROJECT_GRAPH_REFERENCE_STORE_PATH: getReferenceStorePath(),
+    },
   });
 }
 
@@ -119,11 +123,46 @@ function runCliAsync(...args: string[]): Promise<{ status: number | null; stdout
   });
 }
 
+const openProjectToolMatrix: ReadonlyArray<{
+  category: "project" | "selection" | "viewport";
+  name: string;
+  input: unknown;
+}> = [
+  { category: "project", name: "get_all_nodes", input: {} },
+  { category: "project", name: "delete_node", input: { ref: "n1" } },
+  { category: "project", name: "delete_nodes", input: { refs: [] } },
+  { category: "selection", name: "delete_selected_nodes", input: {} },
+  { category: "project", name: "delete_all_nodes", input: {} },
+  { category: "project", name: "edit_text_node", input: { ref: "n1", data: {} } },
+  { category: "project", name: "edit_image_node", input: { ref: "n1", data: {} } },
+  { category: "project", name: "auto_layout_dag", input: { refs: ["n1", "n2"] } },
+  { category: "viewport", name: "create_text_node", input: { text: "Text" } },
+  { category: "viewport", name: "generate_node_tree_by_text", input: { text: "Root" } },
+  { category: "project", name: "expand_node_tree_from_node", input: { ref: "n1", text: "Child" } },
+  { category: "project", name: "search_text_nodes_by_regex", input: { regex: "Text" } },
+  { category: "project", name: "get_children", input: { ref: "n1" } },
+  { category: "project", name: "get_parents", input: { ref: "n1" } },
+  { category: "project", name: "batch_change_color", input: { refs: [], color: [0, 0, 0, 0] } },
+  { category: "project", name: "get_object_details", input: { refs: [] } },
+  { category: "project", name: "check_connections", input: { pairs: [] } },
+  { category: "project", name: "create_edges", input: { edges: [] } },
+  { category: "project", name: "change_edge_text", input: { edgeRef: "e1", text: "" } },
+  { category: "selection", name: "select_objects", input: { refs: [] } },
+  { category: "selection", name: "get_selected_nodes", input: {} },
+  { category: "viewport", name: "get_nodes_in_viewport", input: {} },
+  { category: "selection", name: "get_selected_refs", input: {} },
+  { category: "project", name: "breadth_expand_node", input: { ref: "n1", texts: [] } },
+  { category: "project", name: "depth_expand_node", input: { ref: "n1", texts: [] } },
+  { category: "selection", name: "sort_selected_nodes_by_y", input: { current_order: [], desired_order: [] } },
+  { category: "selection", name: "sort_selected_nodes_by_x", input: { current_order: [], desired_order: [] } },
+  { category: "viewport", name: "search_and_add_image_node", input: { query: "Image" } },
+  { category: "project", name: "recognize_image", input: { ref: "n1", prompt: "Describe" } },
+];
+
 function expectCliError(args: string[], expected: Record<string, unknown>, exitCode = 2): void {
   const result = runCli(...args);
-  const error = JSON.parse(result.stderr) as Record<string, unknown>;
-
   expect(result).toMatchObject({ status: exitCode, stdout: "" });
+  const error = JSON.parse(result.stderr) as Record<string, unknown>;
   expect(error).toEqual(expected);
   expect(result.stderr).toBe(`${JSON.stringify(error)}\n`);
 }
@@ -393,17 +432,196 @@ describe("Project Graph CLI process contract", () => {
     });
   });
 
-  it("keeps the Closed Project Runtime Host limited to get_all_nodes", async () => {
+  it("routes another Registry-declared read tool through the Closed Project Runtime Host", async () => {
+    const projectPath = await createProjectFixture("2.7.0", createMutationStage());
+    const before = readFileSync(projectPath);
+
+    const discovered = runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}");
+    expect(discovered).toMatchObject({ status: 0, stderr: "" });
+
+    const result = runCli(
+      "tool",
+      "invoke",
+      "get_object_details",
+      "--project",
+      projectPath,
+      "--input",
+      '{"refs":["n1"]}',
+    );
+
+    expect(result).toMatchObject({ status: 0, stderr: "" });
+    expect(JSON.parse(result.stdout)).toEqual([
+      expect.objectContaining({ ref: "n1", type: "TextNode", text: "Source" }),
+    ]);
+    expect(readFileSync(projectPath)).toEqual(before);
+  }, 15_000);
+
+  it.each([
+    ["delete_selected_nodes", "{}"],
+    ["create_text_node", '{"text":"fixture"}'],
+  ])("requires an Open Project for the live-context tool %s", async (toolName, input) => {
     const projectPath = await createProjectFixture();
     const before = readFileSync(projectPath);
 
     expectCliError(
-      ["tool", "invoke", "get_object_details", "--project", projectPath, "--input", '{"refs":[]}'],
-      { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
+      ["tool", "invoke", toolName, "--project", projectPath, "--input", input],
+      { code: "PROJECT_MUST_BE_OPEN", message: "This tool requires a matching Open Project." },
       1,
     );
     expect(readFileSync(projectPath)).toEqual(before);
   });
+
+  it("composes graph, layout, import, text, connection, deletion, and history services from Registry capabilities", async () => {
+    const projectPath = await createProjectFixture("2.7.0", createMutationStage());
+
+    expect(runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}")).toMatchObject({
+      status: 0,
+      stderr: "",
+    });
+
+    const disconnected = runCli(
+      "tool",
+      "invoke",
+      "check_connections",
+      "--project",
+      projectPath,
+      "--input",
+      '{"pairs":[["n1","n2"]]}',
+    );
+    expect(disconnected).toMatchObject({
+      status: 0,
+      stdout: '[{"fromRef":"n1","toRef":"n2","connected":false}]\n',
+      stderr: "",
+    });
+
+    const edited = runCli(
+      "tool",
+      "invoke",
+      "edit_text_node",
+      "--project",
+      projectPath,
+      "--input",
+      '{"ref":"n1","data":{"text":"Updated source"}}',
+    );
+    expect(edited).toMatchObject({ status: 0, stderr: "" });
+    expect(JSON.parse(edited.stdout)).toMatchObject({ success: true, ref: "n1", text: "Updated source" });
+
+    const breadth = runCli(
+      "tool",
+      "invoke",
+      "breadth_expand_node",
+      "--project",
+      projectPath,
+      "--input",
+      '{"ref":"n1","texts":["Breadth child"]}',
+    );
+    expect(breadth).toMatchObject({ status: 0, stderr: "" });
+    const breadthValue = JSON.parse(breadth.stdout) as { results: Array<{ ref: string; success: boolean }> };
+    expect(breadthValue.results).toEqual([
+      expect.objectContaining({ ref: expect.stringMatching(/^n\d+$/), success: true }),
+    ]);
+
+    const childRef = breadthValue.results[0].ref;
+    const children = runCli(
+      "tool",
+      "invoke",
+      "get_children",
+      "--project",
+      projectPath,
+      "--input",
+      JSON.stringify({ ref: "n1" }),
+    );
+    expect(children).toMatchObject({ status: 0, stderr: "" });
+    expect(JSON.parse(children.stdout)).toContainEqual({ text: "Breadth child", ref: childRef });
+
+    const deleted = runCli(
+      "tool",
+      "invoke",
+      "delete_node",
+      "--project",
+      projectPath,
+      "--input",
+      JSON.stringify({ ref: childRef }),
+    );
+    expect(deleted).toMatchObject({ status: 0, stderr: "" });
+    expect(JSON.parse(deleted.stdout)).toMatchObject({ deletedNodeCount: 1, deletedAssociationCount: 1 });
+
+    const edge = runCli(
+      "tool",
+      "invoke",
+      "create_edges",
+      "--project",
+      projectPath,
+      "--input",
+      '{"edges":[{"sourceRef":"n1","targetRef":"n2"}]}',
+    );
+    expect(edge).toMatchObject({ status: 0, stderr: "" });
+
+    const layout = runCli(
+      "tool",
+      "invoke",
+      "auto_layout_dag",
+      "--project",
+      projectPath,
+      "--input",
+      '{"refs":["n1","n2"]}',
+    );
+    expect(layout).toMatchObject({ status: 0, stderr: "" });
+    expect(JSON.parse(layout.stdout)).toMatchObject({ success: true, movedCount: 2, internalEdgeCount: 1 });
+
+    const tree = runCli(
+      "tool",
+      "invoke",
+      "expand_node_tree_from_node",
+      "--project",
+      projectPath,
+      "--input",
+      '{"ref":"n1","text":"Tree child"}',
+    );
+    expect(tree).toMatchObject({ status: 0, stderr: "" });
+    expect(JSON.parse(tree.stdout)).toEqual({ success: true, nodeCount: 1 });
+  }, 45_000);
+
+  it("preserves recognize_image dependency failure as its normal external-effect result", async () => {
+    const projectPath = await createProjectFixture("2.7.0", [
+      {
+        _: "ImageNode",
+        uuid: "55555555-5555-4555-8555-555555555555",
+        attachmentId: "missing-attachment",
+        scale: 1,
+        isBackground: false,
+        collisionBox: {
+          _: "CollisionBox",
+          shapes: [
+            {
+              _: "Rectangle",
+              location: { _: "Vector", x: 10, y: 20 },
+              size: { _: "Vector", x: 100, y: 50 },
+            },
+          ],
+        },
+      },
+    ]);
+    const before = readFileSync(projectPath);
+    expect(runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}")).toMatchObject({
+      status: 0,
+      stderr: "",
+    });
+
+    const result = runCli(
+      "tool",
+      "invoke",
+      "recognize_image",
+      "--project",
+      projectPath,
+      "--input",
+      '{"ref":"n1","prompt":"Describe this image"}',
+    );
+
+    expect(result).toMatchObject({ status: 0, stderr: "" });
+    expect(JSON.parse(result.stdout)).toEqual({ success: false, error: "图片数据未找到（附件可能已丢失）" });
+    expect(readFileSync(projectPath)).toEqual(before);
+  }, 15_000);
 
   it("rejects newer and implicit legacy formats without rewriting the Project", async () => {
     const newerProjectPath = await createProjectFixture("99.0.0");
@@ -856,6 +1074,73 @@ describe("Project Graph CLI process contract", () => {
       host.close();
     }
   }, 15_000);
+
+  it("routes the complete 19/6/4 built-in tool matrix to the matching Open Project", async () => {
+    const projectPath = await createProjectFixture();
+    const before = readFileSync(projectPath);
+    const host = await createOpenProjectHost(projectPath, { routed: true });
+
+    try {
+      const results = await Promise.all(
+        openProjectToolMatrix.map(({ name, input }) =>
+          runCliAsync("tool", "invoke", name, "--project", projectPath, "--input", JSON.stringify(input)),
+        ),
+      );
+
+      expect(openProjectToolMatrix.filter(({ category }) => category === "project")).toHaveLength(19);
+      expect(openProjectToolMatrix.filter(({ category }) => category === "selection")).toHaveLength(6);
+      expect(openProjectToolMatrix.filter(({ category }) => category === "viewport")).toHaveLength(4);
+      expect(new Set(openProjectToolMatrix.map(({ name }) => name))).toHaveLength(29);
+      expect(results).toEqual(
+        openProjectToolMatrix.map(() => ({ status: 0, stdout: '{"routed":true}\n', stderr: "" })),
+      );
+      expect(host.requests).toEqual(
+        expect.arrayContaining(
+          openProjectToolMatrix.map(({ name, input }) => ({
+            projectPath: realpathSync(projectPath),
+            toolName: name,
+            input,
+          })),
+        ),
+      );
+      expect(host.requests).toHaveLength(29);
+      expect(readFileSync(projectPath)).toEqual(before);
+    } finally {
+      host.close();
+    }
+  }, 60_000);
+
+  it("requires an Open Project before entering any selection or viewport handler", async () => {
+    const projectPath = await createProjectFixture();
+    const before = readFileSync(projectPath);
+    const executorReadyPath = join(dirname(projectPath), "executor-ready.txt");
+    const liveContextTools = openProjectToolMatrix.filter(({ category }) => category !== "project");
+    const previousExecutorReadyPath = process.env.PROJECT_GRAPH_CLI_EXECUTOR_READY_PATH;
+
+    const results = [];
+    process.env.PROJECT_GRAPH_CLI_EXECUTOR_READY_PATH = executorReadyPath;
+    try {
+      for (const { name, input } of liveContextTools) {
+        results.push(
+          await runCliAsync("tool", "invoke", name, "--project", projectPath, "--input", JSON.stringify(input)),
+        );
+      }
+    } finally {
+      if (previousExecutorReadyPath === undefined) delete process.env.PROJECT_GRAPH_CLI_EXECUTOR_READY_PATH;
+      else process.env.PROJECT_GRAPH_CLI_EXECUTOR_READY_PATH = previousExecutorReadyPath;
+    }
+
+    expect(liveContextTools).toHaveLength(10);
+    expect(results).toEqual(
+      liveContextTools.map(() => ({
+        status: 1,
+        stdout: "",
+        stderr: '{"code":"PROJECT_MUST_BE_OPEN","message":"This tool requires a matching Open Project."}\n',
+      })),
+    );
+    expect(existsSync(executorReadyPath)).toBe(false);
+    expect(readFileSync(projectPath)).toEqual(before);
+  }, 45_000);
 
   it("returns a structured error when a connectable Open Project host disconnects without using the closed route", async () => {
     const projectPath = await createProjectFixture();

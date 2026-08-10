@@ -27,6 +27,8 @@ vi.mock("@/core/Tab", () => ({
       Object.assign(this, { [service.id]: instance });
     }
 
+    emit() {}
+
     async dispose() {
       this.services.clear();
     }
@@ -75,7 +77,7 @@ import { AIEngine } from "@/core/service/dataManageService/aiEngine/AIEngine";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { AIProjectReferenceStore } from "@/core/service/dataManageService/aiEngine/AIProjectReferenceStore";
-import { Project } from "@/core/Project";
+import { Project, ProjectState } from "@/core/Project";
 import { activeTabAtom, store, tabsAtom } from "@/state";
 import { Rectangle } from "@graphif/shapes";
 import { Vector } from "@graphif/data-structures";
@@ -96,6 +98,34 @@ class LiveStageManager {
   get(uuid: string) {
     return this.project.stage.find((object) => object.uuid === uuid);
   }
+
+  getEntities() {
+    return this.project.stage.filter((object) => object instanceof ConnectableEntity) as ConnectableEntity[];
+  }
+
+  getAssociations() {
+    return [];
+  }
+
+  getSelectedEntities() {
+    return this.getEntities().filter((object) => object.isSelected);
+  }
+
+  getSelectedAssociations() {
+    return [];
+  }
+
+  getConnectableEntityByUUID(uuid: string) {
+    return this.getEntities().find((object) => object.uuid === uuid);
+  }
+
+  deleteEntities(entities: ConnectableEntity[]) {
+    for (const entity of entities) {
+      const index = this.project.stage.indexOf(entity);
+      if (index !== -1) this.project.stage.splice(index, 1);
+    }
+    this.project.historyManager.recordStep();
+  }
 }
 
 function createLiveProject(canonicalPath = "/projects/graph.prg", restoreReference = true) {
@@ -108,6 +138,16 @@ function createLiveProject(canonicalPath = "/projects/graph.prg", restoreReferen
   Object.defineProperty(project, "canonicalProjectPath", { configurable: true, value: canonicalPath });
   project.loadService(LiveStageManager);
   project.loadService(AIEngine);
+  Object.assign(project, {
+    historyManager: {
+      recordStep: vi.fn(() => {
+        project.projectState = ProjectState.Unsaved;
+      }),
+    },
+    renderer: {
+      getCoverWorldRectangle: () => new Rectangle(new Vector(0, 0), new Vector(500, 500)),
+    },
+  });
   project.stage = [node];
   const references = project.aiEngine.getProjectReferences(project);
   if (restoreReference) {
@@ -157,7 +197,7 @@ function runCli(...args: string[]): Promise<{ status: number | null; stdout: str
 }
 
 async function startDesktopRuntimeBridge(projectPath: string, host: OpenProjectRuntimeHost) {
-  const server = createServer((socket) => {
+  const server = createServer({ allowHalfOpen: true }, (socket) => {
     socket.setEncoding("utf8");
     let request = "";
     socket.on("data", (chunk) => {
@@ -339,7 +379,34 @@ describe("Open Project Runtime Host", () => {
     await registration.dispose();
   });
 
-  it("serves an unsaved real Project to a CLI process without changing desktop state or ownership", async () => {
+  it("persists live references allocated before a handler failure without rolling back the Project", async () => {
+    const fixture = createLiveProject("/projects/partial.prg", false);
+    fixture.project.stage.push({
+      uuid: "33333333-3333-4333-8333-333333333333",
+      collisionBox: {
+        getRectangle() {
+          throw new Error("broken live object");
+        },
+      },
+    } as never);
+    const host = new OpenProjectRuntimeHost(fixture.project);
+
+    const response = await host.invoke("get_all_nodes", {});
+
+    expect(response).toEqual({
+      ok: false,
+      error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
+    });
+    expect(AIProjectReferenceStore.save).toHaveBeenCalledWith("file:///projects/partial.prg", {
+      entries: [{ ref: "n1", uuid: fixture.node.uuid }],
+      nextNodeRef: 2,
+      nextEdgeRef: 1,
+    });
+    expect(fixture.project.save).not.toHaveBeenCalled();
+    await host.dispose();
+  });
+
+  it("serves live mutation, selection, and viewport tools without saving or changing desktop context", async () => {
     const directory = mkdtempSync(join(tmpdir(), "project-graph-desktop-host-"));
     const projectPath = join(directory, "graph.prg");
     const symlinkPath = join(directory, "graph-link.prg");
@@ -348,28 +415,99 @@ describe("Open Project Runtime Host", () => {
     const canonicalPath = realpathSync.native(projectPath);
     const persistedBefore = readFileSync(projectPath);
     const fixture = createLiveProject(canonicalPath, false);
+    fixture.project.projectState = ProjectState.Saved;
     const foregroundProject = new Project(URI.parse("draft:foreground"));
+    Object.assign(foregroundProject, { camera: { location: new Vector(900, 700) } });
     store.set(tabsAtom, [foregroundProject, fixture.project]);
     store.set(activeTabAtom, foregroundProject);
     const focusedElement = document.createElement("input");
     document.body.append(focusedElement);
     focusedElement.focus();
     const tabsBefore = store.get(tabsAtom);
+    const foregroundCameraBefore = foregroundProject.camera.location.clone();
     const runtimeHost = new OpenProjectRuntimeHost(fixture.project);
     const bridge = await startDesktopRuntimeBridge(canonicalPath, runtimeHost);
 
     try {
       const result = await runCli("tool", "invoke", "get_all_nodes", "--project", symlinkPath, "--input", "{}");
+      expect(result).toMatchObject({ status: 0, stderr: "" });
       const value = JSON.parse(result.stdout) as { objects: Array<Record<string, unknown>> };
 
-      expect(result).toMatchObject({ status: 0, stderr: "" });
+      const selection = await runCli(
+        "tool",
+        "invoke",
+        "select_objects",
+        "--project",
+        symlinkPath,
+        "--input",
+        '{"refs":["n1"],"clearOthers":true}',
+      );
+      const selectedRefs = await runCli(
+        "tool",
+        "invoke",
+        "get_selected_refs",
+        "--project",
+        symlinkPath,
+        "--input",
+        "{}",
+      );
+      const viewport = await runCli(
+        "tool",
+        "invoke",
+        "get_nodes_in_viewport",
+        "--project",
+        symlinkPath,
+        "--input",
+        "{}",
+      );
+
+      fixture.node.isSelected = false;
+      fixture.project.projectState = ProjectState.Saved;
+      const partialFailure = await runCli(
+        "tool",
+        "invoke",
+        "select_objects",
+        "--project",
+        symlinkPath,
+        "--input",
+        '{"refs":["n1","n99"]}',
+      );
+      const mutation = await runCli(
+        "tool",
+        "invoke",
+        "delete_node",
+        "--project",
+        symlinkPath,
+        "--input",
+        '{"ref":"n1"}',
+      );
+
       expect(value.objects).toEqual([
         expect.objectContaining({ ref: "n1", type: "ConnectableEntity", position: { x: 10, y: 20 } }),
       ]);
+      expect(selection).toMatchObject({ status: 0, stdout: '{"selectedCount":1}\n', stderr: "" });
+      expect(selectedRefs).toMatchObject({ status: 0, stdout: '{"refs":["n1"]}\n', stderr: "" });
+      expect(JSON.parse(viewport.stdout)).toEqual({
+        nodes: [expect.objectContaining({ ref: "n1", position: { x: 10, y: 20 } })],
+      });
+      expect(partialFailure).toMatchObject({
+        status: 1,
+        stdout: "",
+        stderr: '{"code":"TOOL_EXECUTION_FAILED","message":"Built-in tool execution failed."}\n',
+      });
+      expect(mutation).toMatchObject({
+        status: 0,
+        stdout: '{"deletedNodeCount":1,"deletedAssociationCount":0}\n',
+        stderr: "",
+      });
+      expect(fixture.node.isSelected).toBe(true);
+      expect(fixture.project.stage).toEqual([]);
+      expect(fixture.project.projectState).toBe(ProjectState.Unsaved);
       expect(readFileSync(projectPath)).toEqual(persistedBefore);
       expect(fixture.project.save).not.toHaveBeenCalled();
       expect(store.get(tabsAtom)).toEqual(tabsBefore);
       expect(store.get(activeTabAtom)).toBe(foregroundProject);
+      expect(foregroundProject.camera.location).toEqual(foregroundCameraBefore);
       expect(document.activeElement).toBe(focusedElement);
       expect(
         spawnSync("/usr/bin/lockf", ["-k", "-s", "-t", "0", bridge.ownershipLockPath, "/usr/bin/true"]).status,

@@ -4,6 +4,10 @@ import { createConnection } from "node:net";
 import { fileURLToPath } from "node:url";
 import { JSDOM } from "jsdom";
 import { createServer, type Plugin } from "vite";
+import {
+  classifyBuiltInToolProjectContext,
+  getBuiltInToolDefinition,
+} from "../core/service/dataManageService/aiEngine/BuiltInToolRegistry";
 import type { ClosedProjectInvocationResult, ProjectGraphCliOperationalError } from "./ClosedProjectInvocation";
 
 type RuntimeResult =
@@ -13,7 +17,12 @@ type RuntimeResult =
       error:
         | ProjectGraphCliOperationalError
         | {
-            code: "PROJECT_NOT_FOUND" | "PROJECT_BUSY" | "RUNTIME_CLEANUP_FAILED" | "RUNTIME_HOST_UNAVAILABLE";
+            code:
+              | "PROJECT_NOT_FOUND"
+              | "PROJECT_BUSY"
+              | "PROJECT_MUST_BE_OPEN"
+              | "RUNTIME_CLEANUP_FAILED"
+              | "RUNTIME_HOST_UNAVAILABLE";
             message: string;
           };
     }
@@ -85,7 +94,9 @@ function runtimeCompatibilityPlugin(stubs: {
         return stubs.detailsManager;
       }
       if (id.includes("/core/fileSystemProvider/FileSystemProviderFile")) return stubs.fileSystemProvider;
-      if (id.includes("/core/service/feedbackService/SoundService")) return stubs.soundService;
+      if (id.includes("/core/service/feedbackService/SoundService") || id.endsWith("/feedbackService/SoundService")) {
+        return stubs.soundService;
+      }
       return id === "virtual:original-class-name" ? `\0${id}` : undefined;
     },
     load(id) {
@@ -126,6 +137,7 @@ async function invokeInRenderer(options: {
       root: appRoot,
       logLevel: "silent",
       optimizeDeps: { noDiscovery: true },
+      ssr: { noExternal: ["@platejs/math"] },
       resolve: {
         alias: [
           { find: "@/core/service/Settings", replacement: stubs.settings },
@@ -147,9 +159,12 @@ async function invokeInRenderer(options: {
       plugins: [runtimeCompatibilityPlugin(stubs)],
     });
     const runtime = (await server.ssrLoadModule("/src/cli/ClosedProjectInvocation.ts")) as {
-      invokeClosedProjectTool: (value: typeof options) => Promise<ClosedProjectInvocationResult>;
+      invokeClosedProjectTool: (
+        value: typeof options,
+        loadModule: (id: string) => Promise<Record<string, unknown>>,
+      ) => Promise<ClosedProjectInvocationResult>;
     };
-    result = await runtime.invokeClosedProjectTool(options);
+    result = await runtime.invokeClosedProjectTool(options, (id) => server!.ssrLoadModule(id));
   } catch {
     result = {
       ok: false,
@@ -292,17 +307,25 @@ export async function runPathRoutedInvocation(options: {
   projectPath: string;
   allowUpgrade: boolean;
 }): Promise<RuntimeResult> {
-  if (options.toolName !== "get_all_nodes" && options.toolName !== "create_edges") {
+  const definition = getBuiltInToolDefinition(options.toolName);
+  if (!definition) {
     return {
       ok: false,
       error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
     };
   }
+  const requiresOpenProject = classifyBuiltInToolProjectContext(definition) !== "closed-capable";
 
   const projectPathResult = canonicalizeProjectPath(options.projectPath);
   if (!projectPathResult.ok) return projectPathResult;
 
   if (process.env.PROJECT_GRAPH_CLI_OWNERSHIP_ACQUIRED === "1") {
+    if (requiresOpenProject) {
+      return {
+        ok: false,
+        error: { code: "PROJECT_MUST_BE_OPEN", message: "This tool requires a matching Open Project." },
+      };
+    }
     return invokeInRenderer({ ...options, canonicalPath: projectPathResult.canonicalPath });
   }
 

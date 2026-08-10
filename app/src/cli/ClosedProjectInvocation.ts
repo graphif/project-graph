@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { Project } from "@/core/Project";
 import { FileSystemProviderFile } from "@/core/fileSystemProvider/FileSystemProviderFile";
+import { ClosedProjectEffects } from "./ClosedProjectEffects";
 import { compareProjectVersions, LATEST_PROJECT_VERSION, parseProjectFile } from "@/core/ProjectFile";
 import {
   AIObjectReferenceRegistry,
@@ -17,8 +18,6 @@ import {
 } from "@/core/service/dataManageService/aiEngine/BuiltInToolRegistry";
 // The serializer registers decorated classes when their modules load.
 import "@/core/stage/stageObject/association/LineEdge";
-import { NodeConnector } from "@/core/stage/stageManager/concreteMethods/StageNodeConnector";
-import { HistoryManager } from "@/core/stage/stageManager/StageHistoryManager";
 import { StageManager } from "@/core/stage/stageManager/StageManager";
 import { deserialize } from "@graphif/serializer";
 import { Decoder } from "@msgpack/msgpack";
@@ -54,10 +53,97 @@ const supportedCapabilities = new Set<BuiltInToolCapability>([
   "project",
   "references",
   "history",
+  "effects",
+  "delete",
+  "text",
+  "graph",
+  "layout",
+  "tree-import",
+  "node-connect",
+  "attachments",
   "dom",
   "image",
   "settings",
+  "network",
+  "model",
+  "abort-signal",
 ]);
+
+type ServiceConstructor = { id?: string; new (...args: any[]): any };
+type ClosedProjectModuleLoader = (id: string) => Promise<Record<string, unknown>>;
+
+const closedProjectCapabilityServices: Partial<
+  Record<BuiltInToolCapability, readonly { moduleId: string; exportName: string }[]>
+> = {
+  history: [{ moduleId: "/src/core/stage/stageManager/StageHistoryManager.tsx", exportName: "HistoryManager" }],
+  delete: [
+    { moduleId: "/src/core/stage/stageManager/basicMethods/SectionMethods.tsx", exportName: "SectionMethods" },
+    {
+      moduleId: "/src/core/stage/stageManager/concreteMethods/StageSectionInOutManager.tsx",
+      exportName: "SectionInOutManager",
+    },
+    {
+      moduleId: "/src/core/stage/stageManager/concreteMethods/StageSyncAssociationManager.tsx",
+      exportName: "StageSyncAssociationManager",
+    },
+    {
+      moduleId: "/src/core/stage/stageManager/concreteMethods/StageDeleteManager.tsx",
+      exportName: "DeleteManager",
+    },
+  ],
+  text: [
+    { moduleId: "/src/core/render/canvas2d/basicRenderer/textRenderer.tsx", exportName: "TextRenderer" },
+    {
+      moduleId: "/src/core/stage/stageManager/concreteMethods/StageSyncAssociationManager.tsx",
+      exportName: "StageSyncAssociationManager",
+    },
+  ],
+  graph: [{ moduleId: "/src/core/stage/stageManager/basicMethods/GraphMethods.tsx", exportName: "GraphMethods" }],
+  layout: [
+    {
+      moduleId: "/src/core/stage/stageManager/concreteMethods/StageEntityMoveManager.tsx",
+      exportName: "EntityMoveManager",
+    },
+    { moduleId: "/src/core/service/controlService/autoLayoutEngine/mainTick.tsx", exportName: "AutoLayout" },
+  ],
+  "tree-import": [
+    {
+      moduleId: "/src/core/stage/stageManager/concreteMethods/StageEntityMoveManager.tsx",
+      exportName: "EntityMoveManager",
+    },
+    {
+      moduleId: "/src/core/service/controlService/autoLayoutEngine/autoLayoutFastTreeMode.tsx",
+      exportName: "AutoLayoutFastTree",
+    },
+    {
+      moduleId: "/src/core/service/dataGenerateService/stageImportEngine/stageImportEngine.tsx",
+      exportName: "StageImport",
+    },
+  ],
+  "node-connect": [
+    {
+      moduleId: "/src/core/stage/stageManager/concreteMethods/StageNodeConnector.tsx",
+      exportName: "NodeConnector",
+    },
+  ],
+};
+
+function loadServiceOnce(project: Project, service: ServiceConstructor): void {
+  if (!service.id || !project.getService(service.id as keyof Project & string)) project.loadService(service);
+}
+
+async function loadClosedProjectCapability(
+  project: Project,
+  capability: BuiltInToolCapability,
+  loadModule: ClosedProjectModuleLoader,
+): Promise<void> {
+  if (capability === "effects") loadServiceOnce(project, ClosedProjectEffects);
+  for (const service of closedProjectCapabilityServices[capability] ?? []) {
+    const loaded = (await loadModule(service.moduleId))[service.exportName];
+    if (typeof loaded !== "function") throw new Error(`Closed Project service is unavailable: ${service.exportName}`);
+    loadServiceOnce(project, loaded as ServiceConstructor);
+  }
+}
 
 function projectReferenceStorePath(): string {
   return (
@@ -143,23 +229,25 @@ function createClosedProject(
 function createClosedProjectRuntimeHost(
   project: Project,
   references: AIObjectReferenceRegistry,
+  loadModule: ClosedProjectModuleLoader,
   beforeExecutorInvoke?: () => void | Promise<void>,
 ): BuiltInToolRuntimeHost {
   return {
     beforeExecutorInvoke,
-    acquireCapabilities(capabilities): AcquiredBuiltInToolCapabilities {
-      if (capabilities.some((capability) => !supportedCapabilities.has(capability))) {
-        throw new Error("The closed Project Runtime Host cannot provide all declared capabilities for this tool");
+    async acquireCapabilities(capabilities, context): Promise<AcquiredBuiltInToolCapabilities> {
+      const unsupportedCapabilities = capabilities.filter((capability) => !supportedCapabilities.has(capability));
+      if (unsupportedCapabilities.length > 0) {
+        throw new Error(
+          `The closed Project Runtime Host cannot provide capabilities: ${unsupportedCapabilities.join(", ")}`,
+        );
       }
       const acquired: Record<string, unknown> = {};
       for (const capability of capabilities) {
         if (capability === "project") acquired.project = project;
         else if (capability === "references") acquired.references = references;
-        else if (capability === "history") {
-          project.loadService(NodeConnector);
-          project.loadService(HistoryManager);
-          acquired.history = true;
-        } else if (capability === "dom" || capability === "image" || capability === "settings") {
+        else if (capability === "abort-signal") acquired[capability] = context.abortSignal;
+        else {
+          await loadClosedProjectCapability(project, capability, loadModule);
           acquired[capability] = true;
         }
       }
@@ -168,12 +256,15 @@ function createClosedProjectRuntimeHost(
   };
 }
 
-export async function invokeClosedProjectTool(options: {
-  toolName: string;
-  input: unknown;
-  canonicalPath: string;
-  allowUpgrade: boolean;
-}): Promise<ClosedProjectInvocationResult> {
+export async function invokeClosedProjectTool(
+  options: {
+    toolName: string;
+    input: unknown;
+    canonicalPath: string;
+    allowUpgrade: boolean;
+  },
+  loadModule: ClosedProjectModuleLoader,
+): Promise<ClosedProjectInvocationResult> {
   const attachments = new Map<string, Blob>();
   let project: Project | undefined;
   let disposeProject: (() => Promise<void>) | undefined;
@@ -242,6 +333,7 @@ export async function invokeClosedProjectTool(options: {
         createClosedProjectRuntimeHost(
           project,
           references,
+          loadModule,
           executorReadyPath ? () => writeFile(executorReadyPath, process.hrtime.bigint().toString()) : undefined,
         ),
       );

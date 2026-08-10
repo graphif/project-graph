@@ -17,6 +17,14 @@ export type BuiltInToolCapability =
   | "project"
   | "references"
   | "history"
+  | "effects"
+  | "delete"
+  | "text"
+  | "graph"
+  | "layout"
+  | "tree-import"
+  | "node-connect"
+  | "attachments"
   | "dom"
   | "viewport"
   | "selection"
@@ -31,6 +39,14 @@ export type AcquiredBuiltInToolCapabilities = Readonly<
     project: Project;
     references: AIObjectReferenceRegistry;
     history: true;
+    effects: true;
+    delete: true;
+    text: true;
+    graph: true;
+    layout: true;
+    "tree-import": true;
+    "node-connect": true;
+    attachments: true;
     dom: true;
     viewport: true;
     selection: true;
@@ -147,7 +163,7 @@ const definitions: BuiltInToolDefinition[] = [
     inputSchema: z.object({ ref: nodeRefSchema }),
     effect: { project: "mutate", selection: "none", external: "none" },
     risk: "destructive",
-    capabilities: ["project", "references", "history"],
+    capabilities: ["project", "references", "history", "effects", "delete", "settings"],
     projectReferences: { reads: true, allocates: false },
     cancellation: "none",
     transaction: "atomic",
@@ -159,7 +175,7 @@ const definitions: BuiltInToolDefinition[] = [
     inputSchema: z.object({ refs: z.array(nodeRefSchema).describe("要删除的节点引用数组") }),
     effect: { project: "mutate", selection: "none", external: "none" },
     risk: "destructive",
-    capabilities: ["project", "references", "history"],
+    capabilities: ["project", "references", "history", "effects", "delete", "settings"],
     projectReferences: { reads: true, allocates: false },
     cancellation: "none",
     transaction: "atomic",
@@ -171,7 +187,7 @@ const definitions: BuiltInToolDefinition[] = [
     inputSchema: z.object({}),
     effect: { project: "mutate", selection: "read", external: "none" },
     risk: "destructive",
-    capabilities: ["project", "selection", "history"],
+    capabilities: ["project", "selection", "history", "effects", "delete", "settings"],
     projectReferences: { reads: false, allocates: false },
     cancellation: "none",
     transaction: "atomic",
@@ -183,7 +199,7 @@ const definitions: BuiltInToolDefinition[] = [
     inputSchema: z.object({}),
     effect: { project: "mutate", selection: "none", external: "none" },
     risk: "destructive",
-    capabilities: ["project", "history"],
+    capabilities: ["project", "history", "effects", "delete", "settings"],
     projectReferences: { reads: false, allocates: false },
     cancellation: "none",
     transaction: "non-transactional",
@@ -208,7 +224,7 @@ const definitions: BuiltInToolDefinition[] = [
     }),
     effect: { project: "mutate", selection: "none", external: "none" },
     risk: "project-mutation",
-    capabilities: ["project", "references", "history", "dom", "settings"],
+    capabilities: ["project", "references", "history", "text", "dom", "settings"],
     projectReferences: { reads: true, allocates: false },
     cancellation: "none",
     transaction: "rollback-on-error",
@@ -233,7 +249,7 @@ const definitions: BuiltInToolDefinition[] = [
     }),
     effect: { project: "mutate", selection: "none", external: "none" },
     risk: "project-mutation",
-    capabilities: ["project", "references", "history", "image"],
+    capabilities: ["project", "references", "history", "attachments", "image", "settings"],
     projectReferences: { reads: true, allocates: false },
     cancellation: "none",
     transaction: "rollback-on-error",
@@ -246,7 +262,7 @@ const definitions: BuiltInToolDefinition[] = [
     inputSchema: z.object({ refs: z.array(nodeRefSchema).min(2).describe("需要整体布局的节点项目级引用") }),
     effect: { project: "mutate", selection: "none", external: "none" },
     risk: "project-mutation",
-    capabilities: ["project", "references", "history", "settings"],
+    capabilities: ["project", "references", "history", "effects", "graph", "layout", "settings"],
     projectReferences: { reads: true, allocates: false },
     cancellation: "none",
     transaction: "non-transactional",
@@ -284,7 +300,7 @@ const definitions: BuiltInToolDefinition[] = [
     }),
     effect: { project: "mutate", selection: "none", external: "none" },
     risk: "project-mutation",
-    capabilities: ["project", "history", "dom", "settings", "viewport"],
+    capabilities: ["project", "history", "effects", "graph", "tree-import", "dom", "settings", "viewport"],
     projectReferences: { reads: false, allocates: false },
     cancellation: "none",
     transaction: "non-transactional",
@@ -299,7 +315,7 @@ const definitions: BuiltInToolDefinition[] = [
     }),
     effect: { project: "mutate", selection: "none", external: "none" },
     risk: "project-mutation",
-    capabilities: ["project", "references", "history", "dom", "settings"],
+    capabilities: ["project", "references", "history", "effects", "graph", "tree-import", "dom", "settings"],
     projectReferences: { reads: true, allocates: false },
     cancellation: "none",
     transaction: "non-transactional",
@@ -323,7 +339,7 @@ const definitions: BuiltInToolDefinition[] = [
     inputSchema: z.object({ ref: nodeRefSchema }),
     effect: { project: "read", selection: "none", external: "none" },
     risk: "none",
-    capabilities: ["project", "references"],
+    capabilities: ["project", "references", "graph"],
     projectReferences: { reads: true, allocates: true },
     cancellation: "none",
     transaction: "none",
@@ -335,7 +351,7 @@ const definitions: BuiltInToolDefinition[] = [
     inputSchema: z.object({ ref: nodeRefSchema }),
     effect: { project: "read", selection: "none", external: "none" },
     risk: "none",
-    capabilities: ["project", "references"],
+    capabilities: ["project", "references", "graph"],
     projectReferences: { reads: true, allocates: true },
     cancellation: "none",
     transaction: "none",
@@ -350,7 +366,7 @@ const definitions: BuiltInToolDefinition[] = [
     }),
     effect: { project: "mutate", selection: "none", external: "none" },
     risk: "project-mutation",
-    capabilities: ["project", "references", "history"],
+    capabilities: ["project", "references", "history", "settings"],
     projectReferences: { reads: true, allocates: false },
     cancellation: "none",
     transaction: "partial-success",
@@ -376,7 +392,7 @@ const definitions: BuiltInToolDefinition[] = [
     }),
     effect: { project: "read", selection: "none", external: "none" },
     risk: "none",
-    capabilities: ["project", "references"],
+    capabilities: ["project", "references", "graph"],
     projectReferences: { reads: true, allocates: false },
     cancellation: "none",
     transaction: "none",
@@ -396,7 +412,7 @@ const definitions: BuiltInToolDefinition[] = [
     }),
     effect: { project: "mutate", selection: "none", external: "none" },
     risk: "project-mutation",
-    capabilities: ["project", "references", "history", "settings"],
+    capabilities: ["project", "references", "history", "node-connect", "settings"],
     projectReferences: { reads: true, allocates: true },
     cancellation: "none",
     transaction: "partial-success",
@@ -408,7 +424,7 @@ const definitions: BuiltInToolDefinition[] = [
     inputSchema: z.object({ edgeRef: edgeRefSchema, text: z.string() }),
     effect: { project: "mutate", selection: "none", external: "none" },
     risk: "project-mutation",
-    capabilities: ["project", "references", "history"],
+    capabilities: ["project", "references", "history", "settings"],
     projectReferences: { reads: true, allocates: false },
     cancellation: "none",
     transaction: "non-transactional",
@@ -423,7 +439,7 @@ const definitions: BuiltInToolDefinition[] = [
     }),
     effect: { project: "read", selection: "mutate", external: "none" },
     risk: "none",
-    capabilities: ["project", "references", "selection", "history"],
+    capabilities: ["project", "references", "selection", "history", "settings"],
     projectReferences: { reads: true, allocates: false },
     cancellation: "none",
     transaction: "partial-success",
@@ -474,7 +490,7 @@ const definitions: BuiltInToolDefinition[] = [
     }),
     effect: { project: "mutate", selection: "none", external: "none" },
     risk: "project-mutation",
-    capabilities: ["project", "references", "history", "dom", "settings"],
+    capabilities: ["project", "references", "history", "effects", "node-connect", "dom", "settings"],
     projectReferences: { reads: true, allocates: true },
     cancellation: "none",
     transaction: "partial-success",
@@ -489,7 +505,7 @@ const definitions: BuiltInToolDefinition[] = [
     }),
     effect: { project: "mutate", selection: "none", external: "none" },
     risk: "project-mutation",
-    capabilities: ["project", "references", "history", "dom", "settings"],
+    capabilities: ["project", "references", "history", "effects", "node-connect", "dom", "settings"],
     projectReferences: { reads: true, allocates: true },
     cancellation: "none",
     transaction: "partial-success",
@@ -507,7 +523,7 @@ const definitions: BuiltInToolDefinition[] = [
     }),
     effect: { project: "mutate", selection: "read", external: "none" },
     risk: "project-mutation",
-    capabilities: ["project", "selection", "history", "dom", "settings"],
+    capabilities: ["project", "selection", "history", "effects", "dom", "settings"],
     projectReferences: { reads: false, allocates: false },
     cancellation: "none",
     transaction: "non-transactional",
@@ -525,7 +541,7 @@ const definitions: BuiltInToolDefinition[] = [
     }),
     effect: { project: "mutate", selection: "read", external: "none" },
     risk: "project-mutation",
-    capabilities: ["project", "selection", "history", "dom", "settings"],
+    capabilities: ["project", "selection", "history", "effects", "dom", "settings"],
     projectReferences: { reads: false, allocates: false },
     cancellation: "none",
     transaction: "non-transactional",
@@ -573,7 +589,7 @@ const definitions: BuiltInToolDefinition[] = [
     }),
     effect: { project: "read", selection: "none", external: "model" },
     risk: "external-communication",
-    capabilities: ["project", "references", "dom", "settings", "image", "network", "model"],
+    capabilities: ["project", "references", "attachments", "dom", "settings", "image", "network", "model"],
     projectReferences: { reads: true, allocates: false },
     cancellation: "none",
     transaction: "none",
@@ -589,6 +605,14 @@ const builtInToolsByName = new Map(builtInToolCatalog.map((definition) => [defin
 
 export function getBuiltInToolDefinition(name: string): BuiltInToolDefinition | undefined {
   return builtInToolsByName.get(name);
+}
+
+export type BuiltInToolProjectContext = "closed-capable" | "live-selection" | "live-viewport";
+
+export function classifyBuiltInToolProjectContext(definition: BuiltInToolDefinition): BuiltInToolProjectContext {
+  if (definition.capabilities.includes("selection")) return "live-selection";
+  if (definition.capabilities.includes("viewport")) return "live-viewport";
+  return "closed-capable";
 }
 
 export async function invokeBuiltInTool(
