@@ -57,6 +57,17 @@ export default function App() {
 
   const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
 
+  const handleTitleBarMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.buttons !== 1) return;
+
+    if (event.detail === 2) {
+      void getCurrentWindow().toggleMaximize();
+      return;
+    }
+
+    void getCurrentWindow().startDragging();
+  };
+
   // const { t } = useTranslation("app");
 
   useEffect(() => {
@@ -360,11 +371,11 @@ export default function App() {
           >
             <div
               className="hover:bg-primary/25 h-full min-w-6 cursor-grab transition-colors active:cursor-grabbing sm:hidden"
-              data-tauri-drag-region
+              onMouseDown={handleTitleBarMouseDown}
             />
             {isMac && <WindowButtons />}
             <GlobalMenu />
-            <div className="h-full flex-1" data-tauri-drag-region />
+            <div className="h-full flex-1 cursor-grab active:cursor-grabbing" onMouseDown={handleTitleBarMouseDown} />
             <div className="hidden sm:block">
               <ThemeModeSwitch />
             </div>
