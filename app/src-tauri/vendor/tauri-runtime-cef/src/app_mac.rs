@@ -2,8 +2,10 @@ use cef::application_mac::{CefAppProtocol, CrAppControlProtocol, CrAppProtocol};
 use objc2::rc::Retained;
 use objc2::runtime::Bool;
 use objc2::{define_class, msg_send, ClassType, MainThreadMarker, MainThreadOnly};
-use objc2_app_kit::{NSApplication, NSApplicationActivationPolicy, NSEvent, NSEventMask};
-use objc2_foundation::NSDefaultRunLoopMode;
+use objc2_app_kit::{
+    NSApplication, NSApplicationActivationPolicy, NSEvent, NSEventMask, NSEventType, NSWindow,
+};
+use objc2_foundation::{CGFloat, NSDefaultRunLoopMode, NSPoint};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 static HANDLING_SEND_EVENT: AtomicBool = AtomicBool::new(false);
@@ -18,6 +20,13 @@ define_class!(
         #[unsafe(method(sendEvent:))]
         fn send_event(&self, event: &NSEvent) {
             let was = HANDLING_SEND_EVENT.swap(true, Ordering::AcqRel);
+            if event.r#type() == NSEventType::ScrollWheel
+                && let Some(window) = inactive_window_under_mouse(event)
+            {
+                let _: () = unsafe { msg_send![&window, sendEvent: inactive_window_scroll_event(event, &window)] };
+                HANDLING_SEND_EVENT.store(was, Ordering::Release);
+                return;
+            }
             let _: () = unsafe { msg_send![super(self), sendEvent: event] };
             HANDLING_SEND_EVENT.store(was, Ordering::Release);
         }
@@ -39,6 +48,49 @@ define_class!(
 
     unsafe impl CefAppProtocol for KabegameCefApplication {}
 );
+
+fn inactive_window_under_mouse(event: &NSEvent) -> Option<Retained<NSWindow>> {
+    let screen_location = NSEvent::mouseLocation();
+    let target_window_number: isize = unsafe {
+        msg_send![
+            NSWindow::class(),
+            windowNumberAtPoint: screen_location
+            belowWindowWithWindowNumber: 0isize
+        ]
+    };
+    if target_window_number == 0 || target_window_number == event.windowNumber() {
+        return None;
+    }
+
+    let marker = MainThreadMarker::new().expect("AppKit events must be handled on the main thread");
+    NSApplication::sharedApplication(marker)
+        .windows()
+        .into_iter()
+        .find(|window| unsafe { msg_send![window, windowNumber] } == target_window_number)
+}
+
+fn inactive_window_scroll_event(event: &NSEvent, window: &NSWindow) -> Retained<NSEvent> {
+    let screen_location = NSEvent::mouseLocation();
+    let location: NSPoint = unsafe { msg_send![window, convertPointFromScreen: screen_location] };
+    let phase: usize = unsafe { msg_send![event, phase] };
+    let momentum_phase: usize = unsafe { msg_send![event, momentumPhase] };
+    let delta_x: CGFloat = unsafe { msg_send![event, scrollingDeltaX] };
+    let delta_y: CGFloat = unsafe { msg_send![event, scrollingDeltaY] };
+
+    unsafe {
+        msg_send![
+            NSEvent::class(),
+            scrollingEventWithTimestamp: event.timestamp()
+            location: location
+            modifierFlags: event.modifierFlags()
+            phase: phase
+            momentumPhase: momentum_phase
+            deltaX: delta_x
+            deltaY: delta_y
+            deltaZ: 0.0 as CGFloat
+        ]
+    }
+}
 
 pub(crate) fn init_cef_app_mac() {
     let _mtm = MainThreadMarker::new().expect("CEF application must initialize on the main thread");
