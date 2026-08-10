@@ -236,11 +236,11 @@ export function Field({
         <div className="flex items-center gap-2">
           <span>{icon}</span>
           <div className="flex flex-col">
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-1 select-text">
               {title}
               {titleExtra}
             </span>
-            <span className="text-panel-details-text text-xs font-light opacity-60">
+            <span className="text-panel-details-text text-xs font-light opacity-60 select-text">
               {description.split("\n").map((dd, ii) => (
                 <p key={ii} className="text-xs">
                   {dd}
