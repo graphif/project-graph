@@ -807,8 +807,8 @@ addExecutor(
     },
 );
 addExecutor("recognize_image", () => async (project, { ref, prompt }, references) => {
-  const [{ blobToCompressedDataUrl }, { Settings }] = await Promise.all([
-    import("@/core/service/dataManageService/imageUtils"),
+  const [{ encodeModelImageDataUrl }, { Settings }] = await Promise.all([
+    import("@/core/service/dataManageService/aiEngine/ModelImageEncoder"),
     import("@/core/service/Settings"),
   ]);
   const obj = references.resolve(ref, "node");
@@ -829,7 +829,7 @@ addExecutor("recognize_image", () => async (project, { ref, prompt }, references
     return { success: false, error: "图片数据未找到（附件可能已丢失）" };
   }
   try {
-    const dataUrl = await blobToCompressedDataUrl(blob, Settings.maxPastedImageSize);
+    const dataUrl = await encodeModelImageDataUrl(blob, Settings.maxPastedImageSize);
     const description = await recognizeImage(dataUrl, prompt);
     return { success: true, description };
   } catch (e) {

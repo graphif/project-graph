@@ -2,6 +2,7 @@ import { spawn, spawnSync } from "node:child_process";
 import {
   chmodSync,
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   realpathSync,
@@ -9,14 +10,16 @@ import {
   symlinkSync,
   writeFileSync,
 } from "node:fs";
+import { createServer as createHttpServer } from "node:http";
 import { createServer } from "node:net";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Encoder } from "@msgpack/msgpack";
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
 import { afterEach, describe, expect, it } from "vitest";
 import { URI } from "vscode-uri";
+import sharp from "sharp";
 
 const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const temporaryDirectories: string[] = [];
@@ -35,7 +38,11 @@ function getReferenceStorePath(): string {
   return referenceStorePath;
 }
 
-async function createProjectFixture(version = "2.7.0", stage: unknown[] = []): Promise<string> {
+async function createProjectFixture(
+  version = "2.7.0",
+  stage: unknown[] = [],
+  attachment?: { id: string; extension: string; data: Uint8Array },
+): Promise<string> {
   const directory = mkdtempSync(join(tmpdir(), "project-graph-cli-"));
   temporaryDirectories.push(directory);
   const projectPath = join(directory, "fixture.prg");
@@ -48,6 +55,11 @@ async function createProjectFixture(version = "2.7.0", stage: unknown[] = []): P
     level: 0,
   });
   await writer.add("metadata.msgpack", new Uint8ArrayReader(encoder.encode({ version })), { level: 0 });
+  if (attachment) {
+    await writer.add(`attachments/${attachment.id}.${attachment.extension}`, new Uint8ArrayReader(attachment.data), {
+      level: 0,
+    });
+  }
   await writer.close();
   writeFileSync(projectPath, await archive.getData());
   return projectPath;
@@ -101,11 +113,19 @@ function runCli(...args: string[]) {
   });
 }
 
-function runCliAsync(...args: string[]): Promise<{ status: number | null; stdout: string; stderr: string }> {
+function runCliAsyncWithEnvironment(
+  environment: Record<string, string>,
+  ...args: string[]
+): Promise<{ status: number | null; stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     const child = spawn("pnpm", ["cli", "--", ...args], {
       cwd: repositoryRoot,
-      env: { ...process.env, NO_COLOR: "1", PROJECT_GRAPH_REFERENCE_STORE_PATH: getReferenceStorePath() },
+      env: {
+        ...process.env,
+        ...environment,
+        NO_COLOR: "1",
+        PROJECT_GRAPH_REFERENCE_STORE_PATH: getReferenceStorePath(),
+      },
       stdio: ["ignore", "pipe", "pipe"],
     });
     let stdout = "";
@@ -121,6 +141,10 @@ function runCliAsync(...args: string[]): Promise<{ status: number | null; stdout
     child.once("error", reject);
     child.once("close", (status) => resolve({ status, stdout, stderr }));
   });
+}
+
+function runCliAsync(...args: string[]): Promise<{ status: number | null; stdout: string; stderr: string }> {
+  return runCliAsyncWithEnvironment({}, ...args);
 }
 
 const openProjectToolMatrix: ReadonlyArray<{
@@ -622,6 +646,130 @@ describe("Project Graph CLI process contract", () => {
     expect(JSON.parse(result.stdout)).toEqual({ success: false, error: "图片数据未找到（附件可能已丢失）" });
     expect(readFileSync(projectPath)).toEqual(before);
   }, 15_000);
+
+  it("uses the saved model credentials and attachment for recognize_image", async () => {
+    const attachmentId = "66666666-6666-4666-8666-666666666666";
+    const projectPath = await createProjectFixture(
+      "2.7.0",
+      [
+        {
+          _: "ImageNode",
+          uuid: "55555555-5555-4555-8555-555555555555",
+          attachmentId,
+          scale: 1,
+          isBackground: false,
+          collisionBox: {
+            _: "CollisionBox",
+            shapes: [
+              {
+                _: "Rectangle",
+                location: { _: "Vector", x: 10, y: 20 },
+                size: { _: "Vector", x: 100, y: 50 },
+              },
+            ],
+          },
+        },
+      ],
+      {
+        id: attachmentId,
+        extension: "svg",
+        data: new TextEncoder().encode(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="4000" height="2000"><rect width="4000" height="2000"/></svg>',
+        ),
+      },
+    );
+    let requestBody = "";
+    const modelServer = createHttpServer((request, response) => {
+      request.setEncoding("utf8");
+      request.on("data", (chunk) => {
+        requestBody += chunk;
+      });
+      request.on("end", () => {
+        response.writeHead(200, { "Content-Type": "application/json", Connection: "close" });
+        response.end(
+          JSON.stringify({
+            id: "chatcmpl-fixture",
+            object: "chat.completion",
+            created: 0,
+            model: "fixture-model",
+            choices: [
+              {
+                index: 0,
+                message: { role: "assistant", content: "fixture image description" },
+                finish_reason: "stop",
+              },
+            ],
+            usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+          }),
+        );
+      });
+    });
+    await new Promise<void>((resolve, reject) => {
+      modelServer.once("error", reject);
+      modelServer.listen(0, "127.0.0.1", () => {
+        modelServer.off("error", reject);
+        resolve();
+      });
+    });
+    const address = modelServer.address();
+    if (!address || typeof address === "string") throw new Error("Expected a model fixture address");
+
+    const settingsHome = mkdtempSync(join(tmpdir(), "project-graph-cli-settings-"));
+    temporaryDirectories.push(settingsHome);
+    const settingsDirectory = join(settingsHome, "Library", "Application Support", "liren.project-graph");
+    mkdirSync(settingsDirectory, { recursive: true });
+    writeFileSync(
+      join(settingsDirectory, "settings.json"),
+      JSON.stringify({
+        aiApiBaseUrl: `http://127.0.0.1:${address.port}/v1`,
+        aiApiKey: "fixture-api-key",
+        aiModel: "fixture-model",
+      }),
+    );
+
+    try {
+      expect(runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}")).toMatchObject({
+        status: 0,
+        stderr: "",
+      });
+      const result = await runCliAsyncWithEnvironment(
+        { HOME: settingsHome, COREPACK_HOME: process.env.COREPACK_HOME ?? join(homedir(), ".cache/node/corepack") },
+        "tool",
+        "invoke",
+        "recognize_image",
+        "--project",
+        projectPath,
+        "--input",
+        '{"ref":"n1","prompt":"Describe this image"}',
+      );
+
+      expect(result).toMatchObject({ status: 0, stderr: "" });
+      expect(JSON.parse(result.stdout)).toEqual({ success: true, description: "fixture image description" });
+      expect(requestBody).toContain("Describe this image");
+      const encodedImage = requestBody.match(/data:image\/png;base64,([A-Za-z0-9+/=]+)/)?.[1];
+      expect(encodedImage).toBeDefined();
+      const metadata = await sharp(Buffer.from(encodedImage!, "base64")).metadata();
+      expect(metadata).toMatchObject({ format: "png", width: 1920, height: 960 });
+
+      const mutation = runCli(
+        "tool",
+        "invoke",
+        "batch_change_color",
+        "--project",
+        projectPath,
+        "--input",
+        '{"refs":["n1"],"color":[1,2,3,1]}',
+      );
+      expect(mutation).toMatchObject({ status: 0, stderr: "" });
+      const reopened = runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}");
+      expect(reopened).toMatchObject({ status: 0, stderr: "" });
+      expect(JSON.parse(reopened.stdout)).toMatchObject({
+        objects: [{ ref: "n1", size: { width: 100, height: 50 } }],
+      });
+    } finally {
+      await new Promise<void>((resolve, reject) => modelServer.close((error) => (error ? reject(error) : resolve())));
+    }
+  }, 45_000);
 
   it("rejects newer and implicit legacy formats without rewriting the Project", async () => {
     const newerProjectPath = await createProjectFixture("99.0.0");

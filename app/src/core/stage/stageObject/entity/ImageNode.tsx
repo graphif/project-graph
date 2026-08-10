@@ -96,6 +96,7 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
       this.state = "notFound";
       return;
     }
+    if (typeof createImageBitmap === "undefined") return;
     createImageBitmap(blob).then((bitmap) => {
       this.bitmap = bitmap;
       this.state = "success";

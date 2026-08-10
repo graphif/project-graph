@@ -71,6 +71,8 @@ function runtimeCompatibilityPlugin(stubs: {
   detailsManager: string;
   fileSystemProvider: string;
   soundService: string;
+  http: string;
+  modelImageEncoder: string;
 }): Plugin {
   return {
     name: "project-graph-cli-runtime-compatibility",
@@ -97,6 +99,8 @@ function runtimeCompatibilityPlugin(stubs: {
       if (id.includes("/core/service/feedbackService/SoundService") || id.endsWith("/feedbackService/SoundService")) {
         return stubs.soundService;
       }
+      if (id === "@tauri-apps/plugin-http") return stubs.http;
+      if (id.includes("/core/service/dataManageService/aiEngine/ModelImageEncoder")) return stubs.modelImageEncoder;
       return id === "virtual:original-class-name" ? `\0${id}` : undefined;
     },
     load(id) {
@@ -128,6 +132,8 @@ async function invokeInRenderer(options: {
     detailsManager: fileURLToPath(new URL("./ClosedProjectDetailsManager.ts", import.meta.url)),
     fileSystemProvider: fileURLToPath(new URL("./ClosedProjectFileSystemProvider.ts", import.meta.url)),
     soundService: fileURLToPath(new URL("./ClosedProjectSoundService.ts", import.meta.url)),
+    http: fileURLToPath(new URL("./ClosedProjectHttp.ts", import.meta.url)),
+    modelImageEncoder: fileURLToPath(new URL("./ClosedProjectModelImageEncoder.ts", import.meta.url)),
   };
   let server: Awaited<ReturnType<typeof createServer>> | undefined;
   let result: RuntimeResult;
@@ -148,6 +154,11 @@ async function invokeInRenderer(options: {
             replacement: stubs.fileSystemProvider,
           },
           { find: "@/core/service/feedbackService/SoundService", replacement: stubs.soundService },
+          { find: "@tauri-apps/plugin-http", replacement: stubs.http },
+          {
+            find: "@/core/service/dataManageService/aiEngine/ModelImageEncoder",
+            replacement: stubs.modelImageEncoder,
+          },
           {
             find: /\/core\/service\/feedbackService\/SoundService(?:\.tsx)?$/,
             replacement: stubs.soundService,
