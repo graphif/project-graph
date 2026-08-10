@@ -64,7 +64,7 @@ export const settingsSchema = z.object({
   enableTagTextNodesBigDisplay: z.boolean().default(true),
   forceHideTextNodeBorder: z.boolean().default(false),
   textNodeInitBorderStyle: z.union([z.literal("solid"), z.literal("dashed"), z.literal("none")]).default("solid"),
-  showTreeDirectionHint: z.boolean().default(true),
+  showTreeDirectionHint: z.boolean().default(false),
   lineStyle: z.union([z.literal("straight"), z.literal("bezier"), z.literal("vertical")]).default("straight"),
   hideArrowWhenPointingToConnectPoint: z.boolean().default(true),
   sectionBitTitleRenderType: z.union([z.literal("none"), z.literal("top"), z.literal("cover")]).default("cover"),
