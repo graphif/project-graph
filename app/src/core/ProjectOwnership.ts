@@ -37,6 +37,16 @@ export class ProjectOwnershipLease {
     readonly canonicalPath: string,
   ) {}
 
+  async makeConnectable(): Promise<void> {
+    try {
+      await invoke<void>("make_desktop_project_ownership_connectable", {
+        ownershipId: this.ownershipId,
+      });
+    } catch (error) {
+      throw toProjectOwnershipError(error);
+    }
+  }
+
   dispose(): Promise<void> {
     if (this.disposed) return Promise.resolve();
     this.disposePromise ??= invoke<void>("release_desktop_project_ownership", {
@@ -71,6 +81,35 @@ export async function releaseProjectOwnershipWithRetry(ownership: ProjectOwnersh
 export type ProjectOwnershipLoadResult<T> =
   | { status: "opened"; value: T }
   | { status: "already_open"; ownershipId: string; canonicalPath: string };
+
+export type ProjectOwnershipSaveReservation =
+  | { status: "reserved"; ownership: ProjectOwnershipLease | undefined }
+  | { status: "already_open"; ownershipId: string; canonicalPath: string };
+
+export async function reserveProjectOwnershipForSave(projectPath: string): Promise<ProjectOwnershipSaveReservation> {
+  if (!isTauri()) return { status: "reserved", ownership: undefined };
+
+  let acquisition: DesktopOwnershipAcquisition;
+  try {
+    await ensureOpenProjectRuntimeBridgeListener();
+    acquisition = await invoke<DesktopOwnershipAcquisition>("acquire_desktop_project_ownership_for_save", {
+      projectPath,
+    });
+  } catch (error) {
+    throw toProjectOwnershipError(error);
+  }
+  if (acquisition.status === "already_owned") {
+    return {
+      status: "already_open",
+      ownershipId: acquisition.ownershipId,
+      canonicalPath: acquisition.canonicalPath,
+    };
+  }
+  return {
+    status: "reserved",
+    ownership: new ProjectOwnershipLease(acquisition.ownershipId, acquisition.canonicalPath),
+  };
+}
 
 export async function loadWithProjectOwnership<T>(
   projectPath: string,

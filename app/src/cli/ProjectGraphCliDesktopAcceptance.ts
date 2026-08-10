@@ -315,9 +315,11 @@ async function runAcceptance(): Promise<void> {
       "reference-store-concurrency",
       undefined,
     );
+    const savedDraftProjectPath = join(temporaryDirectory, "saved-draft.prg");
     const manifest: CliDesktopAcceptanceManifest = {
       invocations,
       unsavedProjectPath: invocations[0].projectPath,
+      savedDraftProjectPath,
     };
     writeFileSync(manifestPath, JSON.stringify(manifest));
     const port = await getAvailablePort();
@@ -417,6 +419,22 @@ async function runAcceptance(): Promise<void> {
     }
     const before = new Map(invocations.map(({ projectPath }) => [projectPath, readFileSync(projectPath)]));
     for (const invocation of invocations) assertProjectOwned(invocation.projectPath);
+    assertProjectOwned(savedDraftProjectPath);
+
+    const savedDraftResult = await runCli(
+      referenceStorePath,
+      "tool",
+      "invoke",
+      "get_all_nodes",
+      "--project",
+      savedDraftProjectPath,
+      "--input",
+      "{}",
+    );
+    assertSuccessfulInvocation("saved draft Project", savedDraftResult);
+    if (!savedDraftResult.stdout.includes("desktop-saved-draft-sentinel")) {
+      throw new Error("CLI did not route the saved draft through its live desktop runtime host");
+    }
 
     for (const invocation of invocations) {
       const discovery = await runCli(
@@ -472,6 +490,7 @@ async function runAcceptance(): Promise<void> {
       }
       assertProjectOwned(invocation.projectPath);
     }
+    assertProjectOwned(savedDraftProjectPath);
     writeFileSync(completionPath, "complete");
     const verified = (await waitForState(statePath, "verified", tauri)) as Extract<
       CliDesktopAcceptanceState,

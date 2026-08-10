@@ -17,10 +17,11 @@ vi.mock("@tauri-apps/api/event", () => ({
   }),
 }));
 vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn(async () => true), isTauri: vi.fn(() => false) }));
+vi.mock("@tauri-apps/plugin-dialog", () => ({ save: vi.fn() }));
 vi.mock("@/core/Tab", () => ({
   Tab: class Tab {
     private readonly services = new Map<string, unknown>();
-    private readonly fileSystemProviders = new Map<string, unknown>();
+    protected readonly fileSystemProviders = new Map<string, unknown>();
 
     loadService(service: { id?: string; new (project: unknown): unknown }) {
       if (!service.id) throw new Error("Test service requires an id");
@@ -83,12 +84,14 @@ vi.mock("@/core/service/dataManageService/aiEngine/AIProjectReferenceStore", () 
   AIProjectReferenceStore: { load: vi.fn(async () => null), save: vi.fn(async () => undefined) },
 }));
 
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
+import { save } from "@tauri-apps/plugin-dialog";
 import { AIEngine } from "@/core/service/dataManageService/aiEngine/AIEngine";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { AIProjectReferenceStore } from "@/core/service/dataManageService/aiEngine/AIProjectReferenceStore";
 import { Project, ProjectState } from "@/core/Project";
+import { ProjectOwnershipLease } from "@/core/ProjectOwnership";
 import { activeTabAtom, store, tabsAtom } from "@/state";
 import { Rectangle } from "@graphif/shapes";
 import { Vector } from "@graphif/data-structures";
@@ -269,7 +272,9 @@ async function startDesktopRuntimeBridge(projectPath: string, host: OpenProjectR
 
 describe("Open Project Runtime Host", () => {
   beforeEach(() => {
-    vi.mocked(invoke).mockClear();
+    vi.mocked(invoke).mockReset().mockResolvedValue(true);
+    vi.mocked(isTauri).mockReturnValue(false);
+    vi.mocked(save).mockReset();
     vi.mocked(AIProjectReferenceStore.load).mockReset().mockResolvedValue(null);
     vi.mocked(AIProjectReferenceStore.save).mockReset().mockResolvedValue(undefined);
     openverseImageSearch.findDownloadableOpenverseImage.mockReset();
@@ -565,6 +570,215 @@ describe("Open Project Runtime Host", () => {
     expect(write).toHaveBeenCalledOnce();
     expect(write).toHaveBeenCalledWith(project.uri, content);
     expect(write.mock.calls[0]).toHaveLength(2);
+  });
+
+  it("moves a draft to a CLI-connectable file ownership when it is saved", async () => {
+    vi.mocked(isTauri).mockReturnValue(true);
+    vi.mocked(save).mockResolvedValue("/projects/saved-draft.prg");
+    vi.mocked(invoke).mockImplementation(async (command) => {
+      if (command === "acquire_desktop_project_ownership_for_save") {
+        return {
+          status: "acquired",
+          ownershipId: "saved-draft-owner",
+          canonicalPath: "/projects/saved-draft.prg",
+        };
+      }
+      return true;
+    });
+    const write = vi.fn<(uri: URI, content: Uint8Array) => Promise<void>>().mockResolvedValue(undefined);
+    class FileProvider {
+      async read() {
+        return new Uint8Array();
+      }
+      async readDir() {
+        return [];
+      }
+      async write(uri: URI, content: Uint8Array) {
+        await write(uri, content);
+      }
+      async remove() {}
+      async exists() {
+        return true;
+      }
+      async mkdir() {}
+      async rename() {}
+    }
+    const project = new Project(URI.parse("draft:saved-draft"));
+    project.registerFileSystemProvider("file", FileProvider);
+    vi.spyOn(project, "getFileContent").mockResolvedValue(new Uint8Array([1, 2, 3]));
+
+    await project.save({ includeThumbnail: false });
+
+    expect(project.uri.toString()).toBe("file:///projects/saved-draft.prg");
+    expect(project.canonicalProjectPath).toBe("/projects/saved-draft.prg");
+    expect(write).toHaveBeenCalledOnce();
+    expect(save).toHaveBeenCalledWith({
+      title: "保存草稿",
+      filters: [{ name: "Project Graph", extensions: ["prg"] }],
+    });
+    expect(invoke).toHaveBeenCalledWith("make_desktop_project_ownership_connectable", {
+      ownershipId: "saved-draft-owner",
+    });
+    if (!bridgeListener) throw new Error("Runtime bridge listener was not registered");
+    await bridgeListener({
+      payload: {
+        requestId: "saved-draft-route",
+        projectPath: "/projects/saved-draft.prg",
+        toolName: "not_a_tool",
+        input: {},
+      },
+    });
+    expect(invoke).toHaveBeenLastCalledWith("respond_project_runtime_bridge", {
+      requestId: "saved-draft-route",
+      response: expect.not.objectContaining({
+        error: expect.objectContaining({ code: "RUNTIME_HOST_UNAVAILABLE" }),
+      }),
+    });
+    await project.dispose();
+  });
+
+  it("rebinds the runtime host and releases the old ownership after Save As", async () => {
+    vi.mocked(isTauri).mockReturnValue(true);
+    vi.mocked(invoke).mockImplementation(async (command) => {
+      if (command === "acquire_desktop_project_ownership_for_save") {
+        return {
+          status: "acquired",
+          ownershipId: "new-owner",
+          canonicalPath: "/projects/new.prg",
+        };
+      }
+      return true;
+    });
+    class FileProvider {
+      async read() {
+        return new Uint8Array();
+      }
+      async readDir() {
+        return [];
+      }
+      async write() {}
+      async remove() {}
+      async exists() {
+        return true;
+      }
+      async mkdir() {}
+      async rename() {}
+    }
+    const project = new Project(URI.file("/projects/old.prg"));
+    project.registerFileSystemProvider("file", FileProvider);
+    project.attachProjectOwnership(new ProjectOwnershipLease("old-owner", "/projects/old.prg"));
+    project.activateOpenRuntimeHost();
+    vi.spyOn(project, "getFileContent").mockResolvedValue(new Uint8Array([1, 2, 3]));
+
+    await project.saveAs(URI.file("/projects/new.prg"));
+
+    const promoteOrder =
+      vi.mocked(invoke).mock.invocationCallOrder[
+        vi.mocked(invoke).mock.calls.findIndex(([command]) => command === "make_desktop_project_ownership_connectable")
+      ];
+    const releaseOldOrder =
+      vi.mocked(invoke).mock.invocationCallOrder[
+        vi
+          .mocked(invoke)
+          .mock.calls.findIndex(
+            ([command, payload]) =>
+              command === "release_desktop_project_ownership" &&
+              (payload as { ownershipId?: string }).ownershipId === "old-owner",
+          )
+      ];
+    expect(releaseOldOrder).toBeGreaterThan(promoteOrder);
+    if (!bridgeListener) throw new Error("Runtime bridge listener was not registered");
+    await bridgeListener({
+      payload: { requestId: "old-route", projectPath: "/projects/old.prg", toolName: "not_a_tool", input: {} },
+    });
+    expect(invoke).toHaveBeenLastCalledWith("respond_project_runtime_bridge", {
+      requestId: "old-route",
+      response: {
+        ok: false,
+        error: { code: "RUNTIME_HOST_UNAVAILABLE", message: "Open Project Runtime Host is unavailable." },
+      },
+    });
+    await project.dispose();
+  });
+
+  it("rolls back the Project identity and runtime route when ownership promotion fails", async () => {
+    vi.mocked(isTauri).mockReturnValue(true);
+    vi.mocked(invoke).mockImplementation(async (command, payload) => {
+      if (command === "acquire_desktop_project_ownership_for_save") {
+        return {
+          status: "acquired",
+          ownershipId: "failed-owner",
+          canonicalPath: "/projects/failed.prg",
+        };
+      }
+      if (command === "make_desktop_project_ownership_connectable") {
+        throw { code: "PROJECT_LOAD_FAILED" };
+      }
+      if (command === "release_desktop_project_ownership") return true;
+      return { command, payload };
+    });
+    class FileProvider {
+      async read() {
+        return new Uint8Array();
+      }
+      async readDir() {
+        return [];
+      }
+      async write() {}
+      async remove() {}
+      async exists() {
+        return true;
+      }
+      async mkdir() {}
+      async rename() {}
+    }
+    const project = new Project(URI.file("/projects/rollback-old.prg"));
+    project.registerFileSystemProvider("file", FileProvider);
+    project.attachProjectOwnership(new ProjectOwnershipLease("rollback-old-owner", "/projects/rollback-old.prg"));
+    project.activateOpenRuntimeHost();
+    vi.spyOn(project, "getFileContent").mockResolvedValue(new Uint8Array([1, 2, 3]));
+
+    await expect(project.saveAs(URI.file("/projects/failed.prg"))).rejects.toMatchObject({
+      code: "PROJECT_LOAD_FAILED",
+    });
+
+    expect(project.uri.toString()).toBe("file:///projects/rollback-old.prg");
+    expect(project.canonicalProjectPath).toBe("/projects/rollback-old.prg");
+    expect(invoke).toHaveBeenCalledWith("release_desktop_project_ownership", { ownershipId: "failed-owner" });
+    expect(invoke).not.toHaveBeenCalledWith("release_desktop_project_ownership", {
+      ownershipId: "rollback-old-owner",
+    });
+    if (!bridgeListener) throw new Error("Runtime bridge listener was not registered");
+    await bridgeListener({
+      payload: {
+        requestId: "rollback-old-route",
+        projectPath: "/projects/rollback-old.prg",
+        toolName: "not_a_tool",
+        input: {},
+      },
+    });
+    expect(invoke).toHaveBeenLastCalledWith("respond_project_runtime_bridge", {
+      requestId: "rollback-old-route",
+      response: expect.not.objectContaining({
+        error: expect.objectContaining({ code: "RUNTIME_HOST_UNAVAILABLE" }),
+      }),
+    });
+    await bridgeListener({
+      payload: {
+        requestId: "rollback-failed-route",
+        projectPath: "/projects/failed.prg",
+        toolName: "not_a_tool",
+        input: {},
+      },
+    });
+    expect(invoke).toHaveBeenLastCalledWith("respond_project_runtime_bridge", {
+      requestId: "rollback-failed-route",
+      response: {
+        ok: false,
+        error: { code: "RUNTIME_HOST_UNAVAILABLE", message: "Open Project Runtime Host is unavailable." },
+      },
+    });
+    await project.dispose();
   });
 
   it("returns a structured reference persistence error without saving the Project", async () => {

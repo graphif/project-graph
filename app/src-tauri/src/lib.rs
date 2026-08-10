@@ -111,6 +111,8 @@ pub fn run() {
             exit,
             take_pending_open_files,
             project_ownership::acquire_desktop_project_ownership,
+            project_ownership::acquire_desktop_project_ownership_for_save,
+            project_ownership::make_desktop_project_ownership_connectable,
             project_ownership::release_desktop_project_ownership,
             project_reference_store::load_project_reference_snapshot,
             project_reference_store::save_project_reference_snapshot,

@@ -131,6 +131,18 @@ impl DesktopProjectOwnershipManager {
         )
     }
 
+    pub(crate) fn acquire_for_save(
+        &self,
+        project_path: &Path,
+    ) -> Result<DesktopOwnershipAcquisition, ProjectOwnershipError> {
+        let canonical_path = canonicalize_project_save_target(project_path)?;
+        self.acquire_canonical_with_owner_and_retry_delay(
+            canonical_path,
+            ProjectOwner::UnconnectableHolder,
+            OWNERSHIP_RETRY_DELAY,
+        )
+    }
+
     fn acquire_with_retry_delay(
         &self,
         project_path: &Path,
@@ -150,6 +162,15 @@ impl DesktopProjectOwnershipManager {
         retry_delay: Duration,
     ) -> Result<DesktopOwnershipAcquisition, ProjectOwnershipError> {
         let canonical_path = canonicalize_project_path(project_path)?;
+        self.acquire_canonical_with_owner_and_retry_delay(canonical_path, owner, retry_delay)
+    }
+
+    fn acquire_canonical_with_owner_and_retry_delay(
+        &self,
+        canonical_path: CanonicalProjectPath,
+        owner: ProjectOwner,
+        retry_delay: Duration,
+    ) -> Result<DesktopOwnershipAcquisition, ProjectOwnershipError> {
         {
             let mut state = self
                 .state
@@ -176,8 +197,8 @@ impl DesktopProjectOwnershipManager {
             }
         }
 
-        let ownership_result = acquire_project_ownership_with_retry_delay(
-            canonical_path.as_path(),
+        let ownership_result = acquire_canonical_project_ownership_with_retry_delay(
+            canonical_path.clone(),
             owner,
             retry_delay,
         );
@@ -212,6 +233,42 @@ impl DesktopProjectOwnershipManager {
         })
     }
 
+    pub(crate) fn make_connectable(
+        &self,
+        ownership_id: &str,
+        endpoint: &str,
+    ) -> Result<(), ProjectOwnershipError> {
+        let canonical_path = {
+            let state = self
+                .state
+                .lock()
+                .map_err(|_| ProjectOwnershipError::LoadFailed)?;
+            let ownership = state
+                .ownership_by_id
+                .get(ownership_id)
+                .ok_or(ProjectOwnershipError::LoadFailed)?;
+            if ownership.connectable_owner_lock.is_some() {
+                return Ok(());
+            }
+            ownership.canonical_path.clone()
+        };
+        let owner = ProjectOwner::Connectable {
+            endpoint: endpoint.to_owned(),
+        };
+        let connectable_owner_lock =
+            acquire_connectable_owner_lock(&canonical_path, &owner, OWNERSHIP_RETRY_DELAY, false)?;
+        let mut state = self
+            .state
+            .lock()
+            .map_err(|_| ProjectOwnershipError::LoadFailed)?;
+        let ownership = state
+            .ownership_by_id
+            .get_mut(ownership_id)
+            .ok_or(ProjectOwnershipError::LoadFailed)?;
+        ownership.connectable_owner_lock = Some(connectable_owner_lock);
+        Ok(())
+    }
+
     pub(crate) fn release(&self, ownership_id: &str) -> Result<(), ProjectOwnershipError> {
         let mut state = self
             .state
@@ -242,6 +299,29 @@ pub(crate) async fn acquire_desktop_project_ownership(
     .await
     .map_err(|_| DesktopProjectOwnershipError::from(ProjectOwnershipError::LoadFailed))?
     .map_err(DesktopProjectOwnershipError::from)
+}
+
+#[tauri::command]
+pub(crate) async fn acquire_desktop_project_ownership_for_save(
+    manager: tauri::State<'_, Arc<DesktopProjectOwnershipManager>>,
+    project_path: String,
+) -> Result<DesktopOwnershipAcquisition, DesktopProjectOwnershipError> {
+    let manager = Arc::clone(manager.inner());
+    tauri::async_runtime::spawn_blocking(move || manager.acquire_for_save(Path::new(&project_path)))
+        .await
+        .map_err(|_| DesktopProjectOwnershipError::from(ProjectOwnershipError::LoadFailed))?
+        .map_err(DesktopProjectOwnershipError::from)
+}
+
+#[tauri::command]
+pub(crate) fn make_desktop_project_ownership_connectable(
+    manager: tauri::State<'_, Arc<DesktopProjectOwnershipManager>>,
+    runtime_bridge: tauri::State<'_, Arc<ProjectRuntimeBridgeManager>>,
+    ownership_id: String,
+) -> Result<(), DesktopProjectOwnershipError> {
+    manager
+        .make_connectable(&ownership_id, runtime_bridge.endpoint())
+        .map_err(DesktopProjectOwnershipError::from)
 }
 
 #[tauri::command]
@@ -290,6 +370,36 @@ pub(crate) fn canonicalize_project_path(
     Ok(CanonicalProjectPath(canonical_path))
 }
 
+fn canonicalize_project_save_target(
+    project_path: &Path,
+) -> Result<CanonicalProjectPath, ProjectOwnershipError> {
+    match fs::symlink_metadata(project_path) {
+        Ok(_) => return canonicalize_project_path(project_path),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(_) => return Err(ProjectOwnershipError::LoadFailed),
+    }
+    let is_project = project_path
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("prg"));
+    if !is_project {
+        return Err(ProjectOwnershipError::LoadFailed);
+    }
+    let file_name = project_path
+        .file_name()
+        .ok_or(ProjectOwnershipError::LoadFailed)?;
+    let parent = project_path
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    let canonical_parent =
+        fs::canonicalize(parent).map_err(|_| ProjectOwnershipError::LoadFailed)?;
+    if !canonical_parent.is_dir() {
+        return Err(ProjectOwnershipError::LoadFailed);
+    }
+    Ok(CanonicalProjectPath(canonical_parent.join(file_name)))
+}
+
 pub(crate) fn acquire_project_ownership(
     project_path: &Path,
     owner: ProjectOwner,
@@ -303,6 +413,14 @@ fn acquire_project_ownership_with_retry_delay(
     retry_delay: Duration,
 ) -> Result<ProjectOwnership, ProjectOwnershipError> {
     let canonical_path = canonicalize_project_path(project_path)?;
+    acquire_canonical_project_ownership_with_retry_delay(canonical_path, owner, retry_delay)
+}
+
+fn acquire_canonical_project_ownership_with_retry_delay(
+    canonical_path: CanonicalProjectPath,
+    owner: ProjectOwner,
+    retry_delay: Duration,
+) -> Result<ProjectOwnership, ProjectOwnershipError> {
     let ownership_lock = open_lock_file(&canonical_path)?;
     let used_retry = match try_exclusive_lock(&ownership_lock, retry_delay, true)? {
         ExclusiveLockAttempt::Acquired { used_retry } => used_retry,
@@ -804,6 +922,69 @@ mod tests {
             Duration::from_millis(1),
         )
         .unwrap();
+    }
+
+    #[test]
+    fn desktop_manager_reserves_a_missing_save_target_before_it_is_written() {
+        let directory = TestDirectory::new();
+        let project = directory.path().join("saved-draft.prg");
+        let manager = DesktopProjectOwnershipManager::default();
+
+        let acquisition = manager.acquire_for_save(&project).unwrap();
+        fs::write(&project, []).unwrap();
+        let error = acquire_project_ownership_with_retry_delay(
+            &project,
+            ProjectOwner::UnconnectableHolder,
+            Duration::from_millis(1),
+        )
+        .unwrap_err();
+
+        assert_eq!(error.code(), "PROJECT_BUSY");
+        assert_eq!(error.owner(), Some(&ProjectOwner::UnconnectableHolder));
+        let DesktopOwnershipAcquisition::Acquired {
+            ownership_id,
+            canonical_path,
+        } = acquisition
+        else {
+            panic!("missing save target must be reserved");
+        };
+        assert_eq!(
+            Path::new(&canonical_path),
+            fs::canonicalize(directory.path())
+                .unwrap()
+                .join("saved-draft.prg")
+        );
+        manager.release(&ownership_id).unwrap();
+    }
+
+    #[test]
+    fn desktop_manager_promotes_a_save_reservation_after_the_runtime_host_is_ready() {
+        let directory = TestDirectory::new();
+        let project = directory.path().join("saved-draft.prg");
+        let manager = DesktopProjectOwnershipManager::default();
+        let endpoint = "tcp://127.0.0.1:41234";
+        let DesktopOwnershipAcquisition::Acquired { ownership_id, .. } =
+            manager.acquire_for_save(&project).unwrap()
+        else {
+            panic!("missing save target must be reserved");
+        };
+        fs::write(&project, []).unwrap();
+
+        manager.make_connectable(&ownership_id, endpoint).unwrap();
+        let error = acquire_project_ownership_with_retry_delay(
+            &project,
+            ProjectOwner::UnconnectableHolder,
+            Duration::from_millis(1),
+        )
+        .unwrap_err();
+
+        assert!(matches!(
+            error,
+            ProjectOwnershipError::Busy {
+                owner: ProjectOwner::Connectable { endpoint: owner_endpoint }
+            } if owner_endpoint == endpoint
+        ));
+        manager.release(&ownership_id).unwrap();
     }
 
     #[test]

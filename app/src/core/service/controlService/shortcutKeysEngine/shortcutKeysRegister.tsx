@@ -1535,16 +1535,16 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "C-s",
     icon: Save,
     when: whenHasProject,
-    onPress: () => {
+    onPress: async () => {
       const tab = store.get(activeTabAtom);
       const activeProject = tab instanceof Project ? tab : undefined;
       if (activeProject) {
         activeProject.camera.clearMoveCommander();
-        activeProject.save();
+        await activeProject.save();
         if (Settings.clearHistoryWhenManualSave) {
           activeProject.historyManager.clearHistory();
         }
-        RecentFileManager.addRecentFileByUri(activeProject.uri);
+        await RecentFileManager.addRecentFileByUri(activeProject.uri);
       }
     },
   },
@@ -3364,9 +3364,8 @@ export const allKeyBinds: KeyBindItem[] = [
         filters: [{ name: "Project Graph", extensions: ["prg"] }],
       });
       if (!path) return;
-      p.uri = URI.file(path);
+      await p.saveAs(URI.file(path));
       await RecentFileManager.addRecentFileByUri(p.uri);
-      await p.save();
     },
   },
   {

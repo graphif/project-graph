@@ -11,6 +11,7 @@ export type CliDesktopAcceptanceInvocation = {
 export type CliDesktopAcceptanceManifest = {
   invocations: CliDesktopAcceptanceInvocation[];
   unsavedProjectPath: string;
+  savedDraftProjectPath: string;
 };
 
 export type CliDesktopAcceptanceState =

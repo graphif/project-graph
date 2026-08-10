@@ -50,6 +50,16 @@ export async function runProjectGraphCliDesktopAcceptanceHost(): Promise<void> {
     );
     unsavedProject.projectState = ProjectState.Unsaved;
 
+    const savedDraft = await onNewDraft();
+    savedDraft.stageManager.add(
+      new TextNode(savedDraft, {
+        uuid: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        text: "desktop-saved-draft-sentinel",
+        collisionBox: new CollisionBox([new Rectangle(new Vector(300, 100), new Vector(160, 60))]),
+      }),
+    );
+    await savedDraft.saveAs(URI.file(manifest.savedDraftProjectPath), { includeThumbnail: false });
+
     const foreground = await onNewDraft();
     await renderSettled();
     const focusTarget = document.createElement("input");

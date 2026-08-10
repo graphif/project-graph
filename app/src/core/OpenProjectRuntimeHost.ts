@@ -177,12 +177,28 @@ export function ensureOpenProjectRuntimeBridgeListener(): Promise<void> {
   return bridgeListenerPromise;
 }
 
-export function registerOpenProjectRuntimeHost(project: Project): { dispose(): Promise<void> } {
-  const canonicalPath = project.canonicalProjectPath;
-  if (!canonicalPath) throw new Error("Open Project Runtime Host requires a canonical Project Path");
+export type OpenProjectRuntimeHostRegistration = {
+  rebind(canonicalPath: string): void;
+  dispose(): Promise<void>;
+};
+
+export function registerOpenProjectRuntimeHost(project: Project): OpenProjectRuntimeHostRegistration {
+  const initialCanonicalPath = project.canonicalProjectPath;
+  if (!initialCanonicalPath) throw new Error("Open Project Runtime Host requires a canonical Project Path");
+  let canonicalPath = initialCanonicalPath;
   const host = new OpenProjectRuntimeHost(project);
+  const existingHost = runtimeHosts.get(canonicalPath);
+  if (existingHost && existingHost !== host) throw new Error("Open Project Runtime Host already exists for this path");
   runtimeHosts.set(canonicalPath, host);
   return {
+    rebind(nextCanonicalPath) {
+      if (nextCanonicalPath === canonicalPath) return;
+      const nextHost = runtimeHosts.get(nextCanonicalPath);
+      if (nextHost && nextHost !== host) throw new Error("Open Project Runtime Host already exists for this path");
+      if (runtimeHosts.get(canonicalPath) === host) runtimeHosts.delete(canonicalPath);
+      runtimeHosts.set(nextCanonicalPath, host);
+      canonicalPath = nextCanonicalPath;
+    },
     async dispose() {
       if (runtimeHosts.get(canonicalPath) === host) runtimeHosts.delete(canonicalPath);
       await host.dispose();

@@ -84,12 +84,18 @@ import { File } from "lucide-react";
 import md5 from "md5";
 import mime from "mime";
 import React from "react";
+import { save as saveDialog } from "@tauri-apps/plugin-dialog";
 import { URI } from "vscode-uri";
 import { CollaborationService } from "./service/collaboration/CollaborationService";
 import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
 import { generateThumbnail } from "./service/dataGenerateService/generateThumbnail";
-import { registerOpenProjectRuntimeHost } from "./OpenProjectRuntimeHost";
-import { ProjectOwnershipLease, releaseProjectOwnershipWithRetry } from "./ProjectOwnership";
+import { OpenProjectRuntimeHostRegistration, registerOpenProjectRuntimeHost } from "./OpenProjectRuntimeHost";
+import {
+  ProjectOwnershipError,
+  ProjectOwnershipLease,
+  releaseProjectOwnershipWithRetry,
+  reserveProjectOwnershipForSave,
+} from "./ProjectOwnership";
 import { compareProjectVersions, parseProjectFile } from "./ProjectFile";
 import { ProjectUpgrader } from "./stage/ProjectUpgrader";
 import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageReferenceManager";
@@ -137,7 +143,7 @@ export class Project extends Tab {
   private _projectState: ProjectState = ProjectState.Unsaved;
   private _isSaving = false;
   private projectOwnership?: ProjectOwnershipLease;
-  private openRuntimeHost?: { dispose(): Promise<void> };
+  private openRuntimeHost?: OpenProjectRuntimeHostRegistration;
   public stage: StageObject[] = [];
   public tags: string[] = [];
   /**
@@ -333,9 +339,81 @@ export class Project extends Tab {
     // TODO: stash
   }
   async save(options: { includeThumbnail?: boolean } = {}) {
+    if (this.isDraft || this.isCollab) {
+      const path = await saveDialog({
+        title: this.isDraft ? "保存草稿" : "保存协作工程",
+        filters: [{ name: "Project Graph", extensions: ["prg"] }],
+      });
+      if (!path) throw new Error("未选择路径");
+      await this.saveAs(URI.file(path), options);
+      return;
+    }
     try {
       this.isSaving = true;
       await this.fs.write(this.uri, await this.getFileContent(options));
+      this.projectState = ProjectState.Saved;
+    } finally {
+      this.isSaving = false;
+    }
+  }
+
+  async saveAs(targetUri: URI, options: { includeThumbnail?: boolean } = {}) {
+    if (targetUri.scheme !== "file") throw new Error("Project Save As requires a file URI");
+    const fileSystemProvider = this.fileSystemProviders.get("file");
+    if (!fileSystemProvider) throw new Error("File Project provider is not registered");
+
+    try {
+      this.isSaving = true;
+      const content = await this.getFileContent(options);
+      const reservation = await reserveProjectOwnershipForSave(targetUri.fsPath);
+      if (reservation.status === "already_open") {
+        if (reservation.ownershipId !== this.projectOwnerIdentity) throw new ProjectOwnershipError("PROJECT_BUSY");
+        await fileSystemProvider.write(targetUri, content);
+        this._uri = targetUri;
+        this.projectState = ProjectState.Saved;
+        return;
+      }
+
+      const nextOwnership = reservation.ownership;
+      try {
+        await fileSystemProvider.write(targetUri, content);
+      } catch (error) {
+        if (nextOwnership) await releaseProjectOwnershipWithRetry(nextOwnership);
+        throw error;
+      }
+      if (!nextOwnership) {
+        this._uri = targetUri;
+        this.projectState = ProjectState.Saved;
+        return;
+      }
+
+      const previousUri = this._uri;
+      const previousOwnership = this.projectOwnership;
+      const previousRuntimeHost = this.openRuntimeHost;
+      let createdRuntimeHost = false;
+      this._uri = targetUri;
+      this.projectOwnership = nextOwnership;
+      try {
+        if (previousRuntimeHost) {
+          previousRuntimeHost.rebind(nextOwnership.canonicalPath);
+        } else {
+          this.openRuntimeHost = registerOpenProjectRuntimeHost(this);
+          createdRuntimeHost = true;
+        }
+        await nextOwnership.makeConnectable();
+      } catch (error) {
+        if (createdRuntimeHost) {
+          await this.openRuntimeHost?.dispose();
+          this.openRuntimeHost = undefined;
+        } else if (previousRuntimeHost && previousOwnership) {
+          previousRuntimeHost.rebind(previousOwnership.canonicalPath);
+        }
+        this._uri = previousUri;
+        this.projectOwnership = previousOwnership;
+        await releaseProjectOwnershipWithRetry(nextOwnership);
+        throw error;
+      }
+      if (previousOwnership) await releaseProjectOwnershipWithRetry(previousOwnership);
       this.projectState = ProjectState.Saved;
     } finally {
       this.isSaving = false;
