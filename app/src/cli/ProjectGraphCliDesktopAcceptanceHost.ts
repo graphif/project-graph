@@ -65,12 +65,16 @@ export async function runProjectGraphCliDesktopAcceptanceHost(): Promise<void> {
     const focusTarget = document.createElement("input");
     focusTarget.id = "cli-desktop-acceptance-focus";
     document.body.append(focusTarget);
+    const currentWindow = getCurrentWindow();
+    await currentWindow.setFocus();
+    await renderSettled();
     focusTarget.focus();
 
     const tabsBefore = store.get(tabsAtom);
     const activeTabBefore = store.get(activeTabAtom);
     const activeElementBefore = document.activeElement;
-    const windowFocusedBefore = await getCurrentWindow().isFocused();
+    const windowFocusedBefore = await currentWindow.isFocused();
+    if (!windowFocusedBefore) throw new Error("Could not focus the desktop acceptance window");
     const categories = manifest.invocations.reduce<Record<CliDesktopAcceptanceCategory, number>>(
       (counts, invocation) => ({ ...counts, [invocation.category]: counts[invocation.category] + 1 }),
       { project: 0, selection: 0, viewport: 0 },
@@ -91,7 +95,7 @@ export async function runProjectGraphCliDesktopAcceptanceHost(): Promise<void> {
         store.get(tabsAtom).length === tabsBefore.length &&
         store.get(tabsAtom).every((tab, index) => tab === tabsBefore[index]),
       domFocusUnchanged: document.activeElement === activeElementBefore,
-      windowFocusUnchanged: (await getCurrentWindow().isFocused()) === windowFocusedBefore,
+      windowFocusUnchanged: (await currentWindow.isFocused()) === windowFocusedBefore,
     });
   } catch (error) {
     await writeState({

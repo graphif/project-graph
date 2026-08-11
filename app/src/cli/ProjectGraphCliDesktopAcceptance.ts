@@ -352,6 +352,7 @@ async function runAcceptance(): Promise<void> {
               decorations: false,
               transparent: true,
               visible: true,
+              focus: false,
               skipTaskbar: true,
             },
           ],
