@@ -22,7 +22,10 @@ import { URI } from "vscode-uri";
 import sharp from "sharp";
 
 const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
-const cliEntryPath = fileURLToPath(new URL("../../../packages/project-graph-cli/src/cli.mjs", import.meta.url));
+const cliEntryPath =
+  process.env.PROJECT_GRAPH_CLI_TEST_ENTRY ??
+  fileURLToPath(new URL("../../../packages/project-graph-cli/src/cli.mjs", import.meta.url));
+const expectedCliVersion = process.env.PROJECT_GRAPH_CLI_TEST_VERSION ?? "1.0.0";
 const temporaryDirectories: string[] = [];
 let referenceStorePath: string | undefined;
 
@@ -103,7 +106,7 @@ function createMutationStage(): unknown[] {
 }
 
 function runCli(...args: string[]) {
-  return spawnSync("pnpm", ["cli", "--", ...args], {
+  return spawnSync(process.execPath, [cliEntryPath, "--", ...args], {
     cwd: repositoryRoot,
     encoding: "utf8",
     env: {
@@ -122,7 +125,7 @@ function runCliAsyncWithEnvironment(
 }
 
 function spawnCliProcess(environment: Record<string, string>, ...args: string[]) {
-  return spawnCapturedProcess("pnpm", ["cli", "--", ...args], environment);
+  return spawnCapturedProcess(process.execPath, [cliEntryPath, "--", ...args], environment);
 }
 
 function spawnCliEntryProcess(environment: Record<string, string>, ...args: string[]) {
@@ -375,7 +378,7 @@ describe("Project Graph CLI process contract", () => {
   it("prints only one semantic-version line", () => {
     const result = runCli("--version");
 
-    expect(result).toMatchObject({ status: 0, stdout: "1.0.0\n", stderr: "" });
+    expect(result).toMatchObject({ status: 0, stdout: `${expectedCliVersion}\n`, stderr: "" });
   });
 
   it("lists every current Registry tool as one JSON value", () => {
@@ -518,8 +521,8 @@ describe("Project Graph CLI process contract", () => {
     const executorReadyPath = join(dirname(projectPath), "executor-ready.txt");
     const startedAt = process.hrtime.bigint();
     const result = spawnSync(
-      "pnpm",
-      ["cli", "--", "tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}"],
+      process.execPath,
+      [cliEntryPath, "--", "tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}"],
       {
         cwd: repositoryRoot,
         encoding: "utf8",

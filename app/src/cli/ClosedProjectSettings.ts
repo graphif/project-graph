@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import z from "zod/v4";
 import {
   DEFAULT_FONT_FAMILY,
   MAC_DEFAULT_FONT_FAMILY,
@@ -8,6 +9,8 @@ import {
 } from "@/core/service/ProjectToolSettingsSchema";
 
 let availableSettings: Record<string, unknown> | undefined;
+
+export const settingsSchema = z.object({});
 
 function loadSettings(): Record<string, unknown> {
   if (availableSettings) return availableSettings;

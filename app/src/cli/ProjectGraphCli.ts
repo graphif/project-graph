@@ -1,4 +1,3 @@
-import packageJson from "../../../package.json" with { type: "json" };
 import {
   getBuiltInToolCliEntries,
   getBuiltInToolCliEntry,
@@ -12,6 +11,7 @@ import {
   canOpenProjectProvideCapabilities,
 } from "../core/service/dataManageService/aiEngine/BuiltInToolRuntimeProfiles";
 import type { ProjectGraphCliOperationalError } from "./ClosedProjectInvocation";
+import type { ProjectGraphCliRuntime } from "./ProjectGraphCliRuntime";
 
 const help = `Usage: project-graph <command>
 
@@ -50,14 +50,18 @@ function writeError(error: ProjectGraphCliError): void {
 
 export async function runProjectGraphCli(
   args: readonly string[],
-  options: { abortSignal?: AbortSignal } = {},
+  options: {
+    version: string;
+    loadRuntime: () => Promise<ProjectGraphCliRuntime>;
+    abortSignal?: AbortSignal;
+  },
 ): Promise<number> {
   if (args.length === 1 && args[0] === "--help") {
     process.stdout.write(help);
     return 0;
   }
   if (args.length === 1 && args[0] === "--version") {
-    process.stdout.write(`${packageJson.version}\n`);
+    process.stdout.write(`${options.version}\n`);
     return 0;
   }
   if (args.length === 2 && args[0] === "tool" && args[1] === "list") {
@@ -110,7 +114,7 @@ export async function runProjectGraphCli(
       return 2;
     }
 
-    const { runPathRoutedInvocation } = await import("./ProjectGraphCliRuntime");
+    const { runPathRoutedInvocation } = await options.loadRuntime();
     const result = await runPathRoutedInvocation({
       toolName,
       input,
@@ -128,4 +132,26 @@ export async function runProjectGraphCli(
   }
   writeError({ code: "INVALID_COMMAND", message: "Invalid Project Graph CLI command." });
   return 2;
+}
+
+export async function runProjectGraphCliProcess(options: {
+  version: string;
+  loadRuntime: () => Promise<ProjectGraphCliRuntime>;
+}): Promise<void> {
+  const args = process.argv.slice(2);
+  const abortController = new AbortController();
+  const handleSignal = (signal: NodeJS.Signals) => abortController.abort(signal);
+  const handleSigint = () => handleSignal("SIGINT");
+  const handleSigterm = () => handleSignal("SIGTERM");
+  process.on("SIGINT", handleSigint);
+  process.on("SIGTERM", handleSigterm);
+  try {
+    process.exitCode = await runProjectGraphCli(args[0] === "--" ? args.slice(1) : args, {
+      ...options,
+      abortSignal: abortController.signal,
+    });
+  } finally {
+    process.off("SIGINT", handleSigint);
+    process.off("SIGTERM", handleSigterm);
+  }
 }

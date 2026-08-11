@@ -2,15 +2,11 @@ import { spawn, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { closeSync, openSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { createConnection } from "node:net";
-import { fileURLToPath } from "node:url";
-import { JSDOM } from "jsdom";
-import { createServer, type Plugin } from "vite";
 import { prepareBuiltInToolInvocation } from "../core/service/dataManageService/aiEngine/BuiltInToolRegistry";
 import {
   canClosedProjectProvideCapabilities,
   canOpenProjectProvideCapabilities,
 } from "../core/service/dataManageService/aiEngine/BuiltInToolRuntimeProfiles";
-import { finalizeRuntimeCleanup } from "../core/RuntimeCleanup";
 import type { ClosedProjectInvocationResult, ProjectGraphCliOperationalError } from "./ClosedProjectInvocation";
 
 type RuntimeResult =
@@ -31,6 +27,26 @@ type RuntimeResult =
           };
     }
   | { forwarded: true; exitCode: number };
+
+export type ClosedProjectRuntimeOptions = {
+  toolName: string;
+  input: unknown;
+  canonicalPath: string;
+  allowUpgrade: boolean;
+  abortSignal?: AbortSignal;
+};
+
+type ClosedProjectInvoker = (options: ClosedProjectRuntimeOptions) => Promise<ClosedProjectInvocationResult>;
+
+export type ProjectGraphCliRuntime = {
+  runPathRoutedInvocation(options: {
+    toolName: string;
+    input: unknown;
+    projectPath: string;
+    allowUpgrade: boolean;
+    abortSignal?: AbortSignal;
+  }): Promise<RuntimeResult>;
+};
 
 const cancelledResult = (): RuntimeResult => ({
   ok: false,
@@ -70,131 +86,6 @@ function isStructuredCliError(output: string): boolean {
   } catch {
     return false;
   }
-}
-
-type RuntimeStubs = {
-  settings: string;
-  renderer: string;
-  detailsManager: string;
-  fileSystemProvider: string;
-  soundService: string;
-  http: string;
-  modelImageEncoder: string;
-};
-
-const runtimeStubDescriptors: readonly {
-  matcher: string | RegExp;
-  stubKey: keyof RuntimeStubs;
-}[] = [
-  { matcher: "@/core/service/Settings", stubKey: "settings" },
-  { matcher: /^(?:.*\/)?core\/service\/Settings(?:\.tsx)?(?:\?.*)?$/, stubKey: "settings" },
-  { matcher: /^(?:.*\/)?Settings$/, stubKey: "settings" },
-  { matcher: "@/core/render/canvas2d/renderer", stubKey: "renderer" },
-  { matcher: /^(?:.*\/)?core\/render\/canvas2d\/renderer(?:\.tsx)?$/, stubKey: "renderer" },
-  { matcher: /^(?:.*\/)?stageObject\/tools\/entityDetailsManager$/, stubKey: "detailsManager" },
-  { matcher: "../tools/entityDetailsManager", stubKey: "detailsManager" },
-  {
-    matcher: /^(?:.*\/)?core\/fileSystemProvider\/FileSystemProviderFile(?:\.tsx)?$/,
-    stubKey: "fileSystemProvider",
-  },
-  { matcher: "@/core/fileSystemProvider/FileSystemProviderFile", stubKey: "fileSystemProvider" },
-  {
-    matcher: /^(?:.*\/)?core\/service\/feedbackService\/SoundService(?:\.tsx)?$/,
-    stubKey: "soundService",
-  },
-  { matcher: /^(?:.*\/)?feedbackService\/SoundService$/, stubKey: "soundService" },
-  { matcher: "@/core/service/feedbackService/SoundService", stubKey: "soundService" },
-  { matcher: "@tauri-apps/plugin-http", stubKey: "http" },
-  {
-    matcher: /^(?:.*\/)?core\/service\/dataManageService\/aiEngine\/ModelImageEncoder(?:\.tsx)?$/,
-    stubKey: "modelImageEncoder",
-  },
-  { matcher: "@/core/service/dataManageService/aiEngine/ModelImageEncoder", stubKey: "modelImageEncoder" },
-];
-
-function runtimeCompatibilityPlugin(stubs: RuntimeStubs): Plugin {
-  return {
-    name: "project-graph-cli-runtime-compatibility",
-    enforce: "pre",
-    resolveId(id) {
-      const descriptor = runtimeStubDescriptors.find(({ matcher }) =>
-        typeof matcher === "string" ? id === matcher : matcher.test(id),
-      );
-      if (descriptor) return stubs[descriptor.stubKey];
-      return id === "virtual:original-class-name" ? `\0${id}` : undefined;
-    },
-    load(id) {
-      return id === "\0virtual:original-class-name"
-        ? "export const getOriginalNameOf = value => value.name"
-        : undefined;
-    },
-  };
-}
-
-async function invokeInRenderer(options: {
-  toolName: string;
-  input: unknown;
-  canonicalPath: string;
-  allowUpgrade: boolean;
-  abortSignal?: AbortSignal;
-}): Promise<RuntimeResult> {
-  const dom = new JSDOM("<!doctype html><html><body></body></html>", { url: "http://localhost" });
-  const previousWindow = globalThis.window;
-  const previousDocument = globalThis.document;
-  Object.assign(globalThis, { window: dom.window, document: dom.window.document });
-  Object.defineProperty(dom.window.HTMLCanvasElement.prototype, "getContext", {
-    configurable: true,
-    value: () => ({ measureText: (text: string) => ({ width: text.length * 50 }) }),
-  });
-  const appRoot = fileURLToPath(new URL("../..", import.meta.url));
-  const stubs = {
-    settings: fileURLToPath(new URL("./ClosedProjectSettings.ts", import.meta.url)),
-    renderer: fileURLToPath(new URL("./ClosedProjectRenderer.ts", import.meta.url)),
-    detailsManager: fileURLToPath(new URL("./ClosedProjectDetailsManager.ts", import.meta.url)),
-    fileSystemProvider: fileURLToPath(new URL("./ClosedProjectFileSystemProvider.ts", import.meta.url)),
-    soundService: fileURLToPath(new URL("./ClosedProjectSoundService.ts", import.meta.url)),
-    http: fileURLToPath(new URL("./ClosedProjectHttp.ts", import.meta.url)),
-    modelImageEncoder: fileURLToPath(new URL("./ClosedProjectModelImageEncoder.ts", import.meta.url)),
-  };
-  let server: Awaited<ReturnType<typeof createServer>> | undefined;
-  let result: RuntimeResult;
-  try {
-    server = await createServer({
-      configFile: false,
-      root: appRoot,
-      logLevel: "silent",
-      optimizeDeps: { noDiscovery: true },
-      ssr: { noExternal: ["@platejs/math"] },
-      resolve: {
-        alias: [
-          ...runtimeStubDescriptors.map(({ matcher, stubKey }) => ({
-            find: matcher,
-            replacement: stubs[stubKey],
-          })),
-          { find: "@", replacement: `${appRoot}/src` },
-        ],
-      },
-      server: { middlewareMode: true },
-      plugins: [runtimeCompatibilityPlugin(stubs)],
-    });
-    const runtime = (await server.ssrLoadModule("/src/cli/ClosedProjectInvocation.ts")) as {
-      invokeClosedProjectTool: (
-        value: typeof options,
-        loadModule: (id: string) => Promise<Record<string, unknown>>,
-      ) => Promise<ClosedProjectInvocationResult>;
-    };
-    result = await runtime.invokeClosedProjectTool(options, (id) => server!.ssrLoadModule(id));
-  } catch {
-    result = {
-      ok: false,
-      error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
-    };
-  }
-  return finalizeRuntimeCleanup(result, [
-    async () => server?.close(),
-    () => dom.window.close(),
-    () => Object.assign(globalThis, { window: previousWindow, document: previousDocument }),
-  ]);
 }
 
 function runOwnedWorker(args: readonly string[], canonicalPath: string, abortSignal?: AbortSignal) {
@@ -392,13 +283,16 @@ function invokeConnectableOwnerIfPresent(
   );
 }
 
-export async function runPathRoutedInvocation(options: {
-  toolName: string;
-  input: unknown;
-  projectPath: string;
-  allowUpgrade: boolean;
-  abortSignal?: AbortSignal;
-}): Promise<RuntimeResult> {
+async function runPathRoutedInvocation(
+  options: {
+    toolName: string;
+    input: unknown;
+    projectPath: string;
+    allowUpgrade: boolean;
+    abortSignal?: AbortSignal;
+  },
+  invokeClosedProjectTool: ClosedProjectInvoker,
+): Promise<RuntimeResult> {
   if (options.abortSignal?.aborted) return cancelledResult();
   let prepared;
   try {
@@ -427,7 +321,7 @@ export async function runPathRoutedInvocation(options: {
   if (!projectPathResult.ok) return projectPathResult;
 
   if (process.env.PROJECT_GRAPH_CLI_OWNERSHIP_ACQUIRED === "1") {
-    return invokeInRenderer({ ...options, canonicalPath: projectPathResult.canonicalPath });
+    return invokeClosedProjectTool({ ...options, canonicalPath: projectPathResult.canonicalPath });
   }
 
   const args = [
@@ -463,4 +357,10 @@ export async function runPathRoutedInvocation(options: {
   if (worker.stdout) process.stdout.write(worker.stdout);
   if (worker.stderr) process.stderr.write(worker.stderr);
   return { forwarded: true, exitCode: worker.status };
+}
+
+export function createProjectGraphCliRuntime(invokeClosedProjectTool: ClosedProjectInvoker): ProjectGraphCliRuntime {
+  return {
+    runPathRoutedInvocation: (options) => runPathRoutedInvocation(options, invokeClosedProjectTool),
+  };
 }

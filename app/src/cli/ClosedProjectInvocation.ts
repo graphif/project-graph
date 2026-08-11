@@ -86,60 +86,100 @@ type StoredProjectReferences = {
 type ServiceConstructor = { id?: string; new (...args: any[]): any };
 type ClosedProjectModuleLoader = (id: string) => Promise<Record<string, unknown>>;
 
+type ClosedProjectServiceDescriptor = {
+  moduleId: string;
+  exportName: string;
+  load: () => Promise<unknown>;
+};
+
+const closedProjectServices = {
+  history: {
+    moduleId: "/src/core/stage/stageManager/StageHistoryManager.tsx",
+    exportName: "HistoryManager",
+    load: () => import("@/core/stage/stageManager/StageHistoryManager"),
+  },
+  section: {
+    moduleId: "/src/core/stage/stageManager/basicMethods/SectionMethods.tsx",
+    exportName: "SectionMethods",
+    load: () => import("@/core/stage/stageManager/basicMethods/SectionMethods"),
+  },
+  sectionInOut: {
+    moduleId: "/src/core/stage/stageManager/concreteMethods/StageSectionInOutManager.tsx",
+    exportName: "SectionInOutManager",
+    load: () => import("@/core/stage/stageManager/concreteMethods/StageSectionInOutManager"),
+  },
+  syncAssociation: {
+    moduleId: "/src/core/stage/stageManager/concreteMethods/StageSyncAssociationManager.tsx",
+    exportName: "StageSyncAssociationManager",
+    load: () => import("@/core/stage/stageManager/concreteMethods/StageSyncAssociationManager"),
+  },
+  delete: {
+    moduleId: "/src/core/stage/stageManager/concreteMethods/StageDeleteManager.tsx",
+    exportName: "DeleteManager",
+    load: () => import("@/core/stage/stageManager/concreteMethods/StageDeleteManager"),
+  },
+  text: {
+    moduleId: "/src/core/render/canvas2d/basicRenderer/textRenderer.tsx",
+    exportName: "TextRenderer",
+    load: () => import("@/core/render/canvas2d/basicRenderer/textRenderer"),
+  },
+  graph: {
+    moduleId: "/src/core/stage/stageManager/basicMethods/GraphMethods.tsx",
+    exportName: "GraphMethods",
+    load: () => import("@/core/stage/stageManager/basicMethods/GraphMethods"),
+  },
+  entityMove: {
+    moduleId: "/src/core/stage/stageManager/concreteMethods/StageEntityMoveManager.tsx",
+    exportName: "EntityMoveManager",
+    load: () => import("@/core/stage/stageManager/concreteMethods/StageEntityMoveManager"),
+  },
+  layout: {
+    moduleId: "/src/core/service/controlService/autoLayoutEngine/mainTick.tsx",
+    exportName: "AutoLayout",
+    load: () => import("@/core/service/controlService/autoLayoutEngine/mainTick"),
+  },
+  fastTreeLayout: {
+    moduleId: "/src/core/service/controlService/autoLayoutEngine/autoLayoutFastTreeMode.tsx",
+    exportName: "AutoLayoutFastTree",
+    load: () => import("@/core/service/controlService/autoLayoutEngine/autoLayoutFastTreeMode"),
+  },
+  stageImport: {
+    moduleId: "/src/core/service/dataGenerateService/stageImportEngine/stageImportEngine.tsx",
+    exportName: "StageImport",
+    load: () => import("@/core/service/dataGenerateService/stageImportEngine/stageImportEngine"),
+  },
+  nodeConnector: {
+    moduleId: "/src/core/stage/stageManager/concreteMethods/StageNodeConnector.tsx",
+    exportName: "NodeConnector",
+    load: () => import("@/core/stage/stageManager/concreteMethods/StageNodeConnector"),
+  },
+} satisfies Record<string, ClosedProjectServiceDescriptor>;
+
+export async function loadPrecompiledClosedProjectModule(id: string): Promise<Record<string, unknown>> {
+  const service = Object.values(closedProjectServices).find(({ moduleId }) => moduleId === id);
+  if (!service) throw new Error(`Closed Project module is unavailable: ${id}`);
+  return (await service.load()) as Record<string, unknown>;
+}
+
 const closedProjectCapabilityServices: Partial<
-  Record<BuiltInToolCapability, readonly { moduleId: string; exportName: string }[]>
+  Record<BuiltInToolCapability, readonly ClosedProjectServiceDescriptor[]>
 > = {
-  history: [{ moduleId: "/src/core/stage/stageManager/StageHistoryManager.tsx", exportName: "HistoryManager" }],
+  history: [closedProjectServices.history],
   delete: [
-    { moduleId: "/src/core/stage/stageManager/basicMethods/SectionMethods.tsx", exportName: "SectionMethods" },
-    {
-      moduleId: "/src/core/stage/stageManager/concreteMethods/StageSectionInOutManager.tsx",
-      exportName: "SectionInOutManager",
-    },
-    {
-      moduleId: "/src/core/stage/stageManager/concreteMethods/StageSyncAssociationManager.tsx",
-      exportName: "StageSyncAssociationManager",
-    },
-    {
-      moduleId: "/src/core/stage/stageManager/concreteMethods/StageDeleteManager.tsx",
-      exportName: "DeleteManager",
-    },
+    closedProjectServices.section,
+    closedProjectServices.sectionInOut,
+    closedProjectServices.syncAssociation,
+    closedProjectServices.delete,
   ],
-  text: [
-    { moduleId: "/src/core/render/canvas2d/basicRenderer/textRenderer.tsx", exportName: "TextRenderer" },
-    {
-      moduleId: "/src/core/stage/stageManager/concreteMethods/StageSyncAssociationManager.tsx",
-      exportName: "StageSyncAssociationManager",
-    },
-  ],
-  graph: [{ moduleId: "/src/core/stage/stageManager/basicMethods/GraphMethods.tsx", exportName: "GraphMethods" }],
-  layout: [
-    {
-      moduleId: "/src/core/stage/stageManager/concreteMethods/StageEntityMoveManager.tsx",
-      exportName: "EntityMoveManager",
-    },
-    { moduleId: "/src/core/service/controlService/autoLayoutEngine/mainTick.tsx", exportName: "AutoLayout" },
-  ],
+  text: [closedProjectServices.text, closedProjectServices.syncAssociation],
+  graph: [closedProjectServices.graph],
+  layout: [closedProjectServices.entityMove, closedProjectServices.layout],
   "tree-import": [
-    {
-      moduleId: "/src/core/stage/stageManager/concreteMethods/StageEntityMoveManager.tsx",
-      exportName: "EntityMoveManager",
-    },
-    {
-      moduleId: "/src/core/service/controlService/autoLayoutEngine/autoLayoutFastTreeMode.tsx",
-      exportName: "AutoLayoutFastTree",
-    },
-    {
-      moduleId: "/src/core/service/dataGenerateService/stageImportEngine/stageImportEngine.tsx",
-      exportName: "StageImport",
-    },
+    closedProjectServices.entityMove,
+    closedProjectServices.fastTreeLayout,
+    closedProjectServices.stageImport,
   ],
-  "node-connect": [
-    {
-      moduleId: "/src/core/stage/stageManager/concreteMethods/StageNodeConnector.tsx",
-      exportName: "NodeConnector",
-    },
-  ],
+  "node-connect": [closedProjectServices.nodeConnector],
 };
 
 function loadServiceOnce(project: Project, service: ServiceConstructor): void {
