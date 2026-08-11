@@ -247,9 +247,10 @@ async function startDesktopRuntimeBridge(projectPath: string, host: OpenProjectR
   if (!address || typeof address === "string") throw new Error("Expected a TCP Runtime Host address");
 
   const ownershipLockPath = `${projectPath}.project-graph.lock`;
-  const connectableLockPath = `${projectPath}.project-graph.connectable`;
+  const connectableRecordPath = `${projectPath}.project-graph.connectable`;
+  const connectableLockPath = `${connectableRecordPath}.lock`;
   writeFileSync(
-    connectableLockPath,
+    connectableRecordPath,
     JSON.stringify({ kind: "connectable", endpoint: `tcp://127.0.0.1:${address.port}` }),
   );
   const lockHolder = spawn("/usr/bin/lockf", [

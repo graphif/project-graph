@@ -143,7 +143,7 @@ fn handle_connection(
                     }
                     let cancellation_emit = Arc::clone(&emit);
                     let cancellation_request_id = request_id.clone();
-                    let cancellation_listener = thread::spawn(move || {
+                    let _cancellation_listener = thread::spawn(move || {
                         if let Ok(ProjectRuntimeRequest::Cancellation { cancel_request_id }) =
                             read_request(&mut reader)
                         {
@@ -158,8 +158,6 @@ fn handle_connection(
                     if let Ok(mut pending) = pending.lock() {
                         pending.remove(&request_id);
                     }
-                    let _ = stream.shutdown(Shutdown::Read);
-                    let _ = cancellation_listener.join();
                     response
                 }
             })
@@ -396,11 +394,17 @@ mod tests {
         assert!(ownership_helper_path.is_file());
         let cli_project_path = project_path.clone();
         let cli = thread::spawn(move || {
-            Command::new("pnpm")
+            Command::new("node")
                 .current_dir(repository_root)
                 .env("NO_COLOR", "1")
                 .env("PROJECT_GRAPH_OWNERSHIP_HELPER_PATH", ownership_helper_path)
-                .args(["cli", "--", "tool", "invoke", "get_all_nodes", "--project"])
+                .args([
+                    "packages/project-graph-cli/src/cli.mjs",
+                    "tool",
+                    "invoke",
+                    "get_all_nodes",
+                    "--project",
+                ])
                 .arg(cli_project_path)
                 .args(["--input", "{}"])
                 .output()
@@ -416,8 +420,8 @@ mod tests {
             panic!("expected invocation event");
         };
         assert_eq!(
-            invocation_project_path,
-            fs::canonicalize(&project_path).unwrap().to_string_lossy()
+            fs::canonicalize(invocation_project_path).unwrap(),
+            fs::canonicalize(&project_path).unwrap()
         );
         assert!(bridge.respond(
             &request_id,

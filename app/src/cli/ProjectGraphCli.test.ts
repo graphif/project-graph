@@ -269,9 +269,10 @@ async function createOpenProjectHost(projectPath: string, value: unknown, respon
 
   const canonicalPath = realpathSync(projectPath);
   const ownershipLockPath = `${canonicalPath}.project-graph.lock`;
-  const connectableLockPath = `${canonicalPath}.project-graph.connectable`;
+  const connectableRecordPath = `${canonicalPath}.project-graph.connectable`;
+  const connectableLockPath = `${connectableRecordPath}.lock`;
   writeFileSync(
-    connectableLockPath,
+    connectableRecordPath,
     JSON.stringify({ kind: "connectable", endpoint: `tcp://127.0.0.1:${address.port}` }),
   );
   const holder = spawn("/usr/bin/lockf", [
@@ -350,9 +351,10 @@ async function createCancellableOpenProjectHost(projectPath: string) {
 
   const canonicalPath = realpathSync(projectPath);
   const ownershipLockPath = `${canonicalPath}.project-graph.lock`;
-  const connectableLockPath = `${canonicalPath}.project-graph.connectable`;
+  const connectableRecordPath = `${canonicalPath}.project-graph.connectable`;
+  const connectableLockPath = `${connectableRecordPath}.lock`;
   writeFileSync(
-    connectableLockPath,
+    connectableRecordPath,
     JSON.stringify({ kind: "connectable", endpoint: `tcp://127.0.0.1:${address.port}` }),
   );
   const holder = spawn("/usr/bin/lockf", [
