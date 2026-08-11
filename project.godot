@@ -13,7 +13,7 @@ config_version=5
 config/name="Project Graph"
 run/main_scene="uid://dpglridd8c5go"
 config/features=PackedStringArray("4.7", "GL Compatibility")
-config/icon="res://icon.svg"
+config/icon="uid://bxfj8cpdlgdoa"
 
 [display]
 

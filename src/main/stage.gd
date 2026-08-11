@@ -19,6 +19,5 @@ func _ready() -> void:
 # 递归设置节点及其所有子孙的 owner
 func _set_owner_recursive(node: Node, new_owner: Node) -> void:
 	node.owner = new_owner
-	print(node.owner)
 	for child in node.get_children():
 		_set_owner_recursive(child, new_owner)
