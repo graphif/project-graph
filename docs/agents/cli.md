@@ -20,4 +20,18 @@ SIGINT and SIGTERM request cooperative cancellation. A handled cancellation writ
 
 Cancellation has no invocation timeout and does not hard-kill a handler. A handler that consumes its `AbortSignal` can stop promptly; existing handlers that do not consume it may finish their current work before the CLI reports cancellation. There is no cancel subcommand, stdin cancellation message, or crash/power-loss rollback guarantee.
 
-The repository process suites currently validate this development workflow on macOS, including `/usr/bin/lockf` ownership and the loopback Open Project Runtime bridge. Windows, Linux, packaged applications, signing, installation, PATH setup, and release workflows are outside this boundary.
+## Production runtime materialization
+
+Build the native ownership helper for the current target, then materialize the precompiled Node runtime into an empty output directory:
+
+```sh
+cargo test --manifest-path app/src-tauri/Cargo.toml --test project_ownership_helper
+PROJECT_GRAPH_CLI_VERSION=1.2.3 \
+PROJECT_GRAPH_OWNERSHIP_HELPER_PATH="$PWD/app/src-tauri/target/debug/project-graph-ownership-helper" \
+pnpm --filter @graphif/project-graph materialize:cli --outDir /absolute/path/to/empty-output
+node /absolute/path/to/empty-output/project-graph.mjs --version
+```
+
+The materialized directory contains the precompiled CLI entry and chunks, production Node dependencies, and the target-native ownership helper. It does not interpret TypeScript, start Vite at runtime, download dependencies, fall back to `PATH`, or bundle a Node executable. A later integration package must add a fixed Node runtime and invoke this exact package-local entry.
+
+The repository process suites validate the native helper, materialized runtime, Closed Project execution, and loopback Open Project Runtime bridge on macOS arm64. The ownership primitive is implemented for macOS and Windows, but this core candidate does not claim a validated Windows payload or Host installation; those require target-native materialization and acceptance on the designated Windows machine. Linux payloads, packaged desktop applications, signing, installation, and Host Plugin or Marketplace lifecycles remain outside this boundary.
