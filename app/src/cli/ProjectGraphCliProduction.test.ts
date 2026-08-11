@@ -125,7 +125,7 @@ describe("Project Graph production CLI runtime", () => {
     }
   }, 60_000);
 
-  it("runs a Closed Project invocation through the precompiled runtime", async () => {
+  it("uses the package-local helper for a Closed Project invocation", async () => {
     const entryPath = materializeProductionRuntime("3.2.1");
     const projectPath = await createProjectFixture();
     const referenceStoreDirectory = mkdtempSync(join(tmpdir(), "project-graph-production-references-"));
@@ -140,6 +140,7 @@ describe("Project Graph production CLI runtime", () => {
           encoding: "utf8",
           env: {
             ...process.env,
+            PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: join(referenceStoreDirectory, "external-helper"),
             PROJECT_GRAPH_REFERENCE_STORE_PATH: referenceStorePath,
           },
         },
