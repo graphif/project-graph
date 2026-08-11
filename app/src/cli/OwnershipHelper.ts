@@ -174,6 +174,11 @@ function hasExactKeys(value: object, keys: readonly string[]): boolean {
   return actualKeys.length === keys.length && keys.every((key) => actualKeys.includes(key));
 }
 
+function normalizeWindowsVerbatimPath(path: string): string {
+  if (path.startsWith("\\\\?\\UNC\\")) return `\\\\${path.slice(8)}`;
+  return path.startsWith("\\\\?\\") ? path.slice(4) : path;
+}
+
 export async function acquireProjectOwnership(
   canonicalPath: string,
   abortSignal?: AbortSignal,
@@ -195,7 +200,8 @@ export async function acquireProjectOwnership(
   if (
     response.status === "acquired" &&
     "canonicalPath" in response &&
-    response.canonicalPath === canonicalPath &&
+    typeof response.canonicalPath === "string" &&
+    normalizeWindowsVerbatimPath(response.canonicalPath) === normalizeWindowsVerbatimPath(canonicalPath) &&
     hasExactKeys(response, ["status", "canonicalPath"])
   ) {
     return { status: "acquired", canonicalPath, lease: new OwnershipHelperLease(child) };

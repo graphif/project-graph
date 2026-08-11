@@ -565,6 +565,39 @@ describe("Project Graph CLI process contract", () => {
   });
 
   it.skipIf(productionEntry || process.platform === "win32")(
+    "accepts the Windows verbatim prefix on an acquired canonical path",
+    async () => {
+      const projectPath = await createProjectFixture();
+      const ownershipHelperPath = createFakeOwnershipHelper(`
+const command = process.argv[2];
+const response = command === "try-hold-project"
+  ? { status: "acquired", canonicalPath: "\\\\\\\\?\\\\" + process.argv[3] }
+  : { status: "acquired" };
+process.stdout.write(JSON.stringify(response) + "\\n");
+process.stdin.resume();
+process.stdin.on("end", () => process.exit(0));
+`);
+
+      const result = await spawnCliEntryProcess(
+        { PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: ownershipHelperPath },
+        "tool",
+        "invoke",
+        "get_all_nodes",
+        "--project",
+        projectPath,
+        "--input",
+        "{}",
+      ).result;
+
+      expect(result).toEqual({
+        status: 0,
+        stdout: '{"objects":[]}\n',
+        stderr: "",
+      });
+    },
+  );
+
+  it.skipIf(productionEntry || process.platform === "win32")(
     "fails closed when the ownership helper emits output after its response",
     async () => {
       const projectPath = await createProjectFixture();
