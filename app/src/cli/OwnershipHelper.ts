@@ -187,6 +187,7 @@ export async function acquireProjectOwnership(
   try {
     child = spawn(ownershipHelperPath(), ["try-hold-project", canonicalPath], {
       stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true,
     });
     child.stderr.resume();
   } catch {
@@ -236,6 +237,7 @@ export async function acquireReferenceStoreLock(
   try {
     child = spawn(ownershipHelperPath(), ["hold-reference-store", storePath], {
       stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true,
     });
     child.stderr.resume();
   } catch {
