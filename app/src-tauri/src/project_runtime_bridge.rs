@@ -1,8 +1,10 @@
+use crate::project_ownership::canonicalize_project_path;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Write};
 use std::net::{Shutdown, TcpListener, TcpStream};
+use std::path::Path;
 use std::sync::mpsc::{self, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -121,6 +123,9 @@ fn handle_connection(
                     if request_id.is_empty() {
                         return Err(());
                     }
+                    let project_path = canonicalize_project_path(Path::new(&project_path))
+                        .map_err(|_| ())?
+                        .to_protocol_string();
                     let (response_sender, response_receiver) = mpsc::channel();
                     {
                         let mut pending = pending.lock().map_err(|_| ())?;
@@ -236,12 +241,16 @@ mod tests {
 
     #[test]
     fn loopback_bridge_forwards_one_runtime_invocation_and_response() {
+        let directory = TestDirectory::new();
+        let project_path = directory.path().join("graph.prg");
+        fs::write(&project_path, b"project").unwrap();
         let (event_sender, event_receiver) = mpsc::channel();
         let bridge = ProjectRuntimeBridgeManager::start_with_emitter(move |invocation| {
             event_sender.send(invocation).map_err(|_| ())
         })
         .unwrap();
         let endpoint = bridge.endpoint().to_owned();
+        let invocation_path = project_path.clone();
         let client = thread::spawn(move || {
             let address = endpoint.strip_prefix("tcp://").unwrap();
             let mut stream = TcpStream::connect(address).unwrap();
@@ -250,7 +259,7 @@ mod tests {
                 "{}",
                 json!({
                     "requestId": "request-1",
-                    "projectPath": "/projects/graph.prg",
+                    "projectPath": invocation_path,
                     "toolName": "get_all_nodes",
                     "input": {}
                 })
@@ -263,14 +272,19 @@ mod tests {
 
         let ProjectRuntimeEvent::Invoke {
             request_id,
-            project_path,
+            project_path: emitted_project_path,
             tool_name,
             ..
         } = event_receiver.recv().unwrap()
         else {
             panic!("expected invocation event");
         };
-        assert_eq!(project_path, "/projects/graph.prg");
+        assert_eq!(
+            emitted_project_path,
+            canonicalize_project_path(&project_path)
+                .unwrap()
+                .to_protocol_string()
+        );
         assert_eq!(tool_name, "get_all_nodes");
         assert!(bridge.respond(
             &request_id,
@@ -285,6 +299,9 @@ mod tests {
 
     #[test]
     fn loopback_bridge_returns_a_structured_error_when_the_frontend_rejects_the_invocation() {
+        let directory = TestDirectory::new();
+        let project_path = directory.path().join("graph.prg");
+        fs::write(&project_path, b"project").unwrap();
         let bridge = ProjectRuntimeBridgeManager::start_with_emitter(|_| Err(())).unwrap();
         let address = bridge.endpoint().strip_prefix("tcp://").unwrap();
         let mut stream = TcpStream::connect(address).unwrap();
@@ -293,7 +310,7 @@ mod tests {
             "{}",
             json!({
                 "requestId": "request-rejected",
-                "projectPath": "/projects/graph.prg",
+                "projectPath": project_path,
                 "toolName": "get_all_nodes",
                 "input": {}
             })
@@ -310,6 +327,9 @@ mod tests {
 
     #[test]
     fn loopback_bridge_forwards_cancellation_for_the_matching_invocation() {
+        let directory = TestDirectory::new();
+        let project_path = directory.path().join("graph.prg");
+        fs::write(&project_path, b"project").unwrap();
         let (event_sender, event_receiver) = mpsc::channel();
         let bridge = ProjectRuntimeBridgeManager::start_with_emitter(move |event| {
             event_sender.send(event).map_err(|_| ())
@@ -322,7 +342,7 @@ mod tests {
             "{}",
             json!({
                 "requestId": "request-cancel",
-                "projectPath": "/projects/graph.prg",
+                "projectPath": project_path,
                 "toolName": "get_all_nodes",
                 "input": {}
             })
@@ -420,8 +440,10 @@ mod tests {
             panic!("expected invocation event");
         };
         assert_eq!(
-            fs::canonicalize(invocation_project_path).unwrap(),
-            fs::canonicalize(&project_path).unwrap()
+            invocation_project_path,
+            canonicalize_project_path(&project_path)
+                .unwrap()
+                .to_protocol_string()
         );
         assert!(bridge.respond(
             &request_id,
@@ -451,10 +473,9 @@ mod tests {
                 .unwrap(),
             DesktopOwnershipAcquisition::AlreadyOwned {
                 ownership_id: ownership_id.clone(),
-                canonical_path: fs::canonicalize(&project_path)
+                canonical_path: canonicalize_project_path(&project_path)
                     .unwrap()
-                    .to_string_lossy()
-                    .into_owned(),
+                    .to_protocol_string(),
             }
         );
         ownership.release(&ownership_id).unwrap();

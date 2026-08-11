@@ -24,6 +24,20 @@ impl CanonicalProjectPath {
     pub fn as_path(&self) -> &Path {
         &self.0
     }
+
+    pub(crate) fn to_protocol_string(&self) -> String {
+        let path = self.0.to_string_lossy();
+        #[cfg(windows)]
+        {
+            if let Some(path) = path.strip_prefix(r"\\?\UNC\") {
+                return format!(r"\\{path}");
+            }
+            if let Some(path) = path.strip_prefix(r"\\?\") {
+                return path.to_owned();
+            }
+        }
+        path.into_owned()
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
@@ -184,7 +198,7 @@ impl DesktopProjectOwnershipManager {
                 {
                     return Ok(DesktopOwnershipAcquisition::AlreadyOwned {
                         ownership_id,
-                        canonical_path: canonical_path.as_path().to_string_lossy().into_owned(),
+                        canonical_path: canonical_path.to_protocol_string(),
                     });
                 }
                 if state.acquiring_paths.insert(canonical_path.0.clone()) {
@@ -219,7 +233,7 @@ impl DesktopProjectOwnershipManager {
             std::process::id(),
             NEXT_DESKTOP_OWNERSHIP_ID.fetch_add(1, Ordering::Relaxed)
         );
-        let canonical_path_string = canonical_path.as_path().to_string_lossy().into_owned();
+        let canonical_path_string = canonical_path.to_protocol_string();
         state
             .ownership_id_by_path
             .insert(canonical_path.0, ownership_id.clone());
@@ -964,10 +978,10 @@ mod tests {
             panic!("missing save target must be reserved");
         };
         assert_eq!(
-            Path::new(&canonical_path),
-            fs::canonicalize(directory.path())
+            canonical_path,
+            canonicalize_project_path(&project)
                 .unwrap()
-                .join("saved-draft.prg")
+                .to_protocol_string()
         );
         manager.release(&ownership_id).unwrap();
     }

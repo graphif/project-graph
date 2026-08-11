@@ -4,9 +4,10 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { Encoder } from "@msgpack/msgpack";
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
+import { URI } from "vscode-uri";
 import type {
   CliDesktopAcceptanceInvocation,
   CliDesktopAcceptanceManifest,
@@ -174,6 +175,11 @@ function startManagedProcess(command: string, args: string[], environment: NodeJ
 
 async function stopManagedProcess(process: ManagedProcess | undefined): Promise<void> {
   if (!process?.child.pid || process.child.exitCode !== null || process.child.signalCode !== null) return;
+  if (globalThis.process.platform === "win32") {
+    spawnSync("taskkill", ["/PID", String(process.child.pid), "/T", "/F"], { stdio: "ignore" });
+    await Promise.race([process.exited, delay(3000)]);
+    return;
+  }
   try {
     globalThis.process.kill(-process.child.pid, "SIGTERM");
   } catch (error) {
@@ -252,7 +258,20 @@ function runCli(
   ...args: string[]
 ): Promise<{ status: number | null; stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
-    const child = spawn("pnpm", ["cli", "--", ...args], {
+    const adapter = process.env.PROJECT_GRAPH_CLI_ACCEPTANCE_ADAPTER;
+    const usesWindowsAdapter = adapter !== undefined && process.platform === "win32";
+    const command = usesWindowsAdapter ? (process.env.ComSpec ?? "cmd.exe") : (adapter ?? "pnpm");
+    const commandArguments = adapter
+      ? usesWindowsAdapter
+        ? [
+            "/d",
+            "/s",
+            "/c",
+            `"${[adapter, ...args].map((argument) => `"${argument.replaceAll('"', '""')}"`).join(" ")}"`,
+          ]
+        : args
+      : ["cli", "--", ...args];
+    const child = spawn(command, commandArguments, {
       cwd: repositoryRoot,
       env: {
         ...process.env,
@@ -261,6 +280,7 @@ function runCli(
         PROJECT_GRAPH_REFERENCE_STORE_PATH: referenceStorePath,
       },
       stdio: ["ignore", "pipe", "pipe"],
+      windowsVerbatimArguments: usesWindowsAdapter,
     });
     let stdout = "";
     let stderr = "";
@@ -278,11 +298,12 @@ function assertSuccessfulInvocation(
   result: { status: number | null; stdout: string; stderr: string },
 ): void {
   if (result.status !== 0 || result.stderr !== "") {
-    throw new Error(`${name} failed with status ${String(result.status)}:\n${result.stderr}`);
+    throw new Error(`${name} failed with status ${String(result.status)}:\n${result.stderr}${result.stdout}`);
   }
 }
 
 function assertProjectOwned(projectPath: string): void {
+  if (process.platform === "win32") return;
   const lock = spawnSync("/usr/bin/lockf", [
     "-k",
     "-s",
@@ -308,7 +329,7 @@ async function runAcceptance(): Promise<void> {
     for (const [index, definition] of invocationDefinitions.entries()) {
       const projectPath = await createProjectFixture(temporaryDirectory, index, definition.name, definition.fixture);
       let invocationPath = projectPath;
-      if (definition.name === "get_all_nodes") {
+      if (definition.name === "get_all_nodes" && process.platform !== "win32") {
         invocationPath = join(temporaryDirectory, "get-all-nodes-link.prg");
         symlinkSync(projectPath, invocationPath);
       }
@@ -368,7 +389,7 @@ async function runAcceptance(): Promise<void> {
       PROJECT_GRAPH_REFERENCE_STORE_PATH: referenceStorePath,
     };
     vite = startManagedProcess(
-      "pnpm",
+      process.platform === "win32" ? "pnpm.exe" : "pnpm",
       [
         "--filter",
         "@graphif/project-graph",
@@ -384,7 +405,7 @@ async function runAcceptance(): Promise<void> {
     );
     await waitForVite(port, vite);
     tauri = startManagedProcess(
-      "pnpm",
+      process.platform === "win32" ? "pnpm.exe" : "pnpm",
       ["--filter", "@graphif/project-graph", "exec", "tauri", "dev", "--no-watch", "--config", configPath],
       environment,
     );
@@ -426,7 +447,7 @@ async function runAcceptance(): Promise<void> {
     assertSuccessfulInvocation("closed reference-store concurrency", closedReferenceUpdate);
     const referenceStore = JSON.parse(readFileSync(referenceStorePath, "utf8")) as Record<string, unknown>;
     for (const projectPath of [invocations[0].projectPath, closedReferenceProjectPath]) {
-      const key = `project:${pathToFileURL(realpathSync(projectPath)).toString()}:references`;
+      const key = `project:${URI.file(realpathSync(projectPath)).toString()}:references`;
       if (!(key in referenceStore)) throw new Error(`Concurrent reference-store update was lost: ${key}`);
     }
     const before = new Map(invocations.map(({ projectPath }) => [projectPath, readFileSync(projectPath)]));
