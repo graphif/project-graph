@@ -483,10 +483,7 @@ fn acquire_connectable_owner_lock(
     retry_delay: Duration,
     retry_available: bool,
 ) -> Result<File, ProjectOwnershipError> {
-    let mut owner_lock = open_connectable_owner_lock(canonical_path)?;
-    owner_lock
-        .set_len(0)
-        .map_err(|_| ProjectOwnershipError::LoadFailed)?;
+    let owner_lock = open_connectable_owner_lock(canonical_path)?;
     match try_exclusive_lock(&owner_lock, retry_delay, retry_available)? {
         ExclusiveLockAttempt::Acquired { .. } => {}
         ExclusiveLockAttempt::Contended => {
@@ -496,11 +493,18 @@ fn acquire_connectable_owner_lock(
         }
     }
     let owner_record = serde_json::to_vec(owner).map_err(|_| ProjectOwnershipError::LoadFailed)?;
-    record_owner(&mut owner_lock, &owner_record)?;
+    let mut owner_record_file = open_connectable_owner_record(canonical_path)?;
+    record_owner(&mut owner_record_file, &owner_record)?;
     Ok(owner_lock)
 }
 
 fn open_connectable_owner_lock(
+    canonical_path: &CanonicalProjectPath,
+) -> Result<File, ProjectOwnershipError> {
+    open_sidecar_file(canonical_path, ".project-graph.connectable.lock")
+}
+
+fn open_connectable_owner_record(
     canonical_path: &CanonicalProjectPath,
 ) -> Result<File, ProjectOwnershipError> {
     open_sidecar_file(canonical_path, ".project-graph.connectable")
@@ -540,7 +544,7 @@ fn record_owner(lock_file: &mut File, owner_record: &[u8]) -> Result<(), Project
 }
 
 fn read_current_owner(canonical_path: &CanonicalProjectPath) -> ProjectOwner {
-    let Ok(mut owner_lock) = open_connectable_owner_lock(canonical_path) else {
+    let Ok(owner_lock) = open_connectable_owner_lock(canonical_path) else {
         return ProjectOwner::UnconnectableHolder;
     };
     match owner_lock.try_lock() {
@@ -548,14 +552,18 @@ fn read_current_owner(canonical_path: &CanonicalProjectPath) -> ProjectOwner {
             let _ = owner_lock.unlock();
             ProjectOwner::UnconnectableHolder
         }
-        Err(TryLockError::WouldBlock) => read_connectable_owner(&mut owner_lock),
+        Err(TryLockError::WouldBlock) => read_connectable_owner(canonical_path),
         Err(TryLockError::Error(_)) => ProjectOwner::UnconnectableHolder,
     }
 }
 
-fn read_connectable_owner(owner_lock: &mut File) -> ProjectOwner {
+fn read_connectable_owner(canonical_path: &CanonicalProjectPath) -> ProjectOwner {
+    let Ok(mut owner_record_file) = open_connectable_owner_record(canonical_path) else {
+        return ProjectOwner::UnconnectableHolder;
+    };
     let mut record = String::new();
-    if owner_lock.seek(SeekFrom::Start(0)).is_ok() && owner_lock.read_to_string(&mut record).is_ok()
+    if owner_record_file.seek(SeekFrom::Start(0)).is_ok()
+        && owner_record_file.read_to_string(&mut record).is_ok()
     {
         if let Ok(owner) = serde_json::from_str::<ProjectOwner>(&record) {
             if matches!(owner, ProjectOwner::Connectable { .. }) {
