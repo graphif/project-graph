@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://dpglridd8c5go"]
+
+[ext_resource type="PackedScene" uid="uid://btnefrbc5lowu" path="res://src/stage_object/entity/text_node/text_node.tscn" id="1_3eh75"]
+[ext_resource type="Script" uid="uid://b3brlqban06ut" path="res://src/main/camera.gd" id="1_3s6yk"]
+
+[node name="Root" type="Control" unique_id=895869584]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="." unique_id=1942299076]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer" unique_id=1267056667]
+size = Vector2i(1152, 648)
+size_2d_override_stretch = true
+
+[node name="Node2D" type="Node2D" parent="SubViewportContainer/SubViewport" unique_id=610645673]
+
+[node name="Camera" type="Camera2D" parent="SubViewportContainer/SubViewport/Node2D" unique_id=2044935444]
+unique_name_in_owner = true
+script = ExtResource("1_3s6yk")
+max_speed = null
+move_friction = null
+min_zoom = null
+max_zoom = null
+zoom_speed = null
+zoom_friction = null
+
+[node name="TextNode" parent="SubViewportContainer/SubViewport/Node2D" unique_id=1629768609 instance=ExtResource("1_3eh75")]
+text = "hello world"

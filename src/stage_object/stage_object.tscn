@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://q8qamyck0otb"]
+
+[ext_resource type="Script" uid="uid://3pt2cbccx0se" path="res://src/stage_object/stage_object.gd" id="1_751jx"]
+
+[node name="StageObject" type="Control" unique_id=1834879285]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_751jx")

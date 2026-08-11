@@ -1,0 +1,120 @@
+[gd_scene format=3 uid="uid://dpglridd8c5go"]
+
+[ext_resource type="PackedScene" uid="uid://btnefrbc5lowu" path="res://src/stage_object/entity/text_node/text_node.tscn" id="1_3eh75"]
+[ext_resource type="Script" uid="uid://b3brlqban06ut" path="res://src/main/camera.gd" id="1_3s6yk"]
+[ext_resource type="Script" uid="uid://bpt33a0tmgiii" path="res://src/main/main.gd" id="1_frqgp"]
+[ext_resource type="Script" uid="uid://bxbv0ox8ehxy" path="res://src/main/stage.gd" id="1_jqarl"]
+[ext_resource type="Material" uid="uid://ddx2si8u7j4ah" path="res://src/main/grid.tres" id="2_djufw"]
+[ext_resource type="Script" uid="uid://dr6t06rlyub81" path="res://src/main/debug_info/active_actions.gd" id="3_ab7mr"]
+[ext_resource type="Script" uid="uid://da4b7r3gn615d" path="res://src/main/debug_info/fps.gd" id="4_jkpqq"]
+[ext_resource type="Script" uid="uid://dyoffk035pa80" path="res://src/main/debug_info/os.gd" id="5_30cu5"]
+[ext_resource type="Script" uid="uid://daqhif4n0xhgs" path="res://src/main/dump_button.gd" id="9_2nke2"]
+[ext_resource type="Script" uid="uid://c2khy05f382gk" path="res://src/main/load_button.gd" id="9_km7bn"]
+
+[node name="Root" type="Control" unique_id=895869584]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_frqgp")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="." unique_id=1942299076]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer" unique_id=1267056667]
+handle_input_locally = false
+size = Vector2i(1152, 648)
+size_2d_override_stretch = true
+render_target_update_mode = 4
+
+[node name="Stage" type="Node2D" parent="SubViewportContainer/SubViewport" unique_id=610645673]
+unique_name_in_owner = true
+script = ExtResource("1_jqarl")
+
+[node name="Camera" type="Camera2D" parent="SubViewportContainer/SubViewport/Stage" unique_id=2044935444]
+unique_name_in_owner = true
+script = ExtResource("1_3s6yk")
+grid_material = ExtResource("2_djufw")
+max_zoom = 50.0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="SubViewportContainer/SubViewport/Stage" unique_id=1215796185]
+layer = -1
+
+[node name="Grid" type="ColorRect" parent="SubViewportContainer/SubViewport/Stage/CanvasLayer" unique_id=1044710621]
+unique_name_in_owner = true
+material = ExtResource("2_djufw")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TextNode" parent="SubViewportContainer/SubViewport/Stage" unique_id=1629768609 instance=ExtResource("1_3eh75")]
+text = "hello world"
+
+[node name="UIOverlay" type="Control" parent="." unique_id=360473786]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="DebugInfo" type="VBoxContainer" parent="UIOverlay" unique_id=106941584]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="OS" type="Label" parent="UIOverlay/DebugInfo" unique_id=2117542532]
+unique_name_in_owner = true
+layout_mode = 2
+text = "OS"
+script = ExtResource("5_30cu5")
+
+[node name="FPS" type="Label" parent="UIOverlay/DebugInfo" unique_id=1126818277]
+unique_name_in_owner = true
+layout_mode = 2
+text = "FPS"
+script = ExtResource("4_jkpqq")
+
+[node name="ActiveActions" type="Label" parent="UIOverlay/DebugInfo" unique_id=269406437]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ActiveActions"
+script = ExtResource("3_ab7mr")
+ignore_ui_actions = false
+deadzone = 0.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UIOverlay" unique_id=1559640193]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -52.0
+offset_bottom = 64.0
+grow_horizontal = 0
+
+[node name="LoadButton" type="Button" parent="UIOverlay/VBoxContainer" unique_id=1621775476]
+layout_mode = 2
+text = "load"
+script = ExtResource("9_km7bn")
+
+[node name="DumpButton" type="Button" parent="UIOverlay/VBoxContainer" unique_id=1055376033]
+layout_mode = 2
+text = "dump"
+script = ExtResource("9_2nke2")
+
+[connection signal="pressed" from="UIOverlay/VBoxContainer/LoadButton" to="UIOverlay/VBoxContainer/LoadButton" method="_on_pressed"]
+[connection signal="pressed" from="UIOverlay/VBoxContainer/DumpButton" to="UIOverlay/VBoxContainer/DumpButton" method="_on_pressed"]

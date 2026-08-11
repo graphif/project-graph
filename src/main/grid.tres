@@ -1,0 +1,12 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://ddx2si8u7j4ah"]
+
+[ext_resource type="Shader" uid="uid://bl3vh8545fk7b" path="res://src/main/grid.gdshader" id="1_umykj"]
+
+[resource]
+shader = ExtResource("1_umykj")
+shader_parameter/camera_offset = Vector2(0, 0)
+shader_parameter/camera_zoom = Vector2(1, 1)
+shader_parameter/bg_color = Color(0.1, 0.1, 0.1, 1)
+shader_parameter/grid_color = Color(0.3, 0.3, 0.3, 1)
+shader_parameter/grid_size = 64.0
+shader_parameter/line_thickness = 1.5
