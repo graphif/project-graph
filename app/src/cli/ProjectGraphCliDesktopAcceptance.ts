@@ -160,6 +160,7 @@ function startManagedProcess(command: string, args: string[], environment: NodeJ
     detached: true,
     env: environment,
     stdio: ["ignore", "pipe", "pipe"],
+    windowsHide: process.platform === "win32",
   });
   let output = "";
   child.stdout?.setEncoding("utf8");
