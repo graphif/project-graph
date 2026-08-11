@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { Project, ProjectState } from "@/core/Project";
 import { FileSystemProviderFile, writeClosedProjectFileAtomically } from "./ClosedProjectFileSystemProvider";
 import { ClosedProjectEffects } from "./ClosedProjectEffects";
-import { finalizeRuntimeCleanup, RuntimeCleanupError } from "@/core/RuntimeCleanup";
+import { finalizeRuntimeCleanup, runtimeCleanupFailure, RuntimeCleanupError } from "@/core/RuntimeCleanup";
 import { compareProjectVersions, LATEST_PROJECT_VERSION, parseProjectFile } from "@/core/ProjectFile";
 import {
   AIObjectReferenceRegistry,
@@ -62,21 +62,6 @@ export type ProjectGraphCliOperationalError =
 export type ClosedProjectInvocationResult =
   | { ok: true; value: unknown }
   | { ok: false; error: ProjectGraphCliOperationalError };
-
-function runtimeCleanupFailed(executionError: {
-  code: string;
-  message: string;
-  details?: unknown;
-}): ClosedProjectInvocationResult {
-  return {
-    ok: false,
-    error: {
-      code: "RUNTIME_CLEANUP_FAILED",
-      message: "Project Runtime Host cleanup failed.",
-      details: { executionError },
-    },
-  };
-}
 
 type StoredProjectReferences = {
   version: 1;
@@ -448,7 +433,7 @@ async function executeClosedProjectTool(
       projectSaved = true;
     } catch (error) {
       if (error instanceof RuntimeCleanupError) {
-        return runtimeCleanupFailed({ code: "PROJECT_SAVE_FAILED", message: "Project could not be saved." });
+        return runtimeCleanupFailure({ code: "PROJECT_SAVE_FAILED", message: "Project could not be saved." });
       }
       return { ok: false, error: { code: "PROJECT_SAVE_FAILED", message: "Project could not be saved." } };
     }
@@ -466,7 +451,7 @@ async function executeClosedProjectTool(
       }
       if (error instanceof OwnershipHelperError) return { ok: false, error: error.cliError };
       if (error instanceof RuntimeCleanupError) {
-        return runtimeCleanupFailed({
+        return runtimeCleanupFailure({
           code: "PROJECT_REFERENCE_SAVE_FAILED",
           message: "Project Object References could not be saved.",
           ...(projectSaved ? { details: { projectSaved: true as const } } : {}),

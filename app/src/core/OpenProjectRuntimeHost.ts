@@ -47,6 +47,17 @@ const cancelledResponse = (): RuntimeResponse => ({
   error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." },
 });
 
+function failedInvocationResponse(error: unknown, abortSignal: AbortSignal): RuntimeResponse {
+  if (abortSignal.aborted) return cancelledResponse();
+  const referenceError = classifyBuiltInToolRuntimeError(error);
+  return referenceError
+    ? { ok: false, error: referenceError }
+    : {
+        ok: false,
+        error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
+      };
+}
+
 export class OpenProjectRuntimeHost {
   private readonly activeInvocations = new Set<Promise<RuntimeResponse>>();
   private readonly activeAbortControllers = new Set<AbortController>();
@@ -103,15 +114,7 @@ export class OpenProjectRuntimeHost {
         const value = await invokeBuiltInTool(toolName, input, host, { abortSignal });
         response = abortSignal.aborted ? cancelledResponse() : { ok: true, value: value === undefined ? null : value };
       } catch (error) {
-        const referenceError = classifyBuiltInToolRuntimeError(error);
-        response = abortSignal.aborted
-          ? cancelledResponse()
-          : referenceError
-            ? { ok: false, error: referenceError }
-            : {
-                ok: false,
-                error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
-              };
+        response = failedInvocationResponse(error, abortSignal);
       }
       const after = references.exportSnapshot();
       if (this.referencesNeedSave) {
@@ -129,15 +132,7 @@ export class OpenProjectRuntimeHost {
         }
       }
     } catch (error) {
-      const referenceError = classifyBuiltInToolRuntimeError(error);
-      response = abortSignal.aborted
-        ? cancelledResponse()
-        : referenceError
-          ? { ok: false, error: referenceError }
-          : {
-              ok: false,
-              error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
-            };
+      response = failedInvocationResponse(error, abortSignal);
     }
     return finalizeRuntimeCleanup(response, [() => unsubscribe?.()]);
   }

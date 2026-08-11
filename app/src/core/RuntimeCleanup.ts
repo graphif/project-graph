@@ -6,7 +6,7 @@ type RuntimeError = {
 
 type RuntimeResult = { ok: true; value: unknown } | { ok: false; error: RuntimeError };
 
-type RuntimeCleanupFailure = {
+export type RuntimeCleanupFailure = {
   ok: false;
   error: {
     code: "RUNTIME_CLEANUP_FAILED";
@@ -16,6 +16,17 @@ type RuntimeCleanupFailure = {
 };
 
 export class RuntimeCleanupError extends Error {}
+
+export function runtimeCleanupFailure(executionError?: RuntimeError): RuntimeCleanupFailure {
+  return {
+    ok: false,
+    error: {
+      code: "RUNTIME_CLEANUP_FAILED",
+      message: "Project Runtime Host cleanup failed.",
+      ...(executionError ? { details: { executionError } } : {}),
+    },
+  };
+}
 
 export async function finalizeRuntimeCleanup<T extends RuntimeResult>(
   result: T,
@@ -30,12 +41,5 @@ export async function finalizeRuntimeCleanup<T extends RuntimeResult>(
     }
   }
   if (!cleanupFailed) return result;
-  return {
-    ok: false,
-    error: {
-      code: "RUNTIME_CLEANUP_FAILED",
-      message: "Project Runtime Host cleanup failed.",
-      ...(!result.ok ? { details: { executionError: result.error } } : {}),
-    },
-  };
+  return runtimeCleanupFailure(result.ok ? undefined : result.error);
 }
