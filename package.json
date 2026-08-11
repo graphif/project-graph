@@ -21,7 +21,7 @@
     "benchmark:cli:cold-start": "pnpm --filter @graphif/project-graph exec tsx ./src/cli/ProjectGraphCliBenchmark.ts",
     "test:cli:desktop": "pnpm --filter @graphif/project-graph exec tsx ./src/cli/ProjectGraphCliDesktopAcceptance.ts",
     "format": "prettier --write .",
-    "test": "vitest",
+    "test": "vitest run --exclude app/src/cli/ProjectGraphCliProduction.test.ts && vitest run app/src/cli/ProjectGraphCliProduction.test.ts",
     "tauri": "pnpm --filter @graphif/project-graph tauri",
     "prepublish": "pnpm run build:no-tauri",
     "publish": "nx run-many -t publish"

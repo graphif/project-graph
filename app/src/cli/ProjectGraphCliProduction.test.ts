@@ -156,6 +156,7 @@ describe("Project Graph production CLI runtime", () => {
       env: {
         ...process.env,
         PROJECT_GRAPH_CLI_TEST_ENTRY: entryPath,
+        PROJECT_GRAPH_CLI_TEST_PRODUCTION: "1",
         PROJECT_GRAPH_CLI_TEST_VERSION: "3.2.1",
       },
     });

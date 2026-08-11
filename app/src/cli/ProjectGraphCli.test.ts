@@ -34,7 +34,7 @@ const cliEntryPath =
 const expectedCliVersion = process.env.PROJECT_GRAPH_CLI_TEST_VERSION ?? "1.0.0";
 const temporaryDirectories: string[] = [];
 let referenceStorePath: string | undefined;
-const itWithUnixExecutableFixture = process.platform === "win32" ? it.skip : it;
+const productionEntry = process.env.PROJECT_GRAPH_CLI_TEST_PRODUCTION === "1";
 
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) rmSync(directory, { recursive: true, force: true });
@@ -495,7 +495,7 @@ describe("Project Graph CLI process contract", () => {
     );
   });
 
-  it("fails closed with a diagnostic error when the ownership helper is missing", async () => {
+  it.skipIf(productionEntry)("fails closed with a diagnostic error when the ownership helper is missing", async () => {
     const projectPath = await createProjectFixture();
     const missingHelperPath = join(dirname(projectPath), "missing-ownership-helper");
 
@@ -517,29 +517,32 @@ describe("Project Graph CLI process contract", () => {
     });
   });
 
-  it("fails closed with the same diagnostic when the ownership helper is not executable", async () => {
-    const projectPath = await createProjectFixture();
-    const nonExecutableHelperPath = dirname(projectPath);
+  it.skipIf(productionEntry)(
+    "fails closed with the same diagnostic when the ownership helper is not executable",
+    async () => {
+      const projectPath = await createProjectFixture();
+      const nonExecutableHelperPath = dirname(projectPath);
 
-    const result = await spawnCliEntryProcess(
-      { PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: nonExecutableHelperPath },
-      "tool",
-      "invoke",
-      "get_all_nodes",
-      "--project",
-      projectPath,
-      "--input",
-      "{}",
-    ).result;
+      const result = await spawnCliEntryProcess(
+        { PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: nonExecutableHelperPath },
+        "tool",
+        "invoke",
+        "get_all_nodes",
+        "--project",
+        projectPath,
+        "--input",
+        "{}",
+      ).result;
 
-    expect(result).toEqual({
-      status: 1,
-      stdout: "",
-      stderr: '{"code":"OWNERSHIP_HELPER_UNAVAILABLE","message":"Project ownership helper is unavailable."}\n',
-    });
-  });
+      expect(result).toEqual({
+        status: 1,
+        stdout: "",
+        stderr: '{"code":"OWNERSHIP_HELPER_UNAVAILABLE","message":"Project ownership helper is unavailable."}\n',
+      });
+    },
+  );
 
-  it("fails closed when the ownership helper returns an invalid response", async () => {
+  it.skipIf(productionEntry)("fails closed when the ownership helper returns an invalid response", async () => {
     const projectPath = await createProjectFixture();
 
     const result = await spawnCliEntryProcess(
@@ -561,83 +564,92 @@ describe("Project Graph CLI process contract", () => {
     });
   });
 
-  itWithUnixExecutableFixture("fails closed when the ownership helper emits output after its response", async () => {
-    const projectPath = await createProjectFixture();
-    const invalidHelperPath = createFakeOwnershipHelper(`
+  it.skipIf(productionEntry || process.platform === "win32")(
+    "fails closed when the ownership helper emits output after its response",
+    async () => {
+      const projectPath = await createProjectFixture();
+      const invalidHelperPath = createFakeOwnershipHelper(`
 process.stdout.write(JSON.stringify({ status: "acquired", canonicalPath: process.argv[3] }) + "\\n");
 setTimeout(() => process.stdout.write("unexpected\\n"), 10);
 process.stdin.resume();
 process.stdin.on("end", () => process.exit(0));
 `);
 
-    const result = await spawnCliEntryProcess(
-      { PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: invalidHelperPath },
-      "tool",
-      "invoke",
-      "get_all_nodes",
-      "--project",
-      projectPath,
-      "--input",
-      "{}",
-    ).result;
+      const result = await spawnCliEntryProcess(
+        { PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: invalidHelperPath },
+        "tool",
+        "invoke",
+        "get_all_nodes",
+        "--project",
+        projectPath,
+        "--input",
+        "{}",
+      ).result;
 
-    expect(result).toEqual({
-      status: 1,
-      stdout: "",
-      stderr:
-        '{"code":"OWNERSHIP_HELPER_INVALID_RESPONSE","message":"Project ownership helper returned an invalid response."}\n',
-    });
-  });
+      expect(result).toEqual({
+        status: 1,
+        stdout: "",
+        stderr:
+          '{"code":"OWNERSHIP_HELPER_INVALID_RESPONSE","message":"Project ownership helper returned an invalid response."}\n',
+      });
+    },
+  );
 
-  itWithUnixExecutableFixture("rejects a helper Project error with the wrong exit code", async () => {
-    const projectPath = await createProjectFixture();
-    const invalidHelperPath = createFakeOwnershipHelper(`
+  it.skipIf(productionEntry || process.platform === "win32")(
+    "rejects a helper Project error with the wrong exit code",
+    async () => {
+      const projectPath = await createProjectFixture();
+      const invalidHelperPath = createFakeOwnershipHelper(`
 process.stdout.write(JSON.stringify({ status: "error", code: "PROJECT_LOAD_FAILED" }) + "\\n");
 `);
 
-    const result = await spawnCliEntryProcess(
-      { PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: invalidHelperPath },
-      "tool",
-      "invoke",
-      "get_all_nodes",
-      "--project",
-      projectPath,
-      "--input",
-      "{}",
-    ).result;
+      const result = await spawnCliEntryProcess(
+        { PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: invalidHelperPath },
+        "tool",
+        "invoke",
+        "get_all_nodes",
+        "--project",
+        projectPath,
+        "--input",
+        "{}",
+      ).result;
 
-    expect(result).toEqual({
-      status: 1,
-      stdout: "",
-      stderr:
-        '{"code":"OWNERSHIP_HELPER_INVALID_RESPONSE","message":"Project ownership helper returned an invalid response."}\n',
-    });
-  });
+      expect(result).toEqual({
+        status: 1,
+        stdout: "",
+        stderr:
+          '{"code":"OWNERSHIP_HELPER_INVALID_RESPONSE","message":"Project ownership helper returned an invalid response."}\n',
+      });
+    },
+  );
 
-  it("uses the ownership helper for the reference store in an acquired closed worker", async () => {
-    const projectPath = await createProjectFixture();
-    const missingHelperPath = join(dirname(projectPath), "missing-reference-store-helper");
+  it.skipIf(productionEntry)(
+    "uses the ownership helper for the reference store in an acquired closed worker",
+    async () => {
+      const projectPath = await createProjectFixture();
+      const missingHelperPath = join(dirname(projectPath), "missing-reference-store-helper");
 
-    const result = await spawnCliEntryProcess(
-      {
-        PROJECT_GRAPH_CLI_OWNERSHIP_ACQUIRED: "1",
-        PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: missingHelperPath,
-      },
-      "tool",
-      "invoke",
-      "get_all_nodes",
-      "--project",
-      projectPath,
-      "--input",
-      "{}",
-    ).result;
+      const result = await spawnCliEntryProcess(
+        {
+          PROJECT_GRAPH_CLI_OWNERSHIP_ACQUIRED: "1",
+          PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: missingHelperPath,
+        },
+        "tool",
+        "invoke",
+        "get_all_nodes",
+        "--project",
+        projectPath,
+        "--input",
+        "{}",
+      ).result;
 
-    expect(result).toEqual({
-      status: 1,
-      stdout: "",
-      stderr: '{"code":"OWNERSHIP_HELPER_UNAVAILABLE","message":"Project ownership helper is unavailable."}\n',
-    });
-  });
+      expect(result).toEqual({
+        status: 1,
+        stdout: "",
+        stderr: '{"code":"OWNERSHIP_HELPER_UNAVAILABLE","message":"Project ownership helper is unavailable."}\n',
+      });
+    },
+  );
 
   it("reports a corrupt Project as a stable load failure", () => {
     const directory = mkdtempSync(join(tmpdir(), "project-graph-cli-corrupt-"));
