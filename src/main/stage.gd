@@ -2,8 +2,6 @@ extends Node2D
 
 const TEXT_NODE = preload("uid://btnefrbc5lowu")
 
-@onready var stage: Node2D = %Stage
-
 
 func _ready() -> void:
 	for i in range(100):
@@ -13,7 +11,7 @@ func _ready() -> void:
 		add_child(node)
 
 		# 设置当前节点的 owner 为 Stage（如果 TextNode 内部还有子节点，也需要递归设置）
-		_set_owner_recursive(node, stage)
+		_set_owner_recursive(node, self)
 
 
 # 递归设置节点及其所有子孙的 owner
