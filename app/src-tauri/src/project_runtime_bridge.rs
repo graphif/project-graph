@@ -389,11 +389,17 @@ mod tests {
             panic!("desktop Runtime Host must acquire the Project");
         };
         let repository_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let ownership_helper_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!(
+            "target/debug/project-graph-ownership-helper{}",
+            std::env::consts::EXE_SUFFIX
+        ));
+        assert!(ownership_helper_path.is_file());
         let cli_project_path = project_path.clone();
         let cli = thread::spawn(move || {
             Command::new("pnpm")
                 .current_dir(repository_root)
                 .env("NO_COLOR", "1")
+                .env("PROJECT_GRAPH_OWNERSHIP_HELPER_PATH", ownership_helper_path)
                 .args(["cli", "--", "tool", "invoke", "get_all_nodes", "--project"])
                 .arg(cli_project_path)
                 .args(["--input", "{}"])

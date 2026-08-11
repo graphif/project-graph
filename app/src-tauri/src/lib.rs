@@ -6,6 +6,14 @@ mod project_ownership;
 mod project_reference_store;
 mod project_runtime_bridge;
 
+pub mod ownership_helper {
+    pub use crate::project_ownership::{
+        acquire_project_ownership, try_acquire_project_ownership, CanonicalProjectPath,
+        ProjectOwner, ProjectOwnership, ProjectOwnershipError,
+    };
+    pub use crate::project_reference_store::acquire_reference_store_lock;
+}
+
 use std::sync::{Arc, Mutex, OnceLock};
 use tauri::{Emitter, Listener, Manager, State};
 

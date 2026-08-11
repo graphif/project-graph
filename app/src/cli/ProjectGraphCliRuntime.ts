@@ -1,6 +1,6 @@
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { closeSync, openSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { realpathSync, statSync } from "node:fs";
 import { createConnection } from "node:net";
 import { prepareBuiltInToolInvocation } from "../core/service/dataManageService/aiEngine/BuiltInToolRegistry";
 import {
@@ -8,6 +8,12 @@ import {
   canOpenProjectProvideCapabilities,
 } from "../core/service/dataManageService/aiEngine/BuiltInToolRuntimeProfiles";
 import type { ClosedProjectInvocationResult, ProjectGraphCliOperationalError } from "./ClosedProjectInvocation";
+import {
+  acquireProjectOwnership,
+  OwnershipHelperError,
+  type OwnershipHelperCliError,
+  type ProjectOwner,
+} from "./OwnershipHelper";
 
 type RuntimeResult =
   | ClosedProjectInvocationResult
@@ -88,47 +94,57 @@ function isStructuredCliError(output: string): boolean {
   }
 }
 
-function runOwnedWorker(args: readonly string[], canonicalPath: string, abortSignal?: AbortSignal) {
-  return new Promise<{ status: number | null; stdout: string; stderr: string; error?: Error }>((resolve) => {
-    if (abortSignal?.aborted) {
-      resolve({ status: null, stdout: "", stderr: "" });
-      return;
+type OwnedWorkerResult = {
+  status: number | null;
+  stdout: string;
+  stderr: string;
+  error?: Error;
+  helperError?: OwnershipHelperCliError;
+  owner?: ProjectOwner;
+};
+
+async function runOwnedWorker(
+  args: readonly string[],
+  canonicalPath: string,
+  abortSignal?: AbortSignal,
+): Promise<OwnedWorkerResult> {
+  if (abortSignal?.aborted) return { status: null, stdout: "", stderr: "" };
+  let acquisition;
+  try {
+    acquisition = await acquireProjectOwnership(canonicalPath, abortSignal);
+  } catch (error) {
+    if (abortSignal?.aborted) return { status: null, stdout: "", stderr: "" };
+    if (error instanceof OwnershipHelperError) {
+      return { status: null, stdout: "", stderr: "", helperError: error.cliError };
     }
-    let lockFd: number;
-    try {
-      lockFd = openSync(`${canonicalPath}.project-graph.lock`, "a+");
-    } catch (error) {
-      resolve({ status: null, stdout: "", stderr: "", error: error as Error });
-      return;
-    }
-    const lock = spawnSync("/usr/bin/lockf", ["-s", "-t", "0", "3"], {
-      stdio: ["ignore", "ignore", "ignore", lockFd],
-    });
-    if (lock.error || lock.status !== 0) {
-      closeSync(lockFd);
-      resolve({
-        status: lock.status,
-        stdout: "",
-        stderr: "",
-        ...(lock.error ? { error: lock.error } : {}),
-      });
-      return;
-    }
+    return { status: null, stdout: "", stderr: "", error: error as Error };
+  }
+  if (acquisition.status === "busy") {
+    return { status: 75, stdout: "", stderr: "", owner: acquisition.owner };
+  }
+  const ownership = acquisition.lease;
+  return new Promise<OwnedWorkerResult>((resolve) => {
     const worker = spawn(process.execPath, [process.argv[1], "--", ...args], {
       env: { ...process.env, PROJECT_GRAPH_CLI_OWNERSHIP_ACQUIRED: "1" },
-      stdio: ["ignore", "pipe", "pipe", lockFd],
+      stdio: ["ignore", "pipe", "pipe"],
     });
-    closeSync(lockFd);
     const stdoutStream = worker.stdout;
     const stderrStream = worker.stderr;
     if (!stdoutStream || !stderrStream) {
       worker.kill();
-      resolve({ status: null, stdout: "", stderr: "", error: new Error("CLI worker pipes are unavailable") });
-      return;
+      ownership.terminate();
+      return resolve({ status: null, stdout: "", stderr: "", error: new Error("CLI worker pipes are unavailable") });
     }
     let stdout = "";
     let stderr = "";
     let error: Error | undefined;
+    let workerClosed = false;
+    let ownershipExitedEarly = false;
+    void ownership.exit.then(() => {
+      if (workerClosed) return;
+      ownershipExitedEarly = true;
+      worker.kill();
+    });
     stdoutStream.setEncoding("utf8");
     stderrStream.setEncoding("utf8");
     stdoutStream.on("data", (chunk) => {
@@ -150,8 +166,29 @@ function runOwnedWorker(args: readonly string[], canonicalPath: string, abortSig
     };
     abortSignal?.addEventListener("abort", cancelWorker, { once: true });
     worker.once("close", (status) => {
+      workerClosed = true;
       abortSignal?.removeEventListener("abort", cancelWorker);
-      resolve({ status, stdout, stderr, ...(error ? { error } : {}) });
+      void ownership
+        .release()
+        .then(() => {
+          if (ownershipExitedEarly) {
+            resolve({
+              status,
+              stdout,
+              stderr,
+              helperError: { code: "OWNERSHIP_HELPER_FAILED", message: "Project ownership helper failed." },
+            });
+          } else {
+            resolve({ status, stdout, stderr, ...(error ? { error } : {}) });
+          }
+        })
+        .catch((releaseError: unknown) => {
+          if (releaseError instanceof OwnershipHelperError) {
+            resolve({ status, stdout, stderr, helperError: releaseError.cliError });
+          } else {
+            resolve({ status, stdout, stderr, error: releaseError as Error });
+          }
+        });
     });
     if (abortSignal?.aborted) cancelWorker();
   });
@@ -168,28 +205,6 @@ function waitForOwnerRetry(abortSignal?: AbortSignal): Promise<void> {
     const timeout = setTimeout(finish, 5000);
     abortSignal?.addEventListener("abort", finish, { once: true });
   });
-}
-
-function readConnectableOwner(canonicalPath: string): { endpoint: string } | undefined {
-  const ownerPath = `${canonicalPath}.project-graph.connectable`;
-  const ownerLock = spawnSync("/usr/bin/lockf", ["-k", "-s", "-t", "0", ownerPath, "/usr/bin/true"]);
-  if (ownerLock.status !== 75) return undefined;
-  try {
-    const owner: unknown = JSON.parse(readFileSync(ownerPath, "utf8"));
-    if (
-      owner &&
-      typeof owner === "object" &&
-      "kind" in owner &&
-      owner.kind === "connectable" &&
-      "endpoint" in owner &&
-      typeof owner.endpoint === "string"
-    ) {
-      return { endpoint: owner.endpoint };
-    }
-  } catch {
-    return undefined;
-  }
-  return undefined;
 }
 
 function invokeOpenProjectTool(
@@ -266,14 +281,13 @@ function invokeOpenProjectTool(
   });
 }
 
-function invokeConnectableOwnerIfPresent(
+function invokeConnectableOwner(
+  endpoint: string,
   canonicalPath: string,
   options: { toolName: string; input: unknown; abortSignal?: AbortSignal },
-): Promise<RuntimeResult> | undefined {
-  const owner = readConnectableOwner(canonicalPath);
-  if (!owner) return undefined;
+): Promise<RuntimeResult> {
   return invokeOpenProjectTool(
-    owner.endpoint,
+    endpoint,
     {
       projectPath: canonicalPath,
       toolName: options.toolName,
@@ -335,18 +349,21 @@ async function runPathRoutedInvocation(
     ...(options.allowUpgrade ? ["--allow-upgrade"] : []),
   ];
   let worker = await runOwnedWorker(args, projectPathResult.canonicalPath, options.abortSignal);
+  if (worker.status === 75 && worker.owner?.kind === "connectable") {
+    return invokeConnectableOwner(worker.owner.endpoint, projectPathResult.canonicalPath, options);
+  }
   if (worker.status === 75) {
-    const openResult = invokeConnectableOwnerIfPresent(projectPathResult.canonicalPath, options);
-    if (openResult) return openResult;
     await waitForOwnerRetry(options.abortSignal);
     if (options.abortSignal?.aborted) return cancelledResult();
     worker = await runOwnedWorker(args, projectPathResult.canonicalPath, options.abortSignal);
   }
   if (worker.status === 75) {
-    const openResult = invokeConnectableOwnerIfPresent(projectPathResult.canonicalPath, options);
-    if (openResult) return openResult;
+    if (worker.owner?.kind === "connectable") {
+      return invokeConnectableOwner(worker.owner.endpoint, projectPathResult.canonicalPath, options);
+    }
     return { ok: false, error: { code: "PROJECT_BUSY", message: "Project is already owned by another runtime." } };
   }
+  if (worker.helperError) return { ok: false, error: worker.helperError };
   if (worker.error || worker.status === null) {
     if (options.abortSignal?.aborted) return cancelledResult();
     return { ok: false, error: { code: "PROJECT_LOAD_FAILED", message: "Project file could not be loaded." } };

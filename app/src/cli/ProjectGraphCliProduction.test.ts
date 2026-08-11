@@ -8,6 +8,12 @@ import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
 import { afterEach, describe, expect, it } from "vitest";
 
 const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
+const ownershipHelperPath = fileURLToPath(
+  new URL(
+    `../../src-tauri/target/debug/project-graph-ownership-helper${process.platform === "win32" ? ".exe" : ""}`,
+    import.meta.url,
+  ),
+);
 const temporaryDirectories: string[] = [];
 
 function materializeProductionRuntime(version: string): string {
@@ -19,7 +25,11 @@ function materializeProductionRuntime(version: string): string {
     {
       cwd: repositoryRoot,
       encoding: "utf8",
-      env: { ...process.env, PROJECT_GRAPH_CLI_VERSION: version },
+      env: {
+        ...process.env,
+        PROJECT_GRAPH_CLI_VERSION: version,
+        PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: ownershipHelperPath,
+      },
     },
   );
   expect(result).toMatchObject({ status: 0, stderr: "" });
@@ -61,7 +71,11 @@ describe("Project Graph production CLI runtime", () => {
       {
         cwd: repositoryRoot,
         encoding: "utf8",
-        env: { ...process.env, PROJECT_GRAPH_CLI_VERSION: "3.2.1" },
+        env: {
+          ...process.env,
+          PROJECT_GRAPH_CLI_VERSION: "3.2.1",
+          PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: ownershipHelperPath,
+        },
       },
     );
 
@@ -93,6 +107,14 @@ describe("Project Graph production CLI runtime", () => {
     expect(runtimeSources.every((source) => !source.includes("ssrLoadModule"))).toBe(true);
     expect(existsSync(join(outputDirectory, "node_modules", "tsx"))).toBe(false);
     expect(existsSync(join(outputDirectory, "node_modules", "vite"))).toBe(false);
+    expect(
+      existsSync(
+        join(
+          outputDirectory,
+          process.platform === "win32" ? "project-graph-ownership-helper.exe" : "project-graph-ownership-helper",
+        ),
+      ),
+    ).toBe(true);
 
     for (const env of [process.env, { ...process.env, PROJECT_GRAPH_CLI_OWNERSHIP_ACQUIRED: "1" }]) {
       expect(spawnSync(process.execPath, [entryPath, "--version"], { encoding: "utf8", env })).toMatchObject({

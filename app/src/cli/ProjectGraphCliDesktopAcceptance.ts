@@ -14,6 +14,12 @@ import type {
 } from "./ProjectGraphCliDesktopAcceptanceProtocol";
 
 const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
+const ownershipHelperPath = fileURLToPath(
+  new URL(
+    `../../src-tauri/target/debug/project-graph-ownership-helper${process.platform === "win32" ? ".exe" : ""}`,
+    import.meta.url,
+  ),
+);
 
 type InvocationDefinition = Omit<CliDesktopAcceptanceInvocation, "projectPath" | "invocationPath"> & {
   fixture?: "image" | "graph";
@@ -248,7 +254,12 @@ function runCli(
   return new Promise((resolve, reject) => {
     const child = spawn("pnpm", ["cli", "--", ...args], {
       cwd: repositoryRoot,
-      env: { ...process.env, NO_COLOR: "1", PROJECT_GRAPH_REFERENCE_STORE_PATH: referenceStorePath },
+      env: {
+        ...process.env,
+        NO_COLOR: "1",
+        PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: ownershipHelperPath,
+        PROJECT_GRAPH_REFERENCE_STORE_PATH: referenceStorePath,
+      },
       stdio: ["ignore", "pipe", "pipe"],
     });
     let stdout = "";

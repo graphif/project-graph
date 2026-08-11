@@ -103,6 +103,10 @@ import {
 } from "./OpenProjectRuntimeHost";
 
 const repositoryRoot = process.cwd();
+const ownershipHelperPath = join(
+  repositoryRoot,
+  `app/src-tauri/target/debug/project-graph-ownership-helper${process.platform === "win32" ? ".exe" : ""}`,
+);
 
 class LiveStageManager {
   static id = "stageManager";
@@ -196,7 +200,7 @@ function runCli(...args: string[]): Promise<{ status: number | null; stdout: str
   return new Promise((resolve, reject) => {
     const child = spawn("pnpm", ["cli", "--", ...args], {
       cwd: repositoryRoot,
-      env: { ...process.env, NO_COLOR: "1" },
+      env: { ...process.env, NO_COLOR: "1", PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: ownershipHelperPath },
       stdio: ["ignore", "pipe", "pipe"],
     });
     let stdout = "";

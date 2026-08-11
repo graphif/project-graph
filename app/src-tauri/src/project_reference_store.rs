@@ -38,7 +38,7 @@ fn lock_path(path: &Path) -> PathBuf {
     PathBuf::from(name)
 }
 
-fn open_store_lock(path: &Path) -> Result<File, String> {
+pub fn acquire_reference_store_lock(path: &Path) -> Result<File, String> {
     let parent = path
         .parent()
         .ok_or_else(|| "Project Object Reference store path has no parent".to_owned())?;
@@ -99,7 +99,7 @@ fn write_store_atomically(path: &Path, store: &Map<String, Value>) -> Result<(),
 }
 
 fn load_snapshot(path: &Path, project_uri: &str) -> Result<Option<Value>, String> {
-    let _lock = open_store_lock(path)?;
+    let _lock = acquire_reference_store_lock(path)?;
     let store = read_store(path)?;
     let Some(value) = store.get(&project_key(project_uri)) else {
         return Ok(None);
@@ -114,7 +114,7 @@ fn load_snapshot(path: &Path, project_uri: &str) -> Result<Option<Value>, String
 }
 
 fn save_snapshot(path: &Path, project_uri: &str, references: Value) -> Result<(), String> {
-    let _lock = open_store_lock(path)?;
+    let _lock = acquire_reference_store_lock(path)?;
     let mut store = read_store(path)?;
     let updated_at = SystemTime::now()
         .duration_since(UNIX_EPOCH)

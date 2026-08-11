@@ -17,6 +17,12 @@ const SAMPLE_COUNT = 20;
 const P95 = 0.95;
 const MAXIMUM_P95_MS = 5_000;
 const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
+const ownershipHelperPath = fileURLToPath(
+  new URL(
+    `../../src-tauri/target/debug/project-graph-ownership-helper${process.platform === "win32" ? ".exe" : ""}`,
+    import.meta.url,
+  ),
+);
 const artifactPath = join(repositoryRoot, "benchmarks", "project-graph-cli-cold-start", "GRAPH-27.json");
 
 export type BenchmarkEnvironment = {
@@ -178,6 +184,7 @@ async function runColdStartSample(options: {
           ...process.env,
           NO_COLOR: "1",
           PROJECT_GRAPH_CLI_EXECUTOR_READY_PATH: options.executorReadyPath,
+          PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: ownershipHelperPath,
           PROJECT_GRAPH_REFERENCE_STORE_PATH: options.referenceStorePath,
         },
         stdio: ["ignore", "ignore", "pipe"],

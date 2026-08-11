@@ -18,30 +18,30 @@ enum ExclusiveLockAttempt {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct CanonicalProjectPath(PathBuf);
+pub struct CanonicalProjectPath(PathBuf);
 
 impl CanonicalProjectPath {
-    pub(crate) fn as_path(&self) -> &Path {
+    pub fn as_path(&self) -> &Path {
         &self.0
     }
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
-pub(crate) enum ProjectOwner {
+pub enum ProjectOwner {
     Connectable { endpoint: String },
     UnconnectableHolder,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub(crate) enum ProjectOwnershipError {
+pub enum ProjectOwnershipError {
     NotFound,
     LoadFailed,
     Busy { owner: ProjectOwner },
 }
 
 impl ProjectOwnershipError {
-    pub(crate) fn code(&self) -> &'static str {
+    pub fn code(&self) -> &'static str {
         match self {
             Self::NotFound => "PROJECT_NOT_FOUND",
             Self::LoadFailed => "PROJECT_LOAD_FAILED",
@@ -49,7 +49,7 @@ impl ProjectOwnershipError {
         }
     }
 
-    pub(crate) fn owner(&self) -> Option<&ProjectOwner> {
+    pub fn owner(&self) -> Option<&ProjectOwner> {
         match self {
             Self::Busy { owner } => Some(owner),
             Self::NotFound | Self::LoadFailed => None,
@@ -58,7 +58,7 @@ impl ProjectOwnershipError {
 }
 
 #[derive(Debug)]
-pub(crate) struct ProjectOwnership {
+pub struct ProjectOwnership {
     canonical_path: CanonicalProjectPath,
     ownership_lock: File,
     connectable_owner_lock: Option<File>,
@@ -335,7 +335,7 @@ pub(crate) fn release_desktop_project_ownership(
 }
 
 impl ProjectOwnership {
-    pub(crate) fn canonical_path(&self) -> &CanonicalProjectPath {
+    pub fn canonical_path(&self) -> &CanonicalProjectPath {
         &self.canonical_path
     }
 }
@@ -349,7 +349,7 @@ impl Drop for ProjectOwnership {
     }
 }
 
-pub(crate) fn canonicalize_project_path(
+pub fn canonicalize_project_path(
     project_path: &Path,
 ) -> Result<CanonicalProjectPath, ProjectOwnershipError> {
     let canonical_path = fs::canonicalize(project_path).map_err(|error| {
@@ -400,11 +400,18 @@ fn canonicalize_project_save_target(
     Ok(CanonicalProjectPath(canonical_parent.join(file_name)))
 }
 
-pub(crate) fn acquire_project_ownership(
+pub fn acquire_project_ownership(
     project_path: &Path,
     owner: ProjectOwner,
 ) -> Result<ProjectOwnership, ProjectOwnershipError> {
     acquire_project_ownership_with_retry_delay(project_path, owner, OWNERSHIP_RETRY_DELAY)
+}
+
+pub fn try_acquire_project_ownership(
+    project_path: &Path,
+    owner: ProjectOwner,
+) -> Result<ProjectOwnership, ProjectOwnershipError> {
+    acquire_project_ownership_with_retry_delay(project_path, owner, Duration::ZERO)
 }
 
 fn acquire_project_ownership_with_retry_delay(

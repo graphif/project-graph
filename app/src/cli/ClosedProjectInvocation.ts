@@ -1,7 +1,6 @@
-import { spawnSync } from "node:child_process";
-import { mkdir, open, readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { Project, ProjectState } from "@/core/Project";
 import { FileSystemProviderFile, writeClosedProjectFileAtomically } from "./ClosedProjectFileSystemProvider";
 import { ClosedProjectEffects } from "./ClosedProjectEffects";
@@ -27,8 +26,10 @@ import { StageManager } from "@/core/stage/stageManager/StageManager";
 import { deserialize } from "@graphif/serializer";
 import { Decoder } from "@msgpack/msgpack";
 import { URI } from "vscode-uri";
+import { acquireReferenceStoreLock, OwnershipHelperError, type OwnershipHelperCliError } from "./OwnershipHelper";
 
 export type ProjectGraphCliOperationalError =
+  | OwnershipHelperCliError
   | {
       code:
         | "PROJECT_UPGRADE_REQUIRED"
@@ -210,7 +211,7 @@ function projectReferenceKey(canonicalPath: string): string {
   return `project:${URI.file(canonicalPath).toString()}:references`;
 }
 
-async function readReferenceStore(path = projectReferenceStorePath()): Promise<Record<string, unknown>> {
+async function readReferenceStoreUnlocked(path: string): Promise<Record<string, unknown>> {
   try {
     const value: unknown = JSON.parse(await readFile(path, "utf8"));
     if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid reference store");
@@ -218,6 +219,18 @@ async function readReferenceStore(path = projectReferenceStorePath()): Promise<R
   } catch (error) {
     if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") return {};
     throw error;
+  }
+}
+
+async function readReferenceStore(
+  path = projectReferenceStorePath(),
+  abortSignal?: AbortSignal,
+): Promise<Record<string, unknown>> {
+  const lock = await acquireReferenceStoreLock(path, abortSignal);
+  try {
+    return await readReferenceStoreUnlocked(path);
+  } finally {
+    await lock.release();
   }
 }
 
@@ -241,18 +254,15 @@ function parseStoredReferences(value: unknown): AIObjectReferenceSnapshot | null
   return references as AIObjectReferenceSnapshot;
 }
 
-async function saveReferences(canonicalPath: string, references: AIObjectReferenceSnapshot): Promise<void> {
+async function saveReferences(
+  canonicalPath: string,
+  references: AIObjectReferenceSnapshot,
+  abortSignal?: AbortSignal,
+): Promise<void> {
   const path = projectReferenceStorePath();
-  await mkdir(dirname(path), { recursive: true });
-  const lock = await open(`${path}.lock`, "a+");
+  const lock = await acquireReferenceStoreLock(path, abortSignal);
   try {
-    const acquired = spawnSync("/usr/bin/lockf", ["-s", "3"], {
-      stdio: ["ignore", "ignore", "ignore", lock.fd],
-    });
-    if (acquired.error || acquired.status !== 0) {
-      throw acquired.error ?? new Error("Project Object Reference store lock could not be acquired");
-    }
-    const store = await readReferenceStore(path);
+    const store = await readReferenceStoreUnlocked(path);
     store[projectReferenceKey(canonicalPath)] = {
       version: 1,
       references,
@@ -260,7 +270,7 @@ async function saveReferences(canonicalPath: string, references: AIObjectReferen
     } satisfies StoredProjectReferences;
     await writeClosedProjectFileAtomically(path, JSON.stringify(store));
   } finally {
-    await lock.close();
+    await lock.release();
   }
 }
 
@@ -390,10 +400,16 @@ async function executeClosedProjectTool(
   });
   try {
     const storedReferences = parseStoredReferences(
-      (await readReferenceStore())[projectReferenceKey(options.canonicalPath)],
+      (await readReferenceStore(projectReferenceStorePath(), options.abortSignal))[
+        projectReferenceKey(options.canonicalPath)
+      ],
     );
     if (storedReferences) references.restoreSnapshot(storedReferences);
-  } catch {
+  } catch (error) {
+    if (options.abortSignal?.aborted) {
+      return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
+    }
+    if (error instanceof OwnershipHelperError) return { ok: false, error: error.cliError };
     return { ok: false, error: { code: "PROJECT_LOAD_FAILED", message: "Project file could not be loaded." } };
   }
 
@@ -443,8 +459,12 @@ async function executeClosedProjectTool(
 
   if (pendingReferenceSnapshot) {
     try {
-      await saveReferences(options.canonicalPath, pendingReferenceSnapshot);
+      await saveReferences(options.canonicalPath, pendingReferenceSnapshot, options.abortSignal);
     } catch (error) {
+      if (options.abortSignal?.aborted) {
+        return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };
+      }
+      if (error instanceof OwnershipHelperError) return { ok: false, error: error.cliError };
       if (error instanceof RuntimeCleanupError) {
         return runtimeCleanupFailed({
           code: "PROJECT_REFERENCE_SAVE_FAILED",
