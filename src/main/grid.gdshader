@@ -20,15 +20,20 @@ void fragment() {
     // 3. 逆向计算出该片段在游戏世界中的【绝对物理坐标】
     vec2 world_pos = (screen_pos_from_center / camera_zoom) + camera_offset;
     
-    // 4. 计算网格相对位置
-    vec2 grid_pos = abs(mod(world_pos, grid_size));
+    // 4. 网格间距按缩放阈值分档跳变，而不是随缩放连续变化。
+    //    每降低一个 2 倍缩放档位，世界网格间距就增大一倍。
+    float zoom_scale = max(min(camera_zoom.x, camera_zoom.y), 0.0001);
+    float zoom_lod = max(0.0, ceil(-log(zoom_scale) / log(2.0)));
+    float grid_size_multiplier = pow(2.0, zoom_lod);
+    float effective_grid_size = grid_size * grid_size_multiplier;
+    vec2 grid_pos = abs(mod(world_pos, effective_grid_size));
     
     // 5. 使用 fwidth 进行抗锯齿计算（防止 Camera 拉远缩放时线条产生锯齿或消失）
     vec2 deriv = fwidth(world_pos);
     vec2 target_thickness = line_thickness * deriv;
     
     vec2 line_alpha = smoothstep(target_thickness, vec2(0.0), grid_pos) + 
-                       smoothstep(vec2(grid_size) - target_thickness, vec2(grid_size), grid_pos);
+                       smoothstep(vec2(effective_grid_size) - target_thickness, vec2(effective_grid_size), grid_pos);
     
     float alpha = max(line_alpha.x, line_alpha.y);
     

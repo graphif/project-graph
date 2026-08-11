@@ -43,6 +43,7 @@ script = ExtResource("1_jqarl")
 unique_name_in_owner = true
 script = ExtResource("1_3s6yk")
 grid_material = ExtResource("2_djufw")
+min_zoom = 0.001
 max_zoom = 50.0
 
 [node name="CanvasLayer" type="CanvasLayer" parent="SubViewportContainer/SubViewport/Stage" unique_id=1215796185]
