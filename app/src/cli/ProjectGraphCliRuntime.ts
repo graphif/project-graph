@@ -127,6 +127,7 @@ async function runOwnedWorker(
     const worker = spawn(process.execPath, [process.argv[1], "--", ...args], {
       env: { ...process.env, PROJECT_GRAPH_CLI_OWNERSHIP_ACQUIRED: "1" },
       stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: true,
     });
     const stdoutStream = worker.stdout;
     const stderrStream = worker.stderr;
