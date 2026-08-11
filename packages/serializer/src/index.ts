@@ -7,9 +7,7 @@ type SerializableClass = {
 };
 
 let getOriginalNameOf: (class_: SerializableClass) => string = (class_) => class_.className ?? class_.name;
-export function configureSerializer(
-  getOriginalNameOfFn: (class_: SerializableClass) => string,
-) {
+export function configureSerializer(getOriginalNameOfFn: (class_: SerializableClass) => string) {
   getOriginalNameOf = (class_) => (class_.className === undefined ? class_.name : getOriginalNameOfFn(class_));
 }
 

@@ -185,7 +185,7 @@ export namespace PathString {
     const downPart = toParts.slice(commonDepth).join("/");
 
     // 组合相对路径
-    let relativePath = "";
+    let relativePath: string;
     if (upPart && downPart) {
       relativePath = upPart + "/" + downPart;
     } else if (upPart) {
@@ -404,7 +404,7 @@ export namespace PathString {
 
     if (hasExtension) {
       const ext = parts[parts.length - 1].toLowerCase();
-      let emoji = "📃"; // 默认文件
+      let emoji: string;
       switch (ext) {
         // 办公
         case "doc":
