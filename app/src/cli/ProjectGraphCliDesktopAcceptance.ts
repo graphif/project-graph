@@ -280,6 +280,7 @@ function runCli(
         PROJECT_GRAPH_REFERENCE_STORE_PATH: referenceStorePath,
       },
       stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: usesWindowsAdapter,
       windowsVerbatimArguments: usesWindowsAdapter,
     });
     let stdout = "";
