@@ -22,5 +22,6 @@ export default defineConfig({
   },
   test: {
     include: ["app/src/**/*.test.{ts,tsx}", "packages/*/tests/**/*.test.{ts,tsx}"],
+    maxWorkers: 4,
   },
 });
