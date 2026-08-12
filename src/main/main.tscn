@@ -91,7 +91,7 @@ mouse_filter = 2
 
 [node name="DebugInfo" type="VBoxContainer" parent="UIOverlay" unique_id=106941584]
 unique_name_in_owner = true
-layout_mode = 0
+layout_mode = 1
 offset_right = 40.0
 offset_bottom = 40.0
 
@@ -107,9 +107,15 @@ layout_mode = 2
 text = "FPS"
 script = ExtResource("4_jkpqq")
 
-[node name="ActiveActions" type="Label" parent="UIOverlay/DebugInfo" unique_id=269406437]
+[node name="ActiveActions" type="Label" parent="UIOverlay" unique_id=269406437]
 unique_name_in_owner = true
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -21.666687
+offset_right = 103.0
+grow_vertical = 0
 text = "ActiveActions"
 script = ExtResource("3_ab7mr")
 ignore_ui_actions = false
