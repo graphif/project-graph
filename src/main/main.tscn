@@ -12,6 +12,7 @@
 [ext_resource type="Script" uid="uid://sfly6isuc6sp" path="res://src/line_edge_creator.gd" id="6_line_edge_creator"]
 [ext_resource type="PackedScene" uid="uid://dodce5rghnax4" path="res://src/stage_object/association/line_edge/line_edge.tscn" id="7_ibsor"]
 [ext_resource type="Script" uid="uid://cwaedcftwo5gx" path="res://src/main/switch_grid.gd" id="11_erw1m"]
+[ext_resource type="Script" uid="uid://d3v2fs4ef4qx" path="res://src/main/create_100_text_nodes_button.gd" id="12_ibsor"]
 
 [node name="Root" type="Control" unique_id=895869584]
 layout_mode = 3
@@ -134,11 +135,18 @@ offset_left = -52.0
 offset_bottom = 64.0
 grow_horizontal = 0
 
+[node name="Create100TextNodesButton" type="Button" parent="UIOverlay/VBoxContainer" unique_id=1892297281]
+unique_name_in_owner = true
+layout_mode = 2
+text = "创建100个节点"
+script = ExtResource("12_ibsor")
+
 [node name="GridToggle" type="CheckButton" parent="UIOverlay/VBoxContainer" unique_id=364331301]
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
-text = "grid"
+text = "背景网格"
 script = ExtResource("11_erw1m")
 
+[connection signal="pressed" from="UIOverlay/VBoxContainer/Create100TextNodesButton" to="UIOverlay/VBoxContainer/Create100TextNodesButton" method="_on_pressed"]
 [connection signal="toggled" from="UIOverlay/VBoxContainer/GridToggle" to="UIOverlay/VBoxContainer/GridToggle" method="_on_toggled"]
