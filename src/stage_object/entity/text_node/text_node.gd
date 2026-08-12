@@ -60,6 +60,7 @@ func enter_edit_mode() -> void:
 	label.hide()
 	text_edit.show()
 	text_edit.grab_focus()
+	text_edit.select_all()
 
 
 func exit_edit_mode() -> void:
