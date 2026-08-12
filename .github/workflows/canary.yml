@@ -19,15 +19,16 @@ jobs:
         run: |
           mkdir -v -p ~/.local/share/godot/export_templates/
           mv /root/.local/share/godot/export_templates/4.7.stable ~/.local/share/godot/export_templates/4.7.stable
+          sudo apt install libatomic1 -y
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
       - name: Export
         run: |
           mkdir -v -p dist/web
           EXPORT_DIR="$(readlink -f dist)"
           godot --headless --verbose --export-release "Web" "$EXPORT_DIR/web/index.html"
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 26
       - name: Deploy
         uses: cloudflare/wrangler-action@v4
         with:
