@@ -11,8 +11,6 @@
 [ext_resource type="Script" uid="uid://nn8qw6ipcykw" path="res://src/stage_object_slicer.gd" id="5_w0wra"]
 [ext_resource type="Script" uid="uid://sfly6isuc6sp" path="res://src/line_edge_creator.gd" id="6_line_edge_creator"]
 [ext_resource type="PackedScene" uid="uid://dodce5rghnax4" path="res://src/stage_object/association/line_edge/line_edge.tscn" id="7_ibsor"]
-[ext_resource type="Script" uid="uid://daqhif4n0xhgs" path="res://src/main/dump_button.gd" id="9_2nke2"]
-[ext_resource type="Script" uid="uid://c2khy05f382gk" path="res://src/main/load_button.gd" id="9_km7bn"]
 [ext_resource type="Script" uid="uid://cwaedcftwo5gx" path="res://src/main/switch_grid.gd" id="11_erw1m"]
 
 [node name="Root" type="Control" unique_id=895869584]
@@ -136,16 +134,6 @@ offset_left = -52.0
 offset_bottom = 64.0
 grow_horizontal = 0
 
-[node name="LoadButton" type="Button" parent="UIOverlay/VBoxContainer" unique_id=1621775476]
-layout_mode = 2
-text = "load"
-script = ExtResource("9_km7bn")
-
-[node name="DumpButton" type="Button" parent="UIOverlay/VBoxContainer" unique_id=1055376033]
-layout_mode = 2
-text = "dump"
-script = ExtResource("9_2nke2")
-
 [node name="GridToggle" type="CheckButton" parent="UIOverlay/VBoxContainer" unique_id=364331301]
 unique_name_in_owner = true
 layout_mode = 2
@@ -153,6 +141,4 @@ button_pressed = true
 text = "grid"
 script = ExtResource("11_erw1m")
 
-[connection signal="pressed" from="UIOverlay/VBoxContainer/LoadButton" to="UIOverlay/VBoxContainer/LoadButton" method="_on_pressed"]
-[connection signal="pressed" from="UIOverlay/VBoxContainer/DumpButton" to="UIOverlay/VBoxContainer/DumpButton" method="_on_pressed"]
 [connection signal="toggled" from="UIOverlay/VBoxContainer/GridToggle" to="UIOverlay/VBoxContainer/GridToggle" method="_on_toggled"]
