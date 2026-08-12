@@ -19,7 +19,7 @@ jobs:
         run: |
           mkdir -v -p ~/.local/share/godot/export_templates/
           mv /root/.local/share/godot/export_templates/4.7.stable ~/.local/share/godot/export_templates/4.7.stable
-          sudo apt install libatomic1 -y
+          apt install libatomic1 -y
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
