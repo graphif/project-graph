@@ -52,14 +52,13 @@ func _finish_slice() -> void:
 		return
 
 	for stage_object in _get_stage_objects():
-		if _segment_intersects_rect(_slice_start, _slice_end, _get_object_rect(stage_object)):
+		if _segment_intersects_rect(_slice_start, _slice_end, stage_object.get_rect()):
 			stage_object.queue_free()
 
 
 func _get_stage_objects() -> Array[StageObject]:
 	var result: Array[StageObject] = []
-	var root := target_root if target_root else get_parent()
-	_collect_stage_objects(root, result)
+	_collect_stage_objects(target_root, result)
 	return result
 
 
@@ -69,25 +68,6 @@ func _collect_stage_objects(node: Node, result: Array[StageObject]) -> void:
 			result.append(child)
 			continue
 		_collect_stage_objects(child, result)
-
-
-func _get_object_rect(object: Control) -> Rect2:
-	var rect := Rect2()
-	var has_rect := false
-	var controls: Array[Node] = [object]
-
-	while not controls.is_empty():
-		var current: Node = controls.pop_back()
-		if current is Control:
-			var current_rect: Rect2 = current.get_global_rect()
-			if current_rect.size.x > 0.0 and current_rect.size.y > 0.0:
-				rect = current_rect if not has_rect else rect.merge(current_rect)
-				has_rect = true
-
-		for child in current.get_children():
-			controls.push_back(child)
-
-	return rect
 
 
 func _segment_intersects_rect(start: Vector2, end: Vector2, rect: Rect2) -> bool:

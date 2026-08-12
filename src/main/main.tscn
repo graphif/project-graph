@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://da4b7r3gn615d" path="res://src/main/debug_info/fps.gd" id="4_jkpqq"]
 [ext_resource type="Script" uid="uid://dyoffk035pa80" path="res://src/main/debug_info/os.gd" id="5_30cu5"]
 [ext_resource type="Script" uid="uid://nn8qw6ipcykw" path="res://src/stage_object_slicer.gd" id="5_w0wra"]
+[ext_resource type="PackedScene" uid="uid://dodce5rghnax4" path="res://src/stage_object/association/line_edge/line_edge.tscn" id="7_ibsor"]
 [ext_resource type="Script" uid="uid://daqhif4n0xhgs" path="res://src/main/dump_button.gd" id="9_2nke2"]
 [ext_resource type="Script" uid="uid://c2khy05f382gk" path="res://src/main/load_button.gd" id="9_km7bn"]
 [ext_resource type="Script" uid="uid://cwaedcftwo5gx" path="res://src/main/switch_grid.gd" id="11_erw1m"]
@@ -71,12 +72,19 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="StageObjectSlicer" type="Node2D" parent="SubViewportContainer/SubViewport/Stage" unique_id=24509522]
+[node name="StageObjectSlicer" type="Node2D" parent="SubViewportContainer/SubViewport/Stage" unique_id=24509522 node_paths=PackedStringArray("target_root")]
 script = ExtResource("5_w0wra")
+target_root = NodePath("..")
 metadata/_custom_type_script = "uid://nn8qw6ipcykw"
 
 [node name="TextNode" parent="SubViewportContainer/SubViewport/Stage" unique_id=1629768609 instance=ExtResource("1_3eh75")]
 text = "hello world"
+
+[node name="TextNode2" parent="SubViewportContainer/SubViewport/Stage" unique_id=1077602490 instance=ExtResource("1_3eh75")]
+
+[node name="LineEdge" parent="SubViewportContainer/SubViewport/Stage" unique_id=2098186653 node_paths=PackedStringArray("source", "target") instance=ExtResource("7_ibsor")]
+source = NodePath("../TextNode")
+target = NodePath("../TextNode2")
 
 [node name="UIOverlay" type="Control" parent="." unique_id=360473786]
 unique_name_in_owner = true

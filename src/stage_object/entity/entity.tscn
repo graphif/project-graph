@@ -1,9 +1,8 @@
-[gd_scene format=3 uid="uid://45fxmxicif0a"]
+[gd_scene format=3 uid="uid://dqhu31cd6300y"]
 
 [ext_resource type="Script" uid="uid://cjuhy4crce61f" path="res://src/stage_object/entity/entity.gd" id="1_bclhr"]
 
-[node name="Entity" type="Control" unique_id=191603504]
-layout_mode = 3
+[node name="Entity" type="MarginContainer" unique_id=1989864574]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0

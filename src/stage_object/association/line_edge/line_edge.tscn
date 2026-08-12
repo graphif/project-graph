@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://dodce5rghnax4"]
+
+[ext_resource type="Script" uid="uid://cx3yytgaa802v" path="res://src/stage_object/association/line_edge/line_edge.gd" id="1_qxjbk"]
+
+[node name="LineEdge" type="MarginContainer" unique_id=877118951]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_qxjbk")
+
+[node name="Line" type="Line2D" parent="." unique_id=655085003]
+width = 2.0
+
+[node name="Head" type="Polygon2D" parent="." unique_id=2018816104]
+polygon = PackedVector2Array(0, 0, -12, -6, -12, 6)

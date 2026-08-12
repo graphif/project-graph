@@ -7,16 +7,13 @@
 [sub_resource type="FontVariation" id="FontVariation_hmhrc"]
 baseline_offset = 0.045
 
-[node name="TextNode" type="Control" unique_id=1411878724]
-layout_mode = 3
-anchors_preset = 0
-mouse_filter = 1
+[node name="TextNode" type="MarginContainer" unique_id=271345002]
+offset_right = 29.0
+offset_bottom = 72.0
 script = ExtResource("1_0djjf")
 
 [node name="Label" type="Label" parent="." unique_id=75542421]
-layout_mode = 0
-offset_right = 29.0
-offset_bottom = 72.0
+layout_mode = 2
 mouse_filter = 1
 theme_override_fonts/font = SubResource("FontVariation_hmhrc")
 theme_override_font_sizes/font_size = 32
@@ -25,9 +22,7 @@ theme_override_styles/normal = ExtResource("2_qcl3h")
 [node name="TextEdit" type="TextEdit" parent="." unique_id=118923332]
 visible = false
 custom_minimum_size = Vector2(28, 71.33333)
-layout_mode = 0
-offset_right = 28.0
-offset_bottom = 71.33333
+layout_mode = 2
 theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = ExtResource("2_qcl3h")
 script = ExtResource("3_hm685")
