@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://da4b7r3gn615d" path="res://src/main/debug_info/fps.gd" id="4_jkpqq"]
 [ext_resource type="Script" uid="uid://dyoffk035pa80" path="res://src/main/debug_info/os.gd" id="5_30cu5"]
 [ext_resource type="Script" uid="uid://nn8qw6ipcykw" path="res://src/stage_object_slicer.gd" id="5_w0wra"]
+[ext_resource type="Script" uid="uid://sfly6isuc6sp" path="res://src/line_edge_creator.gd" id="6_line_edge_creator"]
 [ext_resource type="PackedScene" uid="uid://dodce5rghnax4" path="res://src/stage_object/association/line_edge/line_edge.tscn" id="7_ibsor"]
 [ext_resource type="Script" uid="uid://daqhif4n0xhgs" path="res://src/main/dump_button.gd" id="9_2nke2"]
 [ext_resource type="Script" uid="uid://c2khy05f382gk" path="res://src/main/load_button.gd" id="9_km7bn"]
@@ -76,6 +77,10 @@ mouse_filter = 2
 script = ExtResource("5_w0wra")
 target_root = NodePath("..")
 metadata/_custom_type_script = "uid://nn8qw6ipcykw"
+
+[node name="LineEdgeCreator" type="Node2D" parent="SubViewportContainer/SubViewport/Stage" unique_id=1920728493 node_paths=PackedStringArray("target_root")]
+script = ExtResource("6_line_edge_creator")
+target_root = NodePath("..")
 
 [node name="TextNode" parent="SubViewportContainer/SubViewport/Stage" unique_id=1629768609 instance=ExtResource("1_3eh75")]
 text = "hello world"
