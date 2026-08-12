@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://dyoffk035pa80" path="res://src/main/debug_info/os.gd" id="5_30cu5"]
 [ext_resource type="Script" uid="uid://daqhif4n0xhgs" path="res://src/main/dump_button.gd" id="9_2nke2"]
 [ext_resource type="Script" uid="uid://c2khy05f382gk" path="res://src/main/load_button.gd" id="9_km7bn"]
+[ext_resource type="Script" uid="uid://cwaedcftwo5gx" path="res://src/main/switch_grid.gd" id="11_erw1m"]
 
 [node name="Root" type="Control" unique_id=895869584]
 layout_mode = 3
@@ -30,10 +31,21 @@ grow_vertical = 2
 stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="SubViewportContainer" unique_id=1267056667]
+transparent_bg = true
 handle_input_locally = false
 size = Vector2i(1152, 648)
 size_2d_override_stretch = true
 render_target_update_mode = 4
+
+[node name="PopupMenu" type="PopupMenu" parent="SubViewportContainer/SubViewport" unique_id=1264082139]
+unique_name_in_owner = true
+oversampling_override = 1.0
+visible = true
+item_count = 2
+item_0/text = "1"
+item_0/id = 0
+item_1/text = "2"
+item_1/id = 1
 
 [node name="Stage" type="Node2D" parent="SubViewportContainer/SubViewport" unique_id=156110269]
 unique_name_in_owner = true
@@ -58,15 +70,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-
-[node name="PopupMenu" type="PopupMenu" parent="SubViewportContainer/SubViewport/Stage" unique_id=1264082139]
-oversampling_override = 1.0
-visible = true
-item_count = 2
-item_0/text = "1"
-item_0/id = 0
-item_1/text = "2"
-item_1/id = 1
 
 [node name="TextNode" parent="SubViewportContainer/SubViewport/Stage" unique_id=1629768609 instance=ExtResource("1_3eh75")]
 text = "hello world"
@@ -126,5 +129,13 @@ layout_mode = 2
 text = "dump"
 script = ExtResource("9_2nke2")
 
+[node name="GridToggle" type="CheckButton" parent="UIOverlay/VBoxContainer" unique_id=364331301]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "grid"
+script = ExtResource("11_erw1m")
+
 [connection signal="pressed" from="UIOverlay/VBoxContainer/LoadButton" to="UIOverlay/VBoxContainer/LoadButton" method="_on_pressed"]
 [connection signal="pressed" from="UIOverlay/VBoxContainer/DumpButton" to="UIOverlay/VBoxContainer/DumpButton" method="_on_pressed"]
+[connection signal="toggled" from="UIOverlay/VBoxContainer/GridToggle" to="UIOverlay/VBoxContainer/GridToggle" method="_on_toggled"]

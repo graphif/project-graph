@@ -1,7 +1,7 @@
 extends Node2D
 
 const TEXT_NODE = preload("uid://btnefrbc5lowu")
-@onready var popup_menu: PopupMenu = $PopupMenu
+@onready var popup_menu: PopupMenu = %PopupMenu
 
 
 func _ready() -> void:

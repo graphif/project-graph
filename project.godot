@@ -17,7 +17,9 @@ config/icon="uid://bxfj8cpdlgdoa"
 
 [display]
 
+window/size/transparent=true
 window/stretch/aspect="expand"
+window/per_pixel_transparency/allowed=true
 
 [editor_plugins]
 
@@ -82,3 +84,5 @@ rendering_device/driver.windows="d3d12"
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
+environment/defaults/default_clear_color=Color(0, 0, 0, 0)
+viewport/transparent_background=true
