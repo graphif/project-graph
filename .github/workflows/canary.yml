@@ -24,6 +24,10 @@ jobs:
           mkdir -v -p dist/web
           EXPORT_DIR="$(readlink -f dist)"
           godot --headless --verbose --export-release "Web" "$EXPORT_DIR/web/index.html"
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 26
       - name: Deploy
         uses: cloudflare/wrangler-action@v4
         with:
