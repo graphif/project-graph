@@ -37,6 +37,7 @@ tauri-plugin-global-shortcut = "2.3.0"
 tauri-plugin-deep-link = "2"
 regex = "1.12.3"
 dirs = "6"
+sha2 = "0.10.9"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 aha = { version = "0.2.6", features = ["metal"] }

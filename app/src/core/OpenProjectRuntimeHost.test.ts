@@ -5,7 +5,7 @@ import { mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFile
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 let bridgeListener: ((event: { payload: unknown }) => Promise<void>) | undefined;
 const openverseImageSearch = vi.hoisted(() => ({ findDownloadableOpenverseImage: vi.fn() }));
@@ -101,12 +101,16 @@ import {
   OpenProjectRuntimeHost,
   registerOpenProjectRuntimeHost,
 } from "./OpenProjectRuntimeHost";
+import { resolveProjectOwnershipArtifactPaths } from "@/cli/ProjectGraphAppDataPath";
 
 const repositoryRoot = process.cwd();
 const ownershipHelperPath = join(
   repositoryRoot,
   `app/src-tauri/target/debug/project-graph-ownership-helper${process.platform === "win32" ? ".exe" : ""}`,
 );
+const ownershipDirectory = mkdtempSync(join(tmpdir(), "project-graph-runtime-host-ownership-"));
+
+afterAll(() => rmSync(ownershipDirectory, { recursive: true, force: true }));
 
 class LiveStageManager {
   static id = "stageManager";
@@ -200,7 +204,12 @@ function runCli(...args: string[]): Promise<{ status: number | null; stdout: str
   return new Promise((resolve, reject) => {
     const child = spawn("pnpm", ["cli", "--", ...args], {
       cwd: repositoryRoot,
-      env: { ...process.env, NO_COLOR: "1", PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: ownershipHelperPath },
+      env: {
+        ...process.env,
+        NO_COLOR: "1",
+        PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: ownershipHelperPath,
+        PROJECT_GRAPH_OWNERSHIP_DIRECTORY: ownershipDirectory,
+      },
       stdio: ["ignore", "pipe", "pipe"],
     });
     let stdout = "";
@@ -246,9 +255,11 @@ async function startDesktopRuntimeBridge(projectPath: string, host: OpenProjectR
   const address = server.address();
   if (!address || typeof address === "string") throw new Error("Expected a TCP Runtime Host address");
 
-  const ownershipLockPath = `${projectPath}.project-graph.lock`;
-  const connectableRecordPath = `${projectPath}.project-graph.connectable`;
-  const connectableLockPath = `${connectableRecordPath}.lock`;
+  const {
+    ownershipLock: ownershipLockPath,
+    connectableOwnerLock: connectableLockPath,
+    connectableOwnerRecord: connectableRecordPath,
+  } = resolveProjectOwnershipArtifactPaths(projectPath, ownershipDirectory);
   writeFileSync(
     connectableRecordPath,
     JSON.stringify({ kind: "connectable", endpoint: `tcp://127.0.0.1:${address.port}` }),

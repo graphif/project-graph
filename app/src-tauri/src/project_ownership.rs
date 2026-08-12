@@ -1,5 +1,6 @@
 use crate::project_runtime_bridge::ProjectRuntimeBridgeManager;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
 use std::fs::{self, File, OpenOptions, TryLockError};
 use std::io::{Read, Seek, SeekFrom, Write};
@@ -10,6 +11,12 @@ use std::thread;
 use std::time::Duration;
 
 const OWNERSHIP_RETRY_DELAY: Duration = Duration::from_secs(5);
+#[cfg(not(test))]
+const APP_IDENTIFIER: &str = "liren.project-graph";
+#[cfg(not(test))]
+const OWNERSHIP_DIRECTORY_NAME: &str = "project-ownership";
+pub(crate) const OWNERSHIP_DIRECTORY_ENVIRONMENT_VARIABLE: &str =
+    "PROJECT_GRAPH_OWNERSHIP_DIRECTORY";
 static NEXT_DESKTOP_OWNERSHIP_ID: AtomicU64 = AtomicU64::new(1);
 
 enum ExclusiveLockAttempt {
@@ -76,6 +83,19 @@ pub struct ProjectOwnership {
     canonical_path: CanonicalProjectPath,
     ownership_lock: File,
     connectable_owner_lock: Option<File>,
+}
+
+struct OwnershipArtifactPaths {
+    ownership_lock: PathBuf,
+    connectable_owner_lock: PathBuf,
+    connectable_owner_record: PathBuf,
+}
+
+#[derive(Clone, Copy)]
+enum OwnershipArtifact {
+    OwnershipLock,
+    ConnectableOwnerLock,
+    ConnectableOwnerRecord,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize)]
@@ -490,7 +510,7 @@ fn try_exclusive_lock(
 }
 
 fn open_lock_file(canonical_path: &CanonicalProjectPath) -> Result<File, ProjectOwnershipError> {
-    open_sidecar_file(canonical_path, ".project-graph.lock")
+    open_ownership_file(canonical_path, OwnershipArtifact::OwnershipLock)
 }
 
 fn acquire_connectable_owner_lock(
@@ -517,31 +537,96 @@ fn acquire_connectable_owner_lock(
 fn open_connectable_owner_lock(
     canonical_path: &CanonicalProjectPath,
 ) -> Result<File, ProjectOwnershipError> {
-    open_sidecar_file(canonical_path, ".project-graph.connectable.lock")
+    open_ownership_file(canonical_path, OwnershipArtifact::ConnectableOwnerLock)
 }
 
 fn open_connectable_owner_record(
     canonical_path: &CanonicalProjectPath,
 ) -> Result<File, ProjectOwnershipError> {
-    open_sidecar_file(canonical_path, ".project-graph.connectable")
+    open_ownership_file(canonical_path, OwnershipArtifact::ConnectableOwnerRecord)
 }
 
-fn open_sidecar_file(
+fn ownership_directory() -> Result<PathBuf, ProjectOwnershipError> {
+    if let Some(directory) = std::env::var_os(OWNERSHIP_DIRECTORY_ENVIRONMENT_VARIABLE) {
+        if !directory.is_empty() {
+            return Ok(PathBuf::from(directory));
+        }
+    }
+    default_ownership_directory()
+}
+
+fn open_ownership_file(
     canonical_path: &CanonicalProjectPath,
-    suffix: &str,
+    artifact: OwnershipArtifact,
 ) -> Result<File, ProjectOwnershipError> {
+    let directory = ownership_directory()?;
+    fs::create_dir_all(&directory).map_err(|_| ProjectOwnershipError::LoadFailed)?;
+    let paths = ownership_artifact_paths(&directory, canonical_path);
     OpenOptions::new()
         .create(true)
         .read(true)
         .write(true)
-        .open(sidecar_path(canonical_path, suffix))
+        .open(match artifact {
+            OwnershipArtifact::OwnershipLock => paths.ownership_lock,
+            OwnershipArtifact::ConnectableOwnerLock => paths.connectable_owner_lock,
+            OwnershipArtifact::ConnectableOwnerRecord => paths.connectable_owner_record,
+        })
         .map_err(|_| ProjectOwnershipError::LoadFailed)
 }
 
-fn sidecar_path(canonical_path: &CanonicalProjectPath, suffix: &str) -> PathBuf {
-    let mut lock_file_name = canonical_path.as_path().as_os_str().to_owned();
-    lock_file_name.push(suffix);
-    PathBuf::from(lock_file_name)
+#[cfg(not(test))]
+fn default_ownership_directory() -> Result<PathBuf, ProjectOwnershipError> {
+    dirs::data_dir()
+        .map(|directory| {
+            directory
+                .join(APP_IDENTIFIER)
+                .join(OWNERSHIP_DIRECTORY_NAME)
+        })
+        .ok_or(ProjectOwnershipError::LoadFailed)
+}
+
+#[cfg(test)]
+pub(crate) fn default_ownership_directory() -> Result<PathBuf, ProjectOwnershipError> {
+    Ok(std::env::temp_dir().join(format!(
+        "project-graph-ownership-tests-{}",
+        std::process::id()
+    )))
+}
+
+fn ownership_artifact_paths(
+    ownership_directory: &Path,
+    canonical_path: &CanonicalProjectPath,
+) -> OwnershipArtifactPaths {
+    let key = ownership_key(canonical_path);
+    OwnershipArtifactPaths {
+        ownership_lock: ownership_directory.join(format!("{key}.lock")),
+        connectable_owner_lock: ownership_directory.join(format!("{key}.connectable.lock")),
+        connectable_owner_record: ownership_directory.join(format!("{key}.connectable")),
+    }
+}
+
+fn ownership_key(canonical_path: &CanonicalProjectPath) -> String {
+    let mut hasher = Sha256::new();
+    #[cfg(unix)]
+    {
+        use std::os::unix::ffi::OsStrExt;
+        hasher.update(canonical_path.as_path().as_os_str().as_bytes());
+    }
+    #[cfg(windows)]
+    for code_unit in canonical_path.to_protocol_string().encode_utf16() {
+        hasher.update(code_unit.to_le_bytes());
+    }
+    #[cfg(not(any(unix, windows)))]
+    hasher.update(canonical_path.to_protocol_string().as_bytes());
+
+    const HEX_DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let digest = hasher.finalize();
+    let mut key = String::with_capacity(digest.len() * 2);
+    for byte in digest {
+        key.push(HEX_DIGITS[(byte >> 4) as usize] as char);
+        key.push(HEX_DIGITS[(byte & 0x0f) as usize] as char);
+    }
+    key
 }
 
 fn record_owner(lock_file: &mut File, owner_record: &[u8]) -> Result<(), ProjectOwnershipError> {
@@ -709,6 +794,71 @@ mod tests {
         assert_eq!(
             canonicalize_project_path(&project).unwrap().as_path(),
             fs::canonicalize(&project).unwrap()
+        );
+    }
+
+    #[test]
+    fn ownership_artifacts_use_the_canonical_project_path_hash_as_their_key() {
+        let canonical_path = CanonicalProjectPath(PathBuf::from("/projects/graph.prg"));
+        let paths =
+            ownership_artifact_paths(Path::new("/app-data/project-ownership"), &canonical_path);
+
+        assert_eq!(
+            paths.ownership_lock,
+            Path::new("/app-data/project-ownership/624b76f040538e5c4bab3f62f4111c955343dec3ede76c976f50ca8ac300a62e.lock")
+        );
+        assert_eq!(
+            paths.connectable_owner_lock,
+            Path::new("/app-data/project-ownership/624b76f040538e5c4bab3f62f4111c955343dec3ede76c976f50ca8ac300a62e.connectable.lock")
+        );
+        assert_eq!(
+            paths.connectable_owner_record,
+            Path::new("/app-data/project-ownership/624b76f040538e5c4bab3f62f4111c955343dec3ede76c976f50ca8ac300a62e.connectable")
+        );
+    }
+
+    #[test]
+    fn ownership_hard_switch_ignores_legacy_project_sidecars() {
+        let directory = TestDirectory::new();
+        let project = directory.path().join("graph.prg");
+        fs::write(&project, []).unwrap();
+        let mut legacy_lock_name = project.as_os_str().to_owned();
+        legacy_lock_name.push(".project-graph.lock");
+        let legacy_lock_path = PathBuf::from(legacy_lock_name);
+        let legacy_lock = OpenOptions::new()
+            .create(true)
+            .read(true)
+            .write(true)
+            .open(&legacy_lock_path)
+            .unwrap();
+        legacy_lock.try_lock().unwrap();
+
+        let ownership = acquire_project_ownership_with_retry_delay(
+            &project,
+            ProjectOwner::UnconnectableHolder,
+            Duration::ZERO,
+        )
+        .unwrap();
+        let paths = ownership_artifact_paths(
+            &default_ownership_directory().unwrap(),
+            ownership.canonical_path(),
+        );
+
+        assert!(paths.ownership_lock.is_file());
+        assert_eq!(fs::metadata(&legacy_lock_path).unwrap().len(), 0);
+        assert!(
+            !PathBuf::from(format!("{}.project-graph.connectable", project.display())).exists()
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn ownership_key_normalizes_windows_verbatim_paths_and_hashes_utf16() {
+        let canonical_path = CanonicalProjectPath(PathBuf::from(r"\\?\C:\Projects\Graph.prg"));
+
+        assert_eq!(
+            ownership_key(&canonical_path),
+            "3ba5afbf87609293ab5fdd2921a3bbc7663d526d3ec657bd394ddc097efc7d68"
         );
     }
 
@@ -1183,6 +1333,10 @@ mod tests {
             .arg("project_ownership::tests::ownership_holder_process")
             .arg("--nocapture")
             .env(HOLDER_PROJECT_PATH, project_path)
+            .env(
+                OWNERSHIP_DIRECTORY_ENVIRONMENT_VARIABLE,
+                default_ownership_directory().unwrap(),
+            )
             .stdout(Stdio::piped());
         if let Some(milliseconds) = exit_after_millis {
             command.env(HOLDER_EXIT_AFTER_MILLIS, milliseconds.to_string());

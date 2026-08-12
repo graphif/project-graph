@@ -13,6 +13,7 @@ import type {
   CliDesktopAcceptanceManifest,
   CliDesktopAcceptanceState,
 } from "./ProjectGraphCliDesktopAcceptanceProtocol";
+import { resolveProjectOwnershipArtifactPaths } from "./ProjectGraphAppDataPath";
 
 const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const ownershipHelperPath = fileURLToPath(
@@ -256,6 +257,7 @@ async function waitForState(
 
 function runCli(
   referenceStorePath: string,
+  ownershipDirectory: string,
   ...args: string[]
 ): Promise<{ status: number | null; stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
@@ -278,6 +280,7 @@ function runCli(
         ...process.env,
         NO_COLOR: "1",
         PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: ownershipHelperPath,
+        PROJECT_GRAPH_OWNERSHIP_DIRECTORY: ownershipDirectory,
         PROJECT_GRAPH_REFERENCE_STORE_PATH: referenceStorePath,
       },
       stdio: ["ignore", "pipe", "pipe"],
@@ -304,16 +307,10 @@ function assertSuccessfulInvocation(
   }
 }
 
-function assertProjectOwned(projectPath: string): void {
+function assertProjectOwned(projectPath: string, ownershipDirectory: string): void {
   if (process.platform === "win32") return;
-  const lock = spawnSync("/usr/bin/lockf", [
-    "-k",
-    "-s",
-    "-t",
-    "0",
-    `${realpathSync(projectPath)}.project-graph.lock`,
-    "/usr/bin/true",
-  ]);
+  const { ownershipLock } = resolveProjectOwnershipArtifactPaths(realpathSync(projectPath), ownershipDirectory);
+  const lock = spawnSync("/usr/bin/lockf", ["-k", "-s", "-t", "0", ownershipLock, "/usr/bin/true"]);
   if (lock.status !== 75) throw new Error(`Desktop does not own Project: ${projectPath}`);
 }
 
@@ -323,6 +320,7 @@ async function runAcceptance(): Promise<void> {
   const statePath = join(temporaryDirectory, "state.json");
   const completionPath = join(temporaryDirectory, "complete");
   const referenceStorePath = join(temporaryDirectory, "ai-project-references.json");
+  const ownershipDirectory = join(temporaryDirectory, "project-ownership");
   const configPath = join(temporaryDirectory, "tauri-acceptance.json");
   let vite: ManagedProcess | undefined;
   let tauri: ManagedProcess | undefined;
@@ -389,6 +387,7 @@ async function runAcceptance(): Promise<void> {
       PROJECT_GRAPH_CLI_DESKTOP_ACCEPTANCE_STATE_PATH: statePath,
       PROJECT_GRAPH_CLI_DESKTOP_ACCEPTANCE_COMPLETION_PATH: completionPath,
       PROJECT_GRAPH_REFERENCE_STORE_PATH: referenceStorePath,
+      PROJECT_GRAPH_OWNERSHIP_DIRECTORY: ownershipDirectory,
     };
     vite = startManagedProcess(
       process.platform === "win32" ? "pnpm.exe" : "pnpm",
@@ -426,6 +425,7 @@ async function runAcceptance(): Promise<void> {
     const [desktopReferenceUpdate, closedReferenceUpdate] = await Promise.all([
       runCli(
         referenceStorePath,
+        ownershipDirectory,
         "tool",
         "invoke",
         "get_all_nodes",
@@ -436,6 +436,7 @@ async function runAcceptance(): Promise<void> {
       ),
       runCli(
         referenceStorePath,
+        ownershipDirectory,
         "tool",
         "invoke",
         "get_all_nodes",
@@ -453,11 +454,12 @@ async function runAcceptance(): Promise<void> {
       if (!(key in referenceStore)) throw new Error(`Concurrent reference-store update was lost: ${key}`);
     }
     const before = new Map(invocations.map(({ projectPath }) => [projectPath, readFileSync(projectPath)]));
-    for (const invocation of invocations) assertProjectOwned(invocation.projectPath);
-    assertProjectOwned(savedDraftProjectPath);
+    for (const invocation of invocations) assertProjectOwned(invocation.projectPath, ownershipDirectory);
+    assertProjectOwned(savedDraftProjectPath, ownershipDirectory);
 
     const savedDraftResult = await runCli(
       referenceStorePath,
+      ownershipDirectory,
       "tool",
       "invoke",
       "get_all_nodes",
@@ -474,6 +476,7 @@ async function runAcceptance(): Promise<void> {
     for (const invocation of invocations) {
       const discovery = await runCli(
         referenceStorePath,
+        ownershipDirectory,
         "tool",
         "invoke",
         "get_all_nodes",
@@ -488,6 +491,7 @@ async function runAcceptance(): Promise<void> {
           ? discovery
           : await runCli(
               referenceStorePath,
+              ownershipDirectory,
               "tool",
               "invoke",
               invocation.name,
@@ -523,9 +527,9 @@ async function runAcceptance(): Promise<void> {
       if (!readFileSync(invocation.projectPath).equals(before.get(invocation.projectPath)!)) {
         throw new Error(`Open invocation saved Project unexpectedly: ${invocation.name}`);
       }
-      assertProjectOwned(invocation.projectPath);
+      assertProjectOwned(invocation.projectPath, ownershipDirectory);
     }
-    assertProjectOwned(savedDraftProjectPath);
+    assertProjectOwned(savedDraftProjectPath, ownershipDirectory);
     writeFileSync(completionPath, "complete");
     const verified = (await waitForState(statePath, "verified", tauri)) as Extract<
       CliDesktopAcceptanceState,

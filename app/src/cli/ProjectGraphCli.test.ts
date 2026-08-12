@@ -20,6 +20,7 @@ import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
 import { afterEach, describe, expect, it } from "vitest";
 import { URI } from "vscode-uri";
 import sharp from "sharp";
+import { resolveProjectOwnershipArtifactPaths } from "./ProjectGraphAppDataPath";
 
 const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const ownershipHelperPath = fileURLToPath(
@@ -34,11 +35,13 @@ const cliEntryPath =
 const expectedCliVersion = process.env.PROJECT_GRAPH_CLI_TEST_VERSION ?? "1.0.0";
 const temporaryDirectories: string[] = [];
 let referenceStorePath: string | undefined;
+let ownershipDirectory: string | undefined;
 const productionEntry = process.env.PROJECT_GRAPH_CLI_TEST_PRODUCTION === "1";
 
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) rmSync(directory, { recursive: true, force: true });
   referenceStorePath = undefined;
+  ownershipDirectory = undefined;
 });
 
 function getReferenceStorePath(): string {
@@ -47,6 +50,13 @@ function getReferenceStorePath(): string {
   temporaryDirectories.push(directory);
   referenceStorePath = join(directory, "ai-project-references.json");
   return referenceStorePath;
+}
+
+function getOwnershipDirectory(): string {
+  if (ownershipDirectory) return ownershipDirectory;
+  ownershipDirectory = mkdtempSync(join(tmpdir(), "project-graph-ownership-"));
+  temporaryDirectories.push(ownershipDirectory);
+  return ownershipDirectory;
 }
 
 async function createProjectFixture(
@@ -129,6 +139,7 @@ function runCli(...args: string[]) {
       ...process.env,
       NO_COLOR: "1",
       PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: ownershipHelperPath,
+      PROJECT_GRAPH_OWNERSHIP_DIRECTORY: getOwnershipDirectory(),
       PROJECT_GRAPH_REFERENCE_STORE_PATH: getReferenceStorePath(),
     },
   });
@@ -157,6 +168,7 @@ function spawnCapturedProcess(command: string, args: string[], environment: Reco
       env: {
         ...process.env,
         PROJECT_GRAPH_OWNERSHIP_HELPER_PATH: ownershipHelperPath,
+        PROJECT_GRAPH_OWNERSHIP_DIRECTORY: getOwnershipDirectory(),
         ...environment,
         NO_COLOR: "1",
         PROJECT_GRAPH_REFERENCE_STORE_PATH: getReferenceStorePath(),
@@ -268,9 +280,11 @@ async function createOpenProjectHost(projectPath: string, value: unknown, respon
   if (!address || typeof address === "string") throw new Error("Expected a TCP Runtime Host address");
 
   const canonicalPath = realpathSync(projectPath);
-  const ownershipLockPath = `${canonicalPath}.project-graph.lock`;
-  const connectableRecordPath = `${canonicalPath}.project-graph.connectable`;
-  const connectableLockPath = `${connectableRecordPath}.lock`;
+  const {
+    ownershipLock: ownershipLockPath,
+    connectableOwnerLock: connectableLockPath,
+    connectableOwnerRecord: connectableRecordPath,
+  } = resolveProjectOwnershipArtifactPaths(canonicalPath, getOwnershipDirectory());
   writeFileSync(
     connectableRecordPath,
     JSON.stringify({ kind: "connectable", endpoint: `tcp://127.0.0.1:${address.port}` }),
@@ -350,9 +364,11 @@ async function createCancellableOpenProjectHost(projectPath: string) {
   if (!address || typeof address === "string") throw new Error("Expected a TCP Runtime Host address");
 
   const canonicalPath = realpathSync(projectPath);
-  const ownershipLockPath = `${canonicalPath}.project-graph.lock`;
-  const connectableRecordPath = `${canonicalPath}.project-graph.connectable`;
-  const connectableLockPath = `${connectableRecordPath}.lock`;
+  const {
+    ownershipLock: ownershipLockPath,
+    connectableOwnerLock: connectableLockPath,
+    connectableOwnerRecord: connectableRecordPath,
+  } = resolveProjectOwnershipArtifactPaths(canonicalPath, getOwnershipDirectory());
   writeFileSync(
     connectableRecordPath,
     JSON.stringify({ kind: "connectable", endpoint: `tcp://127.0.0.1:${address.port}` }),
@@ -701,17 +717,18 @@ process.stdout.write(JSON.stringify({ status: "error", code: "PROJECT_LOAD_FAILE
     );
   });
 
-  it("frames ownership-sidecar failures as a stable load error", async () => {
+  it("does not create legacy ownership sidecars in the Project directory", async () => {
     const projectPath = await createProjectFixture();
     const directory = dirname(projectPath);
     chmodSync(directory, 0o555);
 
     try {
-      expectCliError(
-        ["tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}"],
-        { code: "PROJECT_LOAD_FAILED", message: "Project file could not be loaded." },
-        1,
-      );
+      const result = runCli("tool", "invoke", "get_all_nodes", "--project", projectPath, "--input", "{}");
+
+      expect(result).toMatchObject({ status: 0, stdout: '{"objects":[]}\n', stderr: "" });
+      expect(existsSync(`${projectPath}.project-graph.lock`)).toBe(false);
+      expect(existsSync(`${projectPath}.project-graph.connectable.lock`)).toBe(false);
+      expect(existsSync(`${projectPath}.project-graph.connectable`)).toBe(false);
     } finally {
       chmodSync(directory, 0o755);
     }
@@ -1560,7 +1577,10 @@ process.stdout.write(JSON.stringify({ status: "error", code: "PROJECT_LOAD_FAILE
 
   it("returns PROJECT_BUSY instead of reading a Project held by an unconnectable owner", async () => {
     const projectPath = await createProjectFixture();
-    const lockPath = `${realpathSync(projectPath)}.project-graph.lock`;
+    const { ownershipLock: lockPath } = resolveProjectOwnershipArtifactPaths(
+      realpathSync(projectPath),
+      getOwnershipDirectory(),
+    );
     const holder = spawn("/usr/bin/lockf", ["-k", lockPath, "/bin/sleep", "8"]);
     const deadline = Date.now() + 1000;
     while (!existsSync(lockPath) && Date.now() < deadline) {
@@ -1759,7 +1779,8 @@ process.stdout.write(JSON.stringify({ status: "error", code: "PROJECT_LOAD_FAILE
       JSON.stringify({ edges: [{ sourceRef: "n1", targetRef: "n2" }] }),
     );
 
-    await waitForProjectLock(`${realpathSync(projectPath)}.project-graph.lock`);
+    const { ownershipLock } = resolveProjectOwnershipArtifactPaths(realpathSync(projectPath), getOwnershipDirectory());
+    await waitForProjectLock(ownershipLock);
     invocation.child.kill("SIGTERM");
 
     await expect(invocation.result).resolves.toEqual({

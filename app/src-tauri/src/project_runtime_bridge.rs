@@ -202,7 +202,10 @@ pub(crate) fn respond_project_runtime_bridge(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::project_ownership::{DesktopOwnershipAcquisition, DesktopProjectOwnershipManager};
+    use crate::project_ownership::{
+        default_ownership_directory, DesktopOwnershipAcquisition, DesktopProjectOwnershipManager,
+        OWNERSHIP_DIRECTORY_ENVIRONMENT_VARIABLE,
+    };
     use serde_json::json;
     use std::fs;
     use std::io::{BufRead, BufReader, Write};
@@ -418,6 +421,10 @@ mod tests {
                 .current_dir(repository_root)
                 .env("NO_COLOR", "1")
                 .env("PROJECT_GRAPH_OWNERSHIP_HELPER_PATH", ownership_helper_path)
+                .env(
+                    OWNERSHIP_DIRECTORY_ENVIRONMENT_VARIABLE,
+                    default_ownership_directory().unwrap(),
+                )
                 .args([
                     "packages/project-graph-cli/src/cli.mjs",
                     "tool",
