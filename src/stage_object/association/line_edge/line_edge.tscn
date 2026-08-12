@@ -12,6 +12,7 @@ script = ExtResource("1_qxjbk")
 
 [node name="Line" type="Line2D" parent="." unique_id=655085003]
 width = 2.0
+antialiased = true
 
 [node name="Head" type="Polygon2D" parent="." unique_id=2018816104]
 polygon = PackedVector2Array(0, 0, -12, -6, -12, 6)
