@@ -1,6 +1,6 @@
 services:
   web:
     build:
-      context: ..
+      context: .
       dockerfile: docker/Dockerfile
     restart: unless-stopped
