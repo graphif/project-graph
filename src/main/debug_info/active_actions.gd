@@ -29,4 +29,4 @@ func _process(_delta: float) -> void:
 	if active_data.size() > 0:
 		text = "\n".join(active_data)
 	else:
-		text = "No active inputs"
+		text = "无输入"
