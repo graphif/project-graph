@@ -5,7 +5,7 @@ extends Camera2D
 @export var grid_material: ShaderMaterial
 
 @export_group("移动设置")
-## 键盘移动最大速度（像素/秒）
+## 键盘移动最大速度（像素/秒，基于默认缩放为 1.0 时的视觉基准）
 @export var max_speed: float = 800.0
 ## 移动平滑阻尼系数
 @export var move_friction: float = 15.0
@@ -43,7 +43,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_released("camera_pan"):
 		is_panning = false
 
-	# 2. 中键按住拖拽移动画布
+	# 2. 中键按住拖拽移动画布（拖拽天然与 zoom 相关，因此不需要额外修改）
 	if event is InputEventMouseMotion and is_panning:
 		target_position -= event.relative / target_zoom
 
@@ -60,6 +60,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+	var focus_owner = get_viewport().gui_get_focus_owner()
+	if focus_owner is TextEdit or focus_owner is LineEdit or focus_owner is SpinBox:
+		return
+
 	# 1. 键盘/手柄摇杆控制摄像机平移
 	var input_direction := Input.get_vector(
 		"camera_move_left",
@@ -68,7 +72,12 @@ func _process(delta: float) -> void:
 		"camera_move_down",
 	)
 
-	var target_velocity := input_direction * max_speed
+	# 修改点：根据当前缩放（target_zoom）调整移动速度
+	# 当 zoom 大于 1（放大/拉近）时，世界移动速度减小，保持屏幕像素移动速率一致
+	# 使用 target_zoom.x（假设宽高缩放比例一致）进行换算
+	var current_max_speed = max_speed / target_zoom.x
+	var target_velocity = input_direction * current_max_speed
+
 	velocity = velocity.lerp(target_velocity, move_friction * delta)
 	target_position += velocity * delta
 

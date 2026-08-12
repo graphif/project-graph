@@ -35,5 +35,3 @@ min_width = 0.0
 padding_x = 14.0
 padding_y = 14.0
 metadata/_custom_type_script = "uid://y6ndrptulx6x"
-
-[connection signal="gui_input" from="." to="." method="_on_gui_input"]
