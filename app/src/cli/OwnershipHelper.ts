@@ -1,4 +1,8 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import type { Project } from "@/core/Project";
+import type { AIObjectReferenceSnapshot } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
+
+type ProjectReferenceStoreProject = Pick<Project, "uri">;
 
 export type OwnershipHelperCliError =
   | {
@@ -79,6 +83,12 @@ function rejectAdditionalOutput(child: ChildProcessWithoutNullStreams): void {
   };
   child.stdout.once("data", onData);
   child.once("close", () => child.stdout.off("data", onData));
+}
+
+function recordStdinFailure(child: ChildProcessWithoutNullStreams): void {
+  const onError = () => helperProtocolErrors.set(child, helperFailed());
+  child.stdin.once("error", onError);
+  child.once("close", () => child.stdin.off("error", onError));
 }
 
 function projectFailure(code: "PROJECT_NOT_FOUND" | "PROJECT_LOAD_FAILED"): OwnershipHelperError {
@@ -229,13 +239,14 @@ export async function acquireProjectOwnership(
   throw invalidHelperResponse();
 }
 
-export async function acquireReferenceStoreLock(
-  storePath: string,
+export async function loadProjectReferences(
+  project: ProjectReferenceStoreProject,
   abortSignal?: AbortSignal,
-): Promise<OwnershipHelperLease> {
+): Promise<AIObjectReferenceSnapshot | null> {
+  const projectUri = project.uri.toString();
   let child: ChildProcessWithoutNullStreams;
   try {
-    child = spawn(ownershipHelperPath(), ["hold-reference-store", storePath], {
+    child = spawn(ownershipHelperPath(), ["load-project-references", projectUri], {
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: true,
     });
@@ -243,15 +254,21 @@ export async function acquireReferenceStoreLock(
   } catch {
     throw helperUnavailable();
   }
+  recordStdinFailure(child);
+  child.stdin.end();
   const response = await readResponse(child, abortSignal);
   if (
     response &&
     typeof response === "object" &&
     "status" in response &&
-    response.status === "acquired" &&
-    hasExactKeys(response, ["status"])
+    response.status === "loaded" &&
+    "snapshot" in response &&
+    (response.snapshot === null ||
+      (typeof response.snapshot === "object" && response.snapshot !== null && !Array.isArray(response.snapshot))) &&
+    hasExactKeys(response, ["status", "snapshot"])
   ) {
-    return new OwnershipHelperLease(child);
+    await requireExitCode(child, 0);
+    return response.snapshot as AIObjectReferenceSnapshot | null;
   }
   if (
     response &&
@@ -259,11 +276,57 @@ export async function acquireReferenceStoreLock(
     "status" in response &&
     response.status === "error" &&
     "code" in response &&
-    response.code === "REFERENCE_STORE_LOCK_FAILED" &&
+    response.code === "REFERENCE_STORE_LOAD_FAILED" &&
     hasExactKeys(response, ["status", "code"])
   ) {
     await requireExitCode(child, 1);
-    throw helperFailed();
+    throw new Error("Project Object Reference store could not be loaded.");
+  }
+  child.kill();
+  throw invalidHelperResponse();
+}
+
+export async function saveProjectReferences(
+  project: ProjectReferenceStoreProject,
+  references: AIObjectReferenceSnapshot,
+  abortSignal?: AbortSignal,
+): Promise<void> {
+  const projectUri = project.uri.toString();
+  const serializedReferences = JSON.stringify(references);
+  let child: ChildProcessWithoutNullStreams;
+  try {
+    child = spawn(ownershipHelperPath(), ["save-project-references", projectUri], {
+      stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true,
+    });
+    child.stderr.resume();
+  } catch {
+    throw helperUnavailable();
+  }
+  recordStdinFailure(child);
+  child.stdin.end(serializedReferences);
+  const response = await readResponse(child, abortSignal);
+  if (
+    response &&
+    typeof response === "object" &&
+    "status" in response &&
+    response.status === "saved" &&
+    hasExactKeys(response, ["status"])
+  ) {
+    await requireExitCode(child, 0);
+    return;
+  }
+  if (
+    response &&
+    typeof response === "object" &&
+    "status" in response &&
+    response.status === "error" &&
+    "code" in response &&
+    response.code === "REFERENCE_STORE_SAVE_FAILED" &&
+    hasExactKeys(response, ["status", "code"])
+  ) {
+    await requireExitCode(child, 1);
+    throw new Error("Project Object Reference store could not be saved.");
   }
   child.kill();
   throw invalidHelperResponse();

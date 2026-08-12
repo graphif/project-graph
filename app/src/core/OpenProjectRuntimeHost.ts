@@ -119,7 +119,7 @@ export class OpenProjectRuntimeHost {
       const after = references.exportSnapshot();
       if (this.referencesNeedSave) {
         try {
-          await AIProjectReferenceStore.save(this.project.aiEngine.getProjectReferenceStoreUri(this.project), after);
+          await AIProjectReferenceStore.save(this.project, after);
           this.referencesNeedSave = false;
         } catch {
           response = {

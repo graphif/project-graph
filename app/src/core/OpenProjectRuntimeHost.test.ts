@@ -853,7 +853,7 @@ describe("Open Project Runtime Host", () => {
       ok: false,
       error: { code: "TOOL_EXECUTION_FAILED", message: "Built-in tool execution failed." },
     });
-    expect(AIProjectReferenceStore.save).toHaveBeenCalledWith("file:///projects/partial.prg", {
+    expect(AIProjectReferenceStore.save).toHaveBeenCalledWith(fixture.project, {
       entries: [{ ref: "n1", uuid: fixture.node.uuid }],
       nextNodeRef: 2,
       nextEdgeRef: 1,

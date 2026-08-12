@@ -172,7 +172,6 @@ function formatSessionUpdatedAt(timestamp: number): string {
 
 function AIChatWorkspace({ project, tabId }: { project: Project; tabId: string }) {
   const projectUri = project.uri.toString();
-  const referenceStoreUri = project.aiEngine.getProjectReferenceStoreUri(project);
   const [model] = Settings.use("aiModel");
   const [sessionState, setSessionState] = useState<AIChatSessionProjectState | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -189,11 +188,11 @@ function AIChatWorkspace({ project, tabId }: { project: Project; tabId: string }
   useEffect(
     () =>
       references.subscribe((snapshot) => {
-        void AIProjectReferenceStore.save(referenceStoreUri, snapshot).catch((saveError) => {
+        void AIProjectReferenceStore.save(project, snapshot).catch((saveError) => {
           toast.error(`AI 项目引用保存失败: ${saveError instanceof Error ? saveError.message : String(saveError)}`);
         });
       }),
-    [referenceStoreUri, references],
+    [project, references],
   );
 
   useEffect(() => {
@@ -511,18 +510,17 @@ function AIChatPanel({
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [contextWindowState, setContextWindowState] = useState<ContextWindowState>({ status: "loading" });
   const projectUri = project.uri.toString();
-  const referenceStoreUri = project.aiEngine.getProjectReferenceStoreUri(project);
   const messagesRef = useRef<UIMessage<AIMessageMetadata>[]>(session.messages);
   const lastSavedMessagesRef = useRef<UIMessage<AIMessageMetadata>[]>(session.messages);
 
   const persistMessages = useCallback(
     async (nextMessages: UIMessage<AIMessageMetadata>[]) => {
-      await AIProjectReferenceStore.save(referenceStoreUri, references.exportSnapshot());
+      await AIProjectReferenceStore.save(project, references.exportSnapshot());
       const nextState = await AIChatSessionStore.saveSession(projectUri, session.id, nextMessages);
       lastSavedMessagesRef.current = nextMessages;
       onSessionSaved(nextState);
     },
-    [onSessionSaved, projectUri, referenceStoreUri, references, session.id],
+    [onSessionSaved, project, projectUri, references, session.id],
   );
 
   const { messages, setMessages, sendMessage, stop, status, addToolApprovalResponse } = useChat<

@@ -1,36 +1,40 @@
+import type { Project } from "@/core/Project";
 import type { AIObjectReferenceSnapshot } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
 import { invoke } from "@tauri-apps/api/core";
+import { URI } from "vscode-uri";
 
-let writeQueue: Promise<void> = Promise.resolve();
+type ProjectReferenceStoreProject = Pick<Project, "canonicalProjectPath" | "uri">;
 
-function isAIObjectReferenceSnapshot(value: unknown): value is AIObjectReferenceSnapshot {
-  if (!value || typeof value !== "object") return false;
-  const references = value as Partial<AIObjectReferenceSnapshot>;
-  return (
-    Array.isArray(references.entries) &&
-    typeof references.nextNodeRef === "number" &&
-    Number.isInteger(references.nextNodeRef) &&
-    references.nextNodeRef >= 1 &&
-    typeof references.nextEdgeRef === "number" &&
-    Number.isInteger(references.nextEdgeRef) &&
-    references.nextEdgeRef >= 1
-  );
+const writeQueues = new Map<string, Promise<void>>();
+
+function projectIdentity(project: ProjectReferenceStoreProject) {
+  const legacyProjectUri = project.uri.toString();
+  const projectUri = project.canonicalProjectPath
+    ? URI.file(project.canonicalProjectPath).toString()
+    : legacyProjectUri;
+  return {
+    projectUri,
+    ...(projectUri === legacyProjectUri ? {} : { legacyProjectUri }),
+  };
 }
 
 export namespace AIProjectReferenceStore {
-  export async function load(projectUri: string): Promise<AIObjectReferenceSnapshot | null> {
-    const value = await invoke<unknown>("load_project_reference_snapshot", { projectUri });
-    if (value === undefined || value === null) return null;
-    if (!isAIObjectReferenceSnapshot(value)) throw new Error("保存的 AI 项目引用格式无效");
-    return value;
+  export function load(project: ProjectReferenceStoreProject): Promise<AIObjectReferenceSnapshot | null> {
+    return invoke<AIObjectReferenceSnapshot | null>("load_project_reference_snapshot", projectIdentity(project));
   }
 
-  export async function save(projectUri: string, references: AIObjectReferenceSnapshot): Promise<void> {
-    const result = writeQueue.then(
+  export function save(project: ProjectReferenceStoreProject, references: AIObjectReferenceSnapshot): Promise<void> {
+    const { projectUri } = projectIdentity(project);
+    const previousWrite = writeQueues.get(projectUri) ?? Promise.resolve();
+    const write = previousWrite.then(
       () => invoke<void>("save_project_reference_snapshot", { projectUri, references }),
       () => invoke<void>("save_project_reference_snapshot", { projectUri, references }),
     );
-    writeQueue = result;
-    return result;
+    writeQueues.set(projectUri, write);
+    const removeCompletedWrite = () => {
+      if (writeQueues.get(projectUri) === write) writeQueues.delete(projectUri);
+    };
+    void write.then(removeCompletedWrite, removeCompletedWrite);
+    return write;
   }
 }

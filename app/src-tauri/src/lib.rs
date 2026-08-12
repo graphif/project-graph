@@ -3,7 +3,7 @@ mod cli_desktop_acceptance;
 mod cmd;
 #[allow(dead_code)]
 mod project_ownership;
-mod project_reference_store;
+pub mod project_reference_store;
 mod project_runtime_bridge;
 
 pub mod ownership_helper {
@@ -11,7 +11,6 @@ pub mod ownership_helper {
         acquire_project_ownership, try_acquire_project_ownership, CanonicalProjectPath,
         ProjectOwner, ProjectOwnership, ProjectOwnershipError,
     };
-    pub use crate::project_reference_store::acquire_reference_store_lock;
 }
 
 use std::sync::{Arc, Mutex, OnceLock};

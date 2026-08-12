@@ -1,8 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
-import { join } from "node:path";
 import { Project, ProjectState } from "@/core/Project";
-import { FileSystemProviderFile, writeClosedProjectFileAtomically } from "./ClosedProjectFileSystemProvider";
+import { FileSystemProviderFile } from "./ClosedProjectFileSystemProvider";
 import { ClosedProjectEffects } from "./ClosedProjectEffects";
 import { finalizeRuntimeCleanup, runtimeCleanupFailure, RuntimeCleanupError } from "@/core/RuntimeCleanup";
 import { compareProjectVersions, LATEST_PROJECT_VERSION, parseProjectFile } from "@/core/ProjectFile";
@@ -26,7 +24,12 @@ import { StageManager } from "@/core/stage/stageManager/StageManager";
 import { deserialize } from "@graphif/serializer";
 import { Decoder } from "@msgpack/msgpack";
 import { URI } from "vscode-uri";
-import { acquireReferenceStoreLock, OwnershipHelperError, type OwnershipHelperCliError } from "./OwnershipHelper";
+import {
+  loadProjectReferences,
+  OwnershipHelperError,
+  saveProjectReferences,
+  type OwnershipHelperCliError,
+} from "./OwnershipHelper";
 
 export type ProjectGraphCliOperationalError =
   | OwnershipHelperCliError
@@ -62,12 +65,6 @@ export type ProjectGraphCliOperationalError =
 export type ClosedProjectInvocationResult =
   | { ok: true; value: unknown }
   | { ok: false; error: ProjectGraphCliOperationalError };
-
-type StoredProjectReferences = {
-  version: 1;
-  references: AIObjectReferenceSnapshot;
-  updatedAt: number;
-};
 
 type ServiceConstructor = { id?: string; new (...args: any[]): any };
 type ClosedProjectModuleLoader = (id: string) => Promise<Record<string, unknown>>;
@@ -182,80 +179,6 @@ async function loadClosedProjectCapability(
     const loaded = (await loadModule(service.moduleId))[service.exportName];
     if (typeof loaded !== "function") throw new Error(`Closed Project service is unavailable: ${service.exportName}`);
     loadServiceOnce(project, loaded as ServiceConstructor);
-  }
-}
-
-function projectReferenceStorePath(): string {
-  return (
-    process.env.PROJECT_GRAPH_REFERENCE_STORE_PATH ??
-    join(homedir(), "Library", "Application Support", "liren.project-graph", "ai-project-references.json")
-  );
-}
-
-function projectReferenceKey(canonicalPath: string): string {
-  return `project:${URI.file(canonicalPath).toString()}:references`;
-}
-
-async function readReferenceStoreUnlocked(path: string): Promise<Record<string, unknown>> {
-  try {
-    const value: unknown = JSON.parse(await readFile(path, "utf8"));
-    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid reference store");
-    return value as Record<string, unknown>;
-  } catch (error) {
-    if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") return {};
-    throw error;
-  }
-}
-
-async function readReferenceStore(
-  path = projectReferenceStorePath(),
-  abortSignal?: AbortSignal,
-): Promise<Record<string, unknown>> {
-  const lock = await acquireReferenceStoreLock(path, abortSignal);
-  try {
-    return await readReferenceStoreUnlocked(path);
-  } finally {
-    await lock.release();
-  }
-}
-
-function parseStoredReferences(value: unknown): AIObjectReferenceSnapshot | null {
-  if (value === undefined || value === null) return null;
-  if (!value || typeof value !== "object") throw new Error("Invalid Project Object Reference snapshot");
-  const stored = value as Partial<StoredProjectReferences>;
-  const references = stored.references as Partial<AIObjectReferenceSnapshot> | undefined;
-  if (
-    stored.version !== 1 ||
-    typeof stored.updatedAt !== "number" ||
-    !references ||
-    !Array.isArray(references.entries) ||
-    !Number.isInteger(references.nextNodeRef) ||
-    (references.nextNodeRef ?? 0) < 1 ||
-    !Number.isInteger(references.nextEdgeRef) ||
-    (references.nextEdgeRef ?? 0) < 1
-  ) {
-    throw new Error("Invalid Project Object Reference snapshot");
-  }
-  return references as AIObjectReferenceSnapshot;
-}
-
-async function saveReferences(
-  canonicalPath: string,
-  references: AIObjectReferenceSnapshot,
-  abortSignal?: AbortSignal,
-): Promise<void> {
-  const path = projectReferenceStorePath();
-  const lock = await acquireReferenceStoreLock(path, abortSignal);
-  try {
-    const store = await readReferenceStoreUnlocked(path);
-    store[projectReferenceKey(canonicalPath)] = {
-      version: 1,
-      references,
-      updatedAt: Date.now(),
-    } satisfies StoredProjectReferences;
-    await writeClosedProjectFileAtomically(path, JSON.stringify(store));
-  } finally {
-    await lock.release();
   }
 }
 
@@ -384,11 +307,7 @@ async function executeClosedProjectTool(
     pendingReferenceSnapshot = snapshot;
   });
   try {
-    const storedReferences = parseStoredReferences(
-      (await readReferenceStore(projectReferenceStorePath(), options.abortSignal))[
-        projectReferenceKey(options.canonicalPath)
-      ],
-    );
+    const storedReferences = await loadProjectReferences(project, options.abortSignal);
     if (storedReferences) references.restoreSnapshot(storedReferences);
   } catch (error) {
     if (options.abortSignal?.aborted) {
@@ -444,7 +363,7 @@ async function executeClosedProjectTool(
 
   if (pendingReferenceSnapshot) {
     try {
-      await saveReferences(options.canonicalPath, pendingReferenceSnapshot, options.abortSignal);
+      await saveProjectReferences(project, pendingReferenceSnapshot, options.abortSignal);
     } catch (error) {
       if (options.abortSignal?.aborted) {
         return { ok: false, error: { code: "CANCELLED", message: "Project Graph CLI invocation was cancelled." } };

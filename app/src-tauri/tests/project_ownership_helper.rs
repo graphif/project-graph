@@ -1,13 +1,10 @@
-use project_graph_lib::ownership_helper::{
-    acquire_project_ownership, acquire_reference_store_lock, ProjectOwner,
-};
+use project_graph_lib::ownership_helper::{acquire_project_ownership, ProjectOwner};
 use serde_json::Value;
 use std::fs;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::mpsc;
 use std::time::Duration;
 use std::time::Instant;
 
@@ -52,10 +49,6 @@ impl HelperProcess {
         Self::hold("try-hold-project", project_path)
     }
 
-    fn hold_reference_store(store_path: &Path) -> Self {
-        Self::hold("hold-reference-store", store_path)
-    }
-
     fn hold(command: &str, path: &Path) -> Self {
         let mut child = Command::new(env!("CARGO_BIN_EXE_project-graph-ownership-helper"))
             .arg(command)
@@ -97,31 +90,83 @@ impl HelperProcess {
 }
 
 #[test]
-fn helper_and_desktop_serialize_the_reference_store_with_the_same_lock() {
+fn helper_loads_and_saves_through_the_shared_reference_store() {
     let directory = TestDirectory::new();
     let store_path = directory.path().join("ai-project-references.json");
-    let mut helper = HelperProcess::hold_reference_store(&store_path);
-    assert_eq!(
-        helper.read_response(),
-        serde_json::json!({ "status": "acquired" })
-    );
-
-    let (acquired_sender, acquired_receiver) = mpsc::channel();
-    let contender_path = store_path.clone();
-    let contender = std::thread::spawn(move || {
-        let lock = acquire_reference_store_lock(&contender_path).unwrap();
-        acquired_sender.send(()).unwrap();
-        lock
+    let project_uri = "file:///graph.prg";
+    let snapshot = serde_json::json!({
+        "entries": [{ "ref": "n1", "uuid": "node-1" }],
+        "nextNodeRef": 2,
+        "nextEdgeRef": 1
     });
-    assert!(acquired_receiver
-        .recv_timeout(Duration::from_millis(100))
-        .is_err());
 
-    helper.release();
-    acquired_receiver
-        .recv_timeout(Duration::from_secs(2))
+    let saved = run_reference_store_helper(
+        "save-project-references",
+        project_uri,
+        &store_path,
+        Some(&snapshot),
+    );
+    assert_eq!(saved, (true, serde_json::json!({ "status": "saved" })));
+
+    let loaded =
+        run_reference_store_helper("load-project-references", project_uri, &store_path, None);
+    assert_eq!(
+        loaded,
+        (
+            true,
+            serde_json::json!({ "status": "loaded", "snapshot": snapshot })
+        )
+    );
+}
+
+#[test]
+fn helper_fails_closed_for_a_corrupt_reference_store() {
+    let directory = TestDirectory::new();
+    let store_path = directory.path().join("ai-project-references.json");
+    fs::write(&store_path, "not json").unwrap();
+
+    assert_eq!(
+        run_reference_store_helper(
+            "load-project-references",
+            "file:///graph.prg",
+            &store_path,
+            None,
+        ),
+        (
+            false,
+            serde_json::json!({
+                "status": "error",
+                "code": "REFERENCE_STORE_LOAD_FAILED"
+            })
+        )
+    );
+    assert_eq!(fs::read_to_string(store_path).unwrap(), "not json");
+}
+
+fn run_reference_store_helper(
+    command: &str,
+    project_uri: &str,
+    store_path: &Path,
+    input: Option<&Value>,
+) -> (bool, Value) {
+    let mut child = Command::new(env!("CARGO_BIN_EXE_project-graph-ownership-helper"))
+        .arg(command)
+        .arg(project_uri)
+        .env("PROJECT_GRAPH_REFERENCE_STORE_PATH", store_path)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::inherit())
+        .spawn()
         .unwrap();
-    drop(contender.join().unwrap());
+    if let Some(input) = input {
+        serde_json::to_writer(child.stdin.as_mut().unwrap(), input).unwrap();
+    }
+    drop(child.stdin.take());
+    let output = child.wait_with_output().unwrap();
+    (
+        output.status.success(),
+        serde_json::from_slice(&output.stdout).unwrap(),
+    )
 }
 
 impl Drop for HelperProcess {

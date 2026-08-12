@@ -89,13 +89,7 @@ import { URI } from "vscode-uri";
 import { CollaborationService } from "./service/collaboration/CollaborationService";
 import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";
 import { generateThumbnail } from "./service/dataGenerateService/generateThumbnail";
-import { OpenProjectRuntimeHostRegistration, registerOpenProjectRuntimeHost } from "./OpenProjectRuntimeHost";
-import {
-  ProjectOwnershipError,
-  ProjectOwnershipLease,
-  releaseProjectOwnershipWithRetry,
-  reserveProjectOwnershipForSave,
-} from "./ProjectOwnership";
+import { ProjectOwnershipLifecycle, ProjectOwnershipLease } from "./ProjectOwnership";
 import { compareProjectVersions, parseProjectFile } from "./ProjectFile";
 import { ProjectUpgrader } from "./stage/ProjectUpgrader";
 import { ReferenceManager } from "./stage/stageManager/concreteMethods/StageReferenceManager";
@@ -142,8 +136,7 @@ export class Project extends Tab {
   private _uri: URI;
   private _projectState: ProjectState = ProjectState.Unsaved;
   private _isSaving = false;
-  private projectOwnership?: ProjectOwnershipLease;
-  private openRuntimeHost?: OpenProjectRuntimeHostRegistration;
+  private readonly projectOwnership = new ProjectOwnershipLifecycle(this);
   public stage: StageObject[] = [];
   public tags: string[] = [];
   /**
@@ -172,19 +165,19 @@ export class Project extends Tab {
   }
 
   attachProjectOwnership(ownership: ProjectOwnershipLease) {
-    this.projectOwnership = ownership;
+    this.projectOwnership.attach(ownership);
   }
 
   get projectOwnerIdentity() {
-    return this.projectOwnership?.ownershipId;
+    return this.projectOwnership.ownershipId;
   }
 
   get canonicalProjectPath() {
-    return this.projectOwnership?.canonicalPath;
+    return this.projectOwnership.canonicalPath;
   }
 
   activateOpenRuntimeHost() {
-    if (this.projectOwnership) this.openRuntimeHost ??= registerOpenProjectRuntimeHost(this);
+    this.projectOwnership.activate();
   }
   /**
    * 创建一个草稿工程
@@ -365,55 +358,7 @@ export class Project extends Tab {
     try {
       this.isSaving = true;
       const content = await this.getFileContent(options);
-      const reservation = await reserveProjectOwnershipForSave(targetUri.fsPath);
-      if (reservation.status === "already_open") {
-        if (reservation.ownershipId !== this.projectOwnerIdentity) throw new ProjectOwnershipError("PROJECT_BUSY");
-        await fileSystemProvider.write(targetUri, content);
-        this._uri = targetUri;
-        this.projectState = ProjectState.Saved;
-        return;
-      }
-
-      const nextOwnership = reservation.ownership;
-      try {
-        await fileSystemProvider.write(targetUri, content);
-      } catch (error) {
-        if (nextOwnership) await releaseProjectOwnershipWithRetry(nextOwnership);
-        throw error;
-      }
-      if (!nextOwnership) {
-        this._uri = targetUri;
-        this.projectState = ProjectState.Saved;
-        return;
-      }
-
-      const previousUri = this._uri;
-      const previousOwnership = this.projectOwnership;
-      const previousRuntimeHost = this.openRuntimeHost;
-      let createdRuntimeHost = false;
-      this._uri = targetUri;
-      this.projectOwnership = nextOwnership;
-      try {
-        if (previousRuntimeHost) {
-          previousRuntimeHost.rebind(nextOwnership.canonicalPath);
-        } else {
-          this.openRuntimeHost = registerOpenProjectRuntimeHost(this);
-          createdRuntimeHost = true;
-        }
-        await nextOwnership.makeConnectable();
-      } catch (error) {
-        if (createdRuntimeHost) {
-          await this.openRuntimeHost?.dispose();
-          this.openRuntimeHost = undefined;
-        } else if (previousRuntimeHost && previousOwnership) {
-          previousRuntimeHost.rebind(previousOwnership.canonicalPath);
-        }
-        this._uri = previousUri;
-        this.projectOwnership = previousOwnership;
-        await releaseProjectOwnershipWithRetry(nextOwnership);
-        throw error;
-      }
-      if (previousOwnership) await releaseProjectOwnershipWithRetry(previousOwnership);
+      await this.projectOwnership.saveAs(targetUri, () => fileSystemProvider.write(targetUri, content));
       this.projectState = ProjectState.Saved;
     } finally {
       this.isSaving = false;
@@ -580,16 +525,8 @@ export class Project extends Tab {
   }
 
   override async dispose() {
-    const ownership = this.projectOwnership;
-    const cleanupErrors: unknown[] = [];
-    try {
-      try {
-        await this.openRuntimeHost?.dispose();
-      } catch (error) {
-        cleanupErrors.push(error);
-      } finally {
-        this.openRuntimeHost = undefined;
-      }
+    await this.projectOwnership.dispose(async () => {
+      const cleanupErrors: unknown[] = [];
       try {
         await super.dispose();
       } catch (error) {
@@ -609,13 +546,8 @@ export class Project extends Tab {
           .map(({ reason }) => reason),
       );
       this.stage.length = 0;
-    } finally {
-      if (ownership) {
-        await releaseProjectOwnershipWithRetry(ownership);
-        if (this.projectOwnership === ownership) this.projectOwnership = undefined;
-      }
-    }
-    if (cleanupErrors.length > 0) throw new AggregateError(cleanupErrors, "Project cleanup failed");
+      if (cleanupErrors.length > 0) throw new AggregateError(cleanupErrors, "Project cleanup failed");
+    });
   }
 }
 

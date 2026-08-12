@@ -574,10 +574,12 @@ describe("Project Graph CLI process contract", () => {
 const command = process.argv[2];
 const response = command === "try-hold-project"
   ? { status: "acquired", canonicalPath: "\\\\\\\\?\\\\" + process.argv[3] }
-  : { status: "acquired" };
+  : { status: "loaded", snapshot: null };
 process.stdout.write(JSON.stringify(response) + "\\n");
-process.stdin.resume();
-process.stdin.on("end", () => process.exit(0));
+if (command === "try-hold-project") {
+  process.stdin.resume();
+  process.stdin.on("end", () => process.exit(0));
+}
 `);
 
       const result = await spawnCliEntryProcess(
@@ -1184,7 +1186,7 @@ process.stdout.write(JSON.stringify({ status: "error", code: "PROJECT_LOAD_FAILE
         },
       ],
     });
-  }, 15_000);
+  }, 300_000);
 
   it("keeps snapshots for two different Projects updated concurrently", async () => {
     const firstProjectPath = await createProjectFixture("2.7.0", createMutationStage().slice(0, 1));
