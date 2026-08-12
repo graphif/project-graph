@@ -1,5 +1,8 @@
 name: "Canary"
-on: push
+on:
+  push:
+    branches:
+      - godot
 
 jobs:
   deploy:
@@ -22,7 +25,7 @@ jobs:
           EXPORT_DIR="$(readlink -f dist)"
           godot --headless --verbose --export-release "Web" "$EXPORT_DIR/web/index.html"
       - name: Deploy
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
