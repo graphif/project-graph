@@ -1,29 +1,39 @@
 [gd_scene format=3 uid="uid://btnefrbc5lowu"]
 
 [ext_resource type="Script" uid="uid://dod1gh6rthy3r" path="res://src/stage_object/entity/text_node/text_node.gd" id="1_0djjf"]
+[ext_resource type="StyleBox" uid="uid://dvdwiynne2hm" path="res://src/stage_object/entity/text_node/style.tres" id="2_qcl3h"]
+[ext_resource type="Script" uid="uid://y6ndrptulx6x" path="res://src/auto_size_text_edit.gd" id="3_hm685"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_djufw"]
-content_margin_left = 8.0
-content_margin_top = 8.0
-content_margin_right = 8.0
-content_margin_bottom = 8.0
-draw_center = false
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
+[sub_resource type="FontVariation" id="FontVariation_hmhrc"]
+baseline_offset = 0.045
 
-[node name="TextNode" type="Control" unique_id=1629768609]
+[node name="TextNode" type="Control" unique_id=1411878724]
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+anchors_preset = 0
+mouse_filter = 1
 script = ExtResource("1_0djjf")
 
-[node name="Label" type="Label" parent="." unique_id=1436656846]
+[node name="Label" type="Label" parent="." unique_id=75542421]
 layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_djufw")
+offset_right = 29.0
+offset_bottom = 72.0
+mouse_filter = 1
+theme_override_fonts/font = SubResource("FontVariation_hmhrc")
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = ExtResource("2_qcl3h")
+
+[node name="TextEdit" type="TextEdit" parent="." unique_id=118923332]
+visible = false
+custom_minimum_size = Vector2(28, 71.33333)
+layout_mode = 0
+offset_right = 28.0
+offset_bottom = 71.33333
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = ExtResource("2_qcl3h")
+script = ExtResource("3_hm685")
+min_width = 0.0
+padding_x = 14.0
+padding_y = 14.0
+metadata/_custom_type_script = "uid://y6ndrptulx6x"
+
+[connection signal="gui_input" from="." to="." method="_on_gui_input"]
