@@ -1,7 +1,6 @@
 #[cfg(debug_assertions)]
 mod cli_desktop_acceptance;
 mod cmd;
-#[allow(dead_code)]
 mod project_ownership;
 pub mod project_reference_store;
 mod project_runtime_bridge;

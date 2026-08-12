@@ -185,14 +185,9 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
 
   async dispose() {
     this.pause();
-    const cleanupTasks: Promise<void>[] = [];
-    for (const service of this.services.values()) {
-      try {
-        cleanupTasks.push(Promise.resolve(service.dispose?.()));
-      } catch (error) {
-        cleanupTasks.push(Promise.reject(error));
-      }
-    }
+    const cleanupTasks = Array.from(this.services.values(), (service) =>
+      Promise.resolve().then(() => service.dispose?.()),
+    );
     const cleanupResults = await Promise.allSettled(cleanupTasks);
     this.services.clear();
     this.fileSystemProviders.clear();

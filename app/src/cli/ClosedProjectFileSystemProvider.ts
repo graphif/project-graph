@@ -55,9 +55,6 @@ export async function writeClosedProjectFileAtomically(
   abortSignal?: AbortSignal,
 ): Promise<void> {
   const temporaryPath = join(dirname(path), `.${basename(path)}.${randomUUID()}.tmp`);
-  let operationError: unknown;
-  let failed = false;
-  let committed = false;
   try {
     abortSignal?.throwIfAborted();
     try {
@@ -68,12 +65,7 @@ export async function writeClosedProjectFileAtomically(
     await writeFile(temporaryPath, content, { signal: abortSignal });
     abortSignal?.throwIfAborted();
     await rename(temporaryPath, path);
-    committed = true;
-  } catch (error) {
-    failed = true;
-    operationError = error;
-  }
-  if (!committed) {
+  } catch (operationError) {
     try {
       await rm(temporaryPath, { force: true });
     } catch (cleanupError) {
@@ -81,6 +73,6 @@ export async function writeClosedProjectFileAtomically(
         cause: new AggregateError([operationError, cleanupError]),
       });
     }
+    throw operationError;
   }
-  if (failed) throw operationError;
 }

@@ -26,10 +26,8 @@ export namespace AIProjectReferenceStore {
   export function save(project: ProjectReferenceStoreProject, references: AIObjectReferenceSnapshot): Promise<void> {
     const { projectUri } = projectIdentity(project);
     const previousWrite = writeQueues.get(projectUri) ?? Promise.resolve();
-    const write = previousWrite.then(
-      () => invoke<void>("save_project_reference_snapshot", { projectUri, references }),
-      () => invoke<void>("save_project_reference_snapshot", { projectUri, references }),
-    );
+    const persist = () => invoke<void>("save_project_reference_snapshot", { projectUri, references });
+    const write = previousWrite.then(persist, persist);
     writeQueues.set(projectUri, write);
     const removeCompletedWrite = () => {
       if (writeQueues.get(projectUri) === write) writeQueues.delete(projectUri);

@@ -49,11 +49,10 @@ impl From<io::Error> for ProjectReferenceStoreError {
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
 struct StoredProjectReferences {
-    version: u8,
     references: Value,
-    updated_at: u64,
+    #[serde(rename = "updatedAt")]
+    _updated_at: u64,
 }
 
 #[derive(Deserialize)]
@@ -240,10 +239,6 @@ fn decode_snapshot(value: &Value) -> Result<Value, ProjectReferenceStoreError> {
     }
     let stored: StoredProjectReferences = serde_json::from_value(value.clone())
         .map_err(|_| ProjectReferenceStoreError::InvalidSnapshot)?;
-    let _ = stored.updated_at;
-    if stored.version != 1 {
-        return Err(ProjectReferenceStoreError::UnsupportedVersion);
-    }
     validate_snapshot(stored.references)
 }
 

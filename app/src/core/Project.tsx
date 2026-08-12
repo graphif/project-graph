@@ -532,13 +532,7 @@ export class Project extends Tab {
       } catch (error) {
         cleanupErrors.push(error);
       }
-      const stageCleanupTasks = this.stage.map((stageObject) => {
-        try {
-          return Promise.resolve(stageObject.dispose?.());
-        } catch (error) {
-          return Promise.reject(error);
-        }
-      });
+      const stageCleanupTasks = this.stage.map((stageObject) => Promise.resolve().then(() => stageObject.dispose?.()));
       const stageCleanupResults = await Promise.allSettled(stageCleanupTasks);
       cleanupErrors.push(
         ...stageCleanupResults

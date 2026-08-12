@@ -104,6 +104,19 @@ function ownershipHelperPath(): string {
   return path;
 }
 
+function startOwnershipHelper(args: string[]): ChildProcessWithoutNullStreams {
+  try {
+    const child = spawn(ownershipHelperPath(), args, {
+      stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true,
+    });
+    child.stderr.resume();
+    return child;
+  } catch {
+    throw helperUnavailable();
+  }
+}
+
 function waitForExit(
   child: ChildProcessWithoutNullStreams,
 ): Promise<{ code: number | null; signal: NodeJS.Signals | null }> {
@@ -193,16 +206,7 @@ export async function acquireProjectOwnership(
   canonicalPath: string,
   abortSignal?: AbortSignal,
 ): Promise<ProjectOwnershipAcquisition> {
-  let child: ChildProcessWithoutNullStreams;
-  try {
-    child = spawn(ownershipHelperPath(), ["try-hold-project", canonicalPath], {
-      stdio: ["pipe", "pipe", "pipe"],
-      windowsHide: true,
-    });
-    child.stderr.resume();
-  } catch {
-    throw helperUnavailable();
-  }
+  const child = startOwnershipHelper(["try-hold-project", canonicalPath]);
   const response = await readResponse(child, abortSignal);
   if (!response || typeof response !== "object" || !("status" in response)) {
     child.kill();
@@ -244,16 +248,7 @@ export async function loadProjectReferences(
   abortSignal?: AbortSignal,
 ): Promise<AIObjectReferenceSnapshot | null> {
   const projectUri = project.uri.toString();
-  let child: ChildProcessWithoutNullStreams;
-  try {
-    child = spawn(ownershipHelperPath(), ["load-project-references", projectUri], {
-      stdio: ["pipe", "pipe", "pipe"],
-      windowsHide: true,
-    });
-    child.stderr.resume();
-  } catch {
-    throw helperUnavailable();
-  }
+  const child = startOwnershipHelper(["load-project-references", projectUri]);
   recordStdinFailure(child);
   child.stdin.end();
   const response = await readResponse(child, abortSignal);
@@ -293,16 +288,7 @@ export async function saveProjectReferences(
 ): Promise<void> {
   const projectUri = project.uri.toString();
   const serializedReferences = JSON.stringify(references);
-  let child: ChildProcessWithoutNullStreams;
-  try {
-    child = spawn(ownershipHelperPath(), ["save-project-references", projectUri], {
-      stdio: ["pipe", "pipe", "pipe"],
-      windowsHide: true,
-    });
-    child.stderr.resume();
-  } catch {
-    throw helperUnavailable();
-  }
+  const child = startOwnershipHelper(["save-project-references", projectUri]);
   recordStdinFailure(child);
   child.stdin.end(serializedReferences);
   const response = await readResponse(child, abortSignal);

@@ -8,13 +8,9 @@ export class ClosedProjectEffects implements EffectsContract {
 
   readonly effectsCount = 0;
 
-  addEffect(...args: Parameters<EffectsContract["addEffect"]>): void {
-    void args;
-  }
+  addEffect(): void {}
 
-  addEffects(...args: Parameters<EffectsContract["addEffects"]>): void {
-    void args;
-  }
+  addEffects(): void {}
 
   tick(): void {}
 }

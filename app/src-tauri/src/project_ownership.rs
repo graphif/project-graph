@@ -124,6 +124,7 @@ impl From<ProjectOwnershipError> for DesktopProjectOwnershipError {
 }
 
 impl DesktopProjectOwnershipManager {
+    #[cfg(test)]
     pub(crate) fn acquire(
         &self,
         project_path: &Path,
@@ -157,6 +158,7 @@ impl DesktopProjectOwnershipManager {
         )
     }
 
+    #[cfg(test)]
     fn acquire_with_retry_delay(
         &self,
         project_path: &Path,

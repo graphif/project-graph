@@ -543,6 +543,34 @@ describe("Open Project Runtime Host", () => {
     expect(project.stage).toEqual([]);
   });
 
+  it("attempts every stage cleanup before reporting synchronous and asynchronous failures", async () => {
+    const project = new Project(URI.parse("draft:cleanup-failures"));
+    const synchronousFailure = new Error("synchronous stage cleanup failed");
+    const asynchronousFailure = new Error("asynchronous stage cleanup failed");
+    const successfulCleanup = vi.fn();
+    project.stage = [
+      {
+        dispose() {
+          throw synchronousFailure;
+        },
+      },
+      {
+        async dispose() {
+          throw asynchronousFailure;
+        },
+      },
+      { dispose: successfulCleanup },
+    ] as never;
+
+    await expect(project.dispose()).rejects.toMatchObject({
+      name: "AggregateError",
+      errors: [synchronousFailure, asynchronousFailure],
+    });
+
+    expect(successfulCleanup).toHaveBeenCalledOnce();
+    expect(project.stage).toEqual([]);
+  });
+
   it("keeps Project.save on the original two-argument FileSystemProvider.write contract", async () => {
     const write = vi.fn<(uri: URI, content: Uint8Array) => Promise<void>>().mockResolvedValue(undefined);
     class TestFileSystemProvider {

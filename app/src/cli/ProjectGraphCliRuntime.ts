@@ -314,8 +314,7 @@ async function runPathRoutedInvocation(
     prepared = prepareBuiltInToolInvocation(
       options.toolName,
       options.input,
-      (capabilities) =>
-        canClosedProjectProvideCapabilities(capabilities) || canOpenProjectProvideCapabilities(capabilities),
+      (capabilities) => canClosedProjectProvideCapabilities(capabilities) || canOpenProjectProvideCapabilities(),
     );
   } catch {
     return {

@@ -103,8 +103,7 @@ export async function runProjectGraphCli(
       prepareBuiltInToolInvocation(
         toolName,
         input,
-        (capabilities) =>
-          canClosedProjectProvideCapabilities(capabilities) || canOpenProjectProvideCapabilities(capabilities),
+        (capabilities) => canClosedProjectProvideCapabilities(capabilities) || canOpenProjectProvideCapabilities(),
       );
     } catch {
       writeError({

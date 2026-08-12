@@ -54,6 +54,26 @@ describe("AI Project Reference Store", () => {
     });
   });
 
+  it("continues an ordered write queue after preserving an earlier write failure", async () => {
+    let rejectFirst: ((reason?: unknown) => void) | undefined;
+    vi.mocked(invoke)
+      .mockReturnValueOnce(new Promise<void>((_resolve, reject) => (rejectFirst = reject)))
+      .mockResolvedValueOnce(undefined);
+
+    const graph = project("/projects/graph.prg");
+    const first = AIProjectReferenceStore.save(graph, snapshot);
+    const second = AIProjectReferenceStore.save(graph, snapshot);
+    const failure = new Error("first write failed");
+
+    await vi.waitFor(() => expect(invoke).toHaveBeenCalledTimes(1));
+    const firstRejected = expect(first).rejects.toBe(failure);
+    rejectFirst?.(failure);
+
+    await firstRejected;
+    await expect(second).resolves.toBeUndefined();
+    expect(invoke).toHaveBeenCalledTimes(2);
+  });
+
   it("does not serialize writes for unrelated Projects", async () => {
     const releaseWrites: Array<() => void> = [];
     vi.mocked(invoke).mockImplementation(

@@ -24,7 +24,6 @@ export function canClosedProjectProvideCapabilities(capabilities: readonly Built
   return capabilities.every((capability) => closedProjectCapabilities.has(capability));
 }
 
-export function canOpenProjectProvideCapabilities(capabilities: readonly BuiltInToolCapability[]): boolean {
-  void capabilities;
+export function canOpenProjectProvideCapabilities(): boolean {
   return true;
 }
