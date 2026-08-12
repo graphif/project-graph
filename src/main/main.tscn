@@ -1,6 +1,5 @@
 [gd_scene format=3 uid="uid://dpglridd8c5go"]
 
-[ext_resource type="PackedScene" uid="uid://btnefrbc5lowu" path="res://src/stage_object/entity/text_node/text_node.tscn" id="1_3eh75"]
 [ext_resource type="Script" uid="uid://b3brlqban06ut" path="res://src/main/camera.gd" id="1_3s6yk"]
 [ext_resource type="Script" uid="uid://bpt33a0tmgiii" path="res://src/main/main.gd" id="1_frqgp"]
 [ext_resource type="Script" uid="uid://bxbv0ox8ehxy" path="res://src/main/stage.gd" id="1_jqarl"]
@@ -10,7 +9,6 @@
 [ext_resource type="Script" uid="uid://dyoffk035pa80" path="res://src/main/debug_info/os.gd" id="5_30cu5"]
 [ext_resource type="Script" uid="uid://nn8qw6ipcykw" path="res://src/stage_object_slicer.gd" id="5_w0wra"]
 [ext_resource type="Script" uid="uid://sfly6isuc6sp" path="res://src/line_edge_creator.gd" id="6_line_edge_creator"]
-[ext_resource type="PackedScene" uid="uid://dodce5rghnax4" path="res://src/stage_object/association/line_edge/line_edge.tscn" id="7_ibsor"]
 [ext_resource type="Script" uid="uid://cwaedcftwo5gx" path="res://src/main/switch_grid.gd" id="11_erw1m"]
 [ext_resource type="Script" uid="uid://d3v2fs4ef4qx" path="res://src/main/create_100_text_nodes_button.gd" id="12_ibsor"]
 
@@ -81,15 +79,6 @@ metadata/_custom_type_script = "uid://nn8qw6ipcykw"
 script = ExtResource("6_line_edge_creator")
 target_root = NodePath("..")
 
-[node name="TextNode" parent="SubViewportContainer/SubViewport/Stage" unique_id=1629768609 instance=ExtResource("1_3eh75")]
-text = "hello world"
-
-[node name="TextNode2" parent="SubViewportContainer/SubViewport/Stage" unique_id=1077602490 instance=ExtResource("1_3eh75")]
-
-[node name="LineEdge" parent="SubViewportContainer/SubViewport/Stage" unique_id=2098186653 node_paths=PackedStringArray("source", "target") instance=ExtResource("7_ibsor")]
-source = NodePath("../TextNode")
-target = NodePath("../TextNode2")
-
 [node name="UIOverlay" type="Control" parent="." unique_id=360473786]
 unique_name_in_owner = true
 layout_mode = 1
@@ -145,7 +134,7 @@ script = ExtResource("12_ibsor")
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
-text = "背景网格"
+text = "grid"
 script = ExtResource("11_erw1m")
 
 [connection signal="pressed" from="UIOverlay/VBoxContainer/Create100TextNodesButton" to="UIOverlay/VBoxContainer/Create100TextNodesButton" method="_on_pressed"]
