@@ -24,6 +24,8 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
 		if event.pressed:
+			if _is_point_on_stage_object(get_global_mouse_position()):
+				return
 			_is_slicing = true
 			_slice_start = get_global_mouse_position()
 			_slice_end = _slice_start
@@ -60,6 +62,13 @@ func _get_stage_objects() -> Array[StageObject]:
 	var result: Array[StageObject] = []
 	_collect_stage_objects(target_root, result)
 	return result
+
+
+func _is_point_on_stage_object(point: Vector2) -> bool:
+	for stage_object in _get_stage_objects():
+		if stage_object.get_rect().has_point(point):
+			return true
+	return false
 
 
 func _collect_stage_objects(node: Node, result: Array[StageObject]) -> void:
