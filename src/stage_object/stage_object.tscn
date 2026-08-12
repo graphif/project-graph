@@ -10,3 +10,12 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_751jx")
+
+[node name="PopupMenu" type="PopupMenu" parent="." unique_id=1315986322]
+oversampling_override = 1.0
+visible = true
+item_count = 2
+item_0/text = "1"
+item_0/id = 0
+item_1/text = "2"
+item_1/id = 1

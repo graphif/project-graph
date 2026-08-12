@@ -35,7 +35,7 @@ size = Vector2i(1152, 648)
 size_2d_override_stretch = true
 render_target_update_mode = 4
 
-[node name="Stage" type="Node2D" parent="SubViewportContainer/SubViewport" unique_id=610645673]
+[node name="Stage" type="Node2D" parent="SubViewportContainer/SubViewport" unique_id=156110269]
 unique_name_in_owner = true
 script = ExtResource("1_jqarl")
 
@@ -58,6 +58,15 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+
+[node name="PopupMenu" type="PopupMenu" parent="SubViewportContainer/SubViewport/Stage" unique_id=1264082139]
+oversampling_override = 1.0
+visible = true
+item_count = 2
+item_0/text = "1"
+item_0/id = 0
+item_1/text = "2"
+item_1/id = 1
 
 [node name="TextNode" parent="SubViewportContainer/SubViewport/Stage" unique_id=1629768609 instance=ExtResource("1_3eh75")]
 text = "hello world"
