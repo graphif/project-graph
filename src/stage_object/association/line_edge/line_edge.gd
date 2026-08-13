@@ -1,9 +1,9 @@
 class_name LineEdge
 extends Association
 
-@onready var collision_shape: CollisionShape2D = $CollisionShape
-@onready var line: Line2D = $Line
-@onready var arrow_head: Polygon2D = $Head
+@onready var collision_shape: CollisionShape2D = %CollisionShape
+@onready var line: Line2D = %Line
+@onready var arrow_head: Polygon2D = %Head
 
 @export var source: Entity
 @export var target: Entity

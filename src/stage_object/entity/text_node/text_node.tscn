@@ -16,9 +16,11 @@ linear_damp = 10.0
 script = ExtResource("1_0djjf")
 
 [node name="CollisionShape" type="CollisionShape2D" parent="." unique_id=613159987]
+unique_name_in_owner = true
 shape = SubResource("RectangleShape2D_nwfkh")
 
 [node name="Label" type="Label" parent="." unique_id=75542421]
+unique_name_in_owner = true
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -36,6 +38,7 @@ theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = ExtResource("2_qcl3h")
 
 [node name="TextEdit" type="TextEdit" parent="." unique_id=118923332]
+unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(28, 71.33333)
 anchors_preset = 8

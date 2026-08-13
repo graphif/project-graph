@@ -1,9 +1,9 @@
 class_name TextNode
 extends Entity
 
-@onready var collision_shape: CollisionShape2D = $CollisionShape
-@onready var label: Label = $Label
-@onready var text_edit: TextEdit = $TextEdit
+@onready var collision_shape: CollisionShape2D = %CollisionShape
+@onready var label: Label = %Label
+@onready var text_edit: TextEdit = %TextEdit
 
 @export var text: String = "":
 	set(value):
