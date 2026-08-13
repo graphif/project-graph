@@ -19,17 +19,8 @@ script = ExtResource("1_0djjf")
 shape = SubResource("RectangleShape2D_nwfkh")
 
 [node name="Label" type="Label" parent="." unique_id=75542421]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -14.5
-offset_top = -36.0
-offset_right = 14.5
-offset_bottom = 36.0
-grow_horizontal = 2
-grow_vertical = 2
+offset_right = 29.0
+offset_bottom = 72.0
 mouse_filter = 1
 theme_override_fonts/font = SubResource("FontVariation_hmhrc")
 theme_override_font_sizes/font_size = 32
@@ -38,17 +29,6 @@ theme_override_styles/normal = ExtResource("2_qcl3h")
 [node name="TextEdit" type="TextEdit" parent="." unique_id=118923332]
 visible = false
 custom_minimum_size = Vector2(28, 71.33333)
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -14.0
-offset_top = -35.666664
-offset_right = 14.0
-offset_bottom = 35.666664
-grow_horizontal = 2
-grow_vertical = 2
 theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = ExtResource("2_qcl3h")
 script = ExtResource("3_hm685")

@@ -54,7 +54,7 @@ func _finish_slice() -> void:
 		return
 
 	for stage_object in _get_stage_objects():
-		if _segment_intersects_rect(_slice_start, _slice_end, stage_object.get_rect()):
+		if _segment_intersects_rect(_slice_start, _slice_end, stage_object.aabb):
 			stage_object.queue_free()
 
 
@@ -66,7 +66,7 @@ func _get_stage_objects() -> Array[StageObject]:
 
 func _is_point_on_stage_object(point: Vector2) -> bool:
 	for stage_object in _get_stage_objects():
-		if stage_object.get_rect().has_point(point):
+		if stage_object.aabb.has_point(point):
 			return true
 	return false
 

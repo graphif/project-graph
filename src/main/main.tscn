@@ -9,8 +9,9 @@
 [ext_resource type="Script" uid="uid://dyoffk035pa80" path="res://src/main/debug_info/os.gd" id="5_30cu5"]
 [ext_resource type="Script" uid="uid://nn8qw6ipcykw" path="res://src/stage_object_slicer.gd" id="5_w0wra"]
 [ext_resource type="Script" uid="uid://sfly6isuc6sp" path="res://src/line_edge_creator.gd" id="6_line_edge_creator"]
-[ext_resource type="Script" uid="uid://cwaedcftwo5gx" path="res://src/main/switch_grid.gd" id="11_erw1m"]
+[ext_resource type="Script" uid="uid://cwaedcftwo5gx" path="res://src/main/grid_toggle.gd" id="11_erw1m"]
 [ext_resource type="Script" uid="uid://d3v2fs4ef4qx" path="res://src/main/create_100_text_nodes_button.gd" id="12_ibsor"]
+[ext_resource type="Script" uid="uid://bpwf4fasd1n3n" path="res://src/main/physics_toggle.gd" id="12_w0wra"]
 
 [node name="Root" type="Control" unique_id=895869584]
 layout_mode = 3
@@ -140,8 +141,15 @@ script = ExtResource("12_ibsor")
 unique_name_in_owner = true
 layout_mode = 2
 button_pressed = true
-text = "grid"
+text = "背景网格"
 script = ExtResource("11_erw1m")
+
+[node name="PhysicsToggle" type="CheckButton" parent="UIOverlay/VBoxContainer" unique_id=783487685]
+unique_name_in_owner = true
+layout_mode = 2
+button_pressed = true
+text = "物理引擎"
+script = ExtResource("12_w0wra")
 
 [node name="Label" type="Label" parent="UIOverlay" unique_id=2062113696]
 layout_mode = 1
@@ -161,3 +169,4 @@ horizontal_alignment = 2
 
 [connection signal="pressed" from="UIOverlay/VBoxContainer/Create100TextNodesButton" to="UIOverlay/VBoxContainer/Create100TextNodesButton" method="_on_pressed"]
 [connection signal="toggled" from="UIOverlay/VBoxContainer/GridToggle" to="UIOverlay/VBoxContainer/GridToggle" method="_on_toggled"]
+[connection signal="toggled" from="UIOverlay/VBoxContainer/PhysicsToggle" to="UIOverlay/VBoxContainer/PhysicsToggle" method="_on_toggled"]

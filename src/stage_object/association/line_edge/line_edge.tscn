@@ -2,13 +2,17 @@
 
 [ext_resource type="Script" uid="uid://cx3yytgaa802v" path="res://src/stage_object/association/line_edge/line_edge.gd" id="1_qxjbk"]
 
-[node name="LineEdge" type="MarginContainer" unique_id=877118951]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[sub_resource type="ConcavePolygonShape2D" id="ConcavePolygonShape2D_qxjbk"]
+
+[node name="LineEdge" type="RigidBody2D" unique_id=712430331]
+collision_layer = 0
+collision_mask = 0
+gravity_scale = 0.0
+freeze = true
 script = ExtResource("1_qxjbk")
+
+[node name="CollisionShape" type="CollisionShape2D" parent="." unique_id=352164070]
+shape = SubResource("ConcavePolygonShape2D_qxjbk")
 
 [node name="Line" type="Line2D" parent="." unique_id=655085003]
 width = 2.0

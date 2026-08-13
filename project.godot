@@ -75,6 +75,7 @@ camera_pan={
 
 [physics]
 
+2d/run_on_separate_thread=true
 3d/physics_engine="Jolt Physics"
 2d/icon="uid://bxfj8cpdlgdoa"
 

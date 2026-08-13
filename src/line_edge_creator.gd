@@ -118,7 +118,7 @@ func _get_entity_at(point: Vector2) -> Entity:
 	# 逆序查找，使视觉上靠前的 Entity 优先响应。
 	var entities := _get_entities()
 	for i in range(entities.size() - 1, -1, -1):
-		if entities[i].get_global_rect().has_point(point):
+		if entities[i].aabb.has_point(point):
 			return entities[i]
 	return null
 
@@ -126,8 +126,7 @@ func _get_entity_at(point: Vector2) -> Entity:
 func _get_uv_at(entity: Entity, point: Vector2) -> Vector2:
 	# 在归一化矩形中比较相对中心的 x/y 距离，相当于用两条对角线
 	# 将矩形分成上、下、左、右四个三角形。
-	var rect := entity.get_global_rect()
-	var normalized := (point - rect.position) / rect.size - Vector2(0.5, 0.5)
+	var normalized := (point - entity.aabb.position) / entity.aabb.size - Vector2(0.5, 0.5)
 	if absf(normalized.x) > absf(normalized.y):
 		return Vector2(0.0, 0.5) if normalized.x < 0.0 else Vector2(1.0, 0.5)
 	return Vector2(0.5, 0.0) if normalized.y < 0.0 else Vector2(0.5, 1.0)
@@ -135,8 +134,7 @@ func _get_uv_at(entity: Entity, point: Vector2) -> Vector2:
 
 func _get_position_by_uv(entity: Entity, uv: Vector2) -> Vector2:
 	# 四个方向 UV 对应 Entity 四条边的中点。
-	var rect := entity.get_global_rect()
-	return rect.position + rect.size * uv
+	return entity.aabb.position + entity.aabb.size * uv
 
 
 func _create_feedback_line(color: Color, width: float, line_z_index: int) -> Line2D:
@@ -152,20 +150,16 @@ func _create_feedback_line(color: Color, width: float, line_z_index: int) -> Lin
 
 func _update_edge_highlight(highlight: Line2D, entity: Entity, uv: Vector2) -> void:
 	# 根据方向 UV 取出整条矩形边，并转换到 Creator 的局部坐标系绘制。
-	var rect := entity.get_global_rect()
+	var rect := entity.aabb
 	var edge_points := PackedVector2Array()
 	if is_zero_approx(uv.y):
 		edge_points = PackedVector2Array([rect.position, rect.position + Vector2(rect.size.x, 0.0)])
 	elif is_equal_approx(uv.y, 1.0):
-		edge_points = PackedVector2Array(
-			[rect.position + Vector2(0.0, rect.size.y), rect.end]
-		)
+		edge_points = PackedVector2Array([rect.position + Vector2(0.0, rect.size.y), rect.end])
 	elif is_zero_approx(uv.x):
 		edge_points = PackedVector2Array([rect.position, rect.position + Vector2(0.0, rect.size.y)])
 	else:
-		edge_points = PackedVector2Array(
-			[rect.position + Vector2(rect.size.x, 0.0), rect.end]
-		)
+		edge_points = PackedVector2Array([rect.position + Vector2(rect.size.x, 0.0), rect.end])
 
 	for point in edge_points:
 		highlight.add_point(to_local(point))
@@ -190,17 +184,13 @@ func _get_preview_curve(start: Vector2, end: Vector2) -> PackedVector2Array:
 		# 尚未命中 target 时，让末端沿鼠标方向的主轴进入终点。
 		end_direction = _get_dominant_direction(-line_direction)
 
-	var control_distance := maxf(
-		preview_width * 25.0, minf(absf(offset.x), absf(offset.y)) / 2.0
-	)
+	var control_distance := maxf(preview_width * 25.0, minf(absf(offset.x), absf(offset.y)) / 2.0)
 	var control_1 := start + start_direction * control_distance
 	var control_2 := end + end_direction * control_distance
 	var curve_points := PackedVector2Array()
 	for i in range(preview_curve_segments + 1):
 		var t := float(i) / preview_curve_segments
-		curve_points.append(
-			to_local(_cubic_bezier(start, control_1, control_2, end, t))
-		)
+		curve_points.append(to_local(_cubic_bezier(start, control_1, control_2, end, t)))
 	return curve_points
 
 
@@ -215,15 +205,11 @@ func _get_dominant_direction(direction: Vector2) -> Vector2:
 	return Vector2(0.0, signf(direction.y))
 
 
-func _cubic_bezier(
-	p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float
-) -> Vector2:
+func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
 	var one_minus_t := 1.0 - t
 	return (
-		one_minus_t * one_minus_t * one_minus_t * p0
-		+ 3.0 * one_minus_t * one_minus_t * t * p1
-		+ 3.0 * one_minus_t * t * t * p2
-		+ t * t * t * p3
+		one_minus_t * one_minus_t * one_minus_t * p0 + 3.0 * one_minus_t * one_minus_t * t * p1
+		+ 3.0 * one_minus_t * t * t * p2 + t * t * t * p3
 	)
 
 
