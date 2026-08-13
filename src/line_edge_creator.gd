@@ -118,9 +118,30 @@ func _get_entity_at(point: Vector2) -> Entity:
 	# 逆序查找，使视觉上靠前的 Entity 优先响应。
 	var entities := _get_entities()
 	for i in range(entities.size() - 1, -1, -1):
-		if entities[i].aabb.has_point(point):
+		if _point_in_collision_box(point, entities[i]):
 			return entities[i]
 	return null
+
+
+func _get_collision_box(entity: Entity) -> PackedVector2Array:
+	for child in entity.get_children():
+		if child is CollisionShape2D and child.shape is RectangleShape2D:
+			var shape := child.shape as RectangleShape2D
+			var half_size := shape.size / 2.0
+			var local_points := PackedVector2Array([
+				Vector2(-half_size.x, -half_size.y), Vector2(half_size.x, -half_size.y),
+				Vector2(half_size.x, half_size.y), Vector2(-half_size.x, half_size.y),
+			])
+			var points := PackedVector2Array()
+			for point in local_points:
+				points.append(child.to_global(point))
+			return points
+	return PackedVector2Array()
+
+
+func _point_in_collision_box(point: Vector2, entity: Entity) -> bool:
+	var box := _get_collision_box(entity)
+	return box.size() >= 3 and Geometry2D.is_point_in_polygon(point, box)
 
 
 func _get_uv_at(entity: Entity, point: Vector2) -> Vector2:
@@ -150,16 +171,19 @@ func _create_feedback_line(color: Color, width: float, line_z_index: int) -> Lin
 
 func _update_edge_highlight(highlight: Line2D, entity: Entity, uv: Vector2) -> void:
 	# 根据方向 UV 取出整条矩形边，并转换到 Creator 的局部坐标系绘制。
-	var rect := entity.aabb
+	var box := _get_collision_box(entity)
+	if box.size() < 4:
+		highlight.visible = false
+		return
 	var edge_points := PackedVector2Array()
 	if is_zero_approx(uv.y):
-		edge_points = PackedVector2Array([rect.position, rect.position + Vector2(rect.size.x, 0.0)])
+		edge_points = PackedVector2Array([box[0], box[1]])
 	elif is_equal_approx(uv.y, 1.0):
-		edge_points = PackedVector2Array([rect.position + Vector2(0.0, rect.size.y), rect.end])
+		edge_points = PackedVector2Array([box[3], box[2]])
 	elif is_zero_approx(uv.x):
-		edge_points = PackedVector2Array([rect.position, rect.position + Vector2(0.0, rect.size.y)])
+		edge_points = PackedVector2Array([box[0], box[3]])
 	else:
-		edge_points = PackedVector2Array([rect.position + Vector2(rect.size.x, 0.0), rect.end])
+		edge_points = PackedVector2Array([box[1], box[2]])
 
 	for point in edge_points:
 		highlight.add_point(to_local(point))
