@@ -87,25 +87,43 @@ func _collect_stage_objects(node: Node, result: Array[StageObject]) -> void:
 func _get_collision_geometry(stage_object: StageObject) -> PackedVector2Array:
 	for child in stage_object.get_children():
 		if child is CollisionShape2D and child.shape != null:
-			if child.shape is RectangleShape2D:
-				var shape := child.shape as RectangleShape2D
-				var half_size := shape.size / 2.0
-				var corners := [
-					Vector2(-half_size.x, -half_size.y), Vector2(half_size.x, -half_size.y),
-					Vector2(half_size.x, half_size.y), Vector2(-half_size.x, half_size.y),
-				]
-				var points := PackedVector2Array()
-				for i in corners.size():
-					points.append(child.to_global(corners[i]))
-					points.append(child.to_global(corners[(i + 1) % corners.size()]))
-				return points
-			if child.shape is ConcavePolygonShape2D:
-				var shape := child.shape as ConcavePolygonShape2D
-				var points := PackedVector2Array()
-				for point in shape.segments:
-					points.append(child.to_global(point))
-				return points
+			var geometry := _get_shape_geometry(child)
+			if not geometry.is_empty():
+				return geometry
 	return PackedVector2Array()
+
+
+func _get_shape_geometry(collision_shape: CollisionShape2D) -> PackedVector2Array:
+	var data = PhysicsServer2D.shape_get_data(collision_shape.shape.get_rid())
+	var points := PackedVector2Array()
+	if data is PackedVector2Array:
+		for point in data:
+			points.append(collision_shape.to_global(point))
+	elif data is Vector2:
+		var size: Vector2 = data
+		var half_size := size / 2.0
+		var corners := PackedVector2Array([
+			Vector2(-half_size.x, -half_size.y), Vector2(half_size.x, -half_size.y),
+			Vector2(half_size.x, half_size.y), Vector2(-half_size.x, half_size.y),
+		])
+		for i in corners.size():
+			points.append(collision_shape.to_global(corners[i]))
+			points.append(collision_shape.to_global(corners[(i + 1) % corners.size()]))
+	elif data is float or data is int:
+		var radius: float = float(data)
+		var segments := 24
+		for i in segments:
+			var a := TAU * float(i) / segments
+			var b := TAU * float(i + 1) / segments
+			points.append(collision_shape.to_global(Vector2(cos(a) * radius, sin(a) * radius)))
+			points.append(collision_shape.to_global(Vector2(cos(b) * radius, sin(b) * radius)))
+	else:
+		var rect := collision_shape.shape.get_rect()
+		var corners := PackedVector2Array([rect.position, Vector2(rect.end.x, rect.position.y), rect.end, Vector2(rect.position.x, rect.end.y)])
+		for i in corners.size():
+			points.append(collision_shape.to_global(corners[i]))
+			points.append(collision_shape.to_global(corners[(i + 1) % corners.size()]))
+	return points
 
 
 func _point_on_collision_geometry(point: Vector2, stage_object: StageObject) -> bool:

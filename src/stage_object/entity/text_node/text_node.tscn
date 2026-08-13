@@ -11,7 +11,6 @@ baseline_offset = 0.045
 
 [node name="TextNode" type="RigidBody2D" unique_id=594595858]
 gravity_scale = 0.0
-lock_rotation = true
 linear_damp = 10.0
 script = ExtResource("1_0djjf")
 
