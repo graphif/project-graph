@@ -2718,3 +2718,14 @@ common:
     editingMode: 正在编辑模式
     lineBreak: 换行
     exitEdit: 退出编辑模式
+
+projectOwnership:
+  alreadyOpen: 已切换到打开的标签页。
+  notFound: 项目文件不存在。
+  busy: 该项目正在被另一个 Project Graph 进程使用。
+  loadFailed: 无法取得项目所有权。
+  openFailedTitle: 打开项目失败
+  releaseFailedTitle: 释放项目所有权失败
+  releaseFailedMessage: "项目已关闭，但无法释放它的所有权锁。请选择“重试”再次尝试。\n\n错误信息：{{error}}"
+  retry: 重试
+  ok: 确定

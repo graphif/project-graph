@@ -389,6 +389,7 @@ class HistorymanagerMemoryEfficient extends HistoryManagerAbs {
 export class HistoryManager extends HistoryManagerAbs {
   private memoryEfficient: HistoryManagerAbs;
   private timeEfficient: HistoryManagerAbs;
+  private readonly unwatchHistoryManagerMode: () => void;
 
   // 当前使用的历史管理器实例
   private currentManager: HistoryManagerAbs;
@@ -403,9 +404,13 @@ export class HistoryManager extends HistoryManagerAbs {
     this.currentManager = initialMode === "memoryEfficient" ? this.memoryEfficient : this.timeEfficient;
 
     // 监听设置变化
-    Settings.watch("historyManagerMode", (newMode) => {
+    this.unwatchHistoryManagerMode = Settings.watch("historyManagerMode", (newMode) => {
       this.switchMode(newMode === "timeEfficient");
     });
+  }
+
+  dispose(): void {
+    this.unwatchHistoryManagerMode();
   }
 
   /**

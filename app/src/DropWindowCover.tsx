@@ -74,7 +74,7 @@ export const DropWindowCover = ({ project }: { project: Project }) => {
   return (
     <div
       className={cn(
-        "z-5 pointer-events-none absolute left-0 top-0 flex h-screen w-full flex-col transition-opacity duration-700 ease-out",
+        "pointer-events-none absolute top-0 left-0 z-5 flex h-screen w-full flex-col transition-opacity duration-700 ease-out",
         dropMouseLocation === "notInWindowZone" ? "opacity-0" : isFadingOut ? "opacity-0" : "opacity-100",
       )}
     >

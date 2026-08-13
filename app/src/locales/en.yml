@@ -2530,3 +2530,14 @@ common:
     editingMode: Editing Mode
     lineBreak: New Line
     exitEdit: Exit Edit Mode
+
+projectOwnership:
+  alreadyOpen: Switched to the open tab.
+  notFound: Project file does not exist.
+  busy: This Project is being used by another Project Graph process.
+  loadFailed: Project ownership could not be acquired.
+  openFailedTitle: Failed to open Project
+  releaseFailedTitle: Failed to release Project ownership
+  releaseFailedMessage: "The Project was closed, but its ownership lock could not be released. Select Retry to try again.\n\nError: {{error}}"
+  retry: Retry
+  ok: OK

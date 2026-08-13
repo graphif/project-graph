@@ -1,6 +1,18 @@
+#[cfg(debug_assertions)]
+mod cli_desktop_acceptance;
 mod cmd;
+mod project_ownership;
+pub mod project_reference_store;
+mod project_runtime_bridge;
 
-use std::sync::{Mutex, OnceLock};
+pub mod ownership_helper {
+    pub use crate::project_ownership::{
+        acquire_project_ownership, try_acquire_project_ownership, CanonicalProjectPath,
+        ProjectOwner, ProjectOwnership, ProjectOwnershipError,
+    };
+}
+
+use std::sync::{Arc, Mutex, OnceLock};
 use tauri::{Emitter, Listener, Manager, State};
 
 // 这两行可能不能去掉，否则会导致linux打包软件报错
@@ -55,6 +67,9 @@ pub fn run() {
 
     builder
         .manage(PendingOpenFiles::default())
+        .manage(Arc::new(
+            project_ownership::DesktopProjectOwnershipManager::default(),
+        ))
         .manage(cmd::mcp::McpStdioManager::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -65,6 +80,9 @@ pub fn run() {
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
+            app.manage(project_runtime_bridge::ProjectRuntimeBridgeManager::start(
+                app.handle().clone(),
+            )?);
             #[cfg(debug_assertions)]
             {
                 app.handle().plugin(tauri_plugin_devtools::init())?;
@@ -88,10 +106,23 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             cmd::device::get_device_id,
+            #[cfg(debug_assertions)]
+            cli_desktop_acceptance::load_cli_desktop_acceptance_manifest,
+            #[cfg(debug_assertions)]
+            cli_desktop_acceptance::write_cli_desktop_acceptance_state,
+            #[cfg(debug_assertions)]
+            cli_desktop_acceptance::wait_for_cli_desktop_acceptance_completion,
             write_stdout,
             write_stderr,
             exit,
             take_pending_open_files,
+            project_ownership::acquire_desktop_project_ownership,
+            project_ownership::acquire_desktop_project_ownership_for_save,
+            project_ownership::make_desktop_project_ownership_connectable,
+            project_ownership::release_desktop_project_ownership,
+            project_reference_store::load_project_reference_snapshot,
+            project_reference_store::save_project_reference_snapshot,
+            project_runtime_bridge::respond_project_runtime_bridge,
             #[cfg(desktop)]
             cmd::paddle::get_aha_directory,
             #[cfg(desktop)]

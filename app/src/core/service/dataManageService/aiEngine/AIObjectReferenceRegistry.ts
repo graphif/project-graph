@@ -15,6 +15,10 @@ export type AIObjectReferenceSnapshot = {
   nextEdgeRef: number;
 };
 
+type AIObjectReferenceProject = {
+  stageManager: Pick<Project["stageManager"], "get">;
+};
+
 const AI_OBJECT_REF_PATTERN = /^(?:n|e)[1-9]\d*$/;
 
 export function isAIObjectRef(value: string): value is AIObjectRef {
@@ -41,7 +45,7 @@ export class AIObjectReferenceRegistry {
   private nextEdgeRef = 1;
 
   constructor(
-    private readonly project: Project,
+    private readonly project: AIObjectReferenceProject,
     onChange?: (snapshot: AIObjectReferenceSnapshot) => void,
   ) {
     if (onChange) this.changeListeners.add(onChange);

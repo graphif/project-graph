@@ -2436,3 +2436,14 @@ common:
     editingMode: 正在編輯模式
     lineBreak: 換行
     exitEdit: 退出編輯模式
+
+projectOwnership:
+  alreadyOpen: 已經切換到開啟的分頁。
+  notFound: 找不到專案檔案。
+  busy: 這個專案正在被另一個 Project Graph 程序使用。
+  loadFailed: 無法取得專案所有權。
+  openFailedTitle: 開啟專案失敗
+  releaseFailedTitle: 釋放專案所有權失敗
+  releaseFailedMessage: "專案已關閉，但無法釋放它的所有權鎖。請按「重試」再試一次。\n\n錯誤資訊：{{error}}"
+  retry: 重試
+  ok: 確定
