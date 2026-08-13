@@ -94,36 +94,69 @@ func _get_collision_geometry(stage_object: StageObject) -> PackedVector2Array:
 
 
 func _get_shape_geometry(collision_shape: CollisionShape2D) -> PackedVector2Array:
-	var data = PhysicsServer2D.shape_get_data(collision_shape.shape.get_rid())
+	var shape := collision_shape.shape
 	var points := PackedVector2Array()
-	if data is PackedVector2Array:
-		for point in data:
-			points.append(collision_shape.to_global(point))
-	elif data is Vector2:
-		var size: Vector2 = data
-		var half_size := size / 2.0
-		var corners := PackedVector2Array([
-			Vector2(-half_size.x, -half_size.y), Vector2(half_size.x, -half_size.y),
-			Vector2(half_size.x, half_size.y), Vector2(-half_size.x, half_size.y),
-		])
-		for i in corners.size():
-			points.append(collision_shape.to_global(corners[i]))
-			points.append(collision_shape.to_global(corners[(i + 1) % corners.size()]))
-	elif data is float or data is int:
-		var radius: float = float(data)
-		var segments := 24
-		for i in segments:
-			var a := TAU * float(i) / segments
-			var b := TAU * float(i + 1) / segments
-			points.append(collision_shape.to_global(Vector2(cos(a) * radius, sin(a) * radius)))
-			points.append(collision_shape.to_global(Vector2(cos(b) * radius, sin(b) * radius)))
+	if shape is RectangleShape2D:
+		var rectangle := shape as RectangleShape2D
+		points = _get_polygon_segments(_get_rectangle_points(rectangle.size))
+	elif shape is ConvexPolygonShape2D:
+		var polygon := shape as ConvexPolygonShape2D
+		points = _get_polygon_segments(polygon.points)
+	elif shape is ConcavePolygonShape2D:
+		var concave_polygon := shape as ConcavePolygonShape2D
+		points = concave_polygon.segments
+	elif shape is SegmentShape2D:
+		var segment := shape as SegmentShape2D
+		points = PackedVector2Array([segment.a, segment.b])
+	elif shape is CircleShape2D:
+		var circle := shape as CircleShape2D
+		points = _get_ellipse_segments(circle.radius, circle.radius)
+	elif shape is CapsuleShape2D:
+		var capsule := shape as CapsuleShape2D
+		points = _get_capsule_segments(capsule.radius, capsule.height)
 	else:
-		var rect := collision_shape.shape.get_rect()
-		var corners := PackedVector2Array([rect.position, Vector2(rect.end.x, rect.position.y), rect.end, Vector2(rect.position.x, rect.end.y)])
-		for i in corners.size():
-			points.append(collision_shape.to_global(corners[i]))
-			points.append(collision_shape.to_global(corners[(i + 1) % corners.size()]))
-	return points
+		points = _get_polygon_segments(_get_rectangle_points(shape.get_rect().size, shape.get_rect().get_center()))
+
+	var global_points := PackedVector2Array()
+	for point in points:
+		global_points.append(collision_shape.to_global(point))
+	return global_points
+
+
+func _get_rectangle_points(size: Vector2, center := Vector2.ZERO) -> PackedVector2Array:
+	var half_size := size / 2.0
+	return PackedVector2Array([
+		center + Vector2(-half_size.x, -half_size.y), center + Vector2(half_size.x, -half_size.y),
+		center + Vector2(half_size.x, half_size.y), center + Vector2(-half_size.x, half_size.y),
+	])
+
+
+func _get_polygon_segments(polygon: PackedVector2Array) -> PackedVector2Array:
+	var segments := PackedVector2Array()
+	for i in polygon.size():
+		segments.append(polygon[i])
+		segments.append(polygon[(i + 1) % polygon.size()])
+	return segments
+
+
+func _get_ellipse_segments(radius_x: float, radius_y: float) -> PackedVector2Array:
+	var polygon := PackedVector2Array()
+	for i in 24:
+		var angle := TAU * float(i) / 24.0
+		polygon.append(Vector2(cos(angle) * radius_x, sin(angle) * radius_y))
+	return _get_polygon_segments(polygon)
+
+
+func _get_capsule_segments(radius: float, height: float) -> PackedVector2Array:
+	var polygon := PackedVector2Array()
+	var half_straight := maxf(0.0, height / 2.0 - radius)
+	for i in 12:
+		var angle := PI + PI * float(i) / 11.0
+		polygon.append(Vector2(cos(angle) * radius, -half_straight + sin(angle) * radius))
+	for i in 12:
+		var angle := PI * float(i) / 11.0
+		polygon.append(Vector2(cos(angle) * radius, half_straight + sin(angle) * radius))
+	return _get_polygon_segments(polygon)
 
 
 func _point_on_collision_geometry(point: Vector2, stage_object: StageObject) -> bool:
