@@ -10,7 +10,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			var node: TextNode = TEXT_NODE.instantiate()
 			node.text = "..."
 			node.position = get_global_mouse_position()
-			add_child(node)
+			add_child(node, OS.is_debug_build())
 			get_viewport().set_input_as_handled()
 		elif event.button_index == MOUSE_BUTTON_RIGHT and not event.pressed:
 			popup_menu.position = get_tree().root.get_mouse_position()
