@@ -1,6 +1,13 @@
 class_name StageObject
 extends RigidBody2D
 
+@export var id: String
+
+
+func _init() -> void:
+	id = NanoID.generate()
+
+
 var aabb: Rect2:
 	get:
 		var rect := Rect2()
