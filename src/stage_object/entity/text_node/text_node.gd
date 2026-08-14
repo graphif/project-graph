@@ -98,5 +98,6 @@ func exit_edit_mode() -> void:
 
 
 func _update_collision_shape() -> void:
-	var shape := collision_shape.shape as RectangleShape2D
+	var shape := RectangleShape2D.new()
 	shape.size = label.size
+	collision_shape.shape = shape
