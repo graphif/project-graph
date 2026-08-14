@@ -1,7 +1,7 @@
 extends Node2D
 
 const TEXT_NODE = preload("uid://btnefrbc5lowu")
-@onready var popup_menu: PopupMenu = %PopupMenu
+@export var popup_menu: PopupMenu
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -10,10 +10,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			var node: TextNode = TEXT_NODE.instantiate()
 			node.text = "..."
 			node.position = get_global_mouse_position()
-			print(event.position)
 			add_child(node)
 			get_viewport().set_input_as_handled()
-		if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-			popup_menu.position = event.position
+		elif event.button_index == MOUSE_BUTTON_RIGHT and not event.pressed:
+			popup_menu.position = get_tree().root.get_mouse_position()
 			popup_menu.popup()
 			get_viewport().set_input_as_handled()

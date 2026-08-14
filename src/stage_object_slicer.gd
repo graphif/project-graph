@@ -34,8 +34,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			_slice_end = _slice_start
 			_update_line()
 		elif _is_slicing:
+			var should_handle := _slice_start.distance_squared_to(_slice_end) > 1.0
 			_finish_slice()
-		get_viewport().set_input_as_handled()
+			if should_handle:
+				get_viewport().set_input_as_handled()
+		else:
+			return
+		if event.pressed:
+			get_viewport().set_input_as_handled()
 		return
 
 	if event is InputEventMouseMotion and _is_slicing:

@@ -1,17 +1,15 @@
 [gd_scene format=3 uid="uid://dpglridd8c5go"]
 
-[ext_resource type="Script" uid="uid://b3brlqban06ut" path="res://src/main/camera.gd" id="1_3s6yk"]
 [ext_resource type="Script" uid="uid://bpt33a0tmgiii" path="res://src/main/main.gd" id="1_frqgp"]
-[ext_resource type="Script" uid="uid://bxbv0ox8ehxy" path="res://src/main/stage.gd" id="1_jqarl"]
-[ext_resource type="Material" uid="uid://ddx2si8u7j4ah" path="res://src/main/grid.tres" id="2_djufw"]
+[ext_resource type="PackedScene" uid="uid://bc73att6xutyi" path="res://src/stage/stage.tscn" id="2_frqgp"]
 [ext_resource type="Script" uid="uid://dr6t06rlyub81" path="res://src/main/debug_info/active_actions.gd" id="3_ab7mr"]
 [ext_resource type="Script" uid="uid://da4b7r3gn615d" path="res://src/main/debug_info/fps.gd" id="4_jkpqq"]
 [ext_resource type="Script" uid="uid://dyoffk035pa80" path="res://src/main/debug_info/os.gd" id="5_30cu5"]
-[ext_resource type="Script" uid="uid://nn8qw6ipcykw" path="res://src/stage_object_slicer.gd" id="5_w0wra"]
-[ext_resource type="Script" uid="uid://sfly6isuc6sp" path="res://src/line_edge_creator.gd" id="6_line_edge_creator"]
 [ext_resource type="Script" uid="uid://cwaedcftwo5gx" path="res://src/main/grid_toggle.gd" id="11_erw1m"]
 [ext_resource type="Script" uid="uid://d3v2fs4ef4qx" path="res://src/main/create_100_text_nodes_button.gd" id="12_ibsor"]
 [ext_resource type="Script" uid="uid://bpwf4fasd1n3n" path="res://src/main/physics_toggle.gd" id="12_w0wra"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_frqgp"]
 
 [node name="Root" type="Control" unique_id=895869584]
 layout_mode = 3
@@ -22,23 +20,43 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_frqgp")
 
-[node name="SubViewportContainer" type="SubViewportContainer" parent="." unique_id=1942299076]
+[node name="TabContainer" type="TabContainer" parent="." unique_id=1391016486]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-stretch = true
+theme_override_styles/panel = SubResource("StyleBoxEmpty_frqgp")
+current_tab = 0
 
-[node name="SubViewport" type="SubViewport" parent="SubViewportContainer" unique_id=1267056667]
+[node name="SubViewportContainer" type="SubViewportContainer" parent="TabContainer" unique_id=1942299076]
+layout_mode = 2
+stretch = true
+metadata/_tab_index = 0
+
+[node name="SubViewport" type="SubViewport" parent="TabContainer/SubViewportContainer" unique_id=1267056667]
 transparent_bg = true
 handle_input_locally = false
-size = Vector2i(1152, 648)
+size = Vector2i(1152, 618)
 size_2d_override_stretch = true
 render_target_update_mode = 4
 
-[node name="PopupMenu" type="PopupMenu" parent="SubViewportContainer/SubViewport" unique_id=1264082139]
+[node name="Stage" parent="TabContainer/SubViewportContainer/SubViewport" unique_id=830370194 node_paths=PackedStringArray("popup_menu") instance=ExtResource("2_frqgp")]
+unique_name_in_owner = true
+popup_menu = NodePath("../../../../UIOverlay/PopupMenu")
+
+[node name="UIOverlay" type="Control" parent="." unique_id=360473786]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_top = 0.1
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PopupMenu" type="PopupMenu" parent="UIOverlay" unique_id=1264082139]
 unique_name_in_owner = true
 oversampling_override = 1.0
 item_count = 2
@@ -46,49 +64,6 @@ item_0/text = "1"
 item_0/id = 0
 item_1/text = "2"
 item_1/id = 1
-
-[node name="Stage" type="Node2D" parent="SubViewportContainer/SubViewport" unique_id=156110269]
-unique_name_in_owner = true
-script = ExtResource("1_jqarl")
-
-[node name="Camera" type="Camera2D" parent="SubViewportContainer/SubViewport/Stage" unique_id=2044935444]
-unique_name_in_owner = true
-script = ExtResource("1_3s6yk")
-grid_material = ExtResource("2_djufw")
-min_zoom = 0.001
-max_zoom = 50.0
-
-[node name="CanvasLayer" type="CanvasLayer" parent="SubViewportContainer/SubViewport/Stage" unique_id=1215796185]
-layer = -1
-
-[node name="Grid" type="ColorRect" parent="SubViewportContainer/SubViewport/Stage/CanvasLayer" unique_id=1044710621]
-unique_name_in_owner = true
-material = ExtResource("2_djufw")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="StageObjectSlicer" type="Node2D" parent="SubViewportContainer/SubViewport/Stage" unique_id=24509522 node_paths=PackedStringArray("target_root")]
-script = ExtResource("5_w0wra")
-target_root = NodePath("..")
-metadata/_custom_type_script = "uid://nn8qw6ipcykw"
-
-[node name="LineEdgeCreator" type="Node2D" parent="SubViewportContainer/SubViewport/Stage" unique_id=1920728493 node_paths=PackedStringArray("target_root")]
-script = ExtResource("6_line_edge_creator")
-target_root = NodePath("..")
-
-[node name="UIOverlay" type="Control" parent="." unique_id=360473786]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
 
 [node name="DebugInfo" type="VBoxContainer" parent="UIOverlay" unique_id=106941584]
 unique_name_in_owner = true
@@ -150,22 +125,6 @@ layout_mode = 2
 button_pressed = true
 text = "物理引擎"
 script = ExtResource("12_w0wra")
-
-[node name="Label" type="Label" parent="UIOverlay" unique_id=2062113696]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -40.0
-offset_top = -22.0
-grow_horizontal = 0
-grow_vertical = 0
-text = "Project Graph 5.0 将使用 Godot 重写，性能将获得大幅提升
-届时会同时提供桌面版、Android 版、网页版
-此版本支持使用手柄操作，如果无法使用请尝试启动 Steam"
-horizontal_alignment = 2
 
 [connection signal="pressed" from="UIOverlay/VBoxContainer/Create100TextNodesButton" to="UIOverlay/VBoxContainer/Create100TextNodesButton" method="_on_pressed"]
 [connection signal="toggled" from="UIOverlay/VBoxContainer/GridToggle" to="UIOverlay/VBoxContainer/GridToggle" method="_on_toggled"]

@@ -17,6 +17,7 @@ config/icon="uid://bxfj8cpdlgdoa"
 
 [display]
 
+window/size/borderless=true
 window/size/transparent=true
 window/stretch/aspect="expand"
 window/per_pixel_transparency/allowed=true
@@ -76,6 +77,7 @@ camera_pan={
 [physics]
 
 2d/run_on_separate_thread=true
+common/physics_ticks_per_second=240
 3d/physics_engine="Jolt Physics"
 2d/icon="uid://bxfj8cpdlgdoa"
 

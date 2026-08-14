@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://bc73att6xutyi"]
+
+[ext_resource type="Script" uid="uid://bxbv0ox8ehxy" path="res://src/stage/stage.gd" id="1_j58fr"]
+[ext_resource type="Script" uid="uid://b3brlqban06ut" path="res://src/stage/camera.gd" id="2_y8ixn"]
+[ext_resource type="Material" uid="uid://ddx2si8u7j4ah" path="res://src/main/grid.tres" id="3_804oe"]
+[ext_resource type="Script" uid="uid://nn8qw6ipcykw" path="res://src/stage_object_slicer.gd" id="4_pvnpy"]
+[ext_resource type="Script" uid="uid://sfly6isuc6sp" path="res://src/line_edge_creator.gd" id="5_puyty"]
+
+[node name="Stage" type="Node2D" unique_id=830370194]
+script = ExtResource("1_j58fr")
+
+[node name="Camera" type="Camera2D" parent="." unique_id=1545802721]
+script = ExtResource("2_y8ixn")
+grid_material = ExtResource("3_804oe")
+min_zoom = 0.001
+max_zoom = 50.0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1131989358]
+layer = -1
+
+[node name="Grid" type="ColorRect" parent="CanvasLayer" unique_id=178152197]
+material = ExtResource("3_804oe")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="StageObjectSlicer" type="Node2D" parent="." unique_id=89377148 node_paths=PackedStringArray("target_root")]
+script = ExtResource("4_pvnpy")
+target_root = NodePath("..")
+metadata/_custom_type_script = "uid://nn8qw6ipcykw"
+
+[node name="LineEdgeCreator" type="Node2D" parent="." unique_id=1815339440 node_paths=PackedStringArray("target_root")]
+script = ExtResource("5_puyty")
+target_root = NodePath("..")
