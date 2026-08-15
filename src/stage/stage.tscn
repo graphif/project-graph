@@ -5,6 +5,7 @@
 [ext_resource type="Material" uid="uid://ddx2si8u7j4ah" path="res://src/main/grid.tres" id="3_804oe"]
 [ext_resource type="Script" uid="uid://nn8qw6ipcykw" path="res://src/stage_object_slicer.gd" id="4_pvnpy"]
 [ext_resource type="Script" uid="uid://sfly6isuc6sp" path="res://src/line_edge_creator.gd" id="5_puyty"]
+[ext_resource type="Script" uid="uid://xs5wn3iwffxg" path="res://src/history.gd" id="6_y8ixn"]
 
 [node name="Stage" type="Node2D" unique_id=830370194]
 script = ExtResource("1_j58fr")
@@ -35,3 +36,9 @@ metadata/_custom_type_script = "uid://nn8qw6ipcykw"
 [node name="LineEdgeCreator" type="Node2D" parent="." unique_id=1815339440 node_paths=PackedStringArray("target_root")]
 script = ExtResource("5_puyty")
 target_root = NodePath("..")
+
+[node name="History" type="Node2D" parent="." unique_id=149412457]
+unique_name_in_owner = true
+script = ExtResource("6_y8ixn")
+target_root = NodePath("..")
+metadata/_custom_type_script = "uid://xs5wn3iwffxg"

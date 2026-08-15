@@ -16,9 +16,12 @@ extends Entity
 
 var is_dragging: bool = false
 var drag_offset: Vector2 = Vector2.ZERO
+var _history: History
+var _text_before_edit := ""
 
 
 func _ready() -> void:
+	_history = _find_history()
 	label.text = text
 	call_deferred("_update_collision_shape")
 
@@ -35,6 +38,8 @@ func _on_label_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
+				if _history != null:
+					_history.begin_transaction()
 				is_dragging = true
 
 				# 记录鼠标相对于刚体中心的位置
@@ -45,6 +50,8 @@ func _on_label_gui_input(event: InputEvent) -> void:
 				angular_velocity = 0.0
 			else:
 				is_dragging = false
+				if _history != null:
+					_history.commit()
 
 			return
 
@@ -77,6 +84,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func enter_edit_mode() -> void:
+	_text_before_edit = text
 	text_edit.text = text
 	text_edit.text_changed.emit()
 
@@ -91,7 +99,12 @@ func exit_edit_mode() -> void:
 	if label.visible:
 		return
 
-	text = text_edit.text
+	if text != text_edit.text:
+		if _history != null:
+			_history.begin_transaction()
+		text = text_edit.text
+		if _history != null:
+			_history.commit()
 
 	text_edit.hide()
 	label.show()
@@ -101,3 +114,12 @@ func _update_collision_shape() -> void:
 	var shape := RectangleShape2D.new()
 	shape.size = label.size
 	collision_shape.shape = shape
+
+func _find_history() -> History:
+	var node: Node = self
+	while node != null:
+		var history := node.get_node_or_null("History") as History
+		if history != null:
+			return history
+		node = node.get_parent()
+	return null

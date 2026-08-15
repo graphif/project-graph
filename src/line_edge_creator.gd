@@ -60,6 +60,9 @@ func _input(event: InputEvent) -> void:
 
 
 func _start_drag(source: Entity, mouse_position: Vector2) -> void:
+	var history := _get_history()
+	if history != null:
+		history.begin_transaction()
 	_source = source
 	_source_uv = Vector2(0.5, 0.5)
 	_update_uv_if_on_edge(source, mouse_position)
@@ -81,6 +84,9 @@ func _finish_drag() -> void:
 		line_edge.source_uv = _source_uv
 		line_edge.target_uv = _target_uv
 		target_root.add_child(line_edge)
+		var history := _get_history()
+		if history != null:
+			history.commit()
 
 	_source = null
 	_target = null
@@ -133,10 +139,14 @@ func _get_collision_box(entity: Entity) -> PackedVector2Array:
 		if child is CollisionShape2D and child.shape is RectangleShape2D:
 			var shape := child.shape as RectangleShape2D
 			var half_size := shape.size / 2.0
-			var local_points := PackedVector2Array([
-				Vector2(-half_size.x, -half_size.y), Vector2(half_size.x, -half_size.y),
-				Vector2(half_size.x, half_size.y), Vector2(-half_size.x, half_size.y),
-			])
+			var local_points := PackedVector2Array(
+				[
+					Vector2(-half_size.x, -half_size.y),
+					Vector2(half_size.x, -half_size.y),
+					Vector2(half_size.x, half_size.y),
+					Vector2(-half_size.x, half_size.y),
+				]
+			)
 			var points := PackedVector2Array()
 			for point in local_points:
 				points.append(child.to_global(point))
@@ -161,12 +171,14 @@ func _update_uv_if_on_edge(entity: Entity, point: Vector2) -> void:
 func _get_edge_uv_at(entity: Entity, point: Vector2) -> Variant:
 	# 只在鼠标靠近四条边时返回 UV；矩形内部的点不会触发边切换。
 	var rect: Rect2 = entity.aabb
-	var distances := PackedFloat32Array([
-		absf(point.x - rect.position.x),
-		absf(rect.end.x - point.x),
-		absf(point.y - rect.position.y),
-		absf(rect.end.y - point.y),
-	])
+	var distances := PackedFloat32Array(
+		[
+			absf(point.x - rect.position.x),
+			absf(rect.end.x - point.x),
+			absf(point.y - rect.position.y),
+			absf(rect.end.y - point.y),
+		]
+	)
 	var closest_side := 0
 	for i in range(1, distances.size()):
 		if distances[i] < distances[closest_side]:
@@ -281,3 +293,12 @@ func _collect_entities(node: Node, result: Array[Entity]) -> void:
 			result.append(child)
 			continue
 		_collect_entities(child, result)
+
+func _get_history() -> History:
+	var node: Node = self
+	while node != null:
+		var history := node.get_node_or_null("History") as History
+		if history != null:
+			return history
+		node = node.get_parent()
+	return null

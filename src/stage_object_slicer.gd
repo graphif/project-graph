@@ -63,9 +63,18 @@ func _finish_slice() -> void:
 	if _slice_start.distance_squared_to(_slice_end) <= 1.0:
 		return
 
+	var history := _get_history()
+	var removed := false
 	for stage_object in _get_stage_objects():
 		if _segment_intersects_collision_box(_slice_start, _slice_end, stage_object):
+			if not removed:
+				if history != null:
+					history.begin_transaction()
+				removed = true
 			stage_object.queue_free()
+	if removed:
+		if history != null:
+			history.commit()
 
 
 func _get_stage_objects() -> Array[StageObject]:
@@ -224,3 +233,12 @@ func _clear_collision_highlights() -> void:
 	for highlight in _collision_highlights.values():
 		highlight.queue_free()
 	_collision_highlights.clear()
+
+func _get_history() -> History:
+	var node: Node = self
+	while node != null:
+		var history := node.get_node_or_null("History") as History
+		if history != null:
+			return history
+		node = node.get_parent()
+	return null
