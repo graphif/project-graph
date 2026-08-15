@@ -17,11 +17,11 @@ func _process(_delta: float) -> void:
 			continue
 
 		# 获取动作强度数值 (0.0 到 1.0 之间)
-		var strength := Input.get_action_strength(action)
+		var strength := Input.get_action_strength(action, true)
 
 		# 仅展示被激活的动作（大于死区门槛）
 		if strength > deadzone:
-			var is_pressed := Input.is_action_pressed(action)
+			var is_pressed := Input.is_action_pressed(action, true)
 			# 格式化示例：move_right: true (1.00)
 			active_data.append("%s: %s (%.2f)" % [action, is_pressed, strength])
 
