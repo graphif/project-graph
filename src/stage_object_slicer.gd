@@ -1,4 +1,3 @@
-@tool
 class_name StageObjectSlicer
 extends Node2D
 
@@ -12,7 +11,7 @@ var _is_slicing := false
 var _slice_start := Vector2.ZERO
 var _slice_end := Vector2.ZERO
 var _slice_line: Line2D
-var _collision_highlights: Dictionary[StageObject, Line2D] = {}
+var _collision_highlights: Dictionary[StageObject, Line2D] = { }
 
 
 func _ready() -> void:
@@ -121,7 +120,9 @@ func _get_shape_geometry(collision_shape: CollisionShape2D) -> PackedVector2Arra
 		var capsule := shape as CapsuleShape2D
 		points = _get_capsule_segments(capsule.radius, capsule.height)
 	else:
-		points = _get_polygon_segments(_get_rectangle_points(shape.get_rect().size, shape.get_rect().get_center()))
+		points = _get_polygon_segments(
+			_get_rectangle_points(shape.get_rect().size, shape.get_rect().get_center())
+		)
 
 	var global_points := PackedVector2Array()
 	for point in points:
@@ -131,10 +132,14 @@ func _get_shape_geometry(collision_shape: CollisionShape2D) -> PackedVector2Arra
 
 func _get_rectangle_points(size: Vector2, center := Vector2.ZERO) -> PackedVector2Array:
 	var half_size := size / 2.0
-	return PackedVector2Array([
-		center + Vector2(-half_size.x, -half_size.y), center + Vector2(half_size.x, -half_size.y),
-		center + Vector2(half_size.x, half_size.y), center + Vector2(-half_size.x, half_size.y),
-	])
+	return PackedVector2Array(
+		[
+			center + Vector2(-half_size.x, -half_size.y),
+			center + Vector2(half_size.x, -half_size.y),
+			center + Vector2(half_size.x, half_size.y),
+			center + Vector2(-half_size.x, half_size.y),
+		]
+	)
 
 
 func _get_polygon_segments(polygon: PackedVector2Array) -> PackedVector2Array:
@@ -168,12 +173,18 @@ func _get_capsule_segments(radius: float, height: float) -> PackedVector2Array:
 func _point_on_collision_geometry(point: Vector2, stage_object: StageObject) -> bool:
 	var geometry := _get_collision_geometry(stage_object)
 	for i in range(0, geometry.size() - 1, 2):
-		if Geometry2D.get_closest_point_to_segment(point, geometry[i], geometry[i + 1]).distance_to(point) <= 6.0:
+		if Geometry2D.get_closest_point_to_segment(point, geometry[i], geometry[i + 1]).distance_to(
+			point
+		) <= 6.0:
 			return true
 	return false
 
 
-func _segment_intersects_collision_box(start: Vector2, end: Vector2, stage_object: StageObject) -> bool:
+func _segment_intersects_collision_box(
+	start: Vector2,
+	end: Vector2,
+	stage_object: StageObject,
+) -> bool:
 	var geometry := _get_collision_geometry(stage_object)
 	for i in range(0, geometry.size() - 1, 2):
 		if Geometry2D.segment_intersects_segment(start, end, geometry[i], geometry[i + 1]) != null:
@@ -182,7 +193,7 @@ func _segment_intersects_collision_box(start: Vector2, end: Vector2, stage_objec
 
 
 func _update_collision_highlights() -> void:
-	var highlighted := {}
+	var highlighted := { }
 	for stage_object in _get_stage_objects():
 		if not _segment_intersects_collision_box(_slice_start, _slice_end, stage_object):
 			continue
