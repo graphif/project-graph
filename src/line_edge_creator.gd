@@ -2,6 +2,8 @@ class_name LineEdgeCreator
 extends Node2D
 
 const LINE_EDGE = preload("res://src/stage_object/association/line_edge/line_edge.tscn")
+# 鼠标进入该范围才算碰到节点边缘，避免在节点内部按 quarter 提前切换 UV。
+const EDGE_HIT_TOLERANCE := 6.0
 
 # 新创建的 LineEdge 会被添加到该节点下。
 @export var target_root: Node
@@ -59,7 +61,8 @@ func _input(event: InputEvent) -> void:
 
 func _start_drag(source: Entity, mouse_position: Vector2) -> void:
 	_source = source
-	_source_uv = _get_uv_at(source, mouse_position)
+	_source_uv = Vector2(0.5, 0.5)
+	_update_uv_if_on_edge(source, mouse_position)
 	_target = null
 	_update_preview(mouse_position)
 	_preview_line.visible = true
@@ -103,13 +106,15 @@ func _update_preview(mouse_position: Vector2) -> void:
 func _update_drag_state(mouse_position: Vector2) -> void:
 	var entity := _get_entity_at(mouse_position)
 	if entity == _source:
-		# 鼠标重新经过 source 时允许切换 source 的连接边。
-		_source_uv = _get_uv_at(_source, mouse_position)
+		# 只有鼠标碰到 source 的边缘时才允许切换连接边。
+		_update_uv_if_on_edge(_source, mouse_position)
 		_target = null
 	elif entity != null:
-		# 任意非 source 实体都可成为 target，并持续更新其连接边。
-		_target = entity
-		_target_uv = _get_uv_at(entity, mouse_position)
+		# 任意非 source 实体都可成为 target；进入内部时先从中心开始，碰边后再切换 UV。
+		if _target != entity:
+			_target = entity
+			_target_uv = Vector2(0.5, 0.5)
+		_update_uv_if_on_edge(entity, mouse_position)
 	else:
 		_target = null
 
@@ -144,13 +149,39 @@ func _point_in_collision_box(point: Vector2, entity: Entity) -> bool:
 	return box.size() >= 3 and Geometry2D.is_point_in_polygon(point, box)
 
 
-func _get_uv_at(entity: Entity, point: Vector2) -> Vector2:
-	# 在归一化矩形中比较相对中心的 x/y 距离，相当于用两条对角线
-	# 将矩形分成上、下、左、右四个三角形。
-	var normalized := (point - entity.aabb.position) / entity.aabb.size - Vector2(0.5, 0.5)
-	if absf(normalized.x) > absf(normalized.y):
-		return Vector2(0.0, 0.5) if normalized.x < 0.0 else Vector2(1.0, 0.5)
-	return Vector2(0.5, 0.0) if normalized.y < 0.0 else Vector2(0.5, 1.0)
+func _update_uv_if_on_edge(entity: Entity, point: Vector2) -> void:
+	var edge_uv: Variant = _get_edge_uv_at(entity, point)
+	if edge_uv != null:
+		if entity == _source:
+			_source_uv = edge_uv
+		elif entity == _target:
+			_target_uv = edge_uv
+
+
+func _get_edge_uv_at(entity: Entity, point: Vector2) -> Variant:
+	# 只在鼠标靠近四条边时返回 UV；矩形内部的点不会触发边切换。
+	var rect: Rect2 = entity.aabb
+	var distances := PackedFloat32Array([
+		absf(point.x - rect.position.x),
+		absf(rect.end.x - point.x),
+		absf(point.y - rect.position.y),
+		absf(rect.end.y - point.y),
+	])
+	var closest_side := 0
+	for i in range(1, distances.size()):
+		if distances[i] < distances[closest_side]:
+			closest_side = i
+	if distances[closest_side] > EDGE_HIT_TOLERANCE:
+		return null
+	match closest_side:
+		0:
+			return Vector2(0.0, 0.5)
+		1:
+			return Vector2(1.0, 0.5)
+		2:
+			return Vector2(0.5, 0.0)
+		_:
+			return Vector2(0.5, 1.0)
 
 
 func _get_position_by_uv(entity: Entity, uv: Vector2) -> Vector2:
