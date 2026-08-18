@@ -3,6 +3,7 @@
 [ext_resource type="Shader" uid="uid://bl3vh8545fk7b" path="res://src/main/grid.gdshader" id="1_umykj"]
 
 [resource]
+resource_local_to_scene = true
 shader = ExtResource("1_umykj")
 shader_parameter/camera_offset = Vector2(0, 0)
 shader_parameter/camera_zoom = Vector2(1, 1)
