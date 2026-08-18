@@ -28,12 +28,27 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxEmpty_frqgp")
-current_tab = 0
+current_tab = 1
+
+[node name="SubViewportContainer2" type="SubViewportContainer" parent="TabContainer" unique_id=819860447]
+visible = false
+layout_mode = 2
+stretch = true
+metadata/_tab_index = 0
+
+[node name="SubViewport" type="SubViewport" parent="TabContainer/SubViewportContainer2" unique_id=1902088899]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(2, 2)
+size_2d_override_stretch = true
+render_target_update_mode = 0
+
+[node name="Stage" parent="TabContainer/SubViewportContainer2/SubViewport" unique_id=830370194 instance=ExtResource("2_frqgp")]
 
 [node name="SubViewportContainer" type="SubViewportContainer" parent="TabContainer" unique_id=1942299076]
 layout_mode = 2
 stretch = true
-metadata/_tab_index = 0
+metadata/_tab_index = 1
 
 [node name="SubViewport" type="SubViewport" parent="TabContainer/SubViewportContainer" unique_id=1267056667]
 transparent_bg = true
@@ -42,9 +57,8 @@ size = Vector2i(1152, 618)
 size_2d_override_stretch = true
 render_target_update_mode = 4
 
-[node name="Stage" parent="TabContainer/SubViewportContainer/SubViewport" unique_id=830370194 node_paths=PackedStringArray("popup_menu") instance=ExtResource("2_frqgp")]
+[node name="Stage" parent="TabContainer/SubViewportContainer/SubViewport" unique_id=293082605 instance=ExtResource("2_frqgp")]
 unique_name_in_owner = true
-popup_menu = NodePath("../../../../UIOverlay/PopupMenu")
 
 [node name="UIOverlay" type="Control" parent="." unique_id=360473786]
 unique_name_in_owner = true
