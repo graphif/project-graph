@@ -13,13 +13,6 @@ var current_file_path := ""
 var created_at := ""
 
 
-func _process(_delta: float) -> void:
-	if Input.is_action_just_pressed("history_undo", true):
-		history.undo()
-	if Input.is_action_just_pressed("history_redo", true):
-		history.redo()
-
-
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.double_click:
@@ -69,6 +62,6 @@ func load_from_file(path: String) -> void:
 func _decode_vector2(value):
 	if not value is Array or value.size() != 2:
 		return null
-	if not (value[0] is float or value[0] is int) or not (value[1] is float or value[1] is int):
+	if not(value[0] is float or value[0] is int) or not(value[1] is float or value[1] is int):
 		return null
 	return Vector2(float(value[0]), float(value[1]))

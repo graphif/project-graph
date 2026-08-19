@@ -11,8 +11,8 @@ const MAX_HISTORY_SIZE := 100
 
 var _undo_stack: Array[Dictionary] = []
 var _redo_stack: Array[Dictionary] = []
-var _current_snapshot: Dictionary = {}
-var _transaction_snapshot: Dictionary = {}
+var _current_snapshot: Dictionary = { }
+var _transaction_snapshot: Dictionary = { }
 var _pending_commit := false
 var _busy := false
 
@@ -38,10 +38,10 @@ func commit() -> void:
 		return
 	var before := _transaction_snapshot if not _transaction_snapshot.is_empty() else _current_snapshot
 	var after := _capture_snapshot()
-	_transaction_snapshot = {}
+	_transaction_snapshot = { }
 	if _snapshots_equal(before, after):
 		return
-	_undo_stack.append({"before": before, "after": after})
+	_undo_stack.append({ "before": before, "after": after })
 	if _undo_stack.size() > MAX_HISTORY_SIZE:
 		_undo_stack.pop_front()
 	_redo_stack.clear()
@@ -73,7 +73,7 @@ func redo() -> void:
 func clear() -> void:
 	_undo_stack.clear()
 	_redo_stack.clear()
-	_transaction_snapshot = {}
+	_transaction_snapshot = { }
 	_current_snapshot = _capture_snapshot()
 
 
@@ -109,3 +109,10 @@ func _wait_for_physics_settle() -> void:
 
 func _snapshots_equal(a: Dictionary, b: Dictionary) -> bool:
 	return JSON.stringify(a) == JSON.stringify(b)
+
+
+func _process(_delta: float) -> void:
+	if Input.is_action_just_pressed("history_undo", true):
+		undo()
+	if Input.is_action_just_pressed("history_redo", true):
+		redo()
