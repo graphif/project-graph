@@ -91,7 +91,24 @@ func load_files(paths: PackedStringArray) -> void:
 		stage.load_from_file(path)
 
 
-func load_file(path: String) -> void:
-	if not path.ends_with(".prg"):
-		path += ".prg"
-	get_current_stage().save_to_file(path)
+func save_current_file() -> void:
+	var stage := get_current_stage()
+	if stage == null:
+		return
+	var path := stage.current_file_path
+	if path.is_empty() or not FileAccess.file_exists(path):
+		save_file_dialog.show()
+	else:
+		stage.save_to_file(path)
+
+
+func save_current_file_as(path: String) -> void:
+	var stage := get_current_stage()
+	if stage == null:
+		return
+	var final_path := path
+	if not final_path.ends_with(".prg"):
+		final_path += ".prg"
+	stage.save_to_file(final_path)
+	get_current_tab_control().set_meta("tab_title", final_path.get_file())
+	_update_tab_titles()

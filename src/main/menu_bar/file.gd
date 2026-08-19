@@ -12,4 +12,6 @@ func _on_id_pressed(id: int) -> void:
 		1:
 			open_file_dialog.show()
 		2:
+			tab_container.save_current_file()
+		3:
 			save_file_dialog.show()

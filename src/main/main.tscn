@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://naa1s03q74l6" path="res://src/main/menu_bar/file.gd" id="2_jqarl"]
 [ext_resource type="Script" uid="uid://cvjf8fdbfm5od" path="res://src/main/tab_container.gd" id="3_30cu5"]
 [ext_resource type="Script" uid="uid://dr6t06rlyub81" path="res://src/main/debug_info/active_actions.gd" id="3_ab7mr"]
+[ext_resource type="Script" uid="uid://mj1kiyoilr48" path="res://src/main/menu_bar/debug.gd" id="3_frqgp"]
 [ext_resource type="Script" uid="uid://da4b7r3gn615d" path="res://src/main/debug_info/fps.gd" id="4_jkpqq"]
 [ext_resource type="Script" uid="uid://dyoffk035pa80" path="res://src/main/debug_info/os.gd" id="5_30cu5"]
 
@@ -31,14 +32,22 @@ layout_mode = 2
 
 [node name="File" type="PopupMenu" parent="VBoxContainer/MenuBar" unique_id=1945311634]
 title = "文件"
-item_count = 3
+item_count = 4
 item_0/text = "新建草稿"
 item_0/id = 0
 item_1/text = "打开文件"
 item_1/id = 1
 item_2/text = "保存文件"
 item_2/id = 2
+item_3/text = "另存为"
+item_3/id = 3
 script = ExtResource("2_jqarl")
+
+[node name="Debug" type="PopupMenu" parent="VBoxContainer/MenuBar" unique_id=1519775404]
+item_count = 1
+item_0/text = "创建100个节点"
+item_0/id = 0
+script = ExtResource("3_frqgp")
 
 [node name="TabContainer" type="TabContainer" parent="VBoxContainer" unique_id=1391016486]
 unique_name_in_owner = true
@@ -122,7 +131,7 @@ filters = PackedStringArray("*.prg;Project Graph 文件")
 use_native_dialog = true
 
 [connection signal="id_pressed" from="VBoxContainer/MenuBar/File" to="VBoxContainer/MenuBar/File" method="_on_id_pressed"]
+[connection signal="id_pressed" from="VBoxContainer/MenuBar/Debug" to="VBoxContainer/MenuBar/Debug" method="_on_id_pressed"]
 [connection signal="tab_changed" from="VBoxContainer/TabContainer" to="." method="_on_tab_changed"]
-[connection signal="file_selected" from="UIOverlay/OpenFileDialog" to="." method="load_file"]
-[connection signal="files_selected" from="UIOverlay/OpenFileDialog" to="." method="load_files"]
-[connection signal="file_selected" from="UIOverlay/SaveFileDialog" to="." method="_on_save_file_dialog_file_selected"]
+[connection signal="files_selected" from="UIOverlay/OpenFileDialog" to="VBoxContainer/TabContainer" method="load_files"]
+[connection signal="file_selected" from="UIOverlay/SaveFileDialog" to="VBoxContainer/TabContainer" method="save_current_file_as"]
