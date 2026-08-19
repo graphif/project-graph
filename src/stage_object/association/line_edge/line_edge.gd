@@ -123,7 +123,12 @@ func _get_normal_by_uv(uv: Vector2) -> Vector2:
 func _get_rectangle_normal(entity: Entity, point: Vector2, fallback: Vector2) -> Vector2:
 	var local_point := point - entity.position
 	var distances := PackedFloat32Array(
-		[local_point.x, entity.size.x - local_point.x, local_point.y, entity.size.y - local_point.y]
+		[
+			local_point.x,
+			entity.aabb.size.x - local_point.x,
+			local_point.y,
+			entity.aabb.size.y - local_point.y,
+		]
 	)
 	var closest_side := 0
 	for i in range(1, distances.size()):

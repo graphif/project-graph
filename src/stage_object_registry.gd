@@ -47,6 +47,8 @@ static func restore(target_root: Node, snapshot: Dictionary) -> void:
 
 static func _collect_objects(node: Node, result: Array[Dictionary]) -> void:
 	for child in node.get_children():
+		if not is_instance_valid(child):
+			continue
 		if child is StageObject:
 			result.append(_serialize_object(child))
 		else:
@@ -126,8 +128,11 @@ static func _is_serializable_export(property: Dictionary, usage: int) -> bool:
 
 
 static func _encode_value(value):
+	# Check validity before type checks; "is" can error on freed Objects.
+	if not is_instance_valid(value):
+		return null
 	if value is StageObject:
-		return {"$ref": value.id} if is_instance_valid(value) else null
+		return {"$ref": value.id}
 	if value is Vector2:
 		return _encode_vector2(value)
 	return JSON.from_native(value)

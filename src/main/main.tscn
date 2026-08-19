@@ -125,6 +125,7 @@ access = 2
 filters = PackedStringArray("*.prg;Project Graph 文件")
 use_native_dialog = true
 
+[connection signal="tab_changed" from="VBoxContainer/TabContainer" to="." method="_on_tab_changed"]
 [connection signal="pressed" from="UIOverlay/VBoxContainer/SaveButton" to="UIOverlay/SaveFileDialog" method="show"]
 [connection signal="pressed" from="UIOverlay/VBoxContainer/OpenButton" to="UIOverlay/OpenFileDialog" method="show"]
 [connection signal="pressed" from="UIOverlay/VBoxContainer/NewTabButton" to="." method="_create_stage_tab"]

@@ -14,7 +14,6 @@ func _ready() -> void:
 	Engine.physics_ticks_per_second = screen_fps
 	tab_bar.tab_close_display_policy = TabBar.CLOSE_BUTTON_SHOW_ALWAYS
 	tab_bar.tab_close_pressed.connect(_on_tab_close_pressed)
-	tab_container.tab_changed.connect(_on_tab_changed)
 	_ensure_default_tab()
 	_update_tab_titles()
 
