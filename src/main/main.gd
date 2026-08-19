@@ -1,8 +1,9 @@
 extends Control
 
 const STAGE_SCENE := preload("res://src/stage/stage.tscn")
+const TEXT_NODE = preload("uid://btnefrbc5lowu")
 
-@onready var tab_container: TabContainer = $TabContainer
+@onready var tab_container: TabContainer = %TabContainer
 @onready var tab_bar: TabBar = tab_container.get_tab_bar()
 
 var tab_serial := 1
@@ -98,3 +99,12 @@ func _on_save_file_dialog_file_selected(path: String) -> void:
 	if not path.ends_with(".prg"):
 		path += ".prg"
 	get_current_stage().save_to_file(path)
+
+
+func _on_create_100_text_nodes_button_pressed() -> void:
+	var stage := get_current_stage()
+	for i in range(100):
+		var node: TextNode = TEXT_NODE.instantiate()
+		node.text = str(i)
+		node.position = Vector2(randi_range(1, 1000), randi_range(1, 1000))
+		stage.add_child(node)

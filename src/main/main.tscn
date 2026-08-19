@@ -4,11 +4,10 @@
 [ext_resource type="Script" uid="uid://dr6t06rlyub81" path="res://src/main/debug_info/active_actions.gd" id="3_ab7mr"]
 [ext_resource type="Script" uid="uid://da4b7r3gn615d" path="res://src/main/debug_info/fps.gd" id="4_jkpqq"]
 [ext_resource type="Script" uid="uid://dyoffk035pa80" path="res://src/main/debug_info/os.gd" id="5_30cu5"]
-[ext_resource type="Script" uid="uid://d3v2fs4ef4qx" path="res://src/main/create_100_text_nodes_button.gd" id="12_ibsor"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_frqgp"]
 
-[node name="Root" type="Control" unique_id=895869584]
+[node name="Root" type="Control" unique_id=1720231027]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -17,26 +16,18 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_frqgp")
 
-[node name="TabContainer" type="TabContainer" parent="." unique_id=1391016486]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1273370530]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxEmpty_frqgp")
 
-[node name="UIOverlay" type="Control" parent="." unique_id=360473786]
-unique_name_in_owner = true
-layout_mode = 1
-anchor_top = 0.1
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
+[node name="MenuBar" type="MenuBar" parent="VBoxContainer" unique_id=1175185820]
+layout_mode = 2
 
-[node name="PopupMenu" type="PopupMenu" parent="UIOverlay" unique_id=1264082139]
+[node name="PopupMenu" type="PopupMenu" parent="VBoxContainer/MenuBar" unique_id=1264082139]
 unique_name_in_owner = true
 oversampling_override = 1.0
 item_count = 2
@@ -45,11 +36,28 @@ item_0/id = 0
 item_1/text = "2"
 item_1/id = 1
 
+[node name="TabContainer" type="TabContainer" parent="VBoxContainer" unique_id=1391016486]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_frqgp")
+
+[node name="UIOverlay" type="Control" parent="." unique_id=360473786]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
 [node name="DebugInfo" type="VBoxContainer" parent="UIOverlay" unique_id=106941584]
 unique_name_in_owner = true
 layout_mode = 1
 offset_right = 40.0
 offset_bottom = 40.0
+mouse_filter = 2
 
 [node name="OS" type="Label" parent="UIOverlay/DebugInfo" unique_id=2117542532]
 unique_name_in_owner = true
@@ -99,10 +107,8 @@ layout_mode = 2
 text = "新建标签页"
 
 [node name="Create100TextNodesButton" type="Button" parent="UIOverlay/VBoxContainer" unique_id=1892297281]
-unique_name_in_owner = true
 layout_mode = 2
 text = "创建100个节点"
-script = ExtResource("12_ibsor")
 
 [node name="OpenFileDialog" type="FileDialog" parent="UIOverlay" unique_id=116991559]
 unique_name_in_owner = true
@@ -122,6 +128,6 @@ use_native_dialog = true
 [connection signal="pressed" from="UIOverlay/VBoxContainer/SaveButton" to="UIOverlay/SaveFileDialog" method="show"]
 [connection signal="pressed" from="UIOverlay/VBoxContainer/OpenButton" to="UIOverlay/OpenFileDialog" method="show"]
 [connection signal="pressed" from="UIOverlay/VBoxContainer/NewTabButton" to="." method="_create_stage_tab"]
-[connection signal="pressed" from="UIOverlay/VBoxContainer/Create100TextNodesButton" to="UIOverlay/VBoxContainer/Create100TextNodesButton" method="_on_pressed"]
+[connection signal="pressed" from="UIOverlay/VBoxContainer/Create100TextNodesButton" to="." method="_on_create_100_text_nodes_button_pressed"]
 [connection signal="files_selected" from="UIOverlay/OpenFileDialog" to="." method="_on_open_file_dialog_files_selected"]
 [connection signal="file_selected" from="UIOverlay/SaveFileDialog" to="." method="_on_save_file_dialog_file_selected"]
