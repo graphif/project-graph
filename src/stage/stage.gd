@@ -1,3 +1,4 @@
+class_name Stage
 extends Node2D
 
 signal file_error(message: String)
@@ -17,10 +18,6 @@ func _process(_delta: float) -> void:
 		history.undo()
 	if Input.is_action_just_pressed("history_redo", true):
 		history.redo()
-	if Input.is_action_just_pressed("project_save", true):
-		get_tree().call_group("project_file_save", "open_save_dialog")
-	if Input.is_action_just_pressed("project_open", true):
-		get_tree().call_group("project_file_open", "open_file_dialog")
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -56,7 +53,7 @@ func load_from_file(path: String) -> void:
 		file_error.emit(result.error)
 		return
 	await StageObjectRegistry.restore(self, result.graph)
-	var camera_state: Dictionary = result.graph.get("camera", {})
+	var camera_state: Dictionary = result.graph.get("camera", { })
 	var position: Variant = _decode_vector2(camera_state.get("position"))
 	if position != null:
 		camera.target_position = position
