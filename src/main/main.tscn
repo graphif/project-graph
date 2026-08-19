@@ -8,6 +8,8 @@
 [ext_resource type="Script" uid="uid://cwaedcftwo5gx" path="res://src/main/grid_toggle.gd" id="11_erw1m"]
 [ext_resource type="Script" uid="uid://d3v2fs4ef4qx" path="res://src/main/create_100_text_nodes_button.gd" id="12_ibsor"]
 [ext_resource type="Script" uid="uid://bpwf4fasd1n3n" path="res://src/main/physics_toggle.gd" id="12_w0wra"]
+[ext_resource type="Script" uid="uid://dvfnlseej8vu0" path="res://src/main/save_button.gd" id="13_save"]
+[ext_resource type="Script" uid="uid://cr4rxq30terme" path="res://src/main/open_button.gd" id="14_open"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_frqgp"]
 
@@ -120,6 +122,16 @@ offset_left = -52.0
 offset_bottom = 64.0
 grow_horizontal = 0
 
+[node name="SaveButton" type="Button" parent="UIOverlay/VBoxContainer" unique_id=1559981338]
+layout_mode = 2
+text = "保存"
+script = ExtResource("13_save")
+
+[node name="OpenButton" type="Button" parent="UIOverlay/VBoxContainer" unique_id=2072902568]
+layout_mode = 2
+text = "打开"
+script = ExtResource("14_open")
+
 [node name="Create100TextNodesButton" type="Button" parent="UIOverlay/VBoxContainer" unique_id=1892297281]
 unique_name_in_owner = true
 layout_mode = 2
@@ -140,6 +152,8 @@ button_pressed = true
 text = "物理引擎"
 script = ExtResource("12_w0wra")
 
+[connection signal="pressed" from="UIOverlay/VBoxContainer/SaveButton" to="UIOverlay/VBoxContainer/SaveButton" method="_on_pressed"]
+[connection signal="pressed" from="UIOverlay/VBoxContainer/OpenButton" to="UIOverlay/VBoxContainer/OpenButton" method="_on_pressed"]
 [connection signal="pressed" from="UIOverlay/VBoxContainer/Create100TextNodesButton" to="UIOverlay/VBoxContainer/Create100TextNodesButton" method="_on_pressed"]
 [connection signal="toggled" from="UIOverlay/VBoxContainer/GridToggle" to="UIOverlay/VBoxContainer/GridToggle" method="_on_toggled"]
 [connection signal="toggled" from="UIOverlay/VBoxContainer/PhysicsToggle" to="UIOverlay/VBoxContainer/PhysicsToggle" method="_on_toggled"]

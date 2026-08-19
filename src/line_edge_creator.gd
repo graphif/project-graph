@@ -1,7 +1,7 @@
 class_name LineEdgeCreator
 extends Node2D
 
-const LINE_EDGE = preload("res://src/stage_object/association/line_edge/line_edge.tscn")
+const LINE_EDGE = preload("uid://dodce5rghnax4")
 # 鼠标进入该范围才算碰到节点边缘，避免在节点内部按 quarter 提前切换 UV。
 const EDGE_HIT_TOLERANCE := 6.0
 
