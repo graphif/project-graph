@@ -21,10 +21,6 @@ window/size/transparent=true
 window/stretch/aspect="expand"
 window/per_pixel_transparency/allowed=true
 
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/GDQuest_GDScript_formatter/plugin.cfg")
-
 [gui]
 
 theme/custom_font="uid://2kknpv7sy1ma"
