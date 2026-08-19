@@ -5,6 +5,11 @@ const SCENES := {
 	"line_edge": preload("uid://dodce5rghnax4"),
 }
 
+## Script -> type name。惰性构建一次，避免每个对象都实例化场景来探测类型。
+static var _type_by_script: Dictionary = { }
+## Script -> 可序列化属性名数组。避免每个对象都做一次 get_property_list() 反射筛选。
+static var _property_names_by_script: Dictionary = { }
+
 
 static func capture(target_root: Node) -> Dictionary:
 	var objects: Array[Dictionary] = []
@@ -57,11 +62,8 @@ static func _collect_objects(node: Node, result: Array[Dictionary]) -> void:
 
 static func _serialize_object(object: StageObject) -> Dictionary:
 	var properties := {}
-	for property in object.get_property_list():
-		var usage: int = property.get("usage", 0)
-		if not _is_serializable_export(property, usage):
-			continue
-		properties[property.name] = _encode_value(object.get(property.name))
+	for property_name in _serializable_property_names(object):
+		properties[property_name] = _encode_value(object.get(property_name))
 	return {
 		"type": _type_for(object),
 		"transform": {
@@ -74,14 +76,13 @@ static func _serialize_object(object: StageObject) -> Dictionary:
 
 
 static func _type_for(object: StageObject) -> String:
-	for type_name in SCENES:
-		var scene: PackedScene = SCENES[type_name]
-		var prototype := scene.instantiate()
-		var matches: bool = prototype.get_script() == object.get_script()
-		prototype.free()
-		if matches:
-			return type_name
-	return ""
+	if _type_by_script.is_empty():
+		for type_name in SCENES:
+			var scene: PackedScene = SCENES[type_name]
+			var prototype := scene.instantiate()
+			_type_by_script[prototype.get_script()] = type_name
+			prototype.free()
+	return str(_type_by_script.get(object.get_script(), ""))
 
 
 static func _restore_transform(object: StageObject, transform: Dictionary) -> void:
@@ -111,11 +112,16 @@ static func _restore_properties(object: StageObject, properties: Dictionary, pen
 		object.set(property_name, _decode_value(value, object.get(property_name)))
 
 
-static func _serializable_property_names(object: StageObject) -> Dictionary:
-	var names := {}
+static func _serializable_property_names(object: StageObject) -> PackedStringArray:
+	var script: Variant = object.get_script()
+	var cached: Variant = _property_names_by_script.get(script)
+	if cached != null:
+		return cached
+	var names := PackedStringArray()
 	for property in object.get_property_list():
 		if _is_serializable_export(property, property.get("usage", 0)):
-			names[property.name] = true
+			names.append(property.name)
+	_property_names_by_script[script] = names
 	return names
 
 
@@ -128,11 +134,13 @@ static func _is_serializable_export(property: Dictionary, usage: int) -> bool:
 
 
 static func _encode_value(value):
-	# Check validity before type checks; "is" can error on freed Objects.
-	if not is_instance_valid(value):
-		return null
-	if value is StageObject:
-		return {"$ref": value.id}
+	# 只对 Object 做有效性检查: is_instance_valid() 对任何非 Object 值都返回 false,
+	# 无条件前置检查会把 String / int / Vector2 等普通属性全部写成 null。
+	if value is Object:
+		if not is_instance_valid(value):
+			return null
+		if value is StageObject:
+			return {"$ref": value.id}
 	if value is Vector2:
 		return _encode_vector2(value)
 	return JSON.from_native(value)
