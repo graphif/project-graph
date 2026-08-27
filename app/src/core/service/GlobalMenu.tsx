@@ -3,6 +3,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Extension } from "@/core/extension/Extension";
 import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
 import { Project, ProjectState } from "@/core/Project";
+import { loadWithProjectOwnership, ProjectOwnershipError, type ProjectOwnershipLease } from "@/core/ProjectOwnership";
 import { isResourceTab } from "@/core/Tab";
 import { TabFactory } from "@/core/TabFactory";
 import { activeResourceTabAtom, activeTabAtom, store, tabsAtom } from "@/state";
@@ -16,6 +17,7 @@ import { Decoder } from "@msgpack/msgpack";
 import { open } from "@tauri-apps/plugin-dialog";
 import { exists, readFile, writeFile } from "@tauri-apps/plugin-fs";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
+import i18next from "i18next";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import { FileSystemProviderDraft } from "../fileSystemProvider/FileSystemProviderDraft";
@@ -33,6 +35,27 @@ import CollaborationWindow from "@/sub/CollaborationWindow";
 
 export function GlobalMenu() {
   return <GlobalMenuContent />;
+}
+
+type OpeningProject = {
+  promise: Promise<Project | undefined>;
+  resolve: (project: Project | undefined) => void;
+};
+
+const openingProjects = new Map<string, OpeningProject>();
+
+function getOpeningProject(ownershipId: string) {
+  const existing = openingProjects.get(ownershipId);
+  if (existing) return existing;
+  let resolve!: (project: Project | undefined) => void;
+  const opening = {
+    promise: new Promise<Project | undefined>((complete) => {
+      resolve = complete;
+    }),
+    resolve: (project: Project | undefined) => resolve(project),
+  };
+  openingProjects.set(ownershipId, opening);
+  return opening;
 }
 
 export function openCurrentProjectFolder(project: Project) {
@@ -148,6 +171,19 @@ export async function closeEmptyDrafts(except?: Project) {
   await Promise.all(empties.map((tab) => TabWorkspace.close(tab.id)));
 }
 
+function focusExistingTab(tab: Project | Extension) {
+  store.set(activeTabAtom, tab);
+  if (isResourceTab(tab)) store.set(activeResourceTabAtom, tab);
+  if (tab instanceof Project) tab.loop();
+  if (Settings.pauseRenderWhenTabUnfocused) {
+    store
+      .get(tabsAtom)
+      .filter((candidate) => candidate instanceof Project && candidate !== tab)
+      .forEach((candidate) => candidate.pause());
+  }
+  toast.success(i18next.t("projectOwnership.alreadyOpen"));
+}
+
 export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise<Project | undefined> {
   if (!uri) {
     const path = await open({
@@ -159,45 +195,90 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
     uri = URI.file(path);
   }
 
-  if (
-    store
-      .get(tabsAtom)
-      .some((p) => (p instanceof Project || p instanceof Extension) && p.uri.toString() === uri.toString())
-  ) {
-    store.set(
-      activeTabAtom,
-      store
-        .get(tabsAtom)
-        .find((p) => (p instanceof Project || p instanceof Extension) && p.uri.toString() === uri.toString())!,
+  const textuallyMatchingTab = store
+    .get(tabsAtom)
+    .find(
+      (tab): tab is Project | Extension =>
+        (tab instanceof Project || tab instanceof Extension) && tab.uri.toString() === uri.toString(),
     );
-    const tab = store.get(activeTabAtom);
-    if (tab && isResourceTab(tab)) store.set(activeResourceTabAtom, tab);
-    const activeProject = tab instanceof Project ? tab : undefined;
-    if (activeProject) activeProject.loop();
-    // const activeExtension = tab instanceof Extension ? tab : undefined;
-    // 把其他项目 pause（受设置控制）
-    if (Settings.pauseRenderWhenTabUnfocused) {
-      store
-        .get(tabsAtom)
-        .filter((p) => p instanceof Project && p.uri.toString() !== uri.toString())
-        .forEach((p) => (p as Project).pause());
-    }
-    toast.success("切换到已打开的标签页");
-    return tab as any;
+  if (textuallyMatchingTab) {
+    focusExistingTab(textuallyMatchingTab);
+    return textuallyMatchingTab as any;
   }
 
-  const dummyProject = new Project(uri);
-  loadAllServicesBeforeInit(dummyProject);
-  const tab = await TabFactory.create(uri, dummyProject.fs);
-  const t = performance.now();
-  if (tab instanceof Project) {
-    loadAllServicesBeforeInit(tab);
-  } else {
-    // Extension 只加载必要的基础服务
-    tab.registerFileSystemProvider("file", FileSystemProviderFile);
-    tab.registerFileSystemProvider("draft", FileSystemProviderDraft);
+  let initializationStartedAt = performance.now();
+  let loadServiceTime = 0;
+  let openingOwnershipId: string | undefined;
+  let openingProject: OpeningProject | undefined;
+  const finishOpeningProject = (project: Project | undefined) => {
+    openingProject?.resolve(project);
+    if (openingOwnershipId && openingProjects.get(openingOwnershipId) === openingProject) {
+      openingProjects.delete(openingOwnershipId);
+    }
+    openingProject = undefined;
+  };
+  const createTab = async (ownership?: ProjectOwnershipLease) => {
+    if (ownership) {
+      openingOwnershipId = ownership.ownershipId;
+      openingProject = getOpeningProject(ownership.ownershipId);
+    }
+    const dummyProject = new Project(uri);
+    try {
+      loadAllServicesBeforeInit(dummyProject);
+      const createdTab = await TabFactory.create(uri, dummyProject.fs);
+      initializationStartedAt = performance.now();
+      if (createdTab instanceof Project) {
+        if (ownership) createdTab.attachProjectOwnership(ownership);
+        loadAllServicesBeforeInit(createdTab);
+      } else {
+        await ownership?.dispose();
+        finishOpeningProject(undefined);
+        createdTab.registerFileSystemProvider("file", FileSystemProviderFile);
+        createdTab.registerFileSystemProvider("draft", FileSystemProviderDraft);
+      }
+      loadServiceTime = performance.now() - initializationStartedAt;
+      return createdTab;
+    } catch (error) {
+      finishOpeningProject(undefined);
+      throw error;
+    }
+  };
+
+  let tab: Project | Extension;
+  try {
+    const result =
+      uri.scheme === "file" && uri.fsPath.toLowerCase().endsWith(".prg")
+        ? await loadWithProjectOwnership(uri.fsPath, createTab)
+        : { status: "opened" as const, value: await createTab() };
+    if (result.status === "already_open") {
+      const opening = getOpeningProject(result.ownershipId);
+      const registered = store
+        .get(tabsAtom)
+        .find(
+          (candidate): candidate is Project =>
+            candidate instanceof Project &&
+            !candidate.closing &&
+            candidate.canonicalProjectPath === result.canonicalPath,
+        );
+      if (registered) {
+        opening.resolve(registered);
+        openingProjects.delete(result.ownershipId);
+      }
+      const existing = registered ?? (await opening.promise);
+      if (!existing) throw new ProjectOwnershipError("PROJECT_BUSY");
+      focusExistingTab(existing);
+      return existing;
+    }
+    tab = result.value;
+  } catch (e) {
+    if (e instanceof ProjectOwnershipError) {
+      await Dialog.buttons(i18next.t("projectOwnership.openFailedTitle"), e.message, [
+        { id: "ok", label: i18next.t("projectOwnership.ok") },
+      ]);
+      return undefined;
+    }
+    throw e;
   }
-  const loadServiceTime = performance.now() - t;
 
   try {
     await toast
@@ -206,10 +287,10 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
           await tab.init();
           if (tab instanceof Project) {
             if (tab.projectState !== ProjectState.Saved) {
-              // 用户取消了升级对话框，不打开文件
               throw new Error("USER_CANCELLED");
             }
             loadAllServicesAfterInit(tab);
+            tab.activateOpenRuntimeHost();
             if (tab.wasUpgraded) {
               tab.projectState = ProjectState.Unsaved;
             }
@@ -218,8 +299,9 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
         {
           loading: "正在打开文件...",
           success: async () => {
-            const readFileTime = performance.now() - t;
+            const readFileTime = performance.now() - initializationStartedAt;
             store.set(tabsAtom, [...store.get(tabsAtom), tab]);
+            finishOpeningProject(tab instanceof Project ? tab : undefined);
             store.set(activeTabAtom, tab);
             const project = tab instanceof Project ? tab : undefined;
             await RecentFileManager.addRecentFileByUri(uri);
@@ -321,6 +403,8 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
       )
       .unwrap();
   } catch (e) {
+    finishOpeningProject(undefined);
+    await tab.dispose();
     if (e instanceof Error && e.message === "USER_CANCELLED") {
       return undefined; // 用户取消，静默处理
     }

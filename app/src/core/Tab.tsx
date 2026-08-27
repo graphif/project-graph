@@ -73,7 +73,8 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
   }
 
   removeAllListeners(event?: string | symbol): this {
-    this.eventEmitter.removeAllListeners(event);
+    if (event === undefined) this.eventEmitter.removeAllListeners();
+    else this.eventEmitter.removeAllListeners(event);
     return this;
   }
 
@@ -184,16 +185,18 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
 
   async dispose() {
     this.pause();
-    const promises: Promise<void>[] = [];
-    for (const service of this.services.values()) {
-      const result = service.dispose?.();
-      if (result instanceof Promise) {
-        promises.push(result);
-      }
-    }
-    await Promise.allSettled(promises);
+    const cleanupTasks = Array.from(this.services.values(), (service) =>
+      Promise.resolve().then(() => service.dispose?.()),
+    );
+    const cleanupResults = await Promise.allSettled(cleanupTasks);
     this.services.clear();
+    this.fileSystemProviders.clear();
     this.tickableServices.length = 0;
+    this.removeAllListeners();
+    const cleanupErrors = cleanupResults
+      .filter((result): result is PromiseRejectedResult => result.status === "rejected")
+      .map(({ reason }) => reason);
+    if (cleanupErrors.length > 0) throw new AggregateError(cleanupErrors, "Tab cleanup failed");
   }
 
   get isRunning(): boolean {

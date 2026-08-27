@@ -266,6 +266,24 @@ export async function findDownloadableOpenverseImage<T = Blob>(
   query: string,
   options: FindOpenverseImageOptions<T> = {},
 ): Promise<{ candidate: OpenverseImageCandidate; image: T }> {
+  const { getCliDesktopAcceptanceImage } = await import("./CliDesktopAcceptanceAdapter");
+  const acceptanceImage = getCliDesktopAcceptanceImage();
+  if (acceptanceImage) {
+    const candidate: OpenverseImageCandidate = {
+      id: "desktop-acceptance",
+      title: "Desktop acceptance image",
+      creator: "Project Graph",
+      url: "https://example.invalid/desktop-acceptance.png",
+      foreign_landing_url: "https://example.invalid/desktop-acceptance",
+      license: "cc0",
+      license_url: "https://creativecommons.org/publicdomain/zero/1.0/",
+      width: 32,
+      height: 16,
+      mature: false,
+    };
+    const image = options.transform ? await options.transform(acceptanceImage) : (acceptanceImage as T);
+    return { candidate, image };
+  }
   const fetchImpl = options.fetchImpl ?? tauriFetch;
   const candidates = await searchOpenverseImages(query, fetchImpl, options.abortSignal);
   const orderedCandidates = [...candidates].sort(

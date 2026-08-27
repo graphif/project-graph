@@ -1,75 +1,38 @@
+import type { Project } from "@/core/Project";
 import type { AIObjectReferenceSnapshot } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
-import { LazyStore } from "@tauri-apps/plugin-store";
+import { invoke } from "@tauri-apps/api/core";
+import { URI } from "vscode-uri";
 
-type StoredAIProjectReferences = {
-  version: 1;
-  references: AIObjectReferenceSnapshot;
-  updatedAt: number;
-};
+type ProjectReferenceStoreProject = Pick<Project, "canonicalProjectPath" | "uri">;
 
-const store = new LazyStore("ai-project-references.json");
-let initPromise: Promise<void> | undefined;
-let writeQueue: Promise<void> = Promise.resolve();
+const writeQueues = new Map<string, Promise<void>>();
 
-async function getStore(): Promise<LazyStore> {
-  initPromise ??= store.init();
-  await initPromise;
-  return store;
-}
-
-function getProjectKey(projectUri: string): string {
-  return `project:${projectUri}:references`;
-}
-
-function isStoredProjectReferences(value: unknown): value is StoredAIProjectReferences {
-  if (!value || typeof value !== "object") return false;
-  const stored = value as Partial<StoredAIProjectReferences>;
-  const references = stored.references as Partial<AIObjectReferenceSnapshot> | undefined;
-  return (
-    stored.version === 1 &&
-    typeof stored.updatedAt === "number" &&
-    !!references &&
-    Array.isArray(references.entries) &&
-    typeof references.nextNodeRef === "number" &&
-    Number.isInteger(references.nextNodeRef) &&
-    references.nextNodeRef >= 1 &&
-    typeof references.nextEdgeRef === "number" &&
-    Number.isInteger(references.nextEdgeRef) &&
-    references.nextEdgeRef >= 1
-  );
+function projectIdentity(project: ProjectReferenceStoreProject) {
+  const legacyProjectUri = project.uri.toString();
+  const projectUri = project.canonicalProjectPath
+    ? URI.file(project.canonicalProjectPath).toString()
+    : legacyProjectUri;
+  return {
+    projectUri,
+    ...(projectUri === legacyProjectUri ? {} : { legacyProjectUri }),
+  };
 }
 
 export namespace AIProjectReferenceStore {
-  export async function load(projectUri: string): Promise<AIObjectReferenceSnapshot | null> {
-    const initializedStore = await getStore();
-    const value = await initializedStore.get<unknown>(getProjectKey(projectUri));
-    if (value === undefined || value === null) return null;
-    if (!isStoredProjectReferences(value)) throw new Error("保存的 AI 项目引用格式无效");
-    return value.references;
+  export function load(project: ProjectReferenceStoreProject): Promise<AIObjectReferenceSnapshot | null> {
+    return invoke<AIObjectReferenceSnapshot | null>("load_project_reference_snapshot", projectIdentity(project));
   }
 
-  export async function save(projectUri: string, references: AIObjectReferenceSnapshot): Promise<void> {
-    const result = writeQueue.then(
-      async () => {
-        const initializedStore = await getStore();
-        await initializedStore.set(getProjectKey(projectUri), {
-          version: 1,
-          references,
-          updatedAt: Date.now(),
-        } satisfies StoredAIProjectReferences);
-        await initializedStore.save();
-      },
-      async () => {
-        const initializedStore = await getStore();
-        await initializedStore.set(getProjectKey(projectUri), {
-          version: 1,
-          references,
-          updatedAt: Date.now(),
-        } satisfies StoredAIProjectReferences);
-        await initializedStore.save();
-      },
-    );
-    writeQueue = result;
-    return result;
+  export function save(project: ProjectReferenceStoreProject, references: AIObjectReferenceSnapshot): Promise<void> {
+    const { projectUri } = projectIdentity(project);
+    const previousWrite = writeQueues.get(projectUri) ?? Promise.resolve();
+    const persist = () => invoke<void>("save_project_reference_snapshot", { projectUri, references });
+    const write = previousWrite.then(persist, persist);
+    writeQueues.set(projectUri, write);
+    const removeCompletedWrite = () => {
+      if (writeQueues.get(projectUri) === write) writeQueues.delete(projectUri);
+    };
+    void write.then(removeCompletedWrite, removeCompletedWrite);
+    return write;
   }
 }

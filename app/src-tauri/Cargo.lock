@@ -5112,10 +5112,12 @@ version = "0.1.0"
 dependencies = [
  "aha",
  "base64 0.22.1",
+ "dirs",
  "regex",
  "rmcp",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "tauri",
  "tauri-build",
  "tauri-plugin-cli",

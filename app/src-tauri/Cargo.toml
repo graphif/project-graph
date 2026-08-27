@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
+default-run = "project-graph"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -35,6 +36,8 @@ tauri-plugin-devtools = "2.0.0"
 tauri-plugin-global-shortcut = "2.3.0"
 tauri-plugin-deep-link = "2"
 regex = "1.12.3"
+dirs = "6"
+sha2 = "0.10.9"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 aha = { version = "0.2.6", features = ["metal"] }

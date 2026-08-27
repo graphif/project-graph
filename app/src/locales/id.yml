@@ -2502,3 +2502,14 @@ common:
     editingMode: Mode Edit
     lineBreak: Baris Baru
     exitEdit: Keluar Mode Edit
+
+projectOwnership:
+  alreadyOpen: Beralih ke tab yang terbuka.
+  notFound: File proyek tidak ditemukan.
+  busy: Proyek ini sedang digunakan oleh proses Project Graph lain.
+  loadFailed: Kepemilikan proyek tidak dapat diperoleh.
+  openFailedTitle: Gagal membuka proyek
+  releaseFailedTitle: Gagal melepaskan kepemilikan proyek
+  releaseFailedMessage: "Proyek telah ditutup, tetapi kunci kepemilikannya tidak dapat dilepaskan. Pilih Coba lagi untuk mencoba lagi.\n\nKesalahan: {{error}}"
+  retry: Coba lagi
+  ok: OK
