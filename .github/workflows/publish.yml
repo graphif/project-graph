@@ -211,8 +211,27 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.rust_targets }}
-      #endregion
+      - name: macOS - Tune build for CI memory limits
+        if: matrix.platform == 'macos-latest'
+        run: |
+          echo "=== System info ==="
+          df -h
+          sysctl hw.memsize hw.ncpu hw.physicalcpu hw.logicalcpu 2>/dev/null || true
+          top -l 1 | head -10 || true
 
+          # Reduce peak memory: use thin LTO instead of fat LTO, increase codegen units.
+          # These env vars override Cargo.toml [profile.release] only when set.
+          echo "CARGO_PROFILE_RELEASE_LTO=thin" >> "$GITHUB_ENV"
+          echo "CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16" >> "$GITHUB_ENV"
+
+          # Limit parallel compile jobs (macOS runners have many cores but ~7GB RAM)
+          echo "CARGO_BUILD_JOBS=4" >> "$GITHUB_ENV"
+
+          # Use sparse registry (faster, less I/O pressure)
+          echo "CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse" >> "$GITHUB_ENV"
+
+          echo "=== Env tuned ==="
+      #endregion
       #region Android - Prepare environment
       - name: Android - Setup Java
         if: matrix.android
@@ -264,8 +283,31 @@ jobs:
         run: |
           echo "${{ secrets.BUILD_ENV }}" > app/.env
       - name: Build
+        id: build
         run: |
+          set +e
           pnpm run ${{ matrix.android && inputs.task_build_android || inputs.task_build }}
+          BUILD_EXIT=$?
+          set -e
+          if [ "$BUILD_EXIT" -ne 0 ]; then
+            echo "=== Build failed with exit code $BUILD_EXIT ==="
+            echo "--- Last 100 lines of build log are already above ---"
+            if [ "${{ matrix.platform }}" = "macos-latest" ] || [ "${{ matrix.platform }}" = "ubuntu-22.04" ]; then
+              echo "--- Disk usage ---"
+              df -h 2>/dev/null || true
+              echo "--- Memory ---"
+              if [ "${{ matrix.platform }}" = "macos-latest" ]; then
+                top -l 1 | head -15 || true
+                vm_stat 2>/dev/null | head -10 || true
+              else
+                free -h 2>/dev/null || true
+              fi
+              echo "--- Top 20 largest target dirs ---"
+              du -sh app/src-tauri/target/*/release/deps 2>/dev/null | sort -hr | head -20 || true
+              du -sh app/src-tauri/target/release/deps 2>/dev/null | sort -hr | head -20 || true
+            fi
+            exit "$BUILD_EXIT"
+          fi
         env:
           APPIMAGE_EXTRACT_AND_RUN: ${{ matrix.platform == 'ubuntu-22.04' && '1' || '' }}
           NO_STRIP: ${{ matrix.platform == 'ubuntu-22.04' && 'true' || '' }}
