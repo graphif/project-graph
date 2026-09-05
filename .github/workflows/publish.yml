@@ -213,24 +213,39 @@ jobs:
           targets: ${{ matrix.rust_targets }}
       - name: macOS - Tune build for CI memory limits
         if: matrix.platform == 'macos-latest'
+        shell: bash
         run: |
           echo "=== System info ==="
           df -h
           sysctl hw.memsize hw.ncpu hw.physicalcpu hw.logicalcpu 2>/dev/null || true
           top -l 1 | head -10 || true
 
-          # Reduce peak memory: use thin LTO instead of fat LTO, increase codegen units.
-          # These env vars override Cargo.toml [profile.release] only when set.
+          # Reduce peak memory: use thin LTO instead of fat LTO.
           echo "CARGO_PROFILE_RELEASE_LTO=thin" >> "$GITHUB_ENV"
-          echo "CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16" >> "$GITHUB_ENV"
-
-          # Limit parallel compile jobs (macOS runners have many cores but ~7GB RAM)
-          echo "CARGO_BUILD_JOBS=4" >> "$GITHUB_ENV"
-
+          # Reduce codegen units from 16 -> 8 to reduce process contention (Load Avg was 30+).
+          echo "CARGO_PROFILE_RELEASE_CODEGEN_UNITS=8" >> "$GITHUB_ENV"
+          # Aggressively limit parallel compile jobs (Load Avg on 8-core runner should be < 8).
+          echo "CARGO_BUILD_JOBS=2" >> "$GITHUB_ENV"
           # Use sparse registry (faster, less I/O pressure)
           echo "CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse" >> "$GITHUB_ENV"
+          # Backtraces if any Rust code panics during build
+          echo "RUST_BACKTRACE=short" >> "$GITHUB_ENV"
+          echo "RUSTFLAGS=--error-format=short" >> "$GITHUB_ENV"
 
           echo "=== Env tuned ==="
+      - name: macOS - Verify env vars actually propagate to cargo
+        if: matrix.platform == 'macos-latest'
+        shell: bash
+        working-directory: app/src-tauri
+        run: |
+          set -e
+          echo "CARGO_PROFILE_RELEASE_LTO = ${CARGO_PROFILE_RELEASE_LTO:-<unset>}"
+          echo "CARGO_PROFILE_RELEASE_CODEGEN_UNITS = ${CARGO_PROFILE_RELEASE_CODEGEN_UNITS:-<unset>}"
+          echo "CARGO_BUILD_JOBS = ${CARGO_BUILD_JOBS:-<unset>}"
+          # Use `cargo config get` (available since Rust 1.77) to confirm what cargo *actually* sees.
+          # Fail open: if cargo config get isn't available, just warn.
+          cargo config get profile.release.lto 2>&1 || echo "  (cannot check via cargo config)"
+          cargo config get build.jobs 2>&1 || echo "  (cannot check via cargo config)"
       #endregion
       #region Android - Prepare environment
       - name: Android - Setup Java
@@ -282,31 +297,25 @@ jobs:
         if: matrix.variant != 'foss'
         run: |
           echo "${{ secrets.BUILD_ENV }}" > app/.env
-      - name: Build
-        id: build
+      - name: Build (Unix)
+        if: matrix.platform != 'windows-latest'
+        id: build_unix
+        shell: bash
         run: |
-          set +e
-          pnpm run ${{ matrix.android && inputs.task_build_android || inputs.task_build }}
-          BUILD_EXIT=$?
-          set -e
-          if [ "$BUILD_EXIT" -ne 0 ]; then
-            echo "=== Build failed with exit code $BUILD_EXIT ==="
-            echo "--- Last 100 lines of build log are already above ---"
-            if [ "${{ matrix.platform }}" = "macos-latest" ] || [ "${{ matrix.platform }}" = "ubuntu-22.04" ]; then
-              echo "--- Disk usage ---"
-              df -h 2>/dev/null || true
-              echo "--- Memory ---"
-              if [ "${{ matrix.platform }}" = "macos-latest" ]; then
-                top -l 1 | head -15 || true
-                vm_stat 2>/dev/null | head -10 || true
-              else
-                free -h 2>/dev/null || true
-              fi
-              echo "--- Top 20 largest target dirs ---"
-              du -sh app/src-tauri/target/*/release/deps 2>/dev/null | sort -hr | head -20 || true
-              du -sh app/src-tauri/target/release/deps 2>/dev/null | sort -hr | head -20 || true
+          set -o pipefail
+          LOG_FILE="$RUNNER_TEMP/build.log"
+          echo "Build log will be tee'd to: $LOG_FILE"
+          # script(1) forces line-buffered stdout/stderr even when nx buffers internally.
+          # Fallback: plain tee if script is unavailable (linux docker images).
+          BUILD_CMD="pnpm run ${{ matrix.android && inputs.task_build_android || inputs.task_build }}"
+          if command -v script >/dev/null 2>&1; then
+            if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
+              script -q "$LOG_FILE" bash -lc "$BUILD_CMD"
+            else
+              script -q -c "$BUILD_CMD" "$LOG_FILE"
             fi
-            exit "$BUILD_EXIT"
+          else
+            bash -lc "$BUILD_CMD" 2>&1 | tee "$LOG_FILE"
           fi
         env:
           APPIMAGE_EXTRACT_AND_RUN: ${{ matrix.platform == 'ubuntu-22.04' && '1' || '' }}
@@ -317,6 +326,75 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           NX_SKIP_LOG_GROUPING: "true"
+          CI: "true"
+      - name: Build (Windows)
+        if: matrix.platform == 'windows-latest'
+        id: build_windows
+        shell: pwsh
+        run: |
+          $LogFile = Join-Path $env:RUNNER_TEMP "build.log"
+          Write-Host "Build log will be tee'd to: $LogFile"
+          $TaskName = "${{ matrix.android && inputs.task_build_android || inputs.task_build }}"
+          pnpm run $TaskName 2>&1 | Tee-Object -FilePath $LogFile
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        env:
+          TAURI_BUILD_ARGS: ${{ matrix.args }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          NX_DAEMON: "false"
+          NX_ISOLATE_PLUGINS: "false"
+          NX_PLUGIN_NO_TIMEOUTS: "true"
+          NX_SKIP_LOG_GROUPING: "true"
+          CI: "true"
+      - name: Build failure diagnostics (Unix)
+        if: failure() && (steps.build_unix.outcome == 'failure' || steps.build_windows.outcome == 'failure') && matrix.platform != 'windows-latest'
+        shell: bash
+        run: |
+          LOG_FILE="$RUNNER_TEMP/build.log"
+          echo "==================== BUILD FAILED: EXIT DIAGNOSTICS ===================="
+          echo "--- Build log (last 500 lines) from $LOG_FILE ---"
+          if [ -f "$LOG_FILE" ]; then
+            tail -n 500 "$LOG_FILE" || true
+          else
+            echo "(no build.log found at $LOG_FILE)"
+          fi
+          echo "--- Disk usage ---"
+          df -h 2>/dev/null || true
+          echo "--- Top-level target dirs by size ---"
+          du -sh app/src-tauri/target 2>/dev/null || true
+          du -sh app/src-tauri/target/*/release 2>/dev/null | sort -hr || true
+          echo "--- Memory / load snapshot ---"
+          if [ "${{ matrix.platform }}" = "macos-latest" ]; then
+            top -l 1 | head -15 || true
+            vm_stat 2>/dev/null | head -10 || true
+          else
+            free -h 2>/dev/null || true
+            uptime 2>/dev/null || true
+          fi
+          echo "========================================================================"
+      - name: Build failure diagnostics (Windows)
+        if: failure() && steps.build_windows.outcome == 'failure' && matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          $LogFile = Join-Path $env:RUNNER_TEMP "build.log"
+          Write-Host "==================== BUILD FAILED: EXIT DIAGNOSTICS ===================="
+          Write-Host "--- Build log (last 500 lines) from $LogFile ---"
+          if (Test-Path $LogFile) {
+            Get-Content $LogFile -Tail 500
+          } else {
+            Write-Host "(no build.log found at $LogFile)"
+          }
+          Write-Host "--- Disk usage ---"
+          Get-PSDrive -PSProvider FileSystem | Select-Object Name, Used, Free
+          Write-Host "--- Target dir sizes ---"
+          if (Test-Path app\src-tauri\target) {
+            Get-ChildItem app\src-tauri\target -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+              $Size = (Get-ChildItem $_.FullName -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
+              [PSCustomObject]@{Dir=$_.Name; SizeMB=[math]::Round($Size/1MB,1)}
+            } | Sort-Object SizeMB -Descending | Select-Object -First 10 | Format-Table -AutoSize
+          }
+          Write-Host "========================================================================"
 
       - name: MacOS - Rename app.tar.gz
         if: matrix.platform == 'macos-latest'
