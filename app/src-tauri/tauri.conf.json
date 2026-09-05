@@ -9,7 +9,7 @@
     "beforeBuildCommand": "",
     "beforeBundleCommand": "node ./scripts/collect-cef-linux.js",
     "frontendDist": "../dist",
-    "removeUnusedCommands": true
+    "removeUnusedCommands": false
   },
   "app": {
     "windows": [
