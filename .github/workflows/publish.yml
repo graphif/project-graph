@@ -230,7 +230,8 @@ jobs:
           echo "CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse" >> "$GITHUB_ENV"
           # Backtraces if any Rust code panics during build
           echo "RUST_BACKTRACE=short" >> "$GITHUB_ENV"
-          echo "RUSTFLAGS=--error-format=short" >> "$GITHUB_ENV"
+          # NOTE: Do NOT set --error-format in RUSTFLAGS; Cargo already injects
+          #   `--error-format=json` and rustc refuses to accept the option twice.
 
           echo "=== Env tuned ==="
       - name: macOS - Verify env vars actually propagate to cargo
