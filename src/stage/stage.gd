@@ -7,21 +7,27 @@ signal file_loaded(path: String)
 
 @onready var history: History = %History
 @onready var camera: Camera2D = $Camera
+@onready var selection_controller: SelectionController = %SelectionController
 const TEXT_NODE = preload("uid://btnefrbc5lowu")
 
 var current_file_path := ""
 var created_at := ""
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.double_click:
-			var node: TextNode = TEXT_NODE.instantiate()
-			node.text = "..."
-			node.position = get_global_mouse_position()
-			add_child(node)
-			get_viewport().set_input_as_handled()
-			history.commit()
+func select_only(entity: Entity) -> void:
+	selection_controller.select_only(entity)
+
+
+func get_selected_entities() -> Array[Entity]:
+	return selection_controller.get_selected_entities()
+
+
+func _on_selection_controller_blank_double_clicked(mouse_position: Vector2) -> void:
+	var node: TextNode = TEXT_NODE.instantiate()
+	node.text = "..."
+	node.position = mouse_position
+	add_child(node)
+	history.commit()
 
 
 func save_to_file(path: String) -> bool:

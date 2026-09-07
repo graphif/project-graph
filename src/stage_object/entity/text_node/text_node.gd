@@ -18,6 +18,7 @@ var _text_before_edit := ""
 func _ready() -> void:
 	super()
 	label.text = text
+	text_edit.text_changed.connect(queue_redraw)
 	call_deferred("_update_collision_shape")
 
 
@@ -57,12 +58,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func enter_edit_mode() -> void:
+	_request_selection()
 	_text_before_edit = text
 	text_edit.text = text
 	text_edit.text_changed.emit()
 
 	label.hide()
 	text_edit.show()
+	set_editing(true)
 
 	text_edit.grab_focus()
 	text_edit.select_all()
@@ -81,9 +84,17 @@ func exit_edit_mode() -> void:
 
 	text_edit.hide()
 	label.show()
+	set_editing(false)
 
 
 func _update_collision_shape() -> void:
 	var shape := RectangleShape2D.new()
 	shape.size = label.size
 	collision_shape.shape = shape
+	queue_redraw()
+
+
+func _get_feedback_rect() -> Rect2:
+	if is_editing():
+		return Rect2(text_edit.position, text_edit.size)
+	return super()
