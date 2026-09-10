@@ -124,66 +124,6 @@ export class MediaNodeRenderer {
         4 * scale,
       );
     }
-
-    const titleFontSize = 10 * scale;
-    if (titleFontSize > 2) {
-      const titleBarHeight = titleFontSize + 6 * scale;
-      this.project.shapeRenderer.renderRect(
-        new Rectangle(
-          viewLocation,
-          new Vector(viewSize.x, titleBarHeight),
-        ),
-        new Color(0, 0, 0, 0.5),
-        Color.Transparent,
-        0,
-        0,
-      );
-      const displayTitle =
-        entity.title.length > 20
-          ? entity.title.slice(0, 20) + "..."
-          : entity.title;
-      this.project.textRenderer.renderText(
-        displayTitle,
-        viewLocation.add(new Vector(4 * scale, titleBarHeight / 2)),
-        titleFontSize,
-        Color.White.clone(),
-      );
-    }
-
-    if (entity.duration !== undefined && entity.duration > 0) {
-      const mm = Math.floor(entity.duration / 60);
-      const ss = Math.floor(entity.duration % 60);
-      const durationText = `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
-      const durFontSize = 9 * scale;
-      if (durFontSize > 2) {
-        const durTextSize = this.project.textRenderer.measureMultiLineTextSize(
-          durationText,
-          durFontSize,
-          Infinity,
-        );
-        const padding = 3 * scale;
-        const durRect = new Rectangle(
-          new Vector(
-            viewLocation.x + viewSize.x - durTextSize.x - padding * 2,
-            viewLocation.y + viewSize.y - durTextSize.y - padding * 2,
-          ),
-          new Vector(durTextSize.x + padding * 2, durTextSize.y + padding * 2),
-        );
-        this.project.shapeRenderer.renderRect(
-          durRect,
-          new Color(0, 0, 0, 0.6),
-          Color.Transparent,
-          0,
-          2 * scale,
-        );
-        this.project.textRenderer.renderText(
-          durationText,
-          durRect.location.add(new Vector(padding, padding)),
-          durFontSize,
-          Color.White.clone(),
-        );
-      }
-    }
   }
 
   private renderAudioReady(

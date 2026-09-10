@@ -8,6 +8,8 @@ import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializ
 import { Rectangle } from "@graphif/shapes";
 import type { Value } from "platejs";
 
+export const MEDIA_NODE_PLACEHOLDER_SIZE = { width: 320, height: 180 };
+
 export type MediaKind = "audio" | "video";
 
 type MediaNodeOptions = {
@@ -163,12 +165,12 @@ export class MediaNode extends ConnectableEntity implements ResizeAble {
         if (el.videoWidth > 0 && el.videoHeight > 0) {
           this.aspectRatio = el.videoWidth / el.videoHeight;
           const currentRect = this.rectangle;
-          const currentBoxAspect = currentRect.size.x / currentRect.size.y;
-          if (Math.abs(currentBoxAspect - 16 / 9) < 0.02) {
-            const newWidth = currentRect.size.x;
-            const newHeight = newWidth / this.aspectRatio;
+          const isPlaceholder =
+            Math.abs(currentRect.size.x - MEDIA_NODE_PLACEHOLDER_SIZE.width) < 0.5 &&
+            Math.abs(currentRect.size.y - MEDIA_NODE_PLACEHOLDER_SIZE.height) < 0.5;
+          if (isPlaceholder) {
             this.collisionBox = new CollisionBox([
-              new Rectangle(currentRect.location, new Vector(newWidth, newHeight)),
+              new Rectangle(currentRect.location, new Vector(el.videoWidth, el.videoHeight)),
             ]);
             this.updateFatherSectionByMove();
           }
