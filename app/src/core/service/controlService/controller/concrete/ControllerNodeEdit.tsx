@@ -76,6 +76,15 @@ export class ControllerNodeEditClass extends ControllerClass {
     } else if (clickedEntity instanceof ReferenceBlockNode) {
       // 双击引用块跳转到源头
       clickedEntity.goToSource();
+    } else if (clickedEntity instanceof MediaNode) {
+      if (
+        clickedEntity.mediaKind === "audio" &&
+        MediaPlaybackManager.isActive(clickedEntity) &&
+        clickedEntity.isInProgressBar(pressLocation)
+      ) {
+        return;
+      }
+      MediaPlaybackManager.togglePlay(this.project, clickedEntity);
     }
   };
 
@@ -102,12 +111,13 @@ export class ControllerNodeEditClass extends ControllerClass {
         const dragDistance = this.lastMouseDownClientLocation
           ? new Vector(event.clientX, event.clientY).subtract(this.lastMouseDownClientLocation).magnitude()
           : 0;
-        if (dragDistance <= 5) {
-          if (entity.mediaKind === "audio" && MediaPlaybackManager.isActive(entity) && entity.isInProgressBar(pressLocation)) {
-            MediaPlaybackManager.seekToRatio(entity, entity.getProgressRatio(pressLocation));
-          } else {
-            MediaPlaybackManager.togglePlay(this.project, entity);
-          }
+        if (
+          dragDistance <= 5 &&
+          entity.mediaKind === "audio" &&
+          MediaPlaybackManager.isActive(entity) &&
+          entity.isInProgressBar(pressLocation)
+        ) {
+          MediaPlaybackManager.seekToRatio(entity, entity.getProgressRatio(pressLocation));
         }
         return;
       }
