@@ -1,5 +1,6 @@
 import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
+import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { MediaPlaybackManager } from "@/core/service/mediaPlaybackService/MediaPlaybackManager";
 import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
 import { Color, Vector } from "@graphif/data-structures";
@@ -140,7 +141,7 @@ export class MediaNodeRenderer {
       6 * scale,
     );
 
-    const iconSize = Math.min(viewSize.x * 0.15, viewSize.y * 0.5);
+    const iconSize = viewSize.y * 0.5;
     const iconCenter = new Vector(
       viewLocation.x + viewSize.x * 0.1 + iconSize * 0.5,
       viewLocation.y + viewSize.y * 0.5,
@@ -152,40 +153,73 @@ export class MediaNodeRenderer {
       Color.White.clone(),
     );
 
+    const titleX = viewLocation.x + viewSize.x * 0.1 + iconSize + viewSize.y * 0.04;
+    const titleAreaRightX = viewLocation.x + viewSize.x * 0.62;
+    const maxTitleWidth = titleAreaRightX - titleX;
+    const titleFontSize = viewSize.y * 0.17;
+    if (maxTitleWidth > 0 && entity.title) {
+      const ctx = this.project.canvas.ctx;
+      const titleTextY = viewLocation.y + viewSize.y * 0.5 - titleFontSize * 0.5;
+
+      const fullTextSize = this.project.textRenderer.measureMultiLineTextSize(
+        entity.title,
+        titleFontSize,
+        Infinity,
+      );
+      const fullWidth = fullTextSize.x;
+      const overflow = fullWidth > maxTitleWidth;
+
+      let titleOffsetX = 0;
+      if (overflow && entity.isSelected) {
+        const mouseWorldPos = this.project.renderer.transformView2World(MouseLocation.vector());
+        if (entity.collisionBox.isContainsPoint(mouseWorldPos)) {
+          const overflowAmount = fullWidth - maxTitleWidth;
+          const scrollSpeed = 40;
+          const scrollDuration = overflowAmount / scrollSpeed;
+          const pauseDuration = 0.8;
+          const cycleDuration = 2 * scrollDuration + 2 * pauseDuration;
+          const elapsed = (performance.now() % (cycleDuration * 1000)) / 1000;
+          if (elapsed < scrollDuration) {
+            titleOffsetX = -(elapsed * scrollSpeed);
+          } else if (elapsed < scrollDuration + pauseDuration) {
+            titleOffsetX = -overflowAmount;
+          } else if (elapsed < 2 * scrollDuration + pauseDuration) {
+            titleOffsetX = -overflowAmount + (elapsed - scrollDuration - pauseDuration) * scrollSpeed;
+          } else {
+            titleOffsetX = 0;
+          }
+        }
+      }
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(titleX, viewLocation.y, maxTitleWidth, viewSize.y);
+      ctx.clip();
+      this.project.textRenderer.renderText(
+        entity.title,
+        new Vector(titleX + titleOffsetX, titleTextY),
+        titleFontSize,
+        Color.White.clone(),
+      );
+      ctx.restore();
+    }
+
     const durationTextRightX = viewLocation.x + viewSize.x * 0.92;
     if (entity.duration !== undefined && entity.duration > 0) {
       const mm = Math.floor(entity.duration / 60);
       const ss = Math.floor(entity.duration % 60);
       const durationText = `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
-      const durFontSize = 9 * scale;
-      if (durFontSize > 2) {
-        const durTextSize = this.project.textRenderer.measureMultiLineTextSize(
-          durationText,
-          durFontSize,
-          Infinity,
-        );
-        this.project.textRenderer.renderTextFromCenter(
-          durationText,
-          new Vector(durationTextRightX - durTextSize.x * 0.5, viewLocation.y + viewSize.y * 0.5),
-          durFontSize,
-          new Color(200, 200, 200, 1),
-        );
-      }
-    }
-
-    const titleX = viewLocation.x + viewSize.x * 0.1 + iconSize + 4 * scale;
-    const maxTitleWidth = viewLocation.x + viewSize.x * 0.62 - titleX;
-    const titleFontSize = 11 * scale;
-    if (titleFontSize > 2 && maxTitleWidth > 10) {
-      const displayTitle =
-        entity.title.length > 15
-          ? entity.title.slice(0, 15) + "..."
-          : entity.title;
-      this.project.textRenderer.renderText(
-        displayTitle,
-        new Vector(titleX, viewLocation.y + viewSize.y * 0.5 - titleFontSize * 0.5),
-        titleFontSize,
-        Color.White.clone(),
+      const durFontSize = viewSize.y * 0.12;
+      const durTextSize = this.project.textRenderer.measureMultiLineTextSize(
+        durationText,
+        durFontSize,
+        Infinity,
+      );
+      this.project.textRenderer.renderTextFromCenter(
+        durationText,
+        new Vector(durationTextRightX - durTextSize.x * 0.5, viewLocation.y + viewSize.y * 0.5),
+        durFontSize,
+        new Color(200, 200, 200, 1),
       );
     }
 
@@ -195,7 +229,7 @@ export class MediaNodeRenderer {
     const ctx = this.project.canvas.ctx;
 
     if (isActive) {
-      const smallSize = 8 * scale;
+      const smallSize = viewSize.y * 0.1;
       const iconX = viewLocation.x + 12 * scale;
       const barY = viewLocation.y + viewSize.y - Math.max(12, viewSize.y * 0.16);
       const iconY = barY - 8 * scale;

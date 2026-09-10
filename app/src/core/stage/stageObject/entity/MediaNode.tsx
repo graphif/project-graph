@@ -9,6 +9,7 @@ import { Rectangle } from "@graphif/shapes";
 import type { Value } from "platejs";
 
 export const MEDIA_NODE_PLACEHOLDER_SIZE = { width: 320, height: 180 };
+export const MEDIA_NODE_AUDIO_PLACEHOLDER_SIZE = { width: 640, height: 160 };
 
 export type MediaKind = "audio" | "video";
 
@@ -82,7 +83,7 @@ export class MediaNode extends ConnectableEntity implements ResizeAble {
     this.attachmentId = attachmentId;
     this.mediaKind = mediaKind;
     this.title = title;
-    this.aspectRatio = mediaKind === "audio" ? 320 / 100 : 16 / 9;
+    this.aspectRatio = mediaKind === "audio" ? 640 / 160 : 16 / 9;
 
     const blob = project.attachments.get(attachmentId);
     if (!blob) {

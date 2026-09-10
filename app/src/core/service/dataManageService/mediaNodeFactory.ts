@@ -3,6 +3,7 @@ import { RectanglePushInEffect } from "@/core/service/feedbackService/effectEngi
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
 import { MEDIA_NODE_PLACEHOLDER_SIZE } from "@/core/stage/stageObject/entity/MediaNode";
+import { MEDIA_NODE_AUDIO_PLACEHOLDER_SIZE } from "@/core/stage/stageObject/entity/MediaNode";
 import type { MediaKind } from "@/core/stage/stageObject/entity/MediaNode";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -21,7 +22,9 @@ export function createMediaNodeFromBlob(
   options: CreateMediaNodeFromBlobOptions,
 ): MediaNode {
   const defaultSize =
-    mediaKind === "audio" ? new Vector(320, 100) : new Vector(MEDIA_NODE_PLACEHOLDER_SIZE.width, MEDIA_NODE_PLACEHOLDER_SIZE.height);
+    mediaKind === "audio"
+      ? new Vector(MEDIA_NODE_AUDIO_PLACEHOLDER_SIZE.width, MEDIA_NODE_AUDIO_PLACEHOLDER_SIZE.height)
+      : new Vector(MEDIA_NODE_PLACEHOLDER_SIZE.width, MEDIA_NODE_PLACEHOLDER_SIZE.height);
 
   const attachmentId = project.addAttachment(blob);
   const location = options.location.clone();
