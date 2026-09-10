@@ -35,6 +35,7 @@ export const SUB_WINDOW_IDS = [
   "LittleTagWindow",
   "TestWindow",
   "TextImportWindow",
+  "MediaPlayerWindow",
   "WelcomeWindow",
   "SettingsWindow",
 ] as const;
@@ -78,6 +79,7 @@ export const DEFAULT_SUB_WINDOW_OPEN_MODES = {
   LittleTagWindow: "floating",
   TestWindow: "floating",
   TextImportWindow: "floating",
+  MediaPlayerWindow: "floating",
   WelcomeWindow: "floating",
   SettingsWindow: "docked",
 } as const satisfies SubWindowOpenModes;

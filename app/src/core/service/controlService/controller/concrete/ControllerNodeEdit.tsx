@@ -5,12 +5,14 @@ import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
+import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 import { open } from "@tauri-apps/plugin-shell";
 import { MouseLocation } from "../../MouseLocation";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import LatexEditWindow from "@/sub/LatexEditWindow";
+import MediaPlayerWindow from "@/sub/MediaPlayerWindow";
 /**
  * 包含编辑节点文字，编辑详细信息等功能的控制器
  *
@@ -56,6 +58,8 @@ export class ControllerNodeEditClass extends ControllerClass {
     } else if (clickedEntity instanceof ReferenceBlockNode) {
       // 双击引用块跳转到源头
       clickedEntity.goToSource();
+    } else if (clickedEntity instanceof MediaNode) {
+      MediaPlayerWindow.open(this.project, clickedEntity);
     }
   };
 
@@ -76,6 +80,14 @@ export class ControllerNodeEditClass extends ControllerClass {
         !entity.isHiddenBySectionCollapse
       ) {
         this.project.controllerUtils.editNodeDetails(entity);
+        return;
+      }
+      if (
+        entity instanceof MediaNode &&
+        !entity.isHiddenBySectionCollapse &&
+        entity.isInPlayArea(pressLocation)
+      ) {
+        MediaPlayerWindow.open(this.project, entity);
         return;
       }
     }

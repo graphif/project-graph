@@ -13,6 +13,31 @@ import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsMana
 import { Settings } from "@/core/service/Settings";
 import { prepareImageBlobForImport } from "../imageUtils";
 import { createImageNodeFromBlob } from "../imageNodeFactory";
+import { createMediaNodeFromBlob } from "../mediaNodeFactory";
+import type { MediaKind } from "@/core/stage/stageObject/entity/MediaNode";
+
+export const MEDIA_TYPE_INFO: Record<string, { mime: string; kind: MediaKind }> = {
+  mp3: { mime: "audio/mpeg", kind: "audio" },
+  wav: { mime: "audio/wav", kind: "audio" },
+  ogg: { mime: "audio/ogg", kind: "audio" },
+  oga: { mime: "audio/ogg", kind: "audio" },
+  m4a: { mime: "audio/mp4", kind: "audio" },
+  aac: { mime: "audio/aac", kind: "audio" },
+  flac: { mime: "audio/flac", kind: "audio" },
+  opus: { mime: "audio/opus", kind: "audio" },
+  mp4: { mime: "video/mp4", kind: "video" },
+  m4v: { mime: "video/mp4", kind: "video" },
+  webm: { mime: "video/webm", kind: "video" },
+  ogv: { mime: "video/ogg", kind: "video" },
+  mov: { mime: "video/quicktime", kind: "video" },
+};
+
+export function isMediaFilePath(filePath: string): boolean {
+  const ext = filePath.split(".").pop()?.toLowerCase() ?? "";
+  return ext in MEDIA_TYPE_INFO;
+}
+
+const MAX_IMPORT_MEDIA_BYTES = 500 * 1024 * 1024;
 
 /**
  * 处理文件拖拽到舞台的引擎
@@ -26,6 +51,7 @@ export namespace DragFileIntoStageEngine {
   export async function handleDrop(project: Project, pathList: string[]) {
     try {
       const imageTypeSet = new Set(["png", "jpg", "jpeg", "webp"]);
+
       const imagePaths: string[] = [];
       for (const filePath of pathList) {
         const extName = filePath.split(".").pop()?.toLowerCase() ?? "";
@@ -37,6 +63,7 @@ export namespace DragFileIntoStageEngine {
       const sortedImagePaths = await sortFileList(imagePaths);
 
       let imageIndex = 0;
+      let mediaIndex = 0;
       for (const filePath of pathList) {
         const extName = filePath.split(".").pop()?.toLowerCase();
         if (extName === "png") {
@@ -55,6 +82,10 @@ export namespace DragFileIntoStageEngine {
         } else if (extName === "prg") {
           const uri = URI.file(filePath);
           onOpenFile(uri, "拖拽prg文件到舞台");
+        } else if (extName && extName in MEDIA_TYPE_INFO) {
+          const typeInfo = MEDIA_TYPE_INFO[extName];
+          await handleDropMedia(project, filePath, typeInfo.mime, typeInfo.kind, mediaIndex);
+          mediaIndex++;
         } else {
           toast.error(`不支持的文件类型: 【${extName}】`);
         }
@@ -182,6 +213,33 @@ export namespace DragFileIntoStageEngine {
   /** @deprecated 请使用 handleDropImage */
   export async function handleDropPng(project: Project, filePath: string) {
     return handleDropImage(project, filePath, "image/png");
+  }
+
+  export async function handleDropMedia(
+    project: Project,
+    filePath: string,
+    sourceMime: string,
+    mediaKind: MediaKind,
+    mediaIndex: number = 0,
+  ): Promise<void> {
+    const fileStat = await stat(filePath);
+    if (fileStat.size > MAX_IMPORT_MEDIA_BYTES) {
+      const fileName = filePath.split(/[/\\]/).pop() ?? filePath;
+      toast.error(`媒体文件过大(>${Math.round(MAX_IMPORT_MEDIA_BYTES / 1024 / 1024)}MB),已跳过:${fileName}`);
+      return;
+    }
+    const fileData = await readFile(filePath);
+    const blob = new Blob([new Uint8Array(fileData) as BlobPart], { type: sourceMime });
+    const fileName = filePath.split(/[/\\]/).pop() ?? filePath;
+
+    const addLocation = project.camera.location.clone();
+    addLocation.x += -mediaIndex * 50;
+    addLocation.y += mediaIndex * 50;
+
+    createMediaNodeFromBlob(project, blob, mediaKind, {
+      location: addLocation,
+      title: fileName,
+    });
   }
 
   export async function handleDropTxt(project: Project, filePath: string) {
