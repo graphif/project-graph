@@ -6,22 +6,40 @@ import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
 import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
+import { MediaPlaybackManager } from "@/core/service/mediaPlaybackService/MediaPlaybackManager";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 import { open } from "@tauri-apps/plugin-shell";
 import { MouseLocation } from "../../MouseLocation";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import LatexEditWindow from "@/sub/LatexEditWindow";
-import MediaPlayerWindow from "@/sub/MediaPlayerWindow";
 /**
  * 包含编辑节点文字，编辑详细信息等功能的控制器
  *
  * 当有节点编辑时，会把摄像机锁定住
  */
 export class ControllerNodeEditClass extends ControllerClass {
+  private lastMouseDownClientLocation: Vector | null = null;
+
   constructor(protected readonly project: Project) {
     super(project);
   }
+
+  mousedown = (event: PointerEvent) => {
+    if (event.button !== 0) return;
+    this.lastMouseDownClientLocation = new Vector(event.clientX, event.clientY);
+    if (MediaPlaybackManager.hasActive()) {
+      const pressLocation = this.project.renderer.transformView2World(
+        new Vector(event.clientX, event.clientY),
+      );
+      const activeEnt = this.project.stageManager.getEntities().find(
+        (e) => e instanceof MediaNode && MediaPlaybackManager.isActive(e as MediaNode),
+      );
+      if (activeEnt instanceof MediaNode && !activeEnt.collisionBox.isContainsPoint(pressLocation)) {
+        MediaPlaybackManager.stop();
+      }
+    }
+  };
 
   mouseDoubleClick = async (event: MouseEvent) => {
     if (event.button !== 0) {
@@ -58,8 +76,6 @@ export class ControllerNodeEditClass extends ControllerClass {
     } else if (clickedEntity instanceof ReferenceBlockNode) {
       // 双击引用块跳转到源头
       clickedEntity.goToSource();
-    } else if (clickedEntity instanceof MediaNode) {
-      MediaPlayerWindow.open(this.project, clickedEntity);
     }
   };
 
@@ -82,12 +98,17 @@ export class ControllerNodeEditClass extends ControllerClass {
         this.project.controllerUtils.editNodeDetails(entity);
         return;
       }
-      if (
-        entity instanceof MediaNode &&
-        !entity.isHiddenBySectionCollapse &&
-        entity.isInPlayArea(pressLocation)
-      ) {
-        MediaPlayerWindow.open(this.project, entity);
+      if (entity instanceof MediaNode && !entity.isHiddenBySectionCollapse && entity.collisionBox.isContainsPoint(pressLocation)) {
+        const dragDistance = this.lastMouseDownClientLocation
+          ? new Vector(event.clientX, event.clientY).subtract(this.lastMouseDownClientLocation).magnitude()
+          : 0;
+        if (dragDistance <= 5) {
+          if (entity.mediaKind === "audio" && MediaPlaybackManager.isActive(entity) && entity.isInProgressBar(pressLocation)) {
+            MediaPlaybackManager.seekToRatio(entity, entity.getProgressRatio(pressLocation));
+          } else {
+            MediaPlaybackManager.togglePlay(this.project, entity);
+          }
+        }
         return;
       }
     }

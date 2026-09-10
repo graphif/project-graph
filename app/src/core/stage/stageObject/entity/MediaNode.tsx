@@ -1,4 +1,5 @@
 import { Project } from "@/core/Project";
+import { MediaPlaybackManager } from "@/core/service/mediaPlaybackService/MediaPlaybackManager";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { ResizeAble } from "@/core/stage/stageObject/abstract/StageObjectInterface";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
@@ -48,7 +49,12 @@ export class MediaNode extends ConnectableEntity implements ResizeAble {
   naturalWidth: number | undefined;
   naturalHeight: number | undefined;
   aspectRatio: number;
+  _lastPlaybackTime: number = 0;
   private disposed = false;
+
+  get isDisposed(): boolean {
+    return this.disposed;
+  }
   private readonly pendingTasks = new Set<Promise<void>>();
   private _cachedMediaUrl: string | undefined;
 
@@ -156,6 +162,16 @@ export class MediaNode extends ConnectableEntity implements ResizeAble {
         this.naturalHeight = el.videoHeight;
         if (el.videoWidth > 0 && el.videoHeight > 0) {
           this.aspectRatio = el.videoWidth / el.videoHeight;
+          const currentRect = this.rectangle;
+          const currentBoxAspect = currentRect.size.x / currentRect.size.y;
+          if (Math.abs(currentBoxAspect - 16 / 9) < 0.02) {
+            const newWidth = currentRect.size.x;
+            const newHeight = newWidth / this.aspectRatio;
+            this.collisionBox = new CollisionBox([
+              new Rectangle(currentRect.location, new Vector(newWidth, newHeight)),
+            ]);
+            this.updateFatherSectionByMove();
+          }
         }
         try {
           el.currentTime = this.duration ? Math.min(this.duration * 0.15, 2) : 0;
@@ -255,6 +271,7 @@ export class MediaNode extends ConnectableEntity implements ResizeAble {
 
   async reload(): Promise<void> {
     if (this.disposed) return;
+    MediaPlaybackManager.stop(this);
     this.poster?.close();
     this.poster = undefined;
     this.duration = undefined;
@@ -272,6 +289,7 @@ export class MediaNode extends ConnectableEntity implements ResizeAble {
   }
 
   async dispose(): Promise<void> {
+    MediaPlaybackManager.stop(this);
     this.disposed = true;
     const results = await Promise.allSettled(this.pendingTasks);
     this.poster?.close();
@@ -334,21 +352,30 @@ export class MediaNode extends ConnectableEntity implements ResizeAble {
     );
   }
 
-  isInPlayArea(worldPoint: Vector): boolean {
+  isInProgressBar(worldPoint: Vector): boolean {
+    if (this.mediaKind !== "audio") return false;
     const rect = this.rectangle;
-    if (this.mediaKind === "video") {
-      const center = rect.center;
-      const radius = Math.min(rect.size.x, rect.size.y) * 0.22;
-      const dx = worldPoint.x - center.x;
-      const dy = worldPoint.y - center.y;
-      return dx * dx + dy * dy <= radius * radius;
-    } else {
-      const centerX = rect.right - rect.size.x * 0.12;
-      const centerY = rect.center.y;
-      const radius = rect.size.y * 0.35;
-      const dx = worldPoint.x - centerX;
-      const dy = worldPoint.y - centerY;
-      return dx * dx + dy * dy <= radius * radius;
-    }
+    const w = rect.size.x;
+    const h = rect.size.y;
+    const barLeft = rect.left + w * 0.08;
+    const barRight = rect.right - w * 0.08;
+    const barY = rect.bottom - Math.max(12, h * 0.16);
+    const barHeight = Math.max(6, h * 0.08);
+    return (
+      worldPoint.x >= barLeft &&
+      worldPoint.x <= barRight &&
+      worldPoint.y >= barY &&
+      worldPoint.y <= barY + barHeight
+    );
+  }
+
+  getProgressRatio(worldPoint: Vector): number {
+    const rect = this.rectangle;
+    const w = rect.size.x;
+    const barLeft = rect.left + w * 0.08;
+    const barRight = rect.right - w * 0.08;
+    const barWidth = barRight - barLeft;
+    if (barWidth <= 0) return 0;
+    return Math.max(0, Math.min(1, (worldPoint.x - barLeft) / barWidth));
   }
 }

@@ -146,7 +146,7 @@ async function initAuth() {
 
 /** 加载语言文件 */
 async function loadLanguageFiles() {
-  i18next.use(initReactI18next).init({
+  await i18next.use(initReactI18next).init({
     lng: Settings.language,
     // debug会影响性能，并且没什么用，所以关掉
     // debug: import.meta.env.DEV,

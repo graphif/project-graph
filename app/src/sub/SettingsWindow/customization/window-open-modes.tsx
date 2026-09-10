@@ -56,7 +56,6 @@ const WINDOW_LABELS: Record<SubWindowId, string> = {
   LittleTagWindow: "单个标签窗口",
   TestWindow: "测试窗口",
   TextImportWindow: "文本导入",
-  MediaPlayerWindow: "媒体播放器",
   WelcomeWindow: "欢迎页",
   SettingsWindow: "设置",
 };
