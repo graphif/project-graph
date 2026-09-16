@@ -18,8 +18,15 @@ shape = SubResource("ConcavePolygonShape2D_qxjbk")
 [node name="Line" type="Line2D" parent="." unique_id=655085003]
 unique_name_in_owner = true
 width = 2.0
+default_color = Color(0.5372549, 0.7058824, 0.98039216, 1)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+round_precision = 12
 antialiased = true
 
 [node name="Head" type="Polygon2D" parent="." unique_id=2018816104]
 unique_name_in_owner = true
+color = Color(0.5372549, 0.7058824, 0.98039216, 1)
+antialiased = true
 polygon = PackedVector2Array(0, 0, -12, -6, -12, 6)

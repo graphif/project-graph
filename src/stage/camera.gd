@@ -38,9 +38,9 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	# 1. 中键拖拽状态开关
-	if event.is_action_pressed("camera_pan"):
+	if event is InputEventMouseButton and event.button_index == (MOUSE_BUTTON_MIDDLE if int(GraphPreferences.value("right_mode")) == 0 else MOUSE_BUTTON_RIGHT) and event.pressed:
 		is_panning = true
-	elif event.is_action_released("camera_pan"):
+	elif event is InputEventMouseButton and event.button_index == (MOUSE_BUTTON_MIDDLE if int(GraphPreferences.value("right_mode")) == 0 else MOUSE_BUTTON_RIGHT) and not event.pressed:
 		is_panning = false
 
 	# 2. 中键按住拖拽移动画布（拖拽天然与 zoom 相关，因此不需要额外修改）
@@ -60,6 +60,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+	if get_tree().root.get_meta("workspace_text_input", false):
+		velocity = Vector2.ZERO
+		return
 	var focus_owner = get_viewport().gui_get_focus_owner()
 	if focus_owner is TextEdit or focus_owner is LineEdit or focus_owner is SpinBox:
 		return

@@ -1,14 +1,28 @@
 class_name StageObjectRegistry
 
-const SCENES := {
-	"text_node": preload("uid://btnefrbc5lowu"),
-	"line_edge": preload("uid://dodce5rghnax4"),
+## 仅登记路径，避免解析 Entity/History 时预加载场景并再次解析 Entity 子类。
+const SCENE_PATHS := {
+	"pen_stroke": "res://src/stage_object/entity/pen_stroke/pen_stroke.tscn",
+	"text_node": "uid://btnefrbc5lowu",
+	"line_edge": "uid://dodce5rghnax4",
 }
+static var _scenes: Dictionary[String, PackedScene] = {}
 
 ## Script -> type name。惰性构建一次，避免每个对象都实例化场景来探测类型。
 static var _type_by_script: Dictionary = { }
 ## Script -> 可序列化属性名数组。避免每个对象都做一次 get_property_list() 反射筛选。
 static var _property_names_by_script: Dictionary = { }
+
+
+static func get_scene(type_name: String) -> PackedScene:
+	if not SCENE_PATHS.has(type_name):
+		return null
+	if not _scenes.has(type_name):
+		var scene := load(SCENE_PATHS[type_name]) as PackedScene
+		if scene == null:
+			return null
+		_scenes[type_name] = scene
+	return _scenes[type_name]
 
 
 static func capture(target_root: Node) -> Dictionary:
@@ -18,6 +32,8 @@ static func capture(target_root: Node) -> Dictionary:
 
 
 static func restore(target_root: Node, snapshot: Dictionary) -> void:
+	if target_root.has_method("finish_interaction"):
+		target_root.call("finish_interaction")
 	for child in target_root.get_children():
 		if child is StageObject:
 			child.queue_free()
@@ -31,7 +47,7 @@ static func restore(target_root: Node, snapshot: Dictionary) -> void:
 		if not object_data is Dictionary:
 			continue
 		var type_name := str(object_data.get("type", ""))
-		var scene: PackedScene = SCENES.get(type_name)
+		var scene: PackedScene = get_scene(type_name)
 		if scene == null:
 			continue
 		var object := scene.instantiate() as StageObject
@@ -43,10 +59,13 @@ static func restore(target_root: Node, snapshot: Dictionary) -> void:
 		if not object.id.is_empty() and not by_id.has(object.id):
 			by_id[object.id] = object
 
-	for reference in pending_references:
-		var object := reference.object as StageObject
+	for pending_reference in pending_references:
+		var object := pending_reference.object as StageObject
 		if is_instance_valid(object):
-			object.set(reference.property, by_id.get(reference.reference_id))
+			object.set(pending_reference.property, by_id.get(pending_reference.reference_id))
+	var layer_mover := target_root.get_node_or_null("EntityLayerMover")
+	if layer_mover != null:
+		layer_mover.call("reset_tracking")
 	await target_root.get_tree().process_frame
 
 
@@ -77,8 +96,10 @@ static func _serialize_object(object: StageObject) -> Dictionary:
 
 static func _type_for(object: StageObject) -> String:
 	if _type_by_script.is_empty():
-		for type_name in SCENES:
-			var scene: PackedScene = SCENES[type_name]
+		for type_name in SCENE_PATHS:
+			var scene: PackedScene = get_scene(type_name)
+			if scene == null:
+				continue
 			var prototype := scene.instantiate()
 			_type_by_script[prototype.get_script()] = type_name
 			prototype.free()

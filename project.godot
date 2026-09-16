@@ -21,6 +21,7 @@ MCPRuntimeProbe="*uid://bsg12huaf1u5i"
 
 [display]
 
+window/size/borderless=true
 window/size/transparent=true
 window/stretch/aspect="expand"
 window/per_pixel_transparency/allowed=true
@@ -31,7 +32,7 @@ enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")
 
 [gui]
 
-theme/custom_font="uid://2kknpv7sy1ma"
+theme/custom_font="res://assets/fonts/GenJyuuGothic-Regular.ttf"
 
 [input]
 

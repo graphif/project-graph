@@ -7,148 +7,122 @@ extends Association
 
 @export var source: Entity
 @export var target: Entity
+# 保留旧文件字段；连接边由实时几何计算，不把派生端点写入历史。
 @export var source_uv: Vector2 = Vector2(0.5, 0.5)
 @export var target_uv: Vector2 = Vector2(0.5, 0.5)
 @export_range(4, 128, 1) var curve_segments := 24
 
+var _geometry_key: Array = []
+
 
 func _ready() -> void:
 	line.points = PackedVector2Array()
+	collision_shape.shape = ConcavePolygonShape2D.new()
 
 
 func _process(_delta: float) -> void:
 	if not is_instance_valid(source) or not is_instance_valid(target):
-		if visible:
-			hide()
+		hide()
+		_geometry_key.clear()
 		return
-
-	if not visible:
-		show()
-
-	var source_inner := source.aabb.position + source.aabb.size * source_uv
-	var target_inner := target.aabb.position + target.aabb.size * target_uv
-	var inner_direction := target_inner - source_inner
-	var p1 := _get_connection_point(source, source_uv, inner_direction)
-	var p2 := _get_connection_point(target, target_uv, -inner_direction)
-	var offset: Vector2 = p2 - p1
-	var distance := offset.length()
-
-	if distance <= 0.001:
-		line.points = PackedVector2Array([p1, p2])
-		_update_collision_shape(line.points)
-		if arrow_head:
-			arrow_head.position = p2
+	show()
+	var source_rect := source.aabb
+	var target_rect := target.aabb
+	var key := [source_rect, target_rect, global_transform, line.transform,
+		collision_shape.transform, (arrow_head.get_parent() as Node2D).global_transform, curve_segments]
+	if key == _geometry_key:
 		return
+	_geometry_key = key
+	var anchors := connection_uvs(source_rect, target_rect)
+	var world_points := connection_curve(source_rect, target_rect, anchors, curve_segments)
+	arrow_head.visible = world_points.size() > 1
+	var shaft_points := world_points.duplicate()
+	if arrow_head.visible:
+		var tip := world_points[world_points.size() - 1]
+		# 端点切线沿目标边的内法线，避免离散曲线末段使箭头略微偏斜。
+		var direction := (Vector2(0.5, 0.5) - anchors[1]).normalized()
+		arrow_head.global_position = tip
+		arrow_head.global_rotation = direction.angle()
+		# 线身止于三角形底部；继续画到尖端会使尖端变成突出的细线。
+		var head_length := 0.0
+		for point in arrow_head.polygon:
+			head_length = maxf(head_length, (tip - arrow_head.to_global(point)).dot(direction))
+		shaft_points = _trim_curve_end(world_points, head_length)
+	var local_points := PackedVector2Array()
+	var collision_points := PackedVector2Array()
+	for point in shaft_points:
+		local_points.append(line.to_local(point))
+	for point in world_points:
+		collision_points.append(collision_shape.to_local(point))
+	line.points = local_points
+	_update_collision_shape(collision_points)
 
-	var line_direction := offset / distance
-	var source_direction := _get_normal_by_uv(source_uv)
-	if source_direction == Vector2.ZERO:
-		source_direction = _get_rectangle_normal(source, p1, line_direction)
 
-	var target_direction := _get_normal_by_uv(target_uv)
-	if target_direction == Vector2.ZERO:
-		target_direction = _get_rectangle_normal(target, p2, -line_direction)
+static func _trim_curve_end(points: PackedVector2Array, distance: float) -> PackedVector2Array:
+	var result := points.duplicate()
+	var remaining := distance
+	while result.size() > 1 and remaining > 0.0:
+		var last := result.size() - 1
+		var segment_length := result[last].distance_to(result[last - 1])
+		if segment_length <= remaining:
+			remaining -= segment_length
+			result.remove_at(last)
+		else:
+			result[last] = result[last].move_toward(result[last - 1], remaining)
+			break
+	return result
 
-	var control_distance: float = maxf(
-		line.width * 25.0,
-		minf(absf(offset.x), absf(offset.y)) / 2.0,
-	)
 
-	var control_1: Vector2 = p1 + source_direction * control_distance
-	var control_2: Vector2 = p2 + target_direction * control_distance
+# 只选择两矩形之间有间隙的轴；控制点均留在该间隙中，避免曲线绕到节点背面。
+# 对角排列时比较两组边中点的距离，同样位置始终得出同样的连接边。
+static func connection_uvs(from_rect: Rect2, to_rect: Rect2) -> PackedVector2Array:
+	var offset := to_rect.get_center() - from_rect.get_center()
+	var horizontal := PackedVector2Array([Vector2(1, 0.5), Vector2(0, 0.5)]) if offset.x >= 0 else PackedVector2Array([Vector2(0, 0.5), Vector2(1, 0.5)])
+	var vertical := PackedVector2Array([Vector2(0.5, 1), Vector2(0.5, 0)]) if offset.y >= 0 else PackedVector2Array([Vector2(0.5, 0), Vector2(0.5, 1)])
+	var gap_x := absf(offset.x) - (from_rect.size.x + to_rect.size.x) * 0.5
+	var gap_y := absf(offset.y) - (from_rect.size.y + to_rect.size.y) * 0.5
+	if gap_x > 0 and gap_y <= 0:
+		return horizontal
+	if gap_y > 0 and gap_x <= 0:
+		return vertical
+	if gap_x <= 0 and gap_y <= 0:
+		# 临时重叠时采用穿透较浅的轴，避让完成后自然恢复。
+		return horizontal if gap_x >= gap_y else vertical
+	var horizontal_span := anchor(to_rect, horizontal[1]) - anchor(from_rect, horizontal[0])
+	var vertical_span := anchor(to_rect, vertical[1]) - anchor(from_rect, vertical[0])
+	return horizontal if horizontal_span.length_squared() <= vertical_span.length_squared() else vertical
 
-	var curve_points := PackedVector2Array()
-	for i in range(curve_segments + 1):
-		var t := float(i) / curve_segments
-		curve_points.append(_cubic_bezier(p1, control_1, control_2, p2, t))
 
-	line.points = curve_points
-	_update_collision_shape(curve_points)
+static func anchor(rect: Rect2, uv: Vector2) -> Vector2:
+	return rect.position + rect.size * uv
 
-	if arrow_head:
-		arrow_head.position = p2
-	arrow_head.rotation = (p2 - control_2).angle()
+
+static func connection_curve(from_rect: Rect2, to_rect: Rect2, anchors: PackedVector2Array, segments: int) -> PackedVector2Array:
+	var start := anchor(from_rect, anchors[0])
+	var end := anchor(to_rect, anchors[1])
+	var normal := (anchors[0] - Vector2(0.5, 0.5)) * 2.0
+	var end_normal := (anchors[1] - Vector2(0.5, 0.5)) * 2.0
+	var gap := maxf(0.0, (end - start).dot(normal))
+	# 不设固定最小弯曲半径，近距离连接也不会产生回钩。
+	var handle := minf(gap * 0.45, 96.0)
+	var control_1 := start + normal * handle
+	var control_2 := end + end_normal * handle
+	var points := PackedVector2Array()
+	var count := maxi(4, segments)
+	for index in range(count + 1):
+		var t := float(index) / count
+		var u := 1.0 - t
+		points.append(u * u * u * start + 3.0 * u * u * t * control_1 + 3.0 * u * t * t * control_2 + t * t * t * end)
+	return points
 
 
 func _update_collision_shape(points: PackedVector2Array) -> void:
-	if not collision_shape:
-		return
-
-	if points.size() < 2:
-		collision_shape.shape = null
-		return
-
-	var shape := ConcavePolygonShape2D.new()
+	var shape := collision_shape.shape as ConcavePolygonShape2D
+	if shape == null:
+		shape = ConcavePolygonShape2D.new()
+		collision_shape.shape = shape
 	var segments := PackedVector2Array()
-
-	for i in range(points.size() - 1):
-		segments.append(points[i])
-		segments.append(points[i + 1])
-
+	for index in range(points.size() - 1):
+		segments.append(points[index])
+		segments.append(points[index + 1])
 	shape.segments = segments
-	collision_shape.shape = shape
-
-
-func _get_connection_point(entity: Entity, uv: Vector2, direction: Vector2) -> Vector2:
-	var inner := entity.aabb.position + entity.aabb.size * uv
-	if not uv.is_equal_approx(Vector2(0.5, 0.5)):
-		return inner
-	return _get_rectangle_intersection(entity, direction)
-
-
-func _get_rectangle_intersection(entity: Entity, direction: Vector2) -> Vector2:
-	var center := entity.aabb.position + entity.aabb.size / 2.0
-	if direction.length_squared() <= 0.001:
-		return center
-
-	var half_size := entity.aabb.size / 2.0
-	var scale_x: float = INF if is_zero_approx(direction.x) else half_size.x / absf(direction.x)
-	var scale_y: float = INF if is_zero_approx(direction.y) else half_size.y / absf(direction.y)
-	return center + direction * minf(scale_x, scale_y)
-
-
-func _get_normal_by_uv(uv: Vector2) -> Vector2:
-	var normal := Vector2.ZERO
-	if is_zero_approx(uv.x):
-		normal.x = -1.0
-	elif is_equal_approx(uv.x, 1.0):
-		normal.x = 1.0
-	if is_zero_approx(uv.y):
-		normal.y = -1.0
-	elif is_equal_approx(uv.y, 1.0):
-		normal.y = 1.0
-	return normal.normalized()
-
-
-func _get_rectangle_normal(entity: Entity, point: Vector2, fallback: Vector2) -> Vector2:
-	var local_point := point - entity.position
-	var distances := PackedFloat32Array(
-		[
-			local_point.x,
-			entity.aabb.size.x - local_point.x,
-			local_point.y,
-			entity.aabb.size.y - local_point.y,
-		]
-	)
-	var closest_side := 0
-	for i in range(1, distances.size()):
-		if distances[i] < distances[closest_side]:
-			closest_side = i
-	match closest_side:
-		0:
-			return Vector2.LEFT
-		1:
-			return Vector2.RIGHT
-		2:
-			return Vector2.UP
-		3:
-			return Vector2.DOWN
-	return fallback
-
-
-func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
-	var one_minus_t := 1.0 - t
-	return (
-		one_minus_t * one_minus_t * one_minus_t * p0 + 3.0 * one_minus_t * one_minus_t * t * p1
-		+ 3.0 * one_minus_t * t * t * p2 + t * t * t * p3
-	)

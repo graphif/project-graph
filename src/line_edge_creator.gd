@@ -2,22 +2,22 @@ class_name LineEdgeCreator
 extends Node2D
 
 const LINE_EDGE = preload("uid://dodce5rghnax4")
-# 鼠标进入该范围才算碰到节点边缘，避免在节点内部按 quarter 提前切换 UV。
-const EDGE_HIT_TOLERANCE := 6.0
 
 # 新创建的 LineEdge 会被添加到该节点下。
 @export var target_root: Node
 # 拖拽预览曲线的样式。
-@export var preview_color := Color(0.9, 0.9, 0.9, 0.8)
+@export var preview_color := Color("#cba6f7cc")
 @export_range(1.0, 20.0, 1.0) var preview_width := 2.0
 # source 和 target 当前选中边的提示样式。
-@export var source_edge_color := Color(0.33, 0.85, 0.35)
-@export var target_edge_color := Color(0.2, 0.75, 1.0)
+@export var source_edge_color := Color("#a6e3a1")
+@export var target_edge_color := Color("#89b4fa")
 @export_range(1.0, 20.0, 1.0) var edge_highlight_width := 4.0
 # Line2D 使用离散点绘制贝塞尔曲线，该值越大曲线越平滑。
 @export_range(4, 128, 1) var preview_curve_segments := 24
 
 # 一次拖拽过程中持续保存的连接状态。
+var _drag_start_position := Vector2.ZERO
+var _gesture_button := MOUSE_BUTTON_RIGHT
 var _source: Entity
 var _source_uv := Vector2(0.5, 0.5)
 var _target: Entity
@@ -35,15 +35,20 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventWithModifiers and event.alt_pressed:
+		return
 	# 右键按下开始拖拽，右键松开时尝试创建边。
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+	if event is InputEventMouseButton and (event.button_index == MOUSE_BUTTON_RIGHT or (event.button_index == MOUSE_BUTTON_LEFT and int(GraphPreferences.value("left_mode")) == 2)):
 		if event.pressed:
 			var mouse_position := get_global_mouse_position()
 			var entity := _get_entity_at(mouse_position)
 			if entity == null:
 				return
+			if entity is TextNode and entity.text_edit.visible:
+				return
+			_gesture_button = event.button_index
 			_start_drag(entity, mouse_position)
-		elif _source != null:
+		elif _source != null and event.button_index == _gesture_button:
 			var mouse_position := get_global_mouse_position()
 			_update_drag_state(mouse_position)
 			_finish_drag()
@@ -53,19 +58,19 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	# 拖拽期间每次鼠标移动都会刷新 UV、目标、高亮边和预览曲线。
+	# 拖拽期间每次鼠标移动都会刷新自动连接边、目标和预览曲线。
 	if event is InputEventMouseMotion and _source != null:
 		_update_preview(get_global_mouse_position())
 		get_viewport().set_input_as_handled()
 
 
 func _start_drag(source: Entity, mouse_position: Vector2) -> void:
+	_drag_start_position = mouse_position
 	var history := _get_history()
 	if history != null:
 		history.begin_transaction()
 	_source = source
 	_source_uv = Vector2(0.5, 0.5)
-	_update_uv_if_on_edge(source, mouse_position)
 	_target = null
 	_update_preview(mouse_position)
 	_preview_line.visible = true
@@ -81,53 +86,52 @@ func _finish_drag() -> void:
 		var line_edge := LINE_EDGE.instantiate() as LineEdge
 		line_edge.source = _source
 		line_edge.target = _target
-		line_edge.source_uv = _source_uv
-		line_edge.target_uv = _target_uv
+		var anchors := LineEdge.connection_uvs(_source.aabb, _target.aabb)
+		line_edge.source_uv = anchors[0]
+		line_edge.target_uv = anchors[1]
 		target_root.add_child(line_edge)
 		var history := _get_history()
 		if history != null:
 			history.commit()
 
+	if _target == null:
+		var history := _get_history()
+		if history != null:
+			history.commit()
+	if _target == null and _gesture_button == MOUSE_BUTTON_RIGHT and _drag_start_position.distance_squared_to(get_global_mouse_position()) <= 9.0 and target_root is Stage:
+		target_root.select_object(_source)
+		target_root.context_requested.emit(get_global_mouse_position())
 	_source = null
 	_target = null
 
 
 func _update_preview(mouse_position: Vector2) -> void:
 	_update_drag_state(mouse_position)
-	# 命中 target 时吸附到选中边中点，否则曲线终点跟随鼠标。
-	var end_position := mouse_position
-	if _target != null:
-		end_position = _get_position_by_uv(_target, _target_uv)
-
+	# 预览与正式连线共用选边和曲线，松开鼠标后不会跳回另一条边。
+	var destination := _target.aabb if _target != null else Rect2(mouse_position, Vector2.ZERO)
+	var anchors := LineEdge.connection_uvs(_source.aabb, destination)
+	_source_uv = anchors[0]
+	_target_uv = anchors[1]
 	_update_edge_highlight(_source_edge_highlight, _source, _source_uv)
 	if _target != null:
 		_update_edge_highlight(_target_edge_highlight, _target, _target_uv)
 	else:
 		_target_edge_highlight.visible = false
-
-	var start_position := _get_position_by_uv(_source, _source_uv)
-	_preview_line.points = _get_preview_curve(start_position, end_position)
+	var points := LineEdge.connection_curve(_source.aabb, destination, anchors, preview_curve_segments)
+	for index in points.size():
+		points[index] = to_local(points[index])
+	_preview_line.points = points
 
 
 func _update_drag_state(mouse_position: Vector2) -> void:
 	var entity := _get_entity_at(mouse_position)
-	if entity == _source:
-		# 只有鼠标碰到 source 的边缘时才允许切换连接边。
-		_update_uv_if_on_edge(_source, mouse_position)
-		_target = null
-	elif entity != null:
-		# 任意非 source 实体都可成为 target；进入内部时先从中心开始，碰边后再切换 UV。
-		if _target != entity:
-			_target = entity
-			_target_uv = Vector2(0.5, 0.5)
-		_update_uv_if_on_edge(entity, mouse_position)
-	else:
-		_target = null
+	_target = entity if entity != _source else null
 
 
 func _get_entity_at(point: Vector2) -> Entity:
 	# 逆序查找，使视觉上靠前的 Entity 优先响应。
 	var entities := _get_entities()
+	entities.sort_custom(func(a: Entity, b: Entity) -> bool: return a.container_depth() < b.container_depth())
 	for i in range(entities.size() - 1, -1, -1):
 		if _point_in_collision_box(point, entities[i]):
 			return entities[i]
@@ -157,48 +161,6 @@ func _get_collision_box(entity: Entity) -> PackedVector2Array:
 func _point_in_collision_box(point: Vector2, entity: Entity) -> bool:
 	var box := _get_collision_box(entity)
 	return box.size() >= 3 and Geometry2D.is_point_in_polygon(point, box)
-
-
-func _update_uv_if_on_edge(entity: Entity, point: Vector2) -> void:
-	var edge_uv: Variant = _get_edge_uv_at(entity, point)
-	if edge_uv != null:
-		if entity == _source:
-			_source_uv = edge_uv
-		elif entity == _target:
-			_target_uv = edge_uv
-
-
-func _get_edge_uv_at(entity: Entity, point: Vector2) -> Variant:
-	# 只在鼠标靠近四条边时返回 UV；矩形内部的点不会触发边切换。
-	var rect: Rect2 = entity.aabb
-	var distances := PackedFloat32Array(
-		[
-			absf(point.x - rect.position.x),
-			absf(rect.end.x - point.x),
-			absf(point.y - rect.position.y),
-			absf(rect.end.y - point.y),
-		]
-	)
-	var closest_side := 0
-	for i in range(1, distances.size()):
-		if distances[i] < distances[closest_side]:
-			closest_side = i
-	if distances[closest_side] > EDGE_HIT_TOLERANCE:
-		return null
-	match closest_side:
-		0:
-			return Vector2(0.0, 0.5)
-		1:
-			return Vector2(1.0, 0.5)
-		2:
-			return Vector2(0.5, 0.0)
-		_:
-			return Vector2(0.5, 1.0)
-
-
-func _get_position_by_uv(entity: Entity, uv: Vector2) -> Vector2:
-	# 四个方向 UV 对应 Entity 四条边的中点。
-	return entity.aabb.position + entity.aabb.size * uv
 
 
 func _create_feedback_line(color: Color, width: float, line_z_index: int) -> Line2D:
@@ -235,51 +197,6 @@ func _update_edge_highlight(highlight: Line2D, entity: Entity, uv: Vector2) -> v
 	highlight.visible = true
 
 
-func _get_preview_curve(start: Vector2, end: Vector2) -> PackedVector2Array:
-	# 预览曲线使用与 LineEdge 相同的两端法线和对称控制距离。
-	var offset := end - start
-	var distance := offset.length()
-	if distance <= 0.001:
-		return PackedVector2Array([to_local(start), to_local(end)])
-
-	var line_direction := offset / distance
-	var start_direction := _get_normal_by_uv(_source_uv)
-	var end_direction := -line_direction
-	if _target != null:
-		end_direction = _get_normal_by_uv(_target_uv)
-	else:
-		# 尚未命中 target 时，让末端沿鼠标方向的主轴进入终点。
-		end_direction = _get_dominant_direction(-line_direction)
-
-	var control_distance := maxf(preview_width * 25.0, minf(absf(offset.x), absf(offset.y)) / 2.0)
-	var control_1 := start + start_direction * control_distance
-	var control_2 := end + end_direction * control_distance
-	var curve_points := PackedVector2Array()
-	for i in range(preview_curve_segments + 1):
-		var t := float(i) / preview_curve_segments
-		curve_points.append(to_local(_cubic_bezier(start, control_1, control_2, end, t)))
-	return curve_points
-
-
-func _get_normal_by_uv(uv: Vector2) -> Vector2:
-	# 将边中点 UV 映射为对应的矩形外法线。
-	return (uv - Vector2(0.5, 0.5)) * 2.0
-
-
-func _get_dominant_direction(direction: Vector2) -> Vector2:
-	if absf(direction.x) >= absf(direction.y):
-		return Vector2(signf(direction.x), 0.0)
-	return Vector2(0.0, signf(direction.y))
-
-
-func _cubic_bezier(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
-	var one_minus_t := 1.0 - t
-	return (
-		one_minus_t * one_minus_t * one_minus_t * p0 + 3.0 * one_minus_t * one_minus_t * t * p1
-		+ 3.0 * one_minus_t * t * t * p2 + t * t * t * p3
-	)
-
-
 func _get_entities() -> Array[Entity]:
 	var result: Array[Entity] = []
 	_collect_entities(target_root, result)
@@ -302,3 +219,16 @@ func _get_history() -> History:
 			return history
 		node = node.get_parent()
 	return null
+
+
+func cancel_drag() -> void:
+	if _source == null:
+		return
+	_source = null
+	_target = null
+	_preview_line.hide()
+	_source_edge_highlight.hide()
+	_target_edge_highlight.hide()
+	var history := _get_history()
+	if history != null:
+		history.commit()

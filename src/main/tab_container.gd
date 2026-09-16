@@ -1,62 +1,105 @@
 extends TabContainer
 
+signal stage_added(stage: Stage)
+signal stage_closed
+signal close_requested(container: Control)
+signal workspace_error(message: String)
+signal workspace_saved(path: String)
+
 const STAGE := preload("uid://bc73att6xutyi")
 var tab_serial := 1
+var _save_target: Stage
 @onready var open_file_dialog: FileDialog = %OpenFileDialog
 @onready var save_file_dialog: FileDialog = %SaveFileDialog
 
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	if not tab_changed.is_connected(_on_tab_changed):
+		tab_changed.connect(_on_tab_changed)
 	var tab_bar := get_tab_bar()
 	tab_bar.tab_close_display_policy = TabBar.CLOSE_BUTTON_SHOW_ALWAYS
 	tab_bar.tab_close_pressed.connect(close_tab)
-	_ensure_default_tab()
+	drag_to_rearrange_enabled = true
+	save_file_dialog.canceled.connect(func(): _save_target = null)
+	if get_tab_count() == 0:
+		new_tab()
 	_update_tab_titles()
 
 
-func _ensure_default_tab() -> void:
-	if get_tab_count() > 0:
-		return
-	new_tab("未命名 1")
-
-
 func new_tab(title: String = "") -> Stage:
-	var stage := STAGE.instantiate()
-
+	var stage := STAGE.instantiate() as Stage
 	var viewport := SubViewport.new()
 	viewport.name = "SubViewport"
 	viewport.transparent_bg = true
+	# 2D 多重采样覆盖连线、箭头等几何边缘。
+	viewport.msaa_2d = Viewport.MSAA_4X
+	# 字体按最大相机缩放栅格化，避免放大低分辨率字形。
+	# 固定采样倍率也避免平滑缩放每帧生成新的中文字形缓存。
+	viewport.oversampling = true
+	viewport.oversampling_override = maxf(1.0, float(stage.get_node("Camera").max_zoom))
 	viewport.handle_input_locally = false
 	viewport.size = Vector2i(1152, 618)
 	viewport.size_2d_override_stretch = true
-	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
 	viewport.add_child(stage)
-
 	var container := SubViewportContainer.new()
 	container.name = "StageTab%d" % tab_serial
 	container.set_meta("tab_title", title if not title.is_empty() else "未命名 %d" % tab_serial)
 	container.stretch = true
 	container.add_child(viewport)
+	stage.file_error.connect(func(message): workspace_error.emit(message))
+	stage.file_saved.connect(_on_file_saved.bind(stage))
 	add_child(container)
 	tab_serial += 1
 	current_tab = get_tab_count() - 1
-
 	_update_tab_titles()
+	stage_added.emit(stage)
 	return stage
+
+
+func stages() -> Array[Stage]:
+	var result: Array[Stage] = []
+	for index in get_tab_count():
+		var stage := get_stage(index)
+		if stage != null:
+			result.append(stage)
+	return result
+
+
+func get_stage(index: int) -> Stage:
+	var container := get_tab_control(index)
+	return container.get_node_or_null("SubViewport/Stage") as Stage if container != null else null
+
+
+func get_current_stage() -> Stage:
+	return get_stage(current_tab) if current_tab >= 0 else null
 
 
 func _update_tab_titles() -> void:
 	for index in get_tab_count():
-		var container := get_child(index) as SubViewportContainer
-		if container != null:
-			set_tab_title(index, str(container.get_meta("tab_title", "未命名")))
+		var container := get_tab_control(index)
+		var stage := get_stage(index)
+		var dirty := stage != null and stage.is_node_ready() and stage.is_dirty()
+		set_tab_title(index, str(container.get_meta("tab_title", "未命名")) + (" ●" if dirty else ""))
+		set_tab_tooltip(index, stage.current_file_path if stage != null else "")
 
 
 func close_tab(index: int) -> void:
 	if index < 0 or index >= get_tab_count():
 		return
-	var container := get_child(index)
+	var stage := get_stage(index)
+	stage.finish_text_editing()
+	stage.finish_interaction()
+	if stage.is_dirty():
+		close_requested.emit(get_tab_control(index))
+	else:
+		close_container(get_tab_control(index))
+
+
+func close_container(container: Control) -> void:
+	if not is_instance_valid(container) or container.get_parent() != self:
+		return
+	var index := container.get_index()
 	remove_child(container)
 	container.queue_free()
 	if get_tab_count() == 0:
@@ -64,51 +107,70 @@ func close_tab(index: int) -> void:
 	else:
 		current_tab = mini(index, get_tab_count() - 1)
 	_update_tab_titles()
+	stage_closed.emit()
 
 
-func _on_tab_changed(_index: int) -> void:
+func _on_tab_changed(index: int) -> void:
+	for tab_index in get_tab_count():
+		var container := get_tab_control(tab_index)
+		var stage := get_stage(tab_index)
+		if stage != null and stage.is_node_ready() and tab_index != index:
+			stage.finish_text_editing()
+			stage.finish_interaction()
+		container.process_mode = Node.PROCESS_MODE_INHERIT if tab_index == index else Node.PROCESS_MODE_DISABLED
 	_update_tab_titles()
 
 
-func get_current_stage() -> Stage:
-	var current := get_current_tab_control()
-	if current == null or current.get_child_count() == 0:
-		return null
-	var viewport := current.get_child(0) as SubViewport
-	return viewport.get_node_or_null("Stage") if viewport != null else null
-
-
-func _process(delta: float) -> void:
-	if Input.is_action_just_pressed("project_open", true):
-		open_file_dialog.show()
-	if Input.is_action_just_pressed("project_save", true):
-		save_file_dialog.show()
-
-
 func load_files(paths: PackedStringArray) -> void:
-	for path in paths:
+	for raw_path in paths:
+		var path := raw_path.simplify_path()
+		var existing := -1
+		for index in get_tab_count():
+			if get_stage(index).current_file_path == path:
+				existing = index
+				break
+		if existing >= 0:
+			current_tab = existing
+			continue
 		var stage := new_tab(path.get_file())
-		stage.load_from_file(path)
+		if await stage.load_from_file(path):
+			GraphPreferences.remember(path)
+		else:
+			close_container(stage.get_parent().get_parent())
+	_update_tab_titles()
+
+
+func request_save_as(stage: Stage = null) -> void:
+	_save_target = stage if stage != null else get_current_stage()
+	if _save_target == null:
+		return
+	_save_target.finish_text_editing()
+	save_file_dialog.current_file = _save_target.current_file_path.get_file() if not _save_target.current_file_path.is_empty() else "未命名.prg"
+	save_file_dialog.popup_centered_ratio(0.7)
 
 
 func save_current_file() -> void:
 	var stage := get_current_stage()
 	if stage == null:
 		return
-	var path := stage.current_file_path
-	if path.is_empty() or not FileAccess.file_exists(path):
-		save_file_dialog.show()
+	if stage.current_file_path.is_empty():
+		request_save_as(stage)
 	else:
-		stage.save_to_file(path)
+		stage.save_to_file(stage.current_file_path)
 
 
 func save_current_file_as(path: String) -> void:
-	var stage := get_current_stage()
+	var stage := _save_target if is_instance_valid(_save_target) else get_current_stage()
+	_save_target = null
 	if stage == null:
 		return
-	var final_path := path
-	if not final_path.ends_with(".prg"):
-		final_path += ".prg"
+	var final_path := path if path.to_lower().ends_with(".prg") else path + ".prg"
 	stage.save_to_file(final_path)
-	get_current_tab_control().set_meta("tab_title", final_path.get_file())
+
+
+func _on_file_saved(path: String, stage: Stage) -> void:
+	var container := stage.get_parent().get_parent()
+	container.set_meta("tab_title", path.get_file())
+	GraphPreferences.remember(path)
 	_update_tab_titles()
+	workspace_saved.emit(path)
