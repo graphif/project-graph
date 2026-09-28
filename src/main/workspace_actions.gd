@@ -20,7 +20,7 @@ static func copy_selection(stage: Stage) -> void:
 	var objects: Array = StageObjectRegistry.capture(stage).objects
 	var copied: Array = []
 	for object in objects:
-		if selected.has(str(object.properties.get("id", ""))):
+		if selected.has(str(StageObjectRegistry._decode_value(object.properties.get("id", ""), ""))):
 			copied.append(object)
 	clipboard = {"objects": copied}
 	var text := []
@@ -45,7 +45,7 @@ static func paste(stage: Stage) -> void:
 			if scene == null:
 				continue
 			var node := scene.instantiate() as StageObject
-			var old_id := str(data.properties.get("id", ""))
+			var old_id := str(StageObjectRegistry._decode_value(data.properties.get("id", ""), ""))
 			var properties: Dictionary = data.properties.duplicate(true)
 			properties.erase("id")
 			StageObjectRegistry._restore_transform(node, data.get("transform", {}))
