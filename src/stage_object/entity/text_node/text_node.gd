@@ -124,11 +124,14 @@ func enter_edit_mode() -> void:
 	text_edit.min_width = label.size.x
 	text_edit.text = text
 	text_edit.clear_undo_history()
+	_align_edit_text()
 	text_edit.text_changed.emit()
 	label.hide()
 	text_edit.show()
 	text_edit.grab_focus()
-	text_edit.select_all()
+	text_edit.deselect()
+	text_edit.set_caret_line(text_edit.get_line_count() - 1)
+	text_edit.set_caret_column(text_edit.get_line(text_edit.get_caret_line()).length())
 	_queue_collision_update()
 
 
@@ -305,3 +308,22 @@ func _update_fill_layer(members: Array[Entity]) -> void:
 		return
 	_fill_layer = level
 	_apply_appearance()
+
+
+func _align_edit_text() -> void:
+	var label_style := label.get_theme_stylebox("normal")
+	var edit_style := text_edit.get_theme_stylebox("normal").duplicate() as StyleBoxFlat
+	var content_size := label.size - label_style.get_minimum_size()
+	var font := label.get_theme_font("font")
+	var text_width := 0.0
+	for text_line in text.split("\n"):
+		text_width = maxf(text_width, font.get_string_size(text_line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)
+	# TextEdit 的排版从左上开始；单行编辑用内边距匹配 Label 的居中起点。
+	var inset_x := maxf(0.0, (content_size.x - text_width) * 0.5) if label.get_line_count() == 1 else 0.0
+	var text_height := font.get_height(font_size) * maxi(1, label.get_line_count())
+	var inset_y := maxf(0.0, (content_size.y - text_height) * 0.5)
+	edit_style.content_margin_left = label_style.get_content_margin(SIDE_LEFT) + inset_x
+	edit_style.content_margin_right = label_style.get_content_margin(SIDE_RIGHT)
+	edit_style.content_margin_top = label_style.get_content_margin(SIDE_TOP) + inset_y
+	edit_style.content_margin_bottom = label_style.get_content_margin(SIDE_BOTTOM)
+	text_edit.add_theme_stylebox_override("normal", edit_style)

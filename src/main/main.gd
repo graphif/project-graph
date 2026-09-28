@@ -659,6 +659,8 @@ func _begin_key_binding() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _forward_canvas_text_key(event):
+		return
 	if _ime_composing():
 		return
 	if not event is InputEventKey or not event.pressed or event.echo:
@@ -1286,3 +1288,27 @@ func _on_context_action(id: int) -> void:
 
 func _apply_theme_button(light: bool) -> void:
 	_local_theme.apply_control($VBoxContainer/Header/ThemeMode, light)
+
+
+# A SubViewport editor and the root toolbar can both own GUI focus.
+# Deliver text keys before root GUI navigation moves focus to window controls.
+func _forward_canvas_text_key(event: InputEvent) -> bool:
+	if not event is InputEventKey:
+		return false
+	var stage: Stage = tabs.get_current_stage()
+	if stage == null:
+		return false
+	var viewport := stage.get_viewport()
+	var focus := viewport.gui_get_focus_owner()
+	if not focus is TextEdit or not focus.is_visible_in_tree():
+		return false
+	for window in overlay.get_children():
+		if window is Window and window.visible:
+			return false
+	if event.pressed and not event.echo and not _ime_composing():
+		for command in ["saveFile", "saveAs", "openFile", "newDraft", "commands", "toggleFullscreen"]:
+			if _shortcut_events.has(command) and _shortcut_events[command].get_keycode_with_modifiers() == event.get_keycode_with_modifiers():
+				return false
+	viewport.push_input(event, true)
+	get_viewport().set_input_as_handled()
+	return true
