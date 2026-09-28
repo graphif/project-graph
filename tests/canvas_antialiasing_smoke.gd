@@ -89,6 +89,19 @@ func _run() -> void:
 	var smooth_pixels := partial_pixels(probe.get_texture().get_image())
 	check(smooth_pixels > native_pixels + 100, "Texture AA produces fractional edge coverage: %d -> %d" % [native_pixels, smooth_pixels])
 	print("EDGE_COVERAGE: %d -> %d" % [native_pixels, smooth_pixels])
+	var selected_outline := stage._selection_lines[a.id] as Line2D
+	stroke.texture = selected_outline.texture
+	stroke.texture_mode = selected_outline.texture_mode
+	stroke.texture_filter = selected_outline.texture_filter
+	stroke.width = selected_outline.width
+	stroke.closed = true
+	stroke.points = Corners.outline(Rect2(30, 20, 440, 90), 30)
+	for frame in 3:
+		await process_frame
+	await RenderingServer.frame_post_draw
+	var selection_pixels := partial_pixels(probe.get_texture().get_image())
+	check(selection_pixels > 100, "Selection outline has fractional edge coverage")
+	print("SELECTION_COVERAGE: %d" % selection_pixels)
 	probe.queue_free()
 	app.queue_free()
 	await process_frame
