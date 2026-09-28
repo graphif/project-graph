@@ -1,12 +1,12 @@
-# 画布缩小抗锯齿
+# 画布缩放抗锯齿
 
 ## 方案
 
-复用 Godot 的 SVG 栅格化、Image mipmap、Line2D / Polygon2D 抗锯齿，不引入第三方依赖，不做整屏模糊。
+复用 Godot 的 SVG 栅格化、Image mipmap 和 Line2D 节点，并复用社区 Antialiased Line2D 的自定义 mipmap 纹理，不做整屏模糊。
 
 - 舞台圆角纹理按 4 倍逻辑尺寸生成 mipmap，采用三线性过滤。逻辑尺寸、九宫格边距和文字布局不变。菜单继续使用 DPITexture。
-- 连线、箭头和选中框将相机缩放计入局部几何，并抵消绘制节点的缩放，使原生抗锯齿过渡保持一个视口像素，不再随画布缩小。世界坐标端点、碰撞和保存数据保持不变。
-- 缩小后的连线保持至少一个视口像素宽；用户保存的线宽不变。
+- 连线、箭头和选中框将相机缩放计入局部几何，并抵消绘制节点的缩放，保持以视口像素为单位的绘制尺寸。当前 Compatibility 实测原生 Line2D 抗锯齿没有产生半透明边缘，因此线身改用带透明边缘的平铺纹理及各向异性 mipmap 过滤。世界坐标端点、碰撞和保存数据保持不变。
+- 缩小后的连线保留至少一个视口像素的核心宽度，并给纹理透明边缘增加两个像素空间；用户保存的线宽不变。放大时曲线采样按缩放平方根增加，最多 512 段。
 
 原生 2D MSAA 不支持当前 Compatibility 渲染器；字体 oversampling 不覆盖几何边缘。整屏 FXAA 原型会使小字变软，已撤回；全面超采样需要更大的缓冲区及额外输入适配，本次未采用。实现仅通过节点与资源属性，不调用底层绘制 API。
 
@@ -17,3 +17,16 @@
 自动检查覆盖 mipmap 生成、缩放后的绘制尺度、世界端点不变、连线命中、文档快照不变和窗口调整。真实高 DPI 屏幕、非当前 GPU 及其他渲染后端仍需手动验证。
 
 参考：[Godot 2D 抗锯齿](https://docs.godotengine.org/en/latest/tutorials/2d/2d_antialiasing.html)、[ImageTexture](https://docs.godotengine.org/en/stable/classes/class_imagetexture.html)。
+
+## 连线纹理来源及放大回归
+
+复用 [Antialiased Line2D](https://github.com/godot-extended-libraries/godot-antialiased-line2d) 的 `addons/antialiased_line2d/texture.gd`，固定提交 `808343e4ed29fe11162b51603f11916173a015b3`。使用其原始生成器离线生成 `assets/line_antialiasing.res`，保留 MIT 许可证 `assets/line_antialiasing-LICENSE.txt`。无需安装编辑器插件、添加自动加载或运行时生成纹理。Godot 4.8.dev6 Compatibility 实测通过；不需要外部编译器。
+
+SHA-256：
+- 上游生成器：`bceb877bd7646b1c5314d04c3c12a4d9893a734e90cbd6e29856da0a18eaa827`
+- 纹理资源：`097e2b6bf2a2d65564db5ab4897ada31ffd4c1dd4591d189b630d40c1b509582`
+- MIT 许可证：`e6599e16d9634b1c8846810b630b1e0c34398fe1a6e2f109f8157c18d93f4f8e`
+
+实际透明视口中的斜线测试：原生 AA 有 0 个半透明过渡像素，纹理 AA 有 920 个。回归覆盖 25% 至 400% 缩放、深浅主题、命中几何、文档不变和连线文字编辑。
+
+手动验证：连接两个错位节点，放大到 200% 和 400%，缓慢拖动。线身应有平滑边缘且曲线折角减少；双击线身仍能编辑文字。失败时重点检查纹理加载、过滤模式、断裂或命中偏移。此纹理处理线身长边，端帽与箭头尖端仍受原生几何栅格化限制；跨 GPU 与高 DPI 观感尚待验证。

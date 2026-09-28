@@ -44,7 +44,7 @@ func _run() -> void:
 	for light in [false, true]:
 		GraphPreferences.set_value("theme", "latte" if light else "mocha", false)
 		app._apply_preferences("theme", "latte" if light else "mocha")
-		for zoom in [1.0, 0.25, 0.5, 0.75, 2.0]:
+		for zoom in [1.0, 0.25, 0.5, 0.75, 2.0, 4.0]:
 			stage.camera.target_zoom = Vector2.ONE * zoom
 			stage.camera.zoom = stage.camera.target_zoom
 			var image := await capture()
@@ -65,7 +65,41 @@ func _run() -> void:
 	root.size = Vector2i(1024, 720)
 	await capture()
 	check(is_equal_approx(edge.line.get_global_transform_with_canvas().get_scale().x, 1.0), "Resize preserves AA geometry")
+	# Verify actual coverage on Compatibility, not just the antialiased flag.
+	var probe := SubViewport.new()
+	probe.size = Vector2i(512, 128)
+	probe.transparent_bg = true
+	probe.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	root.add_child(probe)
+	var stroke := Line2D.new()
+	stroke.points = PackedVector2Array([Vector2(20, 30), Vector2(490, 100)])
+	stroke.width = 8.0
+	stroke.antialiased = true
+	probe.add_child(stroke)
+	for frame in 3:
+		await process_frame
+	await RenderingServer.frame_post_draw
+	var native_pixels := partial_pixels(probe.get_texture().get_image())
+	stroke.texture = edge.line.texture
+	stroke.texture_mode = edge.line.texture_mode
+	stroke.texture_filter = edge.line.texture_filter
+	for frame in 3:
+		await process_frame
+	await RenderingServer.frame_post_draw
+	var smooth_pixels := partial_pixels(probe.get_texture().get_image())
+	check(smooth_pixels > native_pixels + 100, "Texture AA produces fractional edge coverage: %d -> %d" % [native_pixels, smooth_pixels])
+	print("EDGE_COVERAGE: %d -> %d" % [native_pixels, smooth_pixels])
+	probe.queue_free()
 	app.queue_free()
 	await process_frame
 	print("CANVAS_AA: " + ("PASS" if failures.is_empty() else str(failures)))
 	quit(0 if failures.is_empty() else 1)
+
+func partial_pixels(image: Image) -> int:
+	var count := 0
+	for y in image.get_height():
+		for x in image.get_width():
+			var alpha := image.get_pixel(x, y).a
+			if alpha > 0.02 and alpha < 0.98:
+				count += 1
+	return count

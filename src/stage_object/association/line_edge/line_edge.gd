@@ -39,6 +39,9 @@ func _ready() -> void:
 	# Container fills use depths 0..64; keep strokes above those backgrounds.
 	z_index = 65
 	_arrow_base_polygon = arrow_head.polygon.duplicate()
+	line.texture = preload("res://assets/line_antialiasing.res")
+	line.texture_mode = Line2D.LINE_TEXTURE_TILE
+	line.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	_apply_style()
 	line.points = PackedVector2Array()
 	collision_shape.shape = ConcavePolygonShape2D.new()
@@ -54,7 +57,7 @@ func _process(_delta: float) -> void:
 	# World anchors/collision stay unchanged through to_local()/to_global().
 	var pixel_scale := maxf(get_global_transform_with_canvas().get_scale().x, 0.01)
 	line.scale = Vector2.ONE / pixel_scale
-	line.width = maxf(1.0, _unscaled_line_width * pixel_scale)
+	line.width = maxf(1.0, _unscaled_line_width * pixel_scale) + 2.0
 	if not is_equal_approx(arrow_head.scale.x, 1.0 / pixel_scale):
 		arrow_head.scale = Vector2.ONE / pixel_scale
 		var polygon := PackedVector2Array()
@@ -74,7 +77,8 @@ func _process(_delta: float) -> void:
 		return
 	_geometry_key = key
 	var anchors := connection_uvs(source_rect, target_rect)
-	var world_points := connection_curve(source_rect, target_rect, anchors, curve_segments)
+	var render_segments := clampi(ceili(curve_segments * sqrt(maxf(1.0, pixel_scale))), curve_segments, 512)
+	var world_points := connection_curve(source_rect, target_rect, anchors, render_segments)
 	arrow_head.visible = world_points.size() > 1
 	var shaft_points := world_points.duplicate()
 	if arrow_head.visible:
