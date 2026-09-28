@@ -31,11 +31,14 @@ const Palette = preload("res://src/main/theme_palette.gd")
 var _appearance_light: Variant = null
 
 var _geometry_key: Array = []
+var _arrow_base_polygon := PackedVector2Array()
+@onready var _unscaled_line_width: float = %Line.width
 
 
 func _ready() -> void:
 	# Container fills use depths 0..64; keep strokes above those backgrounds.
 	z_index = 65
+	_arrow_base_polygon = arrow_head.polygon.duplicate()
 	_apply_style()
 	line.points = PackedVector2Array()
 	collision_shape.shape = ConcavePolygonShape2D.new()
@@ -47,6 +50,18 @@ func _process(_delta: float) -> void:
 		_geometry_key.clear()
 		return
 	show()
+	# Bake zoom into local geometry so native AA keeps a one-pixel fringe.
+	# World anchors/collision stay unchanged through to_local()/to_global().
+	var pixel_scale := maxf(get_global_transform_with_canvas().get_scale().x, 0.01)
+	line.scale = Vector2.ONE / pixel_scale
+	line.width = maxf(1.0, _unscaled_line_width * pixel_scale)
+	if not is_equal_approx(arrow_head.scale.x, 1.0 / pixel_scale):
+		arrow_head.scale = Vector2.ONE / pixel_scale
+		var polygon := PackedVector2Array()
+		for point in _arrow_base_polygon:
+			polygon.append(point * pixel_scale)
+		arrow_head.polygon = polygon
+	arrow_head.antialiased = true
 	var color := display_stroke_color()
 	if line.default_color != color:
 		line.default_color = color

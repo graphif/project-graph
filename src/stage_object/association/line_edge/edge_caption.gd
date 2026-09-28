@@ -13,7 +13,7 @@ var _last_light: Variant = null
 
 
 func _ready() -> void:
-	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	label.gui_input.connect(_label_input)
 	editor.gui_input.connect(_editor_input)
 	editor.focus_exited.connect(finish_edit)
@@ -69,12 +69,12 @@ func _update_style() -> void:
 	normal.content_margin_right = 8
 	normal.content_margin_top = 4
 	normal.content_margin_bottom = 4
-	label.add_theme_stylebox_override("normal", Corners.style(normal, Corners.CONTROL))
-	editor.add_theme_stylebox_override("normal", Corners.style(normal, Corners.CONTROL))
+	label.add_theme_stylebox_override("normal", Corners.style(normal, Corners.CONTROL, true))
+	editor.add_theme_stylebox_override("normal", Corners.style(normal, Corners.CONTROL, true))
 	var focus := normal.duplicate() as StyleBoxFlat
 	focus.border_color = Palette.color(light, "border.focus")
 	focus.set_border_width_all(2)
-	editor.add_theme_stylebox_override("focus", Corners.style(focus, Corners.CONTROL))
+	editor.add_theme_stylebox_override("focus", Corners.style(focus, Corners.CONTROL, true))
 	for control in [label, editor]:
 		control.add_theme_color_override("font_color", Palette.color(light, "text.primary"))
 	editor.add_theme_color_override("caret_color", Palette.color(light, "text.primary"))

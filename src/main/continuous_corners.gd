@@ -56,7 +56,7 @@ static func _path(rect: Rect2, radius: float) -> String:
 	return result + "Z"
 
 
-static func style(original: StyleBoxFlat, radius: float) -> StyleBox:
+static func style(original: StyleBoxFlat, radius: float, mipmapped: bool = false) -> StyleBox:
 	if original == null:
 		return StyleBoxEmpty.new()
 	var flat := original.duplicate() as StyleBoxFlat
@@ -71,8 +71,8 @@ static func style(original: StyleBoxFlat, radius: float) -> StyleBox:
 	var extent := 2.0 * cut + 4.0
 	var rect := Rect2(Vector2.ONE * padding, Vector2.ONE * (extent - padding * 2.0))
 	var key := str([radius, flat.bg_color, flat.border_color, width,
-		flat.draw_center, flat.shadow_color, shadow, flat.shadow_offset])
-	var texture: DPITexture = _textures.get(key)
+		flat.draw_center, flat.shadow_color, shadow, flat.shadow_offset, mipmapped])
+	var texture: Texture2D = _textures.get(key)
 	if texture == null:
 		var svg := '<svg xmlns="http://www.w3.org/2000/svg" width="%s" height="%s" viewBox="0 0 %s %s">' % [extent, extent, extent, extent]
 		if shadow > 0.0:
@@ -88,8 +88,19 @@ static func style(original: StyleBoxFlat, radius: float) -> StyleBox:
 			_path(rect.grow(-width * 0.5), maxf(0.0, radius - width * 0.5)),
 			fill, flat.bg_color.a, flat.border_color.to_html(false), flat.border_color.a, width]
 		svg += "</svg>"
-		texture = DPITexture.create_from_string(svg)
-		texture.fix_alpha_border = true
+		if mipmapped:
+			var image := Image.new()
+			if image.load_svg_from_string(svg, 4.0) != OK:
+				return flat
+			image.fix_alpha_edges()
+			image.generate_mipmaps()
+			var raster := ImageTexture.create_from_image(image)
+			raster.set_size_override(Vector2i(roundi(extent), roundi(extent)))
+			texture = raster
+		else:
+			var scalable := DPITexture.create_from_string(svg)
+			scalable.fix_alpha_border = true
+			texture = scalable
 		if _textures.size() >= 256:
 			_textures.clear()
 		_textures[key] = texture

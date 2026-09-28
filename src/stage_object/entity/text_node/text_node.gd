@@ -53,7 +53,7 @@ var _collision_update_pending := false
 
 
 func _ready() -> void:
-	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	super()
 	label.text = text
 	_normal_label_position = label.position
@@ -232,18 +232,18 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 	style.content_margin_right = 15
 	style.content_margin_top = 10
 	style.content_margin_bottom = 10
-	container_panel.add_theme_stylebox_override("panel", Corners.style(style, Corners.NODE))
+	container_panel.add_theme_stylebox_override("panel", Corners.style(style, Corners.NODE, true))
 	if _container_active:
 		style.bg_color = Color.TRANSPARENT
 		style.set_border_width_all(0)
-	label.add_theme_stylebox_override("normal", Corners.style(style, Corners.NODE))
+	label.add_theme_stylebox_override("normal", Corners.style(style, Corners.NODE, true))
 	text_edit.add_theme_color_override("font_color", Color("#24452c") if light else Color("#cdd6f4"))
 	text_edit.add_theme_color_override("caret_color", Color("#24452c") if light else Color("#f5e0dc"))
 	text_edit.add_theme_color_override("selection_color", Color("#d9efdc") if light else Color("#45475a"))
 	var edit_style := style.duplicate() as StyleBoxFlat
 	edit_style.bg_color = Color("#f6faf6") if light else Color("#181825")
 	edit_style.border_color = style.border_color
-	text_edit.add_theme_stylebox_override("normal", Corners.style(edit_style, Corners.NODE))
+	text_edit.add_theme_stylebox_override("normal", Corners.style(edit_style, Corners.NODE, true))
 	text_edit.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	label.end_bulk_theme_override()
 	text_edit.end_bulk_theme_override()
@@ -351,4 +351,4 @@ func _align_edit_text() -> void:
 	edit_style.content_margin_right = label_style.get_content_margin(SIDE_RIGHT)
 	edit_style.content_margin_top = label_style.get_content_margin(SIDE_TOP) + inset_y
 	edit_style.content_margin_bottom = label_style.get_content_margin(SIDE_BOTTOM)
-	text_edit.add_theme_stylebox_override("normal", Corners.style(edit_style, Corners.NODE))
+	text_edit.add_theme_stylebox_override("normal", Corners.style(edit_style, Corners.NODE, true))
