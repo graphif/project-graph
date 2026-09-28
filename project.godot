@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Project Graph"
-run/main_scene="uid://dpglridd8c5go"
+run/main_scene="res://src/boot/boot.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 boot_splash/show_image=false
 config/icon="res://project-graph-icon.svg"
