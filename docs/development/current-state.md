@@ -30,3 +30,5 @@
 ## UI 一致性补充复核
 
 通过 MCP 读取 main、LocalTheme、DialogTheme、DialogMotion、ThemeTransition、GraphPreferences。确认已有深浅主题、系统跟随配置、UI 缩放、菜单图标映射与弹窗类型变体；未确认全局视觉一致性。配色分散、焦点样式和动效覆盖等证据见 [UI 规范差异表](../design/ui-style.md)。本次未读取场景/主题资源，未运行界面验收。
+
+用户随后确定浅色采用 Catppuccin Latte，深色采用 Mocha。配色目标与预设契约已文档化；现有绿色浅色代码尚未迁移，主题插件未实现。
