@@ -91,6 +91,20 @@ func redo() -> void:
 	_busy = false
 
 
+# Cancel an in-progress gesture without consuming an undo or redo entry.
+func cancel_transaction() -> void:
+	if _busy or _transaction_snapshot.is_empty():
+		return
+	var before := _transaction_snapshot
+	_busy = true
+	_pending_commit = false
+	_commit_generation += 1
+	_transaction_snapshot = {}
+	await _restore_snapshot(before)
+	_current_snapshot = before
+	_busy = false
+
+
 func clear() -> void:
 	_commit_generation += 1
 	_pending_commit = false
