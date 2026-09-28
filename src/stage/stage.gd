@@ -258,6 +258,8 @@ func is_dirty() -> bool:
 func apply_object_preferences(object: StageObject, theme_light: Variant = null) -> void:
 	if object is TextNode:
 		object._apply_appearance(false, theme_light)
+	if object is LineEdge:
+		object.apply_theme(bool(theme_light) if theme_light != null else GraphPreferences.value("theme") == "light")
 	if object is Entity:
 		object.collision_mask = 0
 
@@ -276,6 +278,8 @@ func apply_theme(light: bool) -> void:
 	for object in stage_objects():
 		if object is TextNode:
 			object._apply_appearance(false, light)
+		elif object is LineEdge:
+			object.apply_theme(light)
 	_applied_theme_light = int(light)
 
 

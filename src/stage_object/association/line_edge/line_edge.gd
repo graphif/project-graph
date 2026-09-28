@@ -1,6 +1,8 @@
 class_name LineEdge
 extends Association
 
+const Palette = preload("res://src/main/theme_palette.gd")
+
 @onready var collision_shape: CollisionShape2D = %CollisionShape
 @onready var line: Line2D = %Line
 @onready var arrow_head: Polygon2D = %Head
@@ -14,10 +16,27 @@ extends Association
 @export var target_uv: Vector2 = Vector2(0.5, 0.5)
 @export_range(4, 128, 1) var curve_segments := 24
 
+@export var stroke_color := Color("#89b4fa"):
+	set(value):
+		stroke_color = value
+		use_theme_color = false
+		if is_node_ready():
+			_apply_style()
+@export var use_theme_color := true:
+	set(value):
+		use_theme_color = value
+		if is_node_ready():
+			_apply_style()
+
+var _appearance_light: Variant = null
+
 var _geometry_key: Array = []
 
 
 func _ready() -> void:
+	# Container fills use depths 0..64; keep strokes above those backgrounds.
+	z_index = 65
+	_apply_style()
 	line.points = PackedVector2Array()
 	collision_shape.shape = ConcavePolygonShape2D.new()
 
@@ -28,6 +47,10 @@ func _process(_delta: float) -> void:
 		_geometry_key.clear()
 		return
 	show()
+	var color := display_stroke_color()
+	if line.default_color != color:
+		line.default_color = color
+		arrow_head.color = color
 	var source_rect := source.aabb
 	var target_rect := target.aabb
 	var key := [source_rect, target_rect, global_transform, line.transform,
@@ -149,3 +172,39 @@ func exit_edit_mode(commit_changes := true) -> void:
 
 func is_text_dirty() -> bool:
 	return $Caption.is_dirty()
+
+
+func apply_theme(light: bool) -> void:
+	_appearance_light = light
+	_apply_style()
+
+
+func display_stroke_color() -> Color:
+	var light: bool = Palette.is_light(str(GraphPreferences.value("theme"))) if _appearance_light == null else bool(_appearance_light)
+	return Palette.neutral_edge_color(_stroke_background(light)) if use_theme_color else stroke_color
+
+
+func _apply_style() -> void:
+	line.default_color = display_stroke_color()
+	line.antialiased = true
+	arrow_head.color = display_stroke_color()
+
+
+func _stroke_background(light: bool) -> Color:
+	var background := Palette.color(light, "surface.canvas")
+	if not is_node_ready() or not is_instance_valid(source) or not is_instance_valid(target):
+		return background
+	var midpoint := (source.aabb.get_center() + target.aabb.get_center()) * 0.5
+	if not line.points.is_empty():
+		midpoint = line.to_global(line.points[line.points.size() / 2])
+	var containers: Array[Entity] = []
+	for endpoint in [source, target]:
+		var current: Entity = endpoint.container
+		while is_instance_valid(current) and not containers.has(current):
+			containers.append(current)
+			current = current.container
+	containers.sort_custom(func(a: Entity, b: Entity) -> bool: return a.container_depth() < b.container_depth())
+	for container in containers:
+		if container is TextNode and container.aabb.has_point(midpoint):
+			background = background.blend(container.display_fill_color())
+	return background

@@ -40,6 +40,8 @@ static func is_light(mode: String) -> bool:
 
 
 static func color(light: bool, role: String) -> Color:
+	if role == "canvas.edge":
+		return neutral_edge_color(color(light, "surface.canvas"))
 	if role == "surface.selected":
 		var mixed := color(light, "surface.canvas").lerp(color(light, "accent.primary"), 0.12 if light else 0.16)
 		return Color.from_rgba8(roundi(mixed.r * 255.0), roundi(mixed.g * 255.0), roundi(mixed.b * 255.0))
@@ -102,3 +104,11 @@ static func switch_icon(light: bool, checked: bool, disabled: bool, mirrored: bo
 	var texture := ImageTexture.create_from_image(image)
 	_switch_icons[key] = texture
 	return texture
+
+
+## Pick a neutral gray with readable contrast against the composited background.
+static func neutral_edge_color(background: Color) -> Color:
+	var luminance := background.srgb_to_linear().get_luminance()
+	var level := (luminance + 0.05) / 4.5 - 0.05 if luminance > 0.18 else 4.5 * (luminance + 0.05) - 0.05
+	level = clampf(level, 0.0, 1.0)
+	return Color(level, level, level).linear_to_srgb()

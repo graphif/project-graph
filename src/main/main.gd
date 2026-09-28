@@ -1091,6 +1091,8 @@ func _apply_color() -> void:
 	for object in stage.selected_objects():
 		if object is TextNode:
 			object.fill_color = color
+		elif object is LineEdge:
+			object.stroke_color = color
 		elif object is PenStroke:
 			object.stroke_color = color
 	stage.history.commit()
