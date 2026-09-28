@@ -1047,6 +1047,10 @@ func _focus_reference(index: int) -> void:
 
 
 func _refresh_details() -> void:
+	for field_name in ["BorderLabel", "Border"]:
+		var field := _panel("NodeDetailsWindow").get_node_or_null("Fields/" + field_name)
+		if field != null:
+			field.hide()
 	var stage: Stage = tabs.get_current_stage()
 	var panel := _panel("NodeDetailsWindow")
 	var selected := stage.selected_objects() if stage != null else []
@@ -1066,7 +1070,6 @@ func _refresh_details() -> void:
 	panel.get_node("Fields/FontSize").value = object.font_size
 	panel.get_node("Fields/Width").value = object.fixed_width
 	panel.get_node("Fields/Fill").color = object.fill_color
-	panel.get_node("Fields/Border").color = object.border_color
 
 
 func _apply_details() -> void:
@@ -1081,7 +1084,6 @@ func _apply_details() -> void:
 	object.font_size = int(panel.get_node("Fields/FontSize").value)
 	object.fixed_width = float(panel.get_node("Fields/Width").value)
 	object.fill_color = panel.get_node("Fields/Fill").color
-	object.border_color = panel.get_node("Fields/Border").color
 	stage.history.commit()
 	_toast("节点属性已更新")
 

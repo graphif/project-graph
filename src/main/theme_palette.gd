@@ -41,7 +41,7 @@ static func is_light(mode: String) -> bool:
 
 
 static func color(light: bool, role: String) -> Color:
-	if role == "canvas.edge":
+	if role in ["canvas.edge", "canvas.node.border"]:
 		return neutral_edge_color(color(light, "surface.canvas"))
 	if role == "surface.selected":
 		var mixed := color(light, "surface.canvas").lerp(color(light, "accent.primary"), 0.12 if light else 0.16)

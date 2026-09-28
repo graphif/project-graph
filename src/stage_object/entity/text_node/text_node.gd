@@ -1,6 +1,7 @@
 class_name TextNode
 extends Entity
 
+const Palette = preload("res://src/main/theme_palette.gd")
 const Corners = preload("res://src/main/continuous_corners.gd")
 
 # 舞台使用独立的可缩放字体缓存，不修改菜单等界面共享的原字体。
@@ -39,11 +40,13 @@ var _normal_edit_position := Vector2.ZERO
 		fill_color = value
 		if is_node_ready():
 			_apply_appearance()
-@export var border_color := Color("#585b70"):
+@export_storage var border_color := Color("#585b70"):
 	set(value):
 		border_color = value
 		if is_node_ready():
 			_apply_appearance()
+@export_storage var use_theme_border := false
+var _displayed_background := Color(-1, -1, -1, -1)
 var _editing := false
 var _appearance_light: Variant = null
 var _collision_update_pending := false
@@ -186,11 +189,31 @@ func _update_collision_shape() -> void:
 	collision_shape.position = center
 
 
+func display_border_color() -> Color:
+	var light: bool = Palette.is_light(str(GraphPreferences.value("theme"))) if _appearance_light == null else bool(_appearance_light)
+	return Palette.neutral_edge_color(display_background_color(light))
+
+
+func display_background_color(light: bool) -> Color:
+	var background := Palette.color(light, "surface.canvas")
+	var chain: Array[Entity] = []
+	var current: Entity = self
+	while is_instance_valid(current) and not chain.has(current):
+		chain.append(current)
+		current = current.container
+	chain.reverse()
+	for node in chain:
+		if node is TextNode:
+			background = background.blend(node.display_fill_color())
+	return background
+
 func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) -> void:
-	var light: bool = GraphPreferences.value("theme") == "light" if theme_light == null else bool(theme_light)
-	if not update_layout and _appearance_light == light:
+	var light: bool = Palette.is_light(str(GraphPreferences.value("theme"))) if theme_light == null else bool(theme_light)
+	var background := display_background_color(light)
+	if not update_layout and _appearance_light == light and _displayed_background.is_equal_approx(background):
 		return
 	_appearance_light = light
+	_displayed_background = background
 	label.begin_bulk_theme_override()
 	text_edit.begin_bulk_theme_override()
 	label.add_theme_color_override("font_color", Color("#24452c") if light else Color("#cdd6f4"))
@@ -202,9 +225,7 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 		label.size = Vector2(fixed_width, 0.0)
 	var style := StyleBoxFlat.new()
 	style.bg_color = display_fill_color()
-	style.border_color = border_color
-	if border_color == Color("#e5e7eb") or border_color == Color("#585b70"):
-		style.border_color = Color("#45484f") if light else Color("#585b70")
+	style.border_color = display_border_color()
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(int(Corners.NODE))
 	style.content_margin_left = 15
@@ -249,6 +270,7 @@ static func _make_canvas_font(original: Font) -> Font:
 # 包含状态由子对象引用推导，不更换对象身份，因此连线和属性仍指向原节点。
 func update_container_layout(members: Array[Entity]) -> void:
 	_update_fill_layer(members)
+	_apply_appearance(false)
 	var active := not members.is_empty()
 	if active != _container_active:
 		_container_active = active
