@@ -1,3 +1,5 @@
+> 研究依据：保留研究时点的结论与限制；当前实施范围以 [首版规格](../specs/first-release.md) 为准。文中“当前环境”等描述指研究当时。
+
 # Project Graph 软件设计调研报告
 
 > 从自由画布走向可复用、可追溯的知识工作台
@@ -25,11 +27,11 @@ Project Graph 最值得探索的方向，是帮助用户围绕一个问题，把
 
 ### 1.2 使用的材料
 
-项目材料包括 [AGENTS.md](AGENTS.md)、[TODO.md](TODO.md)、[基础思维导图画布](docs/canvas-mvp.md)和[启动性能调研](docs/startup-performance-research.md)。研究材料包括空间超文本、概念图、图可视化、人机协作与本地优先软件论文，以及相关产品的官方文档。已归档 PDF 见[论文目录](docs/references/papers/README.md)。
+项目材料包括 [AGENTS.md](../../AGENTS.md)、[TODO.md](../archive/2026-09-29/TODO.md)、[基础思维导图画布](../archive/2026-09-29/canvas-mvp.md)和[启动性能调研](startup-performance.md)。研究材料包括空间超文本、概念图、图可视化、人机协作与本地优先软件论文，以及相关产品的官方文档。已归档 PDF 见[论文目录](../references/papers/README.md)。
 
 本文使用三种表述：**文档记录**表示仓库或产品文档的描述；**研究发现**表示研究在特定条件下得到的结果；**设计建议**表示基于这些材料的推断。三者不能互换。产品文档用于确认交互方法，不能证明某产品效果优于另一产品。
 
-本次是定向调研，不是穷尽检索的系统综述。没有访谈目标用户，没有运行项目测试、构建、基准或 Godot Editor；没有读取或修改 Godot 识别的项目文件。当前环境没有 Godot MCP，代码级复核应在按 [CONTRIBUTING.md](CONTRIBUTING.md)准备工具后另行开展。论文中的样本规模和使用条件不能直接换算为本项目的承载量或收益。
+本次是定向调研，不是穷尽检索的系统综述。没有访谈目标用户，没有运行项目测试、构建、基准或 Godot Editor；没有读取或修改 Godot 识别的项目文件。当前环境没有 Godot MCP，代码级复核应在按 [CONTRIBUTING.md](../../CONTRIBUTING.md)准备工具后另行开展。论文中的样本规模和使用条件不能直接换算为本项目的承载量或收益。
 
 ## 2. 产品首先应该承诺什么
 
@@ -123,12 +125,12 @@ InkSeine 将搜索融入笔记现场；Sensecape 探索通过多层抽象组织�
 
 | 研究 | 实际研究了什么 | 对设计的约束 |
 | --- | --- | --- |
-| Nesbit、Adesope，2006 | 55 项研究、5818 名参与者；制图子组中，相对写文本或提纲的标准化效应量约 0.194，相对讲授或讨论约 0.742，且分析有样本范围限制 | 主动整理可能贡献较大收益；不能把效应量当作提升百分比。应与认真写作和提纲这类强基线比较。[PDF 第 19–20 页](docs/references/papers/2006-nesbit-adesope-meta-analysis.pdf) |
-| InkSeine，2007 | 12 名计算机科学研究生分批参加形成性与迭代可用性研究 | 支持搜索现场整合与手势可发现性的设计探索，不证明长期效率。[PDF 第 3、8–9 页](docs/references/papers/2007-inkseine.pdf) |
-| Okoe 等，2017 | 大规模线上参与者的短时图读取实验，使用单一食材共现网络 | 网络实例、任务和交互条件限制外推；不能用其结果断言所有知识图的最佳表示。[PDF 第 7–12 页](docs/references/papers/2017-node-link-matrix-comparison.pdf) |
-| Sensecape，2023 | 12 人被试内比较，每条件主要任务 20 分钟，观察概念、层级与重访等行为 | 概念更多、层级更深不等于理解更好；正式基线也集成聊天与画布，应避免把跨应用复制成本误算为层级界面的收益。[PDF 第 8–10、13–14 页](docs/references/papers/2023-sensecape.pdf) |
-| Graphologue，2023 | 50 个查询用于技术评价，7 人参加用户研究；标注指标衡量生成文本与图的对应 | 关系标注 F1 不代表事实正确率；用户评价没有同步随机对照。[PDF 第 11–14 页](docs/references/papers/2023-graphologue.pdf) |
-| ScholarMate，2025/2026 | 两名研究生的先导试用，另有文献整理案例 | 可提供来源追溯、建议修改和撤销需求的线索；不足以估计一般用户的效率或分类准确率。[PDF 第 5–6 页](docs/references/papers/2025-scholarmate-v3-2026.pdf) |
+| Nesbit、Adesope，2006 | 55 项研究、5818 名参与者；制图子组中，相对写文本或提纲的标准化效应量约 0.194，相对讲授或讨论约 0.742，且分析有样本范围限制 | 主动整理可能贡献较大收益；不能把效应量当作提升百分比。应与认真写作和提纲这类强基线比较。[PDF 第 19–20 页](../references/papers/2006-nesbit-adesope-meta-analysis.pdf) |
+| InkSeine，2007 | 12 名计算机科学研究生分批参加形成性与迭代可用性研究 | 支持搜索现场整合与手势可发现性的设计探索，不证明长期效率。[PDF 第 3、8–9 页](../references/papers/2007-inkseine.pdf) |
+| Okoe 等，2017 | 大规模线上参与者的短时图读取实验，使用单一食材共现网络 | 网络实例、任务和交互条件限制外推；不能用其结果断言所有知识图的最佳表示。[PDF 第 7–12 页](../references/papers/2017-node-link-matrix-comparison.pdf) |
+| Sensecape，2023 | 12 人被试内比较，每条件主要任务 20 分钟，观察概念、层级与重访等行为 | 概念更多、层级更深不等于理解更好；正式基线也集成聊天与画布，应避免把跨应用复制成本误算为层级界面的收益。[PDF 第 8–10、13–14 页](../references/papers/2023-sensecape.pdf) |
+| Graphologue，2023 | 50 个查询用于技术评价，7 人参加用户研究；标注指标衡量生成文本与图的对应 | 关系标注 F1 不代表事实正确率；用户评价没有同步随机对照。[PDF 第 11–14 页](../references/papers/2023-graphologue.pdf) |
+| ScholarMate，2025/2026 | 两名研究生的先导试用，另有文献整理案例 | 可提供来源追溯、建议修改和撤销需求的线索；不足以估计一般用户的效率或分类准确率。[PDF 第 5–6 页](../references/papers/2025-scholarmate-v3-2026.pdf) |
 
 共同启示是：研究支持更好的表达与控制机制，产品仍需证明收益超过录入、维护和核查成本。论文内部统计口径不清楚的细节不作为本报告的决策依据。
 
@@ -136,7 +138,7 @@ InkSeine 将搜索融入笔记现场；Sensecape 探索通过多层抽象组织�
 
 ### 5.1 应保留的基础
 
-项目文档记录了文本与笔迹、创建和割断连线、包含关系、复制粘贴、搜索、保存以及撤销等基础。单父容器、防循环和容器带动内容已经被记录为已有行为，不应作为全新功能重复规划。[TODO：已有基础](TODO.md)
+项目文档记录了文本与笔迹、创建和割断连线、包含关系、复制粘贴、搜索、保存以及撤销等基础。单父容器、防循环和容器带动内容已经被记录为已有行为，不应作为全新功能重复规划。[TODO：已有基础](../archive/2026-09-29/TODO.md)
 
 节点树表达可见内容、工具节点与持久对象分离、世界坐标和事务历史，适合作为后续设计约束。本文不建议为了名词一致而重写现有容器，也不改变已确定的 Alt 操作中心锚点。
 
@@ -388,7 +390,7 @@ Godot 提供线程池，但线程调度也有成本，活动场景树并非线�
 
 可见对象裁剪必须保留当前编辑、选中、拖动及边界连接所需状态。暂停远处物理反馈前，要把确定位置保存到模型；重新进入视野不应造成知识对象跳位。节点树优先与按需实例化并不冲突。
 
-性能目标应在目标设备上制定。首次可编辑时间、输入到反馈延迟、拖动帧时间、检索延迟和后台保存阻塞分别记录；使用百分位和最坏卡顿，避免只看平均帧率。当前没有测量结果，不承诺任何节点上限。[既有启动性能调研](docs/startup-performance-research.md)
+性能目标应在目标设备上制定。首次可编辑时间、输入到反馈延迟、拖动帧时间、检索延迟和后台保存阻塞分别记录；使用百分位和最坏卡顿，避免只看平均帧率。当前没有测量结果，不承诺任何节点上限。[既有启动性能调研](startup-performance.md)
 
 ### 11.4 标准能力与社区库：复用候选及暂不采用的理由
 
@@ -526,21 +528,21 @@ AI 生成关系与用户确认关系应可区分，模型输出不能自行升�
 
 ## 附录 A：参考资料入口
 
-既有调研索引见 [docs/references/README.md](docs/references/README.md)，原始 PDF、版本与下载来源见 [docs/references/papers/README.md](docs/references/papers/README.md)。本文在相关论述旁保留直接来源链接。
+既有调研索引见 [docs/references/README.md](../archive/2026-09-29/references.md)，原始 PDF、版本与下载来源见 [docs/references/papers/README.md](../references/papers/README.md)。本文在相关论述旁保留直接来源链接。
 
 | 资料 | 本地原文或入口 | 在本文中的用途 |
 | --- | --- | --- |
 | Searching for the Missing Link，1993 | [作者 HTML 全文](https://people.engr.tamu.edu/shipman/viki/papers/ht93/ht93.html) | 空间隐含结构与渐进明确化 |
 | VIKI，1994 | [作者论文索引](https://people.engr.tamu.edu/shipman/viki/papers/vkat-papers.html) | 后续阅读线索；未据摘要编写实验结论 |
-| Nesbit、Adesope，2006 | [PDF](docs/references/papers/2006-nesbit-adesope-meta-analysis.pdf) | 概念图学习证据及其范围 |
-| InkSeine，2007 | [PDF](docs/references/papers/2007-inkseine.pdf) | 笔记现场的搜索和收集 |
-| Novak、Cañas，2008 | [PDF](docs/references/papers/2008-novak-canas-concept-maps.pdf) | 焦点问题与命题 |
+| Nesbit、Adesope，2006 | [PDF](../references/papers/2006-nesbit-adesope-meta-analysis.pdf) | 概念图学习证据及其范围 |
+| InkSeine，2007 | [PDF](../references/papers/2007-inkseine.pdf) | 笔记现场的搜索和收集 |
+| Novak、Cañas，2008 | [PDF](../references/papers/2008-novak-canas-concept-maps.pdf) | 焦点问题与命题 |
 | Karpicke、Blunt，2011 | [作者实验室 PDF](https://learninglab.psych.purdue.edu/downloads/2011/2011_Karpicke_Blunt_Science.pdf) | 学习方法比较的反例与边界；未在本地归档 |
-| Okoe 等，2017 | [PDF](docs/references/papers/2017-node-link-matrix-comparison.pdf) | 图表示依赖任务 |
-| Local-first Software，2019 | [PDF](docs/references/papers/2019-local-first.pdf) | 数据持有、离线与协作边界 |
-| Sensecape，2023 | [PDF](docs/references/papers/2023-sensecape.pdf) | 多层抽象 |
-| Graphologue，2023 | [PDF](docs/references/papers/2023-graphologue.pdf) | 图形式的 AI 交互 |
-| ScholarMate，2025/2026 | [PDF](docs/references/papers/2025-scholarmate-v3-2026.pdf) | 材料整理、主题建议与证据追溯 |
+| Okoe 等，2017 | [PDF](../references/papers/2017-node-link-matrix-comparison.pdf) | 图表示依赖任务 |
+| Local-first Software，2019 | [PDF](../references/papers/2019-local-first.pdf) | 数据持有、离线与协作边界 |
+| Sensecape，2023 | [PDF](../references/papers/2023-sensecape.pdf) | 多层抽象 |
+| Graphologue，2023 | [PDF](../references/papers/2023-graphologue.pdf) | 图形式的 AI 交互 |
+| ScholarMate，2025/2026 | [PDF](../references/papers/2025-scholarmate-v3-2026.pdf) | 材料整理、主题建议与证据追溯 |
 
 ## 附录 B：本次交付与未执行事项
 

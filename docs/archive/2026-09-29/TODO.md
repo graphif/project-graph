@@ -1,3 +1,5 @@
+> 历史资料：保留原始上下文，不作为当前开发清单或完成证明。当前入口见 [开发文档](../../README.md)。
+
 # Project Graph 功能清单
 
 ## 2026-09-16：对照 master 的完善计划
@@ -15,7 +17,7 @@
 
 ### P0：数据兼容与跨功能完整性
 
-- [ ] **兼容 master 的 .prg 文件与旧版本迁移（未移植）。** master 的 `ProjectFile.ts` 使用 `stage.msgpack`、`metadata.msgpack`、标签、引用和附件，当前 [project_file.gd](src/project_file.gd) 要求 `metadata.json`、`stage.json` 且仅接受主版本 3；同为 `.prg` 不代表互通。补充明确的格式识别、转换与不支持类型提示。验收：导入 master 的含嵌套、连线、附件样例；重新保存后 ID、文字、关系不丢失，无法转换的内容明确报告。依据：M1、G1。
+- [ ] **兼容 master 的 .prg 文件与旧版本迁移（未移植）。** master 的 `ProjectFile.ts` 使用 `stage.msgpack`、`metadata.msgpack`、标签、引用和附件，当前 [project_file.gd](../../../src/project_file.gd) 要求 `metadata.json`、`stage.json` 且仅接受主版本 3；同为 `.prg` 不代表互通。补充明确的格式识别、转换与不支持类型提示。验收：导入 master 的含嵌套、连线、附件样例；重新保存后 ID、文字、关系不丢失，无法转换的内容明确报告。依据：M1、G1。
 - [ ] **未知对象类型和损坏引用的保护（待完善）。** 当前注册表只登记文本、笔迹和有向连线；恢复时未知类型直接 `continue`，不存在的引用解析为 null。避免打开后再次保存时静默丢数据：增加完整性检查、保留策略或阻止覆盖原文件。验收：未知类型、重复 ID、断链、无效容器关系都有明确处理结果。依据：G1；与 M1 的多类型文件对照。
 - [ ] **自动保存、自动备份及保留策略（部分实现）。** 当前仅有手动备份到 `user://backups`；补 master 的定时间隔、内容未变不重复备份、自定义目录/失败回退、同目录备份和过期清理。验收：编辑后按配置保存/备份，关闭重开可恢复，路径失败时不会误报成功。依据：M2、G2。
 - [ ] **容器的选中导出包含完整子树（待验证风险）。** 复制已扩展容器后代和内部连线，但 SVG、PNG、文本导出仍从 `selected_objects()` 直接取集合，未复用这套展开规则。统一选中容器导出的范围，保留嵌套和内部连线；外部连线明确是否包含。验收：仅选最外层容器，导出内容包含所有后代且不混入无关对象。依据：G3、G4。
@@ -66,12 +68,12 @@
 
 | 编号 | 当前 Godot 实现 |
 | --- | --- |
-| G1 | [项目文件](src/project_file.gd)、[对象注册与恢复](src/stage_object_registry.gd) |
-| G2 | [主界面命令、设置、面板与文件入口](src/main/main.gd)、[偏好设置](src/main/graph_preferences.gd) |
-| G3 | [复制粘贴、生成、导出与图分析](src/main/workspace_actions.gd) |
-| G4 | [舞台交互与文件操作](src/stage/stage.gd) |
-| G5 | [Alt 层级移动](src/entity_layer_mover.gd)、[实体](src/stage_object/entity/entity.gd)、[文本与容器](src/stage_object/entity/text_node/text_node.gd) |
-| G6 | [连线几何](src/stage_object/association/line_edge/line_edge.gd)、[连线创建](src/line_edge_creator.gd) |
+| G1 | [项目文件](../../../src/project_file.gd)、[对象注册与恢复](../../../src/stage_object_registry.gd) |
+| G2 | [主界面命令、设置、面板与文件入口](../../../src/main/main.gd)、[偏好设置](../../../src/main/graph_preferences.gd) |
+| G3 | [复制粘贴、生成、导出与图分析](../../../src/main/workspace_actions.gd) |
+| G4 | [舞台交互与文件操作](../../../src/stage/stage.gd) |
+| G5 | [Alt 层级移动](../../../src/entity_layer_mover.gd)、[实体](../../../src/stage_object/entity/entity.gd)、[文本与容器](../../../src/stage_object/entity/text_node/text_node.gd) |
+| G6 | [连线几何](../../../src/stage_object/association/line_edge/line_edge.gd)、[连线创建](../../../src/line_edge_creator.gd) |
 
 ## 原始逐项清单（已校正本次确认的部分状态）
 
