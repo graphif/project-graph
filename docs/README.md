@@ -9,8 +9,9 @@
 | 1 | [当前状态](development/current-state.md) | 已确认什么，哪些只是旧记录？ |
 | 2 | [首版规格](specs/first-release.md) | 为谁解决什么问题，做到哪里？ |
 | 3 | [设计决定](design/decisions.md) | 数据、交互和依赖有哪些边界？ |
-| 4 | [实施计划](development/implementation-plan.md) | 下一项独立改动是什么，依赖什么？ |
-| 5 | [验收方案](validation/first-release.md) | 如何判断交付成功，失败检查什么？ |
+| 4 | [UI 风格与一致性](design/ui-style.md) | 界面如何保持统一，哪些差异待处理？ |
+| 5 | [实施计划](development/implementation-plan.md) | 下一项独立改动是什么，依赖什么？ |
+| 6 | [验收方案](validation/first-release.md) | 如何判断交付成功，失败检查什么？ |
 
 ## 文档维护规则
 

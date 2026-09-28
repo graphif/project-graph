@@ -26,3 +26,7 @@
 3. 经授权运行验收后记录环境、样例、预期、实际、日期及关联提交。
 
 本轮读取脚本：ProjectFile、StageObjectRegistry、History、Stage、TextNode、LineEdge、WorkspaceActions、FileActions；使用 MCP 项目脚本枚举及脚本读取类别。没有修改 Godot 文件，也没有执行编辑器脚本、运行项目或测试。
+
+## UI 一致性补充复核
+
+通过 MCP 读取 main、LocalTheme、DialogTheme、DialogMotion、ThemeTransition、GraphPreferences。确认已有深浅主题、系统跟随配置、UI 缩放、菜单图标映射与弹窗类型变体；未确认全局视觉一致性。配色分散、焦点样式和动效覆盖等证据见 [UI 规范差异表](../design/ui-style.md)。本次未读取场景/主题资源，未运行界面验收。
