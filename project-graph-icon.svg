@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <linearGradient id="border" x1="35" y1="32" x2="220" y2="226" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#91C96D"/>
+      <stop offset="0.5" stop-color="#79BE9F"/>
+      <stop offset="1" stop-color="#61B5EC"/>
+    </linearGradient>
+    <radialGradient id="background" cx="0" cy="0" r="1" gradientTransform="translate(109 115) rotate(47) scale(153 145)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#425B5C"/>
+      <stop offset="0.54" stop-color="#283D43"/>
+      <stop offset="1" stop-color="#142328"/>
+    </radialGradient>
+  </defs>
+  <rect x="26" y="27" width="204" height="205" rx="46" fill="url(#background)" stroke="url(#border)" stroke-width="6"/>
+  <path d="M106 160C123 160 126 151 128 131C130 112 135 104 150 102" stroke="#5AB2F4" stroke-width="8" stroke-linecap="round"/>
+  <path d="M106 102C123 103 128 115 129 132C130 150 137 158 150 159" stroke="#80B98A" stroke-width="8" stroke-linecap="round"/>
+  <path d="M84 74C68 74 62 80 62 96C62 112 68 118 84 118C100 118 106 112 106 96C106 80 100 74 84 74Z" fill="#466C50" stroke="#83BB90" stroke-width="8"/>
+  <path d="M172 74C156 74 150 80 150 96C150 112 156 118 172 118C188 118 194 112 194 96C194 80 188 74 172 74Z" fill="#326787" stroke="#5CB3F6" stroke-width="8"/>
+  <path d="M84 140C68 140 62 146 62 162C62 178 68 184 84 184C100 184 106 178 106 162C106 146 100 140 84 140Z" fill="#326787" stroke="#5CB3F6" stroke-width="8"/>
+  <path d="M172 140C156 140 150 146 150 162C150 178 156 184 172 184C188 184 194 178 194 162C194 146 188 140 172 140Z" fill="#3D623C" stroke="#80B98A" stroke-width="8"/>
+</svg>

@@ -14,7 +14,7 @@ config/name="Project Graph"
 run/main_scene="uid://dpglridd8c5go"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 boot_splash/show_image=false
-config/icon="uid://bxfj8cpdlgdoa"
+config/icon="res://project-graph-icon.svg"
 
 [autoload]
 
