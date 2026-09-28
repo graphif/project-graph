@@ -18,7 +18,7 @@ static func configure(target: Theme, light: bool) -> void:
 	background.corner_radius_top_left = 0
 	background.corner_radius_top_right = 0
 	target.set_stylebox("panel", "DialogSurface", background)
-	var accept_panel := _panel(surface, border, 20, 10)
+	var accept_panel := _panel(Color.TRANSPARENT, Color.TRANSPARENT, 20, 0)
 	target.set_stylebox("panel", "AcceptDialog", accept_panel)
 	target.set_constant("buttons_min_height", "AcceptDialog", 36)
 	target.set_constant("buttons_min_width", "AcceptDialog", 88)
@@ -82,7 +82,7 @@ static func configure(target: Theme, light: bool) -> void:
 	var focus := _panel(Color.TRANSPARENT, accent, 0, 8)
 	focus.set_border_width_all(2)
 	target.set_stylebox("focus", "DialogButton", focus)
-	for key in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color"]:
+	for key in ["font_color", "font_focus_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color"]:
 		target.set_color(key, "DialogButton", text)
 		target.set_color(key, "DialogPrimaryButton", Color("#ffffff") if light else Color("#1e1e2e"))
 	for state in ["normal", "hover", "pressed", "hover_pressed"]:

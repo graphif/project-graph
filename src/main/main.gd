@@ -233,6 +233,7 @@ func _setup_panels() -> void:
 			DialogTheme.apply_controls(dialog)
 			$DialogMotion.register_window(dialog)
 		if dialog is AcceptDialog:
+			dialog.transparent_bg = true
 			dialog.get_ok_button().theme_type_variation = "DialogPrimaryButton"
 			if dialog is ConfirmationDialog:
 				dialog.get_cancel_button().theme_type_variation = "DialogButton"
@@ -271,7 +272,7 @@ func _setup_panels() -> void:
 		modes.add_item(label)
 	_panel("GenerateNodeWindow").get_node("Generate").pressed.connect(_generate)
 	_panel("ColorWindow").get_node("Apply").pressed.connect(_apply_color)
-	$UIOverlay/UnsavedDialog.add_button("不保存", false, "discard")
+	$UIOverlay/UnsavedDialog.add_button("不保存", false, "discard").theme_type_variation = "DialogButton"
 	$UIOverlay/UnsavedDialog.confirmed.connect(_save_before_close)
 	$UIOverlay/UnsavedDialog.custom_action.connect(func(_action): _discard_close())
 	$UIOverlay/UnsavedDialog.canceled.connect(func(): _pending_close = null; _quitting = false)
