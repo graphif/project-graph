@@ -95,6 +95,7 @@ static func configure_theme(target: Theme, light: bool) -> void:
 				target.set_color(key, type, neutral_text_color(background))
 		if target.has_color("selection_color", type):
 			target.set_color("selection_color", type, color(light, "surface.selected"))
+	_configure_list_feedback(target, light)
 	target.set_type_variation("MutedLabel", "Label")
 	target.set_color("font_color", "MutedLabel", color(light, "text.secondary"))
 	target.set_color("default_color", "RichTextLabel", color(light, "text.primary"))
@@ -139,3 +140,31 @@ static func neutral_text_color(background: Color) -> Color:
 	var level := (luminance + 0.05) / 7.0 - 0.05 if black_contrast >= white_contrast else 7.0 * (luminance + 0.05) - 0.05
 	level = clampf(level, 0.0, 1.0)
 	return Color(level, level, level).linear_to_srgb()
+
+
+static func _configure_list_feedback(target: Theme, light: bool) -> void:
+	for state in ["hovered", "hovered_selected", "hovered_selected_focus", "selected", "selected_focus"]:
+		var style := StyleBoxFlat.new()
+		style.bg_color = color(light, "surface.hover" if state == "hovered" else "surface.selected")
+		style.border_color = color(light, "border.focus")
+		style.set_border_width_all(1 if state.ends_with("focus") else 0)
+		style.set_corner_radius_all(8)
+		style.content_margin_left = 8
+		style.content_margin_right = 8
+		style.content_margin_top = 5
+		style.content_margin_bottom = 5
+		target.set_stylebox(state, "ItemList", style)
+	for key in ["font_color", "font_hovered_color", "font_selected_color", "font_hovered_selected_color"]:
+		var background := color(light, "surface.hover" if key == "font_hovered_color" else "surface.selected")
+		target.set_color(key, "ItemList", neutral_text_color(background))
+	var tooltip := StyleBoxFlat.new()
+	tooltip.bg_color = color(light, "surface.panel")
+	tooltip.border_color = color(light, "border.default")
+	tooltip.set_border_width_all(1)
+	tooltip.set_corner_radius_all(8)
+	tooltip.content_margin_left = 10
+	tooltip.content_margin_right = 10
+	tooltip.content_margin_top = 6
+	tooltip.content_margin_bottom = 6
+	target.set_stylebox("panel", "TooltipPanel", tooltip)
+	target.set_color("font_color", "TooltipLabel", neutral_text_color(tooltip.bg_color))
