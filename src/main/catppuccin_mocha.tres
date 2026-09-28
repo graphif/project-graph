@@ -1,6 +1,6 @@
 [gd_resource type="Theme" format=3 uid="uid://divrt0dadoiok"]
 
-[ext_resource type="FontFile" uid="uid://cajak3br1708r" path="res://assets/fonts/GenJyuuGothic-Regular.ttf" id="1_svnyg"]
+[ext_resource type="FontFile" path="res://assets/fonts/LXGWWenKai-Regular.ttf" id="1_svnyg"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bregm"]
 content_margin_left = 12.0

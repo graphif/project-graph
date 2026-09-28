@@ -482,6 +482,7 @@ func _flush_theme_preference() -> void:
 
 
 func _prepare_themes() -> void:
+	theme.default_font = preload("res://assets/fonts/LXGWWenKai-Regular.ttf")
 	# 构建完整配色后再挂到控件上；两套主题共享字体和图标。
 	_dark_theme = theme.duplicate(false)
 	_dark_theme.default_font_size = 14
