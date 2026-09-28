@@ -1,0 +1,4 @@
+[Thumbnailer Entry]
+TryExec=/usr/libexec/project-graph-thumbnailer
+Exec=/usr/libexec/project-graph-thumbnailer %i %o %s
+MimeType=application/x-project-graph;
