@@ -45,8 +45,15 @@ func _run() -> void:
 		if button.is_visible_in_tree() and button.focus_mode != Control.FOCUS_NONE:
 			button.grab_focus()
 			break
+	var original_rect := node.get_visual_rect()
+	var original_style := node.label.get_theme_stylebox("normal")
 	node.enter_edit_mode()
 	await process_frame
+	check(node.label.visible, "Node background remains visible while editing")
+	check(node.get_visual_rect() == original_rect, "Editing preserves node frame geometry")
+	check(node.label.get_theme_stylebox("normal").get_minimum_size() == original_style.get_minimum_size(), "Editing preserves frame margins")
+	var edit_style = preload("res://src/main/continuous_corners.gd").source(node.text_edit.get_theme_stylebox("normal"))
+	check(edit_style.bg_color.a == 0.0 and edit_style.border_color.a == 0.0, "Autosized editor never draws a competing frame")
 	check(node.text_edit.has_focus() and not node.text_edit.has_selection(), "Node edit focused without selecting all")
 	check(node.text_edit.get_caret_column() == node.text.length(), "Caret starts at text end")
 	var font := node.label.get_theme_font("font")

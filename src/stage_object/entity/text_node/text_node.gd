@@ -225,7 +225,7 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 		label.size = Vector2(fixed_width, 0.0)
 	var style := StyleBoxFlat.new()
 	style.bg_color = display_fill_color()
-	style.border_color = display_border_color()
+	style.border_color = Palette.color(light, "border.focus") if _editing else display_border_color()
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(int(Corners.NODE))
 	style.content_margin_left = 15
@@ -241,8 +241,10 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 	text_edit.add_theme_color_override("caret_color", Color("#24452c") if light else Color("#f5e0dc"))
 	text_edit.add_theme_color_override("selection_color", Color("#d9efdc") if light else Color("#45475a"))
 	var edit_style := style.duplicate() as StyleBoxFlat
-	edit_style.bg_color = Color("#f6faf6") if light else Color("#181825")
-	edit_style.border_color = style.border_color
+	# 输入框只绘制文字、光标和选区，轮廓由节点本身绘制。
+	edit_style.bg_color = Color.TRANSPARENT
+	edit_style.border_color = Color.TRANSPARENT
+	edit_style.set_border_width_all(0)
 	text_edit.add_theme_stylebox_override("normal", Corners.style(edit_style, Corners.NODE, true))
 	text_edit.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	label.end_bulk_theme_override()
