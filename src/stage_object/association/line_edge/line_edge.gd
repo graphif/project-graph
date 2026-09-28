@@ -5,6 +5,8 @@ extends Association
 @onready var line: Line2D = %Line
 @onready var arrow_head: Polygon2D = %Head
 
+@export var text := ""
+
 @export var source: Entity
 @export var target: Entity
 # 保留旧文件字段；连接边由实时几何计算，不把派生端点写入历史。
@@ -126,3 +128,24 @@ func _update_collision_shape(points: PackedVector2Array) -> void:
 		segments.append(points[index])
 		segments.append(points[index + 1])
 	shape.segments = segments
+
+
+func distance_to_point(world_point: Vector2) -> float:
+	var distance := INF
+	for index in range(line.points.size() - 1):
+		var start := line.to_global(line.points[index])
+		var end := line.to_global(line.points[index + 1])
+		distance = minf(distance, world_point.distance_to(Geometry2D.get_closest_point_to_segment(world_point, start, end)))
+	return distance
+
+
+func enter_edit_mode() -> void:
+	$Caption.begin_edit()
+
+
+func exit_edit_mode(commit_changes := true) -> void:
+	$Caption.finish_edit(commit_changes)
+
+
+func is_text_dirty() -> bool:
+	return $Caption.is_dirty()

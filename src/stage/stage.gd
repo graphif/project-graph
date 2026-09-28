@@ -33,18 +33,24 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if not event is InputEventMouseButton or not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
 		return
+	var world_position: Vector2 = get_canvas_transform().affine_inverse() * event.position
 	var mode := int(GraphPreferences.value("left_mode"))
 	if mode == 1:
 		history.begin_transaction()
 		_stroke = StageObjectRegistry.get_scene("pen_stroke").instantiate() as PenStroke
-		_stroke.position = get_global_mouse_position()
+		_stroke.position = world_position
 		add_child(_stroke)
 		_stroke.points = PackedVector2Array([Vector2.ZERO])
+	elif mode == 0 and edge_at(world_position) != null:
+		var edge := edge_at(world_position)
+		select_object(edge, event.ctrl_pressed or event.meta_pressed)
+		if event.double_click:
+			edge.enter_edit_mode()
 	elif mode == 0 and event.double_click:
-		var node := create_text_node("...", get_global_mouse_position())
+		var node := create_text_node("...", world_position)
 		node.enter_edit_mode()
 	elif mode == 0:
-		_marquee_start = get_global_mouse_position()
+		_marquee_start = world_position
 		_marquee_active = true
 		_marquee_toggle = event.ctrl_pressed or event.meta_pressed
 		if not _marquee_toggle:
@@ -242,6 +248,8 @@ func finish_interaction() -> void:
 
 func is_dirty() -> bool:
 	for object in stage_objects():
+		if object is LineEdge and object.is_text_dirty():
+			return true
 		if object is TextNode and object.text_edit.visible and object.text_edit.text != object.text:
 			return true
 	return JSON.stringify(StageObjectRegistry.capture(self)) != JSON.stringify(_saved_snapshot)
@@ -303,7 +311,7 @@ func focus_objects(objects: Array[StageObject]) -> void:
 
 func finish_text_editing() -> void:
 	for child in get_children():
-		if child is TextNode:
+		if child is TextNode or child is LineEdge:
 			child.exit_edit_mode()
 
 
@@ -370,3 +378,15 @@ func _rounded_selection_rect(rect: Rect2, radius: float) -> PackedVector2Array:
 			var angle := PI + float(corner) * PI * 0.5 + float(step) / 8.0 * PI * 0.5
 			points.append(centers[corner] + Vector2.from_angle(angle) * radius)
 	return points
+
+
+func edge_at(world_point: Vector2) -> LineEdge:
+	var nearest: LineEdge
+	var distance := 7.0 / maxf(camera.zoom.x, 0.01)
+	for object in stage_objects():
+		if object is LineEdge and object.is_visible_in_tree():
+			var candidate: float = object.distance_to_point(world_point)
+			if candidate < distance:
+				distance = candidate
+				nearest = object
+	return nearest
