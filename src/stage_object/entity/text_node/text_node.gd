@@ -60,7 +60,7 @@ func _ready() -> void:
 	_normal_edit_position = text_edit.position
 	# MSDF 字形在相机缩放时保持平滑，所有节点共享同一份字形缓存。
 	if _canvas_font == null:
-		_canvas_font = _make_canvas_font(preload("res://assets/fonts/LXGWWenKai-Regular.ttf"))
+		_canvas_font = _make_canvas_font(preload("res://assets/fonts/PingFang-SC-Regular.ttf"))
 	label.add_theme_font_override("font", _canvas_font)
 	text_edit.add_theme_font_override("font", _canvas_font)
 	label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
