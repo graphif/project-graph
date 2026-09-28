@@ -4,7 +4,7 @@
 
 Name: project-graph
 Version: @VERSION@
-Release: 11.local%{?dist}
+Release: 12.local%{?dist}
 Summary: Node-based visual thinking and diagram editor
 License: LicenseRef-Project-Graph
 URL: https://github.com/graphif/project-graph

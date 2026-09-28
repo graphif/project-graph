@@ -1323,3 +1323,18 @@ func _forward_canvas_text_key(event: InputEvent) -> bool:
 	viewport.push_input(event, true)
 	get_viewport().set_input_as_handled()
 	return true
+
+
+func _refresh_color_swatches() -> void:
+	var colors: Dictionary = Palette.LATTE if _displayed_theme_light else Palette.MOCHA
+	for swatch in _panel("ColorWindow").get_node("Palette").get_children():
+		var color := Color(colors[str(swatch.get_meta("palette_name"))])
+		swatch.set_meta("palette_color", color)
+		swatch.tooltip_text = str(swatch.get_meta("palette_name")) + " · #" + color.to_html(false)
+		for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
+			var style := StyleBoxFlat.new()
+			style.bg_color = color
+			style.set_corner_radius_all(6)
+			style.border_color = Palette.color(_displayed_theme_light, "border.focus")
+			style.set_border_width_all(2 if state in ["pressed", "focus"] else 0)
+			swatch.add_theme_stylebox_override(state, Corners.style(style, Corners.CONTROL))
