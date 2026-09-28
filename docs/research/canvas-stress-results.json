@@ -1,0 +1,317 @@
+{
+  "date": "2026-09-29",
+  "scope": "current working tree, editor executable, graphical standalone process",
+  "viewport": [
+    1280,
+    800
+  ],
+  "sample_seconds_per_phase": 3,
+  "cases": [
+    {
+      "display": "Wayland",
+      "edges": 0,
+      "engine": "4.8-dev6 (official)",
+      "file_bytes": 357,
+      "idle": {
+        "fps": 116.193475120447,
+        "frames": 349,
+        "max_ms": 73.914,
+        "p95_ms": 9.212
+      },
+      "linked": false,
+      "load_ms": 22.011,
+      "loaded": true,
+      "navigation": {
+        "fps": 116.02999225691,
+        "frames": 349,
+        "max_ms": 17.544,
+        "p95_ms": 9.407
+      },
+      "nodes": 0,
+      "phase": "complete",
+      "renderer": "gl_compatibility",
+      "save_ms": 2.763,
+      "static_memory_mb": 143.403768539429
+    },
+    {
+      "display": "Wayland",
+      "edges": 0,
+      "engine": "4.8-dev6 (official)",
+      "file_bytes": 1348,
+      "idle": {
+        "fps": 90.1357857362614,
+        "frames": 271,
+        "max_ms": 81.616,
+        "p95_ms": 17.996
+      },
+      "linked": false,
+      "load_ms": 159.306,
+      "loaded": true,
+      "max_node_width": 278.0,
+      "navigation": {
+        "fps": 86.9838499985169,
+        "frames": 261,
+        "max_ms": 24.848,
+        "p95_ms": 17.805
+      },
+      "nodes": 25,
+      "phase": "complete",
+      "renderer": "gl_compatibility",
+      "save_ms": 15.756,
+      "spacing_x": 400,
+      "static_memory_mb": 154.946008682251
+    },
+    {
+      "display": "Wayland",
+      "edges": 24,
+      "engine": "4.8-dev6 (official)",
+      "file_bytes": 2217,
+      "idle": {
+        "fps": 57.0906220687119,
+        "frames": 172,
+        "max_ms": 97.327,
+        "p95_ms": 25.387
+      },
+      "linked": true,
+      "load_ms": 169.747,
+      "loaded": true,
+      "max_node_width": 278.0,
+      "navigation": {
+        "fps": 54.138021398136,
+        "frames": 163,
+        "max_ms": 36.372,
+        "p95_ms": 27.494
+      },
+      "nodes": 25,
+      "phase": "complete",
+      "renderer": "gl_compatibility",
+      "save_ms": 16.079,
+      "spacing_x": 400,
+      "static_memory_mb": 157.41374206543
+    },
+    {
+      "display": "Wayland",
+      "edges": 0,
+      "engine": "4.8-dev6 (official)",
+      "file_bytes": 2094,
+      "idle": {
+        "fps": 58.5930932725474,
+        "frames": 176,
+        "max_ms": 38.229,
+        "p95_ms": 26.499
+      },
+      "linked": false,
+      "load_ms": 204.411,
+      "loaded": true,
+      "max_node_width": 278.0,
+      "navigation": {
+        "fps": 56.9152721315535,
+        "frames": 171,
+        "max_ms": 37.963,
+        "p95_ms": 27.063
+      },
+      "nodes": 50,
+      "phase": "complete",
+      "renderer": "gl_compatibility",
+      "save_ms": 17.71,
+      "spacing_x": 400,
+      "static_memory_mb": 161.602882385254
+    },
+    {
+      "display": "Wayland",
+      "edges": 49,
+      "engine": "4.8-dev6 (official)",
+      "file_bytes": 3712,
+      "idle": {
+        "fps": 38.4719983549904,
+        "frames": 116,
+        "max_ms": 59.381,
+        "p95_ms": 43.576
+      },
+      "linked": true,
+      "load_ms": 217.613,
+      "loaded": true,
+      "max_node_width": 278.0,
+      "navigation": {
+        "fps": 32.6416087916509,
+        "frames": 98,
+        "max_ms": 67.391,
+        "p95_ms": 51.985
+      },
+      "nodes": 50,
+      "phase": "complete",
+      "renderer": "gl_compatibility",
+      "save_ms": 23.488,
+      "spacing_x": 400,
+      "static_memory_mb": 166.449014663696
+    },
+    {
+      "display": "Wayland",
+      "edges": 0,
+      "engine": "4.8-dev6 (official)",
+      "file_bytes": 3319,
+      "idle": {
+        "fps": 30.35479142134,
+        "frames": 92,
+        "max_ms": 87.88,
+        "p95_ms": 61.499
+      },
+      "linked": false,
+      "load_ms": 306.126,
+      "loaded": true,
+      "max_node_width": 278.0,
+      "navigation": {
+        "fps": 31.0053075149279,
+        "frames": 94,
+        "max_ms": 72.736,
+        "p95_ms": 57.954
+      },
+      "nodes": 100,
+      "phase": "complete",
+      "renderer": "gl_compatibility",
+      "save_ms": 32.227,
+      "spacing_x": 400,
+      "static_memory_mb": 174.81748008728
+    },
+    {
+      "display": "Wayland",
+      "edges": 99,
+      "engine": "4.8-dev6 (official)",
+      "file_bytes": 7755,
+      "idle": {
+        "fps": 25.5568658520111,
+        "frames": 77,
+        "max_ms": 94.649,
+        "p95_ms": 72.543
+      },
+      "linked": true,
+      "load_ms": 477.899,
+      "loaded": true,
+      "max_node_width": 278.0,
+      "navigation": {
+        "fps": 19.3206404366596,
+        "frames": 59,
+        "max_ms": 104.556,
+        "p95_ms": 98.846
+      },
+      "nodes": 100,
+      "phase": "complete",
+      "renderer": "gl_compatibility",
+      "save_ms": 53.389,
+      "spacing_x": 400,
+      "static_memory_mb": 184.917694091797
+    },
+    {
+      "display": "Wayland",
+      "edges": 0,
+      "engine": "4.8-dev6 (official)",
+      "file_bytes": 9051,
+      "idle": {
+        "fps": 10.1668878238072,
+        "frames": 31,
+        "max_ms": 158.282,
+        "p95_ms": 130.041
+      },
+      "linked": false,
+      "load_ms": 905.052,
+      "loaded": true,
+      "max_node_width": 293.0,
+      "navigation": {
+        "fps": 9.43010310029272,
+        "frames": 29,
+        "max_ms": 137.491,
+        "p95_ms": 133.849
+      },
+      "nodes": 300,
+      "phase": "complete",
+      "renderer": "gl_compatibility",
+      "save_ms": 55.39,
+      "spacing_x": 400,
+      "static_memory_mb": 228.227609634399
+    },
+    {
+      "display": "Wayland",
+      "edges": 299,
+      "engine": "4.8-dev6 (official)",
+      "file_bytes": 22055,
+      "idle": {
+        "fps": 7.7873305971682,
+        "frames": 24,
+        "max_ms": 187.816,
+        "p95_ms": 184.44
+      },
+      "linked": true,
+      "load_ms": 1286.152,
+      "loaded": true,
+      "max_node_width": 293.0,
+      "navigation": {
+        "fps": 6.44262647842171,
+        "frames": 20,
+        "max_ms": 243.159,
+        "p95_ms": 243.159
+      },
+      "nodes": 300,
+      "phase": "complete",
+      "renderer": "gl_compatibility",
+      "save_ms": 95.061,
+      "spacing_x": 400,
+      "static_memory_mb": 259.246849060059
+    },
+    {
+      "display": "Wayland",
+      "edges": 0,
+      "engine": "4.8-dev6 (official)",
+      "file_bytes": 28387,
+      "idle": {
+        "fps": 2.2410527569431,
+        "frames": 7,
+        "max_ms": 536.829,
+        "p95_ms": 536.829
+      },
+      "linked": false,
+      "load_ms": 3053.236,
+      "loaded": true,
+      "max_node_width": 293.0,
+      "navigation": {
+        "fps": 2.31681521313542,
+        "frames": 8,
+        "max_ms": 526.848,
+        "p95_ms": 526.848
+      },
+      "nodes": 1000,
+      "phase": "complete",
+      "renderer": "gl_compatibility",
+      "save_ms": 175.17,
+      "spacing_x": 400,
+      "static_memory_mb": 415.367546081543
+    },
+    {
+      "display": "Wayland",
+      "edges": 999,
+      "engine": "4.8-dev6 (official)",
+      "file_bytes": 70711,
+      "idle": {
+        "fps": 1.87054109765846,
+        "frames": 6,
+        "max_ms": 737.921,
+        "p95_ms": 737.921
+      },
+      "linked": true,
+      "load_ms": 4568.261,
+      "loaded": true,
+      "max_node_width": 293.0,
+      "navigation": {
+        "fps": 1.60526063172143,
+        "frames": 5,
+        "max_ms": 830.74,
+        "p95_ms": 830.74
+      },
+      "nodes": 1000,
+      "phase": "complete",
+      "renderer": "gl_compatibility",
+      "save_ms": 318.517,
+      "spacing_x": 400,
+      "static_memory_mb": 517.396844863892
+    }
+  ]
+}
