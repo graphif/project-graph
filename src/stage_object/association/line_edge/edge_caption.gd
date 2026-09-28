@@ -76,8 +76,8 @@ func _update_style() -> void:
 	focus.set_border_width_all(2)
 	editor.add_theme_stylebox_override("focus", Corners.style(focus, Corners.CONTROL, true))
 	for control in [label, editor]:
-		control.add_theme_color_override("font_color", Palette.color(light, "text.primary"))
-	editor.add_theme_color_override("caret_color", Palette.color(light, "text.primary"))
+		control.add_theme_color_override("font_color", Palette.neutral_text_color(normal.bg_color))
+	editor.add_theme_color_override("caret_color", Palette.neutral_text_color(normal.bg_color))
 	editor.add_theme_color_override("selection_color", Palette.color(light, "surface.selected"))
 	if is_instance_valid(edge.source) and edge.source is TextNode:
 		var font: Font = edge.source.label.get_theme_font("font")

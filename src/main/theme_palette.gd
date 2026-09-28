@@ -41,6 +41,9 @@ static func is_light(mode: String) -> bool:
 
 
 static func color(light: bool, role: String) -> Color:
+	if role in ["text.primary", "text.secondary", "text.disabled", "canvas.node.text", "text.on_accent"]:
+		var background := color(light, "accent.primary" if role == "text.on_accent" else "surface.canvas")
+		return neutral_text_color(background)
 	if role in ["canvas.edge", "canvas.node.border"]:
 		return neutral_edge_color(color(light, "surface.canvas"))
 	if role == "surface.selected":
@@ -77,6 +80,19 @@ static func configure_theme(target: Theme, light: bool) -> void:
 			if key in ["focus", "tab_focus", "selected_focus"]:
 				style.border_color = color(light, "border.focus")
 			target.set_stylebox(key, type, style)
+		for key in target.get_color_list(type):
+			if key.begins_with("font_") and key.ends_with("_color") and not "outline" in key and not "shadow" in key:
+				var state := "normal"
+				for candidate in ["hover_pressed", "pressed", "hover", "selected", "disabled", "read_only"]:
+					if candidate in key:
+						state = candidate
+						break
+				var background := color(light, "surface.canvas")
+				if target.has_stylebox(state, type):
+					var box := Corners.source(target.get_stylebox(state, type)) as StyleBoxFlat
+					if box != null:
+						background = background.blend(box.bg_color)
+				target.set_color(key, type, neutral_text_color(background))
 		if target.has_color("selection_color", type):
 			target.set_color("selection_color", type, color(light, "surface.selected"))
 	target.set_type_variation("MutedLabel", "Label")
@@ -111,5 +127,15 @@ static func switch_icon(light: bool, checked: bool, disabled: bool, mirrored: bo
 static func neutral_edge_color(background: Color) -> Color:
 	var luminance := background.srgb_to_linear().get_luminance()
 	var level := (luminance + 0.05) / 4.5 - 0.05 if luminance > 0.18 else 4.5 * (luminance + 0.05) - 0.05
+	level = clampf(level, 0.0, 1.0)
+	return Color(level, level, level).linear_to_srgb()
+
+
+## Prefer 7:1 text contrast; use the stronger black/white endpoint when 7:1 is impossible.
+static func neutral_text_color(background: Color) -> Color:
+	var luminance := background.srgb_to_linear().get_luminance()
+	var black_contrast := (luminance + 0.05) / 0.05
+	var white_contrast := 1.05 / (luminance + 0.05)
+	var level := (luminance + 0.05) / 7.0 - 0.05 if black_contrast >= white_contrast else 7.0 * (luminance + 0.05) - 0.05
 	level = clampf(level, 0.0, 1.0)
 	return Color(level, level, level).linear_to_srgb()

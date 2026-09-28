@@ -233,7 +233,7 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 	_displayed_background = background
 	label.begin_bulk_theme_override()
 	text_edit.begin_bulk_theme_override()
-	label.add_theme_color_override("font_color", Color("#24452c") if light else Color("#cdd6f4"))
+	label.add_theme_color_override("font_color", Palette.neutral_text_color(background))
 	if update_layout:
 		label.add_theme_font_size_override("font_size", font_size)
 		text_edit.add_theme_font_size_override("font_size", font_size)
@@ -254,8 +254,8 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 		style.bg_color = Color.TRANSPARENT
 		style.set_border_width_all(0)
 	label.add_theme_stylebox_override("normal", Corners.style(style, Corners.NODE, true))
-	text_edit.add_theme_color_override("font_color", Color("#24452c") if light else Color("#cdd6f4"))
-	text_edit.add_theme_color_override("caret_color", Color("#24452c") if light else Color("#f5e0dc"))
+	text_edit.add_theme_color_override("font_color", Palette.neutral_text_color(background))
+	text_edit.add_theme_color_override("caret_color", Palette.neutral_text_color(background))
 	text_edit.add_theme_color_override("selection_color", Color("#d9efdc") if light else Color("#45475a"))
 	var edit_style := style.duplicate() as StyleBoxFlat
 	# 输入框只绘制文字、光标和选区，轮廓由节点本身绘制。
