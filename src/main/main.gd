@@ -1,5 +1,7 @@
 extends Control
 
+const Corners = preload("res://src/main/continuous_corners.gd")
+
 const LocalTheme = preload("res://src/main/local_theme.gd")
 var _local_theme := LocalTheme.new()
 
@@ -62,6 +64,7 @@ var _displayed_theme_light := false
 
 
 func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	get_tree().auto_accept_quit = false
 	get_window().borderless = true
 	get_window().dpi_changed.connect(_apply_ui_scale)
@@ -517,6 +520,8 @@ func _prepare_themes() -> void:
 	_light_theme.set_color("font_color", "MutedLabel", Color("#617568"))
 	DialogTheme.configure(_dark_theme, false)
 	DialogTheme.configure(_light_theme, true)
+	Corners.configure_theme(_dark_theme)
+	Corners.configure_theme(_light_theme)
 
 
 func _sync_window_theme(window: Window) -> void:

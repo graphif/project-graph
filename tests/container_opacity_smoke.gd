@@ -1,5 +1,7 @@
 extends SceneTree
 
+const Corners = preload("res://src/main/continuous_corners.gd")
+
 var failures: Array[String] = []
 
 func _initialize() -> void:
@@ -28,7 +30,7 @@ func _run() -> void:
 		check(is_equal_approx(nodes[index].display_fill_color().a, expected), "Opacity at level " + str(4 - index))
 		check(nodes[index].fill_color == Color("#89b4fa"), "Raw color preserved")
 		var style := nodes[index].container_panel.get_theme_stylebox("panel") if index < 3 else nodes[index].label.get_theme_stylebox("normal")
-		check(is_equal_approx(style.bg_color.a, expected), "Rendered fill alpha")
+		check(is_equal_approx(Corners.source(style).bg_color.a, expected), "Rendered fill alpha")
 	if DisplayServer.get_name() != "headless":
 		stage.camera.target_position = nodes[0].aabb.get_center()
 		stage.camera.global_position = stage.camera.target_position

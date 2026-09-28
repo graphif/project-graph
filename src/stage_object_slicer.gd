@@ -418,7 +418,7 @@ func _spawn_split_effect(entity: Entity) -> void:
 	if entity is TextNode:
 		border = entity.label.get_theme_color("font_color")
 		if entity.label.has_theme_stylebox("normal"):
-			var style := entity.label.get_theme_stylebox("normal") as StyleBoxFlat
+			var style := preload("res://src/main/continuous_corners.gd").source(entity.label.get_theme_stylebox("normal"))
 			if style != null:
 				fill = style.bg_color
 				border = style.border_color

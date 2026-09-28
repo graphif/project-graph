@@ -1,5 +1,6 @@
 extends RefCounted
 ## Shared built-in palette. Theme plugins remain a separate, future loader.
+const Corners = preload("res://src/main/continuous_corners.gd")
 const MOCHA := {
 	"rosewater": "#f5e0dc", "flamingo": "#f2cdcd", "pink": "#f5c2e7", "mauve": "#cba6f7",
 	"red": "#f38ba8", "maroon": "#eba0ac", "peach": "#fab387", "yellow": "#f9e2af",
@@ -64,7 +65,7 @@ static func configure_theme(target: Theme, light: bool) -> void:
 		for key in target.get_color_list(type):
 			target.set_color(key, type, _from_mocha(target.get_color(key, type), light))
 		for key in target.get_stylebox_list(type):
-			var original := target.get_stylebox(key, type) as StyleBoxFlat
+			var original := Corners.source(target.get_stylebox(key, type))
 			if original == null:
 				continue
 			var style := original.duplicate() as StyleBoxFlat

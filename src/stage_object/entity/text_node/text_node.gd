@@ -1,6 +1,8 @@
 class_name TextNode
 extends Entity
 
+const Corners = preload("res://src/main/continuous_corners.gd")
+
 # 舞台使用独立的可缩放字体缓存，不修改菜单等界面共享的原字体。
 static var _canvas_font: Font
 
@@ -48,6 +50,7 @@ var _collision_update_pending := false
 
 
 func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	super()
 	label.text = text
 	_normal_label_position = label.position
@@ -203,23 +206,23 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 	if border_color == Color("#e5e7eb") or border_color == Color("#585b70"):
 		style.border_color = Color("#45484f") if light else Color("#585b70")
 	style.set_border_width_all(2)
-	style.set_corner_radius_all(6)
+	style.set_corner_radius_all(int(Corners.NODE))
 	style.content_margin_left = 15
 	style.content_margin_right = 15
 	style.content_margin_top = 10
 	style.content_margin_bottom = 10
-	container_panel.add_theme_stylebox_override("panel", style.duplicate())
+	container_panel.add_theme_stylebox_override("panel", Corners.style(style, Corners.NODE))
 	if _container_active:
 		style.bg_color = Color.TRANSPARENT
 		style.set_border_width_all(0)
-	label.add_theme_stylebox_override("normal", style)
+	label.add_theme_stylebox_override("normal", Corners.style(style, Corners.NODE))
 	text_edit.add_theme_color_override("font_color", Color("#24452c") if light else Color("#cdd6f4"))
 	text_edit.add_theme_color_override("caret_color", Color("#24452c") if light else Color("#f5e0dc"))
 	text_edit.add_theme_color_override("selection_color", Color("#d9efdc") if light else Color("#45475a"))
 	var edit_style := style.duplicate() as StyleBoxFlat
 	edit_style.bg_color = Color("#f6faf6") if light else Color("#181825")
 	edit_style.border_color = style.border_color
-	text_edit.add_theme_stylebox_override("normal", edit_style)
+	text_edit.add_theme_stylebox_override("normal", Corners.style(edit_style, Corners.NODE))
 	text_edit.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	label.end_bulk_theme_override()
 	text_edit.end_bulk_theme_override()
@@ -312,7 +315,7 @@ func _update_fill_layer(members: Array[Entity]) -> void:
 
 func _align_edit_text() -> void:
 	var label_style := label.get_theme_stylebox("normal")
-	var edit_style := text_edit.get_theme_stylebox("normal").duplicate() as StyleBoxFlat
+	var edit_style := Corners.source(text_edit.get_theme_stylebox("normal")).duplicate() as StyleBoxFlat
 	var content_size := label.size - label_style.get_minimum_size()
 	var font := label.get_theme_font("font")
 	var text_width := 0.0
@@ -326,4 +329,4 @@ func _align_edit_text() -> void:
 	edit_style.content_margin_right = label_style.get_content_margin(SIDE_RIGHT)
 	edit_style.content_margin_top = label_style.get_content_margin(SIDE_TOP) + inset_y
 	edit_style.content_margin_bottom = label_style.get_content_margin(SIDE_BOTTOM)
-	text_edit.add_theme_stylebox_override("normal", edit_style)
+	text_edit.add_theme_stylebox_override("normal", Corners.style(edit_style, Corners.NODE))

@@ -370,18 +370,9 @@ func _decode_vector2(value):
 	return Vector2(float(value[0]), float(value[1]))
 
 
-func _rounded_selection_rect(rect: Rect2, radius: float) -> PackedVector2Array:
-	var points := PackedVector2Array()
-	radius = minf(radius, minf(rect.size.x, rect.size.y) * 0.5)
-	var centers := [rect.position + Vector2(radius, radius),
-		Vector2(rect.end.x - radius, rect.position.y + radius),
-		rect.end - Vector2(radius, radius),
-		Vector2(rect.position.x + radius, rect.end.y - radius)]
-	for corner in 4:
-		for step in 9:
-			var angle := PI + float(corner) * PI * 0.5 + float(step) / 8.0 * PI * 0.5
-			points.append(centers[corner] + Vector2.from_angle(angle) * radius)
-	return points
+func _rounded_selection_rect(rect: Rect2, _radius: float) -> PackedVector2Array:
+	# Selection and transient previews follow the node's continuous outline.
+	return preload("res://src/main/continuous_corners.gd").outline(rect, 18.0)
 
 
 func edge_at(world_point: Vector2) -> LineEdge:

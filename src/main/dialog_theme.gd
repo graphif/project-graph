@@ -1,5 +1,7 @@
 extends RefCounted
 
+const Corners = preload("res://src/main/continuous_corners.gd")
+
 
 static func configure(target: Theme, light: bool) -> void:
 	var surface := Color("#f6faf6") if light else Color("#181825")
@@ -11,7 +13,7 @@ static func configure(target: Theme, light: bool) -> void:
 	var hover := Color("#e4f1e7") if light else Color("#313244")
 
 	target.set_type_variation("DialogSurface", "Panel")
-	var background := _panel(surface, border, 0, 12)
+	var background := _panel(Color.TRANSPARENT, Color.TRANSPARENT, 0, 0)
 	background.border_width_top = 0
 	background.corner_radius_top_left = 0
 	background.corner_radius_top_right = 0
@@ -22,7 +24,7 @@ static func configure(target: Theme, light: bool) -> void:
 	target.set_constant("buttons_min_width", "AcceptDialog", 88)
 	target.set_constant("buttons_separation", "AcceptDialog", 16)
 
-	var frame := target.get_stylebox("embedded_border", "Window").duplicate() as StyleBoxFlat
+	var frame := Corners.source(target.get_stylebox("embedded_border", "Window")).duplicate() as StyleBoxFlat
 	if frame != null:
 		frame.bg_color = surface
 		frame.border_color = border
