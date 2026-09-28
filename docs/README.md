@@ -13,7 +13,7 @@
 | 5 | [实施计划](development/implementation-plan.md) | 下一项独立改动是什么，依赖什么？ |
 | 6 | [验收方案](validation/first-release.md) | 如何判断交付成功，失败检查什么？ |
 
-配套设计资料：[配色与主题预设规范](design/color-system.md)。颜色只在此处维护，UI 规范维护组件和交互。
+配套设计资料：[配色与主题预设规范](design/color-system.md)。颜色只在此处维护，UI 规范维护组件和交互。图标选型、命令映射与换肤规则见 [图标规范](design/icons.md)。
 
 ## 文档维护规则
 

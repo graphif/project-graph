@@ -44,7 +44,7 @@
 
 优先复用 Godot Theme、类型变体及已有 DialogTheme、LocalTheme。复用 DialogButton、DialogPrimaryButton、DialogField、DialogOption、SettingsSwitch、DialogTabs 等已有变体；新 TextEdit/证据列表需要补统一变体，不能每个窗口另写完整样式。临时反馈仍由节点表达。
 
-图标优先复用现有菜单 Lucide 映射与资源；窗口控制图标保留平台角色。其他图标目录的存在不证明它们都正在使用；UI0 核对实际引用后决定保留范围。当前不新增图标库、字体依赖或第三方 UI 框架。
+图标选型与映射以 [图标规范](icons.md) 为准，优先复用现有菜单 Lucide 映射与资源；窗口控制图标保留平台角色。其他图标目录的存在不证明它们都正在使用；UI0 核对实际引用后决定保留范围。当前不新增图标库、字体依赖或第三方 UI 框架。
 
 ## 5. 输入、主题与动效
 
