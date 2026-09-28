@@ -53,6 +53,8 @@ var _collision_update_pending := false
 
 
 func _ready() -> void:
+	# Click selected text to place the caret instead of dragging the selection.
+	text_edit.drag_and_drop_selection_enabled = false
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	super()
 	label.text = text

@@ -101,6 +101,33 @@ func _run() -> void:
 	node.label.get_viewport().push_input(enter_release, true)
 	await process_frame
 	check(node.text_edit.has_focus() and node.text_edit.get_selected_text() == node.text, "First double-click enters editing with all text selected")
+	for zoom in [0.5, 1.0, 2.0]:
+		stage.camera.target_zoom = Vector2.ONE * zoom
+		stage.camera.zoom = stage.camera.target_zoom
+		await process_frame
+		node.text_edit.text = "Project Graph 你好"
+		node.text_edit.select_all()
+		await process_frame
+		var character_rect := node.text_edit.get_rect_at_line_column(0, 4)
+		var click := InputEventMouseButton.new()
+		click.button_index = MOUSE_BUTTON_LEFT
+		click.pressed = true
+		click.position = node.text_edit.get_global_transform_with_canvas() * (Vector2(character_rect.position) + Vector2(1, character_rect.size.y * 0.5))
+		var expected_column := node.text_edit.get_line_column_at_pos(Vector2(character_rect.position) + Vector2(1, character_rect.size.y * 0.5)).x
+		check(expected_column > 0 and expected_column < node.text_edit.text.length(), "Probe targets middle of text")
+		node.text_edit.get_viewport().push_input(click, true)
+		click = click.duplicate()
+		click.pressed = false
+		node.text_edit.get_viewport().push_input(click, true)
+		await process_frame
+		check(not node.text_edit.has_selection(), "Single click clears full selection")
+		check(node.text_edit.get_caret_column() == expected_column, "Click positions caret at character under pointer")
+		var typing := InputEventKey.new()
+		typing.pressed = true
+		typing.unicode = 88
+		node.text_edit.get_viewport().push_input(typing, true)
+		await process_frame
+		check(node.text_edit.text == "Project Graph 你好".insert(expected_column, "X"), "Typing inserts at clicked position without replacing other text")
 	node.exit_edit_mode(false)
 	app.queue_free()
 	await process_frame
