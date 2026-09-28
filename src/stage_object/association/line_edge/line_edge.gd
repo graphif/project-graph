@@ -196,6 +196,7 @@ func is_text_dirty() -> bool:
 func apply_theme(light: bool) -> void:
 	_appearance_light = light
 	_apply_style()
+	$Caption._update_style()
 
 
 func display_stroke_color() -> Color:

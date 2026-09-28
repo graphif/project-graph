@@ -225,7 +225,7 @@ func display_background_color(light: bool) -> Color:
 	return background
 
 func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) -> void:
-	var light: bool = Palette.is_light(str(GraphPreferences.value("theme"))) if theme_light == null else bool(theme_light)
+	var light: bool = _display_theme_is_light() if theme_light == null else bool(theme_light)
 	var background := display_background_color(light)
 	if not update_layout and _appearance_light == light and _displayed_background.is_equal_approx(background):
 		return
@@ -371,3 +371,10 @@ func _align_edit_text() -> void:
 	edit_style.content_margin_top = label_style.get_content_margin(SIDE_TOP) + inset_y
 	edit_style.content_margin_bottom = label_style.get_content_margin(SIDE_BOTTOM)
 	text_edit.add_theme_stylebox_override("normal", Corners.style(edit_style, Corners.NODE, true))
+
+
+func _display_theme_is_light() -> bool:
+	var stage := get_parent() as Stage
+	if stage != null and stage._applied_theme_light >= 0:
+		return stage._applied_theme_light == 1
+	return Palette.is_light(str(GraphPreferences.value("theme")))

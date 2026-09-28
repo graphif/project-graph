@@ -56,7 +56,8 @@ func _center_controls() -> void:
 
 
 func _update_style() -> void:
-	var light: bool = Palette.is_light(str(GraphPreferences.value("theme")))
+	var stage := edge.get_parent() as Stage
+	var light: bool = stage._applied_theme_light == 1 if stage != null and stage._applied_theme_light >= 0 else Palette.is_light(str(GraphPreferences.value("theme")))
 	if _last_light == light:
 		return
 	_last_light = light

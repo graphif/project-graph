@@ -276,6 +276,7 @@ var _applied_theme_light := -1
 func apply_theme(light: bool) -> void:
 	if _applied_theme_light == int(light):
 		return
+	_applied_theme_light = int(light)
 	var grid_material := $CanvasLayer/Grid.material as ShaderMaterial
 	if grid_material != null:
 		grid_material.set_shader_parameter("bg_color", Color("#ffffff") if light else Color("#1e1e2e"))
@@ -285,7 +286,6 @@ func apply_theme(light: bool) -> void:
 			object._apply_appearance(false, light)
 		elif object is LineEdge:
 			object.apply_theme(light)
-	_applied_theme_light = int(light)
 
 
 func apply_preferences(theme_light: Variant = null) -> void:
