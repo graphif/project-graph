@@ -88,6 +88,20 @@ func _run() -> void:
 	await process_frame
 	check(node.text_edit.get_selected_text() == node.text_edit.text, "Double-click replaces partial selection with all lines")
 	node.exit_edit_mode(false)
+	var enter_click := InputEventMouseButton.new()
+	enter_click.button_index = MOUSE_BUTTON_LEFT
+	enter_click.pressed = true
+	enter_click.double_click = true
+	enter_click.position = node.label.get_global_transform_with_canvas() * Vector2(30, 20)
+	node.label.get_viewport().push_input(enter_click, true)
+	await process_frame
+	var enter_release := enter_click.duplicate() as InputEventMouseButton
+	enter_release.pressed = false
+	enter_release.double_click = false
+	node.label.get_viewport().push_input(enter_release, true)
+	await process_frame
+	check(node.text_edit.has_focus() and node.text_edit.get_selected_text() == node.text, "First double-click enters editing with all text selected")
+	node.exit_edit_mode(false)
 	app.queue_free()
 	await process_frame
 	print("CANVAS_TEXT_FOCUS: " + ("PASS" if failures.is_empty() else str(failures)))

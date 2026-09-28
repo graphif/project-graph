@@ -80,6 +80,7 @@ func _on_label_gui_input(event: InputEvent) -> void:
 	if label.visible and event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.double_click:
 			enter_edit_mode()
+			text_edit.select_all.call_deferred()
 			get_viewport().set_input_as_handled()
 			return
 
