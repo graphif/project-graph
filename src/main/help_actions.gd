@@ -50,6 +50,7 @@ const TOPICS = {
 
 
 func setup() -> void:
+	window.transparent_bg = true
 	text.meta_clicked.connect(_link)
 	window.get_node("Margin/Content/Actions/Close").pressed.connect(window.hide)
 
