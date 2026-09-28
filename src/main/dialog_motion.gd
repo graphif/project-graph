@@ -8,7 +8,7 @@ var _internal: Dictionary = {}
 
 
 func register_window(window: Window) -> void:
-	if window is PopupMenu or _states.has(window):
+	if window is PopupMenu or window.name == &"CommandPalette" or _states.has(window):
 		return
 	_states[window] = {"tween": null, "position": window.position, "colors": {}, "opened": false}
 	window.visibility_changed.connect(_on_visibility_changed.bind(window))
@@ -28,13 +28,10 @@ func _on_visibility_changed(window: Window) -> void:
 				state.colors[child] = child.modulate
 		_animate(window, true)
 	elif state.opened:
-		# 原生对话框会自行隐藏；短暂保留窗口完成退场，再正式隐藏。
+		# visibility_changed is emitted while the viewport is being deactivated.
+		# Do not re-show it from that callback; closing must release focus immediately.
 		_restore(window)
-		window.gui_disable_input = true
-		_internal[window] = true
-		window.show()
-		_internal[window] = false
-		_animate(window, false)
+		state.opened = false
 
 
 func _animate(window: Window, opening: bool) -> void:
