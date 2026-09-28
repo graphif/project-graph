@@ -88,7 +88,7 @@ func _on_label_gui_input(event: InputEvent) -> void:
 
 func _on_text_edit_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and event.double_click:
-		text_edit.select_all()
+		text_edit.select_all.call_deferred()
 		text_edit.accept_event()
 		return
 	# 组合输入期间把选词、确认和取消交给输入法。
@@ -117,7 +117,7 @@ func _input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		# 使用控件局部坐标，兼容相机平移、缩放和子视口。
-		if not Rect2(Vector2.ZERO, text_edit.size).has_point(text_edit.get_local_mouse_position()):
+		if not Rect2(Vector2.ZERO, text_edit.size).has_point(text_edit.get_global_transform_with_canvas().affine_inverse() * event.position):
 			exit_edit_mode()
 
 

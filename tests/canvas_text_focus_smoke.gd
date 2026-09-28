@@ -35,7 +35,7 @@ func _run() -> void:
 	await settle()
 	app.get_node("UIOverlay/Welcome").hide()
 	stage = app.tabs.get_current_stage()
-	var source := stage.create_text_node("Test01", Vector2(-240, 0), false)
+	var source := stage.create_text_node("Project Graph 你好", Vector2(-240, 0), false)
 	var target := stage.create_text_node("目标", Vector2(240, 100), false)
 	source.freeze = true
 	target.freeze = true
@@ -65,14 +65,29 @@ func _run() -> void:
 	check(node.text_edit.get_caret_column() == node.text.length() - 1, "Arrow moves caret once")
 	await key(KEY_RIGHT)
 	check(node.text_edit.get_caret_column() == node.text.length(), "Right arrow returns to end")
+	node.text_edit.select(0, 0, 0, 7)
 	var double_click := InputEventMouseButton.new()
 	double_click.button_index = MOUSE_BUTTON_LEFT
 	double_click.pressed = true
 	double_click.double_click = true
-	node.text_edit.gui_input.emit(double_click)
+	double_click.position = node.text_edit.get_global_transform_with_canvas() * Vector2(30, 20)
+	node.text_edit.get_viewport().push_input(double_click, true)
+	await process_frame
+	var release := double_click.duplicate() as InputEventMouseButton
+	release.double_click = false
+	release.pressed = false
+	node.text_edit.get_viewport().push_input(release, true)
+	await process_frame
 	check(node.text_edit.get_selected_text() == node.text_edit.text, "Second double-click selects all text")
 	check(node.text_edit.has_focus(), "Select all retains editor focus")
-	node.exit_edit_mode()
+	node.text_edit.text = "第一行 Project\n第二行 Graph"
+	node.text_edit.select(0, 0, 0, 2)
+	node.text_edit.get_viewport().push_input(double_click, true)
+	await process_frame
+	node.text_edit.get_viewport().push_input(release, true)
+	await process_frame
+	check(node.text_edit.get_selected_text() == node.text_edit.text, "Double-click replaces partial selection with all lines")
+	node.exit_edit_mode(false)
 	app.queue_free()
 	await process_frame
 	print("CANVAS_TEXT_FOCUS: " + ("PASS" if failures.is_empty() else str(failures)))
