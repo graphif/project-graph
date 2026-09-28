@@ -270,7 +270,13 @@ func reset_tracking() -> void:
 
 func _outline(line: Line2D, rect: Rect2, color: Color) -> void:
 	line.default_color = color
-	line.points = PackedVector2Array([line.to_local(rect.position), line.to_local(Vector2(rect.end.x, rect.position.y)), line.to_local(rect.end), line.to_local(Vector2(rect.position.x, rect.end.y))])
+	var points: PackedVector2Array = target_root.call("_rounded_selection_rect", rect, 6.0)
+	for index in points.size():
+		points[index] = line.to_local(points[index])
+	line.points = points
+	line.closed = true
+	line.antialiased = true
+	line.joint_mode = Line2D.LINE_JOINT_ROUND
 	line.show()
 
 
