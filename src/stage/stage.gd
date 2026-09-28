@@ -193,8 +193,8 @@ func _refresh_selection_outlines() -> void:
 			$SelectionOverlay.add_child(line)
 			_selection_lines[object.id] = line
 		line.scale = Vector2.ONE / maxf(get_global_transform_with_canvas().get_scale().x, 0.01)
-		# Two-pixel core plus the texture coverage fringe.
-		line.width = 4.0
+		# Three-pixel core plus the texture coverage fringe.
+		line.width = 5.0
 		line.default_color = Color("#418856") if _applied_theme_light == 1 else Color("#cba6f7")
 		var rect: Rect2 = object.get_visual_rect() if object is TextNode else object.aabb
 		var points := _rounded_selection_rect(rect, 6.0)
