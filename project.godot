@@ -22,6 +22,8 @@ MCPRuntimeProbe="*uid://bsg12huaf1u5i"
 
 [display]
 
+display_server/driver.linuxbsd="wayland"
+
 window/size/borderless=true
 window/size/transparent=true
 window/stretch/aspect="expand"
