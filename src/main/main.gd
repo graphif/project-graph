@@ -878,7 +878,7 @@ func _remove_recent() -> void:
 
 func _refresh_commands(_query: String = "") -> void:
 	var list := _panel("CommandPalette").get_node("Results") as ItemList
-	list.clear()
+	var rows: Array = []
 	var query: String = _panel("CommandPalette").get_node("Query").text
 	for command in _command_labels:
 		if not _available(command):
@@ -888,8 +888,14 @@ func _refresh_commands(_query: String = "") -> void:
 			continue
 		if _shortcut_events.has(command):
 			label += "    " + _shortcut_events[command].as_text_keycode()
-		var index := list.add_item(label)
-		list.set_item_metadata(index, command)
+		rows.append([label, command])
+	# Retain shaped text and layout when reopening with the same commands.
+	if list.get_meta("command_rows", []) != rows:
+		list.clear()
+		for row in rows:
+			var index := list.add_item(row[0])
+			list.set_item_metadata(index, row[1])
+		list.set_meta("command_rows", rows)
 	if list.item_count > 0:
 		list.select(0)
 
