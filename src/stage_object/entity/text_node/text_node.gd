@@ -9,6 +9,7 @@ static var _canvas_font: Font
 @onready var container_panel: Panel = $ContainerPanel
 var _container_rect := Rect2()
 var _container_active := false
+var _fill_layer := 1
 var _normal_label_position := Vector2.ZERO
 var _normal_edit_position := Vector2.ZERO
 
@@ -194,7 +195,7 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 		label.custom_minimum_size.x = fixed_width
 		label.size = Vector2(fixed_width, 0.0)
 	var style := StyleBoxFlat.new()
-	style.bg_color = fill_color
+	style.bg_color = display_fill_color()
 	style.border_color = border_color
 	if border_color == Color("#e5e7eb") or border_color == Color("#585b70"):
 		style.border_color = Color("#45484f") if light else Color("#585b70")
@@ -241,6 +242,7 @@ static func _make_canvas_font(original: Font) -> Font:
 
 # 包含状态由子对象引用推导，不更换对象身份，因此连线和属性仍指向原节点。
 func update_container_layout(members: Array[Entity]) -> void:
+	_update_fill_layer(members)
 	var active := not members.is_empty()
 	if active != _container_active:
 		_container_active = active
@@ -284,3 +286,22 @@ func get_visual_rect() -> Rect2:
 	if _container_active:
 		return _container_rect
 	return Rect2(text_edit.position, text_edit.size) if _editing else Rect2(label.position, label.size)
+
+
+# Display-only opacity: the longest uninterrupted same-RGB branch defines the level.
+# Preserve the chosen alpha and serialized fill_color; only the fill is faded.
+func display_fill_color() -> Color:
+	var result := fill_color
+	result.a *= pow(0.78, _fill_layer - 1)
+	return result
+
+
+func _update_fill_layer(members: Array[Entity]) -> void:
+	var level := 1
+	for member in members:
+		if member is TextNode and Color(member.fill_color, 1.0).is_equal_approx(Color(fill_color, 1.0)):
+			level = maxi(level, member._fill_layer + 1)
+	if level == _fill_layer:
+		return
+	_fill_layer = level
+	_apply_appearance()
