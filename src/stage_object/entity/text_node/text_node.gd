@@ -87,6 +87,10 @@ func _on_label_gui_input(event: InputEvent) -> void:
 
 
 func _on_text_edit_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and event.double_click:
+		text_edit.select_all()
+		text_edit.accept_event()
+		return
 	# 组合输入期间把选词、确认和取消交给输入法。
 	if text_edit.is_ime_composing():
 		return

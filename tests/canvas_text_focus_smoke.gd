@@ -65,6 +65,13 @@ func _run() -> void:
 	check(node.text_edit.get_caret_column() == node.text.length() - 1, "Arrow moves caret once")
 	await key(KEY_RIGHT)
 	check(node.text_edit.get_caret_column() == node.text.length(), "Right arrow returns to end")
+	var double_click := InputEventMouseButton.new()
+	double_click.button_index = MOUSE_BUTTON_LEFT
+	double_click.pressed = true
+	double_click.double_click = true
+	node.text_edit.gui_input.emit(double_click)
+	check(node.text_edit.get_selected_text() == node.text_edit.text, "Second double-click selects all text")
+	check(node.text_edit.has_focus(), "Select all retains editor focus")
 	node.exit_edit_mode()
 	app.queue_free()
 	await process_frame
