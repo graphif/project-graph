@@ -10,3 +10,4 @@ Terminal=false
 Categories=Office;Graphics;
 MimeType=application/x-project-graph;
 StartupNotify=true
+StartupWMClass=Project Graph
