@@ -97,10 +97,15 @@ func _update_size() -> void:
 	var target_width := ceilf(clampf(content_width + horizontal_padding, min_width, max_width))
 
 	# 2. get_line_height 已包含行间距；长文本达到宽度上限时预留横向滚动条。
+	custom_minimum_size.x = target_width
+	size.x = target_width
 	var single_line_height := maxf(font.get_height(font_size), get_line_height())
-	var total_height := single_line_height * get_line_count()
+	var visual_lines := 0
+	for index in get_line_count():
+		visual_lines += 1 + get_line_wrap_count(index)
+	var total_height := single_line_height * visual_lines
 	var target_height := maxf(min_height, ceilf(total_height + vertical_padding))
-	if max_line_width > target_width - style_size.x:
+	if wrap_mode == TextEdit.LINE_WRAPPING_NONE and max_line_width > target_width - style_size.x:
 		target_height += get_h_scroll_bar().get_combined_minimum_size().y
 
 	# 3. 应用尺寸
