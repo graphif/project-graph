@@ -32,6 +32,7 @@ func key(code: Key) -> void:
 func _run() -> void:
 	app = load("res://src/main/main.tscn").instantiate()
 	root.add_child(app)
+	root.size = Vector2i(1280, 800)
 	await settle()
 	app.get_node("UIOverlay/Welcome").hide()
 	stage = app.tabs.get_current_stage()
@@ -71,20 +72,20 @@ func _run() -> void:
 	double_click.pressed = true
 	double_click.double_click = true
 	double_click.position = node.text_edit.get_global_transform_with_canvas() * Vector2(30, 20)
-	node.text_edit.get_viewport().push_input(double_click, true)
+	send_canvas_input(double_click)
 	await process_frame
 	var release := double_click.duplicate() as InputEventMouseButton
 	release.double_click = false
 	release.pressed = false
-	node.text_edit.get_viewport().push_input(release, true)
+	send_canvas_input(release)
 	await process_frame
 	check(node.text_edit.get_selected_text() == node.text_edit.text, "Second double-click selects all text")
 	check(node.text_edit.has_focus(), "Select all retains editor focus")
 	node.text_edit.text = "第一行 Project\n第二行 Graph"
 	node.text_edit.select(0, 0, 0, 2)
-	node.text_edit.get_viewport().push_input(double_click, true)
+	send_canvas_input(double_click)
 	await process_frame
-	node.text_edit.get_viewport().push_input(release, true)
+	send_canvas_input(release)
 	await process_frame
 	check(node.text_edit.get_selected_text() == node.text_edit.text, "Double-click replaces partial selection with all lines")
 	node.exit_edit_mode(false)
@@ -93,12 +94,12 @@ func _run() -> void:
 	enter_click.pressed = true
 	enter_click.double_click = true
 	enter_click.position = node.label.get_global_transform_with_canvas() * Vector2(30, 20)
-	node.label.get_viewport().push_input(enter_click, true)
+	send_canvas_input(enter_click)
 	await process_frame
 	var enter_release := enter_click.duplicate() as InputEventMouseButton
 	enter_release.pressed = false
 	enter_release.double_click = false
-	node.label.get_viewport().push_input(enter_release, true)
+	send_canvas_input(enter_release)
 	await process_frame
 	check(node.text_edit.has_focus() and node.text_edit.get_selected_text() == node.text, "First double-click enters editing with all text selected")
 	for zoom in [0.5, 1.0, 2.0]:
@@ -115,21 +116,41 @@ func _run() -> void:
 		click.position = node.text_edit.get_global_transform_with_canvas() * (Vector2(character_rect.position) + Vector2(1, character_rect.size.y * 0.5))
 		var expected_column := node.text_edit.get_line_column_at_pos(Vector2(character_rect.position) + Vector2(1, character_rect.size.y * 0.5)).x
 		check(expected_column > 0 and expected_column < node.text_edit.text.length(), "Probe targets middle of text")
-		node.text_edit.get_viewport().push_input(click, true)
+		send_canvas_input(click)
 		click = click.duplicate()
 		click.pressed = false
-		node.text_edit.get_viewport().push_input(click, true)
+		send_canvas_input(click)
 		await process_frame
 		check(not node.text_edit.has_selection(), "Single click clears full selection")
 		check(node.text_edit.get_caret_column() == expected_column, "Click positions caret at character under pointer")
 		var typing := InputEventKey.new()
 		typing.pressed = true
 		typing.unicode = 88
-		node.text_edit.get_viewport().push_input(typing, true)
+		send_canvas_input(typing)
 		await process_frame
 		check(node.text_edit.text == "Project Graph 你好".insert(expected_column, "X"), "Typing inserts at clicked position without replacing other text")
 	node.exit_edit_mode(false)
+	node.enter_edit_mode()
+	var outside := InputEventMouseButton.new()
+	outside.button_index = MOUSE_BUTTON_LEFT
+	outside.pressed = true
+	outside.position = Vector2(1150, 680)
+	send_canvas_input(outside)
+	await process_frame
+	check(not node._editing, "Click outside still finishes editing")
 	app.queue_free()
 	await process_frame
 	print("CANVAS_TEXT_FOCUS: " + ("PASS" if failures.is_empty() else str(failures)))
 	quit(0 if failures.is_empty() else 1)
+
+func send_canvas_input(event: InputEvent) -> void:
+	var forwarded := event.duplicate()
+	if forwarded is InputEventMouse:
+		var container := stage.get_viewport().get_parent() as Control
+		forwarded.position = container.get_global_transform_with_canvas() * forwarded.position
+		forwarded.global_position = forwarded.position
+		var motion := InputEventMouseMotion.new()
+		motion.position = forwarded.position
+		motion.global_position = forwarded.position
+		root.push_input(motion, true)
+	root.push_input(forwarded, true)

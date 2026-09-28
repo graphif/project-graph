@@ -68,7 +68,7 @@ func _ready() -> void:
 	label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	text_edit.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_apply_appearance()
-	text_edit.focus_exited.connect(exit_edit_mode)
+	text_edit.focus_exited.connect(_on_edit_focus_exited)
 	visibility_changed.connect(_on_visibility_changed)
 	label.resized.connect(_queue_collision_update)
 	text_edit.resized.connect(_queue_collision_update)
@@ -146,6 +146,16 @@ func enter_edit_mode() -> void:
 	text_edit.set_caret_line(text_edit.get_line_count() - 1)
 	text_edit.set_caret_column(text_edit.get_line(text_edit.get_caret_line()).length())
 	_queue_collision_update()
+
+
+func _on_edit_focus_exited() -> void:
+	# The root viewport temporarily releases focus before forwarding a canvas click.
+	_finish_edit_after_focus_transfer.call_deferred()
+
+
+func _finish_edit_after_focus_transfer() -> void:
+	if _editing and not text_edit.has_focus():
+		exit_edit_mode()
 
 
 func exit_edit_mode(commit_changes: bool = true) -> void:
