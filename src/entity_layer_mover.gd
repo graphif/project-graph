@@ -14,6 +14,7 @@ var _active := false
 var _cancelled := false
 var _continued_drag := false
 var _last_positions: Dictionary = {}
+var _layout_inputs: Array = []
 
 
 func _ready() -> void:
@@ -225,6 +226,14 @@ func _drop() -> void:
 
 func _physics_process(_delta: float) -> void:
 	var all := entities()
+	var moved := _last_positions.size() != all.size()
+	if not moved:
+		for object in all:
+			if not _last_positions.has(object) or object.global_position != _last_positions[object]:
+				moved = true
+				break
+	if not moved:
+		return # The render pass still detects containment, text and size edits.
 	all.sort_custom(func(a: Entity, b: Entity) -> bool: return a.container_depth() < b.container_depth())
 	for parent in all:
 		var old: Vector2 = _last_positions.get(parent, parent.global_position)
@@ -243,6 +252,9 @@ func _physics_process(_delta: float) -> void:
 
 func refresh_layout() -> void:
 	var all := entities()
+	var inputs := _capture_layout_inputs(all)
+	if inputs == _layout_inputs:
+		return
 	for object in all:
 		if not is_instance_valid(object.container):
 			object.container = null
@@ -261,9 +273,22 @@ func refresh_layout() -> void:
 		if object is TextNode:
 			var members: Array[Entity] = children_by_parent.get(object, [] as Array[Entity])
 			object.update_container_layout(members)
+	_layout_inputs = _capture_layout_inputs(entities())
+
+
+func _capture_layout_inputs(all: Array[Entity]) -> Array:
+	var inputs: Array = []
+	for object in all:
+		var parent_id := object.container.get_instance_id() if is_instance_valid(object.container) else 0
+		var entry := [object.get_instance_id(), parent_id, object.global_transform, object.aabb]
+		if object is TextNode:
+			entry.append_array([object.label.get_minimum_size(), object.fixed_width, object.fill_color])
+		inputs.append(entry)
+	return inputs
 
 
 func reset_tracking() -> void:
+	_layout_inputs.clear()
 	_last_positions.clear()
 	for object in entities():
 		_last_positions[object] = object.global_position

@@ -20,20 +20,10 @@ var aabb: Rect2:
 				if collision_shape.shape == null:
 					continue
 
-				var local_rect := collision_shape.shape.get_rect()
-
-				var points := [
-					collision_shape.to_global(local_rect.position),
-					collision_shape.to_global(Vector2(local_rect.end.x, local_rect.position.y)),
-					collision_shape.to_global(Vector2(local_rect.position.x, local_rect.end.y)),
-					collision_shape.to_global(local_rect.end),
-				]
-
-				for point in points:
-					if not initialized:
-						rect = Rect2(point, Vector2.ZERO)
-						initialized = true
-					else:
-						rect = rect.expand(point)
+				# Native Rect2 transformation computes the same world-space AABB,
+				# including rotation/skew, without per-corner GDScript allocations.
+				var world_rect := collision_shape.global_transform * collision_shape.shape.get_rect()
+				rect = rect.merge(world_rect) if initialized else world_rect
+				initialized = true
 
 		return rect

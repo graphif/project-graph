@@ -350,7 +350,7 @@ func update_container_layout(members: Array[Entity]) -> void:
 			label.size = Vector2(fixed_width, 0.0)
 		_apply_appearance()
 	if not active:
-		_update_collision_shape()
+		# Label/property signals already queue collision updates when needed.
 		return
 	var bounds := Rect2()
 	var initialized := false
@@ -368,6 +368,9 @@ func update_container_layout(members: Array[Entity]) -> void:
 	bounds.position.y -= header_height
 	bounds.size.y += header_height
 	bounds.size.x = maxf(bounds.size.x, maxf(label.get_minimum_size().x, fixed_width))
+	var title_size := Vector2(bounds.size.x, header_height)
+	if bounds == _container_rect and container_panel.position == bounds.position and container_panel.size == bounds.size and label.position == bounds.position and label.size == title_size:
+		return
 	_container_rect = bounds
 	container_panel.position = bounds.position
 	container_panel.size = bounds.size
