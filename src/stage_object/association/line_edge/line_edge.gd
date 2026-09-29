@@ -47,6 +47,16 @@ static var _connection_outlines: Dictionary = {}
 
 var _appearance_light: Variant = null
 
+@export_range(1.0, 12.0, 0.5) var stroke_width := 2.0:
+	set(value):
+		stroke_width = clampf(value, 1.0, 12.0)
+		if is_node_ready():
+			_apply_style()
+@export var show_arrow := true:
+	set(value):
+		show_arrow = value
+		_geometry_key.clear()
+
 var _geometry_key: Array = []
 var _render_key: Array = []
 var _shaft_points := PackedVector2Array()
@@ -91,8 +101,8 @@ func _process(_delta: float) -> void:
 	if line.default_color != color:
 		line.default_color = color
 		arrow_head.color = color
-	var source_rect := source.aabb
-	var target_rect := target.aabb
+	var source_rect := connection_rect(source, target)
+	var target_rect := connection_rect(target, source)
 	var render_segments := clampi(ceili(curve_segments * sqrt(maxf(1.0, pixel_scale))), curve_segments, 512)
 	var key := [source_rect, target_rect, global_transform, collision_shape.transform,
 		(arrow_head.get_parent() as Node2D).global_transform, render_segments]
@@ -105,7 +115,7 @@ func _process(_delta: float) -> void:
 		modulate.a = smoothstep(0.0, 12.0, maxf(0.0, span.dot(center_direction)))
 		var tip := anchor(target_rect, anchors[1])
 		var direction := -anchors[3] if anchors.size() > 3 else (Vector2(0.5, 0.5) - anchors[1]).normalized()
-		_head_length = arrow_length(source_rect, target_rect, anchors, _unscaled_line_width)
+		_head_length = arrow_length(source_rect, target_rect, anchors, _unscaled_line_width) if show_arrow else 0.0
 		arrow_head.visible = _head_length > 0.0
 		_shaft_points = connection_curve(source_rect, target_rect, anchors, render_segments, _head_length, true)
 		_caption_curve.clear_points()
@@ -135,6 +145,16 @@ func caption_position(fraction: float) -> Vector2:
 	if _caption_curve.point_count == 0:
 		return Vector2.ZERO
 	return to_local(_caption_curve.sample_baked(_caption_curve.get_baked_length() * fraction))
+
+
+# A container-to-descendant edge attaches to its title, not the surrounding frame.
+static func connection_rect(entity: Entity, other: Entity) -> Rect2:
+	if entity is TextNode and is_instance_valid(other) and other.is_inside_container(entity):
+		var rect := Rect2(entity.label.global_position, Vector2.ZERO)
+		for point in [Vector2.ZERO, Vector2(entity.label.size.x, 0), entity.label.size, Vector2(0, entity.label.size.y)]:
+			rect = rect.expand(entity.label.get_global_transform() * point)
+		return rect
+	return entity.aabb
 
 
 # Arrow size follows stroke width, but cannot consume the short connection gap.
@@ -229,6 +249,26 @@ func _update_collision_shape(points: PackedVector2Array) -> void:
 	shape.segments = segments
 
 
+func apply_theme(light: bool) -> void:
+	_appearance_light = light
+	_apply_style()
+	$Caption._update_style()
+
+
+func display_stroke_color() -> Color:
+	var light: bool = Palette.is_light(str(GraphPreferences.value("theme"))) if _appearance_light == null else bool(_appearance_light)
+	return Palette.neutral_edge_color(_stroke_background(light)) if use_theme_color else stroke_color
+
+
+func _apply_style() -> void:
+	line.default_color = display_stroke_color()
+	line.width = stroke_width
+	_unscaled_line_width = stroke_width
+	line.antialiased = true
+	arrow_head.color = display_stroke_color()
+	_geometry_key.clear()
+
+
 func distance_to_point(world_point: Vector2) -> float:
 	if modulate.a <= 0.01:
 		return INF
@@ -254,23 +294,6 @@ func exit_edit_mode(commit_changes := true) -> void:
 
 func is_text_dirty() -> bool:
 	return $Caption.is_dirty()
-
-
-func apply_theme(light: bool) -> void:
-	_appearance_light = light
-	_apply_style()
-	$Caption._update_style()
-
-
-func display_stroke_color() -> Color:
-	var light: bool = Palette.is_light(str(GraphPreferences.value("theme"))) if _appearance_light == null else bool(_appearance_light)
-	return Palette.neutral_edge_color(_stroke_background(light)) if use_theme_color else stroke_color
-
-
-func _apply_style() -> void:
-	line.default_color = display_stroke_color()
-	line.antialiased = true
-	arrow_head.color = display_stroke_color()
 
 
 func _stroke_background(light: bool) -> Color:

@@ -1,8 +1,8 @@
 class_name TextNode
 extends Entity
 
-const Palette = preload("res://src/main/theme_palette.gd")
 const Corners = preload("res://src/main/continuous_corners.gd")
+const Palette = preload("res://src/main/theme_palette.gd")
 
 # 舞台使用独立的可缩放字体缓存，不修改菜单等界面共享的原字体。
 static var _canvas_font: Font
@@ -17,6 +17,11 @@ var _normal_label_position := Vector2.ZERO
 var _normal_edit_position := Vector2.ZERO
 
 @onready var text_edit: AutoSizeTextEdit = %TextEdit
+var _edit_menu: PopupMenu
+
+# Theme hierarchy is independent of spatial containers and ordinary edges.
+# Legacy nodes have no inferred parent; Enter creates another root topic.
+@export var topic_parent: TextNode
 
 @export var text: String = "":
 	set(value):
@@ -45,17 +50,32 @@ var _normal_edit_position := Vector2.ZERO
 		border_color = value
 		if is_node_ready():
 			_apply_appearance()
-@export_storage var use_theme_border := false
-var _displayed_background := Color(-1, -1, -1, -1)
+@export_storage var use_theme_border := false:
+	set(value):
+		use_theme_border = value
+		if is_node_ready():
+			_apply_appearance()
+
+@export var text_color := Color.TRANSPARENT:
+	set(value):
+		text_color = value
+		if is_node_ready():
+			_apply_appearance()
 var _editing := false
 var _edit_minimum_size := Vector2.ZERO
 var _edit_origin := Vector2.ZERO
 var _appearance_light: Variant = null
+var _displayed_background := Color(-1, -1, -1, -1)
 var _collision_update_pending := false
 
 
 func _ready() -> void:
-	# Click selected text to place the caret instead of dragging the selection.
+	# 与菜单共用原生 DPITexture 圆角，避免固定分辨率位图在画布缩放时失真。
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	super()
+	label.text = text
+	# 输入层使用左上角定位，最小尺寸变化不能再从中心推动控件。
+	# Clicking selected text should position the caret, not start dragging the selection.
 	text_edit.drag_and_drop_selection_enabled = false
 	text_edit.select_from_padding = true
 	text_edit.add_theme_constant_override("wrap_offset", 0)
@@ -64,10 +84,6 @@ func _ready() -> void:
 	text_edit.grow_vertical = Control.GROW_DIRECTION_END
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	# 与菜单共用原生 DPITexture 圆角，避免固定分辨率位图在画布缩放时失真。
-	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	super()
-	label.text = text
 	_normal_label_position = label.position
 	_normal_edit_position = text_edit.position
 	# MSDF 字形在相机缩放时保持平滑，所有节点共享同一份字形缓存。
@@ -79,6 +95,7 @@ func _ready() -> void:
 	label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	text_edit.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_apply_appearance()
+	_configure_edit_menu()
 	text_edit.focus_exited.connect(_on_edit_focus_exited)
 	text_edit.commit_requested.connect(exit_edit_mode)
 	text_edit.cancel_requested.connect(exit_edit_mode.bind(false))
@@ -91,6 +108,91 @@ func _ready() -> void:
 	container_panel.resized.connect(_queue_collision_update)
 	text_edit.resized.connect(_queue_collision_update)
 	_queue_collision_update()
+
+
+func _configure_edit_menu(theme_light: Variant = null) -> void:
+	# 禁用 Godot 内置 TextEdit 长菜单，改用项目自己的短菜单，避免右侧滚动条和过宽条目。
+	text_edit.set_context_menu_enabled(false)
+	if _edit_menu == null:
+		_edit_menu = PopupMenu.new()
+		_edit_menu.name = "EditMenu"
+		text_edit.add_child(_edit_menu)
+		_edit_menu.id_pressed.connect(_on_edit_menu_pressed)
+	var menu := _edit_menu
+	_compact_edit_menu(menu)
+	# 文本菜单独立使用工作区的圆角卡片样式，避免继承系统直角灰色菜单。
+	var light: bool = _display_theme_is_light() if theme_light == null else bool(theme_light)
+	var panel := StyleBoxFlat.new()
+	panel.bg_color = Palette.color(light, "surface.raised")
+	panel.border_color = Palette.color(light, "border.default")
+	panel.set_border_width_all(1)
+	panel.set_corner_radius_all(12)
+	panel.content_margin_left = 6.0
+	panel.content_margin_right = 6.0
+	panel.content_margin_top = 5.0
+	panel.content_margin_bottom = 5.0
+	panel.shadow_color = Color(0, 0, 0, 0.18 if light else 0.34)
+	panel.shadow_size = 8
+	panel.shadow_offset = Vector2(0, 3)
+	menu.add_theme_stylebox_override("panel", Corners.style(panel, Corners.PANEL))
+
+	var hover := StyleBoxFlat.new()
+	hover.bg_color = Palette.color(light, "surface.selected")
+	hover.set_corner_radius_all(7)
+	hover.content_margin_left = 4.0
+	hover.content_margin_right = 4.0
+	menu.add_theme_stylebox_override("hover", Corners.style(hover, Corners.CONTROL))
+	menu.add_theme_stylebox_override("pressed", Corners.style(hover, Corners.CONTROL))
+
+	var separator := StyleBoxFlat.new()
+	separator.bg_color = Palette.color(light, "border.subtle")
+	separator.content_margin_top = 1.0
+	separator.content_margin_bottom = 1.0
+	menu.add_theme_stylebox_override("separator", separator)
+
+	for key in ["font_color", "font_hover_color", "font_pressed_color", "font_accelerator_color"]:
+		menu.add_theme_color_override(key, Palette.color(light, "text.primary"))
+	menu.add_theme_color_override("font_disabled_color", Palette.color(light, "text.disabled"))
+	menu.add_theme_font_size_override("font_size", 15)
+	menu.add_theme_constant_override("item_vertical_padding", 1)
+	menu.add_theme_constant_override("item_start_padding", 6)
+	menu.add_theme_constant_override("item_end_padding", 6)
+	menu.add_theme_constant_override("h_separation", 4)
+
+
+func _show_edit_menu(local_position: Vector2) -> void:
+	if _edit_menu == null:
+		return
+	_compact_edit_menu(_edit_menu)
+	_edit_menu.size = Vector2i.ZERO
+	_edit_menu.max_size = Vector2i(220, 1000)
+	_edit_menu.position = Vector2i(text_edit.get_screen_position() + local_position)
+	_edit_menu.popup()
+
+
+func _on_edit_menu_pressed(id: int) -> void:
+	text_edit.menu_option(id)
+
+
+func _compact_edit_menu(menu: PopupMenu) -> void:
+	# Godot 默认文本菜单包含书写方向、控制字符等长条目；编辑节点只保留常用项。
+	menu.clear()
+	var has_selection := text_edit.has_selection()
+	menu.add_item("剪切", TextEdit.MENU_CUT)
+	menu.set_item_disabled(menu.item_count - 1, not has_selection)
+	menu.add_item("复制", TextEdit.MENU_COPY)
+	menu.set_item_disabled(menu.item_count - 1, not has_selection)
+	menu.add_item("粘贴", TextEdit.MENU_PASTE)
+	menu.add_separator()
+	menu.add_item("全选", TextEdit.MENU_SELECT_ALL)
+	menu.add_item("清空", TextEdit.MENU_CLEAR)
+	menu.set_item_disabled(menu.item_count - 1, text_edit.text.is_empty())
+	if text_edit.has_undo() or text_edit.has_redo():
+		menu.add_separator()
+		menu.add_item("撤销", TextEdit.MENU_UNDO)
+		menu.set_item_disabled(menu.item_count - 1, not text_edit.has_undo())
+		menu.add_item("重做", TextEdit.MENU_REDO)
+		menu.set_item_disabled(menu.item_count - 1, not text_edit.has_redo())
 
 
 func _on_label_gui_input(event: InputEvent) -> void:
@@ -108,6 +210,10 @@ func _on_label_gui_input(event: InputEvent) -> void:
 
 
 func _on_text_edit_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		_show_edit_menu(event.position)
+		text_edit.accept_event()
+		return
 	text_edit.handle_canvas_input(event)
 
 
@@ -248,9 +354,13 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 		return
 	_appearance_light = light
 	_displayed_background = background
+	if _edit_menu != null:
+		_configure_edit_menu(light)
 	label.begin_bulk_theme_override()
 	text_edit.begin_bulk_theme_override()
-	var foreground := Palette.neutral_text_color(background)
+	var foreground := text_color
+	if foreground.a == 0.0:
+		foreground = Palette.neutral_text_color(background)
 	label.add_theme_color_override("font_color", Color(0, 0, 0, 0) if _editing else foreground)
 	if update_layout:
 		label.add_theme_font_size_override("font_size", font_size)
@@ -387,36 +497,6 @@ func get_visual_rect() -> Rect2:
 	return Rect2(label.position, label.size)
 
 
-func _update_fill_layer(members: Array[Entity]) -> void:
-	var level := 1
-	for member in members:
-		if member is TextNode and Color(member.fill_color, 1.0).is_equal_approx(Color(fill_color, 1.0)):
-			level = maxi(level, member._fill_layer + 1)
-	if level == _fill_layer:
-		return
-	_fill_layer = level
-	_apply_appearance()
-
-
-func _align_edit_text() -> void:
-	text_edit.align_with_label(label, text_edit.text, true)
-
-
-# Display-only opacity: the longest uninterrupted same-RGB branch defines the level.
-# Preserve the chosen alpha and serialized fill_color; only the fill is faded.
-func display_fill_color() -> Color:
-	var result := fill_color
-	result.a *= pow(0.78, _fill_layer - 1)
-	return result
-
-
-func _display_theme_is_light() -> bool:
-	var stage := get_parent() as Stage
-	if stage != null and stage._applied_theme_light >= 0:
-		return stage._applied_theme_light == 1
-	return Palette.is_light(str(GraphPreferences.value("theme")))
-
-
 func _fit_label_text_height() -> void:
 	# Match the native editor row height, including its trailing line spacing.
 	var row_height := ceili(label.get_theme_font("font").get_height(font_size)) + label.get_theme_constant("line_spacing")
@@ -445,3 +525,33 @@ func _restore_edit_scroll() -> void:
 	if _editing:
 		text_edit.scroll_horizontal = 0
 		text_edit.scroll_vertical = 0
+
+
+func _align_edit_text() -> void:
+	text_edit.align_with_label(label, text_edit.text, true)
+
+
+# Display-only opacity: the longest uninterrupted same-RGB branch defines the level.
+# Preserve the chosen alpha and serialized fill_color; only the fill is faded.
+func display_fill_color() -> Color:
+	var result := fill_color
+	result.a *= pow(0.78, _fill_layer - 1)
+	return result
+
+
+func _update_fill_layer(members: Array[Entity]) -> void:
+	var level := 1
+	for member in members:
+		if member is TextNode and Color(member.fill_color, 1.0).is_equal_approx(Color(fill_color, 1.0)):
+			level = maxi(level, member._fill_layer + 1)
+	if level == _fill_layer:
+		return
+	_fill_layer = level
+	_apply_appearance()
+
+
+func _display_theme_is_light() -> bool:
+	var stage := get_parent() as Stage
+	if stage != null and stage._applied_theme_light >= 0:
+		return stage._applied_theme_light == 1
+	return Palette.is_light(str(GraphPreferences.value("theme")))

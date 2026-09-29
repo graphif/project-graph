@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://catmg5fqfped7"]
 
-[ext_resource type="Script" path="res://src/stage_object/entity/pen_stroke/pen_stroke.gd" id="1_ly8l8"]
+[ext_resource type="Script" uid="uid://bdsq6jogroub6" path="res://src/stage_object/entity/pen_stroke/pen_stroke.gd" id="1_ly8l8"]
 
 [node name="PenStroke" type="RigidBody2D" unique_id=147485596]
 collision_mask = 0

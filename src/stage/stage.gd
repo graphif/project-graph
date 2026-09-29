@@ -1,6 +1,8 @@
 class_name Stage
 extends Node2D
 
+const Palette = preload("res://src/main/theme_palette.gd")
+
 signal file_error(message: String)
 signal file_saved(path: String)
 signal file_loaded(path: String)
@@ -20,6 +22,7 @@ var _selection_lines: Dictionary = {}
 var _marquee_start := Vector2.ZERO
 var _marquee_active := false
 var _marquee_toggle := false
+var _marquee_original_ids := PackedStringArray()
 var _stroke: PenStroke
 
 
@@ -30,6 +33,9 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if history._busy:
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventWithModifiers and event.alt_pressed:
 		return
 	if not event is InputEventMouseButton or not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
@@ -51,6 +57,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		var node := create_text_node("...", world_position)
 		node.enter_edit_mode()
 	elif mode == 0:
+		_marquee_original_ids = selected_ids.duplicate()
 		_marquee_start = world_position
 		_marquee_active = true
 		_marquee_toggle = event.ctrl_pressed or event.meta_pressed
@@ -62,6 +69,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if history._busy:
+		get_viewport().set_input_as_handled()
+		return
 	if $EntityLayerMover.handle_input(event):
 		get_viewport().set_input_as_handled()
 		return
@@ -95,6 +105,7 @@ func create_text_node(content: String, world_position: Vector2, record_history :
 	if record_history:
 		history.begin_transaction()
 	var node: TextNode = StageObjectRegistry.get_scene("text_node").instantiate()
+	node.use_theme_border = true
 	node.text = content
 	node.position = world_position
 	add_child(node)
@@ -155,6 +166,15 @@ func select_all() -> void:
 	select_ids(ids)
 
 
+func cancel_marquee_selection() -> void:
+	if not _marquee_active:
+		return
+	_marquee_active = false
+	$SelectionOverlay/Marquee.hide()
+	$SelectionOverlay/Marquee.clear_points()
+	select_ids(_marquee_original_ids)
+
+
 func _update_marquee() -> void:
 	var end := get_global_mouse_position()
 	var rect := Rect2(_marquee_start, end - _marquee_start).abs()
@@ -189,6 +209,9 @@ func _refresh_selection_outlines() -> void:
 	for object in selected_objects():
 		if is_overview_hidden(object):
 			continue
+		# The expanding editor owns its focus outline; keep the physics bounds stable.
+		if object is TextNode and object.text_edit.visible:
+			continue
 		live[object.id] = true
 		var line := _selection_lines.get(object.id) as Line2D
 		if line == null:
@@ -205,7 +228,18 @@ func _refresh_selection_outlines() -> void:
 		line.scale = Vector2.ONE / maxf(get_global_transform_with_canvas().get_scale().x, 0.01)
 		# Three-pixel core plus the texture coverage fringe.
 		line.width = 5.0
-		line.default_color = Color("#418856") if _applied_theme_light == 1 else Color("#cba6f7")
+		line.default_color = Palette.color(_applied_theme_light == 1, "canvas.selection")
+		if object is LineEdge:
+			line.closed = false
+			line.width = object.line.width * object.line.get_global_transform_with_canvas().get_scale().x + 4.0
+			line.modulate.a = 0.45
+			var edge_points := PackedVector2Array()
+			for point in object.line.points:
+				edge_points.append(line.to_local(object.line.to_global(point)))
+			line.points = edge_points
+			continue
+		line.closed = true
+		line.modulate.a = 1.0
 		var rect: Rect2 = object.get_visual_rect() if object is TextNode else object.aabb
 		var points: PackedVector2Array = object.get_visual_outline() if object is TextNode else _rounded_selection_rect(rect, 6.0)
 		if object is TextNode and group_overview.is_active(object):
@@ -237,6 +271,9 @@ func delete_objects(objects: Array[StageObject]) -> void:
 		if object is LineEdge and (targets.has(object.source) or targets.has(object.target)) and not targets.has(object):
 			targets.append(object)
 	history.begin_transaction()
+	for object in stage_objects():
+		if object is TextNode and targets.has(object.topic_parent) and not targets.has(object):
+			object.topic_parent = null
 	for object in targets:
 		remove_child(object)
 		object.queue_free()
@@ -263,6 +300,31 @@ func finish_interaction() -> void:
 			object.finish_drag()
 
 
+func cancel_current_interaction() -> void:
+	if history._busy:
+		return
+	if _marquee_active:
+		cancel_marquee_selection()
+		return
+	if $StageObjectSlicer._is_slicing:
+		$StageObjectSlicer._cancel_slice()
+		return
+	var active: bool = is_instance_valid(_stroke) or $LineEdgeCreator._source != null or $EntityLayerMover._active
+	for object in stage_objects():
+		if object is Entity and object.is_dragging:
+			active = true
+	if active:
+		# History marks itself busy before restore stops the gesture, preventing commits.
+		history.cancel_transaction()
+		return
+	if camera.is_panning:
+		camera.is_panning = false
+		camera.velocity = Vector2.ZERO
+		camera.target_position = camera.global_position
+		return
+	select_ids(PackedStringArray())
+
+
 func is_dirty() -> bool:
 	for object in stage_objects():
 		if object is LineEdge and object.is_text_dirty():
@@ -276,7 +338,7 @@ func apply_object_preferences(object: StageObject, theme_light: Variant = null) 
 	if object is TextNode:
 		object._apply_appearance(false, theme_light)
 	if object is LineEdge:
-		object.apply_theme(bool(theme_light) if theme_light != null else GraphPreferences.value("theme") == "light")
+		object.apply_theme(Palette.is_light(str(GraphPreferences.value("theme"))) if theme_light == null else bool(theme_light))
 	if object is Entity:
 		object.collision_mask = 0
 
@@ -291,24 +353,24 @@ func apply_theme(light: bool) -> void:
 	_applied_theme_light = int(light)
 	var grid_material := $CanvasLayer/Grid.material as ShaderMaterial
 	if grid_material != null:
-		grid_material.set_shader_parameter("bg_color", Color("#ffffff") if light else Color("#1e1e2e"))
-		grid_material.set_shader_parameter("grid_color", Color("#dce0e8") if light else Color("#313244"))
+		grid_material.set_shader_parameter("bg_color", Palette.color(light, "surface.canvas"))
+		grid_material.set_shader_parameter("grid_color", Palette.color(light, "border.subtle"))
 	for object in stage_objects():
 		if object is TextNode:
 			object._apply_appearance(false, light)
 		elif object is LineEdge:
 			object.apply_theme(light)
+	$SelectionOverlay/Marquee.default_color = Palette.color(light, "canvas.selection")
 
 
 func apply_preferences(theme_light: Variant = null) -> void:
-	var light: bool = GraphPreferences.value("theme") == "light" if theme_light == null else bool(theme_light)
+	var light: bool = Palette.is_light(str(GraphPreferences.value("theme"))) if theme_light == null else bool(theme_light)
 	camera.max_speed = float(GraphPreferences.value("camera_speed"))
 	var grid_material := $CanvasLayer/Grid.material as ShaderMaterial
 	if grid_material != null:
 		grid_material.set_shader_parameter("show_horizontal", GraphPreferences.value("grid_h"))
 		grid_material.set_shader_parameter("show_vertical", GraphPreferences.value("grid_v"))
 		grid_material.set_shader_parameter("show_dots", GraphPreferences.value("grid_dots"))
-	$SelectionOverlay/Marquee.default_color = Color("#cba6f7")
 	for object in stage_objects():
 		apply_object_preferences(object, light)
 	# 完整设置更新也覆盖刚加载、恢复的对象。
@@ -404,3 +466,17 @@ func edge_at(world_point: Vector2) -> LineEdge:
 				distance = candidate
 				nearest = object
 	return nearest
+
+
+func connect_entities(from: Entity, to: Entity) -> LineEdge:
+	if not is_instance_valid(from) or not is_instance_valid(to) or from == to:
+		return null
+	for object in stage_objects():
+		if object is LineEdge and object.source == from and object.target == to:
+			return object
+	var edge := StageObjectRegistry.get_scene("line_edge").instantiate() as LineEdge
+	edge.use_theme_color = true
+	edge.source = from
+	edge.target = to
+	add_child(edge)
+	return edge

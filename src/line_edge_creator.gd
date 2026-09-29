@@ -11,13 +11,14 @@ const LINE_EDGE = preload("uid://dodce5rghnax4")
 # source 和 target 当前选中边的提示样式。
 @export var source_edge_color := Color("#a6e3a1")
 @export var target_edge_color := Color("#89b4fa")
-@export_range(1.0, 20.0, 1.0) var edge_highlight_width := 4.0
+@export_range(1.0, 20.0, 1.0) var edge_highlight_width := 1.5
 # Line2D 使用离散点绘制贝塞尔曲线，该值越大曲线越平滑。
 @export_range(4, 128, 1) var preview_curve_segments := 24
 
 # 一次拖拽过程中持续保存的连接状态。
 var _drag_start_position := Vector2.ZERO
 var _gesture_button := MOUSE_BUTTON_RIGHT
+var _drag_threshold_passed := false
 var _source: Entity
 var _source_uv := Vector2(0.5, 0.5)
 var _target: Entity
@@ -35,10 +36,14 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _source != null and event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		cancel_drag()
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventWithModifiers and event.alt_pressed:
 		return
 	# 右键按下开始拖拽，右键松开时尝试创建边。
-	if event is InputEventMouseButton and (event.button_index == MOUSE_BUTTON_RIGHT or (event.button_index == MOUSE_BUTTON_LEFT and int(GraphPreferences.value("left_mode")) == 2)):
+	if event is InputEventMouseButton and ((event.button_index == MOUSE_BUTTON_RIGHT and int(GraphPreferences.value("right_mode")) == 0) or (event.button_index == MOUSE_BUTTON_LEFT and int(GraphPreferences.value("left_mode")) == 2)):
 		if event.pressed:
 			var mouse_position := get_global_mouse_position()
 			var entity := _get_entity_at(mouse_position)
@@ -50,7 +55,7 @@ func _input(event: InputEvent) -> void:
 			_start_drag(entity, mouse_position)
 		elif _source != null and event.button_index == _gesture_button:
 			var mouse_position := get_global_mouse_position()
-			_update_drag_state(mouse_position)
+			_update_preview(mouse_position)
 			_finish_drag()
 		else:
 			return
@@ -66,6 +71,7 @@ func _input(event: InputEvent) -> void:
 
 func _start_drag(source: Entity, mouse_position: Vector2) -> void:
 	_drag_start_position = mouse_position
+	_drag_threshold_passed = false
 	var history := _get_history()
 	if history != null:
 		history.begin_transaction()
@@ -73,7 +79,6 @@ func _start_drag(source: Entity, mouse_position: Vector2) -> void:
 	_source_uv = Vector2(0.5, 0.5)
 	_target = null
 	_update_preview(mouse_position)
-	_preview_line.visible = true
 
 
 func _finish_drag() -> void:
@@ -82,14 +87,11 @@ func _finish_drag() -> void:
 	_source_edge_highlight.visible = false
 	_target_edge_highlight.visible = false
 
-	if _target != null:
-		var line_edge := LINE_EDGE.instantiate() as LineEdge
-		line_edge.source = _source
-		line_edge.target = _target
-		var anchors := LineEdge.connection_uvs(_source.aabb, _target.aabb)
-		line_edge.source_uv = anchors[0]
-		line_edge.target_uv = anchors[1]
-		target_root.add_child(line_edge)
+	if _target != null and target_root is Stage:
+		var edge: LineEdge = target_root.connect_entities(_source, _target)
+		if edge != null:
+			target_root.select_ids(PackedStringArray([edge.id]))
+			target_root.document_changed.emit()
 		var history := _get_history()
 		if history != null:
 			history.commit()
@@ -98,7 +100,7 @@ func _finish_drag() -> void:
 		var history := _get_history()
 		if history != null:
 			history.commit()
-	if _target == null and _gesture_button == MOUSE_BUTTON_RIGHT and _drag_start_position.distance_squared_to(get_global_mouse_position()) <= 9.0 and target_root is Stage:
+	if not _drag_threshold_passed and _gesture_button == MOUSE_BUTTON_RIGHT and target_root is Stage:
 		target_root.select_object(_source)
 		target_root.context_requested.emit(get_global_mouse_position())
 	_source = null
@@ -106,18 +108,29 @@ func _finish_drag() -> void:
 
 
 func _update_preview(mouse_position: Vector2) -> void:
+	if not _drag_threshold_passed:
+		var screen_delta := get_global_transform_with_canvas().basis_xform(mouse_position - _drag_start_position)
+		_drag_threshold_passed = screen_delta.length_squared() > 25.0
+		if not _drag_threshold_passed:
+			_target = null
+			_preview_line.hide()
+			_source_edge_highlight.hide()
+			_target_edge_highlight.hide()
+			return
+	_preview_line.show()
 	_update_drag_state(mouse_position)
 	# 预览与正式连线共用选边和曲线，松开鼠标后不会跳回另一条边。
-	var destination := _target.aabb if _target != null else Rect2(mouse_position, Vector2.ZERO)
-	var anchors := LineEdge.connection_uvs(_source.aabb, destination)
+	var origin := LineEdge.connection_rect(_source, _target)
+	var destination := LineEdge.connection_rect(_target, _source) if _target != null else Rect2(mouse_position, Vector2.ZERO)
+	var anchors := LineEdge.connection_uvs(origin, destination)
 	_source_uv = anchors[0]
 	_target_uv = anchors[1]
-	_update_edge_highlight(_source_edge_highlight, _source.aabb, _source_uv, anchors[2])
+	_update_edge_highlight(_source_edge_highlight, origin, _source_uv, anchors[2])
 	if _target != null:
 		_update_edge_highlight(_target_edge_highlight, destination, _target_uv, anchors[3])
 	else:
 		_target_edge_highlight.visible = false
-	var points := LineEdge.connection_curve(_source.aabb, destination, anchors, preview_curve_segments)
+	var points := LineEdge.connection_curve(origin, destination, anchors, preview_curve_segments)
 	for index in points.size():
 		points[index] = to_local(points[index])
 	_preview_line.points = points
@@ -222,3 +235,12 @@ func cancel_drag() -> void:
 	var history := _get_history()
 	if history != null:
 		history.commit()
+
+
+func _process(_delta: float) -> void:
+	var screen_scale := maxf(get_global_transform_with_canvas().x.length(), 0.01)
+	_preview_line.width = preview_width / screen_scale
+	_source_edge_highlight.width = edge_highlight_width / screen_scale
+	_target_edge_highlight.width = edge_highlight_width / screen_scale
+	if _source != null and (not get_window().has_focus() or not Input.is_mouse_button_pressed(_gesture_button)):
+		cancel_drag()

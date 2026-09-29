@@ -2,10 +2,10 @@ class_name StageObjectSlicer
 extends Node2D
 
 @export var target_root: Node
-@export var line_color := Color("#f38ba8f2")
-@export_range(1.0, 20.0, 1.0) var line_width := 4.0
-@export var highlight_color := Color("#f38ba8e6")
-@export_range(1.0, 20.0, 1.0) var highlight_width := 3.0
+@export var line_color := Color("#f38ba8b3")
+@export_range(1.0, 20.0, 1.0) var line_width := 1.5
+@export var highlight_color := Color("#f38ba899")
+@export_range(1.0, 20.0, 1.0) var highlight_width := 1.5
 
 var _is_slicing := false
 var _slice_button := MOUSE_BUTTON_RIGHT
@@ -36,8 +36,15 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and (event.button_index == MOUSE_BUTTON_LEFT and int(GraphPreferences.value("left_mode")) == 2 or event.button_index == (MOUSE_BUTTON_RIGHT if int(GraphPreferences.value("right_mode")) == 0 else MOUSE_BUTTON_MIDDLE)) and event.pressed:
+	if event is InputEventMouseButton and event.button_index == (MOUSE_BUTTON_RIGHT if int(GraphPreferences.value("right_mode")) == 0 else MOUSE_BUTTON_MIDDLE) and event.pressed:
 		_slice_button = event.button_index
+		if _slice_button == MOUSE_BUTTON_RIGHT and target_root is Stage:
+			var edge: LineEdge = target_root.edge_at(get_global_mouse_position())
+			if edge != null:
+				target_root.select_object(edge)
+				target_root.context_requested.emit(get_global_mouse_position())
+				get_viewport().set_input_as_handled()
+				return
 		if _is_point_on_stage_object(get_global_mouse_position()):
 			return
 		_is_slicing = true
@@ -49,6 +56,12 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventPanGesture and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		if event.is_canceled():
+			return
+		_handle_pressed_touchpad_pan()
+		get_viewport().set_input_as_handled()
+		return
 	if not _is_slicing:
 		return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
@@ -65,6 +78,10 @@ func _input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	_update_effects(delta)
+	if _slice_line != null:
+		_slice_line.width = line_width / _screen_scale()
+	for highlight in _collision_highlights.values():
+		highlight.width = highlight_width / _screen_scale()
 	if not _is_slicing:
 		return
 	# 主分支移出窗口时按当前终点释放切割。
@@ -79,10 +96,24 @@ func _process(delta: float) -> void:
 		_cancel_slice()
 
 
+func _handle_pressed_touchpad_pan() -> void:
+	if not _is_slicing:
+		_slice_button = MOUSE_BUTTON_LEFT
+		if target_root is Stage:
+			target_root.cancel_marquee_selection()
+		if _is_point_on_stage_object(get_global_mouse_position()):
+			return
+		_is_slicing = true
+		_slice_start = get_global_mouse_position()
+		_slice_end = _slice_start
+		_slice_targets.clear()
+	_update_slice_endpoint(get_global_mouse_position())
+
+
 func _update_slice_endpoint(point: Vector2) -> void:
 	_slice_end = point
 	_slice_targets.clear()
-	if _slice_start.distance_squared_to(_slice_end) > 1.0:
+	if _has_slice_motion():
 		for stage_object in _get_stage_objects():
 			if _segment_intersects_collision_box(_slice_start, _slice_end, stage_object):
 				_slice_targets[stage_object] = true
@@ -98,7 +129,7 @@ func _include_connected_edges() -> void:
 
 func _update_line() -> void:
 	_slice_line.points = PackedVector2Array([to_local(_slice_start), to_local(_slice_end)])
-	_slice_line.visible = true
+	_slice_line.visible = _has_slice_motion()
 	_update_collision_highlights()
 	_update_contact_marks()
 
@@ -112,7 +143,7 @@ func _cancel_slice() -> void:
 
 
 func _finish_slice() -> void:
-	if _slice_start.distance_squared_to(_slice_end) <= 1.0:
+	if not _has_slice_motion():
 		_cancel_slice()
 		if target_root is Stage and _slice_button == MOUSE_BUTTON_RIGHT:
 			target_root.select_ids(PackedStringArray())
@@ -122,7 +153,8 @@ func _finish_slice() -> void:
 	for stage_object in _slice_targets:
 		if is_instance_valid(stage_object) and stage_object is Entity:
 			_spawn_split_effect(stage_object)
-	_spawn_cut_flash()
+	if not _slice_targets.is_empty():
+		_spawn_cut_flash()
 	_include_connected_edges()
 	var targets: Array[StageObject] = []
 	for stage_object in _slice_targets:
@@ -289,6 +321,7 @@ func _update_collision_highlights() -> void:
 			highlight = Line2D.new()
 			highlight.default_color = highlight_color
 			highlight.width = highlight_width
+			highlight.antialiased = true
 			highlight.closed = false
 			highlight.z_index = 99
 			add_child(highlight)
@@ -486,14 +519,14 @@ func _spawn_cut_flash() -> void:
 	var flash := Node2D.new()
 	flash.z_index = 102
 	add_child(flash)
-	# master 的尖头刀光：白色刀芯、警示色光晕，宽度上限 20。
+	# 保留 master 的尖头反馈，限制为细窄的屏幕像素宽度。
 	for i in 4:
 		var blade := Polygon2D.new()
 		blade.antialiased = true
 		blade.color = Color(line_color, 0.08 + float(i) * 0.04) if i < 3 else Color.WHITE
 		flash.add_child(blade)
 	var effect := {"node": flash, "start": _slice_start, "end": _slice_end,
-		"width": _slice_start.distance_to(_slice_end) / 10.0, "age": 0.0}
+		"width": 3.0, "age": 0.0}
 	_flashes.append(effect)
 	_update_flash_shape(effect, 0.0)
 
@@ -504,11 +537,11 @@ func _update_flash_shape(effect: Dictionary, progress: float) -> void:
 	var start: Vector2 = (effect.start as Vector2).lerp(end, progress)
 	var direction := (end - start).normalized()
 	var normal := direction.orthogonal()
-	var width := minf(float(effect.width) * (1.0 - progress), 20.0)
+	var width := float(effect.width) * (1.0 - progress) / _screen_scale()
 	var shoulder := end - direction * minf(20.0, start.distance_to(end) * 0.5)
 	for i in flash.get_child_count():
 		var blade := flash.get_child(i) as Polygon2D
-		var spread := float(3 - i) * 3.0 * (1.0 - progress)
+		var spread := float(3 - i) * 0.5 * (1.0 - progress) / _screen_scale()
 		blade.polygon = PackedVector2Array([
 			flash.to_local(start - direction * spread),
 			flash.to_local(shoulder + normal * (width * 0.5 + spread)),
@@ -526,7 +559,7 @@ func _update_effects(delta: float) -> void:
 			effect.node.queue_free()
 			_contact_flares.remove_at(i)
 			continue
-		effect.node.scale = Vector2.ONE * (20.0 / 32.0) * progress
+		effect.node.scale = Vector2.ONE * (8.0 / 32.0) * progress / _screen_scale()
 		effect.node.modulate.a = 1.0 - progress
 	for i in range(_fragments.size() - 1, -1, -1):
 		var effect: Dictionary = _fragments[i]
@@ -550,3 +583,11 @@ func _update_effects(delta: float) -> void:
 			_flashes.remove_at(i)
 			continue
 		_update_flash_shape(effect, progress)
+
+
+func _screen_scale() -> float:
+	return maxf(get_global_transform_with_canvas().x.length(), 0.01)
+
+
+func _has_slice_motion() -> bool:
+	return get_global_transform_with_canvas().basis_xform(_slice_end - _slice_start).length_squared() > 25.0

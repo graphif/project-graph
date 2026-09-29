@@ -1,15 +1,10 @@
 [gd_scene format=3 uid="uid://btnefrbc5lowu"]
 
 [ext_resource type="Script" uid="uid://dod1gh6rthy3r" path="res://src/stage_object/entity/text_node/text_node.gd" id="1_0djjf"]
-[ext_resource type="FontFile" uid="uid://cajak3br1708r" path="res://assets/fonts/GenJyuuGothic-Regular.ttf" id="2_bvegj"]
 [ext_resource type="StyleBox" uid="uid://dvdwiynne2hm" path="res://src/stage_object/entity/text_node/style.tres" id="2_qcl3h"]
 [ext_resource type="Script" uid="uid://y6ndrptulx6x" path="res://src/auto_size_text_edit.gd" id="3_hm685"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_nwfkh"]
-
-[sub_resource type="FontVariation" id="FontVariation_hmhrc"]
-base_font = ExtResource("2_bvegj")
-baseline_offset = 0.045
 
 [node name="TextNode" type="RigidBody2D" unique_id=594595858]
 gravity_scale = 0.0
@@ -39,7 +34,6 @@ offset_bottom = 36.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 1
-theme_override_fonts/font = SubResource("FontVariation_hmhrc")
 theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = ExtResource("2_qcl3h")
 horizontal_alignment = 1
@@ -48,16 +42,16 @@ vertical_alignment = 1
 [node name="TextEdit" type="TextEdit" parent="." unique_id=118923332]
 unique_name_in_owner = true
 visible = false
-custom_minimum_size = Vector2(38, 74)
+custom_minimum_size = Vector2(38, 78)
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -14.0
-offset_top = -35.666664
+offset_top = -37.666664
 offset_right = 24.0
-offset_bottom = 38.333336
+offset_bottom = 40.333336
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_font_sizes/font_size = 32
