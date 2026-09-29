@@ -3,7 +3,7 @@ extends RefCounted
 
 const PATH := "user://workspace.cfg"
 const DEFAULTS := {
-	"theme": "mocha", "grid_h": true, "grid_v": true, "grid_dots": false,
+	"theme": "system", "grid_h": true, "grid_v": true, "grid_dots": false,
 	"snap": false, "physics": true, "effects": true, "welcome": true,
 	"left_mode": 0, "right_mode": 0, "ui_scale": 100.0, "camera_speed": 800.0,
 	"classroom": false, "privacy": false, "quick": true,
@@ -15,6 +15,12 @@ static var _loaded := false
 static func ensure_loaded() -> void:
 	if not _loaded:
 		_config.load(PATH)
+		# 旧版本默认使用深色主题；首次升级迁移到系统跟随，避免安装后仍锁定深色。
+		if not _config.has_section_key("settings", "theme_mode_migrated"):
+			if _config.get_value("settings", "theme", "mocha") == "mocha":
+				_config.set_value("settings", "theme", "system")
+			_config.set_value("settings", "theme_mode_migrated", true)
+			_config.save(PATH)
 		_loaded = true
 
 

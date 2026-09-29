@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const Palette = preload("res://src/main/theme_palette.gd")
+
 @export_range(0.1, 1.0, 0.05) var duration: float = 0.4
 # 手动排查时开启；默认不输出性能日志。
 @export var trace_timings: bool = false
@@ -33,7 +35,12 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_on_viewport_resized)
 	set_process(false)
 	_wave_data.resize(MAX_WAVES)
-	_warm_capture()
+	call_deferred("_warm_capture_after_first_frame")
+
+
+func _warm_capture_after_first_frame() -> void:
+	await get_tree().process_frame
+	await _warm_capture()
 
 
 func _warm_capture() -> void:
@@ -165,7 +172,7 @@ func _update_waves() -> void:
 		if _live_light != int(light):
 			_live_apply.call(light)
 			_live_light = int(light)
-		_button_backdrop.color = Color("#ffffff") if light else Color("#181825")
+		_button_backdrop.color = Palette.color(light, "surface.app")
 		_button_backdrop.show()
 	_shader.set_shader_parameter("live_control_rect", Vector4(live_rect.position.x, live_rect.position.y, live_rect.size.x, live_rect.size.y))
 	_shader.set_shader_parameter("viewport_size", _viewport_size)

@@ -62,7 +62,7 @@ static func fitted_radius(size: Vector2, radius: float, border_width: float = 1.
 	return floorf(clampf(radius, 0.0, maxf(0.0, minf(size.x, size.y) * 0.5 - border_width - 2.0)))
 
 
-static func style(original: StyleBoxFlat, radius: float, mipmapped: bool = false, continuous: bool = false) -> StyleBox:
+static func style(original: StyleBoxFlat, radius: float, mipmapped: bool = false, _continuous: bool = false) -> StyleBox:
 	if original == null:
 		return StyleBoxEmpty.new()
 	var flat := original.duplicate() as StyleBoxFlat
@@ -70,11 +70,7 @@ static func style(original: StyleBoxFlat, radius: float, mipmapped: bool = false
 	# Underlines and one-sided borders keep the native representation.
 	if radius <= 0.0 or flat.border_width_left != flat.border_width_top or flat.border_width_left != flat.border_width_right or flat.border_width_left != flat.border_width_bottom:
 		return flat
-	# 小控件（按钮、输入框、页签）常在 2×切边之内，九宫格会把圆角压缩近半。
-	# 这类尺寸改用原生圆角如实渲染；连续圆角只留给空间足够的大表面。
-	if radius <= CONTROL and not continuous:
-		flat.anti_aliasing = true
-		return flat
+	# 透明弹窗内也复用 SVG 纹理的抗锯齿，避免原生圆角多边形边缘的混合接缝。
 	var width := float(flat.border_width_left)
 	var shadow := float(flat.shadow_size) if flat.shadow_color.a > 0.0 else 0.0
 	var padding := ceilf(shadow + maxf(absf(flat.shadow_offset.x), absf(flat.shadow_offset.y))) + 1.0
@@ -131,7 +127,8 @@ static func configure_theme(theme: Theme) -> void:
 			var flat := source(theme.get_stylebox(key, type))
 			if flat == null:
 				continue
-			var radius := CONTROL
+			# 小控件保留组件声明的半径，避免九宫格切边挤占输入框高度。
+			var radius := minf(CONTROL, maxf(maxf(flat.corner_radius_top_left, flat.corner_radius_top_right), maxf(flat.corner_radius_bottom_left, flat.corner_radius_bottom_right)))
 			if "Scroll" in type or key.contains("separator") or type == "DialogTabs":
 				continue
 			if type in ["Window", "PopupMenu", "Panel", "PanelContainer", "DialogSurface", "AcceptDialog"]:

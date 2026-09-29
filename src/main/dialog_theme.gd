@@ -1,16 +1,17 @@
 extends RefCounted
 
 const Corners = preload("res://src/main/continuous_corners.gd")
+const Palette = preload("res://src/main/theme_palette.gd")
 
 
 static func configure(target: Theme, light: bool) -> void:
-	var surface := Color("#f6faf6") if light else Color("#181825")
-	var field := Color("#ffffff") if light else Color("#1e1e2e")
-	var border := Color("#bfd4c3") if light else Color("#45475a")
-	var text := Color("#24452c") if light else Color("#cdd6f4")
-	var accent := Color("#2d7748") if light else Color("#cba6f7")
-	var selected := Color("#d9efdc") if light else Color("#45405c")
-	var hover := Color("#e4f1e7") if light else Color("#313244")
+	var surface := Palette.color(light, "surface.panel")
+	var field := Palette.color(light, "surface.field")
+	var border := Palette.color(light, "border.default")
+	var text := Palette.color(light, "text.primary")
+	var accent := Palette.color(light, "accent.primary")
+	var selected := Palette.color(light, "surface.selected")
+	var hover := Palette.color(light, "surface.hover")
 
 	target.set_type_variation("DialogSurface", "Panel")
 	var background := _panel(Color.TRANSPARENT, Color.TRANSPARENT, 0, 0)
@@ -36,11 +37,9 @@ static func configure(target: Theme, light: bool) -> void:
 		target.set_stylebox("embedded_unfocused_border", "Window", frame.duplicate())
 	target.set_font_size("title_font_size", "Window", 16)
 	target.set_color("title_color", "Window", text)
-	# 复用主窗口的细线关闭图标，透明留白保留 28×28 的点击范围。
-	var close_icon := AtlasTexture.new()
-	close_icon.atlas = preload("res://src/main/icons/close.tres")
-	close_icon.region = Rect2(Vector2.ZERO, close_icon.atlas.get_size())
-	close_icon.margin = Rect2(4, 4, 8, 8)
+	# Include padding in the SVG so DPITexture keeps the 28-pixel hit area.
+	var close_svg := '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><path d="M8 8L20 20M20 8L8 20" fill="none" stroke="#%s" stroke-width="1.5" stroke-linecap="round"/></svg>' % text.to_html(false)
+	var close_icon := DPITexture.create_from_string(close_svg)
 	target.set_icon("close", "Window", close_icon)
 	target.set_icon("close_pressed", "Window", close_icon)
 	# 图标居中于标题栏，点击区域距右边缘 6 像素。
@@ -63,7 +62,7 @@ static func configure(target: Theme, light: bool) -> void:
 	tab_focus.border_width_bottom = 2
 	target.set_stylebox("tab_focus", "DialogTabs", tab_focus)
 	target.set_color("font_selected_color", "DialogTabs", text)
-	target.set_color("font_unselected_color", "DialogTabs", Color("#617568") if light else Color("#a6adc8"))
+	target.set_color("font_unselected_color", "DialogTabs", Palette.color(light, "text.secondary"))
 	target.set_constant("side_margin", "DialogTabs", 0)
 	target.set_constant("tab_separation", "DialogTabs", 8)
 
@@ -84,7 +83,7 @@ static func configure(target: Theme, light: bool) -> void:
 	target.set_stylebox("focus", "DialogButton", focus)
 	for key in ["font_color", "font_focus_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color"]:
 		target.set_color(key, "DialogButton", text)
-		target.set_color(key, "DialogPrimaryButton", Color("#ffffff") if light else Color("#1e1e2e"))
+		target.set_color(key, "DialogPrimaryButton", Palette.color(light, "text.on_accent"))
 	for state in ["normal", "hover", "pressed", "hover_pressed"]:
 		var button := _panel(accent.lightened(0.08) if state == "hover" else accent, accent, 10, 8)
 		button.content_margin_top = 7
@@ -107,12 +106,12 @@ static func configure(target: Theme, light: bool) -> void:
 		for disabled in [false, true]:
 			for mirrored in [false, true]:
 				var icon_name := ("checked" if checked else "unchecked") + ("_disabled" if disabled else "") + ("_mirrored" if mirrored else "")
-				var path := "res://src/main/icons/switch_" + ("light" if light else "dark") + ("_on" if checked else "_off") + ("_disabled" if disabled else "") + ("_mirrored" if mirrored else "") + ".tres"
-				target.set_icon(icon_name, "SettingsSwitch", load(path))
+				target.set_icon(icon_name, "SettingsSwitch", Palette.switch_icon(light, checked, disabled, mirrored))
 
 	target.set_type_variation("DialogField", "LineEdit")
 	target.set_type_variation("DialogOption", "OptionButton")
-	for type in ["DialogField", "DialogOption"]:
+	target.set_type_variation("DialogTextEdit", "TextEdit")
+	for type in ["DialogField", "DialogOption", "DialogTextEdit"]:
 		for state in ["normal", "hover", "pressed", "hover_pressed", "read_only"]:
 			var box := _panel(hover if state == "hover" else field, Color.TRANSPARENT, 10, 5)
 			box.content_margin_top = 6
@@ -121,6 +120,10 @@ static func configure(target: Theme, light: bool) -> void:
 		target.set_stylebox("focus", type, focus)
 		for key in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
 			target.set_color(key, type, text)
+	target.set_color("font_readonly_color", "DialogTextEdit", Palette.color(light, "text.secondary"))
+	target.set_color("caret_color", "DialogTextEdit", text)
+	target.set_color("selection_color", "DialogTextEdit", selected)
+	target.set_color("font_selected_color", "DialogTextEdit", text)
 	target.set_type_variation("DialogScroll", "VScrollBar")
 	var track := _panel(Color.TRANSPARENT, Color.TRANSPARENT, 3, 3)
 	target.set_stylebox("scroll", "DialogScroll", track)
@@ -133,27 +136,48 @@ static func configure(target: Theme, light: bool) -> void:
 
 
 static func apply_controls(dialog: Window) -> void:
+	# 内容面板透明，由 embedded_border 绘制完整表面；视口必须同步透明。
+	dialog.transparent_bg = true
+	_remove_saved_scrollbars(dialog)
 	for control in dialog.find_children("*", "Control", true, false):
 		if control is CheckButton:
 			control.theme_type_variation = "SettingsSwitch"
 		elif control is SpinBox:
 			control.get_line_edit().theme_type_variation = "DialogField"
+		elif control is TextEdit:
+			control.theme_type_variation = "DialogTextEdit"
 		elif control is LineEdit:
 			control.theme_type_variation = "DialogField"
 		elif control is OptionButton:
 			control.theme_type_variation = "DialogOption"
+		elif control is ColorPickerButton:
+			control.theme_type_variation = "DialogButton"
+		elif control.get_class() == "Button" and control.theme_type_variation.is_empty():
+			control.theme_type_variation = "DialogButton"
 		elif control is ScrollContainer:
 			control.get_v_scroll_bar().theme_type_variation = "DialogScroll"
 
 
 static func _panel(background: Color, border: Color, margin: int, radius: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = background
-	style.border_color = border
-	style.set_border_width_all(1)
+	# 透明白色的一像素边框会在圆角抗锯齿处形成亮色碎边。
+	style.bg_color = Color(0, 0, 0, 0) if background.a == 0.0 else background
+	style.border_color = style.bg_color if border.a == 0.0 else border
+	style.set_border_width_all(0 if border.a == 0.0 else 1)
 	style.set_corner_radius_all(radius)
 	style.content_margin_left = margin
 	style.content_margin_right = margin
 	style.content_margin_top = margin
 	style.content_margin_bottom = margin
 	return style
+
+
+static func _remove_saved_scrollbars(node: Node) -> void:
+	# 引擎内部滚动条由控件自行创建；旧场景误保存的副本是普通子节点。
+	# 只删除带自动生成名称的副本，保留内部节点及明确命名的自定义控件。
+	for child in node.get_children():
+		if (node is ItemList or node is TextEdit) and child is ScrollBar and str(child.name).begins_with("@") and child.owner != null:
+			node.remove_child(child)
+			child.free()
+		else:
+			_remove_saved_scrollbars(child)

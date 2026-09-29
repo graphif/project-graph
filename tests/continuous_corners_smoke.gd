@@ -61,10 +61,10 @@ func _run() -> void:
 			var style: StyleBox = theme.get_stylebox(pair[1], pair[0])
 			check(style is StyleBoxTexture, "Native continuous style: " + str(pair))
 			check(Corners.source(style) != null, "Retain source style for palette changes")
-		# 小控件用原生圆角，九宫格在小尺寸上会把圆角压掉一半。
+		# 小控件复用 SVG 抗锯齿，并保留组件声明的较小半径。
 		var button_style: StyleBox = theme.get_stylebox("normal", "Button")
-		check(button_style is StyleBoxFlat, "Small controls use native corners")
-		check(Corners.source(button_style).corner_radius_top_left == int(Corners.CONTROL), "Small controls keep exact radius")
+		check(button_style is StyleBoxTexture, "Small controls use the shared antialiased style")
+		check(Corners.source(button_style).corner_radius_top_left > 0 and Corners.source(button_style).corner_radius_top_left <= int(Corners.CONTROL), "Small controls retain a bounded component radius")
 		for dock in docks:
 			var dock_box := dock.get_theme_stylebox("panel") as StyleBoxTexture
 			check(dock_box != null, "Visible Dock uses continuous theme")
