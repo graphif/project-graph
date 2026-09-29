@@ -1,7 +1,7 @@
 extends Node2D
 
 ## View-only overview, matching master's section-size and camera-scale gates.
-## Keep bodies visible to physics and serialization; cull only their canvas items.
+## Preserve detail beneath a translucent title cover; only block its interaction.
 @export_range(0.01, 1.0) var camera_scale_threshold := 0.45
 @export_range(0.01, 1.0) var viewport_size_ratio := 0.15
 
@@ -25,6 +25,7 @@ func _process(_delta: float) -> void:
 
 
 func is_hidden(object: StageObject) -> bool:
+	# Covered details remain drawn, but cannot be selected through the overview.
 	return _hidden.has(object.get_instance_id())
 
 
@@ -118,6 +119,15 @@ func refresh() -> void:
 				_suppress_canvas(object, items)
 				_suppressed[key] = {"object": object, "items": items, "pickable": object.input_pickable}
 			object.input_pickable = not _hidden.has(key) and bool(_suppressed[key].pickable)
+			var replace_group: bool = _active.has(key) and not _hidden.has(key)
+			for item in _suppressed[key].items:
+				if not is_instance_valid(item.node):
+					continue
+				# Only replace the visible group's old frame/title. Its members
+				# stay rendered below the 50% cover, including nested groups.
+				item.node.visibility_layer = 0 if replace_group else item.layer
+				if object is LineEdge and item.node != object:
+					item.node.z_index = 0 # Internal captions belong beneath the cover too.
 
 	for key in _summaries.keys():
 		if not _active.has(key) or _hidden.has(key):
@@ -162,12 +172,11 @@ func _active_ancestors(entity: Entity) -> Array:
 
 func _suppress_canvas(node: Node, items: Array[Dictionary]) -> void:
 	if node is CanvasItem:
-		var state := {"node": node, "layer": node.visibility_layer}
+		var state := {"node": node, "layer": node.visibility_layer, "z_index": node.z_index}
 		if node is Control:
 			state["mouse_filter"] = node.mouse_filter
 			node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		items.append(state)
-		node.visibility_layer = 0
 	for child in node.get_children():
 		_suppress_canvas(child, items)
 
@@ -178,6 +187,7 @@ func _restore(key: int) -> void:
 		if not is_instance_valid(item.node):
 			continue
 		item.node.visibility_layer = item.layer
+		item.node.z_index = item.z_index
 		if item.has("mouse_filter"):
 			item.node.mouse_filter = item.mouse_filter
 	if is_instance_valid(state.object):
@@ -200,7 +210,7 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 	# Keep style geometry in viewport pixels so zoom cannot flatten the corners.
 	panel.scale = Vector2.ONE / pixel_scale
 	panel.size = rect.size * pixel_scale
-	panel.z_index = 66 # Cover the hidden endpoints, beneath selection outlines and captions.
+	panel.z_index = 66 # Translucent cover above detail; external captions remain above it.
 	var title := panel.get_node("Title") as Label
 	title.visible = screen_side >= 20.0
 	title.text = group.text
@@ -214,6 +224,7 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 	title.position = (panel.size - title.size * title.scale) * 0.5
 	var light: bool = group._display_theme_is_light()
 	var background := group.display_background_color(light)
+	background.a = 0.5
 	var style_key := [background, group.display_border_color(), panel.size]
 	if panel.get_meta("style_key", []) != style_key:
 		var style := StyleBoxFlat.new()
