@@ -31,14 +31,12 @@ const Palette = preload("res://src/main/theme_palette.gd")
 var _appearance_light: Variant = null
 
 var _geometry_key: Array = []
-var _arrow_base_polygon := PackedVector2Array()
 @onready var _unscaled_line_width: float = %Line.width
 
 
 func _ready() -> void:
 	# Container fills use depths 0..64; keep strokes above those backgrounds.
 	z_index = 65
-	_arrow_base_polygon = arrow_head.polygon.duplicate()
 	line.texture = preload("res://assets/line_antialiasing.res")
 	line.texture_mode = Line2D.LINE_TEXTURE_TILE
 	line.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
@@ -58,12 +56,7 @@ func _process(_delta: float) -> void:
 	var pixel_scale := maxf(get_global_transform_with_canvas().get_scale().x, 0.01)
 	line.scale = Vector2.ONE / pixel_scale
 	line.width = maxf(1.0, _unscaled_line_width * pixel_scale) + 2.0
-	if not is_equal_approx(arrow_head.scale.x, 1.0 / pixel_scale):
-		arrow_head.scale = Vector2.ONE / pixel_scale
-		var polygon := PackedVector2Array()
-		for point in _arrow_base_polygon:
-			polygon.append(point * pixel_scale)
-		arrow_head.polygon = polygon
+	arrow_head.scale = Vector2.ONE / pixel_scale
 	arrow_head.antialiased = true
 	var color := display_stroke_color()
 	if line.default_color != color:
@@ -78,20 +71,24 @@ func _process(_delta: float) -> void:
 	_geometry_key = key
 	var anchors := connection_uvs(source_rect, target_rect)
 	var render_segments := clampi(ceili(curve_segments * sqrt(maxf(1.0, pixel_scale))), curve_segments, 512)
-	var world_points := connection_curve(source_rect, target_rect, anchors, render_segments)
-	arrow_head.visible = world_points.size() > 1
-	var shaft_points := world_points.duplicate()
+	var tip := anchor(target_rect, anchors[1])
+	var direction := (Vector2(0.5, 0.5) - anchors[1]).normalized()
+	var head_length := arrow_length(source_rect, target_rect, anchors, _unscaled_line_width)
+	arrow_head.visible = head_length > 0.0
+	# End the Bezier at the head base with the same tangent as the triangle.
+	# All edges on a shared port now have identical head orientation.
+	var shaft_points := connection_curve(source_rect, target_rect, anchors, render_segments, head_length)
+	var world_points := shaft_points.duplicate()
 	if arrow_head.visible:
-		var tip := world_points[world_points.size() - 1]
-		# 端点切线沿目标边的内法线，避免离散曲线末段使箭头略微偏斜。
-		var direction := (Vector2(0.5, 0.5) - anchors[1]).normalized()
 		arrow_head.global_position = tip
 		arrow_head.global_rotation = direction.angle()
-		# 线身止于三角形底部；继续画到尖端会使尖端变成突出的细线。
-		var head_length := 0.0
-		for point in arrow_head.polygon:
-			head_length = maxf(head_length, (tip - arrow_head.to_global(point)).dot(direction))
-		shaft_points = _trim_curve_end(world_points, head_length)
+		var half_width := head_length * 0.4
+		arrow_head.polygon = PackedVector2Array([
+			Vector2.ZERO,
+			Vector2(-head_length, -half_width) * pixel_scale,
+			Vector2(-head_length, half_width) * pixel_scale,
+		])
+		world_points.append(tip)
 	var local_points := PackedVector2Array()
 	var collision_points := PackedVector2Array()
 	for point in shaft_points:
@@ -102,19 +99,13 @@ func _process(_delta: float) -> void:
 	_update_collision_shape(collision_points)
 
 
-static func _trim_curve_end(points: PackedVector2Array, distance: float) -> PackedVector2Array:
-	var result := points.duplicate()
-	var remaining := distance
-	while result.size() > 1 and remaining > 0.0:
-		var last := result.size() - 1
-		var segment_length := result[last].distance_to(result[last - 1])
-		if segment_length <= remaining:
-			remaining -= segment_length
-			result.remove_at(last)
-		else:
-			result[last] = result[last].move_toward(result[last - 1], remaining)
-			break
-	return result
+# Arrow size follows stroke width, but cannot consume the short connection gap.
+static func arrow_length(from_rect: Rect2, to_rect: Rect2, anchors: PackedVector2Array, width: float) -> float:
+	var direction := (Vector2(0.5, 0.5) - anchors[1]).normalized()
+	var gap := (anchor(to_rect, anchors[1]) - anchor(from_rect, anchors[0])).dot(direction)
+	if gap <= 1.0:
+		return 0.0
+	return minf(maxf(6.0, width * 3.0 + 2.0), gap * 0.45)
 
 
 # 只选择两矩形之间有间隙的轴；控制点均留在该间隙中，避免曲线绕到节点背面。
@@ -141,11 +132,12 @@ static func anchor(rect: Rect2, uv: Vector2) -> Vector2:
 	return rect.position + rect.size * uv
 
 
-static func connection_curve(from_rect: Rect2, to_rect: Rect2, anchors: PackedVector2Array, segments: int) -> PackedVector2Array:
+static func connection_curve(from_rect: Rect2, to_rect: Rect2, anchors: PackedVector2Array, segments: int, end_inset: float = 0.0) -> PackedVector2Array:
 	var start := anchor(from_rect, anchors[0])
 	var end := anchor(to_rect, anchors[1])
 	var normal := (anchors[0] - Vector2(0.5, 0.5)) * 2.0
 	var end_normal := (anchors[1] - Vector2(0.5, 0.5)) * 2.0
+	end += end_normal * end_inset
 	var gap := maxf(0.0, (end - start).dot(normal))
 	# 不设固定最小弯曲半径，近距离连接也不会产生回钩。
 	var handle := minf(gap * 0.45, 96.0)
@@ -155,8 +147,7 @@ static func connection_curve(from_rect: Rect2, to_rect: Rect2, anchors: PackedVe
 	var count := maxi(4, segments)
 	for index in range(count + 1):
 		var t := float(index) / count
-		var u := 1.0 - t
-		points.append(u * u * u * start + 3.0 * u * u * t * control_1 + 3.0 * u * t * t * control_2 + t * t * t * end)
+		points.append(start.bezier_interpolate(control_1, control_2, end, t))
 	return points
 
 
@@ -173,6 +164,8 @@ func _update_collision_shape(points: PackedVector2Array) -> void:
 
 
 func distance_to_point(world_point: Vector2) -> float:
+	if arrow_head.visible and Geometry2D.is_point_in_polygon(arrow_head.to_local(world_point), arrow_head.polygon):
+		return 0.0
 	var distance := INF
 	for index in range(line.points.size() - 1):
 		var start := line.to_global(line.points[index])
