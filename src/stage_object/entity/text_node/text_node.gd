@@ -80,6 +80,8 @@ func _ready() -> void:
 	text_edit.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_apply_appearance()
 	text_edit.focus_exited.connect(_on_edit_focus_exited)
+	text_edit.commit_requested.connect(exit_edit_mode)
+	text_edit.cancel_requested.connect(exit_edit_mode.bind(false))
 	text_edit.text_changed.connect(_refresh_edit_layout)
 	text_edit.content_metrics_changed.connect(_refresh_edit_layout)
 	text_edit.caret_changed.connect(_restore_edit_scroll, CONNECT_DEFERRED)
@@ -106,28 +108,7 @@ func _on_label_gui_input(event: InputEvent) -> void:
 
 
 func _on_text_edit_gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and event.double_click:
-		text_edit.select_all.call_deferred()
-		text_edit.accept_event()
-		return
-	# 组合输入期间把选词、确认和取消交给输入法。
-	if text_edit.is_ime_composing():
-		return
-	if not event is InputEventKey or not event.pressed:
-		return
-	if event.unicode >= 32:
-		return
-	if text_edit.is_ime_commit_pending():
-		if event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_ESCAPE]:
-			text_edit.accept_event()
-		return
-	if event.keycode == KEY_ESCAPE:
-		text_edit.accept_event()
-		exit_edit_mode(false)
-	elif not event.shift_pressed and (event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER):
-		text_edit.accept_event()
-		if not event.echo:
-			exit_edit_mode()
+	text_edit.handle_canvas_input(event)
 
 
 func _input(event: InputEvent) -> void:
@@ -415,22 +396,7 @@ func _update_fill_layer(members: Array[Entity]) -> void:
 
 
 func _align_edit_text() -> void:
-	var label_style := label.get_theme_stylebox("normal")
-	var edit_style := Corners.source(text_edit.get_theme_stylebox("normal")).duplicate() as StyleBoxFlat
-	var content_size := label.size - label_style.get_minimum_size()
-	var font := label.get_theme_font("font")
-	var text_width := text_edit.measure_unwrapped(text_edit.text, true).x
-	# TextEdit 的排版从左上开始；单行编辑用内边距匹配 Label 的居中起点。
-	var inset_x := maxf(0.0, (content_size.x - text_width) * 0.5) if label.get_line_count() == 1 else 0.0
-	var text_height := font.get_height(font_size) * maxi(1, label.get_line_count())
-	var inset_y := maxf(0.0, (content_size.y - text_height) * 0.5)
-	edit_style.content_margin_left = label_style.get_content_margin(SIDE_LEFT) + inset_x
-	edit_style.content_margin_right = maxf(0.0, label_style.get_content_margin(SIDE_RIGHT) - 2.0)
-	edit_style.content_margin_top = label_style.get_content_margin(SIDE_TOP) + inset_y
-	var rows_height := text_edit.get_line_height() * maxi(1, label.get_line_count())
-	# TextEdit counts trailing line spacing and rounds each row to whole pixels.
-	edit_style.content_margin_bottom = maxf(0.0, minf(label_style.get_content_margin(SIDE_BOTTOM), label.size.y - edit_style.content_margin_top - rows_height))
-	text_edit.add_theme_stylebox_override("normal", edit_style)
+	text_edit.align_with_label(label, text_edit.text, true)
 
 
 # Display-only opacity: the longest uninterrupted same-RGB branch defines the level.

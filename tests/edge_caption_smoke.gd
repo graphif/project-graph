@@ -98,6 +98,34 @@ func _run() -> void:
 	await key(KEY_ESCAPE)
 	await settle()
 	check(edge.text == "依赖关系", "Escape cancels draft")
+	# Re-enter through the caption and exercise the same native editor contract.
+	var label_click := InputEventMouseButton.new()
+	label_click.button_index = MOUSE_BUTTON_LEFT
+	label_click.pressed = true
+	label_click.double_click = true
+	edge.get_node("Caption")._label_input(label_click)
+	await process_frame
+	var active_editor := edge.get_node("Caption/Editor") as TextEdit
+	check(active_editor.get_selected_text() == edge.text, "Caption double click selects all, like a node")
+	var select_all := InputEventKey.new()
+	select_all.keycode = KEY_A
+	select_all.ctrl_pressed = true
+	select_all.pressed = true
+	root.push_input(select_all)
+	await process_frame
+	select_all = select_all.duplicate()
+	select_all.pressed = false
+	root.push_input(select_all)
+	check(active_editor.get_selected_text() == edge.text, "Caption Ctrl A selects all")
+	await key(KEY_HOME)
+	check(active_editor.get_caret_column() == 0, "Caption Home reaches first character")
+	active_editor.insert_text_at_caret("首")
+	await key(KEY_END)
+	active_editor.insert_text_at_caret("尾")
+	check(active_editor.text == "首依赖关系尾", "Caption supports insertion at both ends")
+	await key(KEY_ESCAPE)
+	await settle()
+	check(edge.text == "依赖关系", "Shared Escape handler cancels caption changes")
 	check(stage.save_to_file("/tmp/pg-caption-check.prg"), "Save caption")
 	check(await stage.load_from_file("/tmp/pg-caption-check.prg"), "Load caption")
 	await settle()

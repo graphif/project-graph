@@ -10,6 +10,8 @@
 
 关系标签层级移到舞台选择线之上，防止选中线穿过编辑文字。节点位置不随输入框展开改变，标签仍附着连线。
 
+后续统一：节点与关系标签都调用 AutoSizeTextEdit 的 `align_with_label` 和 `handle_canvas_input`。双击进入并全选，单击定位和拖选由原生控件处理；Ctrl+A、首尾插入、Enter 确认、Shift+Enter 换行、Esc 取消及 IME 确认保护一致。显示与输入文字共用居中起点，避免切换时文字左右跳动。
+
 复用评估：Godot TextEdit、Font、DisplayServer 和现有 AutoSizeTextEdit 已提供排版、选择、光标和 IME 能力，不需要额外社区文本控件。根因可见 [Godot TextEdit 源码](https://github.com/godotengine/godot/blob/master/scene/gui/text_edit.cpp)的左边距点击判断；新增代码仅适配画布内边距和共享尺寸，无新依赖。
 
 ## 自动验证
@@ -17,6 +19,7 @@
 用户已授权运行。Godot 4.8.dev6，Linux Wayland / Intel Iris Xe / Compatibility，独立进程使用 `/tmp/pg-caption-validation-data` 隔离用户数据。Godot 文件经 MCP 脚本读写及编辑器脚本执行处理；场景通过 PackedScene/ResourceSaver 修改，没有读取或编辑场景文本。
 
 - `edge_caption_smoke.gd`：通过。连续中英文无空格输入、横向滚动为零、无滚动条、缩短草稿、显式换行、编辑提交/取消、撤销重做、保存重开和端点跟随。
+- 扩展标签交互回归：双击标签全选、Ctrl+A、Home/End、首尾插入、共享 Esc 取消路径通过。
 - `text_edit_geometry_smoke.gd`：通过。节点与标签进入编辑时背景稳定、共享尺寸、固定宽度长文本、仅显式换行和输入框无裁切。
 - `canvas_text_focus_smoke.gd`：通过。0.5/1/2 倍缩放下的 Ctrl+A、Home/End、Shift+Home/End、首尾插入、中间插入、边缘点击及从左内边距拖选到末尾；真实输入分发测试使用 Input.parse_input_event 更新鼠标按键状态。
 

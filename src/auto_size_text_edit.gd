@@ -35,6 +35,8 @@ extends TextEdit
 		_update_size()
 
 
+signal commit_requested
+signal cancel_requested
 signal content_metrics_changed
 
 var _ime_was_active := false
@@ -148,3 +150,39 @@ func _gui_input(event: InputEvent) -> void:
 		var left := ceilf(get_theme_stylebox("normal").get_content_margin(SIDE_LEFT))
 		if event.position.x >= 0.0 and event.position.x < left:
 			event.position.x = left
+
+
+func align_with_label(label: Label, value: String, include_native := false) -> void:
+	var label_style := label.get_theme_stylebox("normal")
+	var style := get_theme_stylebox("normal").duplicate() as StyleBoxFlat
+	var content := label.size - label_style.get_minimum_size()
+	var metrics := measure_unwrapped(value, include_native)
+	var rows := maxi(1, value.split("\n").size())
+	var inset_x := maxf(0.0, (content.x - metrics.x) * 0.5) if rows == 1 else 0.0
+	var font := label.get_theme_font("font")
+	var text_height := font.get_height(label.get_theme_font_size("font_size")) * rows
+	style.content_margin_left = label_style.get_content_margin(SIDE_LEFT) + inset_x
+	style.content_margin_right = maxf(0.0, label_style.get_content_margin(SIDE_RIGHT) - 2.0)
+	style.content_margin_top = label_style.get_content_margin(SIDE_TOP) + maxf(0.0, (content.y - text_height) * 0.5)
+	style.content_margin_bottom = maxf(0.0, minf(label_style.get_content_margin(SIDE_BOTTOM), label.size.y - style.content_margin_top - metrics.y))
+	add_theme_stylebox_override("normal", style)
+
+
+func handle_canvas_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed and event.double_click:
+		select_all.call_deferred()
+		accept_event()
+		return
+	if is_ime_composing() or not event is InputEventKey or not event.pressed or event.unicode >= 32:
+		return
+	if is_ime_commit_pending():
+		if event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_ESCAPE]:
+			accept_event()
+		return
+	if event.keycode == KEY_ESCAPE:
+		accept_event()
+		cancel_requested.emit()
+	elif event.keycode in [KEY_ENTER, KEY_KP_ENTER] and not event.shift_pressed:
+		accept_event()
+		if not event.echo:
+			commit_requested.emit()

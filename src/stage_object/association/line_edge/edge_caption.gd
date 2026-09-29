@@ -18,6 +18,8 @@ func _ready() -> void:
 	label.gui_input.connect(_label_input)
 	editor.gui_input.connect(_editor_input)
 	editor.focus_exited.connect(finish_edit)
+	editor.commit_requested.connect(finish_edit)
+	editor.cancel_requested.connect(finish_edit.bind(false))
 	editor.enable_auto_size = false
 	editor.select_from_padding = true
 	editor.drag_and_drop_selection_enabled = false
@@ -73,13 +75,14 @@ func _center_controls() -> void:
 	# caret reserve and preedit, so it cannot size the editing surface alone.
 	var content_size := label.get_minimum_size().max(editor.get_minimum_size())
 	var metrics := editor.measure_unwrapped(editor.text, true)
-	var margins := editor.get_theme_stylebox("normal").get_minimum_size()
+	var margins := label.get_theme_stylebox("normal").get_minimum_size()
 	content_size.x = maxf(content_size.x, metrics.x + margins.x + 32.0)
 	content_size.y = maxf(content_size.y, ceilf(metrics.y + margins.y + 4.0))
 	label.size = content_size
 	label.position = -content_size * 0.5
 	editor.size = content_size
 	editor.position = label.position
+	editor.align_with_label(label, editor.text, true)
 	# TextEdit may scroll when a caret event precedes the deferred size update.
 	# Once the complete line fits, discard that obsolete horizontal offset.
 	editor.scroll_horizontal = 0
@@ -180,27 +183,12 @@ func _label_input(event: InputEvent) -> void:
 			stage.select_object(edge, event.ctrl_pressed or event.meta_pressed)
 			if event.double_click:
 				begin_edit()
+				editor.select_all.call_deferred()
 		label.accept_event()
 
 
 func _editor_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and event.double_click:
-		editor.select_all.call_deferred()
-		editor.accept_event()
-		return
-	if editor.is_ime_composing() or not event is InputEventKey or not event.pressed or event.unicode >= 32:
-		return
-	if editor.is_ime_commit_pending():
-		if event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_ESCAPE]:
-			editor.accept_event()
-		return
-	if event.keycode == KEY_ESCAPE:
-		editor.accept_event()
-		finish_edit(false)
-	elif event.keycode in [KEY_ENTER, KEY_KP_ENTER] and not event.shift_pressed:
-		editor.accept_event()
-		if not event.echo:
-			finish_edit()
+	editor.handle_canvas_input(event)
 
 
 func _input(event: InputEvent) -> void:
