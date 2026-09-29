@@ -59,8 +59,8 @@ func _run() -> void:
 			var outline := stage._selection_lines[a.id] as Line2D
 			check(is_equal_approx(outline.get_global_transform_with_canvas().get_scale().x, 1.0), "Selection AA remains in screen pixels")
 			var style := a.label.get_theme_stylebox("normal") as StyleBoxTexture
-			check(style.texture is ImageTexture and style.texture.get_image().has_mipmaps(), "Canvas corners have minification mipmaps")
-			check(a.texture_filter == CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS, "Use trilinear minification")
+			check(style.texture is DPITexture, "Canvas corners use scalable SVG textures")
+			check(a.texture_filter == CanvasItem.TEXTURE_FILTER_LINEAR, "Smooth scalable corner textures")
 	check(JSON.stringify(StageObjectRegistry.capture(stage)) == baseline, "AA leaves document untouched")
 	root.size = Vector2i(1024, 720)
 	await capture()

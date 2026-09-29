@@ -55,7 +55,8 @@ var _collision_update_pending := false
 func _ready() -> void:
 	# Click selected text to place the caret instead of dragging the selection.
 	text_edit.drag_and_drop_selection_enabled = false
-	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	# 与菜单共用原生 DPITexture 圆角，避免固定分辨率位图在画布缩放时失真。
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	super()
 	label.text = text
 	_normal_label_position = label.position
@@ -243,17 +244,18 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 	var style := StyleBoxFlat.new()
 	style.bg_color = display_fill_color()
 	style.border_color = Palette.color(light, "border.focus") if _editing else display_border_color()
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(int(Corners.NODE))
+	# 节点与分组沿用窗口的 24 单位连续圆角和细边框。
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(int(Corners.PANEL))
 	style.content_margin_left = 15
 	style.content_margin_right = 15
 	style.content_margin_top = 10
 	style.content_margin_bottom = 10
-	container_panel.add_theme_stylebox_override("panel", Corners.style(style, Corners.NODE, true))
+	container_panel.add_theme_stylebox_override("panel", Corners.style(style, Corners.PANEL))
 	if _container_active:
 		style.bg_color = Color.TRANSPARENT
 		style.set_border_width_all(0)
-	label.add_theme_stylebox_override("normal", Corners.style(style, Corners.NODE, true))
+	label.add_theme_stylebox_override("normal", Corners.style(style, Corners.PANEL))
 	text_edit.add_theme_color_override("font_color", Palette.neutral_text_color(background))
 	text_edit.add_theme_color_override("caret_color", Palette.neutral_text_color(background))
 	text_edit.add_theme_color_override("selection_color", Color("#d9efdc") if light else Color("#45475a"))
@@ -262,7 +264,7 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 	edit_style.bg_color = Color.TRANSPARENT
 	edit_style.border_color = Color.TRANSPARENT
 	edit_style.set_border_width_all(0)
-	text_edit.add_theme_stylebox_override("normal", Corners.style(edit_style, Corners.NODE, true))
+	text_edit.add_theme_stylebox_override("normal", Corners.style(edit_style, Corners.PANEL))
 	text_edit.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	label.end_bulk_theme_override()
 	text_edit.end_bulk_theme_override()
@@ -370,7 +372,7 @@ func _align_edit_text() -> void:
 	edit_style.content_margin_right = label_style.get_content_margin(SIDE_RIGHT)
 	edit_style.content_margin_top = label_style.get_content_margin(SIDE_TOP) + inset_y
 	edit_style.content_margin_bottom = label_style.get_content_margin(SIDE_BOTTOM)
-	text_edit.add_theme_stylebox_override("normal", Corners.style(edit_style, Corners.NODE, true))
+	text_edit.add_theme_stylebox_override("normal", Corners.style(edit_style, Corners.PANEL))
 
 
 func _display_theme_is_light() -> bool:

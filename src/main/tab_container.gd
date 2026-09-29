@@ -33,10 +33,9 @@ func new_tab(title: String = "") -> Stage:
 	viewport.transparent_bg = true
 	# 2D 多重采样覆盖连线、箭头等几何边缘。
 	viewport.msaa_2d = Viewport.MSAA_4X
-	# 字体按最大相机缩放栅格化，避免放大低分辨率字形。
-	# 固定采样倍率也避免平滑缩放每帧生成新的中文字形缓存。
+	# 初始按正常尺寸绘制；相机按当前屏幕缩放更新 SVG 采样档位。
 	viewport.oversampling = true
-	viewport.oversampling_override = maxf(1.0, float(stage.get_node("Camera").max_zoom))
+	viewport.oversampling_override = 1.0
 	viewport.handle_input_locally = false
 	viewport.size = Vector2i(1152, 618)
 	viewport.size_2d_override_stretch = true

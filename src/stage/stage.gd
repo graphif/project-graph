@@ -377,7 +377,7 @@ func _decode_vector2(value):
 
 func _rounded_selection_rect(rect: Rect2, _radius: float) -> PackedVector2Array:
 	# Selection and transient previews follow the node's continuous outline.
-	return preload("res://src/main/continuous_corners.gd").outline(rect, 18.0)
+	return preload("res://src/main/continuous_corners.gd").outline(rect, preload("res://src/main/continuous_corners.gd").PANEL)
 
 
 func edge_at(world_point: Vector2) -> LineEdge:

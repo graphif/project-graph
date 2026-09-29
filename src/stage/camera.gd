@@ -34,6 +34,7 @@ var is_panning: bool = false
 func _ready() -> void:
 	target_zoom = zoom
 	target_position = global_position
+	_sync_texture_sampling()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -60,6 +61,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+	_sync_texture_sampling()
 	if get_tree().root.get_meta("workspace_text_input", false):
 		velocity = Vector2.ZERO
 		return
@@ -115,3 +117,19 @@ func _apply_zoom(zoom_factor: float, anchor_screen_pos: Vector2) -> void:
 		var zoom_delta := (Vector2.ONE / target_zoom) - (Vector2.ONE / new_zoom)
 		target_position += anchor_offset * zoom_delta
 		target_zoom = new_zoom
+
+
+## SVG 圆角按实际屏幕倍率采样；固定最大倍率既阻塞首次绘制，也会压窄抗锯齿过渡。
+func _sync_texture_sampling() -> void:
+	var viewport := get_viewport()
+	if not viewport is SubViewport:
+		return
+	var screen_scale := Vector2.ONE
+	if viewport.get_parent() is SubViewportContainer:
+		screen_scale = viewport.get_screen_transform().get_scale().abs()
+	var visible_scale := maxf(zoom.x * screen_scale.x, zoom.y * screen_scale.y)
+	# 使用不高于显示倍率的二次幂档位，保留约 1～2 屏幕像素的平滑边缘。
+	# 分档避免平滑缩放时逐帧重新栅格化字体和 DPITexture。
+	var sampling := pow(2.0, floorf(log(clampf(visible_scale, 0.125, 64.0)) / log(2.0)))
+	if not is_equal_approx(viewport.oversampling_override, sampling):
+		viewport.oversampling_override = sampling

@@ -64,7 +64,7 @@ func _run() -> void:
 			check(dock.get_theme_stylebox("panel") is StyleBoxTexture, "Visible Dock uses continuous theme")
 		var node_style := left.label.get_theme_stylebox("normal")
 		check(node_style is StyleBoxTexture, "Node uses continuous corners")
-		check(Corners.source(node_style).corner_radius_top_left == 18, "Node radius enlarged")
+		check(Corners.source(node_style).corner_radius_top_left == 24, "Node radius matches popup panels")
 		check(Corners.source(theme.get_stylebox("panel", "PopupMenu")).corner_radius_top_left == 24, "Menu radius enlarged")
 		check(Corners.source(theme.get_stylebox("panel", "PopupMenu")).bg_color.a > 0.0, "Menu keeps opaque background")
 		check(JSON.stringify(StageObjectRegistry.capture(stage)) == before, "Visual style does not mutate graph")
