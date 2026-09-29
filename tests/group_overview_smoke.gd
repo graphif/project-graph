@@ -74,10 +74,10 @@ func _run() -> void:
 	var before := StageObjectRegistry.capture(stage)
 	var original_filter := a.label.mouse_filter
 	var original_pickable := a.input_pickable
-	await zoom_to(1.22)
-	check(not overview.is_active(group), "Above 60 percent keeps details")
 	await zoom_to(1.0)
-	check(overview.is_active(group) and overview.is_active(other), "Group titles appear already at 50 percent zoom")
+	check(not overview.is_active(group), "Innermost group keeps details at 50 percent")
+	await zoom_to(0.5)
+	check(overview.is_active(group) and overview.is_active(other), "Innermost groups reveal titles after zooming out further")
 	check(stage.is_overview_hidden(a) and stage.is_overview_hidden(b), "Group members are covered for interaction")
 	check(stage.is_overview_hidden(inner), "Internal edges and captions cannot be picked through the cover")
 	check(stage.is_overview_hidden(group_relation), "Group-to-member edge is internal to the overview")
@@ -138,11 +138,19 @@ func _run() -> void:
 	await zoom_to(0.9)
 	check(not overview.is_active(outer), "Large screen bounds retain detail even below the camera threshold")
 	check(stage.camera.min_zoom <= 0.02, "Canvas can zoom out to one percent for large diagrams")
-	# Larger groups enter naturally as the user continues zooming out.
-	await zoom_to(0.2)
+	# Outer groups accept a larger screen footprint instead of becoming tiny.
+	await zoom_to(0.5)
 	check(overview.is_active(outer) and stage.is_overview_hidden(group), "Active outer group hides nested groups")
 	check(stage.is_overview_hidden(cross) and not stage.is_overview_hidden(outgoing), "Common active ancestor hides only internal edges")
 	check(overview._summaries.size() == 1, "Only the outer summary is displayed")
+	var outermost := make_node("更外层", Vector2.ZERO)
+	outer.container = outermost
+	await zoom_to(0.68)
+	check(overview.is_active(outermost), "Third-level title appears while its frame still occupies a substantial viewport area")
+	check(stage.is_overview_hidden(outer), "Outermost title replaces nested summaries")
+	outer.container = null
+	outermost.queue_free()
+	await zoom_to(0.5)
 	var nested_snapshot := StageObjectRegistry.capture(stage)
 	await StageObjectRegistry.restore(stage, nested_snapshot)
 	await settle()

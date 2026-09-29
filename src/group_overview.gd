@@ -2,8 +2,8 @@ extends Node2D
 
 ## View-only overview with camera and screen-size gates tuned for earlier titles.
 ## Preserve detail beneath a translucent title cover; only block its interaction.
-@export_range(0.01, 1.0) var camera_scale_threshold := 0.60
-@export_range(0.01, 1.0) var viewport_size_ratio := 0.30
+@export_range(0.01, 1.0) var camera_scale_threshold := 0.45
+@export_range(0.01, 1.0) var viewport_size_ratio := 0.15
 
 const Corners = preload("res://src/main/continuous_corners.gd")
 const TITLE_FONT_SIZE := 64
@@ -60,6 +60,7 @@ func refresh() -> void:
 	if normalized_zoom > camera_scale_threshold and _suppressed.is_empty():
 		return
 	var objects: Array = stage.stage_objects()
+	var levels := _group_levels(objects)
 	var blocked: Dictionary = {}
 	# Programmatic edit commands must reveal the original editor and its ancestors.
 	# Zooming itself is already suspended while a native text editor has focus.
@@ -78,7 +79,11 @@ func refresh() -> void:
 				continue
 			var key: int = object.get_instance_id()
 			var screen_size: Vector2 = object.aabb.size * camera.zoom
-			if not blocked.has(key) and maxf(screen_size.x, screen_size.y) < viewport_side * viewport_size_ratio:
+			var level: int = levels.get(key, 0)
+			# Reveal inner titles first, then allow larger outer frames to take over.
+			var zoom_limit := maxf(0.20, camera_scale_threshold - 0.05 * level)
+			var size_limit := minf(0.75, viewport_size_ratio + 0.20 * level)
+			if not blocked.has(key) and normalized_zoom <= zoom_limit and maxf(screen_size.x, screen_size.y) < viewport_side * size_limit:
 				_active[key] = object
 
 	var ancestors: Dictionary = {}
@@ -147,6 +152,23 @@ func refresh() -> void:
 			panel.gui_input.connect(_on_summary_input.bind(group))
 			_summaries[key] = panel
 		_update_summary(group, panel)
+
+
+func _group_levels(objects: Array) -> Dictionary:
+	var levels := {}
+	for object in objects:
+		if not object is TextNode or not object._container_active:
+			continue
+		var current: Entity = object
+		var level := 0
+		var visited := {}
+		while is_instance_valid(current) and not visited.has(current.get_instance_id()):
+			var key := current.get_instance_id()
+			visited[key] = true
+			levels[key] = maxi(int(levels.get(key, 0)), level)
+			current = current.container
+			level += 1
+	return levels
 
 
 func _block_ancestors(entity: Entity, blocked: Dictionary) -> void:
