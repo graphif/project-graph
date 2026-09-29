@@ -6,6 +6,9 @@
 
 [sub_resource type="ConcavePolygonShape2D" id="ConcavePolygonShape2D_qxjbk"]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_413u6"]
+resource_local_to_scene = true
+
 [node name="LineEdge" type="RigidBody2D" unique_id=712430331]
 collision_layer = 0
 collision_mask = 0
@@ -46,9 +49,13 @@ horizontal_alignment = 1
 visible = false
 custom_minimum_size = Vector2(140, 47)
 offset_right = 140.0
-offset_bottom = 48.0
+offset_bottom = 47.0
 theme_override_font_sizes/font_size = 18
 wrap_mode = 1
 script = ExtResource("3_283k5")
 min_width = 140.0
 max_width = 360.0
+
+[node name="CaptionCollision" type="CollisionShape2D" parent="." unique_id=821329600]
+shape = SubResource("RectangleShape2D_413u6")
+disabled = true

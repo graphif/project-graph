@@ -10,6 +10,8 @@ var _editing := false
 var _last_points := PackedVector2Array()
 var _last_line_transform := Transform2D.IDENTITY
 var _last_light: Variant = null
+var _last_stroke := Color(-1, -1, -1, -1)
+var _last_fraction := -1.0
 var _centering := false
 
 
@@ -45,14 +47,16 @@ func _process(_delta: float) -> void:
 	_update_style()
 	_refresh_text()
 	var points := edge.line.points
-	if points != _last_points or edge.line.transform != _last_line_transform:
+	var fraction := edge.caption_fraction()
+	if points != _last_points or edge.line.transform != _last_line_transform or fraction != _last_fraction:
+		_last_fraction = fraction
 		_last_points = points
 		_last_line_transform = edge.line.transform
 		if not points.is_empty():
 			var curve := Curve2D.new()
 			for point in points:
 				curve.add_point(point)
-			position = edge.to_local(edge.line.to_global(curve.sample_baked(curve.get_baked_length() * 0.5)))
+			position = edge.to_local(edge.line.to_global(curve.sample_baked(curve.get_baked_length() * fraction)))
 	_center_controls()
 
 
@@ -87,18 +91,21 @@ func _center_controls() -> void:
 	# Once the complete line fits, discard that obsolete horizontal offset.
 	editor.scroll_horizontal = 0
 	editor.scroll_vertical = 0
+	edge.update_caption_collision(label.size, position, label.visible)
 	_centering = false
 
 
 func _update_style() -> void:
 	var stage := edge.get_parent() as Stage
 	var light: bool = stage._applied_theme_light == 1 if stage != null and stage._applied_theme_light >= 0 else Palette.is_light(str(GraphPreferences.value("theme")))
-	if _last_light == light:
+	var stroke := edge.display_stroke_color()
+	if _last_light == light and _last_stroke == stroke:
 		return
 	_last_light = light
+	_last_stroke = stroke
 	var normal := StyleBoxFlat.new()
-	normal.bg_color = Palette.color(light, "surface.canvas")
-	normal.border_color = Palette.color(light, "border.focus" if _editing else "border.default")
+	normal.bg_color = stroke
+	normal.border_color = stroke
 	normal.set_border_width_all(1)
 	normal.set_corner_radius_all(6)
 	normal.content_margin_left = 8
@@ -113,11 +120,11 @@ func _update_style() -> void:
 	input_style.content_margin_right -= 2.0
 	editor.add_theme_stylebox_override("normal", input_style)
 	editor.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	var foreground := Palette.neutral_text_color(normal.bg_color)
+	var foreground := Color.BLACK if Palette.neutral_text_color(normal.bg_color).get_luminance() < 0.5 else Color.WHITE
 	label.add_theme_color_override("font_color", Color.TRANSPARENT if _editing else foreground)
 	editor.add_theme_color_override("font_color", foreground)
 	editor.add_theme_constant_override("line_spacing", label.get_theme_constant("line_spacing"))
-	editor.add_theme_color_override("caret_color", Palette.neutral_text_color(normal.bg_color))
+	editor.add_theme_color_override("caret_color", foreground)
 	editor.add_theme_color_override("selection_color", Palette.color(light, "surface.selected"))
 	if is_instance_valid(edge.source) and edge.source is TextNode:
 		var font: Font = edge.source.label.get_theme_font("font")

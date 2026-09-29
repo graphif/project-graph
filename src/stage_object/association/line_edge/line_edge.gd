@@ -45,6 +45,7 @@ func _ready() -> void:
 	_apply_style()
 	line.points = PackedVector2Array()
 	collision_shape.shape = ConcavePolygonShape2D.new()
+	$CaptionCollision.shape = $CaptionCollision.shape.duplicate()
 
 
 func _process(_delta: float) -> void:
@@ -195,6 +196,8 @@ func distance_to_point(world_point: Vector2) -> float:
 		return INF
 	if arrow_head.visible and Geometry2D.is_point_in_polygon(arrow_head.to_local(world_point), arrow_head.polygon):
 		return 0.0
+	if caption_rect().has_point(world_point):
+		return 0.0
 	var distance := INF
 	for index in range(line.points.size() - 1):
 		var start := line.to_global(line.points[index])
@@ -250,3 +253,53 @@ func _stroke_background(light: bool) -> Color:
 		if container is TextNode and container.aabb.has_point(midpoint):
 			background = background.blend(container.display_fill_color())
 	return background
+
+
+func update_caption_collision(size: Vector2, center: Vector2, active: bool) -> void:
+	var collision := get_node("CaptionCollision") as CollisionShape2D
+	var shape := collision.shape as RectangleShape2D
+	if shape.size != size:
+		shape.size = size.max(Vector2.ONE)
+	collision.position = center
+	collision.disabled = not active
+
+
+func caption_rect() -> Rect2:
+	var collision := get_node("CaptionCollision") as CollisionShape2D
+	if collision.disabled or not is_instance_valid(source) or not is_instance_valid(target):
+		return Rect2()
+	return collision.global_transform * collision.shape.get_rect()
+
+
+func caption_fraction() -> float:
+	# Opposite-direction edges share a corridor, but need distinct label positions.
+	var peers: Array[LineEdge] = []
+	for child in get_parent().get_children():
+		if child is LineEdge and not child.is_queued_for_deletion() and not child.text.is_empty():
+			if (child.source == source and child.target == target) or (child.source == target and child.target == source):
+				peers.append(child)
+	if peers.size() < 2:
+		return 0.5
+	peers.sort_custom(func(a: LineEdge, b: LineEdge) -> bool: return a.id < b.id)
+	var index := peers.find(self)
+	if index < 0:
+		return 0.5
+	var fraction := float(index + 1) / float(peers.size() + 1)
+	return fraction if source.id < target.id else 1.0 - fraction
+
+
+func _input(event: InputEvent) -> void:
+	if not is_visible_in_tree() or not event is InputEventMouseButton:
+		return
+	if not event.pressed or event.button_index != MOUSE_BUTTON_RIGHT or event.alt_pressed:
+		return
+	var stage := get_parent() as Stage
+	if stage == null or stage.history._busy or $Caption._editing:
+		return
+	var point: Vector2 = get_canvas_transform().affine_inverse() * event.position
+	if stage.edge_at(point) != self:
+		return
+	stage.finish_text_editing()
+	stage.select_ids(PackedStringArray([id]))
+	stage.context_requested.emit(point)
+	get_viewport().set_input_as_handled()
