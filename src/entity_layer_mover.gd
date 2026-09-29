@@ -160,6 +160,8 @@ func _process(_delta: float) -> void:
 func _target_at(point: Vector2, excluded: Array[Entity]) -> TextNode:
 	var best: TextNode
 	for object in entities():
+		if target_root.has_method("is_overview_hidden") and target_root.is_overview_hidden(object):
+			continue
 		if not object is TextNode or excluded.has(object) or not object.aabb.has_point(point):
 			continue
 		if best == null or object.container_depth() > best.container_depth() or (object.container_depth() == best.container_depth() and object.aabb.get_area() < best.aabb.get_area()):

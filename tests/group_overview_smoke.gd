@@ -1,0 +1,184 @@
+extends SceneTree
+
+var failures: Array[String] = []
+var app
+var stage: Stage
+
+
+func _initialize() -> void:
+	call_deferred("_run")
+
+
+func check(ok: bool, message: String) -> void:
+	if not ok:
+		failures.append(message)
+		push_error(message)
+
+
+func settle() -> void:
+	for frame in 6:
+		await physics_frame
+		await process_frame
+
+
+func zoom_to(value: float) -> void:
+	stage.camera.zoom = Vector2.ONE * value
+	stage.camera.target_zoom = stage.camera.zoom
+	await settle()
+
+
+func node_named(text: String) -> TextNode:
+	for object in stage.stage_objects():
+		if object is TextNode and object.text == text:
+			return object
+	return null
+
+
+func make_node(text: String, position: Vector2, container: Entity = null) -> TextNode:
+	var node := stage.create_text_node(text, position, false)
+	node.freeze = true
+	node.container = container
+	return node
+
+
+func _run() -> void:
+	root.size = Vector2i(1920, 1080)
+	app = load("res://src/main/main.tscn").instantiate()
+	root.add_child(app)
+	await settle()
+	app.get_node("UIOverlay/Welcome").hide()
+	stage = app.tabs.get_current_stage()
+	GraphPreferences.set_value("physics", false, false)
+	stage.apply_preferences()
+	stage.camera.position = Vector2.ZERO
+	stage.camera.target_position = Vector2.ZERO
+	var group := make_node("产品设计", Vector2(-240, 0))
+	group.fill_color = Color("#c50d3c")
+	var a := make_node("需求", Vector2(-290, 0), group)
+	var b := make_node("实现", Vector2(-190, 0), group)
+	var other := make_node("研发", Vector2(240, 0))
+	other.fill_color = Color("#336699")
+	var c := make_node("测试", Vector2(190, 0), other)
+	var d := make_node("发布", Vector2(290, 0), other)
+	var inner := stage.connect_entities(a, b)
+	inner.text = "依赖"
+	var group_relation := stage.connect_entities(group, a)
+	group_relation.text = "包含"
+	var cross := stage.connect_entities(b, c)
+	cross.text = "协作"
+	var outside := make_node("外部节点", Vector2(640, 0))
+	var outgoing := stage.connect_entities(d, outside)
+	await zoom_to(2.0)
+	var overview = stage.group_overview
+	check(not overview.is_active(group), "Normal zoom shows full detail")
+	var before := StageObjectRegistry.capture(stage)
+	var original_filter := a.label.mouse_filter
+	var original_pickable := a.input_pickable
+	await zoom_to(0.92)
+	check(not overview.is_active(group), "Above 45 percent keeps details")
+	await zoom_to(0.5)
+	check(overview.is_active(group) and overview.is_active(other), "Small groups become titles below 45 percent")
+	check(stage.is_overview_hidden(a) and stage.is_overview_hidden(b), "Group members are hidden")
+	check(stage.is_overview_hidden(inner), "Internal edges and their captions are hidden")
+	check(stage.is_overview_hidden(group_relation), "Group-to-member edge is internal to the overview")
+	check(not stage.is_overview_hidden(cross) and not stage.is_overview_hidden(outgoing), "Cross-group and outgoing edges remain")
+	check(a.is_visible_in_tree() and inner.is_visible_in_tree(), "Overview leaves physics visibility unchanged")
+	check(a.visibility_layer == 0 and a.label.visibility_layer == 0, "Native canvas layers cull all member graphics")
+	check(not a.input_pickable and a.label.mouse_filter == Control.MOUSE_FILTER_IGNORE, "Hidden members cannot steal native input")
+	check(inner.get_node("Caption/Label").visibility_layer == 0, "Internal caption is culled")
+	check(cross.get_node("Caption/Label").visibility_layer != 0, "Cross-group caption remains visible")
+	check(stage.get_node("LineEdgeCreator")._get_entity_at(a.aabb.get_center()) == group, "Connection picking resolves to the group")
+	check(stage.get_node("EntityLayerMover")._target_at(a.aabb.get_center(), [] as Array[Entity]) == group, "Layer picking resolves to the group")
+	check(not stage.get_node("StageObjectSlicer")._get_stage_objects().has(a), "Cutting cannot target hidden members")
+	check(not stage.get_node("StageObjectSlicer")._get_stage_objects().has(inner), "Cutting cannot target hidden internal edges")
+	stage.select_all()
+	check(stage.selected_ids.has(group.id) and not stage.selected_ids.has(a.id), "Select all uses visible groups")
+	stage.select_ids(PackedStringArray())
+	check(JSON.stringify(before) == JSON.stringify(StageObjectRegistry.capture(stage)), "Zoom does not change saved objects or geometry")
+
+	# Clicking in the old member rectangle must select the summary instead.
+	await click_world(a.aabb.get_center())
+	check(stage.selected_ids == PackedStringArray([group.id]), "Native click on member area selects group")
+	await settle()
+	if DisplayServer.get_name() != "headless":
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png("/tmp/pg-group-overview.png")
+
+	# An edit command always reveals the existing native editor, with original selection.
+	a.enter_edit_mode()
+	await settle()
+	check(not overview.is_active(group) and not stage.is_overview_hidden(a), "Editing reveals covered ancestors")
+	check(a.text_edit.has_focus() and a.label.mouse_filter == original_filter, "Editor focus and mouse selection survive reveal")
+	a.text_edit.select_all()
+	check(a.text_edit.get_selected_text() == a.text, "Native select all still works")
+	a.exit_edit_mode(false)
+	await settle()
+	check(overview.is_active(group), "Overview returns after editing ends")
+
+	# Double-clicking the title edits the group through the same native TextEdit.
+	await click_world(group.aabb.get_center(), true)
+	check(group._editing and group.text_edit.has_focus(), "Summary double click opens the group editor")
+	group.exit_edit_mode(false)
+	await settle()
+	await zoom_to(2.0)
+	check(not stage.is_overview_hidden(a) and a.visibility_layer == 1 and a.label.visibility_layer == 1, "Zoom in restores rendering layers")
+	check(a.input_pickable == original_pickable and a.label.mouse_filter == original_filter, "Zoom in restores native picking")
+	check(inner.visibility_layer == 1 and inner.get_node("Caption/Label").visibility_layer == 1, "Zoom in restores internal edge captions")
+	check(JSON.stringify(before) == JSON.stringify(StageObjectRegistry.capture(stage)), "Repeated overview and edit cancellation leave document unchanged")
+
+	# Nested groups: an outer summary covers inner summaries and their cross-edge.
+	var outer := make_node("项目总览", Vector2.ZERO)
+	group.container = outer
+	other.container = outer
+	await zoom_to(0.5)
+	check(not overview.is_active(outer), "Large screen bounds retain detail even at low zoom")
+	check(stage.camera.min_zoom <= 0.02, "Canvas can zoom out to one percent for large diagrams")
+	# Larger groups enter naturally as the user continues zooming out.
+	await zoom_to(0.35)
+	check(overview.is_active(outer) and stage.is_overview_hidden(group), "Active outer group hides nested groups")
+	check(stage.is_overview_hidden(cross) and not stage.is_overview_hidden(outgoing), "Common active ancestor hides only internal edges")
+	check(overview._summaries.size() == 1, "Only the outer summary is displayed")
+	var nested_snapshot := StageObjectRegistry.capture(stage)
+	await StageObjectRegistry.restore(stage, nested_snapshot)
+	await settle()
+	check(overview._summaries.size() == 1, "Snapshot restoration rebuilds summaries without stale nodes")
+	check(stage.is_overview_hidden(node_named("需求")), "Restored descendants respect overview")
+	stage.delete_objects([node_named("项目总览")])
+	await settle()
+	check(overview._summaries.is_empty(), "Deleting a group cleans up transient summaries")
+	await stage.history.undo()
+	await settle()
+	check(node_named("项目总览") != null and overview._summaries.size() == 1, "Undo restores group and overview")
+	await zoom_to(2.0)
+	check(not stage.is_overview_hidden(node_named("需求")), "Restored content reappears when zoomed in")
+	app.queue_free()
+	await process_frame
+	print("GROUP_OVERVIEW: " + ("PASS" if failures.is_empty() else str(failures)))
+	quit(0 if failures.is_empty() else 1)
+
+
+func click_world(world_point: Vector2, double_click := false) -> void:
+	var viewport := stage.get_viewport()
+	var container := viewport.get_parent() as Control
+	var local_point := stage.get_canvas_transform() * world_point
+	var screen_point := container.get_global_transform_with_canvas() * (local_point * container.size / Vector2(viewport.size))
+	var motion := InputEventMouseMotion.new()
+	motion.position = screen_point
+	motion.global_position = screen_point
+	Input.parse_input_event(motion)
+	Input.flush_buffered_events()
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.double_click = double_click
+	click.position = screen_point
+	click.global_position = screen_point
+	Input.parse_input_event(click)
+	Input.flush_buffered_events()
+	await process_frame
+	click = click.duplicate()
+	click.pressed = false
+	click.double_click = false
+	Input.parse_input_event(click)
+	Input.flush_buffered_events()
+	await settle()

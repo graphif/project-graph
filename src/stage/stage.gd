@@ -10,6 +10,7 @@ signal context_requested(world_position: Vector2)
 
 @onready var history: History = %History
 @onready var camera: Camera2D = $Camera
+@onready var group_overview: Node2D = $GroupOverview
 
 var current_file_path := ""
 var created_at := ""
@@ -142,10 +143,15 @@ func select_object(object: StageObject, toggle := false) -> void:
 	selection_changed.emit()
 
 
+func is_overview_hidden(object: StageObject) -> bool:
+	return group_overview != null and group_overview.is_hidden(object)
+
+
 func select_all() -> void:
 	var ids := PackedStringArray()
 	for object in stage_objects():
-		ids.append(object.id)
+		if not is_overview_hidden(object):
+			ids.append(object.id)
 	select_ids(ids)
 
 
@@ -166,6 +172,8 @@ func _finish_marquee() -> void:
 		return
 	var ids := selected_ids.duplicate() if _marquee_toggle else PackedStringArray()
 	for object in stage_objects():
+		if is_overview_hidden(object):
+			continue
 		var hit := rect.encloses(object.aabb) if end.x >= _marquee_start.x else rect.intersects(object.aabb)
 		if hit:
 			var index := ids.find(object.id)
@@ -179,6 +187,8 @@ func _finish_marquee() -> void:
 func _refresh_selection_outlines() -> void:
 	var live := {}
 	for object in selected_objects():
+		if is_overview_hidden(object):
+			continue
 		live[object.id] = true
 		var line := _selection_lines.get(object.id) as Line2D
 		if line == null:
@@ -381,10 +391,12 @@ func _rounded_selection_rect(rect: Rect2, _radius: float) -> PackedVector2Array:
 
 
 func edge_at(world_point: Vector2) -> LineEdge:
+	if group_overview != null and group_overview.covers_point(world_point):
+		return null
 	var nearest: LineEdge
 	var distance := 7.0 / maxf(camera.zoom.x, 0.01)
 	for object in stage_objects():
-		if object is LineEdge and object.is_visible_in_tree():
+		if object is LineEdge and object.is_visible_in_tree() and not is_overview_hidden(object):
 			var candidate: float = object.distance_to_point(world_point)
 			if candidate < distance:
 				distance = candidate

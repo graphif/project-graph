@@ -7,6 +7,8 @@
 [ext_resource type="Script" uid="uid://baa0ngv8ifhmp" path="res://src/node_repulsion.gd" id="6_804oe"]
 [ext_resource type="Script" uid="uid://xs5wn3iwffxg" path="res://src/history.gd" id="6_y8ixn"]
 [ext_resource type="Script" uid="uid://c7yjfnjhnd1m3" path="res://src/entity_layer_mover.gd" id="7_804oe"]
+[ext_resource type="PackedScene" uid="uid://cc61owubaautj" path="res://src/group_overview.tscn" id="8_puyty"]
+[ext_resource type="Script" uid="uid://du0nd7bj1acnc" path="res://src/group_overview.gd" id="8_pvnpy"]
 
 [sub_resource type="Shader" id="Shader_j58fr"]
 code = "shader_type canvas_item;
@@ -58,7 +60,7 @@ void fragment() {
 }
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_804oe"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_itwdx"]
 resource_local_to_scene = true
 shader = SubResource("Shader_j58fr")
 shader_parameter/camera_offset = Vector2(0, 0)
@@ -71,11 +73,11 @@ shader_parameter/show_horizontal = true
 shader_parameter/show_vertical = true
 shader_parameter/show_dots = false
 
-[sub_resource type="Gradient" id="Gradient_pvnpy"]
+[sub_resource type="Gradient" id="Gradient_paren"]
 resource_local_to_scene = true
 colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.2)
 
-[sub_resource type="Gradient" id="Gradient_puyty"]
+[sub_resource type="Gradient" id="Gradient_vhebv"]
 resource_local_to_scene = true
 colors = PackedColorArray(0.6509804, 0.8901961, 0.6313726, 0, 0.6509804, 0.8901961, 0.6313726, 1)
 
@@ -95,7 +97,7 @@ script = ExtResource("1_j58fr")
 
 [node name="Camera" type="Camera2D" parent="." unique_id=1545802721]
 script = ExtResource("2_y8ixn")
-grid_material = SubResource("ShaderMaterial_804oe")
+grid_material = SubResource("ShaderMaterial_itwdx")
 min_zoom = 0.001
 max_zoom = 50.0
 
@@ -103,7 +105,7 @@ max_zoom = 50.0
 layer = -1
 
 [node name="Grid" type="ColorRect" parent="CanvasLayer" unique_id=178152197]
-material = SubResource("ShaderMaterial_804oe")
+material = SubResource("ShaderMaterial_itwdx")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -146,7 +148,7 @@ visible = false
 
 [node name="Shadow" type="Line2D" parent="EntityLayerMover/JumpPath" unique_id=1606713552]
 width = 8.0
-gradient = SubResource("Gradient_pvnpy")
+gradient = SubResource("Gradient_paren")
 joint_mode = 2
 begin_cap_mode = 2
 end_cap_mode = 2
@@ -154,7 +156,7 @@ antialiased = true
 
 [node name="Curve" type="Line2D" parent="EntityLayerMover/JumpPath" unique_id=1305407002]
 width = 8.0
-gradient = SubResource("Gradient_puyty")
+gradient = SubResource("Gradient_vhebv")
 joint_mode = 2
 begin_cap_mode = 2
 end_cap_mode = 2
@@ -191,3 +193,6 @@ antialiased = true
 visible = false
 theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleBoxFlat_puyty")
+
+[node name="GroupOverview" type="Node2D" parent="." unique_id=510043347 instance=ExtResource("8_puyty")]
+script = ExtResource("8_pvnpy")

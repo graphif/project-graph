@@ -133,6 +133,8 @@ func _get_entity_at(point: Vector2) -> Entity:
 	var entities := _get_entities()
 	entities.sort_custom(func(a: Entity, b: Entity) -> bool: return a.container_depth() < b.container_depth())
 	for i in range(entities.size() - 1, -1, -1):
+		if target_root.has_method("is_overview_hidden") and target_root.is_overview_hidden(entities[i]):
+			continue
 		if _point_in_collision_box(point, entities[i]):
 			return entities[i]
 	return null

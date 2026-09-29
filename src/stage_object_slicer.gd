@@ -162,6 +162,8 @@ func _is_point_on_stage_object(point: Vector2) -> bool:
 func _collect_stage_objects(node: Node, result: Array[StageObject]) -> void:
 	for child in node.get_children():
 		if child is StageObject:
+			if target_root.has_method("is_overview_hidden") and target_root.is_overview_hidden(child):
+				continue
 			if not child.is_queued_for_deletion() and child.is_visible_in_tree():
 				result.append(child)
 			continue

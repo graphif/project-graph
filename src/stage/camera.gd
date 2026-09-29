@@ -16,11 +16,13 @@ extends Camera2D
 ## 手柄/键盘按住时的缩放速度（连续输入，倍率/秒）
 @export var zoom_speed: float = 2.0
 ## 最小缩放限制（数值越小看得越远）
-@export var min_zoom: float = 0.5
+@export var min_zoom: float = 0.02
 ## 最大缩放限制（数值越大看得越近）
 @export var max_zoom: float = 3.0
 ## 缩放平滑阻尼系数
 @export var zoom_friction: float = 12.0
+
+const REFERENCE_ZOOM := 2.0
 
 # 内部状态变量
 var velocity: Vector2 = Vector2.ZERO
