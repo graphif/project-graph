@@ -32,11 +32,19 @@ const ROLES := {
 	"canvas.edge": "blue", "canvas.selection": "mauve",
 }
 static var _switch_icons: Dictionary = {}
+static var _system_light := false
+static var _system_checked_at := -1000
 
 
 static func is_light(mode: String) -> bool:
 	if mode == "system":
-		return not DisplayServer.is_dark_mode() if DisplayServer.is_dark_mode_supported() else false
+		# Desktop theme queries can perform synchronous IPC. Share a one-second
+		# snapshot with the existing theme poll instead of querying per edge/frame.
+		var now := Time.get_ticks_msec()
+		if now - _system_checked_at >= 1000:
+			_system_light = not DisplayServer.is_dark_mode() if DisplayServer.is_dark_mode_supported() else false
+			_system_checked_at = now
+		return _system_light
 	return mode in ["light", "latte", "builtin.catppuccin-latte"]
 
 
