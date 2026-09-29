@@ -32,6 +32,17 @@ func is_active(group: TextNode) -> bool:
 	return _active.has(group.get_instance_id())
 
 
+func outline_for(group: TextNode) -> PackedVector2Array:
+	var panel := _summaries.get(group.get_instance_id()) as Panel
+	if panel == null:
+		return group.get_visual_outline()
+	var style := Corners.source(panel.get_theme_stylebox("panel"))
+	var points := Corners.outline(Rect2(Vector2.ZERO, panel.size), float(style.corner_radius_top_left))
+	for index in points.size():
+		points[index] = group.to_local(panel.get_global_transform() * points[index])
+	return points
+
+
 func covers_point(world_point: Vector2) -> bool:
 	for key in _active:
 		if not _hidden.has(key) and is_instance_valid(_active[key]) and _active[key].aabb.has_point(world_point):
@@ -181,12 +192,14 @@ func _exit_tree() -> void:
 
 func _update_summary(group: TextNode, panel: Panel) -> void:
 	var rect := group.aabb
-	var pixel_scale := maxf(group.get_global_transform_with_canvas().get_scale().x, 0.01)
+	var pixel_scale := maxf(get_global_transform_with_canvas().get_scale().x, 0.01)
 	var screen_side := maxf(rect.size.x, rect.size.y) * pixel_scale
 	# As in master, skip title drawing below 20 screen pixels.
 	panel.show()
 	panel.position = to_local(rect.position)
-	panel.size = rect.size
+	# Keep style geometry in viewport pixels so zoom cannot flatten the corners.
+	panel.scale = Vector2.ONE / pixel_scale
+	panel.size = rect.size * pixel_scale
 	panel.z_index = 66 # Cover the hidden endpoints, beneath selection outlines and captions.
 	var title := panel.get_node("Title") as Label
 	title.visible = screen_side >= 20.0
@@ -197,18 +210,18 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 	var measured := font.get_multiline_string_size(group.text, HORIZONTAL_ALIGNMENT_LEFT, -1, TITLE_FONT_SIZE)
 	measured = measured.max(Vector2.ONE)
 	title.size = measured
-	title.scale = Vector2.ONE * minf(rect.size.x * 0.85 / measured.x, rect.size.y * 0.75 / measured.y)
-	title.position = (rect.size - title.size * title.scale) * 0.5
+	title.scale = Vector2.ONE * minf(panel.size.x * 0.85 / measured.x, panel.size.y * 0.75 / measured.y)
+	title.position = (panel.size - title.size * title.scale) * 0.5
 	var light: bool = group._display_theme_is_light()
 	var background := group.display_background_color(light)
-	var style_key := [background, group.display_border_color(), rect.size, pixel_scale]
+	var style_key := [background, group.display_border_color(), panel.size]
 	if panel.get_meta("style_key", []) != style_key:
 		var style := StyleBoxFlat.new()
 		style.bg_color = background
 		style.border_color = group.display_border_color()
-		style.set_border_width_all(maxi(1, roundi(2.0 / pixel_scale)))
-		style.set_corner_radius_all(roundi(minf(12.0, minf(rect.size.x, rect.size.y) * 0.25)))
-		panel.add_theme_stylebox_override("panel", Corners.style(style, 12.0, false, true))
+		style.set_border_width_all(2)
+		var radius := Corners.fitted_radius(panel.size, minf(12.0, minf(panel.size.x, panel.size.y) * 0.25), 2.0)
+		panel.add_theme_stylebox_override("panel", Corners.style(style, radius, true, true))
 		panel.set_meta("style_key", style_key)
 
 
