@@ -72,6 +72,7 @@ func _ready() -> void:
 	text_edit.focus_exited.connect(_on_edit_focus_exited)
 	visibility_changed.connect(_on_visibility_changed)
 	label.resized.connect(_queue_collision_update)
+	container_panel.resized.connect(_queue_collision_update)
 	text_edit.resized.connect(_queue_collision_update)
 	_queue_collision_update()
 
@@ -196,6 +197,7 @@ func _queue_collision_update() -> void:
 
 func _update_collision_shape() -> void:
 	_collision_update_pending = false
+	_refresh_corner_styles()
 	var bounds := get_visual_rect()
 	var center := bounds.get_center()
 	var current_shape := collision_shape.shape as RectangleShape2D
@@ -244,18 +246,16 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 	var style := StyleBoxFlat.new()
 	style.bg_color = display_fill_color()
 	style.border_color = Palette.color(light, "border.focus") if _editing else display_border_color()
-	# 节点与分组沿用窗口的 24 单位连续圆角和细边框。
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(int(Corners.PANEL))
 	style.content_margin_left = 15
 	style.content_margin_right = 15
 	style.content_margin_top = 10
 	style.content_margin_bottom = 10
-	container_panel.add_theme_stylebox_override("panel", Corners.style(style, Corners.PANEL))
+	container_panel.add_theme_stylebox_override("panel", Corners.style(style, Corners.fitted_radius(container_panel.size, Corners.PANEL), false, true))
 	if _container_active:
 		style.bg_color = Color.TRANSPARENT
 		style.set_border_width_all(0)
-	label.add_theme_stylebox_override("normal", Corners.style(style, Corners.PANEL))
+	label.add_theme_stylebox_override("normal", Corners.style(style, Corners.fitted_radius(label.size, Corners.PANEL), false, true))
 	text_edit.add_theme_color_override("font_color", Palette.neutral_text_color(background))
 	text_edit.add_theme_color_override("caret_color", Palette.neutral_text_color(background))
 	text_edit.add_theme_color_override("selection_color", Color("#d9efdc") if light else Color("#45475a"))
@@ -264,12 +264,38 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 	edit_style.bg_color = Color.TRANSPARENT
 	edit_style.border_color = Color.TRANSPARENT
 	edit_style.set_border_width_all(0)
-	text_edit.add_theme_stylebox_override("normal", Corners.style(edit_style, Corners.PANEL))
+	text_edit.add_theme_stylebox_override("normal", edit_style)
 	text_edit.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	label.end_bulk_theme_override()
 	text_edit.end_bulk_theme_override()
+	_refresh_corner_styles()
 	if update_layout:
 		_queue_collision_update()
+
+
+# Resizing text or a group changes geometry even when its colors stay unchanged.
+# Updating only the style radius preserves content margins and avoids relayout.
+func _refresh_corner_styles() -> void:
+	_refresh_control_corners(label, "normal")
+	_refresh_control_corners(container_panel, "panel")
+
+
+func _refresh_control_corners(control: Control, key: StringName) -> void:
+	var original := Corners.source(control.get_theme_stylebox(key))
+	if original == null:
+		return
+	var radius := Corners.fitted_radius(control.size, Corners.PANEL)
+	if original.corner_radius_top_left == int(radius):
+		return
+	control.add_theme_stylebox_override(key, Corners.style(original, radius, false, true))
+
+
+func get_visual_outline() -> PackedVector2Array:
+	var control: Control = container_panel if _container_active else label
+	var key: StringName = &"panel" if _container_active else &"normal"
+	var original := Corners.source(control.get_theme_stylebox(key))
+	var radius := float(original.corner_radius_top_left) if original != null else 0.0
+	return Corners.outline(get_visual_rect(), radius)
 
 
 static func _make_canvas_font(original: Font) -> Font:
@@ -372,7 +398,7 @@ func _align_edit_text() -> void:
 	edit_style.content_margin_right = label_style.get_content_margin(SIDE_RIGHT)
 	edit_style.content_margin_top = label_style.get_content_margin(SIDE_TOP) + inset_y
 	edit_style.content_margin_bottom = label_style.get_content_margin(SIDE_BOTTOM)
-	text_edit.add_theme_stylebox_override("normal", Corners.style(edit_style, Corners.PANEL))
+	text_edit.add_theme_stylebox_override("normal", edit_style)
 
 
 func _display_theme_is_light() -> bool:

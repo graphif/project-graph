@@ -12,10 +12,10 @@ const CURVE := [
 static var _textures: Dictionary = {}
 
 
-static func source(style: StyleBox) -> StyleBoxFlat:
-	if style is StyleBoxFlat:
-		return style
-	return style.get_meta(SOURCE_META) as StyleBoxFlat if style.has_meta(SOURCE_META) else null
+static func source(box: StyleBox) -> StyleBoxFlat:
+	if box is StyleBoxFlat:
+		return box
+	return box.get_meta(SOURCE_META) as StyleBoxFlat if box != null and box.has_meta(SOURCE_META) else null
 
 
 static func _corner(rect: Rect2, radius: float, index: int) -> PackedVector2Array:
@@ -56,13 +56,24 @@ static func _path(rect: Rect2, radius: float) -> String:
 	return result + "Z"
 
 
-static func style(original: StyleBoxFlat, radius: float, mipmapped: bool = false) -> StyleBox:
+# Reserve a non-overlapping straight section between opposing nine-patch cuts.
+# Padding is added to both the texture and draw rect, so it cancels here.
+static func fitted_radius(size: Vector2, radius: float, border_width: float = 1.0) -> float:
+	return floorf(clampf(radius, 0.0, maxf(0.0, minf(size.x, size.y) * 0.5 - border_width - 2.0)))
+
+
+static func style(original: StyleBoxFlat, radius: float, mipmapped: bool = false, continuous: bool = false) -> StyleBox:
 	if original == null:
 		return StyleBoxEmpty.new()
 	var flat := original.duplicate() as StyleBoxFlat
 	flat.set_corner_radius_all(roundi(radius))
 	# Underlines and one-sided borders keep the native representation.
 	if radius <= 0.0 or flat.border_width_left != flat.border_width_top or flat.border_width_left != flat.border_width_right or flat.border_width_left != flat.border_width_bottom:
+		return flat
+	# 小控件（按钮、输入框、页签）常在 2×切边之内，九宫格会把圆角压缩近半。
+	# 这类尺寸改用原生圆角如实渲染；连续圆角只留给空间足够的大表面。
+	if radius <= CONTROL and not continuous:
+		flat.anti_aliasing = true
 		return flat
 	var width := float(flat.border_width_left)
 	var shadow := float(flat.shadow_size) if flat.shadow_color.a > 0.0 else 0.0

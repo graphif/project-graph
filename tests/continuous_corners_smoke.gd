@@ -56,16 +56,25 @@ func _run() -> void:
 		for frame in 3:
 			await process_frame
 		var theme: Theme = app._light_theme if light else app._dark_theme
-		for pair in [["Panel", "panel"], ["Button", "normal"], ["PopupMenu", "panel"], ["Window", "embedded_border"]]:
+		# 大表面保持连续圆角九宫格。
+		for pair in [["Panel", "panel"], ["PopupMenu", "panel"], ["Window", "embedded_border"]]:
 			var style: StyleBox = theme.get_stylebox(pair[1], pair[0])
 			check(style is StyleBoxTexture, "Native continuous style: " + str(pair))
 			check(Corners.source(style) != null, "Retain source style for palette changes")
+		# 小控件用原生圆角，九宫格在小尺寸上会把圆角压掉一半。
+		var button_style: StyleBox = theme.get_stylebox("normal", "Button")
+		check(button_style is StyleBoxFlat, "Small controls use native corners")
+		check(Corners.source(button_style).corner_radius_top_left == int(Corners.CONTROL), "Small controls keep exact radius")
 		for dock in docks:
-			check(dock.get_theme_stylebox("panel") is StyleBoxTexture, "Visible Dock uses continuous theme")
+			var dock_box := dock.get_theme_stylebox("panel") as StyleBoxTexture
+			check(dock_box != null, "Visible Dock uses continuous theme")
+			if dock_box != null:
+				check(dock.size.y + dock_box.expand_margin_top + dock_box.expand_margin_bottom >= dock_box.texture_margin_top + dock_box.texture_margin_bottom,
+					"Dock vertical nine-patch cuts do not overlap")
 		var node_style := left.label.get_theme_stylebox("normal")
 		check(node_style is StyleBoxTexture, "Node uses continuous corners")
-		check(Corners.source(node_style).corner_radius_top_left == 24, "Node radius matches popup panels")
-		check(Corners.source(theme.get_stylebox("panel", "PopupMenu")).corner_radius_top_left == 24, "Menu radius enlarged")
+		check_node_corners(left)
+		check(Corners.source(theme.get_stylebox("panel", "PopupMenu")).corner_radius_top_left == int(Corners.PANEL), "Menu uses PANEL preset radius")
 		check(Corners.source(theme.get_stylebox("panel", "PopupMenu")).bg_color.a > 0.0, "Menu keeps opaque background")
 		check(JSON.stringify(StageObjectRegistry.capture(stage)) == before, "Visual style does not mutate graph")
 		if DisplayServer.get_name() != "headless":
@@ -88,6 +97,22 @@ func _run() -> void:
 			await capture("/tmp/pg-rounded-%s-menu.png" % name)
 			check(menu.visible and menu.item_count > 0, "File menu visible during capture")
 			menu.hide()
+	# Geometry changes must refresh the cuts without a theme/color refresh.
+	for value in ["i", "Project Graph", "line one\nline two\nline three"]:
+		left.text = value
+		for frame in 3:
+			await process_frame
+		check_node_corners(left)
+	for value in [8, 24, 64]:
+		left.font_size = value
+		for frame in 3:
+			await process_frame
+		check_node_corners(left)
+	right.position += Vector2(180, 120)
+	stage.get_node("EntityLayerMover").refresh_layout()
+	for frame in 3:
+		await process_frame
+	check_node_corners(group)
 	var small := Corners.outline(Rect2(0, 0, 10, 8), Corners.NODE)
 	for point in small:
 		check(point.x >= -0.001 and point.y >= -0.001 and point.x <= 10.001 and point.y <= 8.001, "Small outline clamps to bounds")
@@ -102,3 +127,24 @@ func _run() -> void:
 	await process_frame
 	print("CONTINUOUS_CORNERS: " + ("PASS" if failures.is_empty() else str(failures)))
 	quit(0 if failures.is_empty() else 1)
+
+
+func check_node_corners(node: TextNode) -> void:
+	var control: Control = node.container_panel if node._container_active else node.label
+	var key: StringName = &"panel" if node._container_active else &"normal"
+	var box := control.get_theme_stylebox(key) as StyleBoxTexture
+	check(box != null, "Canvas nodes retain continuous corners at small sizes")
+	if box == null:
+		return
+	var draw_size := control.size + Vector2(
+		box.expand_margin_left + box.expand_margin_right,
+		box.expand_margin_top + box.expand_margin_bottom)
+	check(draw_size.x >= box.texture_margin_left + box.texture_margin_right + 3.9,
+		"Horizontal nine-patch cuts leave a straight section")
+	check(draw_size.y >= box.texture_margin_top + box.texture_margin_bottom + 3.9,
+		"Vertical nine-patch cuts leave a straight section")
+	var original := Corners.source(box)
+	var expected := Corners.fitted_radius(control.size, Corners.PANEL)
+	check(original.corner_radius_top_left == int(expected), "Radius follows current control size")
+	check(node.get_visual_outline() == Corners.outline(node.get_visual_rect(), expected),
+		"Selection follows the visible fitted corners")

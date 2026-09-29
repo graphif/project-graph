@@ -197,7 +197,7 @@ func _refresh_selection_outlines() -> void:
 		line.width = 5.0
 		line.default_color = Color("#418856") if _applied_theme_light == 1 else Color("#cba6f7")
 		var rect: Rect2 = object.get_visual_rect() if object is TextNode else object.aabb
-		var points := _rounded_selection_rect(rect, 6.0)
+		var points: PackedVector2Array = object.get_visual_outline() if object is TextNode else _rounded_selection_rect(rect, 6.0)
 		for i in points.size():
 			var world_point := object.to_global(points[i]) if object is TextNode else points[i]
 			points[i] = line.to_local(world_point)
