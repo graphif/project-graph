@@ -272,6 +272,12 @@ const MENUS = [
 			},
 			{
 				"type": "item",
+				"id": "groupSelection",
+				"icon": "groupSelection",
+				"label": "创建分组"
+			},
+			{
+				"type": "item",
 				"id": "releaseKeys",
 				"icon": "Keyboard",
 				"label": "释放按键"
@@ -663,7 +669,7 @@ const MENUS = [
 				"label": "关于"
 			}
 		],
-		"label": "帮助"
+		"label": "关于"
 	},
 	{
 		"type": "topMenu",

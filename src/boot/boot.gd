@@ -1,7 +1,6 @@
 extends Control
 
 const MAIN_SCENE := "res://src/main/main.tscn"
-const MIN_SPLASH_TIME := 0.4
 
 const Palette = preload("res://src/main/theme_palette.gd")
 var _light := false
@@ -13,7 +12,6 @@ var _light := false
 @onready var status: Label = $Center/Status
 @onready var progress_bar: ProgressBar = $Center/ProgressBar
 
-var _elapsed := 0.0
 var _transition_started := false
 var _load_requested := false
 
@@ -66,8 +64,7 @@ func _ready() -> void:
 	tween.tween_property(progress_bar, "modulate:a", 1.0, 0.24).set_delay(0.22)
 
 
-func _process(delta: float) -> void:
-	_elapsed += delta
+func _process(_delta: float) -> void:
 	if not _load_requested:
 		return
 
@@ -84,7 +81,7 @@ func _process(delta: float) -> void:
 	if load_progress[0] < 0.99:
 		status.text = "正在加载工作区"
 
-	if _transition_started or _elapsed < MIN_SPLASH_TIME or load_status != ResourceLoader.THREAD_LOAD_LOADED:
+	if _transition_started or load_status != ResourceLoader.THREAD_LOAD_LOADED:
 		return
 
 	var scene := ResourceLoader.load_threaded_get(MAIN_SCENE) as PackedScene

@@ -31,8 +31,9 @@ func new_tab(title: String = "") -> Stage:
 	var viewport := SubViewport.new()
 	viewport.name = "SubViewport"
 	viewport.transparent_bg = true
-	# 2D 多重采样覆盖连线、箭头等几何边缘。
-	viewport.msaa_2d = Viewport.MSAA_4X
+	# Compatibility/GLES 不支持 2D MSAA；Forward+/Mobile 保留 4x 边缘质量。
+	var renderer := str(ProjectSettings.get_setting("rendering/renderer/rendering_method"))
+	viewport.msaa_2d = Viewport.MSAA_DISABLED if renderer == "gl_compatibility" else Viewport.MSAA_4X
 	# 初始按正常尺寸绘制；相机按当前屏幕缩放更新 SVG 采样档位。
 	viewport.oversampling = true
 	viewport.oversampling_override = 1.0
@@ -46,6 +47,8 @@ func new_tab(title: String = "") -> Stage:
 	container.set_meta("tab_title", title if not title.is_empty() else "未命名 %d" % tab_serial)
 	container.stretch = true
 	container.add_child(viewport)
+	container.resized.connect(_sync_viewport_size.bind(container, viewport))
+	_sync_viewport_size.call_deferred(container, viewport)
 	stage.file_error.connect(func(message): workspace_error.emit(message))
 	stage.file_saved.connect(_on_file_saved.bind(stage))
 	add_child(container)
@@ -54,6 +57,19 @@ func new_tab(title: String = "") -> Stage:
 	_update_tab_titles()
 	stage_added.emit(stage)
 	return stage
+
+
+func _sync_viewport_size(container: Control, viewport: SubViewport) -> void:
+	if not is_instance_valid(container) or not is_instance_valid(viewport):
+		return
+	if not (container is SubViewportContainer and (container as SubViewportContainer).stretch):
+		var new_size := Vector2i(container.size.round()).max(Vector2i(1, 1))
+		if viewport.size != new_size:
+			viewport.size = new_size
+	var stage := viewport.get_node_or_null("Stage") as Stage
+	if stage != null and stage.is_node_ready():
+		stage.camera.global_position = stage.camera.target_position
+		stage.camera.zoom = stage.camera.target_zoom
 
 
 func stages() -> Array[Stage]:
@@ -79,7 +95,7 @@ func _update_tab_titles() -> void:
 		var container := get_tab_control(index)
 		var stage := get_stage(index)
 		var dirty := stage != null and stage.is_node_ready() and stage.is_dirty()
-		set_tab_title(index, str(container.get_meta("tab_title", "未命名")) + (" ●" if dirty else ""))
+		set_tab_title(index, str(container.get_meta("tab_title", "未命名")) + (" •" if dirty else ""))
 		set_tab_tooltip(index, stage.current_file_path if stage != null else "")
 
 

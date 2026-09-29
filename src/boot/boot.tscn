@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://bkjdtni5un7y5" path="res://src/boot/boot.gd" id="1_8qla2"]
 [ext_resource type="Texture2D" uid="uid://crtq4sibpb1ht" path="res://project-graph-icon.svg" id="2_8qla2"]
 
-[node name="Root" type="Control" unique_id=561485310]
+[node name="Root2" type="Control" unique_id=561485310]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

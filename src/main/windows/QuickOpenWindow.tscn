@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://8slwla4vqrmm"]
+
+[node name="QuickOpenWindow" type="Window" unique_id=627563025]
+oversampling_override = 1.0
+title = "快速打开"
+size = Vector2i(720, 440)
+visible = false
+exclusive = true
+min_size = Vector2i(360, 240)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=410156746]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="Content" type="VBoxContainer" parent="Margin" unique_id=1834386785]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Query" type="LineEdit" parent="Margin/Content" unique_id=981753155]
+layout_mode = 2
+theme_type_variation = &"DialogField"
+placeholder_text = "搜索文件名或路径…"
+
+[node name="Results" type="ItemList" parent="Margin/Content" unique_id=1571648985]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="@VScrollBar@23293" type="VScrollBar" parent="Margin/Content/Results" unique_id=1447248255]
+use_parent_material = true
+layout_mode = 0
+
+[node name="@HScrollBar@23294" type="HScrollBar" parent="Margin/Content/Results" unique_id=679430564]
+use_parent_material = true
+layout_mode = 0
+
+[node name="Hint" type="Label" parent="Margin/Content" unique_id=1102008585]
+layout_mode = 2
+text = "输入文件名 · Enter 打开 · Esc 关闭"
+autowrap_mode = 3

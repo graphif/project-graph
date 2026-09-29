@@ -1,0 +1,67 @@
+[gd_scene format=3 uid="uid://bioanvu28x2ao"]
+
+[node name="RecentFilesWindow" type="Window" unique_id=1788427078]
+oversampling_override = 1.0
+title = "最近打开的文件"
+size = Vector2i(700, 480)
+visible = false
+min_size = Vector2i(320, 220)
+
+[node name="DialogBackground" type="Panel" parent="." unique_id=754661860]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_type_variation = &"DialogSurface"
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1312782783]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Content" type="VBoxContainer" parent="Margin" unique_id=358686984]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Query" type="LineEdit" parent="Margin/Content" unique_id=903809468]
+layout_mode = 2
+theme_type_variation = &"DialogField"
+placeholder_text = "搜索文件名或路径"
+clear_button_enabled = true
+
+[node name="Files" type="ItemList" parent="Margin/Content" unique_id=1615461551]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="@VScrollBar@22510" type="VScrollBar" parent="Margin/Content/Files" unique_id=743958930]
+use_parent_material = true
+layout_mode = 0
+
+[node name="@HScrollBar@22511" type="HScrollBar" parent="Margin/Content/Files" unique_id=1151445123]
+use_parent_material = true
+layout_mode = 0
+
+[node name="Actions" type="HBoxContainer" parent="Margin/Content" unique_id=952283088]
+layout_mode = 2
+
+[node name="Open" type="Button" parent="Margin/Content/Actions" unique_id=283782692]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_type_variation = &"DialogButton"
+text = "打开"
+
+[node name="Remove" type="Button" parent="Margin/Content/Actions" unique_id=1707963157]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_type_variation = &"DialogButton"
+text = "移出最近列表"
+
+[node name="Clear" type="Button" parent="Margin/Content/Actions" unique_id=324546133]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_type_variation = &"DialogButton"
+text = "清空列表"

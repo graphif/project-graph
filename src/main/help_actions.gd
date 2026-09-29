@@ -20,11 +20,11 @@ const TOPICS = {
 	],
 	"helpThemes": [
 		"自定义外观",
-		"[b]主题与字号[/b]\n在偏好设置的外观页切换深浅主题；常规页可调整 UI 缩放、网格和交互方式。窗口顶栏也有主题切换按钮。\n\n[b]节点外观[/b]\n选择一个文本节点，打开节点属性，调整字体大小、宽度、填充和边框颜色后应用。\n\n目前提供内置主题和节点样式设置，尚不支持导入 Typora 的 CSS 主题。\n\n[url=action:openAppearanceSettings]打开外观设置[/url]\n[url=action:properties]打开节点属性[/url]"
+		"[b]主题与字号[/b]\n在偏好设置的外观页选择 Catppuccin Mocha（深色）、Catppuccin Latte（浅色）或跟随系统；常规页可调整 UI 缩放、网格和交互方式。窗口顶栏也有主题切换按钮。\n\n[b]节点外观[/b]\n选择一个文本节点，打开节点属性，调整字体大小、宽度、填充和边框颜色后应用。\n\n目前提供内置主题和节点样式设置，尚不支持导入 Typora 的 CSS 主题。\n\n[url=action:openAppearanceSettings]打开外观设置[/url]\n[url=action:properties]打开节点属性[/url]"
 	],
 	"helpCanvas": [
 		"节点、连线与画笔",
-		"[b]选择工具[/b]\n使用底部选择工具，点击或框选舞台对象，再拖动调整位置。双击文本节点编辑文字。\n\n[b]放入与移出方块[/b]\n先选中一个或多个方块，按住 Alt，在目标方块上按下并松开左键；普通方块会自动成为容器。也可以在拖动时按住 Alt，再在目标上松开。绿色轮廓表示可放入，红色表示不能放入自身或后代。按住 Alt 在空白处点击可移到最外层；松开 Alt 或按 Esc 取消。拖动容器标题会带动内容，最后一个成员移出后恢复普通方块。\n\n[b]连接工具[/b]\n切换到底部连接工具后，在节点之间拖动建立连线。\n\n[b]画笔工具[/b]\n切换到画笔工具，按住左键绘制，松开完成笔迹。节点、连线和笔迹均可保存到 .prg。\n\n使用 Ctrl+Z 撤销最近一步，Ctrl+Shift+Z 重做。\n\n图片节点尚未在当前工作区实现。需要分享图形时，可以导出 SVG 或 PNG。\n\n[url=action:modeSelect]选择工具[/url]    [url=action:modeConnect]连接工具[/url]    [url=action:modeDraw]画笔工具[/url]"
+		"[b]选择工具[/b]\n使用底部选择工具，点击或框选舞台对象，再拖动调整位置。双击文本节点编辑文字。\n\n[b]放入与移出方块[/b]\n先选中一个或多个方块，按住 Alt，在目标方块上按下并松开左键；普通方块会自动成为容器。也可以在拖动时按住 Alt，再在目标上松开。绿色轮廓表示可放入，红色表示不能放入自身或后代。按住 Alt 在空白处点击可移到最外层；松开 Alt 或按 Esc 取消。拖动容器标题会带动内容，最后一个成员移出后恢复普通方块。\n\n[b]快速绘制思维导图[/b]\n选中一个主题，Tab 添加子主题，Enter 添加同级主题（需要唯一父主题），F2 编辑文字。新主题自动连线并继承节点样式。编辑时 Enter 确认，Shift+Enter 换行，Esc 取消文字修改。\n\n[b]连接工具[/b]\n切换到底部连接工具后，在节点之间拖动建立连线；默认模式也可从节点按住右键拖到另一个节点。Esc 取消连接，同方向的重复连接不会叠加。点击连线可选中，右键菜单 → 属性可改线宽、颜色和箭头，或反转方向。\n\n[b]颜色[/b]\n选择节点或连线，按 Ctrl+Shift+C，选择填充/连线、节点边框或节点文字后应用；可批量改色或恢复默认。文字颜色透明表示自动选择适合背景的颜色。\n\n[b]切割[/b]\n默认在空白处按住右键拖出细线，松开删除经过的对象；Esc 取消。右键轻点仍打开菜单。切割和改色均可撤销。\n\n[b]画笔工具[/b]\n切换到画笔工具，按住左键绘制，松开完成笔迹。节点、连线和笔迹均可保存到 .prg。\n\n使用 Ctrl+Z 撤销最近一步，Ctrl+Shift+Z 重做。\n\n图片节点尚未在当前工作区实现。需要分享图形时，可以导出 SVG 或 PNG。\n\n[url=action:modeSelect]选择工具[/url]    [url=action:modeConnect]连接工具[/url]    [url=action:modeDraw]画笔工具[/url]"
 	],
 	"helpRecovery": [
 		"数据恢复与版本管理",
@@ -45,12 +45,20 @@ const TOPICS = {
 }
 
 @onready var app = get_parent()
-@onready var window: Window = $"../UIOverlay/HelpWindow"
-@onready var text: RichTextLabel = $"../UIOverlay/HelpWindow/Margin/Content/Text"
+var window: Window
+var text: RichTextLabel
 
 
 func setup() -> void:
+	if is_instance_valid(window):
+		return
+	window = app.overlay.get_node_or_null("HelpWindow") as Window
+	if window == null:
+		app._ensure_window_ready("HelpWindow")
+		return
+	# Embedded Window supplies the themed surface behind its transparent content.
 	window.transparent_bg = true
+	text = window.get_node("Margin/Content/Text") as RichTextLabel
 	text.meta_clicked.connect(_link)
 	window.get_node("Margin/Content/Actions/Close").pressed.connect(window.hide)
 
@@ -71,6 +79,10 @@ func run(command: String) -> void:
 
 
 func _show(title: String, body: String, markup := true) -> void:
+	if not is_instance_valid(window):
+		app._ensure_window_ready("HelpWindow")
+	if not is_instance_valid(window):
+		return
 	window.title = title
 	text.bbcode_enabled = markup
 	text.text = ("[font_size=22][b]" + title + "[/b][/font_size]\n\n" + body) if markup else body
@@ -97,3 +109,5 @@ func open_link(url: String) -> void:
 	var error := OS.shell_open(url)
 	if error != OK:
 		app._show_error("无法打开链接：" + error_string(error))
+
+# export-cache-invalidation-20260918

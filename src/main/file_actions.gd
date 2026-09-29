@@ -11,10 +11,10 @@ const INDEX_LIMIT := 10000
 @onready var folder_dialog: FileDialog = $"../UIOverlay/FolderDialog"
 @onready var save_dialog: FileDialog = $"../UIOverlay/FileOperationSaveDialog"
 @onready var confirm_dialog: ConfirmationDialog = $"../UIOverlay/FileOperationConfirm"
-@onready var quick_window: Window = $"../UIOverlay/QuickOpenWindow"
-@onready var query: LineEdit = $"../UIOverlay/QuickOpenWindow/Margin/Content/Query"
-@onready var results: ItemList = $"../UIOverlay/QuickOpenWindow/Margin/Content/Results"
-@onready var hint: Label = $"../UIOverlay/QuickOpenWindow/Margin/Content/Hint"
+var quick_window: Window
+var query: LineEdit
+var results: ItemList
+var hint: Label
 
 var folder := ""
 var _paths := PackedStringArray()
@@ -34,28 +34,43 @@ func setup() -> void:
 	save_dialog.canceled.connect(_cancel)
 	confirm_dialog.confirmed.connect(_confirm)
 	confirm_dialog.canceled.connect(_cancel)
-	query.text_changed.connect(func(_text): _refresh_quick())
-	query.text_submitted.connect(func(_text): _open_quick(-1))
-	results.item_activated.connect(_open_quick)
-	quick_window.window_input.connect(_quick_input)
 	sidebar.get_node("Margin/Content/Header/Close").pressed.connect(sidebar.hide)
 	sidebar.get_node("Margin/Content/Header/Refresh").pressed.connect(func(): open_folder(folder))
 	tree.item_activated.connect(_activate_tree)
 	tree.item_collapsed.connect(_expand_tree)
 	tabs.workspace_saved.connect(func(_path): _refresh_sidebar())
 	tabs.stage_closed.connect(_refresh_sidebar)
+
+
+
+func _ensure_quick_ready() -> bool:
+	if is_instance_valid(quick_window):
+		return true
+	quick_window = app._ensure_window_ready("QuickOpenWindow")
+	if quick_window == null:
+		app._show_error("无法加载快速打开窗口。")
+		return false
+	query = quick_window.get_node("Margin/Content/Query") as LineEdit
+	results = quick_window.get_node("Margin/Content/Results") as ItemList
+	hint = quick_window.get_node("Margin/Content/Hint") as Label
+	query.text_changed.connect(func(_text): _refresh_quick())
+	query.text_submitted.connect(func(_text): _open_quick(-1))
+	results.item_activated.connect(_open_quick)
+	quick_window.window_input.connect(_quick_input)
 	quick_window.visibility_changed.connect(func():
 		if quick_window.visible:
 			_refresh_quick()
 			query.grab_focus()
 	)
+	return true
 
 
 func modal_open() -> bool:
 	if _loading:
 		return true
 	for name in DIALOGS:
-		if app.overlay.get_node(name).visible:
+		var dialog: Node = app.overlay.get_node_or_null(name)
+		if dialog != null and dialog.visible:
 			return true
 	return false
 
@@ -89,6 +104,8 @@ func run(command: String) -> void:
 				folder_dialog.current_dir = folder
 			folder_dialog.popup_centered_ratio(0.7)
 		"quickOpen":
+			if not _ensure_quick_ready():
+				return
 			query.text = ""
 			app._show_panel("QuickOpenWindow")
 		"reloadFile", "deleteFile":
@@ -252,7 +269,7 @@ func _refresh_sidebar() -> void:
 	root.set_tooltip_text(0, folder)
 	root.set_metadata(0, {"path": folder, "directory": true, "loaded": false})
 	_populate(root)
-	if quick_window.visible:
+	if is_instance_valid(quick_window) and quick_window.visible:
 		_refresh_quick()
 
 
@@ -367,7 +384,7 @@ func _index_folder() -> void:
 
 
 func _refresh_quick() -> void:
-	if not quick_window.visible:
+	if not is_instance_valid(quick_window) or not quick_window.visible:
 		return
 	results.clear()
 	var candidates := {}
@@ -467,3 +484,5 @@ main svg{display:block;width:100%%;height:85vh}
 		app._show_error("无法打开打印预览：" + error_string(error))
 	else:
 		app._toast("已在默认浏览器打开打印预览")
+
+# export-cache-invalidation-20260918

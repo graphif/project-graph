@@ -1,0 +1,388 @@
+[gd_scene format=3 uid="uid://b58qd4dimt8n1"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_rar46"]
+
+[node name="SettingsWindow" type="Window" unique_id=508024565]
+transparent_bg = true
+title = "设置"
+size = Vector2i(820, 600)
+visible = false
+transient = true
+min_size = Vector2i(560, 380)
+
+[node name="DialogBackground" type="Panel" parent="." unique_id=1639017713]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_type_variation = &"DialogSurface"
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=444897218]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Content" type="HBoxContainer" parent="Margin" unique_id=1797404072]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="Navigation" type="VBoxContainer" parent="Margin/Content" unique_id=1545638572]
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="General" type="Button" parent="Margin/Content/Navigation" unique_id=753881500]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_type_variation = &"DialogButton"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_rar46")
+text = "常规"
+
+[node name="Shortcuts" type="Button" parent="Margin/Content/Navigation" unique_id=609893767]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_type_variation = &"DialogButton"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_rar46")
+text = "快捷键"
+
+[node name="Appearance" type="Button" parent="Margin/Content/Navigation" unique_id=423364230]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_type_variation = &"DialogButton"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_rar46")
+text = "外观"
+
+[node name="About" type="Button" parent="Margin/Content/Navigation" unique_id=2090915513]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_type_variation = &"DialogButton"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_rar46")
+text = "关于"
+
+[node name="Tabs" type="TabContainer" parent="Margin/Content" unique_id=680557818]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_type_variation = &"DialogTabs"
+current_tab = 0
+tabs_visible = false
+
+[node name="General" type="VBoxContainer" parent="Margin/Content/Tabs" unique_id=1494302081]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+metadata/_tab_index = 0
+metadata/title = "常规"
+
+[node name="Search" type="LineEdit" parent="Margin/Content/Tabs/General" unique_id=245815294]
+layout_mode = 2
+theme_type_variation = &"DialogField"
+placeholder_text = "查找常规设置"
+clear_button_enabled = true
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/Content/Tabs/General" unique_id=316674281]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ContentInset" type="MarginContainer" parent="Margin/Content/Tabs/General/Scroll" unique_id=1455472431]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_right = 12
+
+[node name="Rows" type="VBoxContainer" parent="Margin/Content/Tabs/General/Scroll/ContentInset" unique_id=17953836]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="SectionGridH" type="Label" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows" unique_id=925245510]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "画布背景"
+
+[node name="GridH" type="HBoxContainer" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows" unique_id=988419125]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/GridH" unique_id=1811557372]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "水平网格"
+
+[node name="Value" type="CheckButton" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/GridH" unique_id=956721660]
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+
+[node name="GridV" type="HBoxContainer" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows" unique_id=408654233]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/GridV" unique_id=1153383987]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "垂直网格"
+
+[node name="Value" type="CheckButton" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/GridV" unique_id=798218873]
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+
+[node name="GridDots" type="HBoxContainer" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows" unique_id=2026673727]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/GridDots" unique_id=1573142969]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "点阵网格"
+
+[node name="Value" type="CheckButton" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/GridDots" unique_id=774547503]
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+
+[node name="Snap" type="HBoxContainer" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows" unique_id=466867065]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/Snap" unique_id=903289401]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "网格吸附"
+
+[node name="Value" type="CheckButton" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/Snap" unique_id=414343320]
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+
+[node name="SectionPhysics" type="Label" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows" unique_id=525615253]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "编辑反馈"
+
+[node name="Physics" type="HBoxContainer" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows" unique_id=1173891451]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/Physics" unique_id=337709929]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "对象自动避让"
+
+[node name="Value" type="CheckButton" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/Physics" unique_id=33890120]
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+
+[node name="Effects" type="HBoxContainer" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows" unique_id=2042200821]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/Effects" unique_id=801348490]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "切割特效"
+
+[node name="Value" type="CheckButton" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/Effects" unique_id=91812703]
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+
+[node name="Welcome" type="HBoxContainer" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows" unique_id=441538353]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/Welcome" unique_id=2097333268]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "启动时显示欢迎页"
+
+[node name="Value" type="CheckButton" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/Welcome" unique_id=1244728702]
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+
+[node name="SectionLeftMode" type="Label" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows" unique_id=742206047]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "鼠标操作"
+
+[node name="LeftMode" type="HBoxContainer" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows" unique_id=827366353]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/LeftMode" unique_id=322045038]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "鼠标左键"
+
+[node name="Value" type="OptionButton" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/LeftMode" unique_id=892809182]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+
+[node name="RightMode" type="HBoxContainer" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows" unique_id=181393679]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/RightMode" unique_id=1568910672]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "右键拖动空白"
+
+[node name="Value" type="OptionButton" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/RightMode" unique_id=618967784]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+
+[node name="SectionUIScale" type="Label" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows" unique_id=706555543]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "显示与导航"
+
+[node name="UIScale" type="HBoxContainer" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows" unique_id=1356357371]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/UIScale" unique_id=531232851]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "界面缩放"
+
+[node name="Value" type="SpinBox" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/UIScale" unique_id=70823214]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+
+[node name="CameraSpeed" type="HBoxContainer" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows" unique_id=1970298077]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/CameraSpeed" unique_id=746065714]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "键盘移动速度"
+
+[node name="Value" type="SpinBox" parent="Margin/Content/Tabs/General/Scroll/ContentInset/Rows/CameraSpeed" unique_id=1975100519]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+
+[node name="Shortcuts" type="VBoxContainer" parent="Margin/Content/Tabs" unique_id=1394763806]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+metadata/_tab_index = 1
+metadata/title = "快捷键"
+
+[node name="Hint" type="Label" parent="Margin/Content/Tabs/Shortcuts" unique_id=378761752]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "双击一项修改快捷键 · Esc 取消录入"
+autowrap_mode = 3
+
+[node name="Keys" type="Tree" parent="Margin/Content/Tabs/Shortcuts" unique_id=1178302524]
+layout_mode = 2
+size_flags_vertical = 3
+columns = 2
+hide_root = true
+
+[node name="Reset" type="Button" parent="Margin/Content/Tabs/Shortcuts" unique_id=1887632916]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"DialogButton"
+text = "恢复默认快捷键"
+
+[node name="Appearance" type="VBoxContainer" parent="Margin/Content/Tabs" unique_id=503063429]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+metadata/_tab_index = 2
+metadata/title = "外观"
+
+[node name="Heading" type="Label" parent="Margin/Content/Tabs/Appearance" unique_id=822650857]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "配色主题"
+
+[node name="Theme" type="OptionButton" parent="Margin/Content/Tabs/Appearance" unique_id=202543971]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_type_variation = &"DialogOption"
+
+[node name="Description" type="Label" parent="Margin/Content/Tabs/Appearance" unique_id=194628716]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+text = "Mocha 深色与 Latte 浅色，统一使用紫色强调。
+切换主题不会覆盖节点的自定义颜色。"
+autowrap_mode = 3
+
+[node name="Separator" type="HSeparator" parent="Margin/Content/Tabs/Appearance" unique_id=2095688449]
+layout_mode = 2
+
+[node name="Classroom" type="CheckButton" parent="Margin/Content/Tabs/Appearance" unique_id=804771810]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+theme_type_variation = &"SettingsSwitch"
+text = "专注模式 · 隐藏工具栏和状态栏"
+
+[node name="Privacy" type="CheckButton" parent="Margin/Content/Tabs/Appearance" unique_id=508461309]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+theme_type_variation = &"SettingsSwitch"
+text = "遮住画布内容"
+
+[node name="Quick" type="CheckButton" parent="Margin/Content/Tabs/Appearance" unique_id=108089860]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+theme_type_variation = &"SettingsSwitch"
+text = "显示快捷工具栏"
+
+[node name="About" type="VBoxContainer" parent="Margin/Content/Tabs" unique_id=550113095]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+metadata/_tab_index = 3
+metadata/title = "关于"
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/Content/Tabs/About" unique_id=1365160588]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Inset" type="MarginContainer" parent="Margin/Content/Tabs/About/Scroll" unique_id=149653736]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Body" type="VBoxContainer" parent="Margin/Content/Tabs/About/Scroll/Inset" unique_id=1898444444]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="Margin/Content/Tabs/About/Scroll/Inset/Body" unique_id=882618768]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Project Graph"
+
+[node name="Description" type="Label" parent="Margin/Content/Tabs/About/Scroll/Inset/Body" unique_id=1917913426]
+layout_mode = 2
+text = "把想法写下来，用节点和连线整理关系。
+
+本地画布 · 文本节点 · 分组 · 撤销与恢复"
+autowrap_mode = 3
+
+[node name="Links" type="HBoxContainer" parent="Margin/Content/Tabs/About/Scroll/Inset/Body" unique_id=347592361]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Website" type="Button" parent="Margin/Content/Tabs/About/Scroll/Inset/Body/Links" unique_id=512738735]
+layout_mode = 2
+theme_type_variation = &"DialogButton"
+text = "官方网站"
+
+[node name="Source" type="Button" parent="Margin/Content/Tabs/About/Scroll/Inset/Body/Links" unique_id=963197148]
+layout_mode = 2
+theme_type_variation = &"DialogButton"
+text = "源代码"

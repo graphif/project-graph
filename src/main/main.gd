@@ -1,6 +1,7 @@
 extends Control
 
 const Corners = preload("res://src/main/continuous_corners.gd")
+const Palette = preload("res://src/main/theme_palette.gd")
 
 const LocalTheme = preload("res://src/main/local_theme.gd")
 var _local_theme := LocalTheme.new()
@@ -8,30 +9,45 @@ var _local_theme := LocalTheme.new()
 const DialogTheme = preload("res://src/main/dialog_theme.gd")
 
 const WINDOWS := ["FindWindow", "OutlineWindow", "ReferencesWindow", "NodeDetailsWindow", "RecentFilesWindow", "CommandPalette", "GenerateNodeWindow", "ColorWindow", "SettingsWindow", "HelpWindow"]
+const WINDOW_SCENES := {
+	"FindWindow": "res://src/main/windows/FindWindow.tscn",
+	"OutlineWindow": "res://src/main/windows/OutlineWindow.tscn",
+	"ReferencesWindow": "res://src/main/windows/ReferencesWindow.tscn",
+	"NodeDetailsWindow": "res://src/main/windows/NodeDetailsWindow.tscn",
+	"RecentFilesWindow": "res://src/main/windows/RecentFilesWindow.tscn",
+	"CommandPalette": "res://src/main/windows/CommandPalette.tscn",
+	"GenerateNodeWindow": "res://src/main/windows/GenerateNodeWindow.tscn",
+	"ColorWindow": "res://src/main/windows/ColorWindow.tscn",
+	"SettingsWindow": "res://src/main/windows/SettingsWindow.tscn",
+	"HelpWindow": "res://src/main/windows/HelpWindow.tscn",
+	"QuickOpenWindow": "res://src/main/windows/QuickOpenWindow.tscn",
+}
 const SUPPORTED := [
-	"newDraft", "openFile", "openCurrentProjectFileFolder", "clickAppMenuRecentFileButton",
-	"saveFile", "saveAs", "manualBackup", "openDefaultBackupFolder", "importTextFile",
+	"newDraft", "newWindow", "openFile", "openFolder", "quickOpen", "reloadFile", "openCurrentProjectFileFolder", "clickAppMenuRecentFileButton",
+	"saveFile", "saveAs", "moveFile", "saveAll", "manualBackup", "openDefaultBackupFolder", "importTextFile",
 	"exportSvgAll", "exportSvgSelected", "exportPngLegacy", "exportPngSelected",
 	"exportSelectedNetStructureToPlainText", "exportSelectedTreeStructureToPlainText",
 	"exportSelectedTreeStructureToMarkdown", "exportSelectedNetStructureToMermaid",
-	"openOutlineWindow", "openReferencesWindow", "openColorManagerWindow",
+	"openOutlineWindow", "openReferencesWindow", "openColorManagerWindow", "revealInSidebar", "deleteFile", "printFile",
 	"resetViewAll", "resetView", "resetCameraScale", "moveViewToOrigin", "stopDrifting", "focusRandomEntity",
 	"searchText", "updateReferences", "undo", "redo", "releaseKeys", "closeAllSubWindows",
-	"generateNodeTreeByText", "generateNodeTreeByMarkdown", "generateNodeGraphByText", "clearStage",
+	"generateNodeTreeByText", "generateNodeTreeByMarkdown", "generateNodeGraphByText", "generateNodeMermaidByText", "clearStage",
 	"clickAppMenuSettingsButton", "openAppearanceSettings", "resetAllKeyBinds", "openConfigFolder", "openCacheFolder",
 	"toggleFullscreen", "checkoutClassroomMode", "checkoutProtectPrivacy", "toggleBackgroundHorizontalLines",
-	"toggleBackgroundVerticalLines", "toggleBackgroundDots", "switchDebugShow", "openAboutWindow", "openOfficialDocs",
-	"copy", "paste", "delete", "selectAll", "newNode", "properties", "welcome", "commands", "closeTab",
-	"modeSelect", "modeDraw", "modeConnect", "grid", "theme", "website", "guide",
+	"toggleBackgroundVerticalLines", "toggleBackgroundDots", "switchDebugShow", "openExtensionsWindow", "openPluginMarket", "openExtensionFolder", "openAboutWindow", "openOfficialDocs", "downloadTutorialMain", "downloadTutorialShortcutKeys", "downloadTutorialLogicNodes", "watchBilibiliVideo2", "watchBilibiliVideo1_6Basic", "watchBilibiliVideo1_6Advanced", "watchBilibiliVideo1_0", "watchBilibiliVideoPyQtUpdated", "watchBilibiliVideoPyQt", "showUpgradeGuide",
+	"addChild", "addSibling", "editNode", "reverseEdge", "copy", "paste", "delete", "selectAll", "groupSelection", "newNode", "properties", "welcome", "commands", "closeTab",
+	"modeSelect", "modeDraw", "modeConnect", "grid", "theme", "website", "guide", "helpWhatsNew", "helpQuickStart", "helpMarkdown", "helpImportExport", "helpThemes", "helpCanvas", "helpRecovery", "helpCredits", "helpChangelog", "helpPrivacy", "helpFeedback", "helpAbout",
 ]
 const DEFAULT_KEYS := {
+	"addChild": KEY_TAB, "addSibling": KEY_ENTER, "editNode": KEY_F2,
+	"openColorManagerWindow": KEY_MASK_CTRL | KEY_MASK_SHIFT | KEY_C,
 	"newDraft": KEY_MASK_CTRL | KEY_N, "openFile": KEY_MASK_CTRL | KEY_O,
 	"saveFile": KEY_MASK_CTRL | KEY_S, "saveAs": KEY_MASK_CTRL | KEY_MASK_SHIFT | KEY_S,
 	"closeTab": KEY_MASK_CTRL | KEY_W, "searchText": KEY_MASK_CTRL | KEY_F,
 	"commands": KEY_MASK_CTRL | KEY_MASK_SHIFT | KEY_P, "undo": KEY_MASK_CTRL | KEY_Z,
 	"redo": KEY_MASK_CTRL | KEY_MASK_SHIFT | KEY_Z, "copy": KEY_MASK_CTRL | KEY_C,
 	"paste": KEY_MASK_CTRL | KEY_V, "selectAll": KEY_MASK_CTRL | KEY_A,
-	"delete": KEY_DELETE, "resetView": KEY_F, "toggleFullscreen": KEY_F11,
+	"groupSelection": KEY_MASK_CTRL | KEY_G, "delete": KEY_DELETE, "resetView": KEY_F, "toggleFullscreen": KEY_F11,
 	"clickAppMenuSettingsButton": KEY_MASK_CTRL | KEY_COMMA,
 }
 const SETTING_FIELDS := {
@@ -39,11 +55,34 @@ const SETTING_FIELDS := {
 	"Physics": "physics", "Effects": "effects", "Welcome": "welcome", "LeftMode": "left_mode",
 	"RightMode": "right_mode", "UIScale": "ui_scale", "CameraSpeed": "camera_speed",
 }
+const MENU_ICON_BASE := "res://src/main/icons/lucide/"
+const MENU_ICON_SIZE := 18
+const MENU_ICON_FILES := {
+	# Menu icons follow master branch's Lucide icon style.
+	"File": "file", "View": "view", "Axe": "axe", "Settings": "settings", "AppWindow": "app-window", "Blocks": "blocks", "CircleHelp": "circle-help",
+	"Search": "search", "RefreshCcwDot": "refresh-ccw-dot", "Undo": "undo", "Redo": "redo", "Keyboard": "keyboard", "X": "x", "Sparkles": "sparkles",
+	"Network": "network", "GitCompareArrows": "git-compare-arrows", "Workflow": "workflow", "BookOpen": "book-open", "Radiation": "radiation", "Rabbit": "rabbit", "Type": "type",
+	"Palette": "palette", "FolderCog": "folder-cog", "FolderOpen": "folder-open", "Fullscreen": "fullscreen", "Airplay": "airplay", "VenetianMask": "venetian-mask",
+	"LayoutGrid": "layout-grid", "Rows4": "rows-4", "Columns4": "columns-4", "Grip": "grip", "Move3d": "move-3d", "PictureInPicture2": "picture-in-picture-2",
+	"Bug": "bug", "CircleDot": "circle-dot", "CirclePlus": "circle-plus", "CircleMinus": "circle-minus", "Store": "store", "SquareDashedMousePointer": "square-dashed-mouse-pointer", "groupSelection": "blocks",
+	"Scaling": "scaling", "MapPin": "map-pin", "OctagonX": "octagon-x", "Dices": "dices",
+
+	"newDraft": "plus", "newWindow": "app-window", "openFile": "file", "openFolder": "folder-open", "quickOpen": "search", "recentFilesSub": "clock",
+	"reloadFile": "refresh-cw", "saveFile": "save", "saveAs": "download", "moveFile": "external-link", "saveAll": "save-all", "openCurrentProjectFileFolder": "folder-open",
+	"revealInSidebar": "panel-left", "deleteFile": "trash-2", "importTextFile": "upload", "exportSub": "download", "exportSvgAll": "file-down",
+	"exportSvgSelected": "file-down", "exportPngLegacy": "file-image", "exportPngSelected": "file-image", "exportSelectedNetStructureToPlainText": "file-text",
+	"exportSelectedTreeStructureToPlainText": "file-text", "exportSelectedTreeStructureToMarkdown": "file-text", "exportSelectedNetStructureToMermaid": "network",
+	"printFile": "printer", "clickAppMenuSettingsButton": "settings", "closeTab": "x",
+	"helpWhatsNew": "sparkles", "helpQuickStart": "book-open", "helpMarkdown": "file-text", "helpImportExport": "download", "helpThemes": "palette",
+	"helpCanvas": "mouse-pointer-2", "helpRecovery": "refresh-cw", "openOfficialDocs": "book-open", "helpCredits": "heart", "helpChangelog": "file-text",
+	"helpPrivacy": "venetian-mask", "website": "globe", "helpFeedback": "mail", "helpAbout": "info",
+}
 @onready var tabs = %TabContainer
 @onready var overlay: Control = $UIOverlay
 var _command_labels := {}
 var _shortcut_events := {}
 var _menus: Array[PopupMenu] = []
+var _menu_icon_cache := {}
 var _tick := 0.0
 var _last_graph := ""
 var _toast_time := 0.0
@@ -61,10 +100,28 @@ var _context_position := Vector2.ZERO
 var _theme_save_revision := 0
 var _theme_save_pending := false
 var _displayed_theme_light := false
+var _panels_ready := false
+var _settings_ready := false
+var _window_ready := {}
+var _startup_panels_done := false
+var _startup_theme_done := false
+var _startup_documents_done := false
+var _system_theme_light := false
+var _system_theme_poll := 0.0
+
+
+func _enter_tree() -> void:
+	_startup_mark("main.enter_tree.before_children_ready")
+	# 子控件第一次排版就使用最终字体，避免先生成旧字体缓存再全部失效。
+	theme.default_font = preload("res://assets/fonts/PingFang-SC-Regular.ttf")
 
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	var ready_started := Time.get_ticks_usec()
+	var phase_started := ready_started
+	_startup_mark("main.ready.begin")
+	_system_theme_light = _theme_is_light(str(GraphPreferences.value("theme")))
 	get_tree().auto_accept_quit = false
 	get_window().borderless = true
 	get_window().dpi_changed.connect(_apply_ui_scale)
@@ -74,17 +131,28 @@ func _ready() -> void:
 	get_window().close_requested.connect(_request_quit)
 	var screen_fps := DisplayServer.screen_get_refresh_rate(DisplayServer.SCREEN_OF_MAIN_WINDOW)
 	Engine.physics_ticks_per_second = maxi(60, int(screen_fps))
+	_startup_mark("main.ready.window_setup", phase_started)
+	phase_started = Time.get_ticks_usec()
 	_prepare_themes()
+	_startup_mark("main.ready.themes", phase_started)
+	phase_started = Time.get_ticks_usec()
 	_build_command_labels(GraphMenuCatalog.MENUS)
-	_command_labels.merge({"copy": "复制", "paste": "粘贴", "delete": "删除", "selectAll": "全选", "newNode": "新建文本节点", "properties": "节点属性", "welcome": "欢迎页", "commands": "命令面板", "closeTab": "关闭标签页"}, true)
+	_command_labels.merge({"copy": "复制", "paste": "粘贴", "delete": "删除", "selectAll": "全选", "groupSelection": "创建分组", "newNode": "新建文本节点", "properties": "节点 / 连线属性", "addChild": "添加子主题", "addSibling": "添加同级主题", "editNode": "编辑节点文字", "reverseEdge": "反转连线", "openColorManagerWindow": "更改颜色", "welcome": "欢迎页", "commands": "命令面板", "closeTab": "关闭标签页"}, true)
 	_restore_menu_commands($VBoxContainer/Header/MenuBar, GraphMenuCatalog.MENUS)
 	_setup_menus($VBoxContainer/Header/MenuBar)
+	_startup_mark("main.ready.menus", phase_started)
+	phase_started = Time.get_ticks_usec()
 	$UIOverlay/PopupMenu.id_pressed.connect(_on_context_action)
 	_setup_buttons()
-	_setup_panels()
-	_setup_settings()
-	_local_theme.configure(self, _dark_theme, _light_theme)
+	_ensure_panels_ready()
+	$FileActions.setup()
+	_startup_mark("main.ready.buttons", phase_started)
+	phase_started = Time.get_ticks_usec()
+	call_deferred("_finish_deferred_startup")
+	call_deferred("_configure_local_theme")
 	_reload_shortcuts()
+	_startup_mark("main.ready.shortcuts", phase_started)
+	phase_started = Time.get_ticks_usec()
 	tabs.stage_added.connect(_on_stage_added)
 	tabs.stage_closed.connect(_on_stage_closed)
 	tabs.close_requested.connect(_on_close_requested)
@@ -92,13 +160,53 @@ func _ready() -> void:
 	tabs.workspace_saved.connect(_on_saved)
 	for stage in tabs.stages():
 		_on_stage_added(stage)
+	_startup_mark("main.ready.existing_stage_bindings", phase_started)
+	phase_started = Time.get_ticks_usec()
 	%OpenFileDialog.visibility_changed.connect(_file_dialog_visibility_changed)
 	%SaveFileDialog.visibility_changed.connect(_file_dialog_visibility_changed)
 	%SaveFileDialog.canceled.connect(func(): _quitting = false; _pending_close = null)
 	_apply_preferences()
+	_startup_mark("main.ready.dialogs_and_preferences", phase_started)
+	phase_started = Time.get_ticks_usec()
 	$UIOverlay/Welcome.visible = bool(GraphPreferences.value("welcome"))
 	_refresh_recent()
 	_on_tab_changed(tabs.current_tab)
+	_startup_mark("main.ready.recent_and_current_tab", phase_started)
+	_startup_mark("main.ready.complete", ready_started)
+	_startup_open_launch_documents.call_deferred()
+	_startup_wait_for_interactive_frame.call_deferred()
+
+
+func _finish_deferred_startup() -> void:
+	# 浮动窗口不在启动阶段实例化；第一次打开时才加载对应场景。
+	var started := Time.get_ticks_usec()
+	_apply_preferences()
+	_startup_mark("main.deferred.preferences", started)
+	_startup_panels_done = true
+
+
+func _ensure_settings_ready() -> void:
+	if _settings_ready:
+		return
+	_setup_settings()
+	_settings_ready = true
+	_reload_shortcuts()
+
+
+func _ensure_panels_ready() -> void:
+	if _panels_ready:
+		return
+	_setup_panels()
+	_panels_ready = true
+
+
+func _configure_local_theme() -> void:
+	await get_tree().process_frame
+	var started := Time.get_ticks_usec()
+	_local_theme.configure(self, _dark_theme, _light_theme)
+	_local_theme.apply(_displayed_theme_light)
+	_startup_mark("main.deferred.local_theme", started)
+	_startup_theme_done = true
 
 
 func _panel(name: String) -> Node:
@@ -119,16 +227,17 @@ func _build_command_labels(items: Array) -> void:
 
 
 func _restore_menu_commands(parent: Node, definitions: Array) -> void:
-	# PopupMenu 的条目 metadata 不随场景保存；每次启动按配置恢复命令。
+	# PopupMenu 的条目 metadata 不随场景保存；每次启动按菜单目录恢复命令。
 	for definition in definitions:
 		if definition.type != "topMenu":
 			continue
 		var popup := parent.get_node_or_null(str(definition.id)) as PopupMenu
 		if popup != null:
-			_bind_popup_commands(popup, definition.children)
+			popup.set_meta("menu_definitions", definition.get("children", []))
+			_bind_menu_commands(popup, definition.get("children", []))
 
 
-func _bind_popup_commands(popup: PopupMenu, definitions: Array) -> void:
+func _bind_menu_commands(popup: PopupMenu, definitions: Array) -> void:
 	for definition in definitions:
 		if definition.type == "recentFiles":
 			popup.set_meta("recent_files", true)
@@ -143,15 +252,17 @@ func _bind_popup_commands(popup: PopupMenu, definitions: Array) -> void:
 			else:
 				var submenu := popup.get_node_or_null(str(definition.id)) as PopupMenu
 				if submenu != null:
+					submenu.set_meta("menu_definitions", definition.get("children", []))
 					popup.set_item_submenu(index, str(submenu.name))
-					_bind_popup_commands(submenu, definition.children)
+					_bind_menu_commands(submenu, definition.get("children", []))
 			break
 
 
 func _setup_menus(node: Node) -> void:
 	for child in node.get_children():
 		if child is PopupMenu:
-			child.theme = _light_theme if _displayed_theme_light else _dark_theme
+			var initial_light := _theme_is_light(str(GraphPreferences.value("theme")))
+			child.theme = _light_theme if initial_light else _dark_theme
 			child.about_to_popup.connect(_sync_window_theme.bind(child))
 			_menus.append(child)
 			child.id_pressed.connect(_on_menu_pressed.bind(child))
@@ -161,24 +272,113 @@ func _setup_menus(node: Node) -> void:
 
 
 func _refresh_menu(popup: PopupMenu) -> void:
-	if popup.get_meta("recent_files", false):
-		popup.clear()
-		var paths := GraphPreferences.recent_files()
-		for index in mini(paths.size(), 12):
-			popup.add_item(paths[index].get_file())
-			popup.set_item_metadata(index, "recent:" + paths[index])
-			popup.set_item_tooltip(index, paths[index])
-			popup.set_item_disabled(index, not FileAccess.file_exists(paths[index]))
+	if popup.has_meta("menu_definitions"):
+		_rebuild_menu_items(popup, popup.get_meta("menu_definitions"))
 		return
-	for index in popup.item_count:
-		var command: Variant = popup.get_item_metadata(index)
-		if not command is String:
+	if popup.get_meta("recent_files", false):
+		_rebuild_recent_menu(popup)
+
+
+func _rebuild_menu_items(popup: PopupMenu, definitions: Array) -> void:
+	popup.clear()
+	var pending_separator := false
+	for definition in definitions:
+		var type := str(definition.get("type", ""))
+		if type == "separator":
+			pending_separator = popup.item_count > 0
 			continue
-		popup.set_item_disabled(index, not _available(command))
-		if not SUPPORTED.has(command):
-			popup.set_item_tooltip(index, "此功能暂不可用")
-		elif _shortcut_events.has(command):
-			popup.set_item_accelerator(index, _shortcut_events[command].get_keycode_with_modifiers())
+		if type == "recentFiles":
+			if _recent_file_count() == 0:
+				continue
+			if pending_separator:
+				popup.add_separator()
+				pending_separator = false
+			_rebuild_recent_menu(popup)
+			continue
+		if type == "item":
+			var command := str(definition.get("id", ""))
+			if not SUPPORTED.has(command):
+				continue
+			if pending_separator:
+				popup.add_separator()
+				pending_separator = false
+			var index := popup.item_count
+			popup.add_icon_item(_menu_icon(definition, command), _menu_label(definition, command))
+			popup.set_item_metadata(index, command)
+			popup.set_item_disabled(index, not _available(command))
+			# 顶栏菜单保持紧凑；快捷键仍可在命令面板和设置中查看。
+			continue
+		if type == "sub":
+			var children: Array = definition.get("children", [])
+			var submenu := popup.get_node_or_null(str(definition.get("id", ""))) as PopupMenu
+			if submenu == null:
+				submenu = PopupMenu.new()
+				submenu.name = str(definition.get("id", "submenu"))
+				popup.add_child(submenu)
+				_setup_menus(submenu)
+			submenu.set_meta("menu_definitions", children)
+			_rebuild_menu_items(submenu, children)
+			if submenu.item_count == 0:
+				continue
+			if pending_separator:
+				popup.add_separator()
+				pending_separator = false
+			var submenu_id := str(definition.get("id", submenu.name))
+			var index := popup.item_count
+			popup.add_submenu_item(_menu_label(definition, submenu_id), submenu.name)
+			popup.set_item_icon(index, _menu_icon(definition, submenu_id))
+
+
+func _menu_label(definition: Dictionary, fallback_id: String) -> String:
+	return str(definition.get("label", fallback_id))
+
+
+func _menu_icon(definition: Dictionary, fallback_id: String) -> Texture2D:
+	var icon_key := str(definition.get("icon", fallback_id))
+	var icon_file := str(MENU_ICON_FILES.get(icon_key, MENU_ICON_FILES.get(fallback_id, "circle-help")))
+	var path := MENU_ICON_BASE + icon_file + ".svg"
+	var color := "#" + Palette.color(_displayed_theme_light, "icon.default").to_html(false)
+	var cache_key := path + "|" + color + "|" + str(MENU_ICON_SIZE)
+	if not _menu_icon_cache.has(cache_key):
+		_menu_icon_cache[cache_key] = _load_menu_icon(path, color)
+	return _menu_icon_cache[cache_key] as Texture2D
+
+
+func _load_menu_icon(path: String, color: String) -> Texture2D:
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return null
+	var svg := file.get_as_text()
+	file.close()
+	svg = svg.replace("currentColor", color)
+	svg = svg.replace("width=\"20\"", "width=\"%d\"" % MENU_ICON_SIZE)
+	svg = svg.replace("height=\"20\"", "height=\"%d\"" % MENU_ICON_SIZE)
+	# Godot re-rasterizes this SVG for the current viewport scale.
+	return DPITexture.create_from_string(svg)
+
+
+
+func _rebuild_recent_menu(popup: PopupMenu) -> void:
+	popup.clear()
+	var paths := GraphPreferences.recent_files()
+	for path in paths:
+		if popup.item_count >= 12:
+			break
+		if not FileAccess.file_exists(path):
+			continue
+		var index := popup.item_count
+		var recent_definition := {"icon": "File", "label": path.get_file()}
+		popup.add_icon_item(_menu_icon(recent_definition, "recent:" + path), _menu_label(recent_definition, "recent:" + path))
+		popup.set_item_metadata(index, "recent:" + path)
+		popup.set_item_tooltip(index, path)
+
+
+func _recent_file_count() -> int:
+	var count := 0
+	for path in GraphPreferences.recent_files():
+		if FileAccess.file_exists(path):
+			count += 1
+	return count
 
 
 func _on_menu_pressed(id: int, popup: PopupMenu) -> void:
@@ -192,11 +392,25 @@ func _available(command: String) -> bool:
 		return true
 	if not SUPPORTED.has(command):
 		return false
+	if command in $FileActions.COMMANDS:
+		return $FileActions.available(command)
+	if command in $HelpActions.COMMANDS:
+		return true
 	var stage: Stage = tabs.get_current_stage()
+	if stage == null and command in ["saveFile", "saveAs", "closeTab", "newNode", "paste", "selectAll", "clearStage", "manualBackup", "searchText", "openOutlineWindow", "openReferencesWindow", "openColorManagerWindow", "resetViewAll", "resetView", "resetCameraScale", "moveViewToOrigin", "stopDrifting", "releaseKeys", "focusRandomEntity", "updateReferences", "openCurrentProjectFileFolder", "generateNodeTreeByText", "generateNodeTreeByMarkdown", "generateNodeGraphByText", "generateNodeMermaidByText", "importTextFile", "modeSelect", "modeDraw", "modeConnect"]:
+		return false
 	if command in ["undo", "redo"]:
 		return stage != null and (stage.history.can_undo() if command == "undo" else stage.history.can_redo())
-	if command in ["delete", "copy", "properties", "exportSvgSelected", "exportPngSelected"]:
+	if command in ["delete", "copy", "properties", "exportSvgSelected", "exportPngSelected", "exportSelectedNetStructureToPlainText", "exportSelectedTreeStructureToPlainText", "exportSelectedTreeStructureToMarkdown", "exportSelectedNetStructureToMermaid"]:
 		return stage != null and not stage.selected_objects().is_empty()
+	if command in ["addChild", "addSibling", "editNode"]:
+		return stage != null and stage.selected_objects().size() == 1 and stage.selected_objects()[0] is TextNode
+	if command == "reverseEdge":
+		return stage != null and stage.selected_objects().size() == 1 and stage.selected_objects()[0] is LineEdge
+	if command == "groupSelection":
+		return stage != null and stage.drag_entities().size() >= 2
+	if command in ["exportSvgAll", "exportPngLegacy", "printFile"]:
+		return stage != null and not stage.stage_objects().is_empty()
 	return true
 
 
@@ -226,52 +440,15 @@ func _setup_buttons() -> void:
 
 
 func _setup_panels() -> void:
+	# 这里只连接启动必需的确认框和文件对话框；浮动窗口由 _ensure_window_ready 按需加载。
 	for dialog in overlay.get_children():
 		if dialog is Window:
-			dialog.theme = _light_theme if _displayed_theme_light else _dark_theme
 			dialog.visibility_changed.connect(_sync_visible_window_theme.bind(dialog))
-			DialogTheme.apply_controls(dialog)
-			$DialogMotion.register_window(dialog)
 		if dialog is AcceptDialog:
 			dialog.transparent_bg = true
 			dialog.get_ok_button().theme_type_variation = "DialogPrimaryButton"
 			if dialog is ConfirmationDialog:
 				dialog.get_cancel_button().theme_type_variation = "DialogButton"
-	for name in WINDOWS:
-		var window := overlay.get_node(name) as Window
-		window.close_requested.connect(window.hide)
-		window.window_input.connect(_on_window_input.bind(window))
-		window.visibility_changed.connect(_update_text_input_gate)
-	_panel("FindWindow").get_node("Query").text_changed.connect(_refresh_find)
-	_panel("FindWindow").get_node("Query").text_submitted.connect(func(_text): _step_find(1))
-	_panel("FindWindow").get_node("Options/Case").toggled.connect(func(_value): _refresh_find())
-	var scope := _panel("FindWindow").get_node("Options/Scope") as OptionButton
-	for label in ["整个舞台", "选中内容", "选中内容范围"]:
-		scope.add_item(label)
-	scope.item_selected.connect(func(_index): _refresh_find())
-	_panel("FindWindow").get_node("Results").item_activated.connect(_focus_find)
-	_panel("FindWindow").get_node("Results").item_selected.connect(_focus_find)
-	_panel("FindWindow").get_node("Actions/Previous").pressed.connect(_step_find.bind(-1))
-	_panel("FindWindow").get_node("Actions/Next").pressed.connect(_step_find.bind(1))
-	_panel("FindWindow").get_node("Actions/Select").pressed.connect(_select_find_results)
-	_panel("OutlineWindow").get_node("Header/Refresh").pressed.connect(_refresh_outline)
-	_panel("OutlineWindow").get_node("Tree").item_selected.connect(_focus_outline)
-	_panel("ReferencesWindow").get_node("Results").item_activated.connect(_focus_reference)
-	_panel("NodeDetailsWindow").get_node("Actions/Apply").pressed.connect(_apply_details)
-	_panel("NodeDetailsWindow").get_node("Actions/Delete").pressed.connect(_run.bind("delete"))
-	_panel("RecentFilesWindow").get_node("Query").text_changed.connect(func(_text): _refresh_recent())
-	_panel("RecentFilesWindow").get_node("Files").item_activated.connect(_open_recent)
-	_panel("RecentFilesWindow").get_node("Actions/Open").pressed.connect(func(): _open_recent(-1))
-	_panel("RecentFilesWindow").get_node("Actions/Remove").pressed.connect(_remove_recent)
-	_panel("RecentFilesWindow").get_node("Actions/Clear").pressed.connect(func(): GraphPreferences.set_recent(PackedStringArray()); _refresh_recent())
-	_panel("CommandPalette").get_node("Query").text_changed.connect(_refresh_commands)
-	_panel("CommandPalette").get_node("Query").text_submitted.connect(func(_text): _activate_command(-1))
-	_panel("CommandPalette").get_node("Results").item_activated.connect(_activate_command)
-	var modes := _panel("GenerateNodeWindow").get_node("Mode") as OptionButton
-	for label in ["缩进文本 → 树形节点", "Markdown → 树形节点", "每行 → 独立节点"]:
-		modes.add_item(label)
-	_panel("GenerateNodeWindow").get_node("Generate").pressed.connect(_generate)
-	_panel("ColorWindow").get_node("Apply").pressed.connect(_apply_color)
 	$UIOverlay/UnsavedDialog.add_button("不保存", false, "discard").theme_type_variation = "DialogButton"
 	$UIOverlay/UnsavedDialog.confirmed.connect(_save_before_close)
 	$UIOverlay/UnsavedDialog.custom_action.connect(func(_action): _discard_close())
@@ -280,37 +457,140 @@ func _setup_panels() -> void:
 	$UIOverlay/ExportDialog.file_selected.connect(_export_file)
 	$UIOverlay/ImportDialog.file_selected.connect(_import_text)
 
+func _ensure_window_ready(name: String) -> Window:
+	if _window_ready.has(name):
+		return _window_ready[name] as Window
+	var path: String = WINDOW_SCENES.get(name, "")
+	if path.is_empty():
+		return null
+	var packed := load(path) as PackedScene
+	if packed == null:
+		return null
+	var window := packed.instantiate() as Window
+	if window == null:
+		return null
+	window.name = name
+	overlay.add_child(window)
+	_window_ready[name] = window
+	window.theme = _light_theme if _displayed_theme_light else _dark_theme
+	window.close_requested.connect(window.hide)
+	window.window_input.connect(_on_window_input.bind(window))
+	window.visibility_changed.connect(_update_text_input_gate)
+	$DialogMotion.register_window(window)
+	_setup_window_connections(name)
+	return window
+
+func _setup_window_connections(name: String) -> void:
+	match name:
+		"HelpWindow":
+			$HelpActions.setup()
+		"FindWindow":
+			_panel(name).get_node("Query").text_changed.connect(_refresh_find)
+			_panel(name).get_node("Query").text_submitted.connect(func(_text): _step_find(1))
+			_panel(name).get_node("Options/Case").toggled.connect(func(_value): _refresh_find())
+			var scope := _panel(name).get_node("Options/Scope") as OptionButton
+			for label in ["整个舞台", "选中内容", "选中内容范围"]:
+				scope.add_item(label)
+			scope.item_selected.connect(func(_index): _refresh_find())
+			_panel(name).get_node("Results").item_activated.connect(_focus_find)
+			_panel(name).get_node("Results").item_selected.connect(_focus_find)
+			_panel(name).get_node("Actions/Previous").pressed.connect(_step_find.bind(-1))
+			_panel(name).get_node("Actions/Next").pressed.connect(_step_find.bind(1))
+			_panel(name).get_node("Actions/Select").pressed.connect(_select_find_results)
+		"OutlineWindow":
+			_panel(name).get_node("Header/Refresh").pressed.connect(_refresh_outline)
+			_panel(name).get_node("Tree").item_selected.connect(_focus_outline)
+		"ReferencesWindow":
+			_panel(name).get_node("Results").item_activated.connect(_focus_reference)
+		"NodeDetailsWindow":
+			_panel(name).get_node("Actions/Reverse").pressed.connect(_reverse_edge)
+			_panel(name).get_node("Actions/Apply").pressed.connect(_apply_details)
+			_panel(name).get_node("Actions/Delete").pressed.connect(_run.bind("delete"))
+		"RecentFilesWindow":
+			_panel(name).get_node("Query").text_changed.connect(func(_text): _refresh_recent())
+			_panel(name).get_node("Files").item_activated.connect(_open_recent)
+			_panel(name).get_node("Actions/Open").pressed.connect(func(): _open_recent(-1))
+			_panel(name).get_node("Actions/Remove").pressed.connect(_remove_recent)
+			_panel(name).get_node("Actions/Clear").pressed.connect(func(): GraphPreferences.set_recent(PackedStringArray()); _refresh_recent())
+		"CommandPalette":
+			_panel(name).get_node("Query").text_changed.connect(_refresh_commands)
+			_panel(name).get_node("Query").text_submitted.connect(func(_text): _activate_command(-1))
+			_panel(name).get_node("Results").item_activated.connect(_activate_command)
+		"GenerateNodeWindow":
+			var modes := _panel(name).get_node("Mode") as OptionButton
+			for label in ["缩进文本 → 树形节点", "Markdown → 树形节点", "每行 → 独立节点"]:
+				modes.add_item(label)
+			_panel(name).get_node("Generate").pressed.connect(_generate)
+		"ColorWindow":
+			var panel := _panel(name)
+			for swatch in panel.get_node("Palette").get_children():
+				swatch.pressed.connect(func():
+					panel.get_node("ColorRow/Hex").text = "#" + (swatch.get_meta("palette_color") as Color).to_html(true)
+					_update_color_input()
+				)
+			panel.get_node("ColorRow/Hex").text_changed.connect(func(_text): _update_color_input())
+			panel.get_node("ColorRow/Hex").text_submitted.connect(func(_text): _apply_color())
+			panel.get_node("Apply").pressed.connect(_apply_color)
+			panel.get_node("Reset").pressed.connect(_apply_color.bind(true))
+
+
+func _apply_dialog_theme(window: Window) -> void:
+	if window.has_meta("_dialog_theme_applied"):
+		return
+	DialogTheme.apply_controls(window)
+	window.set_meta("_dialog_theme_applied", true)
+
 
 func _show_panel(name: String) -> void:
 	$UIOverlay/Welcome.hide()
 	var stage: Stage = tabs.get_current_stage()
 	if stage != null:
 		stage.finish_text_editing()
-	var window := overlay.get_node(name) as Window
+	_ensure_panels_ready()
+	var window := _ensure_window_ready(name)
+	if window == null:
+		return
+	_apply_dialog_theme(window)
 	var viewport_size := get_viewport_rect().size
 	window.size = Vector2i(Vector2(window.size).min(viewport_size * 0.9))
 	_sync_window_theme(window)
+	# Prepare command rows before showing the window to avoid an empty first frame.
+	if name == "CommandPalette":
+		_refresh_commands()
 	window.popup_centered()
 	match name:
 		"FindWindow":
 			_refresh_find()
 			_panel(name).get_node("Query").grab_focus()
 		"CommandPalette":
-			_refresh_commands()
 			_panel(name).get_node("Query").grab_focus()
+		"ColorWindow":
+			_refresh_color_swatches()
+			_update_color_input()
 		"OutlineWindow": _refresh_outline()
 		"ReferencesWindow": _refresh_references()
-		"NodeDetailsWindow": _refresh_details()
+		"NodeDetailsWindow":
+			_details_id = ""
+			_refresh_details()
 		"RecentFilesWindow": _refresh_recent()
 
 
 func _run(command: String) -> void:
+	var active_stage: Stage = tabs.get_current_stage()
+	if active_stage != null and active_stage.history._busy:
+		return
 	if not _available(command):
 		return
 	var stage: Stage = tabs.get_current_stage()
 	if command.begins_with("recent:"):
 		tabs.load_files(PackedStringArray([command.trim_prefix("recent:")]))
 		$UIOverlay/Welcome.hide()
+		return
+	if command in $FileActions.COMMANDS:
+		$FileActions.run(command)
+		return
+	if command in $HelpActions.COMMANDS:
+		$HelpActions.run(command)
 		return
 	match command:
 		"newDraft":
@@ -321,6 +601,11 @@ func _run(command: String) -> void:
 		"saveAs": tabs.request_save_as()
 		"closeTab": tabs.close_tab(tabs.current_tab)
 		"newNode": stage.create_text_node("...", stage.camera.target_position).enter_edit_mode()
+		"addChild", "addSibling":
+			if WorkspaceActions.add_branch(stage, command == "addSibling") == null:
+				_toast("请先选择一个文本节点")
+		"editNode": (stage.selected_objects()[0] as TextNode).enter_edit_mode()
+		"reverseEdge": _reverse_edge()
 		"welcome": $UIOverlay/Welcome.show(); _refresh_recent()
 		"commands": _show_panel("CommandPalette")
 		"searchText": _show_panel("FindWindow")
@@ -339,6 +624,9 @@ func _run(command: String) -> void:
 		"redo": stage.history.redo()
 		"copy": WorkspaceActions.copy_selection(stage)
 		"paste": WorkspaceActions.paste(stage)
+		"groupSelection":
+			if WorkspaceActions.group_selection(stage) != null:
+				_toast("已创建分组")
 		"delete": stage.delete_objects(stage.selected_objects())
 		"selectAll": stage.select_all()
 		"resetViewAll": stage.focus_objects(stage.stage_objects())
@@ -358,11 +646,13 @@ func _run(command: String) -> void:
 				stage.focus_objects([object])
 		"updateReferences": _refresh_references(); _refresh_outline()
 		"closeAllSubWindows":
-			for name in WINDOWS:
-				overlay.get_node(name).hide()
-		"generateNodeTreeByText", "generateNodeTreeByMarkdown", "generateNodeGraphByText":
-			_panel("GenerateNodeWindow").get_node("Mode").select(1 if command == "generateNodeTreeByMarkdown" else (2 if command == "generateNodeGraphByText" else 0))
+			for name in _window_ready:
+				_window_ready[name].hide()
+		"generateNodeTreeByText", "generateNodeTreeByMarkdown", "generateNodeGraphByText", "generateNodeMermaidByText":
+			_panel("GenerateNodeWindow").get_node("Mode").select(1 if command == "generateNodeTreeByMarkdown" else (2 if command in ["generateNodeGraphByText", "generateNodeMermaidByText"] else 0))
 			_show_panel("GenerateNodeWindow")
+			if command == "generateNodeMermaidByText":
+				_toast("Mermaid 专用解析尚未完成，当前先按文本节点生成")
 		"clearStage": $UIOverlay/ConfirmClear.popup_centered()
 		"modeSelect", "modeDraw", "modeConnect":
 			stage.finish_interaction()
@@ -374,7 +664,7 @@ func _run(command: String) -> void:
 			var show_grid := not bool(GraphPreferences.value("grid_h")) or not bool(GraphPreferences.value("grid_v"))
 			GraphPreferences.set_value("grid_h", show_grid)
 			_set_preference("grid_v", show_grid)
-		"theme": _set_preference("theme", "light" if GraphPreferences.value("theme") == "mocha" else "mocha")
+		"theme": _set_preference("theme", "mocha" if _theme_is_light(str(GraphPreferences.value("theme"))) else "light")
 		"checkoutClassroomMode": _toggle_preference("classroom")
 		"checkoutProtectPrivacy": _toggle_preference("privacy")
 		"toggleFullscreen": get_window().mode = Window.MODE_WINDOWED if get_window().mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN
@@ -387,6 +677,14 @@ func _run(command: String) -> void:
 		"openDefaultBackupFolder":
 			DirAccess.make_dir_recursive_absolute("user://backups")
 			OS.shell_open(ProjectSettings.globalize_path("user://backups"))
+		"openExtensionFolder":
+			DirAccess.make_dir_recursive_absolute("user://extensions")
+			OS.shell_open(ProjectSettings.globalize_path("user://extensions"))
+		"openExtensionsWindow": _toast("扩展运行时尚未移植，已保留入口")
+		"openPluginMarket": _toast("扩展市场尚未移植，已保留入口")
+		"downloadTutorialMain", "downloadTutorialShortcutKeys", "downloadTutorialLogicNodes": OS.shell_open("https://project-graph.top")
+		"watchBilibiliVideo2", "watchBilibiliVideo1_6Basic", "watchBilibiliVideo1_6Advanced", "watchBilibiliVideo1_0", "watchBilibiliVideoPyQtUpdated", "watchBilibiliVideoPyQt": OS.shell_open("https://space.bilibili.com/")
+		"showUpgradeGuide": $HelpActions.run("helpWhatsNew")
 		"manualBackup": _backup(stage)
 		"importTextFile":
 			$UIOverlay/ImportDialog.filters = PackedStringArray(["*.txt,*.md;文本和 Markdown"])
@@ -403,7 +701,10 @@ func _setup_settings() -> void:
 	var general := _panel("SettingsWindow").get_node("Tabs/General")
 	general.get_node("Search").text_changed.connect(func(query):
 		for row in general.get_node("Scroll/ContentInset/Rows").get_children():
-			row.visible = query.is_empty() or str(row.get_node("Label").text).containsn(query)
+			if row is Label:
+				row.visible = query.is_empty()
+			else:
+				row.visible = query.is_empty() or str(row.get_node("Label").text).containsn(query)
 	)
 	for field in SETTING_FIELDS:
 		var control := general.get_node("Scroll/ContentInset/Rows/" + field + "/Value")
@@ -424,10 +725,20 @@ func _setup_settings() -> void:
 	var setting_tabs := _panel("SettingsWindow").get_node("Tabs") as TabContainer
 	for index in setting_tabs.get_tab_count():
 		setting_tabs.set_tab_title(index, str(setting_tabs.get_tab_control(index).get_meta("title")))
+	var navigation := _panel("SettingsWindow").get_node("Navigation")
+	for index in setting_tabs.get_tab_count():
+		var page_name := setting_tabs.get_tab_control(index).name
+		navigation.get_node(NodePath(page_name)).pressed.connect(func(): setting_tabs.current_tab = index)
+	setting_tabs.tab_changed.connect(func(index):
+		for page in navigation.get_children():
+			page.set_pressed_no_signal(page.name == setting_tabs.get_tab_control(index).name)
+	)
+	navigation.get_node("General").set_pressed_no_signal(true)
 	var appearance := setting_tabs.get_node("Appearance")
+	appearance.get_node("Theme").add_item("跟随系统")
 	appearance.get_node("Theme").add_item("Catppuccin Mocha")
-	appearance.get_node("Theme").add_item("明亮 · 绿色")
-	appearance.get_node("Theme").item_selected.connect(func(index): _set_preference("theme", "mocha" if index == 0 else "light"))
+	appearance.get_node("Theme").add_item("Catppuccin Latte")
+	appearance.get_node("Theme").item_selected.connect(func(index): _set_preference("theme", ["system", "mocha", "light"][index]))
 	for pair in [["Classroom", "classroom"], ["Privacy", "privacy"], ["Quick", "quick"]]:
 		appearance.get_node(pair[0]).toggled.connect(func(value): _set_preference(pair[1], value))
 	setting_tabs.get_node("Shortcuts/Reset").pressed.connect(_run.bind("resetAllKeyBinds"))
@@ -438,6 +749,8 @@ func _setup_settings() -> void:
 
 func _show_settings(tab: int) -> void:
 	_show_panel("SettingsWindow")
+	_ensure_settings_ready()
+	_apply_preferences()
 	_panel("SettingsWindow").get_node("Tabs").current_tab = tab
 
 
@@ -452,7 +765,7 @@ func _set_preference(key: String, value: Variant) -> void:
 	if error != OK:
 		_show_error("无法保存设置：" + error_string(error))
 	if key == "theme":
-		$ThemeTransition.reveal(_apply_preferences.bind(key, value), _apply_theme_button, str(value) == "light")
+		$ThemeTransition.reveal(_apply_preferences.bind(key, value), _apply_theme_button, _theme_is_light(str(value)))
 		_save_theme_later()
 	else:
 		_apply_preferences(key)
@@ -483,53 +796,99 @@ func _flush_theme_preference() -> void:
 
 
 func _prepare_themes() -> void:
-	theme.default_font = preload("res://assets/fonts/PingFang-SC-Regular.ttf")
-	# 构建完整配色后再挂到控件上；两套主题共享字体和图标。
+	# 深色主题是默认启动路径；明亮主题延迟到首帧后构建，避免启动阶段复制大量 StyleBox。
 	_dark_theme = theme.duplicate(false)
 	_dark_theme.default_font_size = 14
-	_dark_theme.set_type_variation("MutedLabel", "Label")
-	_dark_theme.set_color("font_color", "MutedLabel", Color("#a6adc8"))
-	_light_theme = _dark_theme.duplicate(false)
-	for type in _light_theme.get_type_list():
-		for key in ["font_color", "font_focus_color", "font_hover_color", "font_hovered_color", "font_selected_color", "font_pressed_color", "font_hover_pressed_color", "title_color", "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_selected_color", "icon_unselected_color", "icon_hovered_color"]:
-			_light_theme.set_color(key, type, Color("#24452c"))
-		for key in ["font_unselected_color", "font_placeholder_color"]:
-			_light_theme.set_color(key, type, Color("#617568"))
-		for key in ["font_disabled_color", "icon_disabled_color"]:
-			_light_theme.set_color(key, type, Color("#829589"))
-		_light_theme.set_color("caret_color", type, Color("#24653b"))
-		_light_theme.set_color("selection_color", type, Color("#d9efdc"))
-		for style_name in _light_theme.get_stylebox_list(type):
-			var original := _light_theme.get_stylebox(style_name, type) as StyleBoxFlat
-			if original == null:
-				continue
-			var style := original.duplicate() as StyleBoxFlat
-			if style.bg_color.a > 0:
-				style.bg_color = Color("#f6faf6")
-			if style_name in ["hover", "tab_hovered", "grabber_highlight"]:
-				style.bg_color = Color("#e4f1e7")
-			elif style_name in ["pressed", "hover_pressed", "tab_selected", "selected", "selected_focus"]:
-				style.bg_color = Color("#d9efdc")
-			elif style_name == "scroll":
-				style.bg_color = Color("#edf3ee")
-			elif style_name == "grabber":
-				style.bg_color = Color("#a7bdac")
-			elif style_name == "grabber_pressed":
-				style.bg_color = Color("#50795d")
-			style.border_color = Color("#418856") if style_name in ["focus", "tab_focus"] else Color("#bfd4c3")
-			style.shadow_color = Color(0.13, 0.24, 0.16, 0.12)
-			_light_theme.set_stylebox(style_name, type, style)
-	_light_theme.set_color("font_color", "MutedLabel", Color("#617568"))
+	Palette.configure_theme(_dark_theme, false)
+	_light_theme = null
 	DialogTheme.configure(_dark_theme, false)
-	DialogTheme.configure(_light_theme, true)
+	_configure_popup_menu_theme(_dark_theme, false)
 	Corners.configure_theme(_dark_theme)
+	if _theme_is_light(str(GraphPreferences.value("theme"))):
+		_ensure_light_theme()
+	else:
+		call_deferred("_ensure_light_theme")
+
+
+func _theme_is_light(value: String) -> bool:
+	return Palette.is_light(value)
+
+
+func _theme_option_index(value: String) -> int:
+	return 0 if value == "system" else (2 if Palette.is_light(value) else 1)
+
+
+func _ensure_light_theme() -> void:
+	if _light_theme != null:
+		return
+	_light_theme = _dark_theme.duplicate(false)
+	Palette.configure_theme(_light_theme, true)
+	DialogTheme.configure(_light_theme, true)
+	_configure_popup_menu_theme(_light_theme, true)
 	Corners.configure_theme(_light_theme)
+
+
+func _configure_popup_menu_theme(target: Theme, light: bool) -> void:
+	var surface := Palette.color(light, "surface.raised")
+	var hover := Palette.color(light, "surface.hover")
+	var pressed := Palette.color(light, "surface.selected")
+	var border := Palette.color(light, "border.default")
+	var text := Palette.color(light, "text.primary")
+	var muted := Palette.color(light, "text.secondary")
+	var disabled := Palette.color(light, "text.disabled")
+
+	var panel := StyleBoxFlat.new()
+	panel.bg_color = surface
+	panel.border_color = border
+	panel.set_border_width_all(1)
+	panel.set_corner_radius_all(12)
+	panel.content_margin_left = 8
+	panel.content_margin_right = 8
+	panel.content_margin_top = 8
+	panel.content_margin_bottom = 8
+	panel.shadow_color = Color(0, 0, 0, 0.32 if light else 0.42)
+	panel.shadow_size = 18
+	panel.shadow_offset = Vector2(0, 8)
+	target.set_stylebox("panel", "PopupMenu", panel)
+
+	var item := StyleBoxFlat.new()
+	item.bg_color = Color.TRANSPARENT
+	item.set_corner_radius_all(8)
+	item.content_margin_left = 8
+	item.content_margin_right = 8
+	item.content_margin_top = 4
+	item.content_margin_bottom = 4
+	target.set_stylebox("labeled_separator_left", "PopupMenu", item.duplicate())
+	target.set_stylebox("labeled_separator_right", "PopupMenu", item.duplicate())
+	target.set_stylebox("separator", "PopupMenu", item.duplicate())
+
+	var hover_style := item.duplicate() as StyleBoxFlat
+	hover_style.bg_color = hover
+	target.set_stylebox("hover", "PopupMenu", hover_style)
+	var pressed_style := item.duplicate() as StyleBoxFlat
+	pressed_style.bg_color = pressed
+	target.set_stylebox("pressed", "PopupMenu", pressed_style)
+
+	for key in ["font_color", "font_hover_color", "font_pressed_color", "font_accelerator_color", "font_hover_pressed_color"]:
+		target.set_color(key, "PopupMenu", text)
+	target.set_color("font_disabled_color", "PopupMenu", disabled)
+	target.set_color("font_separator_color", "PopupMenu", muted)
+	target.set_color("font_separator_outline_color", "PopupMenu", Color.TRANSPARENT)
+	target.set_color("font_outline_color", "PopupMenu", Color.TRANSPARENT)
+	target.set_constant("h_separation", "PopupMenu", 8)
+	target.set_constant("icon_max_width", "PopupMenu", 18)
+	target.set_constant("v_separation", "PopupMenu", 2)
+	target.set_constant("item_start_padding", "PopupMenu", 6)
+	target.set_constant("item_end_padding", "PopupMenu", 6)
+	target.set_font_size("font_size", "PopupMenu", 15)
 
 
 func _sync_window_theme(window: Window) -> void:
 	var selected: Theme = _light_theme if _displayed_theme_light else _dark_theme
 	if window.theme != selected:
 		window.theme = selected
+		if window is PopupMenu and window.has_meta("menu_definitions"):
+			_refresh_menu(window)
 
 
 func _sync_visible_window_theme(window: Window) -> void:
@@ -539,8 +898,11 @@ func _sync_visible_window_theme(window: Window) -> void:
 
 func _apply_preferences(changed_key: String = "", theme_override: String = "") -> void:
 	_loading_settings = true
-	var light: bool = (theme_override if not theme_override.is_empty() else str(GraphPreferences.value("theme"))) == "light"
+	var selected_theme := theme_override if not theme_override.is_empty() else str(GraphPreferences.value("theme"))
+	var light: bool = _theme_is_light(selected_theme)
 	_displayed_theme_light = light
+	if light:
+		_ensure_light_theme()
 	if changed_key == "theme":
 		$ThemeTransition._trace_phase("apply_begin")
 	_local_theme.apply(light)
@@ -548,7 +910,7 @@ func _apply_preferences(changed_key: String = "", theme_override: String = "") -
 		$ThemeTransition._trace_phase("visible_controls_updated")
 	if changed_key.is_empty() or changed_key == "ui_scale":
 		_apply_ui_scale()
-	$Background.color = Color("#ffffff") if light else Color("#181825")
+	$Background.color = Palette.color(light, "surface.app")
 	for window in overlay.get_children():
 		if window is Window and window.visible:
 			_sync_window_theme(window)
@@ -561,7 +923,8 @@ func _apply_preferences(changed_key: String = "", theme_override: String = "") -
 		if current_stage != null:
 			current_stage.apply_theme(light)
 		$ThemeTransition._trace_phase("stage_updated")
-		_panel("SettingsWindow").get_node("Tabs/Appearance/Theme").select(1 if light else 0)
+		if _settings_ready:
+			_panel("SettingsWindow").get_node("Tabs/Appearance/Theme").select(_theme_option_index(selected_theme))
 		_loading_settings = false
 		return
 	$DockAutoHide.set_available(not bool(GraphPreferences.value("classroom")), bool(GraphPreferences.value("quick")) and not bool(GraphPreferences.value("classroom")))
@@ -572,6 +935,9 @@ func _apply_preferences(changed_key: String = "", theme_override: String = "") -
 	var mode := int(GraphPreferences.value("left_mode"))
 	for index in 3:
 		$UIOverlay/BottomToolbar/Tools.get_child(index).set_pressed_no_signal(index == mode)
+	if not _settings_ready:
+		_loading_settings = false
+		return
 	var general := _panel("SettingsWindow").get_node("Tabs/General/Scroll/ContentInset/Rows")
 	for field in SETTING_FIELDS:
 		var control := general.get_node(field + "/Value")
@@ -583,7 +949,7 @@ func _apply_preferences(changed_key: String = "", theme_override: String = "") -
 		elif control is SpinBox:
 			control.set_value_no_signal(float(value))
 	var appearance := _panel("SettingsWindow").get_node("Tabs/Appearance")
-	appearance.get_node("Theme").select(1 if light else 0)
+	appearance.get_node("Theme").select(_theme_option_index(selected_theme))
 	for pair in [["Classroom", "classroom"], ["Privacy", "privacy"], ["Quick", "quick"]]:
 		appearance.get_node(pair[0]).set_pressed_no_signal(bool(GraphPreferences.value(pair[1])))
 	_loading_settings = false
@@ -591,11 +957,12 @@ func _apply_preferences(changed_key: String = "", theme_override: String = "") -
 
 func _apply_ui_scale() -> void:
 	var window := get_window()
-	var system_scale := maxf(1.0, DisplayServer.screen_get_scale(window.current_screen))
 	var user_scale := clampf(float(GraphPreferences.value("ui_scale")) / 100.0, 0.75, 2.0)
 	window.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
 	window.content_scale_size = Vector2i.ZERO
-	window.content_scale_factor = system_scale * user_scale
+	# Godot 已经按 GNOME/Wayland 的窗口 DPI 处理显示尺寸；这里仅叠加应用自己的 UI 缩放。
+	# 再乘 DisplayServer.screen_get_scale() 会造成高 DPI 下的重复放大。
+	window.content_scale_factor = user_scale
 	var minimum := Vector2i(Vector2(960, 600) * window.content_scale_factor)
 	var available := DisplayServer.screen_get_usable_rect(window.current_screen).size
 	if available.x > 0 and available.y > 0:
@@ -619,7 +986,8 @@ func _ime_composing() -> bool:
 func _event_from_code(code: int) -> InputEventKey:
 	var event := InputEventKey.new()
 	event.keycode = code & KEY_CODE_MASK
-	event.ctrl_pressed = (code & KEY_MASK_CTRL) != 0
+	event.ctrl_pressed = (code & KEY_MASK_CTRL) != 0 and OS.get_name() != "macOS"
+	event.meta_pressed = (code & KEY_MASK_META) != 0 or ((code & KEY_MASK_CTRL) != 0 and OS.get_name() == "macOS")
 	event.shift_pressed = (code & KEY_MASK_SHIFT) != 0
 	event.alt_pressed = (code & KEY_MASK_ALT) != 0
 	return event
@@ -639,6 +1007,8 @@ func _reload_shortcuts() -> void:
 		event.alt_pressed = bool(data.get("alt", false))
 		event.meta_pressed = bool(data.get("meta", false))
 		_shortcut_events[command] = event
+	if not _settings_ready:
+		return
 	var tree := _panel("SettingsWindow").get_node("Tabs/Shortcuts/Keys") as Tree
 	tree.clear()
 	tree.set_column_title(0, "操作")
@@ -690,12 +1060,27 @@ func _input(event: InputEvent) -> void:
 		$UIOverlay/Welcome.hide()
 		get_viewport().set_input_as_handled()
 		return
+	if event.keycode == KEY_ESCAPE and not _text_input_active():
+		for window in overlay.get_children():
+			if window is Window and window.visible:
+				return
+		var stage: Stage = tabs.get_current_stage()
+		if stage != null:
+			stage.cancel_current_interaction()
+			get_viewport().set_input_as_handled()
+		return
 	for command in _shortcut_events:
 		var binding: InputEventKey = _shortcut_events[command]
 		if binding.get_keycode_with_modifiers() != event.get_keycode_with_modifiers():
 			continue
 		if _text_input_active() and command not in ["saveFile", "saveAs", "openFile", "newDraft", "commands", "toggleFullscreen"]:
 			return
+		if command in ["addChild", "addSibling", "editNode"]:
+			if $UIOverlay/Welcome.visible or not _available(command):
+				return
+			for name in _window_ready:
+				if _window_ready[name].visible:
+					return
 		_run(command)
 		get_viewport().set_input_as_handled()
 		return
@@ -706,8 +1091,8 @@ func _text_input_active() -> bool:
 	var owner := get_viewport().gui_get_focus_owner()
 	if owner != null:
 		owners.append(owner)
-	for name in WINDOWS:
-		var window := overlay.get_node(name) as Window
+	for name in _window_ready:
+		var window: Window = _window_ready[name]
 		if window.visible:
 			owner = window.gui_get_focus_owner()
 			if owner != null:
@@ -728,6 +1113,14 @@ func _update_text_input_gate() -> void:
 
 
 func _process(delta: float) -> void:
+	_system_theme_poll += delta
+	if _system_theme_poll >= 1.0:
+		_system_theme_poll = 0.0
+		if str(GraphPreferences.value("theme")) == "system":
+			var current_system_light := _theme_is_light("system")
+			if current_system_light != _system_theme_light:
+				_system_theme_light = current_system_light
+				_apply_preferences()
 	_update_text_input_gate()
 	_tick += delta
 	if _toast_time > 0:
@@ -752,11 +1145,11 @@ func _process(delta: float) -> void:
 	var graph := JSON.stringify(StageObjectRegistry.capture(stage))
 	if graph != _last_graph:
 		_last_graph = graph
-		if $UIOverlay/OutlineWindow.visible:
+		if _window_ready.has("OutlineWindow") and _window_ready["OutlineWindow"].visible:
 			_refresh_outline()
-		if $UIOverlay/ReferencesWindow.visible:
+		if _window_ready.has("ReferencesWindow") and _window_ready["ReferencesWindow"].visible:
 			_refresh_references()
-		if $UIOverlay/FindWindow.visible:
+		if _window_ready.has("FindWindow") and _window_ready["FindWindow"].visible:
 			_refresh_find()
 
 
@@ -786,9 +1179,9 @@ func _on_stage_closed() -> void:
 
 
 func _selection_changed() -> void:
-	if $UIOverlay/NodeDetailsWindow.visible:
+	if _window_ready.has("NodeDetailsWindow") and _window_ready["NodeDetailsWindow"].visible:
 		_refresh_details()
-	if $UIOverlay/ReferencesWindow.visible:
+	if _window_ready.has("ReferencesWindow") and _window_ready["ReferencesWindow"].visible:
 		_refresh_references()
 
 
@@ -834,13 +1227,17 @@ func _on_window_input(event: InputEvent, window: Window) -> void:
 
 func _refresh_recent() -> void:
 	var all_paths := GraphPreferences.recent_files()
-	var recent := _panel("RecentFilesWindow").get_node("Files") as ItemList
+	var recent: ItemList = null
+	var query := ""
+	if _window_ready.has("RecentFilesWindow"):
+		recent = _window_ready["RecentFilesWindow"].get_node("Margin/Content/Files") as ItemList
+		query = _window_ready["RecentFilesWindow"].get_node("Margin/Content/Query").text
 	var welcome := $UIOverlay/Welcome/Margin/Content/Columns/Start/RecentList as ItemList
-	recent.clear()
+	if recent != null:
+		recent.clear()
 	welcome.clear()
-	var query: String = _panel("RecentFilesWindow").get_node("Query").text
 	for path in all_paths:
-		if query.is_empty() or path.containsn(query):
+		if recent != null and (query.is_empty() or path.containsn(query)):
 			var index := recent.add_item(path.get_file() + "   " + path.get_base_dir())
 			recent.set_item_metadata(index, path)
 			recent.set_item_tooltip(index, path)
@@ -950,6 +1347,9 @@ func _refresh_find(_query: String = "") -> void:
 				var index := list.add_item(object.text.replace("\n", " "))
 				list.set_item_metadata(index, object.id)
 	panel.get_node("Count").text = "%d 个结果" % list.item_count
+	if list.item_count == 0:
+		list.get_v_scroll_bar().hide()
+		list.get_h_scroll_bar().hide()
 
 
 func _find_object(id: String) -> StageObject:
@@ -1056,55 +1456,124 @@ func _refresh_details() -> void:
 	var stage: Stage = tabs.get_current_stage()
 	var panel := _panel("NodeDetailsWindow")
 	var selected := stage.selected_objects() if stage != null else []
-	var object: TextNode = selected[0] as TextNode if selected.size() == 1 else null
-	panel.get_node("Actions/Apply").disabled = object == null
-	panel.get_node("Text").editable = object != null
-	if object == null:
+	var object: StageObject = selected[0] if selected.size() == 1 else null
+	var text_node := object as TextNode
+	var edge := object as LineEdge
+	panel.get_node("Actions/Apply").disabled = text_node == null and edge == null
+	panel.get_node("Actions/Reverse").visible = edge != null
+	panel.get_node("Text").visible = text_node != null
+	panel.get_node("Text").editable = text_node != null
+	for field in ["FontSizeLabel", "FontSize", "WidthLabel", "Width", "FillLabel", "Fill", "TextColorLabel", "TextColor"]:
+		panel.get_node("Fields/" + field).visible = text_node != null
+	for field in ["StrokeLabel", "Stroke", "StrokeWidthLabel", "StrokeWidth", "ArrowLabel", "Arrow"]:
+		panel.get_node("Fields/" + field).visible = edge != null
+	if text_node == null and edge == null:
 		_details_id = ""
-		panel.get_node("Selection").text = "请选择一个文本节点"
+		panel.get_node("Selection").text = "请选择一个文本节点或一条连线"
 		panel.get_node("Text").text = ""
 		return
 	if _details_id == object.id:
 		return
 	_details_id = object.id
+	if edge != null:
+		panel.get_node("Selection").text = "连线"
+		panel.get_node("Fields/Stroke").color = edge.display_stroke_color()
+		panel.get_node("Fields/StrokeWidth").value = edge.stroke_width
+		panel.get_node("Fields/Arrow").button_pressed = edge.show_arrow
+		return
 	panel.get_node("Selection").text = "文本节点"
-	panel.get_node("Text").text = object.text
-	panel.get_node("Fields/FontSize").value = object.font_size
-	panel.get_node("Fields/Width").value = object.fixed_width
-	panel.get_node("Fields/Fill").color = object.fill_color
+	panel.get_node("Text").text = text_node.text
+	panel.get_node("Fields/FontSize").value = text_node.font_size
+	panel.get_node("Fields/Width").value = text_node.fixed_width
+	panel.get_node("Fields/Fill").color = text_node.fill_color
+	panel.get_node("Fields/TextColor").color = text_node.text_color
 
 
 func _apply_details() -> void:
-	var object := _find_object(_details_id) as TextNode
-	if object == null:
+	var object := _find_object(_details_id)
+	if not object is TextNode and not object is LineEdge:
 		_refresh_details()
 		return
 	var stage: Stage = tabs.get_current_stage()
 	var panel := _panel("NodeDetailsWindow")
+	stage.finish_text_editing()
+	stage.finish_interaction()
 	stage.history.begin_transaction()
-	object.text = panel.get_node("Text").text
-	object.font_size = int(panel.get_node("Fields/FontSize").value)
-	object.fixed_width = float(panel.get_node("Fields/Width").value)
-	object.fill_color = panel.get_node("Fields/Fill").color
+	if object is TextNode:
+		object.text = panel.get_node("Text").text
+		object.font_size = int(panel.get_node("Fields/FontSize").value)
+		object.fixed_width = float(panel.get_node("Fields/Width").value)
+		object.fill_color = panel.get_node("Fields/Fill").color
+		object.text_color = panel.get_node("Fields/TextColor").color
+	else:
+		var stroke: Color = panel.get_node("Fields/Stroke").color
+		if stroke != object.display_stroke_color():
+			object.use_theme_color = false
+			object.stroke_color = stroke
+		object.stroke_width = panel.get_node("Fields/StrokeWidth").value
+		object.show_arrow = panel.get_node("Fields/Arrow").button_pressed
 	stage.history.commit()
-	_toast("节点属性已更新")
+	stage.document_changed.emit()
+	_toast("属性已更新")
 
 
-func _apply_color() -> void:
+func _reverse_edge() -> void:
 	var stage: Stage = tabs.get_current_stage()
-	var color: Color = _panel("ColorWindow").get_node("Picker").color
-	if stage.selected_objects().is_empty():
-		_toast("请先选择节点")
+	if stage == null:
 		return
+	var selected := stage.selected_objects()
+	if selected.size() != 1 or not selected[0] is LineEdge:
+		return
+	var edge := selected[0] as LineEdge
+	stage.finish_interaction()
 	stage.history.begin_transaction()
-	for object in stage.selected_objects():
-		if object is TextNode:
-			object.fill_color = color
-		elif object is LineEdge:
-			object.stroke_color = color
-		elif object is PenStroke:
-			object.stroke_color = color
+	var source := edge.source
+	edge.source = edge.target
+	edge.target = source
+	var source_uv := edge.source_uv
+	edge.source_uv = edge.target_uv
+	edge.target_uv = source_uv
 	stage.history.commit()
+	stage.document_changed.emit()
+
+
+func _apply_color(reset := false) -> void:
+	var stage: Stage = tabs.get_current_stage()
+	var panel := _panel("ColorWindow")
+	if stage == null:
+		return
+	if not reset and not _update_color_input():
+		return
+	var color: Color = panel.get_node("ColorRow/Preview").color
+	var target: int = panel.get_node("Target").selected
+	var objects := stage.selected_objects()
+	if objects.is_empty():
+		_toast("请先选择节点、连线或画笔")
+		return
+	stage.finish_text_editing()
+	stage.finish_interaction()
+	stage.history.begin_transaction()
+	var changed := 0
+	for object in objects:
+		if object is TextNode:
+			match target:
+				0: object.fill_color = Color.TRANSPARENT if reset else color
+				1: object.text_color = Color.TRANSPARENT if reset else color
+		elif target == 0 and object is LineEdge:
+			object.stroke_color = Color("#89b4fa") if reset else color
+			object.use_theme_color = reset
+		elif target == 0 and object is PenStroke:
+			object.stroke_color = Color("#cba6f7") if reset else color
+		else:
+			continue
+		changed += 1
+	stage.history.commit()
+	stage.document_changed.emit()
+	_details_id = ""
+	_selection_changed()
+	_toast("已更新 %d 个对象的颜色" % changed if changed > 0 else "所选对象不支持此颜色类型")
+	if changed > 0:
+		_window_ready["ColorWindow"].hide()
 
 
 func _generate() -> void:
@@ -1114,7 +1583,8 @@ func _generate() -> void:
 	if source.strip_edges().is_empty():
 		return
 	var count := WorkspaceActions.generate(stage, source, panel.get_node("Mode").selected)
-	$UIOverlay/GenerateNodeWindow.hide()
+	if _window_ready.has("GenerateNodeWindow"):
+		_window_ready["GenerateNodeWindow"].hide()
 	stage.focus_objects(stage.selected_objects())
 	_toast("已生成 %d 个节点" % count)
 
@@ -1281,6 +1751,13 @@ func _export_png(stage: Stage, selected_only: bool, path: String) -> void:
 func _show_context(world_position: Vector2) -> void:
 	_context_position = world_position
 	var popup := $UIOverlay/PopupMenu as PopupMenu
+	popup.clear()
+	for command in ["newNode", "addChild", "addSibling", "editNode", "properties", "openColorManagerWindow", "reverseEdge", "copy", "paste", "groupSelection", "delete"]:
+		var index := popup.item_count
+		popup.add_item(_command_labels.get(command, command))
+		popup.set_item_metadata(index, command)
+		if _shortcut_events.has(command):
+			popup.set_item_accelerator(index, _shortcut_events[command].get_keycode_with_modifiers())
 	for index in popup.item_count:
 		popup.set_item_disabled(index, not _available(str(popup.get_item_metadata(index))))
 	popup.position = Vector2i(get_viewport().get_mouse_position())
@@ -1299,6 +1776,81 @@ func _on_context_action(id: int) -> void:
 
 func _apply_theme_button(light: bool) -> void:
 	_local_theme.apply_control($VBoxContainer/Header/ThemeMode, light)
+
+
+func _open_launch_documents() -> void:
+	# 安装器的 desktop 入口用 -- 分隔文档参数，路径逐项传递，支持中文与空格。
+	var paths := PackedStringArray()
+	for argument in OS.get_cmdline_user_args():
+		if argument.get_extension().to_lower() == "prg":
+			if FileAccess.file_exists(argument):
+				paths.append(argument)
+			else:
+				_show_error("找不到项目文件：" + argument)
+	if paths.is_empty():
+		return
+	$UIOverlay/Welcome.hide()
+	var initial := tabs.get_current_stage() as Stage
+	var blank := is_instance_valid(initial) and initial.current_file_path.is_empty() and initial.stage_objects().is_empty()
+	await tabs.load_files(paths)
+	if blank and is_instance_valid(initial) and tabs.get_current_stage() != initial:
+		tabs.close_container(initial.get_parent().get_parent())
+
+
+func _startup_open_launch_documents() -> void:
+	var started := Time.get_ticks_usec()
+	await _open_launch_documents()
+	_startup_mark("main.launch_documents.complete", started)
+	_startup_documents_done = true
+
+
+func _startup_wait_for_interactive_frame() -> void:
+	while not (_startup_panels_done and _startup_theme_done and _startup_documents_done):
+		await get_tree().process_frame
+	_startup_mark("main.startup_tasks.complete")
+	if DisplayServer.get_name() == "headless":
+		_startup_mark("main.first_interactive_frame.skipped_headless")
+		return
+	# A rendered frame followed by a frame boundary is a readiness proxy, not input latency.
+	await RenderingServer.frame_post_draw
+	_startup_mark("main.initialized_frame_drawn")
+	await get_tree().process_frame
+	_startup_mark("main.first_interactive_frame.proxy")
+
+func _startup_mark(label: String, started_usec: int = -1) -> void:
+	if not OS.is_debug_build() and not OS.get_cmdline_user_args().has("--startup-profile"):
+		return
+	var now := Time.get_ticks_usec()
+	var duration := "" if started_usec < 0 else " | duration=%.3f ms" % ((now - started_usec) / 1000.0)
+	print("[startup] engine=%.3f ms | %s%s" % [now / 1000.0, label, duration])
+
+# export-cache-invalidation-20260918
+
+
+func _refresh_color_swatches() -> void:
+	var colors: Dictionary = Palette.LATTE if _displayed_theme_light else Palette.MOCHA
+	for swatch in _panel("ColorWindow").get_node("Palette").get_children():
+		var color := Color(colors[str(swatch.get_meta("palette_name"))])
+		swatch.set_meta("palette_color", color)
+		swatch.tooltip_text = str(swatch.get_meta("palette_name")) + " · #" + color.to_html(false)
+		for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
+			var style := StyleBoxFlat.new()
+			style.bg_color = color
+			style.set_corner_radius_all(6)
+			style.border_color = Palette.color(_displayed_theme_light, "border.focus")
+			style.set_border_width_all(2 if state in ["pressed", "focus"] else 0)
+			swatch.add_theme_stylebox_override(state, Corners.style(style, Corners.CONTROL))
+
+
+func _update_color_input() -> bool:
+	var panel := _panel("ColorWindow")
+	var text: String = panel.get_node("ColorRow/Hex").text.strip_edges()
+	var valid := text.begins_with("#") and text.length() in [7, 9] and Color.html_is_valid(text)
+	panel.get_node("Apply").disabled = not valid
+	panel.get_node("Hint").text = "确认后应用到选中对象；Esc 关闭。" if valid else "请输入 #RRGGBB 或 #RRGGBBAA，例如 #cba6f7。"
+	if valid:
+		panel.get_node("ColorRow/Preview").color = Color.html(text)
+	return valid
 
 
 # A SubViewport editor and the root toolbar can both own GUI focus.
@@ -1323,18 +1875,3 @@ func _forward_canvas_text_key(event: InputEvent) -> bool:
 	viewport.push_input(event, true)
 	get_viewport().set_input_as_handled()
 	return true
-
-
-func _refresh_color_swatches() -> void:
-	var colors: Dictionary = Palette.LATTE if _displayed_theme_light else Palette.MOCHA
-	for swatch in _panel("ColorWindow").get_node("Palette").get_children():
-		var color := Color(colors[str(swatch.get_meta("palette_name"))])
-		swatch.set_meta("palette_color", color)
-		swatch.tooltip_text = str(swatch.get_meta("palette_name")) + " · #" + color.to_html(false)
-		for state in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
-			var style := StyleBoxFlat.new()
-			style.bg_color = color
-			style.set_corner_radius_all(6)
-			style.border_color = Palette.color(_displayed_theme_light, "border.focus")
-			style.set_border_width_all(2 if state in ["pressed", "focus"] else 0)
-			swatch.add_theme_stylebox_override(state, Corners.style(style, Corners.CONTROL))

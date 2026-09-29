@@ -1,0 +1,74 @@
+[gd_scene format=3 uid="uid://bq1qbx120wd2r"]
+
+[node name="GenerateNodeWindow" type="Window" unique_id=516433116]
+oversampling_override = 1.0
+title = "从文本生成节点"
+size = Vector2i(720, 520)
+visible = false
+min_size = Vector2i(320, 220)
+
+[node name="DialogBackground" type="Panel" parent="." unique_id=1046578354]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_type_variation = &"DialogSurface"
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1433562246]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Content" type="VBoxContainer" parent="Margin" unique_id=163174903]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Mode" type="OptionButton" parent="Margin/Content" unique_id=2015782634]
+layout_mode = 2
+theme_type_variation = &"DialogOption"
+
+[node name="Input" type="TextEdit" parent="Margin/Content" unique_id=42259981]
+layout_mode = 2
+size_flags_vertical = 3
+placeholder_text = "每行一个节点；缩进表示父子关系。"
+
+[node name="@HScrollBar@22524" type="HScrollBar" parent="Margin/Content/Input" unique_id=1234049950]
+use_parent_material = true
+layout_mode = 0
+offset_top = 8.0
+offset_right = 16.0
+offset_bottom = 16.0
+max_value = 256.0
+
+[node name="@VScrollBar@22525" type="VScrollBar" parent="Margin/Content/Input" unique_id=1441639529]
+visible = false
+use_parent_material = true
+layout_mode = 0
+offset_left = 16.0
+offset_top = 8.0
+offset_right = 24.0
+max_value = 0.0
+
+[node name="@Timer@22526" type="Timer" parent="Margin/Content/Input" unique_id=1794576104]
+wait_time = 0.65
+
+[node name="@Timer@22527" type="Timer" parent="Margin/Content/Input" unique_id=2068137557]
+wait_time = 0.05
+
+[node name="@Timer@22528" type="Timer" parent="Margin/Content/Input" unique_id=767026057]
+wait_time = 3.0
+one_shot = true
+
+[node name="Hint" type="Label" parent="Margin/Content" unique_id=1963223106]
+layout_mode = 2
+text = "生成结果将作为一次操作记录，可撤销。"
+
+[node name="Generate" type="Button" parent="Margin/Content" unique_id=1779724234]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_type_variation = &"DialogButton"
+text = "生成节点"
