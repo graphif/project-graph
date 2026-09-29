@@ -125,8 +125,10 @@ func refresh() -> void:
 					continue
 				# Only replace the visible group's old frame/title. Its members
 				# stay rendered below the 50% cover, including nested groups.
-				item.node.visibility_layer = 0 if replace_group else item.layer
-				if object is LineEdge and item.node != object:
+				var layer: int = 0 if replace_group else item.layer
+				if item.node.visibility_layer != layer:
+					item.node.visibility_layer = layer
+				if object is LineEdge and item.node != object and item.node.z_index != 0:
 					item.node.z_index = 0 # Internal captions belong beneath the cover too.
 
 	for key in _summaries.keys():
@@ -203,35 +205,52 @@ func _exit_tree() -> void:
 func _update_summary(group: TextNode, panel: Panel) -> void:
 	var rect := group.aabb
 	var pixel_scale := maxf(get_global_transform_with_canvas().get_scale().x, 0.01)
+	var summary_key := [rect, pixel_scale, group.text, group.label.get_theme_font("font"), group.label.get_theme_color("font_color"), group.display_background_color(group._display_theme_is_light()), group.display_border_color()]
+	if panel.get_meta("summary_key", []) == summary_key:
+		return
+	panel.set_meta("summary_key", summary_key)
 	var screen_side := maxf(rect.size.x, rect.size.y) * pixel_scale
 	# As in master, skip title drawing below 20 screen pixels.
 	panel.show()
-	panel.position = to_local(rect.position)
+	var panel_position := to_local(rect.position)
+	if panel.position != panel_position:
+		panel.position = panel_position
 	# Keep style geometry in viewport pixels so zoom cannot flatten the corners.
-	panel.scale = Vector2.ONE / pixel_scale
-	panel.size = rect.size * pixel_scale
+	var panel_scale := Vector2.ONE / pixel_scale
+	var panel_size := rect.size * pixel_scale
+	if panel.scale != panel_scale:
+		panel.scale = panel_scale
+	if panel.size != panel_size:
+		panel.size = panel_size
 	panel.z_index = 66 # Translucent cover above detail; external captions remain above it.
 	var title := panel.get_node("Title") as Label
 	title.visible = screen_side >= 20.0
 	title.text = group.text
-	title.add_theme_font_override("font", group.label.get_theme_font("font"))
-	title.add_theme_color_override("font_color", group.label.get_theme_color("font_color"))
+	var title_font := group.label.get_theme_font("font")
+	var title_color := group.label.get_theme_color("font_color")
+	if title.get_theme_font("font") != title_font:
+		title.add_theme_font_override("font", title_font)
+	if title.get_theme_color("font_color") != title_color:
+		title.add_theme_color_override("font_color", title_color)
 	var font := title.get_theme_font("font")
-	var measured := font.get_multiline_string_size(group.text, HORIZONTAL_ALIGNMENT_LEFT, -1, TITLE_FONT_SIZE)
-	measured = measured.max(Vector2.ONE)
-	title.size = measured
+	var measure_key := [group.text, font]
+	if panel.get_meta("measure_key", []) != measure_key:
+		var measured := font.get_multiline_string_size(group.text, HORIZONTAL_ALIGNMENT_LEFT, -1, TITLE_FONT_SIZE).max(Vector2.ONE)
+		title.size = measured
+		panel.set_meta("measure_key", measure_key)
+	var measured := title.size
 	title.scale = Vector2.ONE * minf(panel.size.x * 0.85 / measured.x, panel.size.y * 0.75 / measured.y)
 	title.position = (panel.size - title.size * title.scale) * 0.5
 	var light: bool = group._display_theme_is_light()
 	var background := group.display_background_color(light)
 	background.a = 0.5
-	var style_key := [background, group.display_border_color(), panel.size]
+	var radius := Corners.fitted_radius(panel.size, minf(12.0, minf(panel.size.x, panel.size.y) * 0.25), 2.0)
+	var style_key := [background, group.display_border_color(), radius]
 	if panel.get_meta("style_key", []) != style_key:
 		var style := StyleBoxFlat.new()
 		style.bg_color = background
 		style.border_color = group.display_border_color()
 		style.set_border_width_all(2)
-		var radius := Corners.fitted_radius(panel.size, minf(12.0, minf(panel.size.x, panel.size.y) * 0.25), 2.0)
 		panel.add_theme_stylebox_override("panel", Corners.style(style, radius, true, true))
 		panel.set_meta("style_key", style_key)
 
