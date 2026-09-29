@@ -9,10 +9,25 @@ static var _connection_outlines: Dictionary = {}
 @onready var line: Line2D = %Line
 @onready var arrow_head: Polygon2D = %Head
 
-@export var text := ""
+@export var text := "":
+	set(value):
+		if text == value:
+			return
+		text = value
+		_invalidate_caption_peers()
 
-@export var source: Entity
-@export var target: Entity
+@export var source: Entity:
+	set(value):
+		if source == value:
+			return
+		source = value
+		_invalidate_caption_peers()
+@export var target: Entity:
+	set(value):
+		if target == value:
+			return
+		target = value
+		_invalidate_caption_peers()
 # 保留旧文件字段；连接边由实时几何计算，不把派生端点写入历史。
 @export var source_uv: Vector2 = Vector2(0.5, 0.5)
 @export var target_uv: Vector2 = Vector2(0.5, 0.5)
@@ -33,10 +48,15 @@ static var _connection_outlines: Dictionary = {}
 var _appearance_light: Variant = null
 
 var _geometry_key: Array = []
+var _render_key: Array = []
+var _shaft_points := PackedVector2Array()
+var _caption_curve := Curve2D.new()
+var _head_length := 0.0
 @onready var _unscaled_line_width: float = %Line.width
 
 
 func _ready() -> void:
+	_invalidate_caption_peers()
 	# Container fills use depths 0..64; keep strokes above those backgrounds.
 	z_index = 65
 	line.texture = preload("res://assets/line_antialiasing.res")
@@ -57,52 +77,64 @@ func _process(_delta: float) -> void:
 	# Bake zoom into local geometry so native AA keeps a one-pixel fringe.
 	# World anchors/collision stay unchanged through to_local()/to_global().
 	var pixel_scale := maxf(get_global_transform_with_canvas().get_scale().x, 0.01)
-	line.scale = Vector2.ONE / pixel_scale
-	line.width = maxf(1.0, _unscaled_line_width * pixel_scale) + 2.0
-	arrow_head.scale = Vector2.ONE / pixel_scale
-	arrow_head.antialiased = true
+	var render_scale := Vector2.ONE / pixel_scale
+	if line.scale != render_scale:
+		line.scale = render_scale
+	var render_width := maxf(1.0, _unscaled_line_width * pixel_scale) + 2.0
+	if line.width != render_width:
+		line.width = render_width
+	if arrow_head.scale != render_scale:
+		arrow_head.scale = render_scale
+	if not arrow_head.antialiased:
+		arrow_head.antialiased = true
 	var color := display_stroke_color()
 	if line.default_color != color:
 		line.default_color = color
 		arrow_head.color = color
 	var source_rect := source.aabb
 	var target_rect := target.aabb
-	var key := [source_rect, target_rect, global_transform, line.transform,
-		collision_shape.transform, (arrow_head.get_parent() as Node2D).global_transform, curve_segments]
-	if key == _geometry_key:
-		return
-	_geometry_key = key
-	var anchors := connection_uvs(source_rect, target_rect)
-	var span := anchor(target_rect, anchors[1]) - anchor(source_rect, anchors[0])
-	var center_direction := (target_rect.get_center() - source_rect.get_center()).normalized()
-	modulate.a = smoothstep(0.0, 12.0, maxf(0.0, span.dot(center_direction)))
 	var render_segments := clampi(ceili(curve_segments * sqrt(maxf(1.0, pixel_scale))), curve_segments, 512)
-	var tip := anchor(target_rect, anchors[1])
-	var direction := -anchors[3] if anchors.size() > 3 else (Vector2(0.5, 0.5) - anchors[1]).normalized()
-	var head_length := arrow_length(source_rect, target_rect, anchors, _unscaled_line_width)
-	arrow_head.visible = head_length > 0.0
-	# End the Bezier at the head base with the same tangent as the triangle.
-	# Head orientation follows the smoothly varying outline normal.
-	var shaft_points := connection_curve(source_rect, target_rect, anchors, render_segments, head_length)
-	var world_points := shaft_points.duplicate()
+	var key := [source_rect, target_rect, global_transform, collision_shape.transform,
+		(arrow_head.get_parent() as Node2D).global_transform, render_segments]
+	if key != _geometry_key:
+		_geometry_key = key
+		_render_key.clear()
+		var anchors := connection_uvs(source_rect, target_rect)
+		var span := anchor(target_rect, anchors[1]) - anchor(source_rect, anchors[0])
+		var center_direction := (target_rect.get_center() - source_rect.get_center()).normalized()
+		modulate.a = smoothstep(0.0, 12.0, maxf(0.0, span.dot(center_direction)))
+		var tip := anchor(target_rect, anchors[1])
+		var direction := -anchors[3] if anchors.size() > 3 else (Vector2(0.5, 0.5) - anchors[1]).normalized()
+		_head_length = arrow_length(source_rect, target_rect, anchors, _unscaled_line_width)
+		arrow_head.visible = _head_length > 0.0
+		_shaft_points = connection_curve(source_rect, target_rect, anchors, render_segments, _head_length, true)
+		_caption_curve.clear_points()
+		for point in _shaft_points:
+			_caption_curve.add_point(point)
+		var collision_points := _shaft_points.duplicate()
+		if arrow_head.visible:
+			arrow_head.global_position = tip
+			arrow_head.global_rotation = direction.angle()
+			collision_points.append(tip)
+		# Camera zoom changes only screen geometry, never world collisions.
+		_update_collision_shape(collision_shape.global_transform.affine_inverse() * collision_points)
+	var render_key := [pixel_scale, line.global_transform]
+	if render_key == _render_key:
+		return
+	_render_key = render_key
+	line.points = line.global_transform.affine_inverse() * _shaft_points
 	if arrow_head.visible:
-		arrow_head.global_position = tip
-		arrow_head.global_rotation = direction.angle()
-		var half_width := head_length * 0.4
 		arrow_head.polygon = PackedVector2Array([
 			Vector2.ZERO,
-			Vector2(-head_length, -half_width) * pixel_scale,
-			Vector2(-head_length, half_width) * pixel_scale,
+			Vector2(-_head_length, -_head_length * 0.4) * pixel_scale,
+			Vector2(-_head_length, _head_length * 0.4) * pixel_scale,
 		])
-		world_points.append(tip)
-	var local_points := PackedVector2Array()
-	var collision_points := PackedVector2Array()
-	for point in shaft_points:
-		local_points.append(line.to_local(point))
-	for point in world_points:
-		collision_points.append(collision_shape.to_local(point))
-	line.points = local_points
-	_update_collision_shape(collision_points)
+
+
+func caption_position(fraction: float) -> Vector2:
+	if _caption_curve.point_count == 0:
+		return Vector2.ZERO
+	return to_local(_caption_curve.sample_baked(_caption_curve.get_baked_length() * fraction))
 
 
 # Arrow size follows stroke width, but cannot consume the short connection gap.
@@ -160,7 +192,7 @@ static func anchor(rect: Rect2, uv: Vector2) -> Vector2:
 	return rect.position + rect.size * uv
 
 
-static func connection_curve(from_rect: Rect2, to_rect: Rect2, anchors: PackedVector2Array, segments: int, end_inset: float = 0.0) -> PackedVector2Array:
+static func connection_curve(from_rect: Rect2, to_rect: Rect2, anchors: PackedVector2Array, segments: int, end_inset: float = 0.0, adaptive: bool = false) -> PackedVector2Array:
 	var start := anchor(from_rect, anchors[0])
 	var end := anchor(to_rect, anchors[1])
 	var normal := anchors[2] if anchors.size() > 3 else (anchors[0] - Vector2(0.5, 0.5)) * 2.0
@@ -171,6 +203,12 @@ static func connection_curve(from_rect: Rect2, to_rect: Rect2, anchors: PackedVe
 	var handle := minf(gap * 0.45, 96.0)
 	var control_1 := start + normal * handle
 	var control_2 := end + end_normal * handle
+	if adaptive:
+		# Native adaptive tessellation omits redundant vertices on straight spans.
+		var curve := Curve2D.new()
+		curve.add_point(start, Vector2.ZERO, control_1 - start)
+		curve.add_point(end, control_2 - end, Vector2.ZERO)
+		return curve.tessellate(clampi(ceili(log(maxi(segments, 4)) / log(2.0)), 2, 9), 4.0)
 	var points := PackedVector2Array()
 	var count := maxi(4, segments)
 	for index in range(count + 1):
@@ -260,8 +298,10 @@ func update_caption_collision(size: Vector2, center: Vector2, active: bool) -> v
 	var shape := collision.shape as RectangleShape2D
 	if shape.size != size:
 		shape.size = size.max(Vector2.ONE)
-	collision.position = center
-	collision.disabled = not active
+	if collision.position != center:
+		collision.position = center
+	if collision.disabled == active:
+		collision.disabled = not active
 
 
 func caption_rect() -> Rect2:
@@ -271,21 +311,40 @@ func caption_rect() -> Rect2:
 	return collision.global_transform * collision.shape.get_rect()
 
 
+func _invalidate_caption_peers() -> void:
+	if is_inside_tree():
+		get_parent().remove_meta("caption_peer_fractions")
+
+
+func _exit_tree() -> void:
+	_invalidate_caption_peers()
+
+
 func caption_fraction() -> float:
-	# Opposite-direction edges share a corridor, but need distinct label positions.
-	var peers: Array[LineEdge] = []
-	for child in get_parent().get_children():
-		if child is LineEdge and not child.is_queued_for_deletion() and not child.text.is_empty():
-			if (child.source == source and child.target == target) or (child.source == target and child.target == source):
-				peers.append(child)
-	if peers.size() < 2:
-		return 0.5
-	peers.sort_custom(func(a: LineEdge, b: LineEdge) -> bool: return a.id < b.id)
-	var index := peers.find(self)
-	if index < 0:
-		return 0.5
-	var fraction := float(index + 1) / float(peers.size() + 1)
-	return fraction if source.id < target.id else 1.0 - fraction
+	# Rebuild only when edge topology or caption membership changes. Stage
+	# metadata owns the cache, so closing a document releases it naturally.
+	var stage := get_parent()
+	if not stage.has_meta("caption_peer_fractions"):
+		var corridors: Dictionary = {}
+		for child in stage.get_children():
+			if not child is LineEdge or child.is_queued_for_deletion() or child.text.is_empty():
+				continue
+			if not is_instance_valid(child.source) or not is_instance_valid(child.target):
+				continue
+			var endpoints := [child.source.get_instance_id(), child.target.get_instance_id()]
+			endpoints.sort()
+			if not corridors.has(endpoints):
+				corridors[endpoints] = []
+			corridors[endpoints].append(child)
+		var fractions: Dictionary = {}
+		for peers in corridors.values():
+			peers.sort_custom(func(a: LineEdge, b: LineEdge) -> bool: return a.id < b.id)
+			for index in peers.size():
+				var peer: LineEdge = peers[index]
+				var fraction := float(index + 1) / float(peers.size() + 1)
+				fractions[peer.get_instance_id()] = fraction if peer.source.id < peer.target.id else 1.0 - fraction
+		stage.set_meta("caption_peer_fractions", fractions)
+	return float(stage.get_meta("caption_peer_fractions").get(get_instance_id(), 0.5))
 
 
 func _input(event: InputEvent) -> void:

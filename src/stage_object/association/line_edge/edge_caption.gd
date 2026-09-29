@@ -7,12 +7,10 @@ const Palette = preload("res://src/main/theme_palette.gd")
 @onready var label: Label = $Label
 @onready var editor: AutoSizeTextEdit = $Editor
 var _editing := false
-var _last_points := PackedVector2Array()
-var _last_line_transform := Transform2D.IDENTITY
 var _last_light: Variant = null
 var _last_stroke := Color(-1, -1, -1, -1)
-var _last_fraction := -1.0
 var _centering := false
+var _layout_dirty := true
 
 
 func _ready() -> void:
@@ -33,7 +31,7 @@ func _ready() -> void:
 	editor.grow_vertical = Control.GROW_DIRECTION_END
 	editor.text_changed.connect(_refresh_text)
 	editor.caret_changed.connect(_refresh_text, CONNECT_DEFERRED)
-	label.resized.connect(_center_controls)
+	label.resized.connect(_on_label_resized)
 	visibility_changed.connect(_visibility_changed)
 	editor.hide()
 	_update_style()
@@ -46,17 +44,9 @@ func _process(_delta: float) -> void:
 		return
 	_update_style()
 	_refresh_text()
-	var points := edge.line.points
-	var fraction := edge.caption_fraction()
-	if points != _last_points or edge.line.transform != _last_line_transform or fraction != _last_fraction:
-		_last_fraction = fraction
-		_last_points = points
-		_last_line_transform = edge.line.transform
-		if not points.is_empty():
-			var curve := Curve2D.new()
-			for point in points:
-				curve.add_point(point)
-			position = edge.to_local(edge.line.to_global(curve.sample_baked(curve.get_baked_length() * fraction)))
+	var center := edge.caption_position(edge.caption_fraction())
+	if position != center:
+		position = center
 	_center_controls()
 
 
@@ -65,14 +55,23 @@ func _refresh_text() -> void:
 		editor.text = edge.text
 	var displayed_text := editor.text if _editing else edge.text
 	if label.text != displayed_text:
+		_layout_dirty = true
 		label.text = displayed_text
 		label.reset_size()
 	label.visible = _editing or not edge.text.is_empty()
 	_center_controls()
 
 
+func _on_label_resized() -> void:
+	_layout_dirty = true
+	_center_controls()
+
+
 func _center_controls() -> void:
 	if _centering:
+		return
+	if not _layout_dirty and not _editing:
+		edge.update_caption_collision(label.size, position, label.visible)
 		return
 	_centering = true
 	# TextEdit owns shaping, caret and IME widths; Label's minimum omits the
@@ -92,6 +91,7 @@ func _center_controls() -> void:
 	editor.scroll_horizontal = 0
 	editor.scroll_vertical = 0
 	edge.update_caption_collision(label.size, position, label.visible)
+	_layout_dirty = false
 	_centering = false
 
 
@@ -101,6 +101,7 @@ func _update_style() -> void:
 	var stroke := edge.display_stroke_color()
 	if _last_light == light and _last_stroke == stroke:
 		return
+	_layout_dirty = true
 	_last_light = light
 	_last_stroke = stroke
 	var normal := StyleBoxFlat.new()
