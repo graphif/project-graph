@@ -4,6 +4,7 @@ extends Association
 const Palette = preload("res://src/main/theme_palette.gd")
 const Corners = preload("res://src/main/continuous_corners.gd")
 static var _connection_outlines: Dictionary = {}
+static var _stroke_textures: Dictionary = {}
 
 @onready var collision_shape: CollisionShape2D = %CollisionShape
 @onready var line: Line2D = %Line
@@ -69,9 +70,9 @@ func _ready() -> void:
 	_invalidate_caption_peers()
 	# Container fills use depths 0..64; keep strokes above those backgrounds.
 	z_index = 65
-	line.texture = preload("res://assets/line_antialiasing.res")
-	line.texture_mode = Line2D.LINE_TEXTURE_TILE
-	line.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	line.texture_repeat = CanvasItem.TEXTURE_REPEAT_DISABLED
+	line.texture_mode = Line2D.LINE_TEXTURE_STRETCH
+	line.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_apply_style()
 	line.points = PackedVector2Array()
 	collision_shape.shape = ConcavePolygonShape2D.new()
@@ -90,9 +91,10 @@ func _process(_delta: float) -> void:
 	var render_scale := Vector2.ONE / pixel_scale
 	if line.scale != render_scale:
 		line.scale = render_scale
-	var render_width := maxf(1.0, _unscaled_line_width * pixel_scale) + 2.0
-	if line.width != render_width:
+	var render_width := ceilf((maxf(1.0, _unscaled_line_width * pixel_scale) + 1.0) * 4.0) / 4.0
+	if line.width != render_width or line.texture == null:
 		line.width = render_width
+		line.texture = _stroke_texture(render_width)
 	if arrow_head.scale != render_scale:
 		arrow_head.scale = render_scale
 	if not arrow_head.antialiased:
@@ -139,6 +141,27 @@ func _process(_delta: float) -> void:
 			Vector2(-_head_length, -_head_length * 0.4) * pixel_scale,
 			Vector2(-_head_length, _head_length * 0.4) * pixel_scale,
 		])
+
+
+# A one-screen-pixel alpha ramp survives GLES rendering and zoom. Cache
+# quarter-pixel width buckets so edges share native gradient textures.
+static func _stroke_texture(screen_width: float) -> GradientTexture2D:
+	if _stroke_textures.has(screen_width):
+		return _stroke_textures[screen_width]
+	var gradient := Gradient.new()
+	var fringe := minf(0.5, 1.0 / screen_width)
+	gradient.offsets = PackedFloat32Array([0.0, fringe, 1.0 - fringe, 1.0])
+	gradient.colors = PackedColorArray([Color(1, 1, 1, 0), Color.WHITE, Color.WHITE, Color(1, 1, 1, 0)])
+	var texture := GradientTexture2D.new()
+	texture.width = 2
+	texture.height = 128
+	texture.fill_from = Vector2.ZERO
+	texture.fill_to = Vector2.DOWN
+	texture.gradient = gradient
+	if _stroke_textures.size() >= 256:
+		_stroke_textures.clear()
+	_stroke_textures[screen_width] = texture
+	return texture
 
 
 func caption_position(fraction: float) -> Vector2:
@@ -228,7 +251,7 @@ static func connection_curve(from_rect: Rect2, to_rect: Rect2, anchors: PackedVe
 		var curve := Curve2D.new()
 		curve.add_point(start, Vector2.ZERO, control_1 - start)
 		curve.add_point(end, control_2 - end, Vector2.ZERO)
-		return curve.tessellate(clampi(ceili(log(maxi(segments, 4)) / log(2.0)), 2, 9), 4.0)
+		return curve.tessellate(clampi(ceili(log(maxi(segments, 4)) / log(2.0)) + 2, 4, 9), 0.1 / maxf(1.0, pow(float(segments) / 24.0, 2.0)))
 	var points := PackedVector2Array()
 	var count := maxi(4, segments)
 	for index in range(count + 1):
