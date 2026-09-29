@@ -6,6 +6,11 @@ extends Node2D
 @export_range(1.0, 2000.0) var acceleration := 1200.0
 @export_range(1.0, 600.0) var maximum_speed := 240.0
 @export_range(1.0, 48.0) var minimum_gap := 12.0
+@export_range(0.0, 600.0) var attraction_acceleration := 180.0
+@export_range(0.0, 200.0) var attraction_speed := 80.0
+@export_range(32.0, 600.0) var attraction_distance := 160.0
+
+var _attraction_pending := false
 
 # 用内置哈希表去重，避免求解每个约束时线性扫描已移动节点。
 # 保存实例 ID，避免已删除实体作为类型化对象键时导致遍历报错。
@@ -20,6 +25,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_attraction_pending = false
 	var history := target_root.get_node_or_null("History") as History
 	if not is_visible_in_tree() or not bool(GraphPreferences.value("physics")):
 		stop_motion()
@@ -56,6 +62,8 @@ func _physics_process(delta: float) -> void:
 			weights[child.target] = weights.get(child.target, 0.0) + fraction
 			var container: Entity = child.source.container if child.source.container == child.target.container else null
 			entries.append({"body": child, "rect": rect, "container": container, "weights": weights})
+	_apply_link_attraction(entries, delta)
+	fastest = maxf(fastest, attraction_speed if _attraction_pending else 0.0)
 	entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.rect.position.x < b.rect.position.x)
 	var pairs: Array[Dictionary] = []
 	var pushes: Dictionary[Entity, Vector2] = {}
@@ -131,6 +139,120 @@ func _physics_process(delta: float) -> void:
 			break
 
 
+func _apply_link_attraction(entries: Array[Dictionary], delta: float) -> void:
+	if attraction_acceleration <= 0.0 or attraction_speed <= 0.0:
+		return
+	var adjacent := {}
+	var held := {}
+	var captions_by_source := {}
+	for entry in entries:
+		if entry.body is Entity:
+			var entity: Entity = entry.body
+			if _held(entity) or entity.is_throwing:
+				var cursor: Entity = entity
+				while is_instance_valid(cursor) and not held.has(cursor):
+					held[cursor] = true
+					cursor = cursor.container
+		elif entry.body is LineEdge:
+			var source: Entity = entry.body.source
+			if not captions_by_source.has(source): captions_by_source[source] = []
+			captions_by_source[source].append(entry)
+	for child in target_root.get_children():
+		if not child is LineEdge or child.is_queued_for_deletion() or not child.is_visible_in_tree():
+			continue
+		if not is_instance_valid(child.source) or not is_instance_valid(child.target):
+			continue
+		var a := child.source as TextNode
+		var b := child.target as TextNode
+		if a == null or b == null or a == b or a.is_queued_for_deletion() or b.is_queued_for_deletion():
+			continue
+		if not a.is_visible_in_tree() or not b.is_visible_in_tree():
+			continue
+		if a.is_inside_container(b) or b.is_inside_container(a):
+			continue # Containment is not a spring from a frame to its own contents.
+		if not adjacent.has(a): adjacent[a] = {}
+		if not adjacent.has(b): adjacent[b] = {}
+		adjacent[a][b] = true
+		adjacent[b][a] = true
+	var visited := {}
+	var desired := {}
+	var weights := {}
+	for start in adjacent:
+		if visited.has(start):
+			continue
+		var members: Array[Entity] = [start]
+		visited[start] = true
+		var cursor := 0
+		while cursor < members.size():
+			for neighbor in adjacent[members[cursor]]:
+				if not visited.has(neighbor):
+					visited[neighbor] = true
+					members.append(neighbor)
+			cursor += 1
+		var common: Entity = members[0].container
+		while is_instance_valid(common):
+			var shared := true
+			for member in members:
+				if not member.is_inside_container(common):
+					shared = false
+					break
+			if shared: break
+			common = common.container
+		var units := {}
+		var unit_for := {}
+		for member in members:
+			var unit := member
+			while is_instance_valid(unit.container) and unit.container != common:
+				unit = unit.container
+			units[unit] = true
+			unit_for[member] = unit
+		if units.size() < 2:
+			continue
+		var surfaces: Array[Dictionary] = []
+		for unit in units:
+			surfaces.append({"rect": unit.aabb, "weights": {unit: 1.0}})
+		var component_captions := []
+		for member in members:
+			component_captions.append_array(captions_by_source.get(member, []))
+		for entry in component_captions:
+			var edge: LineEdge = entry.body
+			if not unit_for.has(edge.source) or not unit_for.has(edge.target):
+				continue
+			var mapped := {}
+			for endpoint in entry.weights:
+				var unit: Entity = unit_for[endpoint]
+				mapped[unit] = float(mapped.get(unit, 0.0)) + float(entry.weights[endpoint])
+			surfaces.append({"rect": entry.rect, "weights": mapped})
+		var center := Vector2.ZERO
+		for surface in surfaces:
+			center += (surface.rect as Rect2).get_center()
+		center /= surfaces.size()
+		for surface in surfaces:
+			var rect: Rect2 = surface.rect
+			var offset := center - rect.get_center()
+			var rest := maxf(attraction_distance, rect.size.length() * 0.5 + influence_distance)
+			var speed := minf(attraction_speed, maxf(0.0, offset.length() - rest) * 0.4)
+			var velocity := offset.normalized() * speed
+			for unit in surface.weights:
+				var weight: float = surface.weights[unit]
+				desired[unit] = desired.get(unit, Vector2.ZERO) + velocity * weight
+				weights[unit] = float(weights.get(unit, 0.0)) + weight
+	for unit in desired:
+		if held.has(unit):
+			continue
+		var target_velocity: Vector2 = (desired[unit] / weights[unit]).limit_length(attraction_speed)
+		unit.linear_velocity = unit.linear_velocity.move_toward(target_velocity, attraction_acceleration * delta)
+		if not unit.linear_velocity.is_zero_approx():
+			unit.sleeping = false
+			_track(unit)
+		if target_velocity.length_squared() > 0.25:
+			_attraction_pending = true
+
+
+func has_pending_motion() -> bool:
+	return _attraction_pending
+
+
 func _track(body: Entity) -> void:
 	_moved[body.get_instance_id()] = true
 
@@ -162,6 +284,7 @@ func _separation(a: Rect2, b: Rect2, first_before_second: bool) -> Dictionary:
 
 
 func stop_motion() -> void:
+	_attraction_pending = false
 	for instance_id in _moved:
 		var body := instance_from_id(instance_id) as Entity
 		if is_instance_valid(body) and not _held(body) and not body.is_throwing:

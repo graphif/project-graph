@@ -140,7 +140,8 @@ func _wait_for_physics_settle() -> void:
 	while elapsed < settle_timeout and stable < stable_physics_frames:
 		await get_tree().physics_frame
 		elapsed += 1.0 / Engine.physics_ticks_per_second
-		var moving := false
+		var repulsion := target_root.get_node_or_null("NodeRepulsion")
+		var moving: bool = repulsion != null and repulsion.has_method("has_pending_motion") and repulsion.call("has_pending_motion")
 		for child in target_root.get_children():
 			if child is RigidBody2D and (child.linear_velocity.length() > velocity_threshold or absf(child.angular_velocity) > angular_velocity_threshold):
 				moving = true
