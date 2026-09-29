@@ -132,6 +132,63 @@ func _run() -> void:
 		send_canvas_input(typing)
 		await process_frame
 		check(node.text_edit.text == "Project Graph 你好".insert(expected_column, "X"), "Typing inserts at clicked position without replacing other text")
+	# Exercise native selection and insertion through the root viewport.
+	for zoom in [0.5, 1.0, 2.0]:
+		stage.camera.target_zoom = Vector2.ONE * zoom
+		stage.camera.zoom = stage.camera.target_zoom
+		node.text_edit.text = "首部Middle末尾"
+		node.text_edit.set_caret_column(node.text_edit.text.length())
+		await process_frame
+		await chord(KEY_A, true)
+		check(node.text_edit.get_selected_text() == node.text_edit.text, "Ctrl A selects all at zoom " + str(zoom))
+		await chord(KEY_HOME)
+		check(not node.text_edit.has_selection() and node.text_edit.get_caret_column() == 0, "Home reaches first character")
+		await type_character(88)
+		check(node.text_edit.text == "X首部Middle末尾", "Typing inserts before first character")
+		await chord(KEY_END)
+		check(node.text_edit.get_caret_column() == node.text_edit.text.length(), "End reaches last character")
+		await type_character(89)
+		check(node.text_edit.text == "X首部Middle末尾Y", "Typing appends after last character")
+		await chord(KEY_HOME, false, true)
+		check(node.text_edit.get_selected_text() == node.text_edit.text, "Shift Home selects to first character")
+		await chord(KEY_END, false, true)
+		check(not node.text_edit.has_selection(), "Shift End contracts selection to last character")
+		for column in [0, 4, node.text_edit.text.length()]:
+			var rect := node.text_edit.get_rect_at_line_column(0, column)
+			var pointer := InputEventMouseButton.new()
+			pointer.button_index = MOUSE_BUTTON_LEFT
+			pointer.pressed = true
+			var local_point := Vector2(rect.position) + Vector2(rect.size.x * 0.5, rect.size.y * 0.5)
+			if column == 0:
+				local_point.x = 1.0
+			elif column == node.text_edit.text.length():
+				local_point.x = node.text_edit.size.x - 1.0
+			var expected := node.text_edit.get_line_column_at_pos(local_point).x
+			pointer.position = node.text_edit.get_global_transform_with_canvas() * local_point
+			send_canvas_input(pointer)
+			pointer = pointer.duplicate()
+			pointer.pressed = false
+			send_canvas_input(pointer)
+			await process_frame
+			check(node.text_edit.get_caret_column() == expected and (column != 0 or expected == 0) and (column != node.text_edit.text.length() or expected == column), "Pointer reaches column %d: actual=%d rect=%s focus=%s editing=%s zoom=%s" % [column, node.text_edit.get_caret_column(), rect, node.text_edit.has_focus(), node._editing, zoom])
+		check(node.text_edit.scroll_horizontal == 0, "First and last characters remain visible")
+		var drag_start := InputEventMouseButton.new()
+		drag_start.button_index = MOUSE_BUTTON_LEFT
+		drag_start.pressed = true
+		drag_start.position = node.text_edit.get_global_transform_with_canvas() * Vector2(1, node.text_edit.size.y * 0.5)
+		send_canvas_input(drag_start, true)
+		await process_frame
+		var drag_motion := InputEventMouseMotion.new()
+		drag_motion.button_mask = MOUSE_BUTTON_MASK_LEFT
+		drag_motion.position = node.text_edit.get_global_transform_with_canvas() * Vector2(node.text_edit.size.x - 1, node.text_edit.size.y * 0.5)
+		send_canvas_input(drag_motion, true)
+		await process_frame
+		var drag_end := drag_start.duplicate() as InputEventMouseButton
+		drag_end.position = drag_motion.position
+		drag_end.pressed = false
+		send_canvas_input(drag_end, true)
+		await process_frame
+		check(node.text_edit.get_selected_text() == node.text_edit.text, "Drag from padding selects first through last character: %s" % node.text_edit.get_selected_text())
 	node.exit_edit_mode(false)
 	node.enter_edit_mode()
 	var outside := InputEventMouseButton.new()
@@ -146,7 +203,7 @@ func _run() -> void:
 	print("CANVAS_TEXT_FOCUS: " + ("PASS" if failures.is_empty() else str(failures)))
 	quit(0 if failures.is_empty() else 1)
 
-func send_canvas_input(event: InputEvent) -> void:
+func send_canvas_input(event: InputEvent, update_input_state := false) -> void:
 	var forwarded := event.duplicate()
 	if forwarded is InputEventMouse:
 		var container := stage.get_viewport().get_parent() as Control
@@ -155,5 +212,36 @@ func send_canvas_input(event: InputEvent) -> void:
 		var motion := InputEventMouseMotion.new()
 		motion.position = forwarded.position
 		motion.global_position = forwarded.position
-		root.push_input(motion, true)
-	root.push_input(forwarded, true)
+		if not update_input_state:
+			root.push_input(motion, true)
+	if update_input_state:
+		Input.parse_input_event(forwarded)
+		Input.flush_buffered_events()
+	else:
+		root.push_input(forwarded, true)
+
+
+func chord(code: Key, ctrl := false, shift := false) -> void:
+	var event := InputEventKey.new()
+	event.keycode = code
+	event.ctrl_pressed = ctrl
+	event.shift_pressed = shift
+	event.pressed = true
+	root.push_input(event)
+	await process_frame
+	event = event.duplicate()
+	event.pressed = false
+	root.push_input(event)
+	await process_frame
+
+
+func type_character(unicode: int) -> void:
+	var event := InputEventKey.new()
+	event.unicode = unicode
+	event.pressed = true
+	root.push_input(event)
+	await process_frame
+	event = event.duplicate()
+	event.pressed = false
+	root.push_input(event)
+	await process_frame

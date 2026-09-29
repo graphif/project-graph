@@ -56,6 +56,25 @@ func _run() -> void:
 	stage.get_viewport().push_input(click, true)
 	await process_frame
 	check(edge.get_node("Caption/Editor").has_focus(), "Edge editor focused")
+	var editor := edge.get_node("Caption/Editor") as TextEdit
+	editor.text = ""
+	for character in "这里是，差sdasda中文连续输入ABCDEFGHIJKLMN":
+		editor.insert_text_at_caret(character)
+		await process_frame
+		await process_frame
+		check(editor.scroll_horizontal == 0, "Typing without spaces keeps the prefix visible")
+		check(not editor.get_h_scroll_bar().visible, "Caption has no horizontal scrollbar")
+	var long_size := editor.size.x
+	editor.select_all()
+	editor.insert_text_at_caret("短")
+	await process_frame
+	await process_frame
+	check(editor.size.x < long_size, "Caption shrinks after replacing a long draft")
+	editor.insert_text_at_caret("\n第二行")
+	await process_frame
+	await process_frame
+	check(editor.scroll_vertical == 0, "Explicit newline fits without vertical scrolling")
+	check(edge.z_index + edge.get_node("Caption").z_index > stage.get_node("SelectionOverlay").z_index, "Selection stroke stays behind caption text")
 	edge.get_node("Caption/Editor").text = "依赖关系"
 	edge.get_node("Caption/Editor").text_changed.emit()
 	check(edge.is_text_dirty(), "Edge draft makes document dirty")

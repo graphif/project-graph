@@ -2,6 +2,8 @@
 class_name AutoSizeTextEdit
 extends TextEdit
 
+@export var select_from_padding := false
+
 @export_group("尺寸自适应设置")
 @export var enable_auto_size: bool = true:
 	set(val):
@@ -33,6 +35,8 @@ extends TextEdit
 		_update_size()
 
 
+signal content_metrics_changed
+
 var _ime_was_active := false
 var _ime_end_frame := -10
 
@@ -40,12 +44,13 @@ var _ime_end_frame := -10
 func _notification(what: int) -> void:
 	if what != MainLoop.NOTIFICATION_OS_IME_UPDATE or not has_focus():
 		return
-	var active := not DisplayServer.ime_get_text().is_empty()
+	var active := not composition_text().is_empty()
 	if _ime_was_active and not active:
 		_ime_end_frame = Engine.get_process_frames()
 	_ime_was_active = active
 	# 等 TextEdit 更新预编辑文本后再测量；预编辑不会触发 text_changed。
 	_update_size.call_deferred()
+	content_metrics_changed.emit.call_deferred()
 
 
 func is_ime_composing() -> bool:
@@ -111,3 +116,35 @@ func _update_size() -> void:
 	# 3. 应用尺寸
 	custom_minimum_size = Vector2(target_width, target_height)
 	size = custom_minimum_size
+
+
+func composition_text() -> String:
+	return DisplayServer.ime_get_text() if DisplayServer.has_feature(DisplayServer.FEATURE_IME) else ""
+
+
+func measure_unwrapped(value: String, include_native := false) -> Vector2:
+	var font := get_theme_font("font")
+	var point_size := get_theme_font_size("font_size")
+	var rows := value.split("\n")
+	var width := 0.0
+	var composition := composition_text() if include_native and has_focus() else ""
+	for index in rows.size():
+		var row: String = rows[index]
+		if index == get_caret_line() and not composition.is_empty():
+			var column := get_caret_column()
+			row = row.left(column) + composition + row.substr(column)
+		var row_width := font.get_string_size(row, HORIZONTAL_ALIGNMENT_LEFT, -1, point_size).x
+		if include_native and index < get_line_count():
+			row_width = maxf(row_width, get_line_width(index))
+		width = maxf(width, row_width)
+	return Vector2(ceilf(width), get_line_height() * maxi(1, rows.size()))
+
+
+func _gui_input(event: InputEvent) -> void:
+	# TextEdit treats the left style margin as a gutter and ignores clicks there.
+	# Canvas editors use that margin for centered text; let native selection handle
+	# padding clicks too, without replacing its caret/drag/Shift-selection logic.
+	if select_from_padding and get_gutter_count() == 0 and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		var left := ceilf(get_theme_stylebox("normal").get_content_margin(SIDE_LEFT))
+		if event.position.x >= 0.0 and event.position.x < left:
+			event.position.x = left

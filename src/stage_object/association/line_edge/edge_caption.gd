@@ -19,6 +19,8 @@ func _ready() -> void:
 	editor.gui_input.connect(_editor_input)
 	editor.focus_exited.connect(finish_edit)
 	editor.enable_auto_size = false
+	editor.select_from_padding = true
+	editor.drag_and_drop_selection_enabled = false
 	editor.wrap_mode = TextEdit.LINE_WRAPPING_NONE
 	editor.add_theme_constant_override("wrap_offset", 0)
 	editor.custom_minimum_size = Vector2.ZERO
@@ -26,6 +28,7 @@ func _ready() -> void:
 	editor.grow_horizontal = Control.GROW_DIRECTION_END
 	editor.grow_vertical = Control.GROW_DIRECTION_END
 	editor.text_changed.connect(_refresh_text)
+	editor.caret_changed.connect(_refresh_text, CONNECT_DEFERRED)
 	label.resized.connect(_center_controls)
 	visibility_changed.connect(_visibility_changed)
 	editor.hide()
@@ -52,6 +55,8 @@ func _process(_delta: float) -> void:
 
 
 func _refresh_text() -> void:
+	if not _editing and editor.text != edge.text:
+		editor.text = edge.text
 	var displayed_text := editor.text if _editing else edge.text
 	if label.text != displayed_text:
 		label.text = displayed_text
@@ -64,17 +69,21 @@ func _center_controls() -> void:
 	if _centering:
 		return
 	_centering = true
-	# One background and one layout determine both display and editing bounds.
-	label.size = label.size.max(editor.get_minimum_size())
-	var row_height := ceili(label.get_theme_font("font").get_height(label.get_theme_font_size("font_size"))) + label.get_theme_constant("line_spacing")
-	label.size.y = maxf(label.size.y, row_height * maxi(1, label.get_line_count()) + 8.0)
-	label.position = -label.size * 0.5
-	var input_style := editor.get_theme_stylebox("normal") as StyleBoxFlat
-	if input_style != null:
-		var rows_height := editor.get_line_height() * maxi(1, label.get_line_count())
-		input_style.content_margin_bottom = maxf(0.0, minf(4.0, label.size.y - input_style.content_margin_top - rows_height))
-	editor.size = label.size
+	# TextEdit owns shaping, caret and IME widths; Label's minimum omits the
+	# caret reserve and preedit, so it cannot size the editing surface alone.
+	var content_size := label.get_minimum_size().max(editor.get_minimum_size())
+	var metrics := editor.measure_unwrapped(editor.text, true)
+	var margins := editor.get_theme_stylebox("normal").get_minimum_size()
+	content_size.x = maxf(content_size.x, metrics.x + margins.x + 32.0)
+	content_size.y = maxf(content_size.y, ceilf(metrics.y + margins.y + 4.0))
+	label.size = content_size
+	label.position = -content_size * 0.5
+	editor.size = content_size
 	editor.position = label.position
+	# TextEdit may scroll when a caret event precedes the deferred size update.
+	# Once the complete line fits, discard that obsolete horizontal offset.
+	editor.scroll_horizontal = 0
+	editor.scroll_vertical = 0
 	_centering = false
 
 
@@ -175,6 +184,10 @@ func _label_input(event: InputEvent) -> void:
 
 
 func _editor_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and event.double_click:
+		editor.select_all.call_deferred()
+		editor.accept_event()
+		return
 	if editor.is_ime_composing() or not event is InputEventKey or not event.pressed or event.unicode >= 32:
 		return
 	if editor.is_ime_commit_pending():

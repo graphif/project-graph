@@ -57,6 +57,7 @@ var _collision_update_pending := false
 func _ready() -> void:
 	# Click selected text to place the caret instead of dragging the selection.
 	text_edit.drag_and_drop_selection_enabled = false
+	text_edit.select_from_padding = true
 	text_edit.add_theme_constant_override("wrap_offset", 0)
 	text_edit.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	text_edit.grow_horizontal = Control.GROW_DIRECTION_END
@@ -80,6 +81,8 @@ func _ready() -> void:
 	_apply_appearance()
 	text_edit.focus_exited.connect(_on_edit_focus_exited)
 	text_edit.text_changed.connect(_refresh_edit_layout)
+	text_edit.content_metrics_changed.connect(_refresh_edit_layout)
+	text_edit.caret_changed.connect(_restore_edit_scroll, CONNECT_DEFERRED)
 	text_edit.text_set.connect(_refresh_edit_layout)
 	visibility_changed.connect(_on_visibility_changed)
 	label.resized.connect(_queue_collision_update)
@@ -416,9 +419,7 @@ func _align_edit_text() -> void:
 	var edit_style := Corners.source(text_edit.get_theme_stylebox("normal")).duplicate() as StyleBoxFlat
 	var content_size := label.size - label_style.get_minimum_size()
 	var font := label.get_theme_font("font")
-	var text_width := 0.0
-	for text_line in text_edit.text.split("\n"):
-		text_width = maxf(text_width, font.get_string_size(text_line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)
+	var text_width := text_edit.measure_unwrapped(text_edit.text, true).x
 	# TextEdit 的排版从左上开始；单行编辑用内边距匹配 Label 的居中起点。
 	var inset_x := maxf(0.0, (content_size.x - text_width) * 0.5) if label.get_line_count() == 1 else 0.0
 	var text_height := font.get_height(font_size) * maxi(1, label.get_line_count())
@@ -450,6 +451,7 @@ func _display_theme_is_light() -> bool:
 func _fit_label_text_height() -> void:
 	# Match the native editor row height, including its trailing line spacing.
 	var row_height := ceili(label.get_theme_font("font").get_height(font_size)) + label.get_theme_constant("line_spacing")
+	label.custom_minimum_size.x = maxf(fixed_width, text_edit.measure_unwrapped(label.text).x + 62.0)
 	label.custom_minimum_size.y = row_height * maxi(1, label.text.split("\n").size()) + 20.0
 
 
@@ -459,10 +461,18 @@ func _refresh_edit_layout() -> void:
 	label.text = text_edit.text
 	_fit_label_text_height()
 	label.reset_size()
-	label.size = label.size.max(_edit_minimum_size)
+	var metrics := text_edit.measure_unwrapped(text_edit.text, true)
+	label.size = label.size.max(_edit_minimum_size).max(Vector2(metrics.x + 62.0, metrics.y + 20.0))
 	label.position = _edit_origin
 	_align_edit_text()
 	text_edit.custom_minimum_size = label.size
 	text_edit.size = label.size
 	text_edit.position = label.position
+	_restore_edit_scroll()
 	_queue_collision_update()
+
+
+func _restore_edit_scroll() -> void:
+	if _editing:
+		text_edit.scroll_horizontal = 0
+		text_edit.scroll_vertical = 0

@@ -79,7 +79,7 @@ func _run() -> void:
 		var bounds: Rect2 = caption.label.get_global_rect()
 		edge.enter_edit_mode()
 		await settle()
-		check(caption.label.get_global_rect().is_equal_approx(bounds), "Entering caption edit preserves background bounds")
+		check(caption.label.get_global_rect().is_equal_approx(bounds), "Entering caption edit preserves background bounds: %s %s -> %s" % [value, bounds, caption.label.get_global_rect()])
 		check(caption.editor.get_global_rect().is_equal_approx(bounds), "Caption input shares the displayed bounds")
 		check(caption.editor.get_total_visible_line_count() == value.split("\n").size(), "Caption only wraps at explicit newlines")
 		check(not caption.editor.get_v_scroll_bar().visible, "Caption text is not vertically clipped")
