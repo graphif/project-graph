@@ -24,7 +24,7 @@ extends Camera2D
 
 # 内部状态变量
 var velocity: Vector2 = Vector2.ZERO
-var target_zoom: Vector2 = Vector2.ONE
+var target_zoom: Vector2 = Vector2.ONE * REFERENCE_ZOOM
 var target_position: Vector2 = Vector2.ZERO
 
 # 拖拽状态变量
@@ -32,6 +32,7 @@ var is_panning: bool = false
 
 
 func _ready() -> void:
+	zoom = Vector2.ONE * REFERENCE_ZOOM
 	target_zoom = zoom
 	target_position = global_position
 	_sync_texture_sampling()

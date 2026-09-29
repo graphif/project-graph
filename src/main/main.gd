@@ -343,7 +343,7 @@ func _run(command: String) -> void:
 		"selectAll": stage.select_all()
 		"resetViewAll": stage.focus_objects(stage.stage_objects())
 		"resetView": stage.focus_objects(stage.selected_objects() if not stage.selected_objects().is_empty() else stage.stage_objects())
-		"resetCameraScale": stage.camera.target_zoom = Vector2.ONE
+		"resetCameraScale": stage.camera.reset_zoom()
 		"moveViewToOrigin": stage.camera.target_position = Vector2.ZERO
 		"stopDrifting", "releaseKeys":
 			stage.finish_interaction()
@@ -748,7 +748,7 @@ func _process(delta: float) -> void:
 			node_count += 1
 		elif object is Association:
 			edge_count += 1
-	$UIOverlay/Status.text = "%d 节点 · %d 连线 · %d%%" % [node_count, edge_count, int(stage.camera.zoom.x * 100)]
+	$UIOverlay/Status.text = "%d 节点 · %d 连线 · %d%%" % [node_count, edge_count, stage.camera.zoom_percent()]
 	var graph := JSON.stringify(StageObjectRegistry.capture(stage))
 	if graph != _last_graph:
 		_last_graph = graph
