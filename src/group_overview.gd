@@ -1,9 +1,9 @@
 extends Node2D
 
-## View-only overview, matching master's section-size and camera-scale gates.
+## View-only overview with camera and screen-size gates tuned for earlier titles.
 ## Preserve detail beneath a translucent title cover; only block its interaction.
-@export_range(0.01, 1.0) var camera_scale_threshold := 0.45
-@export_range(0.01, 1.0) var viewport_size_ratio := 0.15
+@export_range(0.01, 1.0) var camera_scale_threshold := 0.60
+@export_range(0.01, 1.0) var viewport_size_ratio := 0.30
 
 const Corners = preload("res://src/main/continuous_corners.gd")
 const TITLE_FONT_SIZE := 64

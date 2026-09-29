@@ -74,10 +74,10 @@ func _run() -> void:
 	var before := StageObjectRegistry.capture(stage)
 	var original_filter := a.label.mouse_filter
 	var original_pickable := a.input_pickable
-	await zoom_to(0.92)
-	check(not overview.is_active(group), "Above 45 percent keeps details")
-	await zoom_to(0.5)
-	check(overview.is_active(group) and overview.is_active(other), "Small groups become titles below 45 percent")
+	await zoom_to(1.22)
+	check(not overview.is_active(group), "Above 60 percent keeps details")
+	await zoom_to(1.0)
+	check(overview.is_active(group) and overview.is_active(other), "Group titles appear already at 50 percent zoom")
 	check(stage.is_overview_hidden(a) and stage.is_overview_hidden(b), "Group members are covered for interaction")
 	check(stage.is_overview_hidden(inner), "Internal edges and captions cannot be picked through the cover")
 	check(stage.is_overview_hidden(group_relation), "Group-to-member edge is internal to the overview")
@@ -135,8 +135,8 @@ func _run() -> void:
 	var outer := make_node("项目总览", Vector2.ZERO)
 	group.container = outer
 	other.container = outer
-	await zoom_to(0.5)
-	check(not overview.is_active(outer), "Large screen bounds retain detail even at low zoom")
+	await zoom_to(0.9)
+	check(not overview.is_active(outer), "Large screen bounds retain detail even below the camera threshold")
 	check(stage.camera.min_zoom <= 0.02, "Canvas can zoom out to one percent for large diagrams")
 	# Larger groups enter naturally as the user continues zooming out.
 	await zoom_to(0.2)
