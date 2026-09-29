@@ -48,6 +48,8 @@ var _normal_edit_position := Vector2.ZERO
 @export_storage var use_theme_border := false
 var _displayed_background := Color(-1, -1, -1, -1)
 var _editing := false
+var _edit_minimum_size := Vector2.ZERO
+var _edit_origin := Vector2.ZERO
 var _appearance_light: Variant = null
 var _collision_update_pending := false
 
@@ -55,6 +57,12 @@ var _collision_update_pending := false
 func _ready() -> void:
 	# Click selected text to place the caret instead of dragging the selection.
 	text_edit.drag_and_drop_selection_enabled = false
+	text_edit.add_theme_constant_override("wrap_offset", 0)
+	text_edit.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	text_edit.grow_horizontal = Control.GROW_DIRECTION_END
+	text_edit.grow_vertical = Control.GROW_DIRECTION_END
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	# 与菜单共用原生 DPITexture 圆角，避免固定分辨率位图在画布缩放时失真。
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	super()
@@ -66,10 +74,13 @@ func _ready() -> void:
 		_canvas_font = _make_canvas_font(preload("res://assets/fonts/PingFang-SC-Regular.ttf"))
 	label.add_theme_font_override("font", _canvas_font)
 	text_edit.add_theme_font_override("font", _canvas_font)
+	text_edit.add_theme_constant_override("line_spacing", label.get_theme_constant("line_spacing"))
 	label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	text_edit.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_apply_appearance()
 	text_edit.focus_exited.connect(_on_edit_focus_exited)
+	text_edit.text_changed.connect(_refresh_edit_layout)
+	text_edit.text_set.connect(_refresh_edit_layout)
 	visibility_changed.connect(_on_visibility_changed)
 	label.resized.connect(_queue_collision_update)
 	container_panel.resized.connect(_queue_collision_update)
@@ -130,18 +141,34 @@ func enter_edit_mode() -> void:
 	if _editing:
 		return
 	finish_drag()
+	var stage := get_parent()
+	if stage.has_method("select_ids"):
+		stage.call("select_ids", PackedStringArray([id]))
 	linear_velocity = Vector2.ZERO
 	angular_velocity = 0.0
+	_edit_minimum_size = label.size
+	_edit_origin = label.position
 	_editing = true
-	text_edit.position = label.position
-	text_edit.min_height = label.size.y
-	text_edit.max_width = maxf(600.0, label.size.x)
+	_appearance_light = null
+	# 编辑控件只作为输入层，复用标签的原始矩形，避免切换时改变刚体碰撞中心。
+	text_edit.enable_auto_size = false
+	text_edit.wrap_mode = TextEdit.LINE_WRAPPING_NONE
 	text_edit.min_width = label.size.x
+	text_edit.max_width = maxf(text_edit.min_width, fixed_width if fixed_width > 0.0 else 600.0)
+	text_edit.min_height = label.size.y
+	text_edit.position = label.position
+	text_edit.size = label.size
+	text_edit.custom_minimum_size = label.size
 	text_edit.text = text
 	text_edit.clear_undo_history()
+	_apply_appearance(false)
+	text_edit.position = label.position
 	_align_edit_text()
-	text_edit.text_changed.emit()
-	label.hide()
+	# Keep the input overlay on the existing background until the edit is committed.
+	text_edit.size = label.size
+	# 背景与碰撞始终由 Label 保持；输入层只绘制文字、光标和选区。
+	label.show()
+	text_edit.z_index = 1
 	text_edit.show()
 	text_edit.grab_focus()
 	text_edit.deselect()
@@ -177,7 +204,10 @@ func exit_edit_mode(commit_changes: bool = true) -> void:
 		text = text_edit.text
 	text_edit.release_focus()
 	text_edit.hide()
+	label.text = text
 	label.show()
+	_apply_appearance()
+	text_edit.enable_auto_size = true
 	_queue_collision_update()
 	if changed and _history != null:
 		_history.commit()
@@ -236,16 +266,19 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 	_displayed_background = background
 	label.begin_bulk_theme_override()
 	text_edit.begin_bulk_theme_override()
-	label.add_theme_color_override("font_color", Palette.neutral_text_color(background))
+	var foreground := Palette.neutral_text_color(background)
+	label.add_theme_color_override("font_color", Color(0, 0, 0, 0) if _editing else foreground)
 	if update_layout:
 		label.add_theme_font_size_override("font_size", font_size)
 		text_edit.add_theme_font_size_override("font_size", font_size)
-		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if fixed_width > 0.0 else TextServer.AUTOWRAP_OFF
+		label.autowrap_mode = TextServer.AUTOWRAP_OFF
 		label.custom_minimum_size.x = fixed_width
+		_fit_label_text_height()
 		label.size = Vector2(fixed_width, 0.0)
 	var style := StyleBoxFlat.new()
 	style.bg_color = display_fill_color()
 	style.border_color = Palette.color(light, "border.focus") if _editing else display_border_color()
+	# Borders always use neutral contrast; legacy border fields are storage-only.
 	style.set_border_width_all(1)
 	style.content_margin_left = 15
 	style.content_margin_right = 15
@@ -256,11 +289,11 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 		style.bg_color = Color.TRANSPARENT
 		style.set_border_width_all(0)
 	label.add_theme_stylebox_override("normal", Corners.style(style, Corners.fitted_radius(label.size, Corners.PANEL), false, true))
-	text_edit.add_theme_color_override("font_color", Palette.neutral_text_color(background))
-	text_edit.add_theme_color_override("caret_color", Palette.neutral_text_color(background))
-	text_edit.add_theme_color_override("selection_color", Color("#d9efdc") if light else Color("#45475a"))
+	text_edit.add_theme_color_override("font_color", foreground)
+	text_edit.add_theme_color_override("caret_color", foreground)
+	text_edit.add_theme_color_override("selection_color", Palette.color(light, "surface.selected"))
 	var edit_style := style.duplicate() as StyleBoxFlat
-	# 输入框只绘制文字、光标和选区，轮廓由节点本身绘制。
+	# 输入框可为光标与输入法扩展，但不接管节点的背景与轮廓。
 	edit_style.bg_color = Color.TRANSPARENT
 	edit_style.border_color = Color.TRANSPARENT
 	edit_style.set_border_width_all(0)
@@ -268,9 +301,12 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 	text_edit.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	label.end_bulk_theme_override()
 	text_edit.end_bulk_theme_override()
-	_refresh_corner_styles()
+	if _editing:
+		_align_edit_text()
 	if update_layout:
+		label.reset_size()
 		_queue_collision_update()
+	_refresh_corner_styles()
 
 
 # Resizing text or a group changes geometry even when its colors stay unchanged.
@@ -360,15 +396,8 @@ func update_container_layout(members: Array[Entity]) -> void:
 func get_visual_rect() -> Rect2:
 	if _container_active:
 		return _container_rect
-	return Rect2(text_edit.position, text_edit.size) if _editing else Rect2(label.position, label.size)
-
-
-# Display-only opacity: the longest uninterrupted same-RGB branch defines the level.
-# Preserve the chosen alpha and serialized fill_color; only the fill is faded.
-func display_fill_color() -> Color:
-	var result := fill_color
-	result.a *= pow(0.78, _fill_layer - 1)
-	return result
+	# 编辑态不改变可见方块的几何矩形，避免 RigidBody2D 因输入层尺寸变化而位移。
+	return Rect2(label.position, label.size)
 
 
 func _update_fill_layer(members: Array[Entity]) -> void:
@@ -388,17 +417,27 @@ func _align_edit_text() -> void:
 	var content_size := label.size - label_style.get_minimum_size()
 	var font := label.get_theme_font("font")
 	var text_width := 0.0
-	for text_line in text.split("\n"):
+	for text_line in text_edit.text.split("\n"):
 		text_width = maxf(text_width, font.get_string_size(text_line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)
 	# TextEdit 的排版从左上开始；单行编辑用内边距匹配 Label 的居中起点。
 	var inset_x := maxf(0.0, (content_size.x - text_width) * 0.5) if label.get_line_count() == 1 else 0.0
 	var text_height := font.get_height(font_size) * maxi(1, label.get_line_count())
 	var inset_y := maxf(0.0, (content_size.y - text_height) * 0.5)
 	edit_style.content_margin_left = label_style.get_content_margin(SIDE_LEFT) + inset_x
-	edit_style.content_margin_right = label_style.get_content_margin(SIDE_RIGHT)
+	edit_style.content_margin_right = maxf(0.0, label_style.get_content_margin(SIDE_RIGHT) - 2.0)
 	edit_style.content_margin_top = label_style.get_content_margin(SIDE_TOP) + inset_y
-	edit_style.content_margin_bottom = label_style.get_content_margin(SIDE_BOTTOM)
+	var rows_height := text_edit.get_line_height() * maxi(1, label.get_line_count())
+	# TextEdit counts trailing line spacing and rounds each row to whole pixels.
+	edit_style.content_margin_bottom = maxf(0.0, minf(label_style.get_content_margin(SIDE_BOTTOM), label.size.y - edit_style.content_margin_top - rows_height))
 	text_edit.add_theme_stylebox_override("normal", edit_style)
+
+
+# Display-only opacity: the longest uninterrupted same-RGB branch defines the level.
+# Preserve the chosen alpha and serialized fill_color; only the fill is faded.
+func display_fill_color() -> Color:
+	var result := fill_color
+	result.a *= pow(0.78, _fill_layer - 1)
+	return result
 
 
 func _display_theme_is_light() -> bool:
@@ -406,3 +445,24 @@ func _display_theme_is_light() -> bool:
 	if stage != null and stage._applied_theme_light >= 0:
 		return stage._applied_theme_light == 1
 	return Palette.is_light(str(GraphPreferences.value("theme")))
+
+
+func _fit_label_text_height() -> void:
+	# Match the native editor row height, including its trailing line spacing.
+	var row_height := ceili(label.get_theme_font("font").get_height(font_size)) + label.get_theme_constant("line_spacing")
+	label.custom_minimum_size.y = row_height * maxi(1, label.text.split("\n").size()) + 20.0
+
+
+func _refresh_edit_layout() -> void:
+	if not _editing:
+		return
+	label.text = text_edit.text
+	_fit_label_text_height()
+	label.reset_size()
+	label.size = label.size.max(_edit_minimum_size)
+	label.position = _edit_origin
+	_align_edit_text()
+	text_edit.custom_minimum_size = label.size
+	text_edit.size = label.size
+	text_edit.position = label.position
+	_queue_collision_update()

@@ -10,6 +10,7 @@ var _editing := false
 var _last_points := PackedVector2Array()
 var _last_line_transform := Transform2D.IDENTITY
 var _last_light: Variant = null
+var _centering := false
 
 
 func _ready() -> void:
@@ -17,7 +18,14 @@ func _ready() -> void:
 	label.gui_input.connect(_label_input)
 	editor.gui_input.connect(_editor_input)
 	editor.focus_exited.connect(finish_edit)
-	editor.resized.connect(_center_controls)
+	editor.enable_auto_size = false
+	editor.wrap_mode = TextEdit.LINE_WRAPPING_NONE
+	editor.add_theme_constant_override("wrap_offset", 0)
+	editor.custom_minimum_size = Vector2.ZERO
+	editor.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	editor.grow_horizontal = Control.GROW_DIRECTION_END
+	editor.grow_vertical = Control.GROW_DIRECTION_END
+	editor.text_changed.connect(_refresh_text)
 	label.resized.connect(_center_controls)
 	visibility_changed.connect(_visibility_changed)
 	editor.hide()
@@ -44,15 +52,30 @@ func _process(_delta: float) -> void:
 
 
 func _refresh_text() -> void:
-	if label.text != edge.text:
-		label.text = edge.text
+	var displayed_text := editor.text if _editing else edge.text
+	if label.text != displayed_text:
+		label.text = displayed_text
 		label.reset_size()
-	label.visible = not _editing and not edge.text.is_empty()
+	label.visible = _editing or not edge.text.is_empty()
+	_center_controls()
 
 
 func _center_controls() -> void:
+	if _centering:
+		return
+	_centering = true
+	# One background and one layout determine both display and editing bounds.
+	label.size = label.size.max(editor.get_minimum_size())
+	var row_height := ceili(label.get_theme_font("font").get_height(label.get_theme_font_size("font_size"))) + label.get_theme_constant("line_spacing")
+	label.size.y = maxf(label.size.y, row_height * maxi(1, label.get_line_count()) + 8.0)
 	label.position = -label.size * 0.5
-	editor.position = -editor.size * 0.5
+	var input_style := editor.get_theme_stylebox("normal") as StyleBoxFlat
+	if input_style != null:
+		var rows_height := editor.get_line_height() * maxi(1, label.get_line_count())
+		input_style.content_margin_bottom = maxf(0.0, minf(4.0, label.size.y - input_style.content_margin_top - rows_height))
+	editor.size = label.size
+	editor.position = label.position
+	_centering = false
 
 
 func _update_style() -> void:
@@ -63,21 +86,25 @@ func _update_style() -> void:
 	_last_light = light
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = Palette.color(light, "surface.canvas")
-	normal.border_color = Palette.color(light, "border.default")
+	normal.border_color = Palette.color(light, "border.focus" if _editing else "border.default")
 	normal.set_border_width_all(1)
 	normal.set_corner_radius_all(6)
 	normal.content_margin_left = 8
-	normal.content_margin_right = 8
+	normal.content_margin_right = 18
 	normal.content_margin_top = 4
 	normal.content_margin_bottom = 4
 	label.add_theme_stylebox_override("normal", Corners.style(normal, Corners.CONTROL, true))
-	editor.add_theme_stylebox_override("normal", Corners.style(normal, Corners.CONTROL, true))
-	var focus := normal.duplicate() as StyleBoxFlat
-	focus.border_color = Palette.color(light, "border.focus")
-	focus.set_border_width_all(2)
-	editor.add_theme_stylebox_override("focus", Corners.style(focus, Corners.CONTROL, true))
-	for control in [label, editor]:
-		control.add_theme_color_override("font_color", Palette.neutral_text_color(normal.bg_color))
+	var input_style := normal.duplicate() as StyleBoxFlat
+	input_style.bg_color = Color.TRANSPARENT
+	input_style.border_color = Color.TRANSPARENT
+	input_style.set_border_width_all(0)
+	input_style.content_margin_right -= 2.0
+	editor.add_theme_stylebox_override("normal", input_style)
+	editor.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	var foreground := Palette.neutral_text_color(normal.bg_color)
+	label.add_theme_color_override("font_color", Color.TRANSPARENT if _editing else foreground)
+	editor.add_theme_color_override("font_color", foreground)
+	editor.add_theme_constant_override("line_spacing", label.get_theme_constant("line_spacing"))
 	editor.add_theme_color_override("caret_color", Palette.neutral_text_color(normal.bg_color))
 	editor.add_theme_color_override("selection_color", Palette.color(light, "surface.selected"))
 	if is_instance_valid(edge.source) and edge.source is TextNode:
@@ -96,11 +123,13 @@ func begin_edit() -> void:
 	stage.finish_interaction()
 	stage.select_ids(PackedStringArray([edge.id]))
 	_editing = true
+	_last_light = null
+	_update_style()
 	editor.text = edge.text
 	editor.clear_undo_history()
 	editor.show()
 	editor.text_changed.emit()
-	label.hide()
+	_refresh_text()
 	_center_controls()
 	editor.grab_focus()
 	editor.deselect()
@@ -112,6 +141,8 @@ func finish_edit(commit_changes := true) -> void:
 	if not _editing:
 		return
 	_editing = false
+	_last_light = null
+	_update_style()
 	if commit_changes:
 		editor.apply_ime()
 	else:

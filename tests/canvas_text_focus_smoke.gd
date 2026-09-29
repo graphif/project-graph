@@ -46,6 +46,9 @@ func _run() -> void:
 		if button.is_visible_in_tree() and button.focus_mode != Control.FOCUS_NONE:
 			button.grab_focus()
 			break
+	stage.camera.target_position = node.to_global(node.label.position + node.label.size * 0.5)
+	stage.camera.global_position = stage.camera.target_position
+	stage.camera.force_update_scroll()
 	var original_rect := node.get_visual_rect()
 	var original_style := node.label.get_theme_stylebox("normal")
 	node.enter_edit_mode()
@@ -134,7 +137,7 @@ func _run() -> void:
 	var outside := InputEventMouseButton.new()
 	outside.button_index = MOUSE_BUTTON_LEFT
 	outside.pressed = true
-	outside.position = Vector2(1150, 680)
+	outside.position = Vector2(stage.get_viewport().size) - Vector2(30, 30)
 	send_canvas_input(outside)
 	await process_frame
 	check(not node._editing, "Click outside still finishes editing")
@@ -147,7 +150,7 @@ func send_canvas_input(event: InputEvent) -> void:
 	var forwarded := event.duplicate()
 	if forwarded is InputEventMouse:
 		var container := stage.get_viewport().get_parent() as Control
-		forwarded.position = container.get_global_transform_with_canvas() * forwarded.position
+		forwarded.position = container.get_global_transform_with_canvas() * (forwarded.position * container.size / Vector2(stage.get_viewport().size))
 		forwarded.global_position = forwarded.position
 		var motion := InputEventMouseMotion.new()
 		motion.position = forwarded.position
