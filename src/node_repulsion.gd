@@ -7,7 +7,9 @@ extends Node2D
 @export_range(1.0, 600.0) var maximum_speed := 240.0
 @export_range(1.0, 48.0) var minimum_gap := 12.0
 
-var _moved: Array[Entity] = []
+# 用内置哈希表去重，避免求解每个约束时线性扫描已移动节点。
+# 保存实例 ID，避免已删除实体作为类型化对象键时导致遍历报错。
+var _moved: Dictionary[int, bool] = {}
 
 
 func _ready() -> void:
@@ -77,6 +79,7 @@ func _physics_process(delta: float) -> void:
 	# 约束下一物理步的接近速度。拖动者优先跟手，邻居承担大部分让位。
 	# 多轮处理可将推力沿紧密排列的节点传递，避免只推开第一块。
 	for iteration in 6:
+		var corrected := false
 		for pair in pairs:
 			var a: Entity = pair.a
 			var b: Entity = pair.b
@@ -90,6 +93,7 @@ func _physics_process(delta: float) -> void:
 			var total := a_weight + b_weight
 			if total <= 0:
 				continue
+			corrected = true
 			var correction := normal * (required_speed - relative_speed)
 			if a_weight > 0:
 				a.sleeping = false
@@ -99,11 +103,13 @@ func _physics_process(delta: float) -> void:
 				b.sleeping = false
 				b.linear_velocity += correction * b_weight / total
 				_track(b)
+		# 整轮没有速度修正，后续轮次的输入相同，可以直接结束。
+		if not corrected:
+			break
 
 
 func _track(body: Entity) -> void:
-	if not _moved.has(body):
-		_moved.append(body)
+	_moved[body.get_instance_id()] = true
 
 
 func _mobility(body: Entity) -> float:
@@ -133,7 +139,8 @@ func _separation(a: Rect2, b: Rect2, first_before_second: bool) -> Dictionary:
 
 
 func stop_motion() -> void:
-	for body in _moved:
+	for instance_id in _moved:
+		var body := instance_from_id(instance_id) as Entity
 		if is_instance_valid(body) and not _held(body) and not body.is_throwing:
 			body.linear_velocity = Vector2.ZERO
 			body.angular_velocity = 0.0
