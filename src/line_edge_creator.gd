@@ -112,9 +112,9 @@ func _update_preview(mouse_position: Vector2) -> void:
 	var anchors := LineEdge.connection_uvs(_source.aabb, destination)
 	_source_uv = anchors[0]
 	_target_uv = anchors[1]
-	_update_edge_highlight(_source_edge_highlight, _source, _source_uv)
+	_update_edge_highlight(_source_edge_highlight, _source.aabb, _source_uv, anchors[2])
 	if _target != null:
-		_update_edge_highlight(_target_edge_highlight, _target, _target_uv)
+		_update_edge_highlight(_target_edge_highlight, destination, _target_uv, anchors[3])
 	else:
 		_target_edge_highlight.visible = false
 	var points := LineEdge.connection_curve(_source.aabb, destination, anchors, preview_curve_segments)
@@ -174,26 +174,14 @@ func _create_feedback_line(color: Color, width: float, line_z_index: int) -> Lin
 	return feedback_line
 
 
-func _update_edge_highlight(highlight: Line2D, entity: Entity, uv: Vector2) -> void:
-	# 根据方向 UV 取出整条矩形边，并转换到 Creator 的局部坐标系绘制。
-	var box := _get_collision_box(entity)
-	if box.size() < 4:
-		highlight.visible = false
-		return
-	var edge_points := PackedVector2Array()
-	if is_zero_approx(uv.y):
-		edge_points = PackedVector2Array([box[0], box[1]])
-	elif is_equal_approx(uv.y, 1.0):
-		edge_points = PackedVector2Array([box[3], box[2]])
-	elif is_zero_approx(uv.x):
-		edge_points = PackedVector2Array([box[0], box[3]])
-	else:
-		edge_points = PackedVector2Array([box[1], box[2]])
-
-	for point in edge_points:
-		highlight.add_point(to_local(point))
-	while highlight.get_point_count() > edge_points.size():
-		highlight.remove_point(0)
+func _update_edge_highlight(highlight: Line2D, rect: Rect2, uv: Vector2, normal: Vector2) -> void:
+	# Mark the actual free port rather than flashing an entire selected side.
+	var point := LineEdge.anchor(rect, uv)
+	var tangent := normal.orthogonal() * minf(7.0, minf(rect.size.x, rect.size.y) * 0.25)
+	highlight.points = PackedVector2Array([
+		highlight.to_local(point - tangent),
+		highlight.to_local(point + tangent),
+	])
 	highlight.visible = true
 
 

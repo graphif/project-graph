@@ -62,6 +62,19 @@ func _run() -> void:
 	var first := make_edge(host, upper, target)
 	var second := make_edge(host, lower, target)
 	await settle()
+	var creator := LineEdgeCreator.new()
+	creator.target_root = host
+	host.add_child(creator)
+	creator.set_process(false)
+	creator._start_drag(upper, upper.aabb.get_center())
+	creator._update_preview(target.aabb.get_center())
+	var preview_tip := creator._preview_line.to_global(creator._preview_line.points[-1])
+	check(preview_tip.is_equal_approx(first.arrow_head.global_position), "Preview and committed edge share the free port")
+	var marker := creator._target_edge_highlight
+	var marker_center := (marker.to_global(marker.points[0]) + marker.to_global(marker.points[1])) * 0.5
+	check(marker_center.is_equal_approx(preview_tip), "Highlight marks the actual attachment point")
+	creator.cancel_drag()
+	creator.queue_free()
 	var baseline := world_head(first)
 	for zoom in [0.5, 1.0, 2.0]:
 		root.canvas_transform = Transform2D(0.0, Vector2.ONE * zoom, 0.0, Vector2(640, 360))
@@ -69,8 +82,8 @@ func _run() -> void:
 		var a := world_head(first)
 		var b := world_head(second)
 		check(first.arrow_head.visible and second.arrow_head.visible, "Both converging edges retain arrows")
+		check(a[0].distance_to(b[0]) > 4.0, "Different approach directions have separate boundary ports")
 		for i in a.size():
-			check(a[i].is_equal_approx(b[i]), "Shared port heads coincide without rotated spikes")
 			check(a[i].is_equal_approx(baseline[i]), "Zoom preserves world head geometry")
 		var base := (a[1] + a[2]) * 0.5
 		var shaft_end := first.line.to_global(first.line.points[-1])
@@ -86,7 +99,7 @@ func _run() -> void:
 		await settle()
 		var ports := LineEdge.connection_uvs(upper.aabb, target.aabb)
 		var head := world_head(first)
-		var inward := (Vector2(0.5, 0.5) - ports[1]).normalized()
+		var inward := -ports[3]
 		check(head[0].is_equal_approx(LineEdge.anchor(target.aabb, ports[1])), "Tip stays on all four target sides")
 		check((head[0] - (head[1] + head[2]) * 0.5).normalized().is_equal_approx(inward), "Arrow follows target side normal")
 	upper.position = Vector2(-260, -90)
@@ -100,7 +113,7 @@ func _run() -> void:
 	upper.position = target.position + Vector2(-upper.aabb.size.x - 2.0, 0)
 	await settle()
 	var anchors := LineEdge.connection_uvs(upper.aabb, target.aabb)
-	var direction := (Vector2(0.5, 0.5) - anchors[1]).normalized()
+	var direction := -anchors[3]
 	var gap := (LineEdge.anchor(target.aabb, anchors[1]) - LineEdge.anchor(upper.aabb, anchors[0])).dot(direction)
 	if first.arrow_head.visible:
 		var points := world_head(first)

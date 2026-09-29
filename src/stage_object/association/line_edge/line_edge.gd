@@ -2,6 +2,8 @@ class_name LineEdge
 extends Association
 
 const Palette = preload("res://src/main/theme_palette.gd")
+const Corners = preload("res://src/main/continuous_corners.gd")
+static var _connection_outlines: Dictionary = {}
 
 @onready var collision_shape: CollisionShape2D = %CollisionShape
 @onready var line: Line2D = %Line
@@ -70,13 +72,16 @@ func _process(_delta: float) -> void:
 		return
 	_geometry_key = key
 	var anchors := connection_uvs(source_rect, target_rect)
+	var span := anchor(target_rect, anchors[1]) - anchor(source_rect, anchors[0])
+	var center_direction := (target_rect.get_center() - source_rect.get_center()).normalized()
+	modulate.a = smoothstep(0.0, 12.0, maxf(0.0, span.dot(center_direction)))
 	var render_segments := clampi(ceili(curve_segments * sqrt(maxf(1.0, pixel_scale))), curve_segments, 512)
 	var tip := anchor(target_rect, anchors[1])
-	var direction := (Vector2(0.5, 0.5) - anchors[1]).normalized()
+	var direction := -anchors[3] if anchors.size() > 3 else (Vector2(0.5, 0.5) - anchors[1]).normalized()
 	var head_length := arrow_length(source_rect, target_rect, anchors, _unscaled_line_width)
 	arrow_head.visible = head_length > 0.0
 	# End the Bezier at the head base with the same tangent as the triangle.
-	# All edges on a shared port now have identical head orientation.
+	# Head orientation follows the smoothly varying outline normal.
 	var shaft_points := connection_curve(source_rect, target_rect, anchors, render_segments, head_length)
 	var world_points := shaft_points.duplicate()
 	if arrow_head.visible:
@@ -101,31 +106,53 @@ func _process(_delta: float) -> void:
 
 # Arrow size follows stroke width, but cannot consume the short connection gap.
 static func arrow_length(from_rect: Rect2, to_rect: Rect2, anchors: PackedVector2Array, width: float) -> float:
-	var direction := (Vector2(0.5, 0.5) - anchors[1]).normalized()
+	var direction := -anchors[3] if anchors.size() > 3 else (Vector2(0.5, 0.5) - anchors[1]).normalized()
 	var gap := (anchor(to_rect, anchors[1]) - anchor(from_rect, anchors[0])).dot(direction)
 	if gap <= 1.0:
 		return 0.0
 	return minf(maxf(6.0, width * 3.0 + 2.0), gap * 0.45)
 
 
-# 只选择两矩形之间有间隙的轴；控制点均留在该间隙中，避免曲线绕到节点背面。
-# 对角排列时比较两组边中点的距离，同样位置始终得出同样的连接边。
+# Ports slide around the same continuous outline as the node background.
+# The first two entries remain UVs; the last two carry outward tangents' normals.
 static func connection_uvs(from_rect: Rect2, to_rect: Rect2) -> PackedVector2Array:
-	var offset := to_rect.get_center() - from_rect.get_center()
-	var horizontal := PackedVector2Array([Vector2(1, 0.5), Vector2(0, 0.5)]) if offset.x >= 0 else PackedVector2Array([Vector2(0, 0.5), Vector2(1, 0.5)])
-	var vertical := PackedVector2Array([Vector2(0.5, 1), Vector2(0.5, 0)]) if offset.y >= 0 else PackedVector2Array([Vector2(0.5, 0), Vector2(0.5, 1)])
-	var gap_x := absf(offset.x) - (from_rect.size.x + to_rect.size.x) * 0.5
-	var gap_y := absf(offset.y) - (from_rect.size.y + to_rect.size.y) * 0.5
-	if gap_x > 0 and gap_y <= 0:
-		return horizontal
-	if gap_y > 0 and gap_x <= 0:
-		return vertical
-	if gap_x <= 0 and gap_y <= 0:
-		# 临时重叠时采用穿透较浅的轴，避让完成后自然恢复。
-		return horizontal if gap_x >= gap_y else vertical
-	var horizontal_span := anchor(to_rect, horizontal[1]) - anchor(from_rect, horizontal[0])
-	var vertical_span := anchor(to_rect, vertical[1]) - anchor(from_rect, vertical[0])
-	return horizontal if horizontal_span.length_squared() <= vertical_span.length_squared() else vertical
+	var direction := to_rect.get_center() - from_rect.get_center()
+	if direction.is_zero_approx():
+		direction = Vector2.RIGHT
+	var from_port := _outline_port(from_rect.size, direction)
+	var to_port := _outline_port(to_rect.size, -direction)
+	return PackedVector2Array([from_port[0], to_port[0], from_port[1], to_port[1]])
+
+
+static func _outline_port(size: Vector2, direction: Vector2) -> PackedVector2Array:
+	if size.x <= 0.0 or size.y <= 0.0:
+		return PackedVector2Array([Vector2(0.5, 0.5), direction.normalized()])
+	var points: PackedVector2Array = _connection_outlines.get(size, PackedVector2Array())
+	if points.is_empty():
+		var raw := Corners.outline(Rect2(-size * 0.5, size), Corners.fitted_radius(size, Corners.PANEL))
+		for point in raw:
+			if points.is_empty() or not points[-1].is_equal_approx(point):
+				points.append(point)
+		if _connection_outlines.size() >= 256:
+			_connection_outlines.clear()
+		_connection_outlines[size] = points
+	var ray := direction.normalized() * (size.length() + 1.0)
+	for i in points.size():
+		var a := points[i]
+		var b := points[(i + 1) % points.size()]
+		var hit: Variant = Geometry2D.segment_intersects_segment(Vector2.ZERO, ray, a, b)
+		if hit == null:
+			continue
+		var point: Vector2 = hit
+		var tangent := (b - a).normalized()
+		var previous := (a - points[(i - 1 + points.size()) % points.size()]).normalized()
+		var next := (points[(i + 2) % points.size()] - b).normalized()
+		var start_normal := (previous + tangent).normalized().orthogonal()
+		var end_normal := (tangent + next).normalized().orthogonal()
+		var fraction := clampf(a.distance_to(point) / a.distance_to(b), 0.0, 1.0)
+		var normal := start_normal.lerp(end_normal, fraction).normalized()
+		return PackedVector2Array([point / size + Vector2(0.5, 0.5), normal])
+	return PackedVector2Array([Vector2(0.5, 0.5), direction.normalized()])
 
 
 static func anchor(rect: Rect2, uv: Vector2) -> Vector2:
@@ -135,8 +162,8 @@ static func anchor(rect: Rect2, uv: Vector2) -> Vector2:
 static func connection_curve(from_rect: Rect2, to_rect: Rect2, anchors: PackedVector2Array, segments: int, end_inset: float = 0.0) -> PackedVector2Array:
 	var start := anchor(from_rect, anchors[0])
 	var end := anchor(to_rect, anchors[1])
-	var normal := (anchors[0] - Vector2(0.5, 0.5)) * 2.0
-	var end_normal := (anchors[1] - Vector2(0.5, 0.5)) * 2.0
+	var normal := anchors[2] if anchors.size() > 3 else (anchors[0] - Vector2(0.5, 0.5)) * 2.0
+	var end_normal := anchors[3] if anchors.size() > 3 else (anchors[1] - Vector2(0.5, 0.5)) * 2.0
 	end += end_normal * end_inset
 	var gap := maxf(0.0, (end - start).dot(normal))
 	# 不设固定最小弯曲半径，近距离连接也不会产生回钩。
@@ -164,6 +191,8 @@ func _update_collision_shape(points: PackedVector2Array) -> void:
 
 
 func distance_to_point(world_point: Vector2) -> float:
+	if modulate.a <= 0.01:
+		return INF
 	if arrow_head.visible and Geometry2D.is_point_in_polygon(arrow_head.to_local(world_point), arrow_head.polygon):
 		return 0.0
 	var distance := INF
