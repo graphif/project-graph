@@ -46,7 +46,21 @@ RPM 安装时自动完成以下配置，用户无需执行文件关联脚本：
 python3 -m unittest discover -s packaging/linux -p 'test_thumbnailer.py'
 ```
 
-缩略图为轻量概览，使用统一配色和字体，不是编辑器像素级截图；容器、旋转、自定义样式及部分画笔序列化形式可能与画布显示不同。
+缩略图现在读取保存的填充色和文字色，保留透明填充，并按画布背景与祖先容器合成颜色计算中性边框和默认文字对比度。同 RGB 的连续包含链向外按 0.78 递减填充 alpha；先绘制外层容器，再绘制内层和子节点。节点宽度包含画布的文字预留，固定宽度是最小值，正文仅按保存的换行分行；容器标题高度包含上下留白。连线使用可见轮廓端口、保存的线宽、箭头开关和文字标签。
+
+复用评估：标准库 JSON/ZIP/math 足够解析存档和适配项目配色规则；现有 Cairo 提供 alpha 合成、原生贝塞尔曲线、轮廓命中和路径展平，Pango 提供文字排版。无需增加 Pillow、Shapely 或颜色计算库，也不启动 Godot。圆角控制点和颜色对比度规则来自项目现有实现。
+
+缩略图仍为轻量概览，字体使用系统 Sans，主题跟随桌面；没有画布网格、编辑选中状态或未保存的临时文字，不是编辑器像素级截图。旋转、缩放变换、部分画笔序列化形式及复杂连线标签避让仍可能与画布显示不同。
+
+本次已对 `/home/waya/Desktop/project/未命名.prg` 与 `你好.prg` 生成并目视检查新预览，原文档未修改；离线回归、Python 语法及 Ruff 检查通过。手动验收：重开该目录，检查“你好”节点为紫色填充深色文字，蓝色嵌套容器层次可见，连线有箭头和“你好”标签。若仍显示旧配色，重点检查缩略图缓存和 `/usr/libexec/project-graph-thumbnailer` 是否已更新。尚未执行新版 RPM 安装后的文件管理器端到端验收、实际高 DPI 操作和跨平台验证。
+
+开发脚本修改不会更新系统安装的预览器。发布时按上面的 RPM 流程重新打包安装，才会让新建或再次保存的文档持续使用新版。GNOME 的缩略图沙箱不暴露用户主目录，不能简单将 thumbnailer Exec 指向仓库或 `~/.local/libexec`。只测试预览器时，可在仓库根目录由用户执行下列命令更新已安装的辅助程序（本次因缺少管理员权限尚未执行），然后复制一个 `.prg` 到新文件名触发新预览：
+
+```sh
+sudo install -m 755 packaging/linux/project-graph-thumbnailer.py /usr/libexec/project-graph-thumbnailer
+```
+
+该临时更新不替代 RPM 发布；之后重新安装旧 RPM 会覆盖辅助程序。
 解析限制：ZIP 256 MiB、JSON 16 MiB、5000 个对象、每段画笔 2000 个点；不会解压文档到磁盘或访问网络。
 
 参考：[GNOME thumbnailer 接口](https://github.com/GNOME/gnome-desktop/blob/master/libgnome-desktop/gnome-desktop-thumbnail.c)、[MIME 默认应用规范](https://specifications.freedesktop.org/mime-apps/latest/default.html)。
