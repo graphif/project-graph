@@ -80,6 +80,10 @@ func _run() -> void:
 	Input.flush_buffered_events()
 	subject._on_input_event(stage.get_viewport(), press, 0)
 	print("EDIT_BEGIN_MS: ", (Time.get_ticks_usec() - begin) / 1000.0)
+	var original_positions := {}
+	for object in all:
+		if object is Entity: original_positions[object] = object.global_position
+	var subject_origin := subject.global_position
 	var origin := subject.aabb.get_center()
 	await _measure("drag", func(t: float): _motion(origin + Vector2(sin(t * 3) * 80, cos(t * 3) * 50) / stage.camera.zoom.x))
 	subject.finish_drag(false)
@@ -88,6 +92,13 @@ func _run() -> void:
 	Input.parse_input_event(press)
 	Input.flush_buffered_events()
 	await _measure("settle", func(_t: float): pass)
+	var displacement := subject.global_position - subject_origin
+	if displacement.length() < 20.0:
+		failures.append("Benchmark drag did not move its subject")
+	for object in original_positions:
+		if object.is_inside_container(subject) and not object.global_position.is_equal_approx(original_positions[object] + displacement):
+			failures.append("Group member did not follow the measured drag")
+	print("EDIT_REAL_MOVEMENT: ", displacement.length(), " group_members_checked=", original_positions.keys().filter(func(object):return object.is_inside_container(subject)).size())
 	var finish := Time.get_ticks_usec()
 	stage.history._finish_commit()
 	print("EDIT_COMMIT_MS: ", (Time.get_ticks_usec() - finish) / 1000.0)
@@ -137,6 +148,7 @@ func _screen(point: Vector2) -> Vector2:
 	return container.get_global_transform_with_canvas() * ((stage.get_canvas_transform() * point) * container.size / Vector2(viewport.size))
 
 func _motion(point: Vector2) -> void:
+	root.warp_mouse(_screen(point))
 	var motion := InputEventMouseMotion.new()
 	motion.position = _screen(point)
 	motion.global_position = motion.position
