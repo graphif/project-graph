@@ -1,7 +1,7 @@
 extends Node2D
 
 ## View-only overview with camera and screen-size gates tuned for earlier titles.
-## Preserve detail beneath a translucent title cover; only block its interaction.
+## Retain nested group previews beneath covers, while omitting ordinary detail.
 @export_range(0.01, 1.0) var camera_scale_threshold := 0.45
 @export_range(0.01, 1.0) var viewport_size_ratio := 0.15
 
@@ -86,6 +86,15 @@ func refresh() -> void:
 			if not blocked.has(key) and normalized_zoom <= zoom_limit and maxf(screen_size.x, screen_size.y) < viewport_side * size_limit:
 				_active[key] = object
 
+	# A visible outer overview represents its contents through group previews.
+	# Descendant groups must not fall back to tiny headers just because their
+	# independent screen-size gate has not been reached yet.
+	for object in objects:
+		if object is TextNode and object._container_active and object.is_visible_in_tree():
+			var key: int = object.get_instance_id()
+			if not blocked.has(key) and not _active_ancestors(object).is_empty():
+				_active[key] = object
+
 	var ancestors: Dictionary = {}
 	for object in objects:
 		if object is Entity:
@@ -124,25 +133,22 @@ func refresh() -> void:
 				_suppress_canvas(object, items)
 				_suppressed[key] = {"object": object, "items": items, "pickable": object.input_pickable}
 			object.input_pickable = not _hidden.has(key) and bool(_suppressed[key].pickable)
-			var replace_group: bool = _active.has(key) and not _hidden.has(key)
 			for item in _suppressed[key].items:
 				if not is_instance_valid(item.node):
 					continue
-				# Only replace the visible group's old frame/title. Its members
-				# stay rendered below the 50% cover, including nested groups.
-				var layer: int = 0 if replace_group else item.layer
+				# Summaries replace original headers and frames. Covered ordinary
+				# nodes and internal edges are omitted from the simplified view.
+				var layer: int = 0
 				if item.node.visibility_layer != layer:
 					item.node.visibility_layer = layer
 				if object is LineEdge and item.node != object and item.node.z_index != 0:
 					item.node.z_index = 0 # Internal captions belong beneath the cover too.
 
 	for key in _summaries.keys():
-		if not _active.has(key) or _hidden.has(key):
+		if not _active.has(key):
 			_summaries[key].queue_free()
 			_summaries.erase(key)
 	for key in _active:
-		if _hidden.has(key):
-			continue
 		var group: TextNode = _active[key]
 		var panel := _summaries.get(key) as Panel
 		if panel == null:
@@ -151,7 +157,20 @@ func refresh() -> void:
 			add_child(panel)
 			panel.gui_input.connect(_on_summary_input.bind(group))
 			_summaries[key] = panel
+
+		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE if _hidden.has(key) else Control.MOUSE_FILTER_STOP
+		panel.get_node("Title").mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_update_summary(group, panel)
+
+	# All covers share the same foreground layer. Draw descendants first,
+	# then overlay their ancestors, independent of creation or restore order.
+	var summary_keys := _active.keys()
+	summary_keys.sort_custom(func(a: int, b: int) -> bool: return int(levels.get(a, 0)) < int(levels.get(b, 0)))
+	var first_index := get_child_count() - summary_keys.size()
+	for index in summary_keys.size():
+		var panel: Panel = _summaries[summary_keys[index]]
+		if panel.get_index() != first_index + index:
+			move_child(panel, first_index + index)
 
 
 func _group_levels(objects: Array) -> Dictionary:
@@ -278,7 +297,7 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 
 
 func _on_summary_input(event: InputEvent, group: TextNode) -> void:
-	if not is_instance_valid(group):
+	if not is_instance_valid(group) or is_hidden(group):
 		return
 	group._on_label_gui_input(event)
 	# A double click opens the normal editor at its original, stable position.
