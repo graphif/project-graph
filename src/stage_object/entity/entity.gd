@@ -176,6 +176,7 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 		state.linear_velocity = _release_velocity if _release_pending else Vector2.ZERO
 		state.angular_velocity = 0.0
 		_release_pending = false
+	super(state)
 
 
 func _sample_pointer() -> void:

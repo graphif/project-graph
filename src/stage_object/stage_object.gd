@@ -34,6 +34,18 @@ func _notification(what: int) -> void:
 			invalidate_geometry()
 
 
+# RigidBody2D's native force integration can update the pose without sending
+# CanvasItem transform notifications. Recheck after physics flushes the pose,
+# through the same notification path used by pointer/property transforms.
+func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
+	if state.transform != _known_transform:
+		call_deferred("_sync_physics_transform")
+
+
+func _sync_physics_transform() -> void:
+	_notification(NOTIFICATION_TRANSFORM_CHANGED)
+
+
 func invalidate_geometry() -> void:
 	geometry_version += 1
 	geometry_changed.emit()
