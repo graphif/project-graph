@@ -16,6 +16,7 @@ signal context_requested(world_position: Vector2)
 
 var current_file_path := ""
 var created_at := ""
+var _preserved_entries: Dictionary = {}
 var selected_ids := PackedStringArray()
 var _saved_snapshot: Dictionary = {}
 var _selection_lines: Dictionary = {}
@@ -407,7 +408,7 @@ func save_to_file(path: String) -> bool:
 		"position": [camera.target_position.x, camera.target_position.y],
 		"zoom": camera.target_zoom.x,
 	}
-	var result := ProjectFile.save(path, snapshot, camera_state, created_at)
+	var result := ProjectFile.save(path, snapshot, camera_state, created_at, _preserved_entries)
 	if not result.ok:
 		file_error.emit(result.error)
 		return false
@@ -431,6 +432,9 @@ func load_from_file(path: String) -> bool:
 	if camera_state.get("zoom") is float or camera_state.get("zoom") is int:
 		var zoom := float(camera_state.zoom)
 		camera.target_zoom = Vector2(zoom, zoom)
+	if result.get("legacy", false):
+		focus_objects(stage_objects())
+	_preserved_entries = result.get("preserved_entries", {})
 	history.clear()
 	current_file_path = path
 	created_at = str(result.metadata.get("created_at", ""))

@@ -1,11 +1,13 @@
 class_name ProjectFile
 
+const LegacyImporter = preload("res://src/legacy_project_importer.gd")
+
 const FORMAT_VERSION := "3.0.0"
 const METADATA_PATH := "metadata.json"
 const STAGE_PATH := "stage.json"
 
 
-static func save(path: String, snapshot: Dictionary, camera_state: Dictionary, previous_created_at: String = "") -> Dictionary:
+static func save(path: String, snapshot: Dictionary, camera_state: Dictionary, previous_created_at: String = "", preserved_entries: Dictionary = {}) -> Dictionary:
 	var now := Time.get_datetime_string_from_system(true)
 	var metadata := {
 		"version": FORMAT_VERSION,
@@ -24,6 +26,19 @@ static func save(path: String, snapshot: Dictionary, camera_state: Dictionary, p
 	error = _write_json(writer, METADATA_PATH, metadata)
 	if error == OK:
 		error = _write_json(writer, STAGE_PATH, graph)
+	if error == OK:
+		for name in preserved_entries:
+			if not str(name).begins_with("legacy/"):
+				continue
+			error = writer.start_file(name)
+			if error != OK:
+				break
+			error = writer.write_file(preserved_entries[name])
+			var entry_close_error := writer.close_file()
+			if error == OK:
+				error = entry_close_error
+			if error != OK:
+				break
 	var close_error := writer.close()
 	if error != OK:
 		return _failure("无法写入项目文件: %s" % error_string(error))
@@ -37,12 +52,20 @@ static func load(path: String) -> Dictionary:
 	var error := reader.open(path)
 	if error != OK:
 		return _failure("无法打开项目文件或文件不是有效的 ZIP: %s" % error_string(error))
+	if not reader.file_exists(STAGE_PATH) and reader.file_exists("stage.msgpack"):
+		var result: Dictionary = LegacyImporter.new().load_archive(reader)
+		reader.close()
+		return result
 	if not reader.file_exists(METADATA_PATH) or not reader.file_exists(STAGE_PATH):
 		reader.close()
 		return _failure("项目文件必须包含 metadata.json 和 stage.json")
 
 	var metadata_result := _read_json(reader, METADATA_PATH)
 	var graph_result := _read_json(reader, STAGE_PATH)
+	var preserved_entries := {}
+	for name in reader.get_files():
+		if name.begins_with("legacy/") and not name.ends_with("/"):
+			preserved_entries[name] = reader.read_file(name)
 	reader.close()
 	if not metadata_result.ok:
 		return metadata_result
@@ -55,7 +78,7 @@ static func load(path: String) -> Dictionary:
 		return _failure("不支持的项目文件版本: %s" % version)
 	if not graph.get("objects") is Array:
 		return _failure("stage.json 缺少 objects 数组")
-	return {"ok": true, "metadata": metadata, "graph": graph}
+	return {"ok": true, "metadata": metadata, "graph": graph, "preserved_entries": preserved_entries, "legacy": false}
 
 
 static func _write_json(writer: ZIPPacker, archive_path: String, value: Dictionary) -> Error:

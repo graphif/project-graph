@@ -2,6 +2,7 @@ class_name StageObjectRegistry
 
 ## 仅登记路径，避免解析 Entity/History 时预加载场景并再次解析 Entity 子类。
 const SCENE_PATHS := {
+	"legacy_asset": "res://src/stage_object/entity/legacy_asset/legacy_asset.tscn",
 	"pen_stroke": "res://src/stage_object/entity/pen_stroke/pen_stroke.tscn",
 	"text_node": "uid://btnefrbc5lowu",
 	"line_edge": "uid://dodce5rghnax4",
