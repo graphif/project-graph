@@ -14,6 +14,8 @@ Alt 跨层移动在预览时暂停物理并保留手势范围，实际放置后�
 
 Linux X11 / Godot 4.8.dev6 / Compatibility / Iris Xe / 1280×800，1029 对象教程，关闭垂直同步、开启自动物理：修复后节点拖动约 195 FPS、p95 6.83 ms；最大分组（51 个后代）拖动约 154 FPS、p95 9.11 ms。两者使用实际输入路径、刚体积分、实时连线和分组预览，没有冻结测试对象。每阶段 1.2 秒，不能据此保证所有分组大小都稳定 120 FPS。松手历史快照仍有约 63 ms 峰值，另作独立优化。
 
+加入原生历史比较后的最终发布版，119.96 Hz 显示器、开启垂直同步：节点拖动 120.10 FPS、p95 9.31 ms；51 后代的分组拖动 119.74 FPS、p95 9.63 ms。松手提交分别 23.42 ms 和 15.82 ms。导航测试冻结刚体、没有启动编辑事务，无法暴露这次问题；现在的回归保留真实刚体积分和自动物理，并检查远处位置不受影响。
+
 local_drag_physics 验证邻居仍让位、远处相连/拥挤节点静止、每次被动位移不超过一个影响半径、分组成员相对关系不变，以及一次手势的一次撤销/重做。node_repulsion、linked_attraction、group_overview、edge_caption、navigation_cache、native_dirty 和 interaction_visual 回归通过。大图源文件哈希保持不变。独立格式化器未安装，使用 Godot 编译与 Git 空白检查。
 
 通过 `mcp__godot_mcp__read_script`、`create_script`、`modify_script`、`execute_editor_script` 处理 Godot 文件与测试；没有读取场景文本或修改第三方插件。

@@ -150,7 +150,7 @@ func _wait_for_physics_settle() -> void:
 
 
 func _snapshots_equal(a: Dictionary, b: Dictionary) -> bool:
-	return JSON.stringify(a) == JSON.stringify(b)
+	return a == b # Native deep Dictionary/Array equality; no archive-sized JSON copies.
 
 
 func _unhandled_key_input(event: InputEvent) -> void:

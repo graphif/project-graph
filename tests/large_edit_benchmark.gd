@@ -9,7 +9,11 @@ func _initialize() -> void:
 
 func _run() -> void:
 	root.size = Vector2i(1280, 800)
-	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	for screen in DisplayServer.get_screen_count():
+		if DisplayServer.screen_get_refresh_rate(screen) > DisplayServer.screen_get_refresh_rate(root.current_screen):
+			root.current_screen = screen
+	root.position = DisplayServer.screen_get_position(root.current_screen) + Vector2i(100, 100)
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if OS.get_environment("PG_EDIT_VSYNC") == "1" else DisplayServer.VSYNC_DISABLED)
 	app = load("res://src/main/main.tscn").instantiate()
 	root.add_child(app)
 	for i in 5:
@@ -30,7 +34,10 @@ func _run() -> void:
 		var copy := snapshot.duplicate(true)
 		var compared := Time.get_ticks_usec()
 		var same := stage.history._snapshots_equal(snapshot, copy)
-		print("EDIT_HISTORY_COMPARE_MS: ", (Time.get_ticks_usec() - compared) / 1000.0, " equal=", same)
+		var compare_ms := (Time.get_ticks_usec() - compared) / 1000.0
+		print("EDIT_HISTORY_COMPARE_MS: ", compare_ms, " equal=", same)
+		if not same or compare_ms > 20.0:
+			failures.append("History comparison exceeds 20 ms budget")
 		compared = Time.get_ticks_usec()
 		same = snapshot == copy
 		print("EDIT_NATIVE_COMPARE_MS: ", (Time.get_ticks_usec() - compared) / 1000.0, " equal=", same)
@@ -60,7 +67,7 @@ func _run() -> void:
 	var enable_physics := OS.get_environment("PG_EDIT_NO_PHYSICS") != "1"
 	GraphPreferences.set_value("physics", enable_physics, false)
 	stage.get_viewport().physics_object_picking = false
-	print("EDIT_ENV: ", JSON.stringify({"objects": all.size(), "physics": enable_physics, "subject": subject.text}))
+	print("EDIT_ENV: ", JSON.stringify({"objects": all.size(), "physics": enable_physics, "subject": subject.text, "refresh": DisplayServer.screen_get_refresh_rate(root.current_screen), "vsync": DisplayServer.window_get_vsync_mode()}))
 	# Use the same native button path as a real selection/drag.
 	_motion(subject.aabb.get_center())
 	var press := InputEventMouseButton.new()
