@@ -25,6 +25,7 @@ var _gate_key: Array = []
 var _zoom_gates: Array[float] = []
 var _membership_key: Array = []
 var _cover_groups: Dictionary = {}
+var _structure_key: Array = []
 
 
 func _ready() -> void:
@@ -86,26 +87,41 @@ func refresh() -> void:
 		return
 	_refresh_key = refresh_key
 	var layout_changed := _layout_revision != revision
+	var structure_changed := false
 	if layout_changed:
 		_layout_revision = revision
 		_objects = stage.stage_objects()
-		_groups = _objects.filter(func(object): return object is TextNode and object._container_active and object.is_visible_in_tree())
-		_levels = _group_levels(_objects)
+		var structure_key := []
+		for object in _objects:
+			if object is Entity:
+				structure_key.append([object.get_instance_id(), object.container.get_instance_id() if is_instance_valid(object.container) else 0,
+					object._container_active if object is TextNode else false, object._editing if object is TextNode else false, object.is_visible_in_tree()])
+			elif object is LineEdge:
+				structure_key.append([object.get_instance_id(), object.source.get_instance_id() if is_instance_valid(object.source) else 0,
+					object.target.get_instance_id() if is_instance_valid(object.target) else 0, object.get_node("Caption")._editing])
+		structure_changed = structure_key != _structure_key
+		if structure_changed:
+			_structure_key = structure_key
+			_groups = _objects.filter(func(object): return object is TextNode and object._container_active and object.is_visible_in_tree())
+			_levels = _group_levels(_objects)
+			_blocked.clear()
+			# Native editing must reveal its own group and ancestors.
+			for object in _objects:
+				if object is TextNode and object._editing:
+					_block_ancestors(object, _blocked)
+				elif object is LineEdge and object.get_node("Caption")._editing:
+					if is_instance_valid(object.source):
+						_block_ancestors(object.source, _blocked)
+					if is_instance_valid(object.target):
+						_block_ancestors(object.target, _blocked)
+			_cache_cover_groups()
 		_group_rects.clear()
 		for group in _groups:
 			_group_rects[group.get_instance_id()] = group.aabb
-		_blocked.clear()
-		# Native editing must reveal its own group and ancestors.
-		for object in _objects:
-			if object is TextNode and object._editing:
-				_block_ancestors(object, _blocked)
-			elif object is LineEdge and object.get_node("Caption")._editing:
-				if is_instance_valid(object.source):
-					_block_ancestors(object.source, _blocked)
-				if is_instance_valid(object.target):
-					_block_ancestors(object.target, _blocked)
-		_cache_cover_groups()
-	var gate_key := [revision, viewport_size, camera_scale_threshold, viewport_size_ratio]
+	var group_sizes := []
+	for group in _groups:
+		group_sizes.append([group.get_instance_id(), _group_rects[group.get_instance_id()].size, _levels.get(group.get_instance_id(), 0)])
+	var gate_key := [group_sizes, viewport_size, camera_scale_threshold, viewport_size_ratio]
 	if gate_key != _gate_key:
 		_gate_key = gate_key
 		_zoom_gates.clear()
@@ -117,7 +133,7 @@ func refresh() -> void:
 			_zoom_gates.append(minf(limit, viewport_side * minf(0.75, viewport_size_ratio + 0.20 * level) / maxf(side, 0.001)))
 		_zoom_gates.sort()
 	var membership_key := [gate_key, _zoom_gates.bsearch(camera.zoom.x)]
-	if not layout_changed and membership_key == _membership_key and not _zoom_gates.has(camera.zoom.x):
+	if not structure_changed and membership_key == _membership_key and not _zoom_gates.has(camera.zoom.x):
 		for key in _active:
 			_update_summary(_active[key], _summaries[key])
 		return
@@ -148,7 +164,7 @@ func refresh() -> void:
 				_active[key] = object
 
 	# Camera-only scaling normally keeps the same group membership and input.
-	if not layout_changed and previous_active == _active:
+	if not structure_changed and previous_active == _active:
 		for key in _active:
 			_update_summary(_active[key], _summaries[key])
 		return

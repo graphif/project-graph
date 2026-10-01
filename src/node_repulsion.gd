@@ -76,6 +76,8 @@ func _physics_process(delta: float) -> void:
 	if _drivers.is_empty():
 		_apply_link_attraction(entries, delta)
 	fastest = maxf(fastest, attraction_speed if _attraction_pending else 0.0)
+	for entry in entries:
+		entry["mobile"] = entry.weights.keys().any(func(body): return not _held(body))
 	entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.rect.position.x < b.rect.position.x)
 	var pairs: Array[Dictionary] = []
 	var pushes: Dictionary[Entity, Vector2] = {}
@@ -86,6 +88,8 @@ func _physics_process(delta: float) -> void:
 			var b_rect: Rect2 = entries[j].rect
 			if b_rect.position.x - a_rect.end.x > influence_distance + fastest * delta * 2.0:
 				break
+			if not entries[i].mobile and not entries[j].mobile:
+				continue
 			var b: StageObject = entries[j].body
 			# 同层兄弟彼此避让；容器和后代之间不施加排斥。
 			if entries[i].container != entries[j].container and not entries[i].weights.has(b) and not entries[j].weights.has(a):
@@ -343,6 +347,7 @@ func begin_local_edit(objects: Array) -> void:
 func _local_entries(delta: float) -> Array[Dictionary]:
 	var bodies := {}
 	var regions: Array[Rect2] = []
+	var sibling_layers := {}
 	_local_movable.clear()
 	var space := get_world_2d().direct_space_state
 	for key in _drivers.keys():
@@ -350,6 +355,7 @@ func _local_entries(delta: float) -> Array[Dictionary]:
 		if not is_instance_valid(driver) or driver.is_queued_for_deletion():
 			_drivers.erase(key)
 			continue
+		sibling_layers[driver.container] = true
 		var rect := driver.aabb
 		if driver.drag_controlled:
 			var destination := rect
@@ -388,13 +394,15 @@ func _local_entries(delta: float) -> Array[Dictionary]:
 			continue
 		if bodies.has(edge.source.get_instance_id()) or bodies.has(edge.target.get_instance_id()):
 			edge.refresh_for_physics()
+		var container: Entity = edge.source.container if edge.source.container == edge.target.container else null
+		if not sibling_layers.has(container) and not bodies.has(edge.source.get_instance_id()) and not bodies.has(edge.target.get_instance_id()):
+			continue
 		var rect := edge.caption_rect()
 		if not rect.has_area() or not regions.any(func(region: Rect2) -> bool: return region.intersects(rect, true)):
 			continue
 		var fraction := edge.caption_fraction()
 		var weights := {edge.source: 1.0 - fraction}
 		weights[edge.target] = weights.get(edge.target, 0.0) + fraction
-		var container: Entity = edge.source.container if edge.source.container == edge.target.container else null
 		entries.append({"body": edge, "rect": rect, "container": container, "weights": weights})
 	return entries
 

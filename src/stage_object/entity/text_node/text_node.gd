@@ -12,6 +12,7 @@ static var _canvas_font: Font
 @onready var container_panel: Panel = $ContainerPanel
 var _container_rect := Rect2()
 var _container_active := false
+var _container_layout_key: Array = []
 var _fill_layer := 1
 var _normal_label_position := Vector2.ZERO
 var _normal_edit_position := Vector2.ZERO
@@ -466,6 +467,12 @@ static func _make_canvas_font(original: Font) -> Font:
 func update_container_layout(members: Array[Entity]) -> void:
 	_update_fill_layer(members)
 	_apply_appearance(false)
+	var layout_key := [global_transform, label.get_minimum_size(), fixed_width]
+	for member in members:
+		layout_key.append([member.get_instance_id(), member.geometry_version])
+	if layout_key == _container_layout_key:
+		return
+	_container_layout_key = layout_key
 	var active := not members.is_empty()
 	if active != _container_active:
 		_container_active = active
@@ -577,6 +584,7 @@ func _display_theme_is_light() -> bool:
 
 ## Stable full-document bounds during progressive restoration.
 func set_loading_container_rect(world_rect: Rect2) -> void:
+	_container_layout_key.clear()
 	_container_active = true
 	_container_rect = global_transform.affine_inverse() * world_rect
 	container_panel.position = _container_rect.position

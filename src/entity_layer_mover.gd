@@ -17,6 +17,11 @@ var _last_positions: Dictionary = {}
 var _layout_inputs: Array = []
 var _layout_revision := -1
 var _physics_revision := -1
+var _topology_key: Array = []
+var _outer_first: Array[Entity] = []
+var _inner_first: Array[Entity] = []
+var _children_by_parent: Dictionary = {}
+var _live: Dictionary = {}
 
 
 func _ready() -> void:
@@ -243,52 +248,76 @@ func _physics_process(_delta: float) -> void:
 				break
 	if not moved:
 		return # The render pass still detects containment, text and size edits.
-	all.sort_custom(func(a: Entity, b: Entity) -> bool: return a.container_depth() < b.container_depth())
-	for parent in all:
+	_update_topology(all)
+	for parent in _outer_first:
 		var old: Vector2 = _last_positions.get(parent, parent.global_position)
 		var displacement := parent.global_position - old
 		if not displacement.is_zero_approx():
-			for child in all:
-				if child.container == parent and not child.drag_controlled and not child._release_pending:
+			for child: Entity in _children_by_parent.get(parent, []):
+				if not child.drag_controlled and not child._release_pending:
 					child.move_without_inertia(child.global_position + displacement)
 	for object in all:
 		_last_positions[object] = object.global_position
 	for object in _last_positions.keys():
-		if not is_instance_valid(object) or not all.has(object):
+		if not is_instance_valid(object) or not _live.has(object):
 			_last_positions.erase(object)
-	refresh_layout()
+	# Rebuild derived panels once before rendering, not once per catch-up physics step.
 
 
 func refresh_layout() -> void:
 	if target_root is Stage and _layout_revision == target_root.layout_revision:
 		return
 	var all := entities()
-	var inputs := _capture_layout_inputs(all)
-	if inputs == _layout_inputs:
-		if target_root is Stage:
-			_layout_revision = target_root.layout_revision
+	# Stage geometry revisions already describe changes. Do not reread every
+	# collision AABB twice just to compare derived inputs on each physics step.
+	if not target_root is Stage:
+		var inputs := _capture_layout_inputs(all)
+		if inputs == _layout_inputs:
+			return
+	_update_topology(all)
+	for object in _inner_first:
+		if object is TextNode:
+			var members: Array[Entity] = _children_by_parent.get(object, [] as Array[Entity])
+			object.update_container_layout(members)
+	if target_root is Stage:
+		_layout_revision = target_root.layout_revision
+	else:
+		_layout_inputs = _capture_layout_inputs(entities())
+
+
+# Containment order only changes when membership changes, never during a drag.
+# Native dictionaries keep validation and member lookup independent of graph size.
+func _update_topology(all: Array[Entity]) -> void:
+	var key := []
+	for object in all:
+		key.append([object.get_instance_id(), object.container.get_instance_id() if is_instance_valid(object.container) else 0])
+	if key == _topology_key:
 		return
+	_live.clear()
+	for object in all:
+		_live[object] = true
 	for object in all:
 		if not is_instance_valid(object.container):
 			object.container = null
-		elif not object.container is TextNode or not all.has(object.container) or object.container == object or object.container.is_inside_container(object):
+		elif not object.container is TextNode or not _live.has(object.container) or object.container == object or object.container.is_inside_container(object):
 			object.container = null
-		object.z_index = mini(object.container_depth(), 64)
-	all.sort_custom(func(a: Entity, b: Entity) -> bool: return a.container_depth() > b.container_depth())
-	var children_by_parent: Dictionary = {}
+	_children_by_parent.clear()
+	var depths := {}
+	_topology_key.clear()
 	for object in all:
+		var depth := object.container_depth()
+		depths[object] = depth
+		object.z_index = mini(depth, 64)
+		_topology_key.append([object.get_instance_id(), object.container.get_instance_id() if is_instance_valid(object.container) else 0])
 		if is_instance_valid(object.container):
-			if not children_by_parent.has(object.container):
+			if not _children_by_parent.has(object.container):
 				var members: Array[Entity] = []
-				children_by_parent[object.container] = members
-			children_by_parent[object.container].append(object)
-	for object in all:
-		if object is TextNode:
-			var members: Array[Entity] = children_by_parent.get(object, [] as Array[Entity])
-			object.update_container_layout(members)
-	_layout_inputs = _capture_layout_inputs(entities())
-	if target_root is Stage:
-		_layout_revision = target_root.layout_revision
+				_children_by_parent[object.container] = members
+			_children_by_parent[object.container].append(object)
+	_outer_first = all.duplicate()
+	_outer_first.sort_custom(func(a: Entity, b: Entity) -> bool: return depths[a] < depths[b])
+	_inner_first = _outer_first.duplicate()
+	_inner_first.reverse()
 
 
 func _capture_layout_inputs(all: Array[Entity]) -> Array:
@@ -306,6 +335,11 @@ func reset_tracking() -> void:
 	_layout_revision = -1
 	_physics_revision = -1
 	_layout_inputs.clear()
+	_topology_key.clear()
+	_outer_first.clear()
+	_inner_first.clear()
+	_children_by_parent.clear()
+	_live.clear()
 	_last_positions.clear()
 	for object in entities():
 		_last_positions[object] = object.global_position

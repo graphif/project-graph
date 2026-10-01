@@ -93,6 +93,7 @@ var _bucket_offset := 0.0
 var _render_bucket := -2147483648
 var _view_bounds := Rect2()
 var _in_view := true
+var _physics_refresh_requested := false
 var _refresh_key: Array = []
 var _color_key: Array = []
 var _display_color := Color.TRANSPARENT
@@ -123,6 +124,11 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	# Covered edges have no visible geometry or picking surface. Physics requests
+	# can still refresh them explicitly; zooming in queues their normal rebuild.
+	if visibility_layer == 0 and not _physics_refresh_requested:
+		set_process(false)
+		return
 	if not is_instance_valid(source) or not is_instance_valid(target):
 		hide()
 		_geometry_key.clear()
@@ -568,7 +574,9 @@ func refresh_for_physics() -> void:
 	# Rigid-body integration can precede deferred transform notifications.
 	_endpoint_key.clear()
 	_refresh_key.clear()
+	_physics_refresh_requested = true
 	_process(0.0)
+	_physics_refresh_requested = false
 	var caption := get_node("Caption")
 	caption._queue_refresh()
 	caption._process(0.0)

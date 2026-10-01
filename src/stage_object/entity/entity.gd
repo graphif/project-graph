@@ -43,6 +43,7 @@ var _release_velocity := Vector2.ZERO
 var _saved_damping := 0.0
 var _history: History
 var _drag_origins: Dictionary[Entity, Vector2] = {}
+var _drag_followers: Dictionary[Entity, bool] = {}
 
 
 func _ready() -> void:
@@ -84,6 +85,18 @@ func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> voi
 						_drag_origins[object] = object.global_position
 			if _drag_origins.is_empty():
 				_drag_origins[self] = global_position
+			_drag_followers.clear()
+			if stage != null:
+				var roots := _drag_origins.keys()
+				for child in stage.get_children():
+					var candidate := child as Entity
+					if candidate == null or _drag_origins.has(candidate):
+						continue
+					for root in roots:
+						if candidate.is_inside_container(root):
+							_drag_origins[candidate] = candidate.global_position
+							_drag_followers[candidate] = true
+							break
 			for object in _drag_origins:
 				object.stop_throw()
 				object.drag_controlled = true
@@ -96,7 +109,7 @@ func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> voi
 			if stage != null:
 				var solver := stage.get_node_or_null("NodeRepulsion")
 				if solver != null:
-					solver.begin_local_edit(_drag_origins.keys())
+					solver.begin_local_edit(_drag_origins.keys().filter(func(object): return not _drag_followers.has(object)))
 		else:
 			finish_drag(true)
 		return
@@ -126,9 +139,11 @@ func finish_drag(allow_throw := false) -> void:
 		if is_instance_valid(object):
 			object.drag_controlled = false
 			object._release_pending = _drag_moved
-			object._release_velocity = velocity
-			object._start_throw(velocity)
+			# Descendants follow their parent after release; do not add a second throw.
+			object._release_velocity = Vector2.ZERO if _drag_followers.has(object) else velocity
+			object._start_throw(object._release_velocity)
 	_drag_origins.clear()
+	_drag_followers.clear()
 	_drag_samples.clear()
 	if _history != null:
 		_history.commit()
