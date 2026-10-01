@@ -42,6 +42,18 @@ func _input(event: InputEvent) -> void:
 		return
 	if event is InputEventWithModifiers and event.alt_pressed:
 		return
+	# 一次右键事件只查询一次舞台连线，避免每条 LineEdge 重复遍历全图。
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed and target_root is Stage:
+		if target_root.history._busy:
+			return
+		var point: Vector2 = get_canvas_transform().affine_inverse() * event.position
+		var edge: LineEdge = target_root.edge_at(point)
+		if edge != null and not edge.get_node("Caption")._editing:
+			target_root.finish_text_editing()
+			target_root.select_ids(PackedStringArray([edge.id]))
+			target_root.context_requested.emit(point)
+			get_viewport().set_input_as_handled()
+			return
 	# 右键按下开始拖拽，右键松开时尝试创建边。
 	if event is InputEventMouseButton and ((event.button_index == MOUSE_BUTTON_RIGHT and int(GraphPreferences.value("right_mode")) == 0) or (event.button_index == MOUSE_BUTTON_LEFT and int(GraphPreferences.value("left_mode")) == 2)):
 		if event.pressed:

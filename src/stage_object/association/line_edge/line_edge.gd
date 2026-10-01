@@ -496,23 +496,6 @@ func caption_fraction() -> float:
 	return float(stage.get_meta("caption_peer_fractions").get(get_instance_id(), 0.5))
 
 
-func _input(event: InputEvent) -> void:
-	if not is_visible_in_tree() or not event is InputEventMouseButton:
-		return
-	if not event.pressed or event.button_index != MOUSE_BUTTON_RIGHT or event.alt_pressed:
-		return
-	var stage := get_parent() as Stage
-	if stage == null or stage.history._busy or $Caption._editing:
-		return
-	var point: Vector2 = get_canvas_transform().affine_inverse() * event.position
-	if stage.edge_at(point) != self:
-		return
-	stage.finish_text_editing()
-	stage.select_ids(PackedStringArray([id]))
-	stage.context_requested.emit(point)
-	get_viewport().set_input_as_handled()
-
-
 func _watch_endpoints() -> void:
 	for entity in _watched_entities:
 		if is_instance_valid(entity) and entity.geometry_changed.is_connected(_queue_refresh):
