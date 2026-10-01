@@ -1505,6 +1505,8 @@ func _apply_details() -> void:
 	stage.finish_text_editing()
 	stage.finish_interaction()
 	stage.history.begin_transaction()
+	var drivers: Array = [object] if object is TextNode else [object.source, object.target]
+	stage.get_node("NodeRepulsion").begin_local_edit(drivers)
 	if object is TextNode:
 		object.text = panel.get_node("Text").text
 		object.font_size = int(panel.get_node("Fields/FontSize").value)

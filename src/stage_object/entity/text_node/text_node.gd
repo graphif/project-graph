@@ -308,6 +308,9 @@ func exit_edit_mode(commit_changes: bool = true) -> void:
 	var changed := commit_changes and text != text_edit.text
 	if changed and _history != null:
 		_history.begin_transaction()
+		var solver := get_parent().get_node_or_null("NodeRepulsion")
+		if solver != null:
+			solver.begin_local_edit([self])
 	if changed:
 		text = text_edit.text
 	text_edit.release_focus()

@@ -201,6 +201,7 @@ func finish_edit(commit_changes := true) -> void:
 	var changed := commit_changes and edge.text != editor.text
 	if changed and stage != null:
 		stage.history.begin_transaction()
+		stage.get_node("NodeRepulsion").begin_local_edit([edge.source, edge.target])
 		edge.text = editor.text
 	editor.release_focus()
 	editor.hide()
