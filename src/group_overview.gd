@@ -7,6 +7,7 @@ extends Node2D
 
 const Corners = preload("res://src/main/continuous_corners.gd")
 const TITLE_FONT_SIZE := 64
+static var _summary_font: FontFile
 
 @onready var _template: Panel = $SummaryTemplate
 var _active: Dictionary = {}
@@ -69,6 +70,10 @@ func invalidate() -> void:
 
 func refresh() -> void:
 	var stage := get_parent()
+	if stage.is_loading and stage.has_meta("loading_overview_revision"):
+		for key in _active:
+			_update_summary(_active[key], _summaries[key])
+		return
 	var camera: Camera2D = stage.camera
 	var viewport_size := get_viewport_rect().size
 	var viewport_side := maxf(viewport_size.x, viewport_size.y)
@@ -277,7 +282,7 @@ func _exit_tree() -> void:
 
 
 func _update_summary(group: TextNode, panel: Panel) -> void:
-	var revision: int = get_parent().layout_revision
+	var revision: int = get_parent().get_meta("loading_overview_revision", get_parent().layout_revision)
 	var data: Dictionary = panel.get_meta("summary_data", {})
 	if data.get("revision", -1) == revision and not get_parent().world_view_rect.intersects(data.rect, true):
 		return
@@ -312,7 +317,10 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 		panel.size = panel_size
 	panel.z_index = 66 # Translucent cover above detail; external captions remain above it.
 	title.text = data.text
-	var title_font: Font = data.font
+	if _summary_font == null:
+		_summary_font = preload("res://assets/fonts/PingFang-SC-Regular.ttf").duplicate() as FontFile
+		_summary_font.oversampling = 1.0
+	var title_font: Font = _summary_font
 	var title_color: Color = data.foreground
 	if title.get_theme_font("font") != title_font:
 		title.add_theme_font_override("font", title_font)
@@ -368,3 +376,37 @@ func _cache_cover_groups() -> void:
 		from_groups.append(object.source.get_instance_id())
 		to_groups.append(object.target.get_instance_id())
 		_cover_groups[object.get_instance_id()] = from_groups.filter(func(key): return to_groups.has(key))
+
+
+## Full group bounds/topology are installed first; suppress arriving detail before draw.
+func register_loading_object(object: StageObject) -> void:
+	var covered := false
+	if object is Entity:
+		var current: Entity = object.container
+		while is_instance_valid(current):
+			if _active.has(current.get_instance_id()):
+				covered = true
+				break
+			current = current.container
+	elif object is LineEdge and is_instance_valid(object.source) and is_instance_valid(object.target):
+		for key in _active:
+			var group: Entity = _active[key]
+			var from_inside: bool = object.source == group or object.source.is_inside_container(group)
+			var to_inside: bool = object.target == group or object.target.is_inside_container(group)
+			if from_inside and to_inside:
+				covered = true
+				break
+	if not covered:
+		return
+	var key := object.get_instance_id()
+	_hidden[key] = true
+	if _suppressed.has(key):
+		return
+	var items: Array[Dictionary] = []
+	_suppress_canvas(object, items)
+	_suppressed[key] = {"object": object, "items": items, "pickable": object.input_pickable}
+	for item in items:
+		item.node.visibility_layer = 0
+		if object is LineEdge and item.node != object:
+			item.node.z_index = 0
+	object.input_pickable = false

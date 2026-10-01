@@ -578,7 +578,7 @@ func _show_panel(name: String) -> void:
 
 func _run(command: String) -> void:
 	var active_stage: Stage = tabs.get_current_stage()
-	if active_stage != null and active_stage.history._busy:
+	if active_stage != null and active_stage.history._busy and command not in ["closeTab", "newDraft", "openFile", "welcome", "theme"]:
 		return
 	if not _available(command):
 		return
@@ -1142,7 +1142,7 @@ func _process(delta: float) -> void:
 		if _window_ready.has(window_name) and _window_ready[window_name].visible:
 			needs_graph = true
 			break
-	if not needs_graph or _last_graph_revision == stage.document_revision:
+	if stage.is_loading or not needs_graph or _last_graph_revision == stage.document_revision:
 		return
 	_last_graph_revision = stage.document_revision
 	var graph := JSON.stringify(StageObjectRegistry.capture(stage))

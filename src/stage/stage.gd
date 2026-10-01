@@ -1,6 +1,7 @@
 class_name Stage
 extends Node2D
 
+const InitialLoader = preload("res://src/project_loader.gd")
 const Palette = preload("res://src/main/theme_palette.gd")
 
 signal file_error(message: String)
@@ -16,6 +17,8 @@ signal caption_peers_changed
 @onready var camera: Camera2D = $Camera
 @onready var group_overview: Node2D = $GroupOverview
 
+var is_loading := false
+var loading_file_path := ""
 var current_file_path := ""
 var created_at := ""
 var _preserved_entries: Dictionary = {}
@@ -355,6 +358,8 @@ func cancel_current_interaction() -> void:
 
 
 func is_dirty() -> bool:
+	if is_loading:
+		return false
 	for object in _editing_objects.values():
 		if not is_instance_valid(object):
 			continue
@@ -433,6 +438,8 @@ func finish_text_editing() -> void:
 
 
 func save_to_file(path: String) -> bool:
+	if is_loading:
+		return false
 	finish_interaction()
 	finish_text_editing()
 	$EntityLayerMover.refresh_layout()
@@ -456,32 +463,35 @@ func save_to_file(path: String) -> bool:
 
 
 func load_from_file(path: String) -> bool:
-	var result := ProjectFile.load(path)
-	if not result.ok:
-		file_error.emit(result.error)
-		return false
-	await StageObjectRegistry.restore(self, result.graph)
-	var camera_state: Dictionary = result.graph.get("camera", { })
-	var position: Variant = _decode_vector2(camera_state.get("position"))
-	if position != null:
-		camera.target_position = position
-	if camera_state.get("zoom") is float or camera_state.get("zoom") is int:
-		var zoom := float(camera_state.zoom)
-		camera.target_zoom = Vector2(zoom, zoom)
-	if result.get("legacy", false):
-		focus_objects(stage_objects())
+	var loader := start_initial_load(path)
+	return await loader.completed if loader != null else false
+
+
+func start_initial_load(path: String) -> Node:
+	if is_loading or history._busy:
+		return null
+	finish_interaction()
+	finish_text_editing()
+	is_loading = true
+	loading_file_path = path
+	history._busy = true
+	var loader := InitialLoader.new()
+	get_tree().root.add_child(loader)
+	loader.start(self, path)
+	return loader
+
+
+func complete_initial_load(result: Dictionary, snapshot: Dictionary, comparison: Dictionary) -> void:
 	_preserved_entries = result.get("preserved_entries", {})
-	history.clear()
-	current_file_path = path
+	history.clear(snapshot)
+	current_file_path = str(result.get("path", ""))
 	created_at = str(result.metadata.get("created_at", ""))
-	_saved_snapshot = StageObjectRegistry.capture(self)
-	_saved_comparison_state = StageObjectRegistry.comparison_state(self)
+	_saved_snapshot = snapshot
+	_saved_comparison_state = comparison
 	_dirty_revision = -1
 	_cached_dirty = false
-	apply_preferences()
 	select_ids(PackedStringArray())
-	file_loaded.emit(path)
-	return true
+	file_loaded.emit(current_file_path)
 
 
 func _decode_vector2(value):

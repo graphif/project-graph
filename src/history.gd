@@ -105,13 +105,13 @@ func cancel_transaction() -> void:
 	_busy = false
 
 
-func clear() -> void:
+func clear(snapshot: Dictionary = {}) -> void:
 	_commit_generation += 1
 	_pending_commit = false
 	_undo_stack.clear()
 	_redo_stack.clear()
 	_transaction_snapshot = { }
-	_current_snapshot = _capture_snapshot()
+	_current_snapshot = _capture_snapshot() if snapshot.is_empty() else snapshot
 
 
 func is_transaction_active() -> bool:

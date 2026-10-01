@@ -442,6 +442,9 @@ func caption_rect() -> Rect2:
 
 func _invalidate_caption_peers() -> void:
 	if is_inside_tree():
+		if get_parent() is Stage and get_parent().is_loading:
+			get_parent().set_meta("loading_caption_peers_dirty", true)
+			return
 		get_parent().remove_meta("caption_peer_fractions")
 		get_parent().set_meta("caption_peer_revision", int(get_parent().get_meta("caption_peer_revision", 0)) + 1)
 		if get_parent() is Stage:

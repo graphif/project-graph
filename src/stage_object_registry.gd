@@ -47,15 +47,11 @@ static func restore(target_root: Node, snapshot: Dictionary) -> void:
 	for object_data in objects:
 		if not object_data is Dictionary:
 			continue
-		var type_name := str(object_data.get("type", ""))
-		var scene: PackedScene = get_scene(type_name)
-		if scene == null:
-			continue
-		var object := scene.instantiate() as StageObject
+		var object := instantiate_record(object_data, pending_references)
 		if object == null:
 			continue
-		_restore_transform(object, object_data.get("transform", {}))
-		_restore_properties(object, object_data.get("properties", {}), pending_references)
+		if object is TextNode and target_root.has_meta("load_canvas_font"):
+			object.set_meta("prepared_canvas_font", target_root.get_meta("load_canvas_font"))
 		target_root.add_child(object)
 		if not object.id.is_empty() and not by_id.has(object.id):
 			by_id[object.id] = object
@@ -68,6 +64,19 @@ static func restore(target_root: Node, snapshot: Dictionary) -> void:
 	if layer_mover != null:
 		layer_mover.call("reset_tracking")
 	await target_root.get_tree().process_frame
+
+
+## Reuse the same property/reference restoration for history and initial loading.
+static func instantiate_record(record: Dictionary, pending_references: Array[Dictionary]) -> StageObject:
+	var scene := get_scene(str(record.get("type", "")))
+	if scene == null:
+		return null
+	var object := scene.instantiate() as StageObject
+	if object == null:
+		return null
+	_restore_transform(object, record.get("transform", {}))
+	_restore_properties(object, record.get("properties", {}), pending_references)
+	return object
 
 
 static func _collect_objects(node: Node, result: Array[Dictionary]) -> void:
@@ -196,17 +205,21 @@ static func comparison_state(target_root: Node) -> Dictionary:
 	for object in target_root.get_children():
 		if not object is StageObject or object.is_queued_for_deletion():
 			continue
-		var values := {"script": object.get_script(), "transform": object.transform}
-		for name in _serializable_property_names(object):
-			var value: Variant = _comparison_value(object.get(name))
-			if value is Array or value is Dictionary:
-				values[name] = value.duplicate(true)
-			elif typeof(value) >= TYPE_PACKED_BYTE_ARRAY and typeof(value) <= TYPE_PACKED_VECTOR4_ARRAY:
-				values[name] = value.duplicate()
-			else:
-				values[name] = value
-		result[object.id] = values
+		result[object.id] = object_comparison_state(object)
 	return result
+
+
+static func object_comparison_state(object: StageObject) -> Dictionary:
+	var values := {"script": object.get_script(), "transform": object.transform}
+	for name in _serializable_property_names(object):
+		var value: Variant = _comparison_value(object.get(name))
+		if value is Array or value is Dictionary:
+			values[name] = value.duplicate(true)
+		elif typeof(value) >= TYPE_PACKED_BYTE_ARRAY and typeof(value) <= TYPE_PACKED_VECTOR4_ARRAY:
+			values[name] = value.duplicate()
+		else:
+			values[name] = value
+	return values
 
 
 static func matches_comparison_state(target_root: Node, state: Dictionary) -> bool:

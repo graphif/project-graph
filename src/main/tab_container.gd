@@ -141,17 +141,20 @@ func load_files(paths: PackedStringArray) -> void:
 		var path := raw_path.simplify_path()
 		var existing := -1
 		for index in get_tab_count():
-			if get_stage(index).current_file_path == path:
+			if get_stage(index).current_file_path == path or get_stage(index).loading_file_path == path:
 				existing = index
 				break
 		if existing >= 0:
 			current_tab = existing
 			continue
 		var stage := new_tab(path.get_file())
-		if await stage.load_from_file(path):
+		var stage_ref: WeakRef = weakref(stage)
+		var loader := stage.start_initial_load(path)
+		var loaded: bool = await loader.completed if loader != null else false
+		if loaded:
 			GraphPreferences.remember(path)
-		else:
-			close_container(stage.get_parent().get_parent())
+		elif stage_ref.get_ref() != null and stage_ref.get_ref().is_inside_tree():
+			close_container(stage_ref.get_ref().get_parent().get_parent())
 	_update_tab_titles()
 
 

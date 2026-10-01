@@ -97,16 +97,18 @@ func _ready() -> void:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_normal_label_position = label.position
 	_normal_edit_position = text_edit.position
-	# MSDF 字形在相机缩放时保持平滑，所有节点共享同一份字形缓存。
+	# 共享字形缓存；原生视口 oversampling 按当前屏幕倍率采样。
 	if _canvas_font == null:
 		_canvas_font = _make_canvas_font(preload("res://assets/fonts/PingFang-SC-Regular.ttf"))
-	label.add_theme_font_override("font", _canvas_font)
-	text_edit.add_theme_font_override("font", _canvas_font)
+	var display_font: Font = get_meta("prepared_canvas_font", _canvas_font)
+	remove_meta("prepared_canvas_font")
+	label.add_theme_font_override("font", display_font)
+	text_edit.add_theme_font_override("font", display_font)
 	text_edit.add_theme_constant_override("line_spacing", label.get_theme_constant("line_spacing"))
 	label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	text_edit.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	_apply_appearance()
-	_configure_edit_menu()
+	text_edit.set_context_menu_enabled(false)
 	text_edit.focus_exited.connect(_on_edit_focus_exited)
 	text_edit.commit_requested.connect(exit_edit_mode)
 	text_edit.cancel_requested.connect(exit_edit_mode.bind(false))
@@ -173,7 +175,7 @@ func _configure_edit_menu(theme_light: Variant = null) -> void:
 
 func _show_edit_menu(local_position: Vector2) -> void:
 	if _edit_menu == null:
-		return
+		_configure_edit_menu()
 	_compact_edit_menu(_edit_menu)
 	_edit_menu.size = Vector2i.ZERO
 	_edit_menu.max_size = Vector2i(220, 1000)
@@ -453,10 +455,9 @@ static func _make_canvas_font(original: Font) -> Font:
 		return variation
 	if original is FontFile:
 		var scalable := original.duplicate() as FontFile
-		scalable.multichannel_signed_distance_field = true
-		# 较复杂的中文笔画需要比默认 48 更高的距离场精度。
-		scalable.msdf_size = 96
-		scalable.msdf_pixel_range = 8
+		# Native viewport oversampling supplies the current screen-size raster.
+		# Generating 96px MSDFs for every CJK glyph stalls cold large-file loads.
+		scalable.multichannel_signed_distance_field = false
 		return scalable
 	return original
 
@@ -572,3 +573,16 @@ func _display_theme_is_light() -> bool:
 	if stage != null and stage._applied_theme_light >= 0:
 		return stage._applied_theme_light == 1
 	return Palette.is_light(str(GraphPreferences.value("theme")))
+
+
+## Stable full-document bounds during progressive restoration.
+func set_loading_container_rect(world_rect: Rect2) -> void:
+	_container_active = true
+	_container_rect = global_transform.affine_inverse() * world_rect
+	container_panel.position = _container_rect.position
+	container_panel.size = _container_rect.size
+	container_panel.show()
+	label.position = _container_rect.position
+	label.size = Vector2(_container_rect.size.x, label.get_minimum_size().y)
+	_apply_appearance(false)
+	_update_collision_shape()
