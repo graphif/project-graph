@@ -166,6 +166,68 @@ class ThumbnailTests(unittest.TestCase):
         edge["properties"]["show_arrow"] = False
         self.assertNotEqual(arrow, self.render_graph([source, target, edge]))
 
+    def test_master_paths_restore_nested_group_and_edge(self):
+        stage = [
+            {
+                "_": "TextNode",
+                "uuid": "a",
+                "text": "你好",
+                "collisionBox": {
+                    "shapes": [
+                        {
+                            "_": "Rectangle",
+                            "location": {"x": 50, "y": 80},
+                            "size": {"x": 120, "y": 60},
+                        }
+                    ]
+                },
+            },
+            {"_": "Section", "uuid": "b", "text": "分组", "children": [{"$": "/0"}]},
+            {
+                "_": "LineEdge",
+                "uuid": "c",
+                "associationList": [{"$": "/1"}, {"$": "/0"}],
+            },
+        ]
+        graph = thumbnailer.legacy_graph(stage)
+        self.assertEqual(len(graph["objects"]), 3)
+        self.assertEqual(graph["objects"][0]["properties"]["container"], {"$ref": "b"})
+        self.assertEqual(graph["objects"][2]["properties"]["target"], {"$ref": "a"})
+        with tempfile.TemporaryDirectory() as directory:
+            import msgpack
+
+            source, output = Path(directory, "old.prg"), Path(directory, "old.png")
+            with zipfile.ZipFile(source, "w") as archive:
+                archive.writestr("stage.msgpack", msgpack.packb(stage))
+            thumbnailer.render(str(source), str(output), 128)
+            surface = cairo.ImageSurface.create_from_png(str(output))
+            self.assertEqual(surface.get_width(), 256)
+
+    def test_master_embedded_preview_is_used_without_stage_decoding(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source, output = Path(directory, "old.prg"), Path(directory, "old.png")
+            import io
+
+            original = cairo.ImageSurface(cairo.FORMAT_ARGB32, 100, 100)
+            ctx = cairo.Context(original)
+            ctx.set_source_rgb(1, 0, 0)
+            ctx.paint()
+            png = io.BytesIO()
+            original.write_to_png(png)
+            with zipfile.ZipFile(source, "w") as archive:
+                archive.writestr("stage.msgpack", b"unused")
+                archive.writestr("thumbnail.png", png.getvalue())
+            thumbnailer.render(str(source), str(output), 256)
+            self.assertEqual(
+                self.pixels(output.read_bytes())[256 * 512 + 256], (255, 0, 0)
+            )
+
+    def test_master_broken_reference_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "reference"):
+            thumbnailer.legacy_graph(
+                [{"_": "Section", "uuid": "a", "children": [{"$": "/missing"}]}]
+            )
+
     def render_nested(self, directory, name, container_x):
         objects = []
         for identifier, parent, x, text in (

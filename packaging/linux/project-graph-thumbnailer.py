@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Render a bounded, offline overview of a PRG; never execute document content."""
 
+import io
 import json
 import math
 import os
@@ -14,7 +15,7 @@ import gi
 
 gi.require_version("Pango", "1.0")
 gi.require_version("PangoCairo", "1.0")
-from gi.repository import Pango, PangoCairo
+from gi.repository import GLib, Pango, PangoCairo
 
 MAX_JSON = 16 * 1024 * 1024
 
@@ -207,6 +208,163 @@ def curve_path(ctx, curve):
     ctx.curve_to(*curve[1], *curve[2], *curve[3])
 
 
+def archive_bytes(archive, name, limit=MAX_JSON):
+    info = archive.getinfo(name)
+    if info.file_size > limit:
+        raise ValueError("Archive entry exceeds preview limit")
+    with archive.open(info) as stream:
+        data = stream.read(limit + 1)
+    if len(data) > limit:
+        raise ValueError("Archive entry exceeds preview limit")
+    return data
+
+
+def legacy_graph(stage):
+    """Adapt master's serializer paths to the thumbnailer's stable ID graph."""
+    paths, entities = {}, {}
+
+    def visit(value, path="", depth=0):
+        if depth > 100 or len(paths) > 300000:
+            raise ValueError("Legacy graph exceeds preview limit")
+        paths[path] = value
+        if isinstance(value, dict):
+            if value.get("uuid"):
+                entities[value["uuid"]] = value
+            for key, child in value.items():
+                visit(child, path + "/" + str(key), depth + 1)
+        elif isinstance(value, list):
+            for index, child in enumerate(value):
+                visit(child, path + "/" + str(index), depth + 1)
+
+    if not isinstance(stage, list):
+        raise TypeError("Legacy stage must be an array")
+    visit(stage)
+    if len(entities) > 5000:
+        raise ValueError("Too many legacy entities")
+
+    def resolve(value):
+        if isinstance(value, dict) and "$" in value:
+            value = paths.get(value["$"])
+        if not isinstance(value, dict) or not value.get("uuid"):
+            raise ValueError("Broken legacy object reference")
+        return value["uuid"]
+
+    parents = {}
+    for identifier, obj in entities.items():
+        if obj.get("_") == "Section":
+            for child in obj.get("children", []):
+                parents[resolve(child)] = identifier
+
+    def color(value):
+        return {
+            "type": "Color",
+            "args": [number(value.get(k)) / 255 for k in ("r", "g", "b")]
+            + [number(value.get("a"))],
+        }
+
+    def rect(obj):
+        shapes = obj.get("collisionBox", obj.get("_collisionBoxNormal", {})).get(
+            "shapes", []
+        )
+        for shape in shapes:
+            if shape.get("_") == "Rectangle":
+                return (*point(shape.get("location")), *point(shape.get("size")))
+        return (0, 0, 30, 30)
+
+    objects = []
+    for identifier, obj in entities.items():
+        kind = obj.get("_")
+        props = {"id": identifier}
+        if identifier in parents:
+            props["container"] = {"$ref": parents[identifier]}
+        position = rect(obj)[:2]
+        if kind in (
+            "TextNode",
+            "Section",
+            "UrlNode",
+            "ConnectPoint",
+            "ImageNode",
+            "SvgNode",
+        ):
+            props.update(
+                text=obj.get("text", obj.get("title", "")),
+                font_size=32 * 2 ** (number(obj.get("fontScaleLevel")) / 2),
+                fill_color=color(obj.get("color", {})),
+                preview_rect=rect(obj),
+            )
+            if kind in ("ImageNode", "SvgNode"):
+                props["preview_attachment"] = obj.get("attachmentId", "")
+            objects.append(
+                {
+                    "type": "text_node",
+                    "properties": props,
+                    "transform": {"position": position},
+                }
+            )
+        elif kind == "PenStroke":
+            props["points"] = [
+                point(v.get("location")) for v in obj.get("segments", [])
+            ]
+            objects.append({"type": "pen_stroke", "properties": props})
+        elif kind in ("LineEdge", "ArcEdge", "MultiTargetUndirectedEdge"):
+            endpoints = [resolve(v) for v in obj.get("associationList", [])]
+            for index, target in enumerate(endpoints[1:]):
+                edge = dict(
+                    props,
+                    source={"$ref": endpoints[0]},
+                    target={"$ref": target},
+                    text=obj.get("text", "") if index == 0 else "",
+                    show_arrow=kind != "MultiTargetUndirectedEdge"
+                    and obj.get("arrowType") != "none",
+                    use_theme_color=number(obj.get("color", {}).get("a")) == 0,
+                    stroke_color=color(obj.get("color", {})),
+                )
+                objects.append({"type": "line_edge", "properties": edge})
+        else:
+            raise ValueError("Unsupported legacy entity: " + str(kind))
+    return {"objects": objects}
+
+
+def image_surface(data, extension):
+    # Native decoders handle PNG, JPEG and SVG; no document URLs are fetched.
+    if extension.lower() == "svg":
+        gi.require_version("Rsvg", "2.0")
+        from gi.repository import Rsvg
+
+        handle = Rsvg.Handle.new_from_data(data)
+        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 512, 512)
+        viewport = Rsvg.Rectangle()
+        viewport.x = viewport.y = 0
+        viewport.width = viewport.height = 512
+        handle.render_document(cairo.Context(surface), viewport)
+        return surface
+    gi.require_version("GdkPixbuf", "2.0")
+    from gi.repository import GdkPixbuf, Gio
+
+    pixbuf = GdkPixbuf.Pixbuf.new_from_stream_at_scale(
+        Gio.MemoryInputStream.new_from_bytes(GLib.Bytes.new(data)),
+        1024,
+        1024,
+        True,
+        None,
+    )
+    _, encoded = pixbuf.save_to_bufferv("png", [], [])
+    return cairo.ImageSurface.create_from_png(io.BytesIO(encoded))
+
+
+def write_preview(surface, output):
+    fd, temp = tempfile.mkstemp(
+        dir=os.path.dirname(os.path.abspath(output)), suffix=".png"
+    )
+    os.close(fd)
+    try:
+        surface.write_to_png(temp)
+        os.replace(temp, output)
+    finally:
+        if os.path.exists(temp):
+            os.unlink(temp)
+
+
 def render(source, output, requested_size):
     # Keep two device pixels per requested pixel for high-density previews.
     size = 2 * max(32, min(1024, int(requested_size)))
@@ -215,14 +373,46 @@ def render(source, output, requested_size):
     with zipfile.ZipFile(source) as archive:
         if len(archive.infolist()) > 10000:
             raise ValueError("Too many archive entries")
-        info = archive.getinfo("stage.json")
-        if info.file_size > MAX_JSON:
-            raise ValueError("Graph exceeds thumbnail size limit")
-        with archive.open(info) as stream:
-            raw = stream.read(MAX_JSON + 1)
-        if len(raw) > MAX_JSON:
-            raise ValueError("Graph exceeds thumbnail size limit")
-        graph = json.loads(raw)
+        attachments = {}
+        if "stage.json" in archive.namelist():
+            graph = json.loads(archive_bytes(archive, "stage.json"))
+        elif "stage.msgpack" in archive.namelist():
+            if "thumbnail.png" in archive.namelist():
+                original = image_surface(archive_bytes(archive, "thumbnail.png"), "png")
+                surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, size, size)
+                ctx = cairo.Context(surface)
+                factor = min(size / original.get_width(), size / original.get_height())
+                ctx.translate(
+                    (size - original.get_width() * factor) / 2,
+                    (size - original.get_height() * factor) / 2,
+                )
+                ctx.scale(factor, factor)
+                ctx.set_source_surface(original)
+                ctx.paint()
+                write_preview(surface, output)
+                return
+            import msgpack
+
+            graph = legacy_graph(
+                msgpack.unpackb(
+                    archive_bytes(archive, "stage.msgpack"),
+                    max_str_len=MAX_JSON,
+                    max_array_len=300000,
+                    max_map_len=300000,
+                )
+            )
+            for obj in graph["objects"]:
+                identifier = obj["properties"].get("preview_attachment")
+                if not identifier:
+                    continue
+                for name in archive.namelist():
+                    if name.startswith("attachments/" + identifier + "."):
+                        attachments[identifier] = image_surface(
+                            archive_bytes(archive, name), name.rsplit(".", 1)[-1]
+                        )
+                        break
+        else:
+            raise ValueError("Missing stage.json or stage.msgpack")
     objects = graph.get("objects")
     if not isinstance(objects, list) or len(objects) > 5000:
         raise ValueError("Invalid or oversized graph")
@@ -264,6 +454,8 @@ def render(source, output, requested_size):
                 height + 20,
                 layout,
             )
+            if "preview_rect" in props:
+                node = (*props["preview_rect"], layout)
             nodes.append(node)
             object_id = native_text(props.get("id", ""))
             by_id[object_id] = node
@@ -359,6 +551,15 @@ def render(source, output, requested_size):
 
     def draw_node(key, rect, title=False):
         x, y, w, h = rect
+        attachment = attachments.get(node_props[key].get("preview_attachment"))
+        if attachment:
+            ctx.save()
+            ctx.translate(x, y)
+            ctx.scale(w / attachment.get_width(), h / attachment.get_height())
+            ctx.set_source_surface(attachment)
+            ctx.paint()
+            ctx.restore()
+            return
         rounded(ctx, x, y, w, h)
         ctx.set_source_rgba(*display_fills[key])
         ctx.fill_preserve()
@@ -551,16 +752,7 @@ def render(source, output, requested_size):
         ctx.set_source_rgb(*neutral_color(canvas, 7))
         ctx.move_to((size - layout.get_pixel_size()[0]) / 2, size * 0.4)
         PangoCairo.show_layout(ctx, layout)
-    fd, temp = tempfile.mkstemp(
-        dir=os.path.dirname(os.path.abspath(output)), suffix=".png"
-    )
-    os.close(fd)
-    try:
-        surface.write_to_png(temp)
-        os.replace(temp, output)
-    finally:
-        if os.path.exists(temp):
-            os.unlink(temp)
+    write_preview(surface, output)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ RPM 安装时自动完成以下配置，用户无需执行文件关联脚本：
 
 - 注册 `application/x-project-graph` 与 `.prg`，使用专属文件图标。
 - 将 Project Graph 注册为该类型的系统默认应用。已有用户级的显式默认选择按桌面规范优先。
-- 安装 GNOME thumbnailer，从 ZIP 内的 `stage.json` 离线生成 PNG 概览，已有文件无需重存。
+- 安装 GNOME thumbnailer，兼容 ZIP 内的 `stage.json` 和 master 的 `stage.msgpack`。旧存档有 `thumbnail.png` 时直接使用；没有时离线解析图与附件，已有文件无需重存。
 - 双击文档通过 `--` 后的路径参数打开；支持中文、空格与多个文档。
 - 卸载移除默认应用条目并刷新数据库，不删除用户文档。
 
@@ -64,3 +64,21 @@ sudo install -m 755 packaging/linux/project-graph-thumbnailer.py /usr/libexec/pr
 解析限制：ZIP 256 MiB、JSON 16 MiB、5000 个对象、每段画笔 2000 个点；不会解压文档到磁盘或访问网络。
 
 参考：[GNOME thumbnailer 接口](https://github.com/GNOME/gnome-desktop/blob/master/libgnome-desktop/gnome-desktop-thumbnail.c)、[MIME 默认应用规范](https://specifications.freedesktop.org/mime-apps/latest/default.html)。
+
+
+## master 旧格式预览
+
+新增的「教程操作」「教程节点」「tutorial-shortcut-keys-3.1」使用 MessagePack。
+预览器复用 msgpack-python 1.1.2（Apache-2.0），RPM 固定该版本，
+源包哈希见 [requirements-thumbnailer.txt](requirements-thumbnailer.txt)。
+使用 pip 安装时添加 `--require-hashes --no-binary=msgpack`；RPM 由仓库签名验证来源。
+GdkPixbuf 与 librsvg 负责图片/SVG 解码，不另写图像解码器。
+保存内嵌预览的旧文档会保留 master 的配色、网格和取景。
+
+已通过 12 项预览回归、Ruff 检查，并对上述三个实文件生成预览及更新四档
+GNOME 缓存。原文档未改写。手动验收：重开目录或复制文档到新文件名，
+应显示图内容；若仍为应用图标，检查系统预览器版本和 msgpack/GdkPixbuf/librsvg
+依赖。新版辅助程序尚未安装到 `/usr/libexec`，新版 RPM 端到端安装尚未验证。
+
+来源：[msgpack-python](https://github.com/msgpack/msgpack-python)、
+[MessagePack 格式规范](https://github.com/msgpack/msgpack/blob/master/spec.md)。
