@@ -187,3 +187,44 @@ static func _decode_vector2(value):
 	if not (value[1] is float or value[1] is int):
 		return null
 	return Vector2(float(value[0]), float(value[1]))
+
+
+## Native values for unsaved-change checks; document encoding remains in capture().
+## Avoid encoding the entire archive again during camera-only navigation.
+static func comparison_state(target_root: Node) -> Dictionary:
+	var result := {}
+	for object in target_root.get_children():
+		if not object is StageObject or object.is_queued_for_deletion():
+			continue
+		var values := {"script": object.get_script(), "transform": object.transform}
+		for name in _serializable_property_names(object):
+			var value: Variant = _comparison_value(object.get(name))
+			if value is Array or value is Dictionary:
+				values[name] = value.duplicate(true)
+			elif typeof(value) >= TYPE_PACKED_BYTE_ARRAY and typeof(value) <= TYPE_PACKED_VECTOR4_ARRAY:
+				values[name] = value.duplicate()
+			else:
+				values[name] = value
+		result[object.id] = values
+	return result
+
+
+static func matches_comparison_state(target_root: Node, state: Dictionary) -> bool:
+	var count := 0
+	for object in target_root.get_children():
+		if not object is StageObject or object.is_queued_for_deletion():
+			continue
+		count += 1
+		var values: Dictionary = state.get(object.id, {})
+		if values.get("script") != object.get_script() or values.get("transform") != object.transform:
+			return false
+		for name in _serializable_property_names(object):
+			if not values.has(name) or values[name] != _comparison_value(object.get(name)):
+				return false
+	return count == state.size()
+
+
+static func _comparison_value(value: Variant) -> Variant:
+	if value is StageObject:
+		return {"object_id": value.id} if is_instance_valid(value) else null
+	return value

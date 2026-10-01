@@ -19,6 +19,7 @@ var created_at := ""
 var _preserved_entries: Dictionary = {}
 var selected_ids := PackedStringArray()
 var _saved_snapshot: Dictionary = {}
+var _saved_comparison_state: Dictionary = {}
 var _selection_lines: Dictionary = {}
 var _marquee_start := Vector2.ZERO
 var _marquee_active := false
@@ -30,6 +31,7 @@ var _stroke: PenStroke
 
 func _ready() -> void:
 	_saved_snapshot = StageObjectRegistry.capture(self)
+	_saved_comparison_state = StageObjectRegistry.comparison_state(self)
 	apply_preferences()
 
 
@@ -332,7 +334,7 @@ func is_dirty() -> bool:
 			return true
 		if object is TextNode and object.text_edit.visible and object.text_edit.text != object.text:
 			return true
-	return JSON.stringify(StageObjectRegistry.capture(self)) != JSON.stringify(_saved_snapshot)
+	return not StageObjectRegistry.matches_comparison_state(self, _saved_comparison_state)
 
 
 func apply_object_preferences(object: StageObject, theme_light: Variant = null) -> void:
@@ -415,6 +417,7 @@ func save_to_file(path: String) -> bool:
 	current_file_path = path
 	created_at = result.created_at
 	_saved_snapshot = snapshot.duplicate(true)
+	_saved_comparison_state = StageObjectRegistry.comparison_state(self)
 	file_saved.emit(path)
 	return true
 
@@ -439,6 +442,7 @@ func load_from_file(path: String) -> bool:
 	current_file_path = path
 	created_at = str(result.metadata.get("created_at", ""))
 	_saved_snapshot = StageObjectRegistry.capture(self)
+	_saved_comparison_state = StageObjectRegistry.comparison_state(self)
 	apply_preferences()
 	select_ids(PackedStringArray())
 	file_loaded.emit(path)

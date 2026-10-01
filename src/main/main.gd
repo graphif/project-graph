@@ -1142,6 +1142,13 @@ func _process(delta: float) -> void:
 		elif object is Association:
 			edge_count += 1
 	$UIOverlay/Status.text = "%d 节点 · %d 连线 · %d%%" % [node_count, edge_count, stage.camera.zoom_percent()]
+	var needs_graph := false
+	for window_name in ["OutlineWindow", "ReferencesWindow", "FindWindow"]:
+		if _window_ready.has(window_name) and _window_ready[window_name].visible:
+			needs_graph = true
+			break
+	if not needs_graph:
+		return
 	var graph := JSON.stringify(StageObjectRegistry.capture(stage))
 	if graph != _last_graph:
 		_last_graph = graph
