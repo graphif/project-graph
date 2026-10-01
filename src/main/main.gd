@@ -85,6 +85,7 @@ var _menus: Array[PopupMenu] = []
 var _menu_icon_cache := {}
 var _tick := 0.0
 var _last_graph := ""
+var _last_graph_revision := -1
 var _toast_time := 0.0
 var _pending_close: Control
 var _quitting := false
@@ -1134,21 +1135,16 @@ func _process(delta: float) -> void:
 	var stage: Stage = tabs.get_current_stage()
 	if stage == null:
 		return
-	var node_count := 0
-	var edge_count := 0
-	for object in stage.stage_objects():
-		if object is Entity:
-			node_count += 1
-		elif object is Association:
-			edge_count += 1
-	$UIOverlay/Status.text = "%d 节点 · %d 连线 · %d%%" % [node_count, edge_count, stage.camera.zoom_percent()]
+	var counts := stage.object_counts()
+	$UIOverlay/Status.text = "%d 节点 · %d 连线 · %d%%" % [counts.x, counts.y, stage.camera.zoom_percent()]
 	var needs_graph := false
 	for window_name in ["OutlineWindow", "ReferencesWindow", "FindWindow"]:
 		if _window_ready.has(window_name) and _window_ready[window_name].visible:
 			needs_graph = true
 			break
-	if not needs_graph:
+	if not needs_graph or _last_graph_revision == stage.document_revision:
 		return
+	_last_graph_revision = stage.document_revision
 	var graph := JSON.stringify(StageObjectRegistry.capture(stage))
 	if graph != _last_graph:
 		_last_graph = graph
@@ -1164,6 +1160,7 @@ func _on_stage_added(stage: Stage) -> void:
 	stage.selection_changed.connect(_selection_changed)
 	stage.context_requested.connect(_show_context)
 	_last_graph = ""
+	_last_graph_revision = -1
 
 
 func _on_tab_changed(_index: int) -> void:
@@ -1173,12 +1170,14 @@ func _on_tab_changed(_index: int) -> void:
 	if current_stage != null:
 		current_stage.apply_theme(_displayed_theme_light)
 	_last_graph = ""
+	_last_graph_revision = -1
 	_details_id = ""
 	_selection_changed()
 
 
 func _on_stage_closed() -> void:
 	_last_graph = ""
+	_last_graph_revision = -1
 	if not _quitting and tabs.get_tab_count() == 1:
 		var stage: Stage = tabs.get_current_stage()
 		if stage.stage_objects().is_empty() and stage.current_file_path.is_empty():

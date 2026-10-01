@@ -9,6 +9,8 @@ signal file_loaded(path: String)
 signal selection_changed
 signal document_changed
 signal context_requested(world_position: Vector2)
+signal view_changed(world_rect: Rect2, zoom_steps: float)
+signal caption_peers_changed
 
 @onready var history: History = %History
 @onready var camera: Camera2D = $Camera
@@ -17,6 +19,15 @@ signal context_requested(world_position: Vector2)
 var current_file_path := ""
 var created_at := ""
 var _preserved_entries: Dictionary = {}
+var layout_revision := 0
+var document_revision := 0
+var _dirty_revision := -1
+var _cached_dirty := false
+var _editing_objects: Dictionary = {}
+var _counts_revision := -1
+var _counts := Vector2i.ZERO
+var _last_view_key: Array = []
+var world_view_rect := Rect2()
 var selected_ids := PackedStringArray()
 var _saved_snapshot: Dictionary = {}
 var _saved_comparison_state: Dictionary = {}
@@ -30,8 +41,13 @@ var _stroke: PenStroke
 
 
 func _ready() -> void:
+	process_priority = 1
+	child_entered_tree.connect(_on_stage_child_changed)
+	child_exiting_tree.connect(_on_stage_child_changed)
 	_saved_snapshot = StageObjectRegistry.capture(self)
 	_saved_comparison_state = StageObjectRegistry.comparison_state(self)
+	_dirty_revision = -1
+	_cached_dirty = false
 	apply_preferences()
 
 
@@ -99,6 +115,14 @@ func _input(event: InputEvent) -> void:
 
 
 func _process(_delta: float) -> void:
+	var canvas := get_global_transform_with_canvas()
+	var viewport_rect := get_viewport_rect()
+	var view_key := [canvas, viewport_rect]
+	if view_key != _last_view_key:
+		_last_view_key = view_key
+		world_view_rect = get_canvas_transform().affine_inverse() * viewport_rect
+		var scale := maxf(canvas.get_scale().x, 0.01)
+		view_changed.emit(world_view_rect.grow(64.0 / scale), log(scale) / log(2.0) * 16.0)
 	_refresh_selection_outlines()
 	if (_marquee_active or is_instance_valid(_stroke)) and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		finish_interaction()
@@ -134,6 +158,8 @@ func drag_entities() -> Array[Entity]:
 
 func selected_objects() -> Array[StageObject]:
 	var result: Array[StageObject] = []
+	if selected_ids.is_empty():
+		return result
 	for object in stage_objects():
 		if selected_ids.has(object.id):
 			result.append(object)
@@ -329,12 +355,17 @@ func cancel_current_interaction() -> void:
 
 
 func is_dirty() -> bool:
-	for object in stage_objects():
+	for object in _editing_objects.values():
+		if not is_instance_valid(object):
+			continue
 		if object is LineEdge and object.is_text_dirty():
 			return true
 		if object is TextNode and object.text_edit.visible and object.text_edit.text != object.text:
 			return true
-	return not StageObjectRegistry.matches_comparison_state(self, _saved_comparison_state)
+	if _dirty_revision != document_revision:
+		_cached_dirty = not StageObjectRegistry.matches_comparison_state(self, _saved_comparison_state)
+		_dirty_revision = document_revision
+	return _cached_dirty
 
 
 func apply_object_preferences(object: StageObject, theme_light: Variant = null) -> void:
@@ -418,6 +449,8 @@ func save_to_file(path: String) -> bool:
 	created_at = result.created_at
 	_saved_snapshot = snapshot.duplicate(true)
 	_saved_comparison_state = StageObjectRegistry.comparison_state(self)
+	_dirty_revision = -1
+	_cached_dirty = false
 	file_saved.emit(path)
 	return true
 
@@ -443,6 +476,8 @@ func load_from_file(path: String) -> bool:
 	created_at = str(result.metadata.get("created_at", ""))
 	_saved_snapshot = StageObjectRegistry.capture(self)
 	_saved_comparison_state = StageObjectRegistry.comparison_state(self)
+	_dirty_revision = -1
+	_cached_dirty = false
 	apply_preferences()
 	select_ids(PackedStringArray())
 	file_loaded.emit(path)
@@ -488,3 +523,38 @@ func connect_entities(from: Entity, to: Entity) -> LineEdge:
 	edge.target = to
 	add_child(edge)
 	return edge
+
+
+func _on_stage_child_changed(child: Node) -> void:
+	if child is StageObject:
+		_editing_objects.erase(child.get_instance_id())
+		layout_revision += 1
+		document_revision += 1
+
+
+func mark_geometry_changed(object: StageObject) -> void:
+	if object is Entity:
+		layout_revision += 1
+
+
+func mark_document_changed() -> void:
+	document_revision += 1
+
+
+func set_editor_active(object: StageObject, active: bool) -> void:
+	if active:
+		_editing_objects[object.get_instance_id()] = object
+	else:
+		_editing_objects.erase(object.get_instance_id())
+
+
+func object_counts() -> Vector2i:
+	if _counts_revision != layout_revision:
+		_counts = Vector2i.ZERO
+		for object in stage_objects():
+			if object is Entity:
+				_counts.x += 1
+			elif object is Association:
+				_counts.y += 1
+		_counts_revision = layout_revision
+	return _counts

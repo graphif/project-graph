@@ -2,17 +2,36 @@ class_name Entity
 extends StageObject
 
 # 单父包含关系使用稳定对象引用；所有刚体仍直接挂在舞台下，保持世界坐标。
-@export var container: Entity
+@export var container: Entity:
+	set(value):
+		if container == value:
+			return
+		container = value
+		notify_persistent_change()
+		invalidate_geometry()
 
-@export var throw_speed_limit := 1200.0
-@export var throw_damping := 7.0
+@export var throw_speed_limit := 1200.0:
+	set(value):
+		throw_speed_limit = value
+		notify_persistent_change()
+@export var throw_damping := 7.0:
+	set(value):
+		throw_damping = value
+		notify_persistent_change()
 
 const THROW_SAMPLE_SECONDS := 0.08
 
-var is_dragging: bool = false
+var is_dragging: bool = false:
+	set(value):
+		is_dragging = value
+		set_process_input(value)
+		set_physics_process(is_dragging or is_throwing)
 var drag_controlled := false
 var drag_offset: Vector2 = Vector2.ZERO
-var is_throwing := false
+var is_throwing := false:
+	set(value):
+		is_throwing = value
+		set_physics_process(is_dragging or is_throwing)
 var _position_sync_pending := false
 var _position_sync_target := Vector2.ZERO
 var _drag_origin := Vector2.ZERO
@@ -27,6 +46,8 @@ var _drag_origins: Dictionary[Entity, Vector2] = {}
 
 
 func _ready() -> void:
+	set_process_input(is_dragging)
+	set_physics_process(is_dragging or is_throwing)
 	_history = _find_history()
 	# 保留 collision_layer 供点击/连线查询，关闭刚体之间的硬碰撞。
 	collision_mask = 0

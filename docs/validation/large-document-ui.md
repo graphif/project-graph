@@ -10,9 +10,11 @@ packed arrays are copied into the baseline. File serialization is unchanged.
 Hidden auxiliary windows do not request a serialized graph.
 
 This reuses Godot Variant equality and native array/dictionary copying; no
-hashing or serialization dependency is added. Initial debug profiling reduced
-the UI tick to about 6 ms. Navigation still has other costs, and this change
-alone does not achieve 120 FPS.
+hashing or serialization dependency is added. The initial 6 ms measurement
+used an incomplete saved baseline; a subsequent clean-document check measured
+about 25 ms. This change alone does not achieve 120 FPS. The later navigation
+optimization caches checks by document revision and only examines active
+editors; see `large-document-navigation.md` for the measured final behavior.
 
 `native_dirty_smoke` verifies save cleanliness, camera-only navigation, text,
 references, containment, transforms, loading/replacing objects, object addition

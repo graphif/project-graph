@@ -104,8 +104,7 @@ func _run() -> void:
 		check((head[0] - (head[1] + head[2]) * 0.5).normalized().is_equal_approx(inward), "Arrow follows target side normal")
 	upper.position = Vector2(-260, -90)
 	for width in [1.0, 2.0, 12.0]:
-		first._unscaled_line_width = width
-		first._geometry_key.clear()
+		first.stroke_width = width
 		await settle()
 		var head := world_head(first)
 		check(head[1].distance_to(head[2]) >= width, "Triangle base covers the stroke at every supported width")

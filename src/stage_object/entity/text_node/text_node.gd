@@ -21,11 +21,16 @@ var _edit_menu: PopupMenu
 
 # Theme hierarchy is independent of spatial containers and ordinary edges.
 # Legacy nodes have no inferred parent; Enter creates another root topic.
-@export var topic_parent: TextNode
+@export var topic_parent: TextNode:
+	set(value):
+		topic_parent = value
+		notify_persistent_change()
 
 @export var text: String = "":
 	set(value):
 		text = value
+		notify_persistent_change()
+		invalidate_geometry()
 		if is_node_ready():
 			label.text = value
 			_queue_collision_update()
@@ -33,32 +38,38 @@ var _edit_menu: PopupMenu
 @export var font_size := 24:
 	set(value):
 		font_size = maxi(8, value)
+		notify_persistent_change()
 		if is_node_ready():
 			_apply_appearance()
 @export var fixed_width := 0.0:
 	set(value):
 		fixed_width = maxf(0.0, value)
+		notify_persistent_change()
 		if is_node_ready():
 			_apply_appearance()
 @export var fill_color := Color.TRANSPARENT:
 	set(value):
 		fill_color = value
+		notify_persistent_change()
 		if is_node_ready():
 			_apply_appearance()
 @export_storage var border_color := Color("#585b70"):
 	set(value):
 		border_color = value
+		notify_persistent_change()
 		if is_node_ready():
 			_apply_appearance()
 @export_storage var use_theme_border := false:
 	set(value):
 		use_theme_border = value
+		notify_persistent_change()
 		if is_node_ready():
 			_apply_appearance()
 
 @export var text_color := Color.TRANSPARENT:
 	set(value):
 		text_color = value
+		notify_persistent_change()
 		if is_node_ready():
 			_apply_appearance()
 var _editing := false
@@ -239,6 +250,8 @@ func enter_edit_mode() -> void:
 	_edit_minimum_size = label.size
 	_edit_origin = label.position
 	_editing = true
+	if stage.has_method("set_editor_active"):
+		stage.call("set_editor_active", self, true)
 	_appearance_light = null
 	# 编辑控件只作为输入层，复用标签的原始矩形，避免切换时改变刚体碰撞中心。
 	text_edit.enable_auto_size = false
@@ -282,6 +295,8 @@ func exit_edit_mode(commit_changes: bool = true) -> void:
 		return
 	# 先结束状态，避免隐藏控件触发 focus_exited 时重复提交。
 	_editing = false
+	if get_parent().has_method("set_editor_active"):
+		get_parent().call("set_editor_active", self, false)
 	# apply_ime 会更改 text，必须在快照和隐藏控件之前完成。
 	if commit_changes:
 		text_edit.apply_ime()
@@ -327,6 +342,7 @@ func _update_collision_shape() -> void:
 	shape.size = bounds.size
 	collision_shape.shape = shape
 	collision_shape.position = center
+	invalidate_geometry()
 
 
 func display_border_color() -> Color:
@@ -353,6 +369,7 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 	if not update_layout and _appearance_light == light and _displayed_background.is_equal_approx(background):
 		return
 	_appearance_light = light
+	invalidate_geometry()
 	_displayed_background = background
 	if _edit_menu != null:
 		_configure_edit_menu(light)

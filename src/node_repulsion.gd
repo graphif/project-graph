@@ -52,8 +52,7 @@ func _physics_process(delta: float) -> void:
 		if child is LineEdge and child.is_node_ready() and not child.is_queued_for_deletion():
 			if not is_instance_valid(child.source) or not is_instance_valid(child.target):
 				continue
-			child._process(0.0)
-			child.get_node("Caption")._process(0.0)
+			child.refresh_for_physics()
 			var rect: Rect2 = child.caption_rect()
 			if not rect.has_area() or not child.is_visible_in_tree():
 				continue

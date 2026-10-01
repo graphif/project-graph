@@ -29,8 +29,17 @@ func _run() -> void:
 	stage.camera.position += Vector2(100, 50)
 	stage.camera.zoom *= .8
 	check(not stage.is_dirty(), "Navigation leaves document clean")
+	a.enter_edit_mode()
+	a.text_edit.text = "Draft"
+	check(stage.is_dirty(), "Uncommitted active editor marks dirty")
+	a.exit_edit_mode(false)
+	check(not stage.is_dirty(), "Canceled editor returns to clean baseline")
 	a.text = "Changed"
 	check(stage.is_dirty(), "Text edit marks dirty")
+	check(stage.save_to_file(path), "Dirty document saves")
+	check(not stage.is_dirty(), "Saving invalidates cached dirty state")
+	a.text = "A"
+	check(stage.save_to_file(path), "Original text saves again")
 	a.text = "A"
 	check(not stage.is_dirty(), "Restoring text clears dirty")
 	edge.source = b

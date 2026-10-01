@@ -11,9 +11,15 @@ var _last_light: Variant = null
 var _last_stroke := Color(-1, -1, -1, -1)
 var _centering := false
 var _layout_dirty := true
+var _refresh_key: Array = []
 
 
 func _ready() -> void:
+	process_priority = 3
+	edge.geometry_changed.connect(_queue_refresh)
+	edge.style_changed.connect(_queue_refresh)
+	if edge.get_parent() is Stage:
+		edge.get_parent().caption_peers_changed.connect(_queue_refresh)
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	label.gui_input.connect(_label_input)
 	editor.gui_input.connect(_editor_input)
@@ -41,13 +47,28 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if not is_instance_valid(edge.source) or not is_instance_valid(edge.target):
 		finish_edit(false)
+		set_process(false)
 		return
+	if not _editing and edge.visibility_layer == 0:
+		set_process(false)
+		return
+	if not _editing and edge.text.is_empty() and not label.visible:
+		set_process(false)
+		return
+	var refresh_key := [edge.geometry_version, edge.text, edge.line.default_color,
+		edge.get_parent().get_meta("caption_peer_revision", 0), edge.visibility_layer,
+		edge.source.get_instance_id(), edge.target.get_instance_id(), _layout_dirty]
+	if not _editing and refresh_key == _refresh_key:
+		set_process(false)
+		return
+	_refresh_key = refresh_key
 	_update_style()
 	_refresh_text()
 	var center := edge.caption_position(edge.caption_fraction())
 	if position != center:
 		position = center
 	_center_controls()
+	set_process(_editing)
 
 
 func _refresh_text() -> void:
@@ -143,6 +164,10 @@ func begin_edit() -> void:
 	stage.finish_interaction()
 	stage.select_ids(PackedStringArray([edge.id]))
 	_editing = true
+	stage.set_editor_active(edge, true)
+	set_process(true)
+	_refresh_key.clear()
+	stage.group_overview.invalidate()
 	_last_light = null
 	_update_style()
 	editor.text = edge.text
@@ -161,6 +186,11 @@ func finish_edit(commit_changes := true) -> void:
 	if not _editing:
 		return
 	_editing = false
+	_refresh_key.clear()
+	var parent_stage := edge.get_parent() as Stage
+	if parent_stage != null:
+		parent_stage.set_editor_active(edge, false)
+		parent_stage.group_overview.invalidate()
 	_last_light = null
 	_update_style()
 	if commit_changes:
@@ -208,3 +238,8 @@ func _input(event: InputEvent) -> void:
 func _visibility_changed() -> void:
 	if is_node_ready() and not is_visible_in_tree():
 		finish_edit()
+
+
+func _queue_refresh() -> void:
+	_refresh_key.clear()
+	set_process(true)

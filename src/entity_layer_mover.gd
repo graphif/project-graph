@@ -15,6 +15,8 @@ var _cancelled := false
 var _continued_drag := false
 var _last_positions: Dictionary = {}
 var _layout_inputs: Array = []
+var _layout_revision := -1
+var _physics_revision := -1
 
 
 func _ready() -> void:
@@ -225,6 +227,10 @@ func _drop() -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	if target_root is Stage:
+		if _physics_revision == target_root.layout_revision:
+			return
+		_physics_revision = target_root.layout_revision
 	var all := entities()
 	var moved := _last_positions.size() != all.size()
 	if not moved:
@@ -251,9 +257,13 @@ func _physics_process(_delta: float) -> void:
 
 
 func refresh_layout() -> void:
+	if target_root is Stage and _layout_revision == target_root.layout_revision:
+		return
 	var all := entities()
 	var inputs := _capture_layout_inputs(all)
 	if inputs == _layout_inputs:
+		if target_root is Stage:
+			_layout_revision = target_root.layout_revision
 		return
 	for object in all:
 		if not is_instance_valid(object.container):
@@ -274,6 +284,8 @@ func refresh_layout() -> void:
 			var members: Array[Entity] = children_by_parent.get(object, [] as Array[Entity])
 			object.update_container_layout(members)
 	_layout_inputs = _capture_layout_inputs(entities())
+	if target_root is Stage:
+		_layout_revision = target_root.layout_revision
 
 
 func _capture_layout_inputs(all: Array[Entity]) -> Array:
@@ -288,6 +300,8 @@ func _capture_layout_inputs(all: Array[Entity]) -> Array:
 
 
 func reset_tracking() -> void:
+	_layout_revision = -1
+	_physics_revision = -1
 	_layout_inputs.clear()
 	_last_positions.clear()
 	for object in entities():

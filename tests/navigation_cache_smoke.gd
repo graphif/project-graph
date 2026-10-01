@@ -37,6 +37,7 @@ func _run() -> void:
 	stage.camera.zoom = Vector2.ONE * 0.4
 	stage.camera.target_zoom = stage.camera.zoom
 	await settle()
+	check(not edge.is_processing() and not edge.get_node("Caption").is_processing(), "Settled edges and captions stop polling")
 	var collision := (edge.collision_shape.shape as ConcavePolygonShape2D).segments
 	var caption_position: Vector2 = edge.get_node("Caption").global_position
 	for zoom_value in [0.2, 0.6, 0.9]:
@@ -71,6 +72,7 @@ func _run() -> void:
 	a.move_without_inertia(a.position + Vector2(0, 250))
 	await settle()
 	check(group.aabb.encloses(a.aabb), "Child movement invalidates container layout")
+	await _check_local_rendering(edge)
 	_check_transformed_bounds()
 	app.queue_free()
 	await process_frame
@@ -96,3 +98,33 @@ func _check_transformed_bounds() -> void:
 			expected = expected.expand(collision.to_global(point))
 		check(body.aabb.is_equal_approx(expected), "Native bounds preserve rotation, scale and skew")
 	body.queue_free()
+
+
+func _check_local_rendering(edge: LineEdge) -> void:
+	stage.camera.set_process(false)
+	var home := edge._view_bounds.get_center()
+	stage.camera.position = home + Vector2(10000, 10000)
+	stage.camera.zoom = Vector2.ONE * 0.8
+	stage.camera.target_position = stage.camera.position
+	stage.camera.target_zoom = stage.camera.zoom
+	await settle()
+	var render := edge._render_key.duplicate()
+	stage.camera.zoom = Vector2.ONE * 1.2
+	stage.camera.target_zoom = stage.camera.zoom
+	await settle()
+	check(not edge._in_view, "Offscreen edge is excluded from local rendering")
+	check(edge._render_key == render, "Offscreen zoom leaves native geometry untouched")
+	edge.target.move_without_inertia(edge.target.position + Vector2(120, 90))
+	await settle()
+	check(edge._view_bounds.has_point(edge.line.to_global(edge.line.points[0])), "Offscreen endpoint edits refresh world bounds")
+	stage.camera.position = edge._view_bounds.get_center()
+	stage.camera.target_position = stage.camera.position
+	await settle()
+	check(edge._in_view and edge._render_key != render, "Returning to the viewport refreshes deferred zoom")
+	edge.show_arrow = false
+	await settle()
+	check(not edge.arrow_head.visible, "Arrow style wakes a settled edge")
+	edge.show_arrow = true
+	await settle()
+	check(edge.arrow_head.visible, "Arrow style recovers without moving the camera")
+	check(not edge.is_processing(), "Refreshed edge returns to sleep")

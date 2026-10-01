@@ -10,11 +10,13 @@ static var _stroke_textures: Dictionary = {}
 @onready var line: Line2D = %Line
 @onready var arrow_head: Polygon2D = %Head
 
+
 @export var text := "":
 	set(value):
 		if text == value:
 			return
 		text = value
+		notify_persistent_change()
 		_invalidate_caption_peers()
 
 @export var source: Entity:
@@ -22,27 +24,47 @@ static var _stroke_textures: Dictionary = {}
 		if source == value:
 			return
 		source = value
+		_watch_endpoints()
+		_queue_refresh()
+		notify_persistent_change()
 		_invalidate_caption_peers()
 @export var target: Entity:
 	set(value):
 		if target == value:
 			return
 		target = value
+		_watch_endpoints()
+		_queue_refresh()
+		notify_persistent_change()
 		_invalidate_caption_peers()
 # 保留旧文件字段；连接边由实时几何计算，不把派生端点写入历史。
-@export var source_uv: Vector2 = Vector2(0.5, 0.5)
-@export var target_uv: Vector2 = Vector2(0.5, 0.5)
-@export_range(4, 128, 1) var curve_segments := 24
+@export var source_uv: Vector2 = Vector2(0.5, 0.5):
+	set(value):
+		source_uv = value
+		notify_persistent_change()
+		_queue_refresh()
+@export var target_uv: Vector2 = Vector2(0.5, 0.5):
+	set(value):
+		target_uv = value
+		notify_persistent_change()
+		_queue_refresh()
+@export_range(4, 128, 1) var curve_segments := 24:
+	set(value):
+		curve_segments = value
+		notify_persistent_change()
+		_queue_refresh()
 
 @export var stroke_color := Color("#89b4fa"):
 	set(value):
 		stroke_color = value
+		notify_persistent_change()
 		use_theme_color = false
 		if is_node_ready():
 			_apply_style()
 @export var use_theme_color := true:
 	set(value):
 		use_theme_color = value
+		notify_persistent_change()
 		if is_node_ready():
 			_apply_style()
 
@@ -51,13 +73,29 @@ var _appearance_light: Variant = null
 @export_range(1.0, 12.0, 0.5) var stroke_width := 2.0:
 	set(value):
 		stroke_width = clampf(value, 1.0, 12.0)
+		notify_persistent_change()
 		if is_node_ready():
 			_apply_style()
 @export var show_arrow := true:
 	set(value):
 		show_arrow = value
+		notify_persistent_change()
 		_geometry_key.clear()
+		_queue_refresh()
 
+signal style_changed
+
+var _watched_entities: Array = []
+var _endpoint_key: Array = []
+var _source_rect := Rect2()
+var _target_rect := Rect2()
+var _bucket_offset := 0.0
+var _render_bucket := -2147483648
+var _view_bounds := Rect2()
+var _in_view := true
+var _refresh_key: Array = []
+var _color_key: Array = []
+var _display_color := Color.TRANSPARENT
 var _geometry_key: Array = []
 var _render_key: Array = []
 var _shaft_points := PackedVector2Array()
@@ -67,6 +105,11 @@ var _head_length := 0.0
 
 
 func _ready() -> void:
+	_bucket_offset = float(posmod(id.hash(), 16)) / 16.0
+	_watch_endpoints()
+	process_priority = 2
+	if get_parent() is Stage:
+		get_parent().view_changed.connect(_on_view_changed)
 	_invalidate_caption_peers()
 	# Container fills use depths 0..64; keep strokes above those backgrounds.
 	z_index = 65
@@ -83,11 +126,27 @@ func _process(_delta: float) -> void:
 	if not is_instance_valid(source) or not is_instance_valid(target):
 		hide()
 		_geometry_key.clear()
+		set_process(false)
 		return
 	show()
+	var stage := get_parent() as Stage
+	var actual_scale := maxf(get_global_transform_with_canvas().get_scale().x, 0.01)
+	# Stagger native geometry sampling across sixteen per-octave buckets.
+	# At most ~4.5% width variation, while world anchors remain exact.
+	_render_bucket = floori(log(actual_scale) / log(2.0) * 16.0 + _bucket_offset)
+	var sampled_scale := pow(2.0, (_render_bucket - _bucket_offset) / 16.0)
+	var zoom_key := sampled_scale if visibility_layer != 0 else 0.0
+	var refresh_key := [source.get_instance_id(), target.get_instance_id(), source.geometry_version,
+		target.geometry_version, global_transform, zoom_key, visibility_layer,
+		stage.layout_revision if stage != null else 0, _appearance_light,
+		show_arrow, curve_segments, stroke_width, stroke_color, use_theme_color]
+	if refresh_key == _refresh_key:
+		set_process(false)
+		return
+	_refresh_key = refresh_key
 	# Bake zoom into local geometry so native AA keeps a one-pixel fringe.
 	# World anchors/collision stay unchanged through to_local()/to_global().
-	var pixel_scale := maxf(get_global_transform_with_canvas().get_scale().x, 0.01)
+	var pixel_scale := sampled_scale
 	var render_scale := Vector2.ONE / pixel_scale
 	if line.scale != render_scale:
 		line.scale = render_scale
@@ -103,8 +162,13 @@ func _process(_delta: float) -> void:
 	if line.default_color != color:
 		line.default_color = color
 		arrow_head.color = color
-	var source_rect := connection_rect(source, target)
-	var target_rect := connection_rect(target, source)
+	var endpoint_key := [source.get_instance_id(), target.get_instance_id(), source.geometry_version, target.geometry_version]
+	if endpoint_key != _endpoint_key:
+		_endpoint_key = endpoint_key
+		_source_rect = connection_rect(source, target)
+		_target_rect = connection_rect(target, source)
+	var source_rect := _source_rect
+	var target_rect := _target_rect
 	var render_segments := clampi(ceili(curve_segments * sqrt(maxf(1.0, pixel_scale))), curve_segments, 512)
 	var key := [source_rect, target_rect, global_transform, collision_shape.transform,
 		(arrow_head.get_parent() as Node2D).global_transform, render_segments]
@@ -132,6 +196,7 @@ func _process(_delta: float) -> void:
 		_update_collision_shape(collision_shape.global_transform.affine_inverse() * collision_points)
 	var render_key := [pixel_scale, line.global_transform]
 	if render_key == _render_key:
+		set_process(false)
 		return
 	_render_key = render_key
 	line.points = line.global_transform.affine_inverse() * _shaft_points
@@ -141,6 +206,8 @@ func _process(_delta: float) -> void:
 			Vector2(-_head_length, -_head_length * 0.4) * pixel_scale,
 			Vector2(-_head_length, _head_length * 0.4) * pixel_scale,
 		])
+
+	set_process(false)
 
 
 # A one-screen-pixel alpha ramp survives GLES rendering and zoom. Cache
@@ -270,6 +337,8 @@ func _update_collision_shape(points: PackedVector2Array) -> void:
 		segments.append(points[index])
 		segments.append(points[index + 1])
 	shape.segments = segments
+	_refresh_visibility_bounds()
+	invalidate_geometry()
 
 
 func apply_theme(light: bool) -> void:
@@ -280,16 +349,29 @@ func apply_theme(light: bool) -> void:
 
 func display_stroke_color() -> Color:
 	var light: bool = Palette.is_light(str(GraphPreferences.value("theme"))) if _appearance_light == null else bool(_appearance_light)
-	return Palette.neutral_edge_color(_stroke_background(light)) if use_theme_color else stroke_color
+	var stage := get_parent() as Stage
+	var key := [light, use_theme_color, stroke_color,
+		stage.layout_revision if stage != null else 0,
+		source.get_instance_id() if is_instance_valid(source) else 0,
+		target.get_instance_id() if is_instance_valid(target) else 0]
+	if key != _color_key:
+		_color_key = key
+		_display_color = Palette.neutral_edge_color(_stroke_background(light)) if use_theme_color else stroke_color
+	return _display_color
 
 
 func _apply_style() -> void:
+	_queue_refresh()
+	_refresh_key.clear()
+	_color_key.clear()
 	line.default_color = display_stroke_color()
 	line.width = stroke_width
 	_unscaled_line_width = stroke_width
 	line.antialiased = true
 	arrow_head.color = display_stroke_color()
 	_geometry_key.clear()
+
+	style_changed.emit()
 
 
 func distance_to_point(world_point: Vector2) -> float:
@@ -348,6 +430,7 @@ func update_caption_collision(size: Vector2, center: Vector2, active: bool) -> v
 		collision.position = center
 	if collision.disabled == active:
 		collision.disabled = not active
+	_refresh_visibility_bounds()
 
 
 func caption_rect() -> Rect2:
@@ -360,9 +443,20 @@ func caption_rect() -> Rect2:
 func _invalidate_caption_peers() -> void:
 	if is_inside_tree():
 		get_parent().remove_meta("caption_peer_fractions")
+		get_parent().set_meta("caption_peer_revision", int(get_parent().get_meta("caption_peer_revision", 0)) + 1)
+		if get_parent() is Stage:
+			get_parent().caption_peers_changed.emit()
+		if get_parent() is Stage and is_instance_valid(get_parent().group_overview):
+			get_parent().group_overview.invalidate()
 
 
 func _exit_tree() -> void:
+	for entity in _watched_entities:
+		if is_instance_valid(entity) and entity.geometry_changed.is_connected(_queue_refresh):
+			entity.geometry_changed.disconnect(_queue_refresh)
+		if is_instance_valid(entity) and entity.tree_exiting.is_connected(_on_endpoint_exiting):
+			entity.tree_exiting.disconnect(_on_endpoint_exiting)
+	_watched_entities.clear()
 	_invalidate_caption_peers()
 
 
@@ -408,3 +502,70 @@ func _input(event: InputEvent) -> void:
 	stage.select_ids(PackedStringArray([id]))
 	stage.context_requested.emit(point)
 	get_viewport().set_input_as_handled()
+
+
+func _watch_endpoints() -> void:
+	for entity in _watched_entities:
+		if is_instance_valid(entity) and entity.geometry_changed.is_connected(_queue_refresh):
+			entity.geometry_changed.disconnect(_queue_refresh)
+		if is_instance_valid(entity) and entity.tree_exiting.is_connected(_on_endpoint_exiting):
+			entity.tree_exiting.disconnect(_on_endpoint_exiting)
+	_watched_entities.clear()
+	if not is_inside_tree():
+		return
+	for entity in [source, target]:
+		if is_instance_valid(entity) and not _watched_entities.has(entity):
+			entity.geometry_changed.connect(_queue_refresh)
+			entity.tree_exiting.connect(_on_endpoint_exiting)
+			_watched_entities.append(entity)
+
+
+func _queue_refresh() -> void:
+	_refresh_key.clear()
+	set_process(true)
+
+
+func _on_view_changed(world_rect: Rect2, zoom_steps: float) -> void:
+	var entered := not _in_view
+	_in_view = world_rect.intersects(_view_bounds, true)
+	if visibility_layer == 0 or not _in_view:
+		return
+	var local_scale := transform.get_scale().x
+	if not is_equal_approx(local_scale, 1.0):
+		zoom_steps += log(maxf(local_scale, 0.01)) / log(2.0) * 16.0
+	if entered or floori(zoom_steps + _bucket_offset) != _render_bucket:
+		set_process(true)
+
+
+func _on_endpoint_exiting() -> void:
+	hide()
+	_geometry_key.clear()
+	set_process(false)
+
+
+func _refresh_visibility_bounds() -> void:
+	if not is_node_ready():
+		return
+	# Include the complete shaft and caption, even when both endpoints are offscreen.
+	if _shaft_points.is_empty():
+		return
+	var world_rect := Rect2(_shaft_points[0], Vector2.ZERO)
+	for point in _shaft_points:
+		world_rect = world_rect.expand(point)
+	if arrow_head.visible:
+		world_rect = world_rect.expand(arrow_head.global_position)
+	var rect := global_transform.affine_inverse() * world_rect
+	var caption_collision := get_node("CaptionCollision") as CollisionShape2D
+	if not caption_collision.disabled:
+		rect = rect.merge(caption_collision.transform * caption_collision.shape.get_rect())
+	_view_bounds = global_transform * rect.grow(stroke_width + 4.0)
+
+
+func refresh_for_physics() -> void:
+	# Rigid-body integration can precede deferred transform notifications.
+	_endpoint_key.clear()
+	_refresh_key.clear()
+	_process(0.0)
+	var caption := get_node("Caption")
+	caption._queue_refresh()
+	caption._process(0.0)
