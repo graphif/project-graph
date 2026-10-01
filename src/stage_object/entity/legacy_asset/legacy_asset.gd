@@ -35,6 +35,11 @@ func _ready() -> void:
 	_update_geometry()
 
 
+# Share Entity's selection/drag transaction with the native visible image control.
+func _on_texture_gui_input(event: InputEvent) -> void:
+	super._on_input_event(get_viewport(), event, 0)
+
+
 func _update_geometry() -> void:
 	invalidate_geometry()
 	texture_rect.size = asset_size
