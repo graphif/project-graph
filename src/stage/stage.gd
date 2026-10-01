@@ -72,7 +72,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_stroke.points = PackedVector2Array([Vector2.ZERO])
 	elif mode == 0 and edge_at(world_position) != null:
 		var edge := edge_at(world_position)
-		select_object(edge, event.ctrl_pressed or event.meta_pressed)
+		select_object_from_click(edge, event)
 		if event.double_click:
 			edge.enter_edit_mode()
 	elif mode == 0 and event.double_click:
@@ -184,6 +184,19 @@ func select_object(object: StageObject, toggle := false) -> void:
 	elif not selected_ids.has(object.id):
 		selected_ids = PackedStringArray([object.id])
 	selection_changed.emit()
+
+
+# Pointer modifiers share one rule for native labels, physics picks and previews.
+func select_object_from_click(object: StageObject, event: InputEventMouseButton) -> void:
+	if event.ctrl_pressed or event.meta_pressed:
+		select_ids(PackedStringArray([object.id]))
+	elif event.shift_pressed:
+		var ids := selected_ids.duplicate()
+		if not ids.has(object.id):
+			ids.append(object.id)
+		select_ids(ids)
+	else:
+		select_object(object)
 
 
 func is_overview_hidden(object: StageObject) -> bool:

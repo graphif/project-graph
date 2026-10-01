@@ -218,7 +218,7 @@ func _label_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and not event.alt_pressed:
 		var stage := edge.get_parent() as Stage
 		if stage != null:
-			stage.select_object(edge, event.ctrl_pressed or event.meta_pressed)
+			stage.select_object_from_click(edge, event)
 			if event.double_click:
 				begin_edit()
 				editor.select_all.call_deferred()

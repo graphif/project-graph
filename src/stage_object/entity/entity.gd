@@ -62,10 +62,10 @@ func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> voi
 				return
 			# 通过父节点的选择接口交互，避免 Entity 反向依赖引用其子类的 Stage。
 			var stage: Node = get_parent()
-			if stage != null and not (stage.has_method("select_object") and stage.has_method("selected_objects")):
+			if stage != null and not (stage.has_method("select_object_from_click") and stage.has_method("selected_objects")):
 				stage = null
 			if stage != null:
-				stage.call("select_object", self, event.ctrl_pressed or event.meta_pressed)
+				stage.call("select_object_from_click", self, event)
 			get_viewport().set_input_as_handled()
 			if stage != null and not (stage.get("selected_ids") as PackedStringArray).has(id):
 				return
