@@ -93,6 +93,10 @@ func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> voi
 				object.sleeping = false
 			linear_velocity = Vector2.ZERO
 			angular_velocity = 0.0
+			if stage != null:
+				var solver := stage.get_node_or_null("NodeRepulsion")
+				if solver != null:
+					solver.begin_local_edit(_drag_origins.keys())
 		else:
 			finish_drag(true)
 		return

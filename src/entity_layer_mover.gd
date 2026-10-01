@@ -223,6 +223,9 @@ func _drop() -> void:
 	_active = false
 	_hide_feedback()
 	target_root.emit_signal("document_changed")
+	var solver := target_root.get_node_or_null("NodeRepulsion")
+	if solver != null:
+		solver.begin_local_edit(roots)
 	(target_root.get_node("History") as History).commit()
 
 

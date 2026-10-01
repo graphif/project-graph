@@ -11,6 +11,12 @@ extends Node2D
 @export_range(32.0, 600.0) var attraction_distance := 160.0
 
 var _attraction_pending := false
+var _drivers: Dictionary[int, bool] = {}
+var _local_movable: Dictionary[int, bool] = {}
+var _local_edges: Array[LineEdge] = []
+var _local_origins: Dictionary[int, Vector2] = {}
+var _query_shape := RectangleShape2D.new()
+var _query := PhysicsShapeQueryParameters2D.new()
 
 # 用内置哈希表去重，避免求解每个约束时线性扫描已移动节点。
 # 保存实例 ID，避免已删除实体作为类型化对象键时导致遍历报错。
@@ -36,32 +42,39 @@ func _physics_process(delta: float) -> void:
 		return
 	var layer_mover := target_root.get_node_or_null("EntityLayerMover")
 	if layer_mover != null and layer_mover.get("_active"):
-		stop_motion()
+		stop_motion(true)
 		return
 	var entries: Array[Dictionary] = []
 	var fastest := 0.0
-	for child in target_root.get_children():
-		if child is Entity and not child is PenStroke and child.is_node_ready() and child.is_visible_in_tree() and not child.is_queued_for_deletion():
-			if not child.drag_controlled and not child.is_throwing:
-				child.linear_velocity = child.linear_velocity.limit_length(maximum_speed)
-			fastest = maxf(fastest, child.linear_velocity.length())
-			entries.append({"body": child, "rect": child.aabb, "container": child.container, "weights": {child: 1.0}})
-	# The label is a collision surface of its edge, never a separate saved entity.
-	# Its motion comes from the endpoints, so distribute forces to those bodies.
-	for child in target_root.get_children():
-		if child is LineEdge and child.is_node_ready() and not child.is_queued_for_deletion():
-			if not is_instance_valid(child.source) or not is_instance_valid(child.target):
-				continue
-			child.refresh_for_physics()
-			var rect: Rect2 = child.caption_rect()
-			if not rect.has_area() or not child.is_visible_in_tree():
-				continue
-			var fraction: float = child.caption_fraction()
-			var weights := {child.source: 1.0 - fraction}
-			weights[child.target] = weights.get(child.target, 0.0) + fraction
-			var container: Entity = child.source.container if child.source.container == child.target.container else null
-			entries.append({"body": child, "rect": rect, "container": container, "weights": weights})
-	_apply_link_attraction(entries, delta)
+	if not _drivers.is_empty():
+		entries = _local_entries(delta)
+		for entry in entries:
+			if entry.body is Entity:
+				fastest = maxf(fastest, entry.body.linear_velocity.length())
+	else:
+		for child in target_root.get_children():
+			if child is Entity and not child is PenStroke and child.is_node_ready() and child.is_visible_in_tree() and not child.is_queued_for_deletion():
+				if not child.drag_controlled and not child.is_throwing:
+					child.linear_velocity = child.linear_velocity.limit_length(maximum_speed)
+				fastest = maxf(fastest, child.linear_velocity.length())
+				entries.append({"body": child, "rect": child.aabb, "container": child.container, "weights": {child: 1.0}})
+		# The label is a collision surface of its edge, never a separate saved entity.
+		# Its motion comes from the endpoints, so distribute forces to those bodies.
+		for child in target_root.get_children():
+			if child is LineEdge and child.is_node_ready() and not child.is_queued_for_deletion():
+				if not is_instance_valid(child.source) or not is_instance_valid(child.target):
+					continue
+				child.refresh_for_physics()
+				var rect: Rect2 = child.caption_rect()
+				if not rect.has_area() or not child.is_visible_in_tree():
+					continue
+				var fraction: float = child.caption_fraction()
+				var weights := {child.source: 1.0 - fraction}
+				weights[child.target] = weights.get(child.target, 0.0) + fraction
+				var container: Entity = child.source.container if child.source.container == child.target.container else null
+				entries.append({"body": child, "rect": rect, "container": container, "weights": weights})
+	if _drivers.is_empty():
+		_apply_link_attraction(entries, delta)
 	fastest = maxf(fastest, attraction_speed if _attraction_pending else 0.0)
 	entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.rect.position.x < b.rect.position.x)
 	var pairs: Array[Dictionary] = []
@@ -136,6 +149,8 @@ func _physics_process(delta: float) -> void:
 		# 整轮没有速度修正，后续轮次的输入相同，可以直接结束。
 		if not corrected:
 			break
+	if not _drivers.is_empty():
+		_bound_local_motion(delta)
 
 
 func _apply_link_attraction(entries: Array[Dictionary], delta: float) -> void:
@@ -263,6 +278,8 @@ func _mobility(body: Entity) -> float:
 
 
 func _held(body: Entity) -> bool:
+	if not _drivers.is_empty() and (_drivers.has(body.get_instance_id()) or not _local_movable.has(body.get_instance_id())):
+		return true
 	return body.freeze or body.drag_controlled or body.is_dragging or (body is TextNode and body.text_edit.visible)
 
 
@@ -282,7 +299,7 @@ func _separation(a: Rect2, b: Rect2, first_before_second: bool) -> Dictionary:
 	return {"normal": Vector2(0, signf(centers.y) if absf(centers.y) > 0.001 else fallback), "distance": -overlap.y}
 
 
-func stop_motion() -> void:
+func stop_motion(keep_scope := false) -> void:
 	_attraction_pending = false
 	for instance_id in _moved:
 		var body := instance_from_id(instance_id) as Entity
@@ -290,6 +307,11 @@ func stop_motion() -> void:
 			body.linear_velocity = Vector2.ZERO
 			body.angular_velocity = 0.0
 	_moved.clear()
+	if not keep_scope:
+		_drivers.clear()
+		_local_movable.clear()
+		_local_edges.clear()
+		_local_origins.clear()
 
 
 func _relative_weights(from: Dictionary, to: Dictionary) -> Dictionary[Entity, float]:
@@ -302,3 +324,90 @@ func _relative_weights(from: Dictionary, to: Dictionary) -> Dictionary[Entity, f
 		if is_zero_approx(weights[body]):
 			weights.erase(body)
 	return weights
+
+
+## Scope a pointer gesture to sibling neighbours; never contract its entire graph.
+func begin_local_edit(objects: Array) -> void:
+	stop_motion()
+	for object in objects:
+		if object is Entity:
+			_drivers[object.get_instance_id()] = true
+	for child in target_root.get_children():
+		if child is LineEdge:
+			_local_edges.append(child)
+	_query.shape = _query_shape
+	_query.collision_mask = 1
+	_query.collide_with_areas = false
+
+
+func _local_entries(delta: float) -> Array[Dictionary]:
+	var bodies := {}
+	var regions: Array[Rect2] = []
+	_local_movable.clear()
+	var space := get_world_2d().direct_space_state
+	for key in _drivers.keys():
+		var driver := instance_from_id(key) as Entity
+		if not is_instance_valid(driver) or driver.is_queued_for_deletion():
+			_drivers.erase(key)
+			continue
+		var rect := driver.aabb
+		if driver.drag_controlled:
+			var destination := rect
+			destination.position += driver._drag_target - driver.global_position
+			rect = rect.merge(destination)
+		rect = rect.grow(influence_distance + maximum_speed * delta * 2.0)
+		regions.append(rect)
+		bodies[driver.get_instance_id()] = driver
+		_query_shape.size = rect.size.max(Vector2.ONE)
+		_query.transform = Transform2D(0.0, rect.get_center())
+		for hit in space.intersect_shape(_query, 4096):
+			var body: Variant = hit.collider
+			if body is Entity and not body is PenStroke and body.get_parent() == target_root and body.container == driver.container and body.is_visible_in_tree() and not body.is_queued_for_deletion():
+				bodies[body.get_instance_id()] = body
+	for key in bodies:
+		_local_movable[key] = true
+		if not _drivers.has(key) and not _local_origins.has(key):
+			_local_origins[key] = bodies[key].global_position
+	# Leaving the pointer neighbourhood must not leave passive drift behind.
+	for key in _moved.keys():
+		if _local_movable.has(key):
+			continue
+		var body := instance_from_id(key) as Entity
+		if is_instance_valid(body) and not body.drag_controlled and not body.is_throwing:
+			body.linear_velocity = Vector2.ZERO
+			body.angular_velocity = 0.0
+		_moved.erase(key)
+	var entries: Array[Dictionary] = []
+	for key in bodies:
+		var body: Entity = bodies[key]
+		if not body.drag_controlled and not body.is_throwing:
+			body.linear_velocity = body.linear_velocity.limit_length(maximum_speed)
+		entries.append({"body": body, "rect": body.aabb, "container": body.container, "weights": {body: 1.0}})
+	for edge in _local_edges:
+		if not is_instance_valid(edge) or edge.is_queued_for_deletion() or not edge.is_visible_in_tree() or not is_instance_valid(edge.source) or not is_instance_valid(edge.target):
+			continue
+		if bodies.has(edge.source.get_instance_id()) or bodies.has(edge.target.get_instance_id()):
+			edge.refresh_for_physics()
+		var rect := edge.caption_rect()
+		if not rect.has_area() or not regions.any(func(region: Rect2) -> bool: return region.intersects(rect, true)):
+			continue
+		var fraction := edge.caption_fraction()
+		var weights := {edge.source: 1.0 - fraction}
+		weights[edge.target] = weights.get(edge.target, 0.0) + fraction
+		var container: Entity = edge.source.container if edge.source.container == edge.target.container else null
+		entries.append({"body": edge, "rect": rect, "container": container, "weights": weights})
+	return entries
+
+
+func _bound_local_motion(delta: float) -> void:
+	# Passive avoidance yields at most one influence radius per gesture.
+	for key in _local_movable:
+		if _drivers.has(key) or not _local_origins.has(key):
+			continue
+		var body := instance_from_id(key) as Entity
+		if not is_instance_valid(body) or _held(body) or body.is_throwing:
+			continue
+		var offset: Vector2 = body.global_position - _local_origins[key]
+		var next := offset + body.linear_velocity * delta
+		if next.length_squared() > influence_distance * influence_distance:
+			body.linear_velocity = (next.limit_length(influence_distance) - offset) / maxf(delta, 0.0001)
