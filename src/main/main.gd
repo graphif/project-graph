@@ -1504,9 +1504,19 @@ func _apply_details() -> void:
 	var panel := _panel("NodeDetailsWindow")
 	stage.finish_text_editing()
 	stage.finish_interaction()
+	var layout_changed := false
+	var changed := false
+	if object is TextNode:
+		layout_changed = object.text != panel.get_node("Text").text or object.font_size != int(panel.get_node("Fields/FontSize").value) or not is_equal_approx(object.fixed_width, float(panel.get_node("Fields/Width").value))
+		changed = layout_changed or object.fill_color != panel.get_node("Fields/Fill").color or object.text_color != panel.get_node("Fields/TextColor").color
+	else:
+		changed = object.display_stroke_color() != panel.get_node("Fields/Stroke").color or not is_equal_approx(object.stroke_width, float(panel.get_node("Fields/StrokeWidth").value)) or object.show_arrow != panel.get_node("Fields/Arrow").button_pressed
+	if not changed:
+		_toast("属性未变化")
+		return
 	stage.history.begin_transaction()
-	var drivers: Array = [object] if object is TextNode else [object.source, object.target]
-	stage.get_node("NodeRepulsion").begin_local_edit(drivers)
+	if layout_changed:
+		stage.get_node("NodeRepulsion").begin_local_edit([object])
 	if object is TextNode:
 		object.text = panel.get_node("Text").text
 		object.font_size = int(panel.get_node("Fields/FontSize").value)
@@ -1520,7 +1530,7 @@ func _apply_details() -> void:
 			object.stroke_color = stroke
 		object.stroke_width = panel.get_node("Fields/StrokeWidth").value
 		object.show_arrow = panel.get_node("Fields/Arrow").button_pressed
-	stage.history.commit()
+	stage.history.commit(layout_changed)
 	stage.document_changed.emit()
 	_toast("属性已更新")
 
@@ -1541,7 +1551,7 @@ func _reverse_edge() -> void:
 	var source_uv := edge.source_uv
 	edge.source_uv = edge.target_uv
 	edge.target_uv = source_uv
-	stage.history.commit()
+	stage.history.commit(false)
 	stage.document_changed.emit()
 
 
@@ -1575,7 +1585,7 @@ func _apply_color(reset := false) -> void:
 		else:
 			continue
 		changed += 1
-	stage.history.commit()
+	stage.history.commit(false)
 	stage.document_changed.emit()
 	_details_id = ""
 	_selection_changed()

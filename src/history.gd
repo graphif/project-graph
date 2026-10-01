@@ -31,8 +31,12 @@ func begin_transaction() -> void:
 		_transaction_snapshot = _capture_snapshot()
 
 
-func commit() -> void:
+func commit(wait_for_physics := true) -> void:
 	if _busy or _pending_commit:
+		return
+	# 纯样式与方向变化无需物理收尾，也不能启动全图避让。
+	if not wait_for_physics:
+		_finish_commit()
 		return
 	_pending_commit = true
 	_commit_generation += 1
