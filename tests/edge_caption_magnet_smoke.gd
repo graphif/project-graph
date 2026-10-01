@@ -49,6 +49,7 @@ func _run() -> void:
 	await settle()
 	stage.history.clear()
 	stage.history.begin_transaction()
+	stage.get_node("NodeRepulsion").begin_global_layout()
 	var edge := stage.connect_entities(a, b)
 	edge.text = "依赖关系"
 	stage.history.commit()
@@ -62,6 +63,7 @@ func _run() -> void:
 
 	# Reverse edges must not stack their labels in the same midpoint.
 	stage.history.begin_transaction()
+	stage.get_node("NodeRepulsion").begin_global_layout()
 	var reverse := stage.connect_entities(b, a)
 	reverse.text = "反向关系"
 	stage.history.commit()
@@ -71,6 +73,7 @@ func _run() -> void:
 
 	# A third node is also repelled by the edge caption.
 	stage.history.begin_transaction()
+	stage.get_node("NodeRepulsion").begin_global_layout()
 	var obstacle := stage.create_text_node("其他节点", edge.caption_rect().get_center(), false)
 	obstacle.container = group
 	stage.history.commit()
@@ -163,10 +166,15 @@ func _run() -> void:
 
 
 func right_click(world_point: Vector2) -> void:
+	# Keep the tested curve point inside the canvas, clear of root toolbars.
+	stage.camera.position = world_point
+	stage.camera.target_position = world_point
+	await process_frame
 	var viewport := stage.get_viewport()
 	var container := viewport.get_parent() as Control
 	var local_point := stage.get_canvas_transform() * world_point
 	var screen_point := container.get_global_transform_with_canvas() * (local_point * container.size / Vector2(viewport.size))
+	root.warp_mouse(screen_point)
 	var motion := InputEventMouseMotion.new()
 	motion.position = screen_point
 	motion.global_position = screen_point

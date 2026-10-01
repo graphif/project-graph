@@ -55,6 +55,7 @@ func _run() -> void:
 	solver._physics_process(0.1)
 	check(a.linear_velocity == Vector2.ZERO and c.linear_velocity == Vector2.ZERO, "Idle loaded graph does not rearrange")
 	stage.history.begin_transaction()
+	solver.begin_global_layout()
 	solver._physics_process(0.1)
 	check(a.linear_velocity.x > 0.0 and c.linear_velocity.x < 0.0, "Both ends of a connected chain attract")
 	check(b.linear_velocity.y < 0.0, "Indirectly connected component includes its middle node")
@@ -97,6 +98,7 @@ func _run() -> void:
 	solver.set_physics_process(true)
 	stage.history.clear()
 	stage.history.begin_transaction()
+	solver.begin_global_layout()
 	stage.history.commit()
 	while stage.history._pending_commit:
 		await physics_frame
@@ -128,6 +130,7 @@ func _run() -> void:
 	await settle()
 	stage.history.clear()
 	stage.history.begin_transaction()
+	solver.begin_global_layout()
 	clear_velocities()
 	solver._physics_process(0.1)
 	check(left_group.linear_velocity.x > 0.0 and right_group.linear_velocity.x < 0.0, "Cross-group links attract the corresponding containers")

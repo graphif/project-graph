@@ -142,6 +142,7 @@ func create_text_node(content: String, world_position: Vector2, record_history :
 	apply_object_preferences(node)
 	select_ids(PackedStringArray([node.id]))
 	if record_history:
+		$NodeRepulsion.begin_local_edit([node])
 		history.commit()
 	document_changed.emit()
 	return node

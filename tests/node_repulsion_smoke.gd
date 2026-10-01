@@ -51,6 +51,7 @@ func fixture() -> void:
 	solver.target_root = stage
 	stage.add_child(solver)
 	solver.set_physics_process(false)
+	solver.begin_global_layout()
 
 
 func cleanup() -> void:

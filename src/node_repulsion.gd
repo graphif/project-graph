@@ -11,6 +11,8 @@ extends Node2D
 @export_range(32.0, 600.0) var attraction_distance := 160.0
 
 var _attraction_pending := false
+var _global_layout_requested := false
+var _pin_drivers := true
 var _drivers: Dictionary[int, bool] = {}
 var _local_movable: Dictionary[int, bool] = {}
 var _local_edges: Array[LineEdge] = []
@@ -38,6 +40,10 @@ func _physics_process(delta: float) -> void:
 		return
 	# 只在编辑事务及其收尾阶段移动节点，保留载入和撤销后的布局。
 	if history == null or not history.is_transaction_active():
+		stop_motion()
+		return
+	# 历史事务不是重排许可；只运行明确请求的局部或全图布局。
+	if _drivers.is_empty() and not _global_layout_requested:
 		stop_motion()
 		return
 	var layer_mover := target_root.get_node_or_null("EntityLayerMover")
@@ -282,7 +288,7 @@ func _mobility(body: Entity) -> float:
 
 
 func _held(body: Entity) -> bool:
-	if not _drivers.is_empty() and (_drivers.has(body.get_instance_id()) or not _local_movable.has(body.get_instance_id())):
+	if not _drivers.is_empty() and ((_pin_drivers and _drivers.has(body.get_instance_id())) or not _local_movable.has(body.get_instance_id())):
 		return true
 	return body.freeze or body.drag_controlled or body.is_dragging or (body is TextNode and body.text_edit.visible)
 
@@ -312,6 +318,8 @@ func stop_motion(keep_scope := false) -> void:
 			body.angular_velocity = 0.0
 	_moved.clear()
 	if not keep_scope:
+		_global_layout_requested = false
+		_pin_drivers = true
 		_drivers.clear()
 		_local_movable.clear()
 		_local_edges.clear()
@@ -331,8 +339,14 @@ func _relative_weights(from: Dictionary, to: Dictionary) -> Dictionary[Entity, f
 
 
 ## Scope a pointer gesture to sibling neighbours; never contract its entire graph.
-func begin_local_edit(objects: Array) -> void:
+func begin_global_layout() -> void:
 	stop_motion()
+	_global_layout_requested = true
+
+
+func begin_local_edit(objects: Array, pin_drivers := true) -> void:
+	stop_motion()
+	_pin_drivers = pin_drivers
 	for object in objects:
 		if object is Entity:
 			_drivers[object.get_instance_id()] = true
@@ -372,7 +386,7 @@ func _local_entries(delta: float) -> Array[Dictionary]:
 				bodies[body.get_instance_id()] = body
 	for key in bodies:
 		_local_movable[key] = true
-		if not _drivers.has(key) and not _local_origins.has(key):
+		if (not _pin_drivers or not _drivers.has(key)) and not _local_origins.has(key):
 			_local_origins[key] = bodies[key].global_position
 	# Leaving the pointer neighbourhood must not leave passive drift behind.
 	for key in _moved.keys():

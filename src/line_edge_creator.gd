@@ -105,6 +105,7 @@ func _finish_drag() -> void:
 		if edge != null:
 			target_root.select_ids(PackedStringArray([edge.id]))
 			target_root.document_changed.emit()
+			target_root.get_node("NodeRepulsion").begin_local_edit([_source, _target], false)
 		if history != null:
 			history.commit()
 	if not _drag_threshold_passed and _gesture_button == MOUSE_BUTTON_RIGHT and target_root is Stage:
