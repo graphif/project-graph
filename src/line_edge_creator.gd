@@ -84,9 +84,7 @@ func _input(event: InputEvent) -> void:
 func _start_drag(source: Entity, mouse_position: Vector2) -> void:
 	_drag_start_position = mouse_position
 	_drag_threshold_passed = false
-	var history := _get_history()
-	if history != null:
-		history.begin_transaction()
+	# 连线预览不改文档；仅实际创建连线时开始历史事务。
 	_source = source
 	_source_uv = Vector2(0.5, 0.5)
 	_target = null
@@ -100,16 +98,13 @@ func _finish_drag() -> void:
 	_target_edge_highlight.visible = false
 
 	if _target != null and target_root is Stage:
+		var history := _get_history()
+		if history != null:
+			history.begin_transaction()
 		var edge: LineEdge = target_root.connect_entities(_source, _target)
 		if edge != null:
 			target_root.select_ids(PackedStringArray([edge.id]))
 			target_root.document_changed.emit()
-		var history := _get_history()
-		if history != null:
-			history.commit()
-
-	if _target == null:
-		var history := _get_history()
 		if history != null:
 			history.commit()
 	if not _drag_threshold_passed and _gesture_button == MOUSE_BUTTON_RIGHT and target_root is Stage:
@@ -244,9 +239,6 @@ func cancel_drag() -> void:
 	_preview_line.hide()
 	_source_edge_highlight.hide()
 	_target_edge_highlight.hide()
-	var history := _get_history()
-	if history != null:
-		history.commit()
 
 
 func _process(_delta: float) -> void:
