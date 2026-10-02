@@ -59,6 +59,34 @@ func _run() -> void:
 					coverage = maxf(coverage, image.get_pixel(x, y).a)
 				check(coverage >= 0.4, "Border disappears: zoom=%s phase=%s x=%s alpha=%s" % [zoom_value, phase, x, coverage])
 			check(node.transform == original_transform and node.get_visual_rect() == original_rect, "Zoom changes only rendering")
+	# Same bucket must reuse identical baked geometry despite floating-point zoom.
+	stage.camera.zoom = Vector2.ONE * .125
+	stage.camera.target_zoom = stage.camera.zoom
+	stage.camera.force_update_scroll()
+	var border: Line2D
+	for child in node.label.get_children():
+		if child.get_script() == load("res://src/minimum_screen_border.gd"):
+			border = child
+	check(border != null, "Text node has native minimum-pixel border")
+	if border != null:
+		border._process(0.0)
+		var baked := border.points
+		for jitter in [.125001, .125003, .125007]:
+			stage.camera.zoom = Vector2.ONE * jitter
+			stage.camera.target_zoom = stage.camera.zoom
+			stage.camera.force_update_scroll()
+			border._process(0.0)
+			check(border.points == baked, "Sub-bucket zoom reuses identical rounded geometry")
+		var cache_key: Array = border._refresh_key.duplicate()
+		node.visibility_layer = 0
+		stage.camera.zoom = Vector2.ONE * .25
+		stage.camera.target_zoom = stage.camera.zoom
+		stage.camera.force_update_scroll()
+		border._process(0.0)
+		check(border._refresh_key == cache_key and border.points == baked, "Ancestor canvas culling skips hidden border work")
+		node.visibility_layer = 1
+		border._process(0.0)
+		check(border._refresh_key != cache_key, "Restored border catches up to the current zoom")
 	# Thin glyph coverage should survive camera shifts, not turn into fragments.
 	var sample := Label.new()
 	sample.text = "||||||||||||||||"

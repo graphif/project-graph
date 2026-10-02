@@ -9,6 +9,9 @@ const Corners = preload("res://src/main/continuous_corners.gd")
 var _refresh_key: Array = []
 var _event_driven := false
 var _bucket_offset := 0.0
+var _basis_key := Transform2D.IDENTITY
+var _outline_key: Array = []
+var _outline := PackedVector2Array()
 
 
 func _ready() -> void:
@@ -36,6 +39,11 @@ func _queue_refresh(_world_rect: Rect2 = Rect2(), _zoom_steps: float = 0.0) -> v
 func _process(_delta: float) -> void:
 	if _event_driven:
 		set_process(false)
+	var ancestor: CanvasItem = _control
+	while ancestor != null:
+		if ancestor.visibility_layer & get_viewport().canvas_cull_mask == 0:
+			return
+		ancestor = null if ancestor.top_level else ancestor.get_parent() as CanvasItem
 	if not _control.is_visible_in_tree() or visibility_layer == 0:
 		return
 	var original := Corners.source(_control.get_theme_stylebox(style_name))
@@ -54,18 +62,23 @@ func _process(_delta: float) -> void:
 	if not visible:
 		return
 	# Round down: between buckets the core grows slightly, never below one pixel.
-	var sampled_scale := pow(2.0, (floorf(log(actual_scale) / log(2.0) * 16.0 + _bucket_offset) - _bucket_offset) / 16.0)
+	var bucket := floori(log(actual_scale) / log(2.0) * 16.0 + _bucket_offset)
+	var sampled_scale := pow(2.0, (bucket - _bucket_offset) / 16.0)
+	var normalized_basis := Transform2D(canvas.x / actual_scale, canvas.y / actual_scale, Vector2.ZERO)
 	var ratio := sampled_scale / actual_scale
 	basis.x *= ratio
 	basis.y *= ratio
 	var radius := float(original.corner_radius_top_left)
-	var key := [basis, _control.size, radius, border_width, original.border_color]
-	if key == _refresh_key:
+	var key := [bucket, _control.size, radius, border_width, original.border_color]
+	if key == _refresh_key and normalized_basis.is_equal_approx(_basis_key):
 		return
 	_refresh_key = key
+	_basis_key = normalized_basis
 	transform = basis.affine_inverse()
 	default_color = original.border_color
-	var outline := Corners.outline(Rect2(Vector2.ZERO, _control.size).grow(-border_width * 0.5), maxf(0.0, radius - border_width * 0.5))
-	for index in outline.size():
-		outline[index] = basis.basis_xform(outline[index])
-	points = outline
+	var outline_key := [_control.size, radius, border_width]
+	if outline_key != _outline_key:
+		_outline_key = outline_key
+		_outline = Corners.outline(Rect2(Vector2.ZERO, _control.size).grow(-border_width * 0.5), maxf(0.0, radius - border_width * 0.5))
+	# Native packed-array transformation avoids a GDScript loop per corner point.
+	points = basis * _outline
