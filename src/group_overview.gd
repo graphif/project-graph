@@ -7,7 +7,7 @@ extends Node2D
 
 const Corners = preload("res://src/main/continuous_corners.gd")
 const Palette = preload("res://src/main/theme_palette.gd")
-const TITLE_FONT_SIZE := 64
+const TITLE_FONT_SIZE := 100
 static var _summary_font: FontFile
 
 @onready var _template: Panel = $SummaryTemplate
@@ -155,7 +155,6 @@ func refresh() -> void:
 		_link_render_key.clear()
 	for identifier in _summaries:
 		_update_summary(_preview_nodes[identifier], _summaries[identifier])
-	_space_preview_headers()
 	_update_preview_links()
 
 
@@ -377,14 +376,6 @@ func _preview_display_rect(identifier: int) -> Rect2:
 
 
 func _preview_endpoint_rect(identifier: int) -> Rect2:
-	var object: TextNode = _preview_nodes[identifier]
-	if _preview_roots.has(identifier):
-		var panel := _summaries.get(identifier) as Panel
-		if panel != null:
-			var title: Label = panel.get_node("Title")
-			if title.visible and not title.text.is_empty():
-				return title.get_global_transform() * Rect2(Vector2.ZERO, title.size)
-		return object.aabb
 	return _preview_display_rect(identifier)
 
 
@@ -423,7 +414,6 @@ func _update_preview_links() -> void:
 		if not is_equal_approx(line.width, width):
 			line.width = width
 		var color: Color = data.edge.display_stroke_color()
-		color.a *= .8
 		if line.default_color != color:
 			line.default_color = color
 		var head: Polygon2D = node.get_node("Head")
@@ -510,11 +500,10 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 	var revision: int = stage.get_meta("loading_overview_revision", stage.layout_revision)
 	var identifier := group.get_instance_id()
 	var root := _preview_roots.has(identifier) or (stage.is_loading and _active.has(identifier))
-	var rect: Rect2 = _group_rects.get(identifier, group.aabb) if root or group._container_active else group.aabb
+	var rect := _preview_display_rect(identifier) if _preview_nodes.has(identifier) else _group_rects.get(identifier, group.aabb) as Rect2
 	var scale := maxf(get_global_transform_with_canvas().get_scale().x, .01)
 	var screen_size := rect.size * scale
-	# Keep unreadable strips out of the preview, rather than drawing tiny text.
-	if not stage.world_view_rect.intersects(rect.grow(36.0 / scale), true) or (not root and (screen_size.x < 28.0 or screen_size.y < 18.0)):
+	if not stage.world_view_rect.intersects(rect, true):
 		panel.hide()
 		return
 	panel.show()
@@ -522,193 +511,83 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 	var pixel_scale := pow(2.0, (floorf(log(scale) / log(2.0) * 16.0 + offset) - offset) / 16.0)
 	var light := group._display_theme_is_light()
 	var canvas_color := Palette.color(light, "surface.canvas")
-	var original_background := group.display_background_color(light)
-	var background := original_background
-	if root:
-		background = canvas_color.lerp(Color(original_background, 1.0), original_background.a * .18)
-		background.a = .78
-	elif group.fill_color.a < .01 and original_background.is_equal_approx(canvas_color):
-		background = Palette.color(light, "surface.hover")
-		background.a = .97
-	else:
-		background.a = maxf(background.a, .92)
-	var original_border := group.display_border_color()
-	var default_border := Palette.color(light, "canvas.node.border")
-	var border_color := original_border
-	if original_border.is_equal_approx(default_border):
-		border_color = Palette.color(light, "border.default")
-	elif root:
-		border_color.a *= .65
-	var title_color := group.text_color if group.text_color.a > .01 else Palette.neutral_text_color(canvas_color if root else canvas_color.blend(background))
-	var content_key := [group.text, title_color]
-	var key := [revision, pixel_scale, root, content_key, background, border_color]
+	var fill := group.fill_color
+	var covered := root or group._container_active
+	var background := Color(canvas_color if fill.a == 0 else fill, .5) if covered else fill
+	if not covered and fill.a == 0 and group.font_size * pixel_scale < 5.0:
+		background = Color((Palette.LATTE if light else Palette.MOCHA)["surface2"], .2)
+	var border_color := Color((Palette.LATTE if light else Palette.MOCHA)["surface2"])
+	var text_background := fill if fill.a == 1.0 else canvas_color
+	var brightness := .2126 * text_background.r + .7152 * text_background.g + .0722 * text_background.b
+	var foreground := Color.BLACK if brightness > 128.0 / 255.0 else Color.WHITE
+	var text := group.text.replace("\n", " ")
+	var content_key := [text, foreground]
+	var key := [revision, pixel_scale, root, covered, content_key, background, border_color, group.font_size]
 	if panel.get_meta("summary_key", []) == key:
-		if root:
-			_place_preview_header(panel)
 		return
 	panel.set_meta("summary_key", key)
-	var position := to_local(rect.position)
-	if panel.position != position:
-		panel.position = position
-	var scaling := Vector2.ONE / pixel_scale
-	if panel.scale != scaling:
-		panel.scale = scaling
-	var size := rect.size * pixel_scale
-	if panel.size != size:
-		panel.size = size
+	panel.position = to_local(rect.position)
+	panel.scale = Vector2.ONE / pixel_scale
+	panel.size = rect.size * pixel_scale
 	panel.z_index = 66 if root else 68
 	var title: Label = panel.get_node("Title")
 	title.z_index = 4 if root else 0
-	title.visible = maxf(screen_size.x, screen_size.y) >= 20.0
-	title.clip_text = true
-	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	title.clip_text = false
+	title.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if root else HORIZONTAL_ALIGNMENT_CENTER
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	if _summary_font == null:
 		_summary_font = TextNode._make_canvas_font(preload("res://assets/fonts/PingFang-SC-Regular.ttf")) as FontFile
 	if panel.get_meta("summary_content", []) != content_key:
-		var text := group.text.get_slice("\n", 0).strip_edges()
-		if text.length() > 48:
-			text = text.left(47) + "…"
 		title.text = text
 		title.add_theme_font_override("font", _summary_font)
 		title.add_theme_font_size_override("font_size", TITLE_FONT_SIZE)
-		title.add_theme_color_override("font_color", title_color)
+		title.add_theme_color_override("font_color", foreground)
 		panel.set_meta("summary_content", content_key)
-	var desired := 18.0 if root else 14.0
+	# master getTextSize reports the em size for height, not font line height.
+	var measured := _summary_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, TITLE_FONT_SIZE)
+	var desired := float(group.font_size) * pixel_scale
+	if covered:
+		var ratio := maxf(measured.x / TITLE_FONT_SIZE, .0001)
+		var height := minf(panel.size.x / ratio, panel.size.y) * .9
+		desired = clampf(height, .1, maxf(panel.size.x, panel.size.y) * .8)
+	title.visible = not text.strip_edges().is_empty() and (maxf(screen_size.x, screen_size.y) >= 20.0 if covered else desired > 5.0)
 	var factor := desired / TITLE_FONT_SIZE
-	var measured := _summary_font.get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, TITLE_FONT_SIZE)
-	var text_height := _summary_font.get_height(TITLE_FONT_SIZE)
-	var width := maxf(1.0, panel.size.x - 12.0)
-	if root and not group._container_active:
-		width = clampf(group.aabb.size.x * pixel_scale, 96.0, 240.0)
-	elif root:
-		width = minf(280.0, measured.x * factor + 2.0)
-	title.size = Vector2(width / factor, text_height)
+	title.size = Vector2(measured.x, _summary_font.get_height(TITLE_FONT_SIZE))
 	title.scale = Vector2.ONE * factor
-	title.position = Vector2(22.0, -text_height * factor - 12.0) if root else Vector2(6.0, (panel.size.y - text_height * factor) * .5)
-	if root and not group._container_active:
-		var anchor: Vector2 = group.aabb.get_center() - rect.position
-		title.position = anchor * pixel_scale - Vector2(width, text_height * factor) * .5
-	var header := panel.get_node_or_null("HeaderBackground") as Panel
-	if root and header == null:
-		header = Panel.new()
-		header.name = "HeaderBackground"
-		header.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		header.z_index = 3
-		panel.add_child(header)
-	if header != null:
-		header.visible = root and title.visible and not title.text.is_empty()
-		var header_color := Palette.color(group._display_theme_is_light(), "surface.canvas")
-		header_color.a = .95
-		var header_style_key := [header_color]
-		if header.get_meta("style_key", []) != header_style_key:
-			var header_style := StyleBoxFlat.new()
-			header_style.bg_color = header_color
-			header_style.set_border_width_all(0)
-			header.add_theme_stylebox_override("panel", Corners.style(header_style, 8.0, true, true))
-			header.set_meta("style_key", header_style_key)
-		header.size = title.size * factor + Vector2(30, 12)
-		var accent := header.get_node_or_null("Accent") as Panel
-		if accent == null:
-			accent = Panel.new()
-			accent.name = "Accent"
-			accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			header.add_child(accent)
-		var accent_color := Palette.color(light, "accent.primary") if original_background.is_equal_approx(canvas_color) else Color(original_background, 1.0)
-		if accent.get_meta("color", Color.TRANSPARENT) != accent_color:
-			var accent_style := StyleBoxFlat.new()
-			accent_style.bg_color = accent_color
-			accent.add_theme_stylebox_override("panel", Corners.style(accent_style, 1.0, true, true))
-			accent.set_meta("color", accent_color)
-		accent.size = Vector2(3, 16)
-		accent.position = Vector2(9, (header.size.y - 16) * .5)
-	panel.set_meta("title_anchor", title.position)
-	if root:
-		_place_preview_header(panel)
-	var radius := Corners.fitted_radius(panel.size, 16.0 if root else 9.0, 1.0)
+	title.position = (panel.size - title.size * factor) * .5
+	# The direct next-layer preview stays above the parent to preserve requested
+	# readability, while every covered title uses the master fitting formula.
+	var radius := minf(8.0 * pixel_scale, minf(panel.size.x, panel.size.y) * .5)
 	var framed := group._container_active or not root
-	var style_key := [background, border_color, radius, framed, root]
+	var style_key := [background, border_color, radius, framed, covered, root]
 	if panel.get_meta("style_key", []) != style_key:
 		var style := StyleBoxFlat.new()
-		style.bg_color = background if framed else Color.TRANSPARENT
+		style.bg_color = background
 		style.border_color = border_color
-		style.set_border_width_all(1 if framed else 0)
+		style.set_border_width_all(0)
 		panel.add_theme_stylebox_override("panel", Corners.style(style, radius, true, true))
 		panel.set_meta("style_key", style_key)
-
-
-func _place_preview_header(panel: Panel) -> void:
-	var title: Label = panel.get_node("Title")
-	var canvas := panel.get_global_transform_with_canvas()
-	var anchor: Vector2 = panel.get_meta("title_anchor", title.position)
-	var bounds := canvas * Rect2(anchor - Vector2(20, 6), title.size * title.scale + Vector2(30, 12))
-	var viewport := get_viewport_rect().size
-	var position := bounds.position.clamp(Vector2(8, 8), (viewport - bounds.size - Vector2(8, 8)).max(Vector2(8, 8)))
-	var local := anchor + canvas.affine_inverse().basis_xform(position - bounds.position)
-	if title.position != local:
-		title.position = local
-	var header := panel.get_node_or_null("HeaderBackground") as Panel
-	if header != null:
-		var header_position := local - Vector2(20, 6)
-		if header.position != header_position:
-			header.position = header_position
-
-
-func _space_preview_headers() -> void:
-	# Only space temporary titles; never run physics avoidance or a graph layout.
-	var headers: Array[Panel] = []
-	for identifier in _preview_roots:
-		var panel := _summaries.get(identifier) as Panel
-		if panel == null or not panel.visible:
-			continue
-		var header := panel.get_node_or_null("HeaderBackground") as Panel
-		if header != null and header.visible:
-			headers.append(header)
-	headers.sort_custom(func(a: Panel, b: Panel) -> bool:
-		var first := a.get_global_transform_with_canvas().origin
-		var second := b.get_global_transform_with_canvas().origin
-		if not is_equal_approx(first.y, second.y):
-			return first.y < second.y
-		if not is_equal_approx(first.x, second.x):
-			return first.x < second.x
-		return a.get_parent().name < b.get_parent().name)
-	var occupied: Array[Rect2] = []
-	for header in headers:
-		var canvas := header.get_global_transform_with_canvas()
-		var bounds := canvas * Rect2(Vector2.ZERO, header.size)
-		var placed := bounds
-		# Camera-clipped headers can share an anchor. Keep their horizontal
-		# association with the frame and move only as far as necessary.
-		for _attempt in occupied.size() + 1:
-			var blocked := false
-			for previous in occupied:
-				if placed.grow(3.0).intersects(previous):
-					placed.position.y = previous.end.y + 6.0
-					blocked = true
-					break
-			if not blocked:
-				break
-		var limit := get_viewport_rect().size.y - placed.size.y - 8.0
-		if placed.position.y > limit:
-			# In a crowded bottom edge search upward from the viewport limit.
-			placed.position.y = limit
-			for _attempt in occupied.size() + 1:
-				var blocked := false
-				for previous in occupied:
-					if placed.grow(3.0).intersects(previous):
-						placed.position.y = previous.position.y - placed.size.y - 6.0
-						blocked = true
-						break
-				if not blocked:
-					break
-		var panel := header.get_parent() as Panel
-		var title: Label = panel.get_node("Title")
-		var offset := panel.get_global_transform_with_canvas().affine_inverse().basis_xform(placed.position - bounds.position)
-		header.position += offset
-		title.position += offset
-		occupied.append(placed)
+	var border := panel.get_node_or_null("Border") as Line2D
+	if border == null:
+		border = Line2D.new()
+		border.name = "Border"
+		border.antialiased = true
+		border.texture = preload("res://assets/line_antialiasing.res")
+		border.texture_mode = Line2D.LINE_TEXTURE_TILE
+		border.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+		border.closed = true
+		panel.add_child(border)
+	border.visible = framed
+	border.scale = Vector2.ONE * pixel_scale
+	border.default_color = border_color
+	# Native texture includes a one-pixel AA fringe on either side.
+	border.width = (2.0 if covered else 2.0 * pixel_scale) / pixel_scale + 2.0 / pixel_scale
+	var border_key := [rect.size, framed]
+	if border.get_meta("geometry_key", []) != border_key:
+		border.points = Corners.outline(Rect2(Vector2.ZERO, rect.size), minf(8.0, minf(rect.size.x, rect.size.y) * .5))
+		border.set_meta("geometry_key", border_key)
 
 
 func _on_summary_input(event: InputEvent, group: TextNode) -> void:
