@@ -9,7 +9,9 @@ func _run() -> void:
 	for file: String in ["教程操作.prg", "教程节点.prg", "tutorial-shortcut-keys-3.1.prg", "思维导图.prg"]:
 		var path := "/home/waya/Desktop/project/" + file
 		var hash_before := FileAccess.get_sha256(path)
+		print("PREVIEW_FIXTURE_LOAD_BEGIN ", file)
 		check(await stage.load_from_file(path), "Fixture opens: " + file)
+		print("PREVIEW_FIXTURE_LOADED ", file)
 		for object in stage.stage_objects():
 			object.freeze = true
 		stage.select_ids(PackedStringArray())

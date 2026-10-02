@@ -6,6 +6,7 @@ extends Node2D
 @export_range(0.01, 1.0) var viewport_size_ratio := 0.15
 
 const Corners = preload("res://src/main/continuous_corners.gd")
+const Palette = preload("res://src/main/theme_palette.gd")
 const TITLE_FONT_SIZE := 64
 static var _summary_font: FontFile
 
@@ -302,9 +303,10 @@ func _refresh_membership() -> void:
 			panel.name = "Summary_" + _preview_nodes[identifier].id
 			add_child(panel)
 			panel.gui_input.connect(_on_summary_input.bind(_preview_nodes[identifier]))
+			panel.get_node("Title").gui_input.connect(_on_summary_input.bind(_preview_nodes[identifier]))
 			_summaries[identifier] = panel
 		panel.mouse_filter = Control.MOUSE_FILTER_STOP if _preview_roots.has(identifier) else Control.MOUSE_FILTER_IGNORE
-		panel.get_node("Title").mouse_filter = Control.MOUSE_FILTER_IGNORE
+		panel.get_node("Title").mouse_filter = Control.MOUSE_FILTER_STOP if _preview_roots.has(identifier) else Control.MOUSE_FILTER_IGNORE
 	_rebuild_preview_links()
 	_link_render_key.clear()
 
@@ -366,11 +368,23 @@ func _rebuild_preview_links() -> void:
 			_preview_links[identifier].edge = wanted[identifier].edge
 
 
+func _preview_display_rect(identifier: int) -> Rect2:
+	var object: TextNode = _preview_nodes[identifier]
+	if not _preview_roots.has(identifier) and not object._container_active:
+		return object.aabb
+	return _group_rects.get(identifier, object.aabb)
+
+
 func _preview_endpoint_rect(identifier: int) -> Rect2:
 	var object: TextNode = _preview_nodes[identifier]
-	if _preview_roots.has(identifier) and object._container_active:
-		return object.label.get_global_transform() * Rect2(Vector2.ZERO, object.label.size)
-	return _group_rects[identifier] if not _preview_roots.has(identifier) else object.aabb
+	if _preview_roots.has(identifier):
+		var panel := _summaries.get(identifier) as Panel
+		if panel != null:
+			var title: Label = panel.get_node("Title")
+			if title.visible and not title.text.is_empty():
+				return title.get_global_transform() * Rect2(Vector2.ZERO, title.size)
+		return object.aabb
+	return _preview_display_rect(identifier)
 
 
 func _update_preview_links() -> void:
@@ -400,7 +414,7 @@ func _update_preview_links() -> void:
 			data.bounds = bounds.grow(16.0)
 			var line: Line2D = node.get_node("Line")
 			line.points = node.get_global_transform().affine_inverse() * data.points
-		node.visible = stage.world_view_rect.intersects(data.bounds, true)
+		node.visible = stage.world_view_rect.intersects(data.bounds, true) and _summaries[data.source].visible and _summaries[data.target].visible
 		if not node.visible:
 			continue
 		var line: Line2D = node.get_node("Line")
@@ -493,21 +507,25 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 	var stage: Stage = get_parent()
 	var revision: int = stage.get_meta("loading_overview_revision", stage.layout_revision)
 	var identifier := group.get_instance_id()
-	var rect: Rect2 = _group_rects.get(identifier, group.aabb)
-	if not stage.world_view_rect.intersects(rect, true):
+	var root := _preview_roots.has(identifier) or (stage.is_loading and _active.has(identifier))
+	var rect: Rect2 = _group_rects.get(identifier, group.aabb) if root or group._container_active else group.aabb
+	var scale := maxf(get_global_transform_with_canvas().get_scale().x, .01)
+	var screen_size := rect.size * scale
+	# Keep unreadable strips out of the preview, rather than drawing tiny text.
+	if not stage.world_view_rect.intersects(rect.grow(36.0 / scale), true) or (not root and (screen_size.x < 28.0 or screen_size.y < 18.0)):
 		panel.hide()
 		return
 	panel.show()
-	var scale := maxf(get_global_transform_with_canvas().get_scale().x, .01)
 	var offset := float(posmod(group.id.hash(), 16)) / 16.0
 	var pixel_scale := pow(2.0, (floorf(log(scale) / log(2.0) * 16.0 + offset) - offset) / 16.0)
-	var root := _preview_roots.has(identifier) or (stage.is_loading and _active.has(identifier))
 	var background := group.display_background_color(group._display_theme_is_light())
-	background.a = .5
+	background.a = .5 if root else .85
 	var border_color := group.display_border_color()
 	var content_key := [group.text, group.label.get_theme_color("font_color")]
 	var key := [revision, pixel_scale, root, content_key, background, border_color]
 	if panel.get_meta("summary_key", []) == key:
+		if root:
+			_place_preview_header(panel)
 		return
 	panel.set_meta("summary_key", key)
 	var position := to_local(rect.position)
@@ -521,8 +539,13 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 		panel.size = size
 	panel.z_index = 66 if root else 68
 	var title: Label = panel.get_node("Title")
-	title.z_index = 3 if root else 0
-	title.visible = maxf(rect.size.x, rect.size.y) * scale >= 20.0
+	title.z_index = 4 if root else 0
+	title.visible = maxf(screen_size.x, screen_size.y) >= 20.0
+	title.clip_text = true
+	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	title.autowrap_mode = TextServer.AUTOWRAP_OFF
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT if root else HORIZONTAL_ALIGNMENT_CENTER
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	if _summary_font == null:
 		_summary_font = TextNode._make_canvas_font(preload("res://assets/fonts/PingFang-SC-Regular.ttf")) as FontFile
 	if panel.get_meta("summary_content", []) != content_key:
@@ -531,28 +554,74 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 			text = text.left(47) + "…"
 		title.text = text
 		title.add_theme_font_override("font", _summary_font)
+		title.add_theme_font_size_override("font_size", TITLE_FONT_SIZE)
 		title.add_theme_color_override("font_color", group.label.get_theme_color("font_color"))
-		title.size = _summary_font.get_multiline_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, TITLE_FONT_SIZE).max(Vector2.ONE)
 		panel.set_meta("summary_content", content_key)
-	var desired := 28.0 if root else 16.0
-	var factor := minf(desired / TITLE_FONT_SIZE, panel.size.x * .90 / maxf(title.size.x,1.0))
-	factor = minf(factor, panel.size.y * .75 / maxf(title.size.y,1.0))
+	var desired := 20.0 if root else 14.0
+	var factor := desired / TITLE_FONT_SIZE
+	var measured := _summary_font.get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, TITLE_FONT_SIZE)
+	var text_height := _summary_font.get_height(TITLE_FONT_SIZE)
+	var width := maxf(1.0, panel.size.x - 12.0)
+	if root and not group._container_active:
+		width = clampf(group.aabb.size.x * pixel_scale, 96.0, 240.0)
+	elif root:
+		width = minf(280.0, measured.x * factor + 2.0)
+	title.size = Vector2(width / factor, text_height)
 	title.scale = Vector2.ONE * factor
-	title.position.x = (panel.size.x - title.size.x * factor) * .5
-	title.position.y = 5.0 if root and _preview_children.has(identifier) else (panel.size.y - title.size.y * factor) * .5
+	title.position = Vector2(6.0, -text_height * factor - 8.0) if root else Vector2(6.0, (panel.size.y - text_height * factor) * .5)
 	if root and not group._container_active:
 		var anchor: Vector2 = group.aabb.get_center() - rect.position
-		title.position = anchor * pixel_scale - title.size * factor * .5
-	var radius := Corners.fitted_radius(panel.size, minf(12.0, minf(panel.size.x, panel.size.y) * .25), 2.0)
+		title.position = anchor * pixel_scale - Vector2(width, text_height * factor) * .5
+	var header := panel.get_node_or_null("HeaderBackground") as Panel
+	if root and header == null:
+		header = Panel.new()
+		header.name = "HeaderBackground"
+		header.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		header.z_index = 3
+		panel.add_child(header)
+	if header != null:
+		header.visible = root and title.visible and not title.text.is_empty()
+		var header_color := Palette.color(group._display_theme_is_light(), "surface.canvas")
+		header_color.a = .95
+		var header_style_key := [header_color, border_color]
+		if header.get_meta("style_key", []) != header_style_key:
+			var header_style := StyleBoxFlat.new()
+			header_style.bg_color = header_color
+			header_style.border_color = border_color
+			header_style.set_border_width_all(1)
+			header.add_theme_stylebox_override("panel", Corners.style(header_style, 4.0, true, true))
+			header.set_meta("style_key", header_style_key)
+		header.size = title.size * factor + Vector2(8, 6)
+	panel.set_meta("title_anchor", title.position)
+	if root:
+		_place_preview_header(panel)
+	var radius := Corners.fitted_radius(panel.size, minf(8.0, minf(panel.size.x, panel.size.y) * .25), 2.0)
 	var framed := group._container_active or not root
-	var style_key := [background, border_color, radius, framed]
+	var style_key := [background, border_color, radius, framed, root]
 	if panel.get_meta("style_key", []) != style_key:
 		var style := StyleBoxFlat.new()
 		style.bg_color = background if framed else Color.TRANSPARENT
 		style.border_color = border_color
-		style.set_border_width_all(2 if framed else 0)
+		style.set_border_width_all(2 if framed and root else (1 if framed else 0))
 		panel.add_theme_stylebox_override("panel", Corners.style(style, radius, true, true))
 		panel.set_meta("style_key", style_key)
+
+
+func _place_preview_header(panel: Panel) -> void:
+	var title: Label = panel.get_node("Title")
+	var canvas := panel.get_global_transform_with_canvas()
+	var anchor: Vector2 = panel.get_meta("title_anchor", title.position)
+	var bounds := canvas * Rect2(anchor, title.size * title.scale)
+	var viewport := get_viewport_rect().size
+	var position := bounds.position.clamp(Vector2(8, 8), (viewport - bounds.size - Vector2(8, 8)).max(Vector2(8, 8)))
+	var local := anchor + canvas.affine_inverse().basis_xform(position - bounds.position)
+	if title.position != local:
+		title.position = local
+	var header := panel.get_node_or_null("HeaderBackground") as Panel
+	if header != null:
+		var header_position := local - Vector2(4, 3)
+		if header.position != header_position:
+			header.position = header_position
 
 
 func _on_summary_input(event: InputEvent, group: TextNode) -> void:
