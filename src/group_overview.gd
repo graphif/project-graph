@@ -155,6 +155,7 @@ func refresh() -> void:
 		_link_render_key.clear()
 	for identifier in _summaries:
 		_update_summary(_preview_nodes[identifier], _summaries[identifier])
+	_space_preview_headers()
 	_update_preview_links()
 
 
@@ -642,7 +643,7 @@ func _place_preview_header(panel: Panel) -> void:
 	var title: Label = panel.get_node("Title")
 	var canvas := panel.get_global_transform_with_canvas()
 	var anchor: Vector2 = panel.get_meta("title_anchor", title.position)
-	var bounds := canvas * Rect2(anchor, title.size * title.scale)
+	var bounds := canvas * Rect2(anchor - Vector2(20, 6), title.size * title.scale + Vector2(30, 12))
 	var viewport := get_viewport_rect().size
 	var position := bounds.position.clamp(Vector2(8, 8), (viewport - bounds.size - Vector2(8, 8)).max(Vector2(8, 8)))
 	var local := anchor + canvas.affine_inverse().basis_xform(position - bounds.position)
@@ -653,6 +654,61 @@ func _place_preview_header(panel: Panel) -> void:
 		var header_position := local - Vector2(20, 6)
 		if header.position != header_position:
 			header.position = header_position
+
+
+func _space_preview_headers() -> void:
+	# Only space temporary titles; never run physics avoidance or a graph layout.
+	var headers: Array[Panel] = []
+	for identifier in _preview_roots:
+		var panel := _summaries.get(identifier) as Panel
+		if panel == null or not panel.visible:
+			continue
+		var header := panel.get_node_or_null("HeaderBackground") as Panel
+		if header != null and header.visible:
+			headers.append(header)
+	headers.sort_custom(func(a: Panel, b: Panel) -> bool:
+		var first := a.get_global_transform_with_canvas().origin
+		var second := b.get_global_transform_with_canvas().origin
+		if not is_equal_approx(first.y, second.y):
+			return first.y < second.y
+		if not is_equal_approx(first.x, second.x):
+			return first.x < second.x
+		return a.get_parent().name < b.get_parent().name)
+	var occupied: Array[Rect2] = []
+	for header in headers:
+		var canvas := header.get_global_transform_with_canvas()
+		var bounds := canvas * Rect2(Vector2.ZERO, header.size)
+		var placed := bounds
+		# Camera-clipped headers can share an anchor. Keep their horizontal
+		# association with the frame and move only as far as necessary.
+		for _attempt in occupied.size() + 1:
+			var blocked := false
+			for previous in occupied:
+				if placed.grow(3.0).intersects(previous):
+					placed.position.y = previous.end.y + 6.0
+					blocked = true
+					break
+			if not blocked:
+				break
+		var limit := get_viewport_rect().size.y - placed.size.y - 8.0
+		if placed.position.y > limit:
+			# In a crowded bottom edge search upward from the viewport limit.
+			placed.position.y = limit
+			for _attempt in occupied.size() + 1:
+				var blocked := false
+				for previous in occupied:
+					if placed.grow(3.0).intersects(previous):
+						placed.position.y = previous.position.y - placed.size.y - 6.0
+						blocked = true
+						break
+				if not blocked:
+					break
+		var panel := header.get_parent() as Panel
+		var title: Label = panel.get_node("Title")
+		var offset := panel.get_global_transform_with_canvas().affine_inverse().basis_xform(placed.position - bounds.position)
+		header.position += offset
+		title.position += offset
+		occupied.append(placed)
 
 
 func _on_summary_input(event: InputEvent, group: TextNode) -> void:
