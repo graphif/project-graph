@@ -422,6 +422,7 @@ func _update_preview_links() -> void:
 		if not is_equal_approx(line.width, width):
 			line.width = width
 		var color: Color = data.edge.display_stroke_color()
+		color.a *= .8
 		if line.default_color != color:
 			line.default_color = color
 		var head: Polygon2D = node.get_node("Head")
@@ -518,10 +519,27 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 	panel.show()
 	var offset := float(posmod(group.id.hash(), 16)) / 16.0
 	var pixel_scale := pow(2.0, (floorf(log(scale) / log(2.0) * 16.0 + offset) - offset) / 16.0)
-	var background := group.display_background_color(group._display_theme_is_light())
-	background.a = .5 if root else .85
-	var border_color := group.display_border_color()
-	var content_key := [group.text, group.label.get_theme_color("font_color")]
+	var light := group._display_theme_is_light()
+	var canvas_color := Palette.color(light, "surface.canvas")
+	var original_background := group.display_background_color(light)
+	var background := original_background
+	if root:
+		background = canvas_color.lerp(Color(original_background, 1.0), original_background.a * .18)
+		background.a = .78
+	elif group.fill_color.a < .01 and original_background.is_equal_approx(canvas_color):
+		background = Palette.color(light, "surface.hover")
+		background.a = .97
+	else:
+		background.a = maxf(background.a, .92)
+	var original_border := group.display_border_color()
+	var default_border := Palette.color(light, "canvas.node.border")
+	var border_color := original_border
+	if original_border.is_equal_approx(default_border):
+		border_color = Palette.color(light, "border.default")
+	elif root:
+		border_color.a *= .65
+	var title_color := group.text_color if group.text_color.a > .01 else Palette.neutral_text_color(canvas_color if root else canvas_color.blend(background))
+	var content_key := [group.text, title_color]
 	var key := [revision, pixel_scale, root, content_key, background, border_color]
 	if panel.get_meta("summary_key", []) == key:
 		if root:
@@ -555,9 +573,9 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 		title.text = text
 		title.add_theme_font_override("font", _summary_font)
 		title.add_theme_font_size_override("font_size", TITLE_FONT_SIZE)
-		title.add_theme_color_override("font_color", group.label.get_theme_color("font_color"))
+		title.add_theme_color_override("font_color", title_color)
 		panel.set_meta("summary_content", content_key)
-	var desired := 20.0 if root else 14.0
+	var desired := 18.0 if root else 14.0
 	var factor := desired / TITLE_FONT_SIZE
 	var measured := _summary_font.get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, TITLE_FONT_SIZE)
 	var text_height := _summary_font.get_height(TITLE_FONT_SIZE)
@@ -568,7 +586,7 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 		width = minf(280.0, measured.x * factor + 2.0)
 	title.size = Vector2(width / factor, text_height)
 	title.scale = Vector2.ONE * factor
-	title.position = Vector2(6.0, -text_height * factor - 8.0) if root else Vector2(6.0, (panel.size.y - text_height * factor) * .5)
+	title.position = Vector2(22.0, -text_height * factor - 12.0) if root else Vector2(6.0, (panel.size.y - text_height * factor) * .5)
 	if root and not group._container_active:
 		var anchor: Vector2 = group.aabb.get_center() - rect.position
 		title.position = anchor * pixel_scale - Vector2(width, text_height * factor) * .5
@@ -583,26 +601,39 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 		header.visible = root and title.visible and not title.text.is_empty()
 		var header_color := Palette.color(group._display_theme_is_light(), "surface.canvas")
 		header_color.a = .95
-		var header_style_key := [header_color, border_color]
+		var header_style_key := [header_color]
 		if header.get_meta("style_key", []) != header_style_key:
 			var header_style := StyleBoxFlat.new()
 			header_style.bg_color = header_color
-			header_style.border_color = border_color
-			header_style.set_border_width_all(1)
-			header.add_theme_stylebox_override("panel", Corners.style(header_style, 4.0, true, true))
+			header_style.set_border_width_all(0)
+			header.add_theme_stylebox_override("panel", Corners.style(header_style, 8.0, true, true))
 			header.set_meta("style_key", header_style_key)
-		header.size = title.size * factor + Vector2(8, 6)
+		header.size = title.size * factor + Vector2(30, 12)
+		var accent := header.get_node_or_null("Accent") as Panel
+		if accent == null:
+			accent = Panel.new()
+			accent.name = "Accent"
+			accent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			header.add_child(accent)
+		var accent_color := Palette.color(light, "accent.primary") if original_background.is_equal_approx(canvas_color) else Color(original_background, 1.0)
+		if accent.get_meta("color", Color.TRANSPARENT) != accent_color:
+			var accent_style := StyleBoxFlat.new()
+			accent_style.bg_color = accent_color
+			accent.add_theme_stylebox_override("panel", Corners.style(accent_style, 1.0, true, true))
+			accent.set_meta("color", accent_color)
+		accent.size = Vector2(3, 16)
+		accent.position = Vector2(9, (header.size.y - 16) * .5)
 	panel.set_meta("title_anchor", title.position)
 	if root:
 		_place_preview_header(panel)
-	var radius := Corners.fitted_radius(panel.size, minf(8.0, minf(panel.size.x, panel.size.y) * .25), 2.0)
+	var radius := Corners.fitted_radius(panel.size, 16.0 if root else 9.0, 1.0)
 	var framed := group._container_active or not root
 	var style_key := [background, border_color, radius, framed, root]
 	if panel.get_meta("style_key", []) != style_key:
 		var style := StyleBoxFlat.new()
 		style.bg_color = background if framed else Color.TRANSPARENT
 		style.border_color = border_color
-		style.set_border_width_all(2 if framed and root else (1 if framed else 0))
+		style.set_border_width_all(1 if framed else 0)
 		panel.add_theme_stylebox_override("panel", Corners.style(style, radius, true, true))
 		panel.set_meta("style_key", style_key)
 
@@ -619,7 +650,7 @@ func _place_preview_header(panel: Panel) -> void:
 		title.position = local
 	var header := panel.get_node_or_null("HeaderBackground") as Panel
 	if header != null:
-		var header_position := local - Vector2(4, 3)
+		var header_position := local - Vector2(20, 6)
 		if header.position != header_position:
 			header.position = header_position
 
