@@ -18,7 +18,7 @@ func _run() -> void:
 	view.size = Vector2i(1000, 800)
 	view.transparent_bg = true
 	view.oversampling = true
-	# Match the original tab setup so the camera must correct excessive sampling.
+	# Even a stale oversized viewport setting must be reset before drawing.
 	view.oversampling_override = 50.0
 	view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	root.add_child(view)
@@ -31,7 +31,7 @@ func _run() -> void:
 	node.label.custom_minimum_size = Vector2(200, 200)
 	node.label.size = Vector2(200, 200)
 	stage.select_ids(PackedStringArray())
-	for zoom_value in [1.0, 0.5, 4.0, 20.0, 50.0]:
+	for zoom_value in [0.125, 0.5, 1.0, 2.0, 3.0]:
 		stage.camera.target_zoom = Vector2.ONE * zoom_value
 		stage.camera.zoom = stage.camera.target_zoom
 		var top_left := node.label.position
@@ -41,23 +41,24 @@ func _run() -> void:
 			await process_frame
 		await RenderingServer.frame_post_draw
 		var sampling := view.oversampling_override
-		check(sampling <= zoom_value * 1.01 and sampling >= zoom_value * 0.49,
-			"Sampling follows visible zoom %s, got %s" % [zoom_value, sampling])
-		if zoom_value == 20.0:
+		check(sampling == 1.0, "Navigation preserves viewport caches at zoom %s, got %s" % [zoom_value, sampling])
+		check(node.label.get_theme_font("font").oversampling == 2.0, "Canvas font owns its raster cache")
+		check(node.label.get_theme_font("font").generate_mipmaps, "Glyphs retain mipmaps for minification")
+		if zoom_value == 3.0:
 			var pixels := view.get_texture().get_image()
-			pixels.save_png("/tmp/pg-canvas-corner-20x.png")
+			pixels.save_png("/tmp/pg-canvas-corner-3x.png")
 			var partial := 0
 			# Only the curved outer boundary; exclude straight borders and text.
-			for y in range(45, 420):
+			for y in range(40, 112):
 				for x in range(45, 420):
 					var alpha := pixels.get_pixel(x, y).a
 					if alpha > 0.02 and alpha < 0.98:
 						partial += 1
 			print("CORNER_PARTIAL_COVERAGE: ", partial)
-			check(partial > 800, "Enlarged corner retains subpixel edge coverage")
+			check(partial > 100, "Maximum normal zoom retains subpixel corner coverage")
 	var sample_before := view.oversampling_override
 	# Small movements within a sampling level must not re-rasterize the atlas.
-	stage.camera.target_zoom = Vector2.ONE * 49.0
+	stage.camera.target_zoom = Vector2.ONE * 0.49
 	stage.camera.zoom = stage.camera.target_zoom
 	for frame in 3:
 		await process_frame

@@ -82,8 +82,8 @@ var _collision_update_pending := false
 
 
 func _ready() -> void:
-	# 与菜单共用原生 DPITexture 圆角，避免固定分辨率位图在画布缩放时失真。
-	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	# Canvas corners reuse native mipmapped textures independently of UI DPI.
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	super()
 	label.text = text
 	# 输入层使用左上角定位，最小尺寸变化不能再从中心推动控件。
@@ -401,11 +401,11 @@ func _apply_appearance(update_layout: bool = true, theme_light: Variant = null) 
 	style.content_margin_right = 15
 	style.content_margin_top = 10
 	style.content_margin_bottom = 10
-	container_panel.add_theme_stylebox_override("panel", Corners.style(style, Corners.fitted_radius(container_panel.size, Corners.PANEL), false, true))
+	container_panel.add_theme_stylebox_override("panel", Corners.style(style, Corners.fitted_radius(container_panel.size, Corners.PANEL), true, true))
 	if _container_active:
 		style.bg_color = Color.TRANSPARENT
 		style.set_border_width_all(0)
-	label.add_theme_stylebox_override("normal", Corners.style(style, Corners.fitted_radius(label.size, Corners.PANEL), false, true))
+	label.add_theme_stylebox_override("normal", Corners.style(style, Corners.fitted_radius(label.size, Corners.PANEL), true, true))
 	text_edit.add_theme_color_override("font_color", foreground)
 	text_edit.add_theme_color_override("caret_color", foreground)
 	text_edit.add_theme_color_override("selection_color", Palette.color(light, "surface.selected"))
@@ -440,7 +440,7 @@ func _refresh_control_corners(control: Control, key: StringName) -> void:
 	var radius := Corners.fitted_radius(control.size, Corners.PANEL)
 	if original.corner_radius_top_left == int(radius):
 		return
-	control.add_theme_stylebox_override(key, Corners.style(original, radius, false, true))
+	control.add_theme_stylebox_override(key, Corners.style(original, radius, true, true))
 
 
 func get_visual_outline() -> PackedVector2Array:
@@ -459,9 +459,11 @@ static func _make_canvas_font(original: Font) -> Font:
 		return variation
 	if original is FontFile:
 		var scalable := original.duplicate() as FontFile
-		# Native viewport oversampling supplies the current screen-size raster.
-		# Generating 96px MSDFs for every CJK glyph stalls cold large-file loads.
+		# Fixed raster cache survives navigation. Mipmaps retain readable minification.
+		# Generating large MSDFs for every CJK glyph stalls cold document loads.
 		scalable.multichannel_signed_distance_field = false
+		scalable.oversampling = 2.0
+		scalable.generate_mipmaps = true
 		return scalable
 	return original
 

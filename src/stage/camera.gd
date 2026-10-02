@@ -227,17 +227,10 @@ func _apply_zoom(zoom_factor: float, anchor_screen_pos: Vector2) -> void:
 		target_zoom = new_zoom
 
 
-## SVG 圆角按实际屏幕倍率采样；固定最大倍率既阻塞首次绘制，也会压窄抗锯齿过渡。
+## Navigation only changes the canvas transform. Changing viewport oversampling
+## invalidates every Control's glyph/texture cache, including offscreen objects.
+## Canvas fonts and mipmapped corner styles own their fixed-resolution caches.
 func _sync_texture_sampling() -> void:
 	var viewport := get_viewport()
-	if not viewport is SubViewport:
-		return
-	var screen_scale := Vector2.ONE
-	if viewport.get_parent() is SubViewportContainer:
-		screen_scale = viewport.get_screen_transform().get_scale().abs()
-	var visible_scale := maxf(zoom.x * screen_scale.x, zoom.y * screen_scale.y)
-	# 使用不高于显示倍率的二次幂档位，保留约 1～2 屏幕像素的平滑边缘。
-	# 分档避免平滑缩放时逐帧重新栅格化字体和 DPITexture。
-	var sampling := pow(2.0, floorf(log(clampf(visible_scale, 0.125, 64.0)) / log(2.0)))
-	if not is_equal_approx(viewport.oversampling_override, sampling):
-		viewport.oversampling_override = sampling
+	if viewport is SubViewport and not is_equal_approx(viewport.oversampling_override, 1.0):
+		viewport.oversampling_override = 1.0

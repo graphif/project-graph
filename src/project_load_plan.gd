@@ -60,8 +60,7 @@ static func build(graph: Dictionary, viewport_size: Vector2 = Vector2(1280, 719)
 				neighbors[parent].append(identifier)
 	var camera_xy: Variant = graph.get("camera", {}).get("position")
 	var center := bounds.get_center()
-	var font := preload("res://assets/fonts/PingFang-SC-Regular.ttf").duplicate() as FontFile
-	font.multichannel_signed_distance_field = false
+	var font := TextNode._make_canvas_font(preload("res://assets/fonts/PingFang-SC-Regular.ttf"))
 	for identifier in positions:
 		var record: Dictionary = records[identifier]
 		var props: Dictionary = record.get("properties", {})
