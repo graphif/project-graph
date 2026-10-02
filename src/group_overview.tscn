@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://cc61owubaautj"]
+
+[ext_resource type="Script" uid="uid://du0nd7bj1acnc" path="res://src/group_overview.gd" id="1_7ryln"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8x54u"]
+
+[node name="GroupOverview" type="Node2D" unique_id=510043347]
+script = ExtResource("1_7ryln")
+
+[node name="SummaryTemplate" type="Panel" parent="." unique_id=782799712]
+visible = false
+
+[node name="Title" type="Label" parent="SummaryTemplate" unique_id=76678108]
+layout_mode = 0
+theme_override_font_sizes/font_size = 64
+theme_override_styles/normal = SubResource("StyleBoxEmpty_8x54u")
+horizontal_alignment = 1
+vertical_alignment = 1

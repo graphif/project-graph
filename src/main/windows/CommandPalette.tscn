@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://b34oedri2fk4j"]
+
+[node name="CommandPalette" type="Window" unique_id=561599018]
+transparent_bg = true
+oversampling_override = 1.0
+title = "命令面板"
+size = Vector2i(620, 440)
+visible = false
+min_size = Vector2i(320, 220)
+
+[node name="DialogBackground" type="Panel" parent="." unique_id=916794581]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_type_variation = &"DialogSurface"
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=461568935]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Content" type="VBoxContainer" parent="Margin" unique_id=62653809]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Query" type="LineEdit" parent="Margin/Content" unique_id=839211694]
+layout_mode = 2
+theme_type_variation = &"DialogField"
+placeholder_text = "输入命令…"
+clear_button_enabled = true
+
+[node name="Results" type="ItemList" parent="Margin/Content" unique_id=132860577]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Hint" type="Label" parent="Margin/Content" unique_id=27788830]
+layout_mode = 2
+text = "↑ ↓ 选择 · Enter 执行 · Esc 关闭"

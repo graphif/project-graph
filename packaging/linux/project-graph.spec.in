@@ -1,0 +1,62 @@
+# Do not strip the Godot executable: its appended PCK contains the application.
+%global debug_package %{nil}
+%global __strip /bin/true
+
+Name: project-graph
+Version: @VERSION@
+Release: 26.local%{?dist}
+Summary: Node-based visual thinking and diagram editor
+License: LicenseRef-Project-Graph
+URL: https://github.com/graphif/project-graph
+Source0: %{name}-%{version}.tar.gz
+ExclusiveArch: @ARCH@
+Requires: python3
+Requires: python3-gobject
+Requires: python3-cairo
+Requires: python3dist(msgpack) = 1.1.2
+Requires: gdk-pixbuf2
+Requires: librsvg2
+Requires: pango
+Requires: shared-mime-info
+Requires: desktop-file-utils
+Requires: hicolor-icon-theme
+
+%description
+Project Graph editor with PRG document association and an offline GNOME
+thumbnail provider. Existing PRG files are supported without re-saving.
+
+%prep
+%setup -q
+
+%build
+
+%install
+mkdir -p %{buildroot}
+cp -a usr %{buildroot}/
+
+%post
+/usr/bin/update-mime-database /usr/share/mime
+/usr/bin/update-desktop-database /usr/share/applications
+/usr/libexec/project-graph-mime-default install
+
+%preun
+if [ "$1" -eq 0 ]; then
+    /usr/libexec/project-graph-mime-default remove
+fi
+
+%postun
+/usr/bin/update-mime-database /usr/share/mime
+/usr/bin/update-desktop-database /usr/share/applications
+
+%files
+/usr/bin/project-graph
+/usr/libexec/project-graph-thumbnailer
+/usr/libexec/project-graph-mime-default
+/usr/share/applications/dev.graphif.ProjectGraph.desktop
+/usr/share/mime/packages/project-graph.xml
+/usr/share/thumbnailers/project-graph.thumbnailer
+/usr/share/icons/hicolor/256x256/apps/dev.graphif.ProjectGraph.png
+/usr/share/icons/hicolor/256x256/mimetypes/application-x-project-graph.png
+
+/usr/share/icons/hicolor/scalable/apps/dev.graphif.ProjectGraph.svg
+/usr/share/icons/hicolor/scalable/mimetypes/application-x-project-graph.svg

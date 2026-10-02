@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://catmg5fqfped7"]
+
+[ext_resource type="Script" uid="uid://bdsq6jogroub6" path="res://src/stage_object/entity/pen_stroke/pen_stroke.gd" id="1_ly8l8"]
+
+[node name="PenStroke" type="RigidBody2D" unique_id=147485596]
+collision_mask = 0
+input_pickable = true
+gravity_scale = 0.0
+lock_rotation = true
+linear_damp = 12.0
+script = ExtResource("1_ly8l8")
+
+[node name="Line" type="Line2D" parent="." unique_id=1942473006]
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+
+[node name="CollisionShape" type="CollisionShape2D" parent="." unique_id=349448993]
+
+[connection signal="input_event" from="." to="." method="_on_input_event"]

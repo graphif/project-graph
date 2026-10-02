@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://cgoyda8gxvahg"]
+
+[ext_resource type="Script" uid="uid://djhcjecynjk1g" path="res://src/stage_object/entity/legacy_asset/legacy_asset.gd" id="1_tbean"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gaqbj"]
+
+[node name="LegacyAsset" type="RigidBody2D" unique_id=1421821804]
+collision_mask = 0
+gravity_scale = 0.0
+lock_rotation = true
+script = ExtResource("1_tbean")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=328854162]
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CollisionShape" type="CollisionShape2D" parent="." unique_id=1911830149]
+shape = SubResource("RectangleShape2D_gaqbj")
+
+[connection signal="input_event" from="." to="." method="_on_input_event"]
+[connection signal="gui_input" from="TextureRect" to="." method="_on_texture_gui_input"]

@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://8rtlpmwefg0j"]
+
+[node name="HelpWindow" type="Window" unique_id=1614395055]
+oversampling_override = 1.0
+title = "帮助"
+size = Vector2i(640, 520)
+visible = false
+min_size = Vector2i(360, 260)
+
+[node name="DialogBackground" type="Panel" parent="." unique_id=1199310824]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_type_variation = &"DialogSurface"
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=142003065]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Content" type="VBoxContainer" parent="Margin" unique_id=3856291]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Text" type="RichTextLabel" parent="Margin/Content" unique_id=1941167873]
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 2
+bbcode_enabled = true
+text = "从帮助菜单选择一个主题。"
+selection_enabled = true
+
+[node name="@VScrollBar@22669" type="VScrollBar" parent="Margin/Content/Text" unique_id=575246544]
+visible = false
+use_parent_material = true
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+step = 1.0
+
+[node name="@Timer@22670" type="Timer" parent="Margin/Content/Text" unique_id=1074835869]
+wait_time = 0.05
+
+[node name="Actions" type="HBoxContainer" parent="Margin/Content" unique_id=680295784]
+layout_mode = 2
+alignment = 2
+
+[node name="Close" type="Button" parent="Margin/Content/Actions" unique_id=1800016107]
+layout_mode = 2
+text = "关闭"

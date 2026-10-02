@@ -1,0 +1,85 @@
+[gd_scene format=3 uid="uid://tq2d6iootvmi"]
+
+[node name="FindWindow" type="Window" unique_id=146358731]
+oversampling_override = 1.0
+title = "搜索"
+size = Vector2i(420, 480)
+visible = false
+min_size = Vector2i(320, 220)
+
+[node name="DialogBackground" type="Panel" parent="." unique_id=975727171]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_type_variation = &"DialogSurface"
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1364553680]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Content" type="VBoxContainer" parent="Margin" unique_id=340315536]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Query" type="LineEdit" parent="Margin/Content" unique_id=519092669]
+layout_mode = 2
+theme_type_variation = &"DialogField"
+placeholder_text = "请输入要在舞台上搜索的内容"
+clear_button_enabled = true
+
+[node name="Options" type="HBoxContainer" parent="Margin/Content" unique_id=1208676696]
+layout_mode = 2
+
+[node name="Case" type="CheckButton" parent="Margin/Content/Options" unique_id=1323280879]
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"SettingsSwitch"
+text = "区分大小写"
+
+[node name="Scope" type="OptionButton" parent="Margin/Content/Options" unique_id=301460505]
+layout_mode = 2
+theme_type_variation = &"DialogOption"
+
+[node name="Count" type="Label" parent="Margin/Content" unique_id=2104329417]
+layout_mode = 2
+text = "输入内容开始搜索"
+
+[node name="Results" type="ItemList" parent="Margin/Content" unique_id=1185653726]
+layout_mode = 2
+size_flags_vertical = 3
+select_mode = 1
+
+[node name="@VScrollBar@22484" type="VScrollBar" parent="Margin/Content/Results" unique_id=1385111717]
+use_parent_material = true
+layout_mode = 0
+
+[node name="@HScrollBar@22485" type="HScrollBar" parent="Margin/Content/Results" unique_id=1199072512]
+use_parent_material = true
+layout_mode = 0
+
+[node name="Actions" type="HBoxContainer" parent="Margin/Content" unique_id=594276727]
+layout_mode = 2
+
+[node name="Select" type="Button" parent="Margin/Content/Actions" unique_id=1155896831]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_type_variation = &"DialogButton"
+text = "选中全部结果"
+
+[node name="Previous" type="Button" parent="Margin/Content/Actions" unique_id=820561073]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_type_variation = &"DialogButton"
+text = "上一个"
+
+[node name="Next" type="Button" parent="Margin/Content/Actions" unique_id=293950851]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_type_variation = &"DialogButton"
+text = "下一个"

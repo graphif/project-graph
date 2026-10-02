@@ -7,7 +7,7 @@ const MAX_HISTORY_SIZE := 100
 @export var velocity_threshold := 2.0
 @export var angular_velocity_threshold := 0.05
 @export var stable_physics_frames := 3
-@export var settle_timeout := 0.5
+@export var settle_timeout := 1.5
 
 var _undo_stack: Array[Dictionary] = []
 var _redo_stack: Array[Dictionary] = []
@@ -15,6 +15,7 @@ var _current_snapshot: Dictionary = { }
 var _transaction_snapshot: Dictionary = { }
 var _pending_commit := false
 var _busy := false
+var _commit_generation := 0
 
 
 func _ready() -> void:
@@ -24,19 +25,39 @@ func _ready() -> void:
 
 
 func begin_transaction() -> void:
+	if _pending_commit:
+		_finish_commit()
 	if not _busy and _transaction_snapshot.is_empty():
 		_transaction_snapshot = _capture_snapshot()
 
 
-func commit() -> void:
+func commit(wait_for_physics := true) -> void:
 	if _busy or _pending_commit:
 		return
-	_pending_commit = true
-	await _wait_for_physics_settle()
-	_pending_commit = false
-	if _busy:
+	# 纯样式与方向变化无需物理收尾，也不能启动全图避让。
+	if not wait_for_physics:
+		_finish_commit()
 		return
+	_pending_commit = true
+	_commit_generation += 1
+	var generation := _commit_generation
+	await _wait_for_physics_settle()
+	if generation != _commit_generation or _busy:
+		return
+	_finish_commit()
+
+
+func _finish_commit() -> void:
+	_pending_commit = false
+	_commit_generation += 1
 	var before := _transaction_snapshot if not _transaction_snapshot.is_empty() else _current_snapshot
+	var repulsion := target_root.get_node_or_null("NodeRepulsion")
+	if repulsion != null:
+		repulsion.call("stop_motion")
+	# 投掷与避让属于同一次事务；提交前停止剩余惯性，避免记录后继续漂移。
+	for child in target_root.get_children():
+		if child is Entity and not child.drag_controlled:
+			child.stop_throw()
 	var after := _capture_snapshot()
 	_transaction_snapshot = { }
 	if _snapshots_equal(before, after):
@@ -49,7 +70,9 @@ func commit() -> void:
 
 
 func undo() -> void:
-	if _busy or _pending_commit or _undo_stack.is_empty():
+	if _pending_commit and not _busy:
+		_finish_commit()
+	if _busy or _undo_stack.is_empty():
 		return
 	_busy = true
 	var entry: Dictionary = _undo_stack.pop_back()
@@ -60,7 +83,9 @@ func undo() -> void:
 
 
 func redo() -> void:
-	if _busy or _pending_commit or _redo_stack.is_empty():
+	if _pending_commit and not _busy:
+		_finish_commit()
+	if _busy or _redo_stack.is_empty():
 		return
 	_busy = true
 	var entry: Dictionary = _redo_stack.pop_back()
@@ -70,15 +95,35 @@ func redo() -> void:
 	_busy = false
 
 
-func clear() -> void:
+# Cancel an in-progress gesture without consuming an undo or redo entry.
+func cancel_transaction() -> void:
+	if _busy or _transaction_snapshot.is_empty():
+		return
+	var before := _transaction_snapshot
+	_busy = true
+	_pending_commit = false
+	_commit_generation += 1
+	_transaction_snapshot = {}
+	await _restore_snapshot(before)
+	_current_snapshot = before
+	_busy = false
+
+
+func clear(snapshot: Dictionary = {}) -> void:
+	_commit_generation += 1
+	_pending_commit = false
 	_undo_stack.clear()
 	_redo_stack.clear()
 	_transaction_snapshot = { }
-	_current_snapshot = _capture_snapshot()
+	_current_snapshot = _capture_snapshot() if snapshot.is_empty() else snapshot
+
+
+func is_transaction_active() -> bool:
+	return not _busy and (_pending_commit or not _transaction_snapshot.is_empty())
 
 
 func can_undo() -> bool:
-	return not _undo_stack.is_empty()
+	return not _busy and (_pending_commit or not _undo_stack.is_empty())
 
 
 func can_redo() -> bool:
@@ -99,7 +144,8 @@ func _wait_for_physics_settle() -> void:
 	while elapsed < settle_timeout and stable < stable_physics_frames:
 		await get_tree().physics_frame
 		elapsed += 1.0 / Engine.physics_ticks_per_second
-		var moving := false
+		var repulsion := target_root.get_node_or_null("NodeRepulsion")
+		var moving: bool = repulsion != null and repulsion.has_method("has_pending_motion") and repulsion.call("has_pending_motion")
 		for child in target_root.get_children():
 			if child is RigidBody2D and (child.linear_velocity.length() > velocity_threshold or absf(child.angular_velocity) > angular_velocity_threshold):
 				moving = true
@@ -108,11 +154,18 @@ func _wait_for_physics_settle() -> void:
 
 
 func _snapshots_equal(a: Dictionary, b: Dictionary) -> bool:
-	return JSON.stringify(a) == JSON.stringify(b)
+	return a == b # Native deep Dictionary/Array equality; no archive-sized JSON copies.
 
 
-func _process(_delta: float) -> void:
-	if Input.is_action_just_pressed("history_undo", true):
+func _unhandled_key_input(event: InputEvent) -> void:
+	if target_root is CanvasItem and not target_root.is_visible_in_tree():
+		return
+	var focus_owner := get_viewport().gui_get_focus_owner()
+	if focus_owner is TextEdit or focus_owner is LineEdit or focus_owner is SpinBox:
+		return
+	if event.is_action_pressed("history_undo", false, true):
 		undo()
-	if Input.is_action_just_pressed("history_redo", true):
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("history_redo", false, true):
 		redo()
+		get_viewport().set_input_as_handled()

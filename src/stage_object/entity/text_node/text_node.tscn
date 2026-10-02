@@ -1,19 +1,34 @@
 [gd_scene format=3 uid="uid://btnefrbc5lowu"]
 
 [ext_resource type="Script" uid="uid://dod1gh6rthy3r" path="res://src/stage_object/entity/text_node/text_node.gd" id="1_0djjf"]
+[ext_resource type="Texture2D" uid="uid://rp7kortig40k" path="res://assets/line_antialiasing.res" id="2_hmhrc"]
 [ext_resource type="StyleBox" uid="uid://dvdwiynne2hm" path="res://src/stage_object/entity/text_node/style.tres" id="2_qcl3h"]
 [ext_resource type="Script" uid="uid://y6ndrptulx6x" path="res://src/auto_size_text_edit.gd" id="3_hm685"]
+[ext_resource type="Script" path="res://src/minimum_screen_border.gd" id="3_ie6h8"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_nwfkh"]
-
-[sub_resource type="FontVariation" id="FontVariation_hmhrc"]
-baseline_offset = 0.045
 
 [node name="TextNode" type="RigidBody2D" unique_id=594595858]
 gravity_scale = 0.0
 lock_rotation = true
 linear_damp = 10.0
 script = ExtResource("1_0djjf")
+
+[node name="ContainerPanel" type="Panel" parent="." unique_id=1935225507]
+visible = false
+mouse_filter = 2
+
+[node name="MinimumBorder" type="Line2D" parent="ContainerPanel" unique_id=379085159]
+visible = false
+texture_filter = 6
+closed = true
+width = 3.0
+texture = ExtResource("2_hmhrc")
+texture_mode = 1
+joint_mode = 2
+antialiased = true
+script = ExtResource("3_ie6h8")
+style_name = &"panel"
 
 [node name="CollisionShape" type="CollisionShape2D" parent="." unique_id=613159987]
 unique_name_in_owner = true
@@ -33,23 +48,35 @@ offset_bottom = 36.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 1
-theme_override_fonts/font = SubResource("FontVariation_hmhrc")
 theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = ExtResource("2_qcl3h")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MinimumBorder" type="Line2D" parent="Label" unique_id=1863282157]
+visible = false
+texture_filter = 6
+closed = true
+width = 3.0
+texture = ExtResource("2_hmhrc")
+texture_mode = 1
+joint_mode = 2
+antialiased = true
+script = ExtResource("3_ie6h8")
 
 [node name="TextEdit" type="TextEdit" parent="." unique_id=118923332]
 unique_name_in_owner = true
 visible = false
-custom_minimum_size = Vector2(28, 71.33333)
+custom_minimum_size = Vector2(38, 73)
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -14.0
-offset_top = -35.666664
-offset_right = 14.0
-offset_bottom = 35.666664
+offset_top = -37.666664
+offset_right = 24.0
+offset_bottom = 40.333336
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_font_sizes/font_size = 32

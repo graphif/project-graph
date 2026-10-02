@@ -1,0 +1,107 @@
+[gd_scene format=3 uid="uid://xuayjwg0yh4q"]
+
+[node name="OutlineWindow" type="Window" unique_id=344737]
+oversampling_override = 1.0
+title = "大纲"
+size = Vector2i(360, 520)
+visible = false
+min_size = Vector2i(320, 220)
+
+[node name="DialogBackground" type="Panel" parent="." unique_id=1326432976]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_type_variation = &"DialogSurface"
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1673143697]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Content" type="VBoxContainer" parent="Margin" unique_id=260027862]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="Margin/Content" unique_id=2105160994]
+layout_mode = 2
+
+[node name="Count" type="Label" parent="Margin/Content/Header" unique_id=1532296156]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0 个结构"
+
+[node name="Refresh" type="Button" parent="Margin/Content/Header" unique_id=1905321283]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_type_variation = &"DialogButton"
+text = "刷新"
+
+[node name="Tree" type="Tree" parent="Margin/Content" unique_id=1795854803]
+layout_mode = 2
+size_flags_vertical = 3
+hide_root = true
+
+[node name="@Popup@22486" type="Popup" parent="Margin/Content/Tree" unique_id=1458262084]
+
+[node name="@VBoxContainer@22487" type="VBoxContainer" parent="Margin/Content/Tree/@Popup@22486" unique_id=184861638]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 0
+
+[node name="@LineEdit@22488" type="LineEdit" parent="Margin/Content/Tree/@Popup@22486/@VBoxContainer@22487" unique_id=1356577581]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"TreeLineEdit"
+
+[node name="@TextEdit@22494" type="TextEdit" parent="Margin/Content/Tree/@Popup@22486/@VBoxContainer@22487" unique_id=216741055]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="@HScrollBar@22489" type="HScrollBar" parent="Margin/Content/Tree/@Popup@22486/@VBoxContainer@22487/@TextEdit@22494" unique_id=1801348095]
+visible = false
+use_parent_material = true
+layout_mode = 0
+offset_top = 8.0
+offset_right = 16.0
+offset_bottom = 16.0
+max_value = 0.0
+
+[node name="@VScrollBar@22490" type="VScrollBar" parent="Margin/Content/Tree/@Popup@22486/@VBoxContainer@22487/@TextEdit@22494" unique_id=2132883871]
+visible = false
+use_parent_material = true
+layout_mode = 0
+offset_left = 16.0
+offset_top = 8.0
+offset_right = 24.0
+max_value = 0.0
+
+[node name="@Timer@22491" type="Timer" parent="Margin/Content/Tree/@Popup@22486/@VBoxContainer@22487/@TextEdit@22494" unique_id=726637342]
+wait_time = 0.65
+
+[node name="@Timer@22492" type="Timer" parent="Margin/Content/Tree/@Popup@22486/@VBoxContainer@22487/@TextEdit@22494" unique_id=1500571059]
+wait_time = 0.05
+
+[node name="@Timer@22493" type="Timer" parent="Margin/Content/Tree/@Popup@22486/@VBoxContainer@22487/@TextEdit@22494" unique_id=1047303439]
+wait_time = 3.0
+one_shot = true
+
+[node name="@HScrollBar@22495" type="HScrollBar" parent="Margin/Content/Tree" unique_id=586996476]
+use_parent_material = true
+layout_mode = 0
+
+[node name="@VScrollBar@22496" type="VScrollBar" parent="Margin/Content/Tree" unique_id=121390752]
+use_parent_material = true
+layout_mode = 0
+
+[node name="@Timer@22497" type="Timer" parent="Margin/Content/Tree" unique_id=1417640520]
+
+[node name="@Timer@22498" type="Timer" parent="Margin/Content/Tree" unique_id=43191197]
+one_shot = true

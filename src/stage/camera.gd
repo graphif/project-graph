@@ -16,15 +16,19 @@ extends Camera2D
 ## 手柄/键盘按住时的缩放速度（连续输入，倍率/秒）
 @export var zoom_speed: float = 2.0
 ## 最小缩放限制（数值越小看得越远）
-@export var min_zoom: float = 0.5
+@export var min_zoom: float = 0.02
 ## 最大缩放限制（数值越大看得越近）
 @export var max_zoom: float = 3.0
 ## 缩放平滑阻尼系数
 @export var zoom_friction: float = 12.0
 
+const REFERENCE_ZOOM := 2.0
+const MIN_GESTURE_ZOOM_FACTOR := 0.01
+const LINUX_SCROLL_PAN_SCALE := 8.0
+
 # 内部状态变量
 var velocity: Vector2 = Vector2.ZERO
-var target_zoom: Vector2 = Vector2.ONE
+var target_zoom: Vector2 = Vector2.ONE * REFERENCE_ZOOM
 var target_position: Vector2 = Vector2.ZERO
 
 # 拖拽状态变量
@@ -32,22 +36,76 @@ var is_panning: bool = false
 
 
 func _ready() -> void:
+	zoom = Vector2.ONE * REFERENCE_ZOOM
 	target_zoom = zoom
 	target_position = global_position
+	_sync_texture_sampling()
+
+
+func reset_zoom() -> void:
+	target_zoom = Vector2.ONE * REFERENCE_ZOOM
+
+
+func zoom_percent() -> int:
+	return roundi(zoom.x / REFERENCE_ZOOM * 100.0)
+
+
+func _input(event: InputEvent) -> void:
+	if _text_input_active():
+		return
+
+	# GNOME/Wayland 可能把触控板手势交给 GUI 控件；在 _input 阶段提前接收。
+	if event is InputEventPanGesture:
+		if event.is_canceled():
+			return
+		# 触控板按下滑动留给 StageObjectSlicer，避免被相机平移抢走。
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			return
+		# 触控板 PanGesture 的 delta 与鼠标拖拽方向相反；这里反转以保持双指移动时画布跟手。
+		_apply_pan(-event.delta)
+		get_viewport().set_input_as_handled()
+		return
+
+	if event is InputEventMagnifyGesture:
+		if event.is_canceled() or event.factor <= 0.0:
+			return
+		_apply_zoom(maxf(event.factor, MIN_GESTURE_ZOOM_FACTOR), event.position)
+		get_viewport().set_input_as_handled()
+		return
+
+	# GNOME 的双指滚动在部分后端会退化为普通滚轮事件。
+	# Linux 下未带修饰键的滚轮统一视为触控板平移；Ctrl/Meta+滚轮仍用于缩放。
+	if event is InputEventMouseButton and event.is_pressed() and _is_linux_scroll_event(event):
+		if event.ctrl_pressed or event.meta_pressed:
+			var zoom_direction := 1.0 if event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_RIGHT] else -1.0
+			var zoom_amount := maxf(absf(event.factor), 1.0)
+			_apply_zoom(pow(1.0 + zoom_step, zoom_direction * zoom_amount), event.position)
+		else:
+			_apply_linux_scroll_pan(event)
+		get_viewport().set_input_as_handled()
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _text_input_active():
+		return
+
 	# 1. 中键拖拽状态开关
-	if event.is_action_pressed("camera_pan"):
+	if event is InputEventMouseButton and event.button_index == (MOUSE_BUTTON_MIDDLE if int(GraphPreferences.value("right_mode")) == 0 else MOUSE_BUTTON_RIGHT) and event.pressed:
 		is_panning = true
-	elif event.is_action_released("camera_pan"):
+	elif event is InputEventMouseButton and event.button_index == (MOUSE_BUTTON_MIDDLE if int(GraphPreferences.value("right_mode")) == 0 else MOUSE_BUTTON_RIGHT) and not event.pressed:
 		is_panning = false
 
 	# 2. 中键按住拖拽移动画布（拖拽天然与 zoom 相关，因此不需要额外修改）
 	if event is InputEventMouseMotion and is_panning:
-		target_position -= event.relative / target_zoom
+		_apply_pan(event.relative)
+		get_viewport().set_input_as_handled()
+		return
 
-	# 3. 专为“鼠标滚轮”设计的离散缩放（以鼠标指针为中心）
+	# Linux 触控板滚轮已在 _input 阶段处理。
+	if event is InputEventMouseButton and _is_linux_scroll_event(event):
+		return
+
+	# 普通滚轮（非 Linux）继续执行离散缩放。
 	if event is InputEventMouseButton and event.is_pressed():
 		if event.is_action("camera_zoom_in", true) or event.is_action("camera_zoom_out", true):
 			var zoom_factor := 0.0
@@ -60,12 +118,17 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
-	var focus_owner = get_viewport().gui_get_focus_owner()
-	if focus_owner is TextEdit or focus_owner is LineEdit or focus_owner is SpinBox:
+	_sync_texture_sampling()
+	if _text_input_active():
+		velocity = Vector2.ZERO
 		return
 
+	# 带 Ctrl/Shift/Alt/Meta 的快捷键不应同时触发 WASD/方向键的原始相机移动。
+	# 例如 Ctrl+S 保存时，S 不能再让画布向下移动。
+	var shortcut_modifier_active := _shortcut_modifier_active()
+
 	# 1. 键盘/手柄摇杆控制摄像机平移
-	var input_direction := Input.get_vector(
+	var input_direction := Vector2.ZERO if shortcut_modifier_active else Input.get_vector(
 		"camera_move_left",
 		"camera_move_right",
 		"camera_move_up",
@@ -82,7 +145,7 @@ func _process(delta: float) -> void:
 	target_position += velocity * delta
 
 	# 2. 专为“手柄/按键”设计的连续缩放（以屏幕中心为锚点）
-	var continuous_zoom_input := Input.get_axis("camera_zoom_out", "camera_zoom_in")
+	var continuous_zoom_input := 0.0 if shortcut_modifier_active else Input.get_axis("camera_zoom_out", "camera_zoom_in")
 	if not is_zero_approx(continuous_zoom_input):
 		# 根据按压强度和 delta 计算缩放因子
 		var zoom_factor := 1.0 + continuous_zoom_input * zoom_speed * delta
@@ -99,6 +162,56 @@ func _process(delta: float) -> void:
 		grid_material.set_shader_parameter("camera_zoom", zoom)
 
 
+## 统一应用平移，并保持与鼠标拖拽一致的“画布跟手”方向
+func _apply_pan(screen_delta: Vector2) -> void:
+	if screen_delta.is_zero_approx():
+		return
+	velocity = Vector2.ZERO
+	target_position -= screen_delta / target_zoom
+
+
+## 判断 Linux 滚轮事件，覆盖 GNOME 对触控板的离散/高精度两种映射
+func _is_linux_scroll_event(event: InputEventMouseButton) -> bool:
+	if OS.get_name() != "Linux":
+		return false
+	return event.button_index in [
+		MOUSE_BUTTON_WHEEL_UP,
+		MOUSE_BUTTON_WHEEL_DOWN,
+		MOUSE_BUTTON_WHEEL_LEFT,
+		MOUSE_BUTTON_WHEEL_RIGHT,
+	]
+
+
+## 将 GNOME 触控板滚动转换为二维平移量
+func _apply_linux_scroll_pan(event: InputEventMouseButton) -> void:
+	var direction := Vector2.ZERO
+	match event.button_index:
+		MOUSE_BUTTON_WHEEL_UP:
+			direction = Vector2.UP
+		MOUSE_BUTTON_WHEEL_DOWN:
+			direction = Vector2.DOWN
+		MOUSE_BUTTON_WHEEL_LEFT:
+			direction = Vector2.LEFT
+		MOUSE_BUTTON_WHEEL_RIGHT:
+			direction = Vector2.RIGHT
+	var amount := maxf(absf(event.factor), 1.0) * LINUX_SCROLL_PAN_SCALE
+	# GNOME 退化成滚轮事件的触控板滚动方向同样需要与鼠标拖拽区分。
+	_apply_pan(-direction * amount)
+
+
+## 辅助键按住时只响应组合快捷键，不触发单键相机动作。
+func _shortcut_modifier_active() -> bool:
+	return Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_META) or Input.is_key_pressed(KEY_ALT) or Input.is_key_pressed(KEY_SHIFT)
+
+
+## 文本编辑期间不抢占触控板和相机输入
+func _text_input_active() -> bool:
+	if get_tree().root.get_meta("workspace_text_input", false):
+		return true
+	var focus_owner = get_viewport().gui_get_focus_owner()
+	return focus_owner is TextEdit or focus_owner is LineEdit or focus_owner is SpinBox
+
+
 ## 统一应用缩放并计算位置偏移的私有函数
 func _apply_zoom(zoom_factor: float, anchor_screen_pos: Vector2) -> void:
 	var new_zoom := (target_zoom * zoom_factor).clamp(
@@ -112,3 +225,12 @@ func _apply_zoom(zoom_factor: float, anchor_screen_pos: Vector2) -> void:
 		var zoom_delta := (Vector2.ONE / target_zoom) - (Vector2.ONE / new_zoom)
 		target_position += anchor_offset * zoom_delta
 		target_zoom = new_zoom
+
+
+## Navigation only changes the canvas transform. Changing viewport oversampling
+## invalidates every Control's glyph/texture cache, including offscreen objects.
+## Canvas fonts and mipmapped corner styles own their fixed-resolution caches.
+func _sync_texture_sampling() -> void:
+	var viewport := get_viewport()
+	if viewport is SubViewport and not is_equal_approx(viewport.oversampling_override, 1.0):
+		viewport.oversampling_override = 1.0

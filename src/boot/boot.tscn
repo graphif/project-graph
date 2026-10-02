@@ -1,0 +1,59 @@
+[gd_scene format=3 uid="uid://mbhj8e0h8ov7"]
+
+[ext_resource type="Script" uid="uid://bkjdtni5un7y5" path="res://src/boot/boot.gd" id="1_8qla2"]
+[ext_resource type="Texture2D" uid="uid://crtq4sibpb1ht" path="res://project-graph-icon.svg" id="2_8qla2"]
+
+[node name="Root2" type="Control" unique_id=561485310]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_8qla2")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1807107977]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.09411765, 0.09411765, 0.14509805, 1)
+
+[node name="Center" type="VBoxContainer" parent="." unique_id=734504656]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -150.0
+offset_right = 180.0
+offset_bottom = 150.0
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Logo" type="TextureRect" parent="Center" unique_id=2097081048]
+custom_minimum_size = Vector2(180, 180)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_8qla2")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Center" unique_id=2019411783]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Project Graph"
+horizontal_alignment = 1
+
+[node name="Status" type="Label" parent="Center" unique_id=768361297]
+layout_mode = 2
+text = "正在加载…"
+horizontal_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="Center" unique_id=1227609362]
+custom_minimum_size = Vector2(220, 5)
+layout_mode = 2
+mouse_filter = 2
+show_percentage = false

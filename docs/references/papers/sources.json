@@ -1,0 +1,76 @@
+[
+  {
+    "file": "2008-novak-canas-concept-maps.pdf",
+    "source": "https://cmap.ihmc.us/Publications/ResearchPapers/TheoryUnderlyingConceptMaps.pdf",
+    "resolved_url": "https://cmap.ihmc.us/Publications/ResearchPapers/TheoryUnderlyingConceptMaps.pdf",
+    "bytes": 948151,
+    "sha256": "8c3482f91b0e831490d2eb2bb2f77faad2d04ffbacf4ad16b43f060c5a367d8c",
+    "downloaded": "2026-09-29"
+  },
+  {
+    "file": "2006-nesbit-adesope-meta-analysis.pdf",
+    "source": "https://www.sfu.ca/~jcnesbit/research/NesbitAdesope2006.pdf",
+    "resolved_url": "https://www.sfu.ca/~jcnesbit/research/NesbitAdesope2006.pdf",
+    "bytes": 2295440,
+    "sha256": "6b6feed2a41842346278c37bb75f4b1e2b61e4096caddadec32c347ecc54b4f6",
+    "downloaded": "2026-09-29"
+  },
+  {
+    "file": "2017-node-link-matrix-comparison.pdf",
+    "source": "https://arxiv.org/pdf/1709.00293",
+    "resolved_url": "https://arxiv.org/pdf/1709.00293",
+    "bytes": 779755,
+    "sha256": "28a81d6da198d286fb14c78bb22f12b5a725fd8f6fe39e37ecd14d5b9214e97f",
+    "downloaded": "2026-09-29"
+  },
+  {
+    "file": "2023-sensecape.pdf",
+    "source": "https://arxiv.org/pdf/2305.11483",
+    "resolved_url": "https://arxiv.org/pdf/2305.11483",
+    "bytes": 5878531,
+    "sha256": "4b249c4f6ccf598fb286bb2f55fc6a2188cfc8dd203da2482994a01c85bd8efe",
+    "downloaded": "2026-09-29"
+  },
+  {
+    "file": "2023-graphologue.pdf",
+    "source": "https://arxiv.org/pdf/2305.11473",
+    "resolved_url": "https://arxiv.org/pdf/2305.11473",
+    "bytes": 3377508,
+    "sha256": "e4432c0d654d2fbd58927b055e434fbac4b23b1d043a6ba83d686d35444b015b",
+    "downloaded": "2026-09-29"
+  },
+  {
+    "file": "2025-scholarmate-v3-2026.pdf",
+    "source": "https://arxiv.org/pdf/2504.14406v3",
+    "resolved_url": "https://arxiv.org/pdf/2504.14406v3",
+    "bytes": 2692440,
+    "sha256": "0e8d486b772bb1c2bdb724ba0a065cc4e17942a6e4d3ecb2e51a0c4ef6dab3a2",
+    "downloaded": "2026-09-29"
+  },
+  {
+    "file": "2019-local-first.pdf",
+    "source": "https://www.inkandswitch.com/essay/local-first/local-first.pdf",
+    "resolved_url": "https://www.inkandswitch.com/essay/local-first/local-first.pdf",
+    "bytes": 4647743,
+    "sha256": "88da54a770caa92bfc1160c13fe2d62cd7716582ff31c42e835a8ef54993cfaf",
+    "downloaded": "2026-09-29"
+  },
+  {
+    "file": "2007-inkseine.pdf",
+    "source": "https://cutrell.org/papers/Hinckley-InkSeine-CHI2007.pdf",
+    "resolved_url": "https://cutrell.org/papers/Hinckley-InkSeine-CHI2007.pdf",
+    "bytes": 1242303,
+    "sha256": "485ee85851b4f3f494dc4c4fbb47bbb1ed7aec264827e7134c86d3d4d8fbc307",
+    "downloaded": "2026-09-29"
+  },
+  {
+    "file": "1993-searching-for-the-missing-link.pdf",
+    "source": "https://dl.acm.org/doi/pdf/10.1145/168750.168826",
+    "error": "HTTP Error 403: Forbidden"
+  },
+  {
+    "file": "1994-viki.pdf",
+    "source": "https://dl.acm.org/doi/pdf/10.1145/192757.192759",
+    "error": "HTTP Error 403: Forbidden"
+  }
+]

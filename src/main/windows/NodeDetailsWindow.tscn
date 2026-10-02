@@ -1,0 +1,157 @@
+[gd_scene format=3 uid="uid://b6gettp6irojk"]
+
+[node name="NodeDetailsWindow" type="Window" unique_id=874107403]
+oversampling_override = 1.0
+title = "节点属性"
+size = Vector2i(440, 540)
+visible = false
+min_size = Vector2i(320, 220)
+
+[node name="DialogBackground" type="Panel" parent="." unique_id=1764408151]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_type_variation = &"DialogSurface"
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=265564200]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Content" type="VBoxContainer" parent="Margin" unique_id=553072742]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Selection" type="Label" parent="Margin/Content" unique_id=943540643]
+layout_mode = 2
+text = "请选择一个文本节点"
+
+[node name="Text" type="TextEdit" parent="Margin/Content" unique_id=251891261]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="@HScrollBar@22501" type="HScrollBar" parent="Margin/Content/Text" unique_id=936735752]
+visible = false
+use_parent_material = true
+layout_mode = 0
+offset_top = 142.0
+offset_right = 16.0
+offset_bottom = 150.0
+max_value = 0.0
+
+[node name="@VScrollBar@22502" type="VScrollBar" parent="Margin/Content/Text" unique_id=1830204500]
+visible = false
+use_parent_material = true
+layout_mode = 0
+offset_left = 16.0
+offset_top = 8.0
+offset_right = 24.0
+offset_bottom = 134.0
+max_value = 0.0
+
+[node name="@Timer@22503" type="Timer" parent="Margin/Content/Text" unique_id=33158498]
+wait_time = 0.65
+
+[node name="@Timer@22504" type="Timer" parent="Margin/Content/Text" unique_id=2092937139]
+wait_time = 0.05
+
+[node name="@Timer@22505" type="Timer" parent="Margin/Content/Text" unique_id=1424999232]
+wait_time = 3.0
+one_shot = true
+
+[node name="Fields" type="GridContainer" parent="Margin/Content" unique_id=12978351]
+layout_mode = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 10
+columns = 2
+
+[node name="FontSizeLabel" type="Label" parent="Margin/Content/Fields" unique_id=1153845030]
+layout_mode = 2
+text = "字号"
+
+[node name="FontSize" type="SpinBox" parent="Margin/Content/Fields" unique_id=277061811]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 8.0
+max_value = 128.0
+value = 24.0
+
+[node name="WidthLabel" type="Label" parent="Margin/Content/Fields" unique_id=1842661285]
+layout_mode = 2
+text = "固定宽度（0 为自动）"
+
+[node name="Width" type="SpinBox" parent="Margin/Content/Fields" unique_id=636355738]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1600.0
+
+[node name="FillLabel" type="Label" parent="Margin/Content/Fields" unique_id=1262037660]
+layout_mode = 2
+text = "填充颜色"
+
+[node name="Fill" type="ColorPickerButton" parent="Margin/Content/Fields" unique_id=2013773181]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"DialogButton"
+
+[node name="TextColorLabel" type="Label" parent="Margin/Content/Fields" unique_id=724349837]
+layout_mode = 2
+text = "文字颜色（透明为自动）"
+
+[node name="TextColor" type="ColorPickerButton" parent="Margin/Content/Fields" unique_id=1634355029]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+
+[node name="StrokeLabel" type="Label" parent="Margin/Content/Fields" unique_id=1118980240]
+layout_mode = 2
+text = "连线颜色"
+
+[node name="Stroke" type="ColorPickerButton" parent="Margin/Content/Fields" unique_id=1992798674]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+
+[node name="StrokeWidthLabel" type="Label" parent="Margin/Content/Fields" unique_id=1992206508]
+layout_mode = 2
+text = "线宽"
+
+[node name="StrokeWidth" type="SpinBox" parent="Margin/Content/Fields" unique_id=1197052085]
+layout_mode = 2
+min_value = 1.0
+max_value = 12.0
+step = 0.5
+value = 1.0
+
+[node name="ArrowLabel" type="Label" parent="Margin/Content/Fields" unique_id=353712173]
+layout_mode = 2
+text = "方向"
+
+[node name="Arrow" type="CheckBox" parent="Margin/Content/Fields" unique_id=212856753]
+layout_mode = 2
+text = "显示箭头"
+
+[node name="Actions" type="HBoxContainer" parent="Margin/Content" unique_id=778940368]
+layout_mode = 2
+
+[node name="Apply" type="Button" parent="Margin/Content/Actions" unique_id=1865114110]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"DialogButton"
+text = "应用更改"
+
+[node name="Delete" type="Button" parent="Margin/Content/Actions" unique_id=1529932815]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_type_variation = &"DialogButton"
+text = "删除"
+
+[node name="Reverse" type="Button" parent="Margin/Content/Actions" unique_id=1451590279]
+layout_mode = 2
+text = "反转连线"

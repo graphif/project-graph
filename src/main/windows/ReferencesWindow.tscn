@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://dsx1rihbe0frb"]
+
+[node name="ReferencesWindow" type="Window" unique_id=1655302765]
+oversampling_override = 1.0
+title = "引用关系"
+size = Vector2i(420, 480)
+visible = false
+min_size = Vector2i(320, 220)
+
+[node name="DialogBackground" type="Panel" parent="." unique_id=874986411]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_type_variation = &"DialogSurface"
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1125177153]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Content" type="VBoxContainer" parent="Margin" unique_id=1396692208]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Heading" type="Label" parent="Margin/Content" unique_id=376477860]
+layout_mode = 2
+text = "选择节点查看连接关系"
+
+[node name="Results" type="ItemList" parent="Margin/Content" unique_id=89481741]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="@VScrollBar@22499" type="VScrollBar" parent="Margin/Content/Results" unique_id=510844435]
+use_parent_material = true
+layout_mode = 0
+
+[node name="@HScrollBar@22500" type="HScrollBar" parent="Margin/Content/Results" unique_id=646829464]
+use_parent_material = true
+layout_mode = 0

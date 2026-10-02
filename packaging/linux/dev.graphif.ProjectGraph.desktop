@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Project Graph
+Comment=Connect ideas with nodes and links
+Comment[zh_CN]=用节点与连线整理想法和知识
+Exec=/usr/bin/project-graph -- %F
+TryExec=/usr/bin/project-graph
+Icon=dev.graphif.ProjectGraph
+Terminal=false
+Categories=Office;Graphics;
+MimeType=application/x-project-graph;
+StartupNotify=true
+StartupWMClass=Project Graph

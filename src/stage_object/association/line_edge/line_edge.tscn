@@ -1,8 +1,13 @@
 [gd_scene format=3 uid="uid://dodce5rghnax4"]
 
 [ext_resource type="Script" uid="uid://cx3yytgaa802v" path="res://src/stage_object/association/line_edge/line_edge.gd" id="1_qxjbk"]
+[ext_resource type="Script" uid="uid://clxm3md2kfdnh" path="res://src/stage_object/association/line_edge/edge_caption.gd" id="2_413u6"]
+[ext_resource type="Script" uid="uid://y6ndrptulx6x" path="res://src/auto_size_text_edit.gd" id="3_283k5"]
 
 [sub_resource type="ConcavePolygonShape2D" id="ConcavePolygonShape2D_qxjbk"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_413u6"]
+resource_local_to_scene = true
 
 [node name="LineEdge" type="RigidBody2D" unique_id=712430331]
 collision_layer = 0
@@ -18,8 +23,39 @@ shape = SubResource("ConcavePolygonShape2D_qxjbk")
 [node name="Line" type="Line2D" parent="." unique_id=655085003]
 unique_name_in_owner = true
 width = 2.0
+default_color = Color(0.5372549, 0.7058824, 0.98039216, 1)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+round_precision = 12
 antialiased = true
 
 [node name="Head" type="Polygon2D" parent="." unique_id=2018816104]
 unique_name_in_owner = true
+color = Color(0.5372549, 0.7058824, 0.98039216, 1)
+antialiased = true
 polygon = PackedVector2Array(0, 0, -12, -6, -12, 6)
+
+[node name="Caption" type="Node2D" parent="." unique_id=1756927907]
+z_index = 26
+script = ExtResource("2_413u6")
+
+[node name="Label" type="Label" parent="Caption" unique_id=1169276095]
+mouse_filter = 0
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+
+[node name="Editor" type="TextEdit" parent="Caption" unique_id=1441085128]
+visible = false
+custom_minimum_size = Vector2(140, 47)
+offset_right = 140.0
+offset_bottom = 47.0
+theme_override_font_sizes/font_size = 18
+wrap_mode = 1
+script = ExtResource("3_283k5")
+min_width = 140.0
+max_width = 360.0
+
+[node name="CaptionCollision" type="CollisionShape2D" parent="." unique_id=821329600]
+shape = SubResource("RectangleShape2D_413u6")
+disabled = true
