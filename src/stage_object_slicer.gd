@@ -424,21 +424,35 @@ func _update_contact_marks() -> void:
 			_contact_flares.append({"node": flare, "age": 0.0})
 
 
+func _get_effect_polygon(entity: Entity) -> PackedVector2Array:
+	if entity is TextNode:
+		var stage := target_root as Stage
+		var outline: PackedVector2Array = stage.group_overview.outline_for(entity) if stage != null else entity.get_visual_outline()
+		var world := PackedVector2Array()
+		for point in outline:
+			world.append(entity.to_global(point))
+		return world
+	return _get_solid_polygon(entity)
+
+
 func _spawn_split_effect(entity: Entity) -> void:
 	if not GraphPreferences.value("effects"):
 		return
-	var polygon := _get_solid_polygon(entity)
+	var polygon := _get_effect_polygon(entity)
 	if polygon.size() < 3:
 		return
 	var pieces: Array[PackedVector2Array] = []
-	# 主分支在终点落入矩形内部时，以终点为中心裂成四块。
 	var interior := Geometry2D.is_point_in_polygon(_slice_end, polygon)
 	for i in polygon.size():
 		if Geometry2D.get_closest_point_to_segment(_slice_end, polygon[i], polygon[(i + 1) % polygon.size()]).distance_squared_to(_slice_end) < 0.01:
 			interior = false
 	if interior:
-		for i in polygon.size():
-			pieces.append(PackedVector2Array([polygon[i], polygon[(i + 1) % polygon.size()], _slice_end]))
+		# Keep four pieces for rounded text nodes; one triangle per outline
+		# segment would turn a smooth corner into dozens of tiny fragments.
+		var sectors := _get_solid_polygon(entity)
+		for i in sectors.size():
+			var triangle := PackedVector2Array([sectors[i], sectors[(i + 1) % sectors.size()], _slice_end])
+			pieces.append_array(Geometry2D.intersect_polygons(polygon, triangle))
 	else:
 		if _get_cut_contacts(entity).size() != 2:
 			return
@@ -452,8 +466,10 @@ func _spawn_split_effect(entity: Entity) -> void:
 	var border := Color.WHITE
 	if entity is TextNode:
 		border = entity.label.get_theme_color("font_color")
-		if entity.label.has_theme_stylebox("normal"):
-			var style := preload("res://src/main/continuous_corners.gd").source(entity.label.get_theme_stylebox("normal"))
+		var control: Control = entity.container_panel if entity._container_active else entity.label
+		var style_key: StringName = &"panel" if entity._container_active else &"normal"
+		if control.has_theme_stylebox(style_key):
+			var style := preload("res://src/main/continuous_corners.gd").source(control.get_theme_stylebox(style_key))
 			if style != null:
 				fill = style.bg_color
 				border = style.border_color
