@@ -225,7 +225,22 @@ func _update_marquee() -> void:
 	var end := get_global_mouse_position()
 	var rect := Rect2(_marquee_start, end - _marquee_start).abs()
 	var line := $SelectionOverlay/Marquee as Line2D
-	line.points = PackedVector2Array([rect.position, Vector2(rect.end.x, rect.position.y), rect.end, Vector2(rect.position.x, rect.end.y)])
+	# Bake the world rectangle into screen-sized Line2D geometry. A two-world-
+	# unit stroke becomes subpixel when zoomed out and can lose whole sides.
+	var canvas := (line.get_parent() as Node2D).get_global_transform_with_canvas()
+	var basis := Transform2D(canvas.x, canvas.y, Vector2.ZERO)
+	if is_zero_approx(basis.determinant()):
+		line.hide()
+		return
+	line.transform = basis.affine_inverse()
+	line.closed = true
+	line.width = 4.0 # Two-pixel core plus the antialiasing coverage fringe.
+	line.antialiased = true
+	line.texture = preload("res://assets/line_antialiasing.res")
+	line.texture_mode = Line2D.LINE_TEXTURE_TILE
+	line.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	var corners := PackedVector2Array([rect.position, Vector2(rect.end.x, rect.position.y), rect.end, Vector2(rect.position.x, rect.end.y)])
+	line.points = line.global_transform.affine_inverse() * corners
 	line.show()
 
 
