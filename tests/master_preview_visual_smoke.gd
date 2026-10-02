@@ -38,10 +38,8 @@ func _run() -> void:
 	check(title.text_overrun_behavior == TextServer.OVERRUN_NO_TRIMMING, "Master fits the full title instead of adding ellipsis")
 	var border: Line2D = panel.get_node("Border")
 	check(border != null, "Master preview has a native border with fractional widths")
-	if border != null:
-		var border_scale := border.get_global_transform_with_canvas().x.length()
-		check(absf((border.width * border_scale - 2.0) - 2.0) < .25, "Master covered border keeps two screen pixels plus antialiasing fringe")
-		check(border.default_color == Color("#585b70"), "Master Mocha stage border color is reused")
+	check(source.border_width_left == 2, "Covered group retains master's two-pixel border")
+	check(source.border_color == Color("#585b70"), "Master Mocha stage border color is reused")
 	var branch_panel: Panel = overview._summaries[branch.get_instance_id()]
 	var displayed := branch_panel.get_global_transform() * Rect2(Vector2.ZERO, branch_panel.size)
 	check(displayed.is_equal_approx(branch.aabb), "Immediate branch geometry remains its actual node rectangle")
@@ -56,7 +54,8 @@ func _run() -> void:
 	app._apply_preferences("theme", "latte")
 	await settle()
 	check(title.get_theme_color("font_color") == Color.BLACK, "Master Latte canvas uses black title")
-	check(border != null and border.default_color == Color("#acb0be"), "Master Latte stage border color is reused")
+	source = preload("res://src/main/continuous_corners.gd").source(panel.get_theme_stylebox("panel"))
+	check(source.border_color == Color("#acb0be"), "Master Latte stage border color is reused")
 	app._apply_preferences("theme", "mocha")
 	await settle()
 	await click_world(frame.aabb.get_center(), true)

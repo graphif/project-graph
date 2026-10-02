@@ -370,9 +370,22 @@ func _rebuild_preview_links() -> void:
 
 func _preview_display_rect(identifier: int) -> Rect2:
 	var object: TextNode = _preview_nodes[identifier]
+	var rect: Rect2 = _group_rects.get(identifier, object.aabb)
 	if not _preview_roots.has(identifier) and not object._container_active:
 		return object.aabb
-	return _group_rects.get(identifier, object.aabb)
+	if object._container_active:
+		# Match Panel zoom buckets so endpoints follow its exact visible boundary.
+		var scale := maxf(get_global_transform_with_canvas().get_scale().x, .01)
+		var offset := float(posmod(object.id.hash(), 16)) / 16.0
+		var pixel_scale := pow(2.0, (floorf(log(scale) / log(2.0) * 16.0 + offset) - offset) / 16.0)
+		var size := rect.size
+		if not _preview_roots.has(identifier):
+			size = size.min(Vector2(160, 80) / pixel_scale)
+		# A long, thin group still needs enough height for a visible curved end.
+		if maxf(size.x, size.y) * pixel_scale >= 20.0:
+			size = size.max(Vector2(24, 24) / pixel_scale)
+		return Rect2(rect.get_center() - size * .5, size)
+	return rect
 
 
 func _preview_endpoint_rect(identifier: int) -> Rect2:
@@ -500,10 +513,13 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 	var revision: int = stage.get_meta("loading_overview_revision", stage.layout_revision)
 	var identifier := group.get_instance_id()
 	var root := _preview_roots.has(identifier) or (stage.is_loading and _active.has(identifier))
-	var rect := _preview_display_rect(identifier) if _preview_nodes.has(identifier) else _group_rects.get(identifier, group.aabb) as Rect2
+	var rect: Rect2 = _preview_display_rect(identifier) if _preview_nodes.has(identifier) else _group_rects.get(identifier, group.aabb)
 	var scale := maxf(get_global_transform_with_canvas().get_scale().x, .01)
 	var screen_size := rect.size * scale
-	if not stage.world_view_rect.intersects(rect, true):
+	var covered := root or group._container_active
+	# Below legible size, omit tiny frames as well as text to reduce overlap.
+	var readable := maxf(screen_size.x, screen_size.y) >= 20.0 if covered else screen_size.x >= 28.0 and screen_size.y >= 18.0
+	if not readable or not stage.world_view_rect.intersects(rect, true):
 		panel.hide()
 		return
 	panel.show()
@@ -512,7 +528,6 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 	var light := group._display_theme_is_light()
 	var canvas_color := Palette.color(light, "surface.canvas")
 	var fill := group.fill_color
-	var covered := root or group._container_active
 	var background := Color(canvas_color if fill.a == 0 else fill, .5) if covered else fill
 	if not covered and fill.a == 0 and group.font_size * pixel_scale < 5.0:
 		background = Color((Palette.LATTE if light else Palette.MOCHA)["surface2"], .2)
@@ -559,14 +574,14 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 	title.position = (panel.size - title.size * factor) * .5
 	# The direct next-layer preview stays above the parent to preserve requested
 	# readability, while every covered title uses the master fitting formula.
-	var radius := minf(8.0 * pixel_scale, minf(panel.size.x, panel.size.y) * .5)
+	var radius := Corners.fitted_radius(panel.size, 14.0 if covered else 6.0, 2.0 if covered else 1.0)
 	var framed := group._container_active or not root
 	var style_key := [background, border_color, radius, framed, covered, root]
 	if panel.get_meta("style_key", []) != style_key:
 		var style := StyleBoxFlat.new()
 		style.bg_color = background
 		style.border_color = border_color
-		style.set_border_width_all(0)
+		style.set_border_width_all(2 if framed and covered else 0)
 		panel.add_theme_stylebox_override("panel", Corners.style(style, radius, true, true))
 		panel.set_meta("style_key", style_key)
 	var border := panel.get_node_or_null("Border") as Line2D
@@ -579,14 +594,14 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 		border.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 		border.closed = true
 		panel.add_child(border)
-	border.visible = framed
+	border.visible = framed and not covered
 	border.scale = Vector2.ONE * pixel_scale
 	border.default_color = border_color
 	# Native texture includes a one-pixel AA fringe on either side.
 	border.width = (2.0 if covered else 2.0 * pixel_scale) / pixel_scale + 2.0 / pixel_scale
-	var border_key := [rect.size, framed]
-	if border.get_meta("geometry_key", []) != border_key:
-		border.points = Corners.outline(Rect2(Vector2.ZERO, rect.size), minf(8.0, minf(rect.size.x, rect.size.y) * .5))
+	var border_key := [rect.size, framed, radius / pixel_scale]
+	if border.visible and border.get_meta("geometry_key", []) != border_key:
+		border.points = Corners.outline(Rect2(Vector2.ZERO, rect.size), radius / pixel_scale)
 		border.set_meta("geometry_key", border_key)
 
 
