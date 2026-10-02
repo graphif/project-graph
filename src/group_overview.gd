@@ -1,7 +1,7 @@
 extends Node2D
 
 ## View-only overview with camera and screen-size gates tuned for earlier titles.
-## Retain nested group previews beneath covers, while omitting ordinary detail.
+## Show root and immediate child titles with aggregated links; omit deeper detail.
 @export_range(0.01, 1.0) var camera_scale_threshold := 0.45
 @export_range(0.01, 1.0) var viewport_size_ratio := 0.15
 
@@ -26,6 +26,16 @@ var _zoom_gates: Array[float] = []
 var _membership_key: Array = []
 var _cover_groups: Dictionary = {}
 var _structure_key: Array = []
+var _entities := {}
+var _preview_parents := {}
+var _preview_children := {}
+var _preview_nodes := {}
+var _preview_roots := {}
+var _group_gates := {}
+var _preview_links := {}
+var _link_render_key: Array = []
+var _links_layer: Node2D
+var _panel_pool := {}
 
 
 func _ready() -> void:
@@ -59,7 +69,7 @@ func outline_for(group: TextNode) -> PackedVector2Array:
 
 func covers_point(world_point: Vector2) -> bool:
 	for key in _active:
-		if not _hidden.has(key) and is_instance_valid(_active[key]) and _active[key].aabb.has_point(world_point):
+		if not _hidden.has(key) and is_instance_valid(_active[key]) and (_group_rects.get(key, _active[key].aabb) as Rect2).has_point(world_point):
 			return true
 	return false
 
@@ -70,209 +80,391 @@ func invalidate() -> void:
 
 
 func refresh() -> void:
-	var stage := get_parent()
+	var stage: Stage = get_parent()
 	if stage.is_loading and stage.has_meta("loading_overview_revision"):
-		for key in _active:
-			_update_summary(_active[key], _summaries[key])
+		for identifier in _summaries:
+			if _active.has(identifier):
+				_update_summary(_active[identifier], _summaries[identifier])
 		return
 	var camera: Camera2D = stage.camera
 	var viewport_size := get_viewport_rect().size
-	var viewport_side := maxf(viewport_size.x, viewport_size.y)
-	var normalized_zoom: float = camera.zoom.x / camera.REFERENCE_ZOOM
-	if normalized_zoom > camera_scale_threshold and _suppressed.is_empty():
+	var key := [stage.layout_revision, stage.document_revision, camera.zoom, viewport_size,
+		stage.world_view_rect, camera_scale_threshold, viewport_size_ratio, stage._applied_theme_light]
+	if key == _refresh_key:
 		return
-	var revision: int = stage.layout_revision
-	var refresh_key := [revision, camera.zoom, viewport_size, stage.world_view_rect, camera_scale_threshold, viewport_size_ratio]
-	if refresh_key == _refresh_key:
-		return
-	_refresh_key = refresh_key
-	var layout_changed := _layout_revision != revision
-	var structure_changed := false
-	if layout_changed:
-		_layout_revision = revision
+	_refresh_key = key
+	var changed := _layout_revision != stage.layout_revision
+	if changed:
+		_layout_revision = stage.layout_revision
 		_objects = stage.stage_objects()
-		var structure_key := []
+		var structure := []
 		for object in _objects:
 			if object is Entity:
-				structure_key.append([object.get_instance_id(), object.container.get_instance_id() if is_instance_valid(object.container) else 0,
-					object._container_active if object is TextNode else false, object._editing if object is TextNode else false, object.is_visible_in_tree()])
+				structure.append([object.get_instance_id(),
+					object.container.get_instance_id() if is_instance_valid(object.container) else 0,
+					object.topic_parent.get_instance_id() if object is TextNode and is_instance_valid(object.topic_parent) else 0,
+					object._editing if object is TextNode else false, object.is_visible_in_tree()])
 			elif object is LineEdge:
-				structure_key.append([object.get_instance_id(), object.source.get_instance_id() if is_instance_valid(object.source) else 0,
-					object.target.get_instance_id() if is_instance_valid(object.target) else 0, object.get_node("Caption")._editing])
-		structure_changed = structure_key != _structure_key
-		if structure_changed:
-			_structure_key = structure_key
-			_groups = _objects.filter(func(object): return object is TextNode and object._container_active and object.is_visible_in_tree())
-			_levels = _group_levels(_objects)
-			_blocked.clear()
-			# Native editing must reveal its own group and ancestors.
-			for object in _objects:
-				if object is TextNode and object._editing:
-					_block_ancestors(object, _blocked)
-				elif object is LineEdge and object.get_node("Caption")._editing:
-					if is_instance_valid(object.source):
-						_block_ancestors(object.source, _blocked)
-					if is_instance_valid(object.target):
-						_block_ancestors(object.target, _blocked)
-			_cache_cover_groups()
-		_group_rects.clear()
-		for group in _groups:
-			_group_rects[group.get_instance_id()] = group.aabb
-	var group_sizes := []
+				structure.append([object.get_instance_id(),
+					object.source.get_instance_id() if is_instance_valid(object.source) else 0,
+					object.target.get_instance_id() if is_instance_valid(object.target) else 0,
+					object.get_node("Caption")._editing])
+		if structure != _structure_key:
+			_structure_key = structure
+			_build_preview_tree()
+			_membership_key.clear()
+		_refresh_preview_rects()
+	var sizes := []
 	for group in _groups:
-		group_sizes.append([group.get_instance_id(), _group_rects[group.get_instance_id()].size, _levels.get(group.get_instance_id(), 0)])
-	var gate_key := [group_sizes, viewport_size, camera_scale_threshold, viewport_size_ratio]
+		sizes.append([group.get_instance_id(), _group_rects[group.get_instance_id()].size, group.font_size])
+	var gate_key := [sizes, viewport_size, camera_scale_threshold, viewport_size_ratio]
 	if gate_key != _gate_key:
 		_gate_key = gate_key
 		_zoom_gates.clear()
+		_group_gates.clear()
+		var side := maxf(viewport_size.x, viewport_size.y)
 		for group in _groups:
-			var level: int = _levels.get(group.get_instance_id(), 0)
-			var side: float = maxf(_group_rects[group.get_instance_id()].size.x, _group_rects[group.get_instance_id()].size.y)
-			var limit := minf(camera_scale_threshold * camera.REFERENCE_ZOOM,
-				maxf(0.20, camera_scale_threshold - 0.05 * level) * camera.REFERENCE_ZOOM)
-			_zoom_gates.append(minf(limit, viewport_side * minf(0.75, viewport_size_ratio + 0.20 * level) / maxf(side, 0.001)))
+			var identifier: int = group.get_instance_id()
+			var level: int = _levels.get(identifier, 0)
+			var rect: Rect2 = _group_rects[identifier]
+			var limit: float = camera_scale_threshold * camera.REFERENCE_ZOOM
+			var size_gate := side * minf(.75, viewport_size_ratio + .20 * level) / maxf(rect.size.x, rect.size.y)
+			# A large frame must not delay its preview until the header is unreadable.
+			var gate := minf(limit, maxf(size_gate, 18.0 / maxf(group.font_size, 8)))
+			_group_gates[identifier] = gate
+			_zoom_gates.append(gate)
 		_zoom_gates.sort()
-	var membership_key := [gate_key, _zoom_gates.bsearch(camera.zoom.x)]
-	if not structure_changed and membership_key == _membership_key and not _zoom_gates.has(camera.zoom.x):
-		for key in _active:
-			_update_summary(_active[key], _summaries[key])
-		return
-	_membership_key = membership_key
-	var objects: Array = _objects
-	var levels := _levels
-	var blocked := _blocked
-	var previous_active := _active.duplicate()
-	_active.clear()
-	if normalized_zoom <= camera_scale_threshold:
-		for object in _groups:
-			var key: int = object.get_instance_id()
-			var screen_size: Vector2 = (_group_rects[key] as Rect2).size * camera.zoom
-			var level: int = levels.get(key, 0)
-			# Reveal inner titles first, then allow larger outer frames to take over.
-			var zoom_limit := maxf(0.20, camera_scale_threshold - 0.05 * level)
-			var size_limit := minf(0.75, viewport_size_ratio + 0.20 * level)
-			if not blocked.has(key) and normalized_zoom <= zoom_limit and maxf(screen_size.x, screen_size.y) < viewport_side * size_limit:
-				_active[key] = object
+	var membership_zoom := camera.zoom.x + .00001
+	var membership := [gate_key, _zoom_gates.bsearch(membership_zoom)]
+	if membership != _membership_key:
+		_membership_key = membership
+		var previous := _active.duplicate()
+		_active.clear()
+		for group in _groups:
+			var identifier: int = group.get_instance_id()
+			if not _blocked.has(identifier) and membership_zoom < float(_group_gates[identifier]):
+				_active[identifier] = group
+		for group in _groups:
+			var identifier: int = group.get_instance_id()
+			if not _blocked.has(identifier) and not _active_ancestors(group).is_empty():
+				_active[identifier] = group
+		if previous != _active or _preview_nodes.is_empty() or changed:
+			_refresh_membership()
+	elif changed:
+		_link_render_key.clear()
+	for identifier in _summaries:
+		_update_summary(_preview_nodes[identifier], _summaries[identifier])
+	_update_preview_links()
 
-	# A visible outer overview represents its contents through group previews.
-	# Descendant groups must not fall back to tiny headers just because their
-	# independent screen-size gate has not been reached yet.
-	for object in _groups:
-		if object is TextNode:
-			var key: int = object.get_instance_id()
-			if not blocked.has(key) and not _active_ancestors(object).is_empty():
-				_active[key] = object
 
-	# Camera-only scaling normally keeps the same group membership and input.
-	if not structure_changed and previous_active == _active:
-		for key in _active:
-			_update_summary(_active[key], _summaries[key])
-		return
-
-	_hidden.clear()
-	for key in _cover_groups:
-		for ancestor in _cover_groups[key]:
-			if _active.has(ancestor):
-				_hidden[key] = true
+func _build_preview_tree() -> void:
+	for identifier in _panel_pool.keys():
+		var valid := false
+		for object in _objects:
+			if object.get_instance_id() == identifier:
+				valid = true
 				break
+		if not valid:
+			_panel_pool[identifier].queue_free()
+			_panel_pool.erase(identifier)
+	_entities.clear()
+	_preview_parents.clear()
+	_preview_children.clear()
+	_groups.clear()
+	_blocked.clear()
+	var incoming := {}
+	var spatial_parents := {}
+	for object in _objects:
+		if object is Entity and object.is_visible_in_tree():
+			_entities[object.get_instance_id()] = object
+		elif object is LineEdge and object.source is TextNode and object.target is TextNode:
+			var identifier: int = object.target.get_instance_id()
+			if not incoming.has(identifier):
+				incoming[identifier] = []
+			if not incoming[identifier].has(object.source):
+				incoming[identifier].append(object.source)
+	for identifier in _entities:
+		var object: Entity = _entities[identifier]
+		var parent: Entity = object.container
+		if is_instance_valid(parent):
+			spatial_parents[identifier] = parent.get_instance_id()
+		if object is TextNode and not object._container_active:
+			# Logical branch depth refines a flat spatial group for display only.
+			# Explicit nested frames remain direct children of their real frame.
+			if is_instance_valid(object.topic_parent) and object.topic_parent.container == object.container:
+				parent = object.topic_parent
+			else:
+				var candidates: Array = incoming.get(identifier, [])
+				if candidates.size() == 1 and candidates[0].container == object.container:
+					parent = candidates[0]
+		if is_instance_valid(parent) and _entities.has(parent.get_instance_id()):
+			_preview_parents[identifier] = parent.get_instance_id()
+	var cyclic := {}
+	for identifier in _preview_parents:
+		var chain := []
+		var current: int = identifier
+		while _preview_parents.has(current):
+			var index := chain.find(current)
+			if index >= 0:
+				for entry in chain.slice(index):
+					cyclic[entry] = true
+				break
+			chain.append(current)
+			current = _preview_parents[current]
+	for identifier in cyclic:
+		_preview_parents.erase(identifier)
+		if spatial_parents.has(identifier):
+			_preview_parents[identifier] = spatial_parents[identifier]
+	for identifier in _preview_parents:
+		var parent: int = _preview_parents[identifier]
+		if not _preview_children.has(parent):
+			_preview_children[parent] = []
+		_preview_children[parent].append(identifier)
+	for identifier in _preview_children:
+		if _entities[identifier] is TextNode:
+			_groups.append(_entities[identifier])
+	_levels = _group_levels(_objects)
+	for object in _objects:
+		if object is TextNode and object._editing:
+			_block_ancestors(object, _blocked)
+		elif object is LineEdge and object.get_node("Caption")._editing:
+			if is_instance_valid(object.source):
+				_block_ancestors(object.source, _blocked)
+			if is_instance_valid(object.target):
+				_block_ancestors(object.target, _blocked)
+	_cache_cover_groups()
 
-	var wanted: Dictionary = _hidden.duplicate()
-	for key in _active:
-		wanted[key] = true
-	for key in _suppressed.keys():
-		if not wanted.has(key):
-			_restore(key)
-	for object in objects:
-		var key: int = object.get_instance_id()
-		if wanted.has(key):
-			if not _suppressed.has(key):
-				var items: Array[Dictionary] = []
-				_suppress_canvas(object, items)
-				_suppressed[key] = {"object": object, "items": items, "pickable": object.input_pickable}
-				for item in items:
+
+func _refresh_preview_rects() -> void:
+	_group_rects.clear()
+	for identifier in _entities:
+		_group_rects[identifier] = _entities[identifier].aabb
+	var groups := _groups.duplicate()
+	groups.sort_custom(func(a: TextNode, b: TextNode) -> bool:
+		return int(_levels.get(a.get_instance_id(), 0)) < int(_levels.get(b.get_instance_id(), 0)))
+	for group in groups:
+		var identifier: int = group.get_instance_id()
+		if group._container_active:
+			continue
+		var bounds: Rect2 = _group_rects[identifier]
+		for child in _preview_children.get(identifier, []):
+			bounds = bounds.merge(_group_rects[child])
+		_group_rects[identifier] = bounds.grow(12.0)
+
+
+func _refresh_membership() -> void:
+	_hidden.clear()
+	for identifier in _cover_groups:
+		for ancestor in _cover_groups[identifier]:
+			if _active.has(ancestor):
+				_hidden[identifier] = true
+				break
+	var wanted := _hidden.duplicate()
+	for identifier in _active:
+		wanted[identifier] = true
+	for identifier in _suppressed.keys():
+		if not wanted.has(identifier):
+			_restore(identifier)
+	for object in _objects:
+		var identifier: int = object.get_instance_id()
+		if not wanted.has(identifier):
+			continue
+		if not _suppressed.has(identifier):
+			var items: Array[Dictionary] = []
+			_suppress_canvas(object, items)
+			_suppressed[identifier] = {"object":object, "items":items, "pickable":object.input_pickable}
+			for item in items:
+				if item.has("layer"):
 					item.node.visibility_layer = 0
-					if object is LineEdge and item.node != object:
-						item.node.z_index = 0
-			object.input_pickable = not _hidden.has(key) and bool(_suppressed[key].pickable)
-
-	for key in _summaries.keys():
-		if not _active.has(key):
-			_summaries[key].queue_free()
-			_summaries.erase(key)
-	for key in _active:
-		var group: TextNode = _active[key]
-		var panel := _summaries.get(key) as Panel
+		object.input_pickable = not _hidden.has(identifier) and bool(_suppressed[identifier].pickable)
+	_preview_nodes.clear()
+	_preview_roots.clear()
+	for identifier in _active:
+		if not _hidden.has(identifier):
+			_preview_roots[identifier] = true
+			_preview_nodes[identifier] = _active[identifier]
+			for child in _preview_children.get(identifier, []):
+				if _entities[child] is TextNode:
+					_preview_nodes[child] = _entities[child]
+	for identifier in _summaries.keys():
+		if not _preview_nodes.has(identifier):
+			_summaries[identifier].hide()
+			_panel_pool[identifier] = _summaries[identifier]
+			_summaries.erase(identifier)
+	for identifier in _preview_nodes:
+		var panel := _summaries.get(identifier) as Panel
+		if panel == null and _panel_pool.has(identifier):
+			panel = _panel_pool[identifier]
+			_panel_pool.erase(identifier)
+			_summaries[identifier] = panel
 		if panel == null:
 			panel = _template.duplicate() as Panel
-			panel.name = "Summary_" + group.id
+			panel.name = "Summary_" + _preview_nodes[identifier].id
 			add_child(panel)
-			panel.gui_input.connect(_on_summary_input.bind(group))
-			_summaries[key] = panel
-
-		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE if _hidden.has(key) else Control.MOUSE_FILTER_STOP
+			panel.gui_input.connect(_on_summary_input.bind(_preview_nodes[identifier]))
+			_summaries[identifier] = panel
+		panel.mouse_filter = Control.MOUSE_FILTER_STOP if _preview_roots.has(identifier) else Control.MOUSE_FILTER_IGNORE
 		panel.get_node("Title").mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_update_summary(group, panel)
-
-	# All covers share the same foreground layer. Draw descendants first,
-	# then overlay their ancestors, independent of creation or restore order.
-	var summary_keys := _active.keys()
-	summary_keys.sort_custom(func(a: int, b: int) -> bool: return int(levels.get(a, 0)) < int(levels.get(b, 0)))
-	var first_index := get_child_count() - summary_keys.size()
-	for index in summary_keys.size():
-		var panel: Panel = _summaries[summary_keys[index]]
-		if panel.get_index() != first_index + index:
-			move_child(panel, first_index + index)
+	_rebuild_preview_links()
+	_link_render_key.clear()
 
 
-func _group_levels(objects: Array) -> Dictionary:
-	var levels := {}
-	for object in objects:
-		if not object is TextNode or not object._container_active:
+func _representative(identifier: int) -> int:
+	var path := [identifier]
+	var current := identifier
+	while _preview_parents.has(current):
+		current = _preview_parents[current]
+		path.append(current)
+	for index in range(path.size() - 1, -1, -1):
+		if _preview_roots.has(path[index]):
+			return path[index - 1] if index > 0 else path[index]
+	return identifier
+
+
+func _rebuild_preview_links() -> void:
+	if _links_layer == null:
+		_links_layer = Node2D.new()
+		_links_layer.name = "PreviewLinks"
+		_links_layer.z_index = 67
+		add_child(_links_layer)
+	var wanted := {}
+	for object in _objects:
+		if not object is LineEdge or not _hidden.has(object.get_instance_id()) or not is_instance_valid(object.source) or not is_instance_valid(object.target):
 			continue
-		var current: Entity = object
+		var from := _representative(object.source.get_instance_id())
+		var to := _representative(object.target.get_instance_id())
+		if from == to or not _preview_nodes.has(from) or not _preview_nodes.has(to):
+			continue
+		var identifier := str([from, to, object.show_arrow, object.display_stroke_color()])
+		if not wanted.has(identifier):
+			wanted[identifier] = {"edge":object, "source":from, "target":to}
+	for identifier in _preview_links.keys():
+		if not wanted.has(identifier):
+			var node: Node = _preview_links[identifier].node
+			_links_layer.remove_child(node)
+			node.queue_free()
+			_preview_links.erase(identifier)
+	for identifier in wanted:
+		if not _preview_links.has(identifier):
+			var node := Node2D.new()
+			var line := Line2D.new()
+			line.name = "Line"
+			line.antialiased = true
+			line.texture = preload("res://assets/line_antialiasing.res")
+			line.texture_mode = Line2D.LINE_TEXTURE_TILE
+			line.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+			line.joint_mode = Line2D.LINE_JOINT_ROUND
+			node.add_child(line)
+			var head := Polygon2D.new()
+			head.name = "Head"
+			head.antialiased = true
+			node.add_child(head)
+			_links_layer.add_child(node)
+			_preview_links[identifier] = wanted[identifier]
+			_preview_links[identifier].node = node
+		else:
+			_preview_links[identifier].edge = wanted[identifier].edge
+
+
+func _preview_endpoint_rect(identifier: int) -> Rect2:
+	var object: TextNode = _preview_nodes[identifier]
+	if _preview_roots.has(identifier) and object._container_active:
+		return object.label.get_global_transform() * Rect2(Vector2.ZERO, object.label.size)
+	return _group_rects[identifier] if not _preview_roots.has(identifier) else object.aabb
+
+
+func _update_preview_links() -> void:
+	var scale := maxf(get_global_transform_with_canvas().get_scale().x, .01)
+	var bucket := floori(log(scale) / log(2.0) * 16.0)
+	var stage: Stage = get_parent()
+	var key := [_layout_revision, stage.document_revision, bucket, stage.world_view_rect]
+	if key == _link_render_key:
+		return
+	_link_render_key = key
+	var pixel_scale := pow(2.0, bucket / 16.0)
+	for data in _preview_links.values():
+		var node: Node2D = data.node
+		var from := _preview_endpoint_rect(data.source)
+		var to := _preview_endpoint_rect(data.target)
+		var geometry_key := [from, to]
+		# World curves survive camera changes. Only native stroke/head sizes change.
+		if data.get("geometry_key", []) != geometry_key:
+			data.geometry_key = geometry_key
+			var anchors := LineEdge.connection_uvs(from, to)
+			data.points = LineEdge.connection_curve(from, to, anchors, 24, 0.0, true)
+			data.tip = LineEdge.anchor(to, anchors[1])
+			data.direction = -anchors[3] if anchors.size() > 3 else (Vector2(.5,.5) - anchors[1]).normalized()
+			var bounds := Rect2(data.points[0], Vector2.ZERO)
+			for point in data.points:
+				bounds = bounds.expand(point)
+			data.bounds = bounds.grow(16.0)
+			var line: Line2D = node.get_node("Line")
+			line.points = node.get_global_transform().affine_inverse() * data.points
+		node.visible = stage.world_view_rect.intersects(data.bounds, true)
+		if not node.visible:
+			continue
+		var line: Line2D = node.get_node("Line")
+		var width := 3.0 / pixel_scale
+		if not is_equal_approx(line.width, width):
+			line.width = width
+		var color: Color = data.edge.display_stroke_color()
+		if line.default_color != color:
+			line.default_color = color
+		var head: Polygon2D = node.get_node("Head")
+		head.visible = data.edge.show_arrow
+		head.color = line.default_color
+		head.global_position = data.tip
+		head.global_rotation = data.direction.angle()
+		var length := 8.0 / pixel_scale
+		if data.get("render_bucket", -2147483648) != bucket:
+			data.render_bucket = bucket
+			head.polygon = PackedVector2Array([Vector2.ZERO, Vector2(-length,-length*.4), Vector2(-length,length*.4)])
+
+
+func _group_levels(_objects: Array) -> Dictionary:
+	var levels := {}
+	for identifier in _preview_children:
+		var current: int = identifier
 		var level := 0
-		var visited := {}
-		while is_instance_valid(current) and not visited.has(current.get_instance_id()):
-			var key := current.get_instance_id()
-			visited[key] = true
-			levels[key] = maxi(int(levels.get(key, 0)), level)
-			current = current.container
+		levels[current] = maxi(int(levels.get(current, 0)), level)
+		while _preview_parents.has(current):
+			current = _preview_parents[current]
 			level += 1
+			levels[current] = maxi(int(levels.get(current, 0)), level)
 	return levels
 
 
 func _block_ancestors(entity: Entity, blocked: Dictionary) -> void:
-	var current := entity
-	var visited: Dictionary = {}
-	while is_instance_valid(current) and not visited.has(current.get_instance_id()):
-		var key := current.get_instance_id()
-		visited[key] = true
-		blocked[key] = true
-		current = current.container
+	var current := entity.get_instance_id()
+	blocked[current] = true
+	while _preview_parents.has(current):
+		current = _preview_parents[current]
+		blocked[current] = true
 
 
 func _active_ancestors(entity: Entity) -> Array:
-	var ancestors: Array = []
-	var visited: Dictionary = {}
-	var current := entity.container
-	while is_instance_valid(current) and not visited.has(current.get_instance_id()):
-		var key := current.get_instance_id()
-		visited[key] = true
-		if _active.has(key):
-			ancestors.append(key)
-		current = current.container
+	var ancestors := []
+	var current := entity.get_instance_id()
+	while _preview_parents.has(current):
+		current = _preview_parents[current]
+		if _active.has(current):
+			ancestors.append(current)
 	return ancestors
 
 
-func _suppress_canvas(node: Node, items: Array[Dictionary]) -> void:
-	if node is CanvasItem:
-		var state := {"node": node, "layer": node.visibility_layer, "z_index": node.z_index}
-		if node is Control:
-			state["mouse_filter"] = node.mouse_filter
-			node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+func _suppress_canvas(node: Node, items: Array[Dictionary], root := true) -> void:
+	# Native culling checks every CanvasItem ancestor. One root layer hides the
+	# entire subtree; only top-level items need their own layer changed.
+	var state := {"node":node}
+	if node is CanvasItem and (root or node.top_level):
+		state.layer = node.visibility_layer
+	if node is Control:
+		state.mouse_filter = node.mouse_filter
+		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if state.size() > 1:
 		items.append(state)
 	for child in node.get_children():
-		_suppress_canvas(child, items)
+		_suppress_canvas(child, items, not node is CanvasItem)
 
 
 func _restore(key: int) -> void:
@@ -280,8 +472,8 @@ func _restore(key: int) -> void:
 	for item in state.items:
 		if not is_instance_valid(item.node):
 			continue
-		item.node.visibility_layer = item.layer
-		item.node.z_index = item.z_index
+		if item.has("layer"):
+			item.node.visibility_layer = item.layer
 		if item.has("mouse_filter"):
 			item.node.mouse_filter = item.mouse_filter
 	if is_instance_valid(state.object):
@@ -298,70 +490,67 @@ func _exit_tree() -> void:
 
 
 func _update_summary(group: TextNode, panel: Panel) -> void:
-	var revision: int = get_parent().get_meta("loading_overview_revision", get_parent().layout_revision)
-	var data: Dictionary = panel.get_meta("summary_data", {})
-	if data.get("revision", -1) == revision and not get_parent().world_view_rect.intersects(data.rect, true):
+	var stage: Stage = get_parent()
+	var revision: int = stage.get_meta("loading_overview_revision", stage.layout_revision)
+	var identifier := group.get_instance_id()
+	var rect: Rect2 = _group_rects.get(identifier, group.aabb)
+	if not stage.world_view_rect.intersects(rect, true):
+		panel.hide()
 		return
-	if data.get("revision", -1) != revision:
-		var light: bool = group._display_theme_is_light()
-		data = {"revision": revision, "rect": group.aabb, "text": group.text,
-			"font": group.label.get_theme_font("font"),
-			"foreground": group.label.get_theme_color("font_color"),
-			"background": group.display_background_color(light), "border": group.display_border_color()}
-		panel.set_meta("summary_data", data)
-	var rect: Rect2 = data.rect
-	var actual_scale := maxf(get_global_transform_with_canvas().get_scale().x, 0.01)
-	var offset := float(posmod(group.id.hash(), 16)) / 16.0
-	var pixel_scale := pow(2.0, (floorf(log(actual_scale) / log(2.0) * 16.0 + offset) - offset) / 16.0)
-	var title := panel.get_node("Title") as Label
-	title.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	title.visible = maxf(rect.size.x, rect.size.y) * actual_scale >= 20.0
-	var summary_key := [revision, pixel_scale]
-	if panel.get_meta("summary_key", []) == summary_key:
-		return
-	panel.set_meta("summary_key", summary_key)
-	# As in master, skip title drawing below 20 screen pixels.
 	panel.show()
-	var panel_position := to_local(rect.position)
-	if panel.position != panel_position:
-		panel.position = panel_position
-	# Keep style geometry in viewport pixels so zoom cannot flatten the corners.
-	var panel_scale := Vector2.ONE / pixel_scale
-	var panel_size := rect.size * pixel_scale
-	if panel.scale != panel_scale:
-		panel.scale = panel_scale
-	if panel.size != panel_size:
-		panel.size = panel_size
-	panel.z_index = 66 # Translucent cover above detail; external captions remain above it.
-	title.text = data.text
+	var scale := maxf(get_global_transform_with_canvas().get_scale().x, .01)
+	var offset := float(posmod(group.id.hash(), 16)) / 16.0
+	var pixel_scale := pow(2.0, (floorf(log(scale) / log(2.0) * 16.0 + offset) - offset) / 16.0)
+	var root := _preview_roots.has(identifier) or (stage.is_loading and _active.has(identifier))
+	var background := group.display_background_color(group._display_theme_is_light())
+	background.a = .5
+	var border_color := group.display_border_color()
+	var content_key := [group.text, group.label.get_theme_color("font_color")]
+	var key := [revision, pixel_scale, root, content_key, background, border_color]
+	if panel.get_meta("summary_key", []) == key:
+		return
+	panel.set_meta("summary_key", key)
+	var position := to_local(rect.position)
+	if panel.position != position:
+		panel.position = position
+	var scaling := Vector2.ONE / pixel_scale
+	if panel.scale != scaling:
+		panel.scale = scaling
+	var size := rect.size * pixel_scale
+	if panel.size != size:
+		panel.size = size
+	panel.z_index = 66 if root else 68
+	var title: Label = panel.get_node("Title")
+	title.z_index = 3 if root else 0
+	title.visible = maxf(rect.size.x, rect.size.y) * scale >= 20.0
 	if _summary_font == null:
-		_summary_font = preload("res://assets/fonts/PingFang-SC-Regular.ttf").duplicate() as FontFile
-		_summary_font.oversampling = 1.0
-		_summary_font.generate_mipmaps = true
-	var title_font: Font = _summary_font
-	var title_color: Color = data.foreground
-	if title.get_theme_font("font") != title_font:
-		title.add_theme_font_override("font", title_font)
-	if title.get_theme_color("font_color") != title_color:
-		title.add_theme_color_override("font_color", title_color)
-	var font := title.get_theme_font("font")
-	var measure_key := [data.text, font]
-	if panel.get_meta("measure_key", []) != measure_key:
-		var measured := font.get_multiline_string_size(data.text, HORIZONTAL_ALIGNMENT_LEFT, -1, TITLE_FONT_SIZE).max(Vector2.ONE)
-		title.size = measured
-		panel.set_meta("measure_key", measure_key)
-	var measured := title.size
-	title.scale = Vector2.ONE * minf(panel.size.x * 0.85 / measured.x, panel.size.y * 0.75 / measured.y)
-	title.position = (panel.size - title.size * title.scale) * 0.5
-	var background: Color = data.background
-	background.a = 0.5
-	var radius := Corners.fitted_radius(panel.size, minf(12.0, minf(panel.size.x, panel.size.y) * 0.25), 2.0)
-	var style_key := [background, data.border, radius]
+		_summary_font = TextNode._make_canvas_font(preload("res://assets/fonts/PingFang-SC-Regular.ttf")) as FontFile
+	if panel.get_meta("summary_content", []) != content_key:
+		var text := group.text.get_slice("\n", 0).strip_edges()
+		if text.length() > 48:
+			text = text.left(47) + "…"
+		title.text = text
+		title.add_theme_font_override("font", _summary_font)
+		title.add_theme_color_override("font_color", group.label.get_theme_color("font_color"))
+		title.size = _summary_font.get_multiline_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, TITLE_FONT_SIZE).max(Vector2.ONE)
+		panel.set_meta("summary_content", content_key)
+	var desired := 28.0 if root else 16.0
+	var factor := minf(desired / TITLE_FONT_SIZE, panel.size.x * .90 / maxf(title.size.x,1.0))
+	factor = minf(factor, panel.size.y * .75 / maxf(title.size.y,1.0))
+	title.scale = Vector2.ONE * factor
+	title.position.x = (panel.size.x - title.size.x * factor) * .5
+	title.position.y = 5.0 if root and _preview_children.has(identifier) else (panel.size.y - title.size.y * factor) * .5
+	if root and not group._container_active:
+		var anchor: Vector2 = group.aabb.get_center() - rect.position
+		title.position = anchor * pixel_scale - title.size * factor * .5
+	var radius := Corners.fitted_radius(panel.size, minf(12.0, minf(panel.size.x, panel.size.y) * .25), 2.0)
+	var framed := group._container_active or not root
+	var style_key := [background, border_color, radius, framed]
 	if panel.get_meta("style_key", []) != style_key:
 		var style := StyleBoxFlat.new()
-		style.bg_color = background
-		style.border_color = data.border
-		style.set_border_width_all(2)
+		style.bg_color = background if framed else Color.TRANSPARENT
+		style.border_color = border_color
+		style.set_border_width_all(2 if framed else 0)
 		panel.add_theme_stylebox_override("panel", Corners.style(style, radius, true, true))
 		panel.set_meta("style_key", style_key)
 
@@ -377,23 +566,21 @@ func _on_summary_input(event: InputEvent, group: TextNode) -> void:
 
 func _cache_cover_groups() -> void:
 	_cover_groups.clear()
-	for object in _objects:
-		if not object is Entity:
-			continue
-		var ancestors: Array[int] = []
-		var current: Entity = object.container
-		while is_instance_valid(current) and not ancestors.has(current.get_instance_id()):
-			ancestors.append(current.get_instance_id())
-			current = current.container
-		_cover_groups[object.get_instance_id()] = ancestors
+	for identifier in _entities:
+		var ancestors := []
+		var current: int = identifier
+		while _preview_parents.has(current):
+			current = _preview_parents[current]
+			ancestors.append(current)
+		_cover_groups[identifier] = ancestors
 	for object in _objects:
 		if not object is LineEdge or not is_instance_valid(object.source) or not is_instance_valid(object.target):
 			continue
-		var from_groups: Array = _cover_groups.get(object.source.get_instance_id(), []).duplicate()
-		var to_groups: Array = _cover_groups.get(object.target.get_instance_id(), []).duplicate()
-		from_groups.append(object.source.get_instance_id())
-		to_groups.append(object.target.get_instance_id())
-		_cover_groups[object.get_instance_id()] = from_groups.filter(func(key): return to_groups.has(key))
+		var from: Array = _cover_groups.get(object.source.get_instance_id(), []).duplicate()
+		var to: Array = _cover_groups.get(object.target.get_instance_id(), []).duplicate()
+		from.append(object.source.get_instance_id())
+		to.append(object.target.get_instance_id())
+		_cover_groups[object.get_instance_id()] = from.filter(func(key): return to.has(key))
 
 
 ## Full group bounds/topology are installed first; suppress arriving detail before draw.
@@ -424,7 +611,6 @@ func register_loading_object(object: StageObject) -> void:
 	_suppress_canvas(object, items)
 	_suppressed[key] = {"object": object, "items": items, "pickable": object.input_pickable}
 	for item in items:
-		item.node.visibility_layer = 0
-		if object is LineEdge and item.node != object:
-			item.node.z_index = 0
+		if item.has("layer"):
+			item.node.visibility_layer = 0
 	object.input_pickable = false

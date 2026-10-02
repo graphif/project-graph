@@ -83,13 +83,13 @@ func _run() -> void:
 	check(stage.is_overview_hidden(group_relation), "Group-to-member edge is internal to the overview")
 	check(not stage.is_overview_hidden(cross) and not stage.is_overview_hidden(outgoing), "Cross-group and outgoing edges remain")
 	check(a.is_visible_in_tree() and inner.is_visible_in_tree(), "Overview leaves physics visibility unchanged")
-	check(a.visibility_layer == 0 and a.label.visibility_layer == 0, "Overview hides ordinary member rendering instead of exposing every node")
+	check(a.visibility_layer == 0 and a.label.visibility_layer == 1, "Overview hides ordinary member rendering instead of exposing every node")
 	var cover: Panel = overview._summaries[group.get_instance_id()]
 	var cover_style = preload("res://src/main/continuous_corners.gd").source(cover.get_theme_stylebox("panel"))
 	check(is_equal_approx(cover_style.bg_color.a, 0.5), "Overview cover reveals internal detail at half opacity")
 	check(not a.input_pickable and a.label.mouse_filter == Control.MOUSE_FILTER_IGNORE, "Hidden members cannot steal native input")
-	check(inner.get_node("Caption/Label").visibility_layer == 0, "Overview hides internal captions with their edges")
-	check(inner.get_node("Caption").z_index == 0, "Internal caption stays below the translucent title")
+	check(inner.visibility_layer == 0 and inner.get_node("Caption/Label").visibility_layer == 1, "Overview hides internal captions with their edges")
+	check(inner.get_node("Caption").z_index == 26, "Ancestor culling preserves caption foreground order")
 	check(cross.get_node("Caption/Label").visibility_layer != 0, "Cross-group caption remains visible")
 	check(stage.get_node("LineEdgeCreator")._get_entity_at(a.aabb.get_center()) == group, "Connection picking resolves to the group")
 	check(stage.get_node("EntityLayerMover")._target_at(a.aabb.get_center(), [] as Array[Entity]) == group, "Layer picking resolves to the group")
@@ -144,7 +144,7 @@ func _run() -> void:
 	check(stage.is_overview_hidden(cross) and not stage.is_overview_hidden(outgoing), "Common active ancestor hides only internal edges")
 	check(overview._summaries.size() == 3, "Outer overview retains both child-group previews")
 	check_nested_previews(overview, [group, other, outer])
-	check(other.label.visibility_layer == 0 and c.label.visibility_layer == 0, "Child-group summaries replace small headers and ordinary nodes")
+	check(other.visibility_layer == 0 and c.visibility_layer == 0, "Child-group summaries replace small headers and ordinary nodes")
 	await click_world(a.aabb.get_center())
 	check(stage.selected_ids == PackedStringArray([outer.id]), "Covered child preview cannot steal input from the outer group")
 	stage.select_ids(PackedStringArray())
@@ -153,15 +153,16 @@ func _run() -> void:
 	await zoom_to(0.68)
 	check(overview.is_active(outermost), "Third-level title appears while its frame still occupies a substantial viewport area")
 	check(stage.is_overview_hidden(outer), "Outermost group takes over nested interaction")
-	check(overview._summaries.size() == 4, "Third-level overview retains every descendant group preview")
-	check_nested_previews(overview, [group, other, outer, outermost])
+	check(overview._summaries.size() == 2, "Third-level overview keeps only its immediate child preview")
+	check_nested_previews(overview, [outer, outermost])
+	check(not overview._summaries.has(group.get_instance_id()) and not overview._summaries.has(other.get_instance_id()), "Deeper group previews are omitted")
 	a.enter_edit_mode()
 	await settle()
 	check(not overview.is_active(group) and not overview.is_active(outer) and not overview.is_active(outermost), "Editing inside nested previews reveals every ancestor")
 	check(a.label.visibility_layer == 1 and a.text_edit.has_focus(), "Nested editing restores the original rendering and focus")
 	a.exit_edit_mode(false)
 	await settle()
-	check(overview._summaries.size() == 4, "Nested previews return after edit cancellation")
+	check(overview._summaries.size() == 2, "One-layer previews return after edit cancellation")
 	if DisplayServer.get_name() != "headless":
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("/tmp/pg-group-overview-nested.png")
@@ -217,11 +218,15 @@ func check_document_preview(path: String) -> void:
 	await zoom_to(0.68)
 	var overview = stage.group_overview
 	check(overview.is_active(root_group), "Document outer group enters overview")
-	check(overview._summaries.size() == groups.size(), "Document retains all nested group previews")
-	check_nested_previews(overview, groups)
+	var previews: Array = []
+	for identifier in overview._preview_nodes:
+		previews.append(overview._preview_nodes[identifier])
+	check(overview._summaries.size() == previews.size(), "Document shows only immediate-layer previews")
+	for object in previews:
+		check(overview._summaries.has(object.get_instance_id()), "Every visible-layer title has a preview")
 	for object in stage.stage_objects():
 		if object is TextNode and not object._container_active:
-			check(object.label.visibility_layer == 0, "Document overview omits ordinary nodes: " + object.text)
+			check(object.visibility_layer == 0, "Document overview omits ordinary body rendering: " + object.text)
 		elif object is LineEdge:
 			check(object.visibility_layer == 0, "Document overview omits internal edges")
 	check(JSON.stringify(before) == JSON.stringify(StageObjectRegistry.capture(stage)), "Document zoom preserves saved content")
@@ -246,9 +251,9 @@ func check_nested_previews(overview: Node2D, groups: Array) -> void:
 		check(panel.is_visible_in_tree() and panel.get_node("Title").visible, "Nested preview title stays rendered: " + group.text)
 		if is_instance_valid(group.container) and overview._summaries.has(group.container.get_instance_id()):
 			var parent_panel: Panel = overview._summaries[group.container.get_instance_id()]
-			check(panel.get_index() < parent_panel.get_index(), "Outer cover is drawn after its child preview")
+			check(panel.z_index > parent_panel.z_index, "Immediate child preview draws above the parent cover")
 			check(panel.mouse_filter == Control.MOUSE_FILTER_IGNORE, "Covered preview is only a visual, not an input target")
-			check(group.label.visibility_layer == 0, "Covered group does not revert to its tiny original title")
+			check(group.visibility_layer == 0, "Covered group does not revert to its tiny original title")
 
 
 func click_world(world_point: Vector2, double_click := false) -> void:
@@ -259,6 +264,7 @@ func click_world(world_point: Vector2, double_click := false) -> void:
 	var motion := InputEventMouseMotion.new()
 	motion.position = screen_point
 	motion.global_position = screen_point
+	Input.warp_mouse(screen_point)
 	Input.parse_input_event(motion)
 	Input.flush_buffered_events()
 	var click := InputEventMouseButton.new()
