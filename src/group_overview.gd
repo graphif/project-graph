@@ -314,6 +314,7 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 	var offset := float(posmod(group.id.hash(), 16)) / 16.0
 	var pixel_scale := pow(2.0, (floorf(log(actual_scale) / log(2.0) * 16.0 + offset) - offset) / 16.0)
 	var title := panel.get_node("Title") as Label
+	title.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	title.visible = maxf(rect.size.x, rect.size.y) * actual_scale >= 20.0
 	var summary_key := [revision, pixel_scale]
 	if panel.get_meta("summary_key", []) == summary_key:
@@ -336,6 +337,7 @@ func _update_summary(group: TextNode, panel: Panel) -> void:
 	if _summary_font == null:
 		_summary_font = preload("res://assets/fonts/PingFang-SC-Regular.ttf").duplicate() as FontFile
 		_summary_font.oversampling = 1.0
+		_summary_font.generate_mipmaps = true
 	var title_font: Font = _summary_font
 	var title_color: Color = data.foreground
 	if title.get_theme_font("font") != title_font:

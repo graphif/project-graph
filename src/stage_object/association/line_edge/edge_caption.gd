@@ -21,6 +21,8 @@ func _ready() -> void:
 	if edge.get_parent() is Stage:
 		edge.get_parent().caption_peers_changed.connect(_queue_refresh)
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	editor.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	label.gui_input.connect(_label_input)
 	editor.gui_input.connect(_editor_input)
 	editor.focus_exited.connect(finish_edit)

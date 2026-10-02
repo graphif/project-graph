@@ -98,7 +98,7 @@ func _ready() -> void:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_normal_label_position = label.position
 	_normal_edit_position = text_edit.position
-	# 共享字形缓存；原生视口 oversampling 按当前屏幕倍率采样。
+	# 共享固定字形缓存；控件过滤必须实际使用缩小采样的 mipmap。
 	if _canvas_font == null:
 		_canvas_font = _make_canvas_font(preload("res://assets/fonts/PingFang-SC-Regular.ttf"))
 	var display_font: Font = get_meta("prepared_canvas_font", _canvas_font)
@@ -106,8 +106,8 @@ func _ready() -> void:
 	label.add_theme_font_override("font", display_font)
 	text_edit.add_theme_font_override("font", display_font)
 	text_edit.add_theme_constant_override("line_spacing", label.get_theme_constant("line_spacing"))
-	label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	text_edit.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	text_edit.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	_apply_appearance()
 	text_edit.set_context_menu_enabled(false)
 	text_edit.focus_exited.connect(_on_edit_focus_exited)
