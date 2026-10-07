@@ -16,6 +16,56 @@ import React, { CSSProperties, Fragment, useCallback, useEffect, useLayoutEffect
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+function RangeNumberInput({
+  value,
+  min,
+  max,
+  settingKey,
+  onChange,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  settingKey: keyof Settings;
+  onChange: (value: number) => void;
+}) {
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
+
+  const commit = (raw: string) => {
+    const parsed = parseFloat(raw);
+    if (Number.isNaN(parsed)) {
+      setDraft(String(value));
+      return;
+    }
+    if (parsed < min) {
+      toast.warning(`最小值为 ${min}，已自动修正`, { id: `field-clamp-${settingKey}`, duration: 2000 });
+    } else if (parsed > max) {
+      toast.warning(`最大值为 ${max}，已自动修正`, { id: `field-clamp-${settingKey}`, duration: 2000 });
+    }
+    const next = Math.min(max, Math.max(min, parsed));
+    onChange(next);
+    setDraft(String(next));
+  };
+
+  return (
+    <Input
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={(e) => commit(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+      }}
+      type="number"
+      min={min}
+      max={max}
+      className="w-24"
+    />
+  );
+}
+
 export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof Settings; extra?: React.ReactNode }) {
   const [value, setValue] = React.useState<any>(Settings[settingKey]);
   const { t } = useTranslation("settings");
@@ -118,25 +168,12 @@ export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof 
             step={bag.format === "safeint" ? 1 : 0.01}
             className="w-48"
           />
-          <Input
+          <RangeNumberInput
             value={value}
-            onChange={(e) => {
-              const parsed = parseFloat(e.target.value);
-              if (Number.isNaN(parsed)) return;
-              const min = bag.minimum;
-              const max = bag.maximum;
-              if (parsed < min) {
-                toast.warning(`最小值为 ${min}，已自动修正`, { id: `field-clamp-${settingKey}`, duration: 2000 });
-              } else if (parsed > max) {
-                toast.warning(`最大值为 ${max}，已自动修正`, { id: `field-clamp-${settingKey}`, duration: 2000 });
-              }
-              setValue(Math.min(max, Math.max(min, parsed)));
-            }}
-            type="number"
             min={bag.minimum}
             max={bag.maximum}
-            step={bag.format === "safeint" ? 1 : 0.01}
-            className="w-24"
+            settingKey={settingKey}
+            onChange={setValue}
           />
         </>
       ) : innerTypeName === "number" ? (
