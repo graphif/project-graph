@@ -17,6 +17,7 @@ import { EdgeRenderer } from "@/core/render/canvas2d/entityRenderer/edge/EdgeRen
 import { EntityDetailsButtonRenderer } from "@/core/render/canvas2d/entityRenderer/EntityDetailsButtonRenderer";
 import { EntityRenderer } from "@/core/render/canvas2d/entityRenderer/EntityRenderer";
 import { LatexNodeRenderer } from "@/core/render/canvas2d/entityRenderer/latexNode/LatexNodeRenderer";
+import { MediaNodeRenderer } from "@/core/render/canvas2d/entityRenderer/mediaNode/MediaNodeRenderer";
 import { MultiTargetUndirectedEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/multiTargetUndirectedEdge/MultiTargetUndirectedEdgeRenderer";
 import { ReferenceBlockRenderer } from "@/core/render/canvas2d/entityRenderer/ReferenceBlockRenderer";
 import { SectionRenderer } from "@/core/render/canvas2d/entityRenderer/section/SectionRenderer";
@@ -159,6 +160,7 @@ export function loadAllServicesBeforeInit(project: Project): void {
   project.loadService(SectionRenderer);
   project.loadService(SvgNodeRenderer);
   project.loadService(LatexNodeRenderer);
+  project.loadService(MediaNodeRenderer);
   project.loadService(TextNodeRenderer);
   project.loadService(UrlNodeRenderer);
   project.loadService(ReferenceBlockRenderer);

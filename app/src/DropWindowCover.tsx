@@ -1,9 +1,23 @@
 import { cn } from "./utils/cn";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { listen } from "@tauri-apps/api/event";
 import { useEffect, useRef, useState } from "react";
 import { isMac } from "./utils/platform";
 import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
+import { isMediaFilePath } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import type { Project } from "./core/Project";
+import { TextNode } from "./core/stage/stageObject/entity/TextNode";
+import { CollisionBox } from "./core/stage/stageObject/collisionBox/collisionBox";
+import { Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
+
+interface PgDragDropPayload {
+  kind: "enter" | "over" | "leave" | "drop";
+  paths: string[];
+  text: string | null;
+  x: number;
+  y: number;
+}
 
 /**
  * 拖拽鼠标进入舞台时，覆盖一个提示区域
@@ -28,23 +42,29 @@ export const DropWindowCover = ({ project }: { project: Project }) => {
       rafRef.current = null;
     };
 
-    const unlistenPromise = getCurrentWindow().onDragDropEvent(async (event) => {
+    const unlistenPromise = listen<PgDragDropPayload>("pg-drag-drop", async (event) => {
+      const payload = event.payload;
       const size = await getCurrentWindow().outerSize();
-      const logicalHeight = isMac ? size.height / (await getCurrentWindow().scaleFactor()) : size.height;
+      const scaleFactor = await getCurrentWindow().scaleFactor();
+      const logicalHeight = isMac ? size.height / scaleFactor : size.height;
       const getDropLocation = (y: number) =>
         y <= logicalHeight / 3 ? "top" : y <= (logicalHeight / 3) * 2 ? "middle" : "bottom";
 
-      if (event.payload.type === "over") {
+      if (payload.kind === "enter") {
         cancelAnimation();
         setIsFadingOut(false);
-        setDropMouseLocation(getDropLocation(event.payload.position.y));
-      } else if (event.payload.type === "leave") {
+        setDropMouseLocation(getDropLocation(payload.y));
+      } else if (payload.kind === "over") {
+        cancelAnimation();
+        setIsFadingOut(false);
+        setDropMouseLocation(getDropLocation(payload.y));
+      } else if (payload.kind === "leave") {
         cancelAnimation();
         setIsFadingOut(false);
         setDropMouseLocation("notInWindowZone");
-      } else if (event.payload.type === "drop") {
+      } else if (payload.kind === "drop") {
         cancelAnimation();
-        const dropLocation = getDropLocation(event.payload.position.y);
+        const dropLocation = getDropLocation(payload.y);
         setIsFadingOut(false);
         setDropMouseLocation(dropLocation);
         rafRef.current = requestAnimationFrame(() => {
@@ -55,12 +75,33 @@ export const DropWindowCover = ({ project }: { project: Project }) => {
           setIsFadingOut(false);
         }, fadeOutMs);
 
-        if (dropLocation === "top") {
-          DragFileIntoStageEngine.handleDrop(project, event.payload.paths);
-        } else if (dropLocation === "middle") {
-          DragFileIntoStageEngine.handleDropFileRelativePath(project, event.payload.paths);
-        } else {
-          DragFileIntoStageEngine.handleDropFileAbsolutePath(project, event.payload.paths);
+        if (payload.text && payload.text.trim().length > 0) {
+          const worldPos = project.renderer.transformView2World(
+            new Vector(payload.x / scaleFactor, payload.y / scaleFactor),
+          );
+          const textNode = new TextNode(project, {
+            text: payload.text.trim(),
+            collisionBox: new CollisionBox([new Rectangle(worldPos, new Vector(300, 150))]),
+            sizeAdjust: "manual",
+          });
+          project.stageManager.add(textNode);
+        } else if (payload.paths.length > 0) {
+          if (dropLocation === "top") {
+            DragFileIntoStageEngine.handleDrop(project, payload.paths);
+          } else {
+            const mediaPaths = payload.paths.filter(isMediaFilePath);
+            const otherPaths = payload.paths.filter((p) => !isMediaFilePath(p));
+            if (mediaPaths.length > 0) {
+              DragFileIntoStageEngine.handleDrop(project, mediaPaths);
+            }
+            if (otherPaths.length > 0) {
+              if (dropLocation === "middle") {
+                DragFileIntoStageEngine.handleDropFileRelativePath(project, otherPaths);
+              } else {
+                DragFileIntoStageEngine.handleDropFileAbsolutePath(project, otherPaths);
+              }
+            }
+          }
         }
       }
     });
@@ -86,7 +127,7 @@ export const DropWindowCover = ({ project }: { project: Project }) => {
       >
         <p>拖拽到这里：追加到舞台</p>
         <span className="text-sm">
-          如果是图片文件（png/jpg/jpeg/webp），则追加到舞台，如果是prg工程文件，则打开标签页
+          如果是图片文件（png/jpg/jpeg/webp）或音视频文件，则追加到舞台，如果是prg工程文件，则打开标签页
         </span>
       </div>
       <div

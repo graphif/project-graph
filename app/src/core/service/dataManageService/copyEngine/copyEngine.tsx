@@ -8,6 +8,7 @@ import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Serialized } from "@/types/node";
@@ -181,6 +182,13 @@ export class CopyEngine {
                 ]);
               };
             }
+          }
+        } else if (stageObject instanceof MediaNode) {
+          const oldAttachmentId = stageObject.attachmentId;
+          if (oldAttachmentId && attachmentIdMap.has(oldAttachmentId)) {
+            const newAttachmentId = attachmentIdMap.get(oldAttachmentId)!;
+            stageObject.attachmentId = newAttachmentId;
+            stageObject.reload();
           }
         }
 

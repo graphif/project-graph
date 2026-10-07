@@ -6,6 +6,7 @@ import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 
@@ -72,7 +73,7 @@ export namespace CopyEngineUtils {
 
     // 从所有复制的舞台对象中收集 attachmentId
     for (const stageObject of stageObjects) {
-      if (stageObject instanceof ImageNode || stageObject instanceof SvgNode) {
+      if (stageObject instanceof ImageNode || stageObject instanceof SvgNode || stageObject instanceof MediaNode) {
         const attachmentId = stageObject.attachmentId;
         if (attachmentId && !attachmentIds.has(attachmentId)) {
           attachmentIds.add(attachmentId);

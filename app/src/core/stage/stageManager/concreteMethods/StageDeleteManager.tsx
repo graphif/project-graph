@@ -8,6 +8,7 @@ import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/
 import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
+import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
 import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
@@ -37,6 +38,7 @@ export class DeleteManager {
     this.registerHandler(Section, this.deleteSection.bind(this));
     this.registerHandler(ConnectPoint, this.deleteConnectPoint.bind(this));
     this.registerHandler(ImageNode, this.deleteImageNode.bind(this));
+    this.registerHandler(MediaNode, this.deleteMediaNode.bind(this));
     this.registerHandler(UrlNode, this.deleteUrlNode.bind(this));
     this.registerHandler(PenStroke, this.deletePenStroke.bind(this));
     this.registerHandler(SvgNode, this.deleteSvgNode.bind(this));
@@ -129,6 +131,16 @@ export class DeleteManager {
       );
       // 删除所有相关的边
       this.deleteEntityAfterClearAssociation(entity);
+    }
+  }
+  private deleteMediaNode(entity: MediaNode) {
+    if (this.project.stageManager.getEntities().includes(entity)) {
+      this.project.stageManager.delete(entity);
+      this.project.effects.addEffect(
+        new ExplodeDashEffect(new ProgressNumber(0, 30), entity.collisionBox.getRectangle(), Color.White),
+      );
+      this.deleteEntityAfterClearAssociation(entity);
+      void entity.dispose();
     }
   }
   private deleteUrlNode(entity: UrlNode) {
