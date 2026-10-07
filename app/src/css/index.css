@@ -154,3 +154,14 @@
 .debug {
   outline: solid 1px red !important;
 }
+
+/* UI 缩放时，docked 区域顶部需要按顶栏缩放后的高度让位，否则放大后顶栏会盖住内容 */
+.pg-docked-offset {
+  top: calc(1rem * var(--pg-ui-scale, 1));
+}
+
+@media (min-width: 640px) {
+  .pg-docked-offset {
+    top: calc(2rem * var(--pg-ui-scale, 1));
+  }
+}
