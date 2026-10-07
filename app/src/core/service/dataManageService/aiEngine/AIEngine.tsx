@@ -11,6 +11,8 @@ import { createBuiltInToolAgentTools } from "@/core/service/dataManageService/ai
 import { AIMCPStore, materializeMCPServers, prepareMCPTools } from "@/core/service/dataManageService/aiEngine/AIMCP";
 import { AIObjectReferenceRegistry } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
 import { AIProjectReferenceStore } from "@/core/service/dataManageService/aiEngine/AIProjectReferenceStore";
+import { parseAIRequestHeaders } from "@/core/service/dataManageService/aiEngine/AIRequestHeaders";
+import { resolveHttpRequestBody } from "@/core/service/dataManageService/aiEngine/AIHttpBody";
 import {
   AIRequestTraceBuffer,
   type AIRequestTraceCallKind,
@@ -115,11 +117,17 @@ export class AIEngine {
             init?.body,
           );
           try {
+            const requestBody = await resolveHttpRequestBody(init?.body);
+            const finalHeaders: Record<string, string> = {
+              ...(init?.headers instanceof Headers
+                ? Object.fromEntries((init.headers as Headers).entries())
+                : init?.headers),
+              ...parseAIRequestHeaders(Settings.aiCustomHeaders),
+            };
             const response = await fetch(url.toString(), {
               ...init,
-              headers: {
-                ...init?.headers,
-              },
+              body: requestBody,
+              headers: finalHeaders,
               mode: "cors",
             });
             this.requestTraceBuffer.recordWireResponse(traceRunId, wireRequestId, response.status);

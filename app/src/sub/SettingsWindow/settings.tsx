@@ -426,7 +426,15 @@ export const categories = {
     experimental: ["compatibilityMode", "isEnableEntityCollision"],
   },
   ai: {
-    api: ["aiApiBaseUrl", "aiApiKey", "aiModel", "aiContextWindow", "aiShowTokenCount", "aiAutoApproveMcpTools"],
+    api: [
+      "aiApiBaseUrl",
+      "aiApiKey",
+      "aiModel",
+      "aiCustomHeaders",
+      "aiContextWindow",
+      "aiShowTokenCount",
+      "aiAutoApproveMcpTools",
+    ],
     ocr: ["enableOCR"],
   },
 };

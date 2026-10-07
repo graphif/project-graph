@@ -1149,6 +1149,11 @@ settings:
       密鑰將會明文存儲在本地
   aiModel:
     title: AI 模型
+  aiCustomHeaders:
+    title: AI 請求頭
+    description: |
+      每行一個請求頭，格式為“名稱: 值”，以 # 開頭的行會被忽略
+      例如 OpenCode 推理 API 需要：x-opencode-org-id: 你的組織ID
   aiContextWindow:
     title: AI 上下文窗口大小
     description: |

@@ -1124,6 +1124,11 @@ settings:
       Kunci akan disimpan sebagai teks biasa secara lokal
   aiModel:
     title: Model AI
+  aiCustomHeaders:
+    title: Header Permintaan AI
+    description: |
+      Satu header per baris, format "Nama: Nilai". Baris yang diawali # diabaikan.
+      Contoh untuk API inferensi OpenCode: x-opencode-org-id: id-organisasi-anda
   aiContextWindow:
     title: Ukuran jendela konteks AI
     description: |

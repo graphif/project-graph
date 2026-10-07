@@ -30,6 +30,7 @@ export function createProjectToolSettingSchemas(defaultFontFamily: string) {
     aiApiBaseUrl: z.string().default("https://generativelanguage.googleapis.com/v1beta/openai/"),
     aiApiKey: z.string().default(""),
     aiModel: z.string().default("gemini-2.5-flash"),
+    aiCustomHeaders: z.string().default(""),
   };
 }
 
