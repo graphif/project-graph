@@ -8,6 +8,7 @@ import {
   ArrowRightFromLine,
   ArrowUpDown,
   Blend,
+  Braces,
   Bug,
   Calculator,
   CaseSensitive,
@@ -270,4 +271,5 @@ export const settingsIcons = {
   maxFpsUnfocused: Timer,
   aiContextWindow: Gauge,
   aiAutoApproveMcpTools: ShieldCheck,
+  aiCustomHeaders: Braces,
 };

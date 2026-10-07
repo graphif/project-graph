@@ -128,6 +128,7 @@ export const settingsSchema = z.object({
   aiApiBaseUrl: projectToolSettingSchemas.aiApiBaseUrl,
   aiApiKey: projectToolSettingSchemas.aiApiKey,
   aiModel: projectToolSettingSchemas.aiModel,
+  aiCustomHeaders: projectToolSettingSchemas.aiCustomHeaders,
   aiContextWindow: z.number().int().nonnegative().default(0),
   aiShowTokenCount: z.boolean().default(false),
   enableOCR: z.boolean().default(true),

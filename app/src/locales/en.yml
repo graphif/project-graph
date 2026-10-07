@@ -1065,6 +1065,11 @@ settings:
       The key will be stored in plain text locally
   aiModel:
     title: AI Model
+  aiCustomHeaders:
+    title: AI Request Headers
+    description: |
+      One header per line, in "Name: Value" format. Lines starting with # are ignored.
+      Example for the OpenCode inference API: x-opencode-org-id: your-org-id
   aiContextWindow:
     title: AI context window size
     description: |

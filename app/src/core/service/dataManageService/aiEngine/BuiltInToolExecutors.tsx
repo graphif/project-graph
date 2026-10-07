@@ -13,6 +13,8 @@ import { Rectangle } from "@graphif/shapes";
 import type { BuiltInToolExecutor } from "./BuiltInToolRegistry";
 import { findFirstImageInChildren } from "./imageNodeFinder";
 import type { ImageOrientation, OpenverseImageCandidate } from "./OpenverseImageSearch";
+import { parseAIRequestHeaders } from "./AIRequestHeaders";
+import { resolveHttpRequestBody } from "./AIHttpBody";
 
 const builtInToolExecutorLoaders: Record<string, () => BuiltInToolExecutor> = {};
 
@@ -854,7 +856,15 @@ async function recognizeImage(dataUrl: string, prompt: string): Promise<string> 
     baseURL: Settings.aiApiBaseUrl,
     apiKey: Settings.aiApiKey || undefined,
     fetch: async (url: any, init: any) => {
-      const response = await fetch(url.toString(), { ...init, mode: "cors" });
+      const response = await fetch(url.toString(), {
+        ...init,
+        body: await resolveHttpRequestBody(init?.body),
+        headers: {
+          ...(init?.headers instanceof Headers ? Object.fromEntries(init.headers.entries()) : init?.headers),
+          ...parseAIRequestHeaders(Settings.aiCustomHeaders),
+        },
+        mode: "cors",
+      });
       if (!response.ok) {
         const errorText = await response.text().catch(() => "unknown error");
         throw new Error(`图像识别请求失败 (${response.status}): ${errorText}`);
