@@ -2,7 +2,7 @@ import { Vector } from "@graphif/data-structures";
 import { cn } from "@udecode/cn";
 import { useAtomValue } from "jotai";
 import { CircleAlert, CloudUpload, X } from "lucide-react";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { toast } from "sonner";
 import TabContextMenu from "./components/tab-context-menu";
 import { Button } from "./components/ui/button";
@@ -23,6 +23,7 @@ export const ProjectTabs = memo(function ProjectTabs({
   onTabClick,
   onTabClose,
   isClassroomMode,
+  tabsBarStyle,
 }: {
   groupId: string;
   tabs: Tab[];
@@ -30,6 +31,7 @@ export const ProjectTabs = memo(function ProjectTabs({
   onTabClick: (tab: Tab) => void;
   onTabClose: (tab: Tab) => void;
   isClassroomMode: boolean;
+  tabsBarStyle?: CSSProperties;
 }) {
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef(0);
@@ -87,6 +89,7 @@ export const ProjectTabs = memo(function ProjectTabs({
       ref={tabsContainerRef}
       data-pg-tab-bar
       data-pg-tab-group-bar-id={groupId}
+      style={tabsBarStyle}
       className={cn(
         "scrollbar-hide hover:bg-primary/20 z-10 flex h-4 overflow-x-auto whitespace-nowrap transition-colors hover:opacity-100 sm:h-6 sm:gap-1",
         isClassroomMode && "opacity-0",

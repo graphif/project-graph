@@ -341,7 +341,8 @@ export default function App() {
     [closeTab],
   );
 
-  const zoomStyle = uiScalePercent !== 100 ? ({ zoom: `${uiScalePercent / 100}` } as React.CSSProperties) : undefined;
+  const uiScale = uiScalePercent / 100;
+  const zoomStyle = uiScalePercent !== 100 ? ({ zoom: `${uiScale}` } as React.CSSProperties) : undefined;
 
   return (
     <>
@@ -349,13 +350,19 @@ export default function App() {
       <div className="fixed inset-0 z-[-1] bg-(--stage-background)" style={{ opacity: windowBackgroundAlpha }} />
       <div
         className="relative flex h-full w-full flex-col overflow-clip rounded-lg sm:gap-2"
+        style={{ ["--pg-ui-scale" as string]: String(uiScale) } as React.CSSProperties}
         onContextMenu={(event) => {
           if ((event.target as Element).closest('[data-slot="context-menu-trigger"]')) return;
           event.preventDefault();
         }}
       >
         {/* Canvas content - NOT zoomed */}
-        <DockedArea onTabClick={handleTabClick} onTabClose={handleTabClose} isClassroomMode={isClassroomMode} />
+        <DockedArea
+          onTabClick={handleTabClick}
+          onTabClose={handleTabClose}
+          isClassroomMode={isClassroomMode}
+          uiScale={uiScalePercent}
+        />
 
         {/* Zoomed UI layer - 缩放所有 DOM UI 元素，不缩放 Canvas 画布 */}
         <div

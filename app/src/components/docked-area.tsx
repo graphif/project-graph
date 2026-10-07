@@ -1,5 +1,5 @@
 import { ProjectTabs } from "@/ProjectTabs";
-import { Tab } from "@/core/Tab";
+import { ComponentTab, Tab } from "@/core/Tab";
 import { TabGroupNode } from "@/core/TabGroup";
 import { TabWorkspace } from "@/core/TabWorkspace";
 import { activeGroupIdAtom, tabDropTargetAtom, tabGroupRootAtom, tabsAtom } from "@/state";
@@ -91,14 +91,30 @@ export default function DockedArea({
   onTabClick,
   onTabClose,
   isClassroomMode,
+  uiScale,
 }: {
   onTabClick: (tab: Tab) => void;
   onTabClose: (tab: Tab) => void;
   isClassroomMode: boolean;
+  uiScale: number;
 }) {
   const root = useAtomValue(tabGroupRootAtom);
   const tabs = useAtomValue(tabsAtom);
   const activeGroupId = useAtomValue(activeGroupIdAtom);
+
+  const scale = uiScale / 100;
+  // 标签栏用 zoom，布局会随缩放变化
+  const tabBarStyle = scale !== 1 ? ({ zoom: scale } as React.CSSProperties) : undefined;
+  // docked 的 UI 面板内容用 transform + 反比尺寸，避免 zoom 导致填充布局溢出
+  const panelContentStyle =
+    scale !== 1
+      ? ({
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+          width: `calc(100% / ${scale})`,
+          height: `calc(100% / ${scale})`,
+        } as React.CSSProperties)
+      : undefined;
 
   const renderNode = (node: TabGroupNode): React.ReactNode => {
     if (node.type === "split") return <SplitView key={node.id} node={node} renderNode={renderNode} />;
@@ -124,9 +140,17 @@ export default function DockedArea({
           onTabClick={onTabClick}
           onTabClose={onTabClose}
           isClassroomMode={isClassroomMode}
+          tabsBarStyle={tabBarStyle}
         />
         <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
-          {activeTab && React.createElement(activeTab.getComponent())}
+          {activeTab &&
+            (activeTab instanceof ComponentTab ? (
+              <div style={panelContentStyle} className="h-full w-full">
+                {React.createElement(activeTab.getComponent())}
+              </div>
+            ) : (
+              React.createElement(activeTab.getComponent())
+            ))}
         </div>
         <DropPreview groupId={node.id} />
       </section>
@@ -134,7 +158,7 @@ export default function DockedArea({
   };
 
   return (
-    <div className="absolute inset-x-0 top-4 bottom-0 min-h-0 min-w-0 overflow-hidden sm:top-8">
+    <div className="pg-docked-offset absolute inset-x-0 bottom-0 min-h-0 min-w-0 overflow-hidden">
       {root && renderNode(root)}
     </div>
   );
