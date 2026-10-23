@@ -132,6 +132,16 @@ export const transformedKeys = {
 };
 
 /**
+ * 物理按键（KeyboardEvent.code）对应的按键名，用于含 Shift 的符号快捷键匹配
+ */
+const shiftedCodeKeys: Record<string, string[]> = {
+  Minus: ["-"],
+  Equal: ["=", "+"],
+  NumpadSubtract: ["-"],
+  NumpadAdd: ["+"],
+};
+
+/**
  * 检测一个emacs格式的快捷键是否匹配一个事件
  */
 export function matchSingleEmacsKey(key: string, event: KeyboardEvent | MouseEvent | WheelEvent): boolean {
@@ -150,6 +160,11 @@ export function matchSingleEmacsKey(key: string, event: KeyboardEvent | MouseEve
       matchKey = transformedKeys[eventKey as keyof typeof transformedKeys] === parsedKey.key;
     } else {
       matchKey = eventKey === parsedKey.key;
+    }
+    // 按住 Shift 时 event.key 是上档字符（如 Shift+「-」得到「_」），
+    // 导致 "C-A-S--" 这类快捷键永远无法匹配。此时退回按物理按键比对。
+    if (!matchKey && parsedKey.shift && event.shiftKey) {
+      matchKey = shiftedCodeKeys[event.code]?.includes(parsedKey.key) ?? false;
     }
   }
   if (event instanceof MouseEvent) {
