@@ -1078,8 +1078,11 @@ export const Settings = new Proxy<
         throw new Error(`没有这个设置项: ${key}`);
       }
       store.set(key, value);
+      // 必须先写入内存再通知 listener：listener 中可能读取或联动修改其他设置项（如 theme ↔ darkTheme），
+      // 若先通知后写入，listener 读到的仍是旧值，会导致无限递归（栈溢出），最终内存值也未更新。
+      const result = Reflect.set(target, key, value, receiver);
       listeners[key]?.forEach((cb) => cb(value));
-      return Reflect.set(target, key, value, receiver);
+      return result;
     },
     get: (target, key, receiver) => {
       switch (key) {
