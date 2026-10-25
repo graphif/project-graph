@@ -1,5 +1,5 @@
 import { cn } from "@/utils/cn";
-import { open } from "@tauri-apps/plugin-shell";
+import { open } from "@/platform/shell";
 import { useEffect, useState } from "react";
 import production from "react/jsx-runtime";
 import rehypeReact from "rehype-react";

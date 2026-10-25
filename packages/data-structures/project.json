@@ -10,7 +10,7 @@
       "cache": true,
       "inputs": ["{projectRoot}/src/**/*.ts"]
     },
-    "publish": {
+    "release": {
       "dependsOn": ["build"],
       "cache": false
     }

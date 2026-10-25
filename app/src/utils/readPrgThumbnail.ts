@@ -1,5 +1,5 @@
-import { appCacheDir, join } from "@tauri-apps/api/path";
-import { exists, mkdir, readFile, remove, writeFile } from "@tauri-apps/plugin-fs";
+import { appCacheDir, join } from "@/platform/path";
+import { exists, mkdir, readFile, remove, writeFile } from "@/platform/files";
 import { BlobWriter, Uint8ArrayReader, ZipReader } from "@zip.js/zip.js";
 
 /**

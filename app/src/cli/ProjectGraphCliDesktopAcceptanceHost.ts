@@ -6,8 +6,8 @@ import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { activeTabAtom, store, tabsAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { Acceptance } from "@/platform/desktop";
+import { getCurrentWindow } from "@/platform/window";
 import { URI } from "vscode-uri";
 import type {
   CliDesktopAcceptanceCategory,
@@ -16,7 +16,7 @@ import type {
 } from "./ProjectGraphCliDesktopAcceptanceProtocol";
 
 async function writeState(state: CliDesktopAcceptanceState): Promise<void> {
-  await invoke("write_cli_desktop_acceptance_state", { state });
+  await Acceptance.writeState(state);
 }
 
 async function renderSettled(): Promise<void> {
@@ -25,7 +25,7 @@ async function renderSettled(): Promise<void> {
 
 export async function runProjectGraphCliDesktopAcceptanceHost(): Promise<void> {
   try {
-    const manifest = await invoke<CliDesktopAcceptanceManifest>("load_cli_desktop_acceptance_manifest");
+    const manifest = (await Acceptance.manifest()) as CliDesktopAcceptanceManifest;
     enableCliDesktopAcceptanceAdapter();
     const projects = new Map<string, Project>();
     for (const [index, invocation] of manifest.invocations.entries()) {
@@ -86,7 +86,7 @@ export async function runProjectGraphCliDesktopAcceptanceHost(): Promise<void> {
       categories,
     });
 
-    await invoke("wait_for_cli_desktop_acceptance_completion");
+    await Acceptance.waitForCompletion();
     await renderSettled();
     await writeState({
       phase: "verified",

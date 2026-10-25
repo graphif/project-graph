@@ -1,6 +1,6 @@
 import { Color } from "@graphif/data-structures";
-import { Store } from "@tauri-apps/plugin-store";
-import { createStore } from "@/utils/store";
+import type { Store } from "@/platform/store";
+import { createStore } from "@/platform/store";
 
 type ColorChangeListener = () => void;
 

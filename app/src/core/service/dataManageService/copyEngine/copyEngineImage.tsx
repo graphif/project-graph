@@ -1,5 +1,5 @@
 import { Project } from "@/core/Project";
-import { readImage } from "@tauri-apps/plugin-clipboard-manager";
+import { readImage } from "@/platform/clipboard";
 import { MouseLocation } from "../../controlService/MouseLocation";
 import { Settings } from "@/core/service/Settings";
 import { applyBlackAndWhite, prepareImageBlobForImport } from "../imageUtils";
@@ -9,30 +9,21 @@ import { createImageNodeFromBlob } from "../imageNodeFactory";
 export class CopyEngineImage {
   constructor(private project: Project) {}
 
-  public async pasteImageFromTauriClipboard() {
+  public async pasteImageFromSystemClipboard() {
     // 从系统粘贴板里读取图片
     const image = await readImage();
-    const { width: origW, height: origH } = await image.size();
+    if (!image) return;
+    const bitmap = await createImageBitmap(image);
+    const { width: origW, height: origH } = bitmap;
 
     if (origW <= 0 || origH <= 0) return;
-
-    const rgba = await image.rgba();
-    const expectedLength = origW * origH * 4;
-    const clamped = rgba instanceof Uint8ClampedArray ? rgba : new Uint8ClampedArray(rgba);
-    const data =
-      clamped.length === expectedLength
-        ? clamped
-        : (() => {
-            const fixed = new Uint8ClampedArray(expectedLength);
-            fixed.set(clamped.slice(0, Math.min(clamped.length, expectedLength)));
-            return fixed;
-          })();
 
     const origCanvas = document.createElement("canvas");
     origCanvas.width = origW;
     origCanvas.height = origH;
     const origCtx = origCanvas.getContext("2d")!;
-    origCtx.putImageData(new ImageData(data, origW, origH), 0, 0);
+    origCtx.drawImage(bitmap, 0, 0);
+    bitmap.close();
 
     let w = origW;
     let h = origH;

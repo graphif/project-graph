@@ -1,5 +1,5 @@
 import { createMCPClient, type MCPClient } from "@ai-sdk/mcp";
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+import { fetch as desktopFetch } from "@/platform/http";
 import type { ToolSet } from "ai";
 import md5 from "md5";
 import {
@@ -130,7 +130,7 @@ async function createClient(config: AIMCPServerConfig): Promise<AIMCPClientLike>
       url: httpConfig.transport.url,
       headers: httpConfig.transport.headers,
       redirect: "error",
-      fetch: tauriFetch as typeof globalThis.fetch,
+      fetch: desktopFetch as typeof globalThis.fetch,
     },
   });
 }

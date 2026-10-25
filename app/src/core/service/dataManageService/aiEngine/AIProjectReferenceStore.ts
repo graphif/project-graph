@@ -1,6 +1,6 @@
 import type { Project } from "@/core/Project";
 import type { AIObjectReferenceSnapshot } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
-import { invoke } from "@tauri-apps/api/core";
+import { References } from "@/platform/desktop";
 import { URI } from "vscode-uri";
 
 type ProjectReferenceStoreProject = Pick<Project, "canonicalProjectPath" | "uri">;
@@ -20,13 +20,14 @@ function projectIdentity(project: ProjectReferenceStoreProject) {
 
 export namespace AIProjectReferenceStore {
   export function load(project: ProjectReferenceStoreProject): Promise<AIObjectReferenceSnapshot | null> {
-    return invoke<AIObjectReferenceSnapshot | null>("load_project_reference_snapshot", projectIdentity(project));
+    const { projectUri, legacyProjectUri } = projectIdentity(project);
+    return References.load(projectUri, legacyProjectUri ?? "") as Promise<AIObjectReferenceSnapshot | null>;
   }
 
   export function save(project: ProjectReferenceStoreProject, references: AIObjectReferenceSnapshot): Promise<void> {
     const { projectUri } = projectIdentity(project);
     const previousWrite = writeQueues.get(projectUri) ?? Promise.resolve();
-    const persist = () => invoke<void>("save_project_reference_snapshot", { projectUri, references });
+    const persist = () => References.save(projectUri, references);
     const write = previousWrite.then(persist, persist);
     writeQueues.set(projectUri, write);
     const removeCompletedWrite = () => {

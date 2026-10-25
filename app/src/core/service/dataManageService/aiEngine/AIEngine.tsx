@@ -27,7 +27,7 @@ import {
   discoverSkills,
 } from "@/core/service/dataManageService/aiEngine/AISkills";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { fetch } from "@tauri-apps/plugin-http";
+import { fetch } from "@/platform/http";
 import {
   convertToModelMessages,
   DefaultChatTransport,

@@ -1,7 +1,6 @@
 import { Project, ProjectState, service } from "@/core/Project";
-import { appCacheDir } from "@tauri-apps/api/path";
-import { join } from "@tauri-apps/api/path";
-import { exists, writeFile, readDir, stat, remove, mkdir } from "@tauri-apps/plugin-fs";
+import { appCacheDir, join } from "@/platform/path";
+import { exists, writeFile, readDir, stat, remove, mkdir } from "@/platform/files";
 import { Settings } from "@/core/service/Settings";
 import { toast } from "sonner";
 import { PathString } from "@/utils/pathString";

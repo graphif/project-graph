@@ -9,7 +9,7 @@ import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
 import { MediaPlaybackManager } from "@/core/service/mediaPlaybackService/MediaPlaybackManager";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
-import { open } from "@tauri-apps/plugin-shell";
+import { open } from "@/platform/shell";
 import { MouseLocation } from "../../MouseLocation";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import LatexEditWindow from "@/sub/LatexEditWindow";
@@ -29,12 +29,10 @@ export class ControllerNodeEditClass extends ControllerClass {
     if (event.button !== 0) return;
     this.lastMouseDownClientLocation = new Vector(event.clientX, event.clientY);
     if (MediaPlaybackManager.hasActive()) {
-      const pressLocation = this.project.renderer.transformView2World(
-        new Vector(event.clientX, event.clientY),
-      );
-      const activeEnt = this.project.stageManager.getEntities().find(
-        (e) => e instanceof MediaNode && MediaPlaybackManager.isActive(e as MediaNode),
-      );
+      const pressLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
+      const activeEnt = this.project.stageManager
+        .getEntities()
+        .find((e) => e instanceof MediaNode && MediaPlaybackManager.isActive(e as MediaNode));
       if (activeEnt instanceof MediaNode && !activeEnt.collisionBox.isContainsPoint(pressLocation)) {
         MediaPlaybackManager.stop();
       }
@@ -107,7 +105,11 @@ export class ControllerNodeEditClass extends ControllerClass {
         this.project.controllerUtils.editNodeDetails(entity);
         return;
       }
-      if (entity instanceof MediaNode && !entity.isHiddenBySectionCollapse && entity.collisionBox.isContainsPoint(pressLocation)) {
+      if (
+        entity instanceof MediaNode &&
+        !entity.isHiddenBySectionCollapse &&
+        entity.collisionBox.isContainsPoint(pressLocation)
+      ) {
         const dragDistance = this.lastMouseDownClientLocation
           ? new Vector(event.clientX, event.clientY).subtract(this.lastMouseDownClientLocation).magnitude()
           : 0;

@@ -1,4 +1,4 @@
-import { fetch } from "@tauri-apps/plugin-http";
+import { fetch } from "@/platform/http";
 import type { CreateRoomResponse, JoinRoomResponse } from "./CollabProtocol";
 import { resolveCollabHttpBase } from "./CollabTransport";
 import type { StageMapDoc } from "./stageMap";

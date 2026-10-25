@@ -1,4 +1,4 @@
-import { fetch } from "@tauri-apps/plugin-http";
+import { fetch } from "@/platform/http";
 
 export namespace AssetsRepository {
   const repo = "https://assets.graphif.dev";

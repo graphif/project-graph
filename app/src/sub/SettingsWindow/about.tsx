@@ -1,7 +1,7 @@
 import logoUrl from "@/assets/icon.png";
 import { Dialog } from "@/components/ui/dialog";
-import { getVersion } from "@tauri-apps/api/app";
-import { open } from "@tauri-apps/plugin-shell";
+import { getVersion } from "@/platform/app";
+import { open } from "@/platform/shell";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 

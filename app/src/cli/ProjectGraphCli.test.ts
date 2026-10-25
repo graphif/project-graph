@@ -12,7 +12,7 @@ import {
 } from "node:fs";
 import { createServer as createHttpServer } from "node:http";
 import { createServer, type Socket } from "node:net";
-import { homedir, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Encoder } from "@msgpack/msgpack";
@@ -21,18 +21,15 @@ import { afterEach, describe, expect, it } from "vitest";
 import { URI } from "vscode-uri";
 import sharp from "sharp";
 import { holdProjectOwnership, isProjectOwned, releaseProjectOwnership } from "./ProjectGraphOwnershipProcess";
+import { resolveProjectGraphAppDataDirectories } from "./ProjectGraphAppDataPath";
+import { appVersion } from "../../mygo.config";
 
 const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
-const ownershipHelperPath = fileURLToPath(
-  new URL(
-    `../../src-tauri/target/debug/project-graph-ownership-helper${process.platform === "win32" ? ".exe" : ""}`,
-    import.meta.url,
-  ),
-);
+const ownershipHelperPath = fileURLToPath(new URL("../../cmd/project-graph-ownership-helper/main.go", import.meta.url));
 const cliEntryPath =
   process.env.PROJECT_GRAPH_CLI_TEST_ENTRY ??
   fileURLToPath(new URL("../../../packages/project-graph-cli/src/cli.mjs", import.meta.url));
-const expectedCliVersion = process.env.PROJECT_GRAPH_CLI_TEST_VERSION ?? "1.0.0";
+const expectedCliVersion = process.env.PROJECT_GRAPH_CLI_TEST_VERSION ?? appVersion;
 const temporaryDirectories: string[] = [];
 let referenceStorePath: string | undefined;
 let ownershipDirectory: string | undefined;
@@ -1043,7 +1040,16 @@ process.stdout.write(JSON.stringify({ status: "error", code: "PROJECT_LOAD_FAILE
 
     const settingsHome = mkdtempSync(join(tmpdir(), "project-graph-cli-settings-"));
     temporaryDirectories.push(settingsHome);
-    const settingsDirectory = join(settingsHome, "Library", "Application Support", "liren.project-graph");
+    const settingsEnvironment = {
+      HOME: settingsHome,
+      USERPROFILE: settingsHome,
+      APPDATA: settingsHome,
+      XDG_CONFIG_HOME: settingsHome,
+    };
+    const settingsDirectory = join(
+      resolveProjectGraphAppDataDirectories(process.platform, settingsEnvironment, settingsHome)[0],
+      "stores",
+    );
     mkdirSync(settingsDirectory, { recursive: true });
     writeFileSync(
       join(settingsDirectory, "settings.json"),
@@ -1060,7 +1066,7 @@ process.stdout.write(JSON.stringify({ status: "error", code: "PROJECT_LOAD_FAILE
         stderr: "",
       });
       const result = await runCliAsyncWithEnvironment(
-        { HOME: settingsHome, COREPACK_HOME: process.env.COREPACK_HOME ?? join(homedir(), ".cache/node/corepack") },
+        settingsEnvironment,
         "tool",
         "invoke",
         "recognize_image",
@@ -1071,7 +1077,10 @@ process.stdout.write(JSON.stringify({ status: "error", code: "PROJECT_LOAD_FAILE
       );
 
       expect(result).toMatchObject({ status: 0, stderr: "" });
-      expect(JSON.parse(result.stdout)).toEqual({ success: true, description: "fixture image description" });
+      expect(JSON.parse(result.stdout), `Model fixture URL: http://127.0.0.1:${address.port}/v1`).toEqual({
+        success: true,
+        description: "fixture image description",
+      });
       expect(requestBody).toContain("Describe this image");
       const encodedImage = requestBody.match(/data:image\/png;base64,([A-Za-z0-9+/=]+)/)?.[1];
       expect(encodedImage).toBeDefined();
@@ -1337,7 +1346,7 @@ process.stdout.write(JSON.stringify({ status: "error", code: "PROJECT_LOAD_FAILE
       },
       1,
     );
-  }, 20_000);
+  }, 60_000);
 
   it("does not save a normal semantic failure when the Project remains unchanged", async () => {
     const projectPath = await createProjectFixture("2.7.0", createMutationStage());
@@ -1405,7 +1414,7 @@ process.stdout.write(JSON.stringify({ status: "error", code: "PROJECT_LOAD_FAILE
         expect.objectContaining({ ref: "e1", type: "LineEdge", sourceRef: "n1", targetRef: "n2" }),
       ]),
     });
-  }, 20_000);
+  }, 60_000);
 
   it("does not save the Project or new references when the shared executor throws", async () => {
     const projectPath = await createProjectFixture("2.7.0", createMutationStage());
@@ -1504,7 +1513,7 @@ process.stdout.write(JSON.stringify({ status: "error", code: "PROJECT_LOAD_FAILE
         expect.objectContaining({ type: "LineEdge", sourceRef: "n1", targetRef: "n2" }),
       ]),
     });
-  }, 20_000);
+  }, 60_000);
 
   it("upgrades a legacy Project only when a closed mutation explicitly allows it", async () => {
     const projectPath = await createProjectFixture("2.6.0", createMutationStage());
@@ -1545,7 +1554,7 @@ process.stdout.write(JSON.stringify({ status: "error", code: "PROJECT_LOAD_FAILE
     expect(JSON.parse(currentFormatReload.stdout)).toMatchObject({
       objects: expect.arrayContaining([expect.objectContaining({ type: "LineEdge" })]),
     });
-  }, 25_000);
+  }, 60_000);
 
   it("rejects a closed mutation against a newer Project even when upgrade is allowed", async () => {
     const projectPath = await createProjectFixture("99.0.0", createMutationStage());
@@ -1717,7 +1726,8 @@ process.stdout.write(JSON.stringify({ status: "error", code: "PROJECT_LOAD_FAILE
     }
   }, 15_000);
 
-  it.each(["SIGINT", "SIGTERM"] as const)(
+  // Windows child.kill force-terminates processes instead of delivering catchable POSIX signals.
+  it.skipIf(process.platform === "win32").each(["SIGINT", "SIGTERM"] as const)(
     "reports handled %s cancellation without stdout or protocol noise",
     async (signal) => {
       const projectPath = await createProjectFixture();
@@ -1749,7 +1759,7 @@ process.stdout.write(JSON.stringify({ status: "error", code: "PROJECT_LOAD_FAILE
     15_000,
   );
 
-  it("does not save a closed Project or print partial success after handled cancellation", async () => {
+  it("does not save a closed Project or print partial success after cancellation", async () => {
     const projectPath = await createProjectFixture("2.7.0", createMutationStage());
     const projectBefore = readFileSync(projectPath);
     const invocation = spawnCliEntryProcess(
@@ -1766,11 +1776,22 @@ process.stdout.write(JSON.stringify({ status: "error", code: "PROJECT_LOAD_FAILE
     await waitForProjectLock(projectPath);
     invocation.child.kill("SIGTERM");
 
-    await expect(invocation.result).resolves.toEqual({
-      status: 130,
-      stdout: "",
-      stderr: '{"code":"CANCELLED","message":"Project Graph CLI invocation was cancelled."}\n',
-    });
+    await expect(invocation.result).resolves.toEqual(
+      process.platform === "win32"
+        ? {
+            status: null,
+            stdout: "",
+            stderr: "",
+          }
+        : {
+            status: 130,
+            stdout: "",
+            stderr: '{"code":"CANCELLED","message":"Project Graph CLI invocation was cancelled."}\n',
+          },
+    );
     expect(readFileSync(projectPath)).toEqual(projectBefore);
-  }, 15_000);
+    await expect
+      .poll(() => isProjectOwned(ownershipHelperPath, projectPath, getOwnershipDirectory()), { timeout: 30_000 })
+      .toBe(false);
+  }, 60_000);
 });

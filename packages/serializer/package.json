@@ -30,7 +30,7 @@
   "scripts": {
     "build": "tsdown",
     "type-check": "tsc",
-    "publish": "pnpm publish --no-git-checks"
+    "release": "bun publish"
   },
   "devDependencies": {
     "@types/js-md5": "^0.8.0",

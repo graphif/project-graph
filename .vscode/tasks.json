@@ -11,15 +11,15 @@
       // see https://code.visualstudio.com/docs/editor/tasks#_can-a-background-task-be-used-as-a-prelaunchtask-in-launchjson
       "isBackground": true,
       // change this to your `beforeDevCommand`:
-      "command": "pnpm",
-      "args": ["dev"]
+      "command": "bun",
+      "args": ["run", "dev"]
     },
     {
       "label": "ui:build",
       "type": "shell",
       // change this to your `beforeBuildCommand`:
-      "command": "pnpm",
-      "args": ["build"]
+      "command": "bun",
+      "args": ["run", "build"]
     }
   ]
 }

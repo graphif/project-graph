@@ -1,8 +1,6 @@
 /**
  * AI SDK 传给 fetch 的 body 可能是 ReadableStream 等类型，
- * 而 @tauri-apps/plugin-http 只稳定支持字符串/二进制 body，
- * 遇到不支持的 body 会发送空 body（服务端会因此返回 400）。
- * 这里统一转换成字符串，保证请求体不丢失。
+ * 在桌面 HTTP 边界统一转换为字符串，保证 AI JSON 请求体不丢失。
  */
 export async function resolveHttpRequestBody(body: unknown): Promise<string | undefined> {
   if (body == null) return undefined;

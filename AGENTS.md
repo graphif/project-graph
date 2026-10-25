@@ -6,20 +6,20 @@ Project Graph 是一款桌面级节点图绘制工具，用于头脑风暴、知
 
 ## Tech-stack
 
-- React (TypeScript) + Tauri (Rust)
-- Vite + pnpm (monorepo) + Nx
+- React (TypeScript) + MyGo (Go)
+- Vite + Bun (monorepo) + Nx
 - Canvas 2D
 - shadcn/ui + Tailwind CSS + 自研子窗口系统
 - Jotai
 
-Rust 主要负责本地文件等系统能力；绝大部分业务逻辑在前端。
+Go 主要负责本地文件等系统能力；绝大部分业务逻辑在前端。
 
 ## Structure
 
 ### Application
 
 - Frontend Vite project: `/app`
-- Rust / Tauri: `/app/src-tauri`
+- Go / MyGo: `/app/main.go`、`/app/internal/desktop`
 - UI components: `/app/src/components`
 - i18n locales: `/app/src/locales`
 - React state (Jotai 等): `/app/src/state.tsx` 及附近
@@ -92,20 +92,21 @@ Rust 主要负责本地文件等系统能力；绝大部分业务逻辑在前端
   - 需要忽略时用对话框提示用户（用户看不到控制台）
   - 错误应向上传到 DOM（如 `window`），由 `ErrorHandler` 展示友好对话框
   - 反例：`try { something() } catch (e) { console.error(e) }` → 直接 `something()`
-- 错误处理（**Rust / Tauri 命令**）：命令在运行中不能让进程因未捕获错误闪退，须在函数内妥善处理错误并返回给前端。
+- 错误处理（**Go / MyGo 绑定**）：返回 error 给前端，不因未处理错误退出宿主进程。
 - UI：优先复用 shadcn 与 `.agents/skills/ui` 中的约定（`Dialog`、`toast` 等）。
 - 快捷键 / 设置：分别遵循 `create-keybind`、`create-setting-item` skill。
 
 ## Commands
 
-包管理：`pnpm`。常用：
+包管理：Bun `1.4.4`（`.bun-version`）；Node.js 26+ 供兼容工具和独立 CLI 使用。常用：
 
-- 开发：`pnpm dev`
-- Lint：`pnpm lint` / `pnpm lint:fix`
-- 测试：`pnpm test`（vitest）
-- 类型检查：**使用 `type-check` skill**（`pnpm --filter @graphif/project-graph type-check`）
+- 安装：`bun install --frozen-lockfile`
+- 开发：`bun run dev`
+- Lint：`bun run lint` / `bun run lint:fix`
+- 测试：`bun run test`（Vitest，不是 `bun test`）
+- 类型检查：**使用 `type-check` skill**（`bun run --cwd app type-check`）
 
-**禁止** Agent 运行 `build` / `build:ci` / `build:no-tauri` / `tauri build` 等构建命令。验证改动用 type-check（及必要的 lint/test），不要 build。
+**禁止** Agent 运行 `build` / `build:ci` / `build:desktop` / `mygo build` 等构建命令。验证改动用 type-check（及必要的 lint/test），不要 build。
 
 ## Agent constraints
 

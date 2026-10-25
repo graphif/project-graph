@@ -1,4 +1,4 @@
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+import { fetch as desktopFetch } from "@/platform/http";
 import { z } from "zod/v4";
 
 const MAX_DOWNLOAD_BYTES = 20 * 1024 * 1024;
@@ -209,7 +209,7 @@ async function downloadRemoteImageWithBudget(
   options: DownloadRemoteImageOptions,
   retryBudget: DownloadRetryBudget,
 ): Promise<Blob> {
-  const fetchImpl = options.fetchImpl ?? tauriFetch;
+  const fetchImpl = options.fetchImpl ?? desktopFetch;
   const retryDelay = options.retryDelay ?? waitForRetry;
   let retryIndex = 0;
   while (true) {
@@ -234,7 +234,7 @@ export async function downloadRemoteImage(url: string, options: DownloadRemoteIm
 
 export async function searchOpenverseImages(
   query: string,
-  fetchImpl: typeof globalThis.fetch = tauriFetch,
+  fetchImpl: typeof globalThis.fetch = desktopFetch,
   abortSignal?: AbortSignal,
 ): Promise<OpenverseImageCandidate[]> {
   const searchUrl = new URL("https://api.openverse.org/v1/images/");
@@ -284,7 +284,7 @@ export async function findDownloadableOpenverseImage<T = Blob>(
     const image = options.transform ? await options.transform(acceptanceImage) : (acceptanceImage as T);
     return { candidate, image };
   }
-  const fetchImpl = options.fetchImpl ?? tauriFetch;
+  const fetchImpl = options.fetchImpl ?? desktopFetch;
   const candidates = await searchOpenverseImages(query, fetchImpl, options.abortSignal);
   const orderedCandidates = [...candidates].sort(
     (left, right) =>

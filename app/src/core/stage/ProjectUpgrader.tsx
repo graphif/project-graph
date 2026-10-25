@@ -1,7 +1,7 @@
 import { Serialized } from "@/types/node";
 import { PrgMetadata } from "@/types/metadata";
 import { Path } from "@/utils/path";
-import { readFile } from "@tauri-apps/plugin-fs";
+import { readFile } from "@/platform/files";
 import { v4 as uuidv4 } from "uuid";
 import { URI } from "vscode-uri";
 import { PenStrokeSegment } from "./stageObject/entity/PenStroke";

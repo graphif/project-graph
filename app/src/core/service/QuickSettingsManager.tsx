@@ -1,4 +1,4 @@
-import { createStore } from "@/utils/store";
+import { createStore } from "@/platform/store";
 import { settingsSchema } from "./Settings";
 import { settingsIcons } from "./SettingsIcons";
 import { z } from "zod";

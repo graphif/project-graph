@@ -7,8 +7,8 @@ import { activeResourceTabAtom, store, tabsAtom } from "@/state";
 import { FormWindow } from "@/sub/FormWindow";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { invoke } from "@tauri-apps/api/core";
-import { fetch } from "@tauri-apps/plugin-http";
+import { Native } from "@/platform/desktop";
+import { fetch } from "@/platform/http";
 import { proxy } from "comlink";
 import { toast } from "sonner";
 import z from "zod";
@@ -111,11 +111,7 @@ export function extensionHostApiFactory(extension: Extension) {
       args?: string[],
       stdin?: string,
     ): Promise<{ code: number | null; stdout: string; stderr: string }> {
-      return invoke<{ code: number | null; stdout: string; stderr: string }>("run_command", {
-        program,
-        cmdArgs: args ?? [],
-        stdin,
-      });
+      return Native.runCommand(program, args ?? [], stdin ?? "");
     },
 
     //region 设置

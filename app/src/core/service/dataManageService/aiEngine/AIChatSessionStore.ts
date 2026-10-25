@@ -2,7 +2,7 @@ import type { AIMessageMetadata } from "@/core/service/dataManageService/aiEngin
 import type { AIChatSessionMemory } from "@/core/service/dataManageService/aiEngine/AIChatSessionMemory";
 import { isActivatedSkillSnapshot } from "./AISkillSession";
 import type { ActivatedSkillSnapshot } from "./AISkills";
-import { LazyStore } from "@tauri-apps/plugin-store";
+import { LazyStore } from "@/platform/store";
 import type { UIMessage } from "ai";
 
 export type AIChatSessionSummary = {

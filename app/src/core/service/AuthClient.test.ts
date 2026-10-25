@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const createClient = vi.hoisted(() => vi.fn(() => ({})));
 vi.mock("better-auth/client", () => ({ createAuthClient: createClient }));
-vi.mock("@tauri-apps/plugin-http", () => ({ fetch: vi.fn() }));
+vi.mock("@/platform/http", () => ({ fetch: vi.fn() }));
 
 afterEach(() => {
   vi.unstubAllEnvs();

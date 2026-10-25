@@ -28,7 +28,7 @@ import { AlertCircle, AlignStartVertical, Focus, LineSquiggle, TextCursorInput }
 import { transEmacsKeyWinToMac } from "@/utils/emacs";
 import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
 import { isMac } from "@/utils/platform";
-import { createStore } from "@/utils/store";
+import { createStore } from "@/platform/store";
 import {
   AppWindow,
   Dot,

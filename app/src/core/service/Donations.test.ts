@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-vi.mock("@tauri-apps/plugin-http", () => ({ fetch: vi.fn() }));
+vi.mock("@/platform/http", () => ({ fetch: vi.fn() }));
 vi.mock("./AuthClient", () => ({ accountServiceBaseUrl: "https://hub.graphif.dev" }));
-import { fetch } from "@tauri-apps/plugin-http";
+import { fetch } from "@/platform/http";
 import { fetchDonations } from "./Donations";
 
 beforeEach(() => vi.mocked(fetch).mockReset());

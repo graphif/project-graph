@@ -19,8 +19,8 @@
  *       └── 引用文件3.prg
  */
 
-import { mkdir, readDir, exists } from "@tauri-apps/plugin-fs";
-import { join } from "@tauri-apps/api/path";
+import { mkdir, readDir, exists } from "@/platform/files";
+import { join } from "@/platform/path";
 import { PathString } from "@/utils/pathString";
 import { URI } from "vscode-uri";
 

@@ -10,14 +10,30 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 let bridgeListener: ((event: { payload: unknown }) => Promise<void>) | undefined;
 const openverseImageSearch = vi.hoisted(() => ({ findDownloadableOpenverseImage: vi.fn() }));
 
-vi.mock("@tauri-apps/api/event", () => ({
-  listen: vi.fn(async (_event: string, listener: (event: { payload: unknown }) => Promise<void>) => {
-    bridgeListener = listener;
-    return vi.fn();
-  }),
+const invoke = vi.hoisted(() => vi.fn<(command: string, payload?: unknown) => Promise<any>>(async () => true));
+vi.mock("@/platform/desktop", () => ({
+  events: {
+    projectRuntimeInvocation: {
+      on: (listener: (payload: unknown) => Promise<void>) => {
+        bridgeListener = ({ payload }) => listener(payload);
+        return vi.fn();
+      },
+    },
+  },
+  Bridge: {
+    respond: (requestId: string, response: unknown) =>
+      invoke("respond_project_runtime_bridge", { requestId, response }),
+  },
+  Ownership: {
+    acquire: (projectPath: string, forSave: boolean) =>
+      invoke(forSave ? "acquire_desktop_project_ownership_for_save" : "acquire_desktop_project_ownership", {
+        projectPath,
+      }),
+    release: (ownershipId: string) => invoke("release_desktop_project_ownership", { ownershipId }),
+    makeConnectable: (ownershipId: string) => invoke("make_desktop_project_ownership_connectable", { ownershipId }),
+  },
 }));
-vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn(async () => true), isTauri: vi.fn(() => false) }));
-vi.mock("@tauri-apps/plugin-dialog", () => ({ save: vi.fn() }));
+vi.mock("@/platform/dialogs", () => ({ save: vi.fn() }));
 vi.mock("@/core/Tab", () => ({
   Tab: class Tab {
     private readonly services = new Map<string, unknown>();
@@ -84,8 +100,7 @@ vi.mock("@/core/service/dataManageService/aiEngine/AIProjectReferenceStore", () 
   AIProjectReferenceStore: { load: vi.fn(async () => null), save: vi.fn(async () => undefined) },
 }));
 
-import { invoke, isTauri } from "@tauri-apps/api/core";
-import { save } from "@tauri-apps/plugin-dialog";
+import { save } from "@/platform/dialogs";
 import { AIEngine } from "@/core/service/dataManageService/aiEngine/AIEngine";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
@@ -104,10 +119,7 @@ import {
 import { holdProjectOwnership, isProjectOwned, releaseProjectOwnership } from "@/cli/ProjectGraphOwnershipProcess";
 
 const repositoryRoot = process.cwd();
-const ownershipHelperPath = join(
-  repositoryRoot,
-  `app/src-tauri/target/debug/project-graph-ownership-helper${process.platform === "win32" ? ".exe" : ""}`,
-);
+const ownershipHelperPath = join(repositoryRoot, "app/cmd/project-graph-ownership-helper/main.go");
 const ownershipDirectory = mkdtempSync(join(tmpdir(), "project-graph-runtime-host-ownership-"));
 
 afterAll(() => rmSync(ownershipDirectory, { recursive: true, force: true }));
@@ -267,7 +279,6 @@ async function startDesktopRuntimeBridge(projectPath: string, host: OpenProjectR
 describe("Open Project Runtime Host", () => {
   beforeEach(() => {
     vi.mocked(invoke).mockReset().mockResolvedValue(true);
-    vi.mocked(isTauri).mockReturnValue(false);
     vi.mocked(save).mockReset();
     vi.mocked(AIProjectReferenceStore.load).mockReset().mockResolvedValue(null);
     vi.mocked(AIProjectReferenceStore.save).mockReset().mockResolvedValue(undefined);
@@ -458,7 +469,7 @@ describe("Open Project Runtime Host", () => {
     await host.dispose();
   });
 
-  it("normalizes an undefined handler result before crossing the Tauri bridge", async () => {
+  it("normalizes an undefined handler result before crossing the desktop bridge", async () => {
     const fixture = createLiveProject();
     const host = new OpenProjectRuntimeHost(fixture.project);
 
@@ -595,7 +606,6 @@ describe("Open Project Runtime Host", () => {
   });
 
   it("moves a draft to a CLI-connectable file ownership when it is saved", async () => {
-    vi.mocked(isTauri).mockReturnValue(true);
     vi.mocked(save).mockResolvedValue("/projects/saved-draft.prg");
     vi.mocked(invoke).mockImplementation(async (command) => {
       if (command === "acquire_desktop_project_ownership_for_save") {
@@ -660,7 +670,6 @@ describe("Open Project Runtime Host", () => {
   });
 
   it("rebinds the runtime host and releases the old ownership after Save As", async () => {
-    vi.mocked(isTauri).mockReturnValue(true);
     vi.mocked(invoke).mockImplementation(async (command) => {
       if (command === "acquire_desktop_project_ownership_for_save") {
         return {
@@ -724,7 +733,6 @@ describe("Open Project Runtime Host", () => {
   });
 
   it("rolls back the Project identity and runtime route when ownership promotion fails", async () => {
-    vi.mocked(isTauri).mockReturnValue(true);
     vi.mocked(invoke).mockImplementation(async (command, payload) => {
       if (command === "acquire_desktop_project_ownership_for_save") {
         return {
@@ -991,5 +999,5 @@ describe("Open Project Runtime Host", () => {
       focusedElement.remove();
       rmSync(directory, { recursive: true, force: true });
     }
-  }, 15_000);
+  }, 60_000);
 });

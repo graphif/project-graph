@@ -1,7 +1,7 @@
 import { RecentFileManager } from "./RecentFileManager";
 import { onOpenFile } from "../GlobalMenu";
 import { URI } from "vscode-uri";
-import { exists } from "@tauri-apps/plugin-fs";
+import { exists } from "@/platform/files";
 import { toast } from "sonner";
 import { Project } from "@/core/Project";
 

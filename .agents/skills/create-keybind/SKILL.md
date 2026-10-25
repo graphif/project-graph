@@ -60,21 +60,16 @@ description: 指导如何在 Project Graph 项目中创建新的快捷键。当�
 **快捷键类型说明：**
 
 - **项目级快捷键（默认）**：需要项目上下文，`onPress` 会接收 `project` 参数
-- **全局快捷键（`isGlobal: true`）**：使用 Tauri 全局快捷键系统，即使应用不在焦点也能触发
+- **全局快捷键（`isGlobal: true`）**：使用 MyGo 全局快捷键系统，即使应用不在焦点也能触发
 
-**使用 Tauri API 时的类型处理：**
+**使用 MyGo 窗口适配：**
 
-如果快捷键需要使用 Tauri 窗口 API（如 `setSize`），需要导入正确的类型：
+窗口尺寸使用逻辑像素对象，由平台层转交给 MyGo：
 
 ```typescript
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { LogicalSize } from "@tauri-apps/api/dpi"; // 或 PhysicalSize
+import { getCurrentWindow } from "@/platform/window";
 
-// 使用 LogicalSize（推荐，会自动处理 DPI 缩放）
-await window.setSize(new LogicalSize(width, height));
-
-// 或使用 PhysicalSize（物理像素）
-await window.setSize(new PhysicalSize(width, height));
+await getCurrentWindow().setSize({ width, height });
 ```
 
 ### 2. 将快捷键添加到分组中
@@ -250,7 +245,7 @@ UI 级别快捷键不需要项目上下文，可以在没有打开项目时使�
 
 ### 全局快捷键
 
-全局快捷键使用 Tauri 全局快捷键系统，即使应用不在焦点也能触发：
+全局快捷键使用 MyGo 全局快捷键系统，即使应用不在焦点也能触发：
 
 ```typescript
 {
@@ -291,7 +286,7 @@ await KeyBindsUI.resetAllKeyBinds();
 5. **翻译键名：** 翻译文件中的键名必须与快捷键的 `id` 完全一致
 6. **分组必须：** 所有快捷键都必须添加到 `shortcutKeysGroups` 中的相应分组，否则不会在设置页面中显示
 7. **分组选择：** 根据快捷键的功能特性选择合适的分组，保持设置页面的逻辑清晰
-8. **Tauri API 类型：** 使用窗口 API 时，需要使用 `LogicalSize` 或 `PhysicalSize` 类型，不能直接使用普通对象
+8. **窗口 API 类型：** 使用 `@/platform/window`，尺寸传 `{ width, height }` 逻辑像素对象
 9. **Mac 兼容性：** Mac 系统会自动将 `C-` 和 `M-` 互换，无需手动处理
 10. **UI vs 项目级：** 根据快捷键是否需要项目上下文选择合适的类型
 
@@ -302,8 +297,7 @@ await KeyBindsUI.resetAllKeyBinds();
 **1. shortcutKeysRegister.tsx - 注册快捷键：**
 
 ```typescript
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { LogicalSize } from "@tauri-apps/api/dpi";
+import { getCurrentWindow } from "@/platform/window";
 import { Settings } from "@/core/service/Settings";
 
 export const allKeyBinds: KeyBindItem[] = [
@@ -325,7 +319,7 @@ export const allKeyBinds: KeyBindItem[] = [
       // 设置窗口大小为设置中的迷你窗口大小
       const width = Settings.windowCollapsingWidth;
       const height = Settings.windowCollapsingHeight;
-      await window.setSize(new LogicalSize(width, height));
+      await window.setSize({ width, height });
     },
   },
   // ... 其他快捷键

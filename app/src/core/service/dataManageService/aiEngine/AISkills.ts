@@ -1,6 +1,6 @@
-import { dirname, homeDir, join } from "@tauri-apps/api/path";
-import { exists, lstat, readDir, readFile } from "@tauri-apps/plugin-fs";
-import { LazyStore } from "@tauri-apps/plugin-store";
+import { dirname, homeDir, join } from "@/platform/path";
+import { exists, lstat, readDir, readFile } from "@/platform/files";
+import { LazyStore } from "@/platform/store";
 import { tool, type ToolSet } from "ai";
 import { parse as parseYaml } from "yaml";
 import { URI } from "vscode-uri";

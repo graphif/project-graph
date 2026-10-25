@@ -1,4 +1,4 @@
-import { LazyStore } from "@tauri-apps/plugin-store";
+import { LazyStore } from "@/platform/store";
 import md5 from "md5";
 import { z } from "zod/v4";
 

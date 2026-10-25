@@ -64,28 +64,30 @@ Project Graph 不要求你的想法只有一个中心、一个方向或一种层
 
 ## 参与开发
 
-应用使用 **React + TypeScript + Tauri**，画布基于 **Canvas 2D**。工作区由 **pnpm + Nx** 管理。
+应用使用 **React + TypeScript + MyGo (Go)**，画布基于 **Canvas 2D**。工作区由 **Bun + Nx** 管理，桌面入口为 MyGo。
 
-准备 Node.js 26+、项目指定版本的 pnpm、Rust，以及 [Tauri 对应平台的系统依赖](https://v2.tauri.app/start/prerequisites/)。
+准备 Bun **1.4.4**（见 `.bun-version`）、Node.js 26+、Go **1.27.3**，以及 [MyGo 对应平台的系统依赖](https://mygo.egoist.dev/)。PowerShell 使用 `-NoProfile`；fnm 会话先执行 `fnm env --shell powershell | Out-String | Invoke-Expression`，再执行 `fnm use 26.12.1`。
 
 ```bash
 git clone https://github.com/graphif/project-graph.git
 cd project-graph
-pnpm install
-pnpm dev
+bun install --frozen-lockfile
+bun run dev
 ```
 
-`pnpm dev` 启动桌面开发环境，由 Tauri 自动启动 Vite 并等待 `http://localhost:1420` 就绪。无需在另一个终端重复启动前端。
+`bun run dev` 启动桌面开发环境，由 MyGo 自动启动 Vite 并等待 `http://localhost:1420` 就绪。无需在另一个终端重复启动前端。`bun run --cwd app mygo:doctor` 检查系统依赖。
 
-| 命令                                              | 用途                |
-| ------------------------------------------------- | ------------------- |
-| `pnpm dev`                                        | 启动桌面开发环境    |
-| `pnpm --filter @graphif/project-graph dev`        | 仅启动前端开发服务  |
-| `pnpm --filter @graphif/project-graph type-check` | TypeScript 类型检查 |
-| `pnpm test`                                       | 运行测试            |
-| `pnpm lint`                                       | 检查代码规范        |
+| 命令                            | 用途                |
+| ------------------------------- | ------------------- |
+| `bun run dev`                   | 启动桌面开发环境    |
+| `bun run --cwd app dev:webview` | 仅启动前端开发服务  |
+| `bun run --cwd app type-check`  | TypeScript 类型检查 |
+| `bun run test`                  | 运行 Vitest 测试    |
+| `bun run lint`                  | 检查代码规范        |
 
-首次运行测试或修改 Rust 所有权辅助程序后，先运行 `cargo test --manifest-path app/src-tauri/Cargo.toml --test project_ownership_helper`，准备并验证 CLI 测试所需的本地辅助程序，再运行 `pnpm test`。文件锁测试使用项目自带的 Rust 实现，无需安装 `lockf`。
+Go 服务验证使用 `go -C app test ./...`；修改绑定后执行 `bun run --cwd app mygo:generate`。CLI 开发测试通过 `go run` 启动 Go 所有权 helper，无需预先生成可执行文件，也无需 `lockf`。测试 `ProjectGraphCliProduction.test.ts` 会触发打包，不作为静态验证命令运行。
+
+`bun run test` 使用 Vitest；不要用 `bun test` 替代。依赖版本由 `bun.lock` 锁定，共享版本在根 `package.json` 的 `workspaces.catalog` 中维护。安装脚本仅信任 `trustedDependencies` 中显式批准的依赖；新增原生依赖时先审查脚本，不要批量信任。独立 CLI 仍使用 Node，不要求最终用户安装 Bun。
 
 <details>
 <summary><strong>修改后界面没有更新？</strong></summary>
@@ -99,13 +101,14 @@ pnpm dev
 <details>
 <summary><strong>代码从哪里看起？</strong></summary>
 
-| 目录                 | 内容                               |
-| -------------------- | ---------------------------------- |
-| `app/src/core`       | 工程生命周期、画布、渲染与业务服务 |
-| `app/src/components` | 界面组件                           |
-| `app/src-tauri`      | 桌面窗口与本地系统能力             |
-| `app/src/locales`    | 多语言文案                         |
-| `packages`           | 图形、数据结构、序列化与扩展工具链 |
+| 目录                   | 内容                               |
+| ---------------------- | ---------------------------------- |
+| `app/src/core`         | 工程生命周期、画布、渲染与业务服务 |
+| `app/src/components`   | 界面组件                           |
+| `app/internal/desktop` | Go 桌面窗口与本地系统能力          |
+| `app/src/platform`     | MyGo 类型化客户端的前端适配        |
+| `app/src/locales`      | 多语言文案                         |
+| `packages`             | 图形、数据结构、序列化与扩展工具链 |
 
 </details>
 

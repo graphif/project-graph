@@ -1,7 +1,7 @@
 import { Project } from "@/core/Project";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { open } from "@tauri-apps/plugin-shell";
+import { open } from "@/platform/shell";
 import { toast } from "sonner";
 import { PathString } from "./pathString";
 import { URI } from "vscode-uri";
@@ -75,7 +75,7 @@ function splitDoubleQuote(str: string) {
 }
 
 /**
- * 调用tauri框架的open方法
+ * 通过桌面宿主打开外部资源
  * @param url
  * @param project 之所以需要project参数，是因为需要根据project的uri来转换相对路径
  */

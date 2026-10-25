@@ -16,11 +16,11 @@ import { Path } from "@/utils/path";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { getVersion } from "@tauri-apps/api/app";
-import { join, tempDir } from "@tauri-apps/api/path";
-import { writeFile } from "@tauri-apps/plugin-fs";
-import { fetch } from "@tauri-apps/plugin-http";
-import { open as shellOpen } from "@tauri-apps/plugin-shell";
+import { getVersion } from "@/platform/app";
+import { join, tempDir } from "@/platform/path";
+import { writeFile } from "@/platform/files";
+import { fetch } from "@/platform/http";
+import { open as shellOpen } from "@/platform/shell";
 import {
   AlertTriangle,
   Bell,
@@ -34,12 +34,10 @@ import {
   RefreshCw,
   Settings as SettingsIcon,
   TableProperties,
-  X,
 } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { cpuInfo } from "tauri-plugin-system-info-api";
 import { URI } from "vscode-uri";
 
 interface Announcement {
@@ -118,8 +116,6 @@ export default function WelcomeWindow({ tabId }: { tabId: string }) {
   const [isDownloadingGuideFile, setIsDownloadingGuideFile] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [lastClickFileURIPath, setLastClickFileURIPath] = useState("");
-  const [isAmdCpu, setIsAmdCpu] = useState(false);
-  const [isAmdWarningDismissed, setIsAmdWarningDismissed] = useState(true);
   const [currentSlogan, setCurrentSlogan] = useState("");
   const [isHoveringSlogan, setIsHoveringSlogan] = useState(false);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -129,17 +125,6 @@ export default function WelcomeWindow({ tabId }: { tabId: string }) {
     refresh();
     (async () => {
       setAppVersion(await getVersion());
-      const dismissed = await Tutorials.isFinished("amdCpuWarning");
-      setIsAmdWarningDismissed(dismissed);
-      if (!dismissed) {
-        try {
-          const cpu = await cpuInfo();
-          const cpuBrand = cpu.cpus[0].brand;
-          setIsAmdCpu(cpuBrand.includes("AMD"));
-        } catch (e) {
-          console.error("检测CPU信息失败:", e);
-        }
-      }
     })();
 
     randomizeSlogan();
@@ -251,22 +236,6 @@ export default function WelcomeWindow({ tabId }: { tabId: string }) {
               </button>
             )}
           </div>
-          {isAmdCpu && !isAmdWarningDismissed && (
-            <div className="flex items-center gap-2 rounded-lg border p-3 text-sm text-yellow-600/75">
-              <AlertTriangle className="shrink-0" />
-              <span className="flex-1">您的设备（AMD CPU）可能在大屏(4k)下使用时存在渲染卡顿问题</span>
-              <button
-                onClick={async () => {
-                  setIsAmdWarningDismissed(true);
-                  await Tutorials.finish("amdCpuWarning");
-                }}
-                className="hover:bg-muted shrink-0 cursor-pointer rounded p-1 transition-all active:scale-90"
-                title="不再提醒"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          )}
           {announcementLoadError && (
             <div className="text-muted-foreground flex items-center gap-2 text-xs">
               <AlertTriangle className="size-4" />

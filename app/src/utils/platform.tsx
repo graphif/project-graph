@@ -1,30 +1,10 @@
-import { family as osFamily, platform } from "@tauri-apps/plugin-os";
+import { isMyGo, runtime } from "mygo-runtime";
 
-export const isWeb = !("__TAURI_OS_PLUGIN_INTERNALS__" in window);
-export const isMobile = isWeb ? navigator.userAgent.toLowerCase().includes("mobile") : platform() === "android";
-export const isDesktop = !isMobile;
-
-export const isIpad = isWeb && navigator.userAgent.toLowerCase().includes("mac os");
-
-export const isFrame =
-  isWeb && (new URLSearchParams(window.location.search).get("frame") === "true" || import.meta.env.LR_FRAME === "true");
-
-export const isMac = !isWeb && platform() === "macos";
-export const isWindows = !isWeb && platform() === "windows";
-export const isLinux = !isWeb && platform() === "linux";
-
+const hostPlatform = isMyGo() ? runtime().platform : undefined;
+export const isMac = hostPlatform === "darwin";
+export const isWindows = hostPlatform === "win32";
+export const isLinux = hostPlatform === "linux";
 export const isTest = import.meta.env.LR_VITEST === "true";
-
 export function family() {
-  if (isWeb) {
-    // 从userAgent判断unix|windows
-    const ua = navigator.userAgent.toLowerCase();
-    if (ua.includes("windows")) {
-      return "windows";
-    } else {
-      return "unix";
-    }
-  } else {
-    return osFamily();
-  }
+  return isWindows ? "windows" : "unix";
 }

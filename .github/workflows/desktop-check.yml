@@ -1,0 +1,27 @@
+name: Desktop checks
+on:
+  pull_request:
+  push:
+    branches: [master, mygo]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "26"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: app/go.mod
+          cache-dependency-path: app/go.sum
+      - run: bun install --frozen-lockfile
+      - run: bun run --cwd app type-check
+      - run: go -C app test ./...
+      - run: bunx vitest run app/src/platform app/src/core/ProjectOwnership.test.ts app/src/core/OpenProjectRuntimeHost.test.ts app/src/cli/OwnershipHelper.test.ts app/src/cli/ProjectGraphOwnershipProcess.test.ts app/src/cli/ProjectGraphAppDataPath.test.ts app/src/cli/app-version.test.ts

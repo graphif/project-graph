@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Extension } from "@/core/extension/Extension";
 import { ExtensionManager } from "@/core/extension/ExtensionManager";
-import { open } from "@tauri-apps/plugin-shell";
+import { open } from "@/platform/shell";
 import { Blocks, RefreshCcw, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";

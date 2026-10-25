@@ -1,5 +1,6 @@
 import { Color, Vector } from "@graphif/data-structures";
 import type { MsdfGlyph } from "@playcanvas/msdfgen-wasm";
+import { isMyGo } from "mygo-runtime";
 
 const CELL_SIZE = 64;
 const ATLAS_SIZE = 2048;
@@ -111,7 +112,7 @@ export class MsdfTextAtlasRenderer {
       typeof document === "undefined" ||
       import.meta.env.MODE === "test" ||
       import.meta.env.LR_VITEST === "true" ||
-      "__TAURI_INTERNALS__" in window
+      isMyGo()
     )
       return;
     this.initializationStarted = true;

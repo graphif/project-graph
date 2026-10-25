@@ -1,5 +1,5 @@
-import { createStore } from "@/utils/store";
-import { Store } from "@tauri-apps/plugin-store";
+import { createStore } from "@/platform/store";
+import type { Store } from "@/platform/store";
 
 /**
  * 教程记录

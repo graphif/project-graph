@@ -4,6 +4,20 @@
 @plugin "@tailwindcss/typography";
 @import "tw-animate-css";
 
+[data-pg-titlebar],
+#pg-titlebar-navigation,
+[data-pg-titlebar-drag] {
+  --app-region: drag;
+}
+[data-pg-titlebar] button,
+[data-pg-titlebar] a,
+[data-pg-titlebar] input,
+[data-pg-titlebar] [role="menu"],
+[data-pg-titlebar] [role="tablist"],
+#pg-titlebar-navigation > * {
+  --app-region: no-drag;
+}
+
 @font-face {
   font-family: "Project Graph Canvas";
   src: url("../assets/fonts/NotoSansSC-Regular.otf") format("opentype");

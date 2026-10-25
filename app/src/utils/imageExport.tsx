@@ -1,6 +1,6 @@
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { dirname, join } from "@tauri-apps/api/path";
-import { exists, writeFile } from "@tauri-apps/plugin-fs";
+import { dirname, join } from "@/platform/path";
+import { exists, writeFile } from "@/platform/files";
 import mime from "mime";
 
 /**
@@ -21,7 +21,7 @@ export async function exportImagesToProjectDirectory(
   let successCount = 0;
   let failedCount = 0;
 
-  // 获取当前 prg 文件所在目录（使用 Tauri 的 dirname 函数，支持跨平台）
+  // 获取当前 prg 文件所在目录。
   const projectDir = await dirname(projectPath);
 
   for (let i = 0; i < imageNodes.length; i++) {

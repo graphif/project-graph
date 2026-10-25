@@ -15,8 +15,7 @@ import { Serialized } from "@/types/node";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
-import { Image as TauriImage } from "@tauri-apps/api/image";
-import { readText, writeImage, writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { readText, writeImage, writeText } from "@/platform/clipboard";
 import { toast } from "sonner";
 import { v4 } from "uuid";
 import { RectangleNoteEffect } from "../../feedbackService/effectEngine/concrete/RectangleNoteEffect";
@@ -76,7 +75,7 @@ export class CopyEngine {
       const imageNode = selectedEntities[0] as ImageNode;
       const blob = this.project.attachments.get(imageNode.attachmentId);
       if (blob) {
-        blob.arrayBuffer().then(TauriImage.fromBytes).then(writeImage);
+        await writeImage(await blob.arrayBuffer());
         toast.success("已将选中的图片复制到系统剪贴板");
       }
     } else {
@@ -84,7 +83,7 @@ export class CopyEngine {
       const textNodes = selectedEntities.filter((it) => it instanceof TextNode) as TextNode[];
       if (textNodes.length > 0) {
         const text = textNodes.map((it) => it.text).join("\n\n");
-        writeText(text);
+        await writeText(text);
         toast.success("已将选中的文本复制到系统剪贴板");
       }
     }
@@ -261,22 +260,21 @@ export class CopyEngine {
     const mode = Settings.clipboardPasteMode;
     if (mode === "webview") {
       await this.pasteFromWebClipboard();
-    } else if (mode === "tauri") {
-      await this.pasteFromTauriClipboard();
+    } else if (mode === "native") {
+      await this.pasteFromSystemClipboard();
     } else {
       // AUTO模式
       if (isMac) {
         // mac优先用web模式，比较安全不容易崩溃
         await this.pasteFromWebClipboard();
       } else if (isWindows) {
-        // windows优先用tauri，因为不需要申请权限
-        await this.pasteFromTauriClipboard();
+        await this.pasteFromSystemClipboard();
       } else if (isLinux) {
         // 待排查
-        await this.pasteFromTauriClipboard();
+        await this.pasteFromSystemClipboard();
       } else {
         // 未知系统，先随便了
-        await this.pasteFromTauriClipboard();
+        await this.pasteFromSystemClipboard();
       }
     }
   }
@@ -300,13 +298,14 @@ export class CopyEngine {
     }
   }
 
-  private async pasteFromTauriClipboard() {
+  private async pasteFromSystemClipboard() {
     // 处理粘贴文字
-    let text = "";
+    let text: string;
     try {
       text = await readText();
     } catch (err) {
-      if (err instanceof Error) toast.error(`Tauri文字粘贴板出错 ${err}`);
+      toast.error(`无法读取系统剪贴板: ${String(err)}`);
+      return;
     }
 
     if (text && text.length > 0) {
@@ -314,16 +313,9 @@ export class CopyEngine {
     } else {
       // 没有文字，应该是有图片，处理粘贴图片
       try {
-        await this.copyEngineImage.pasteImageFromTauriClipboard();
+        await this.copyEngineImage.pasteImageFromSystemClipboard();
       } catch (err) {
-        if (err instanceof Error) {
-          toast.error(`Tauri模式粘贴图片失败，可尝试在设置中换用webview粘贴模式。报错信息：${err.message}`);
-        } else if (typeof err === "string") {
-          // tauri 给的报错信息是个string
-          toast.error(`Tauri模式粘贴图片失败，可尝试在设置中换用webview粘贴模式。报错信息：${err}`);
-        } else {
-          toast.error(`Tauri模式粘贴图片失败，可尝试在设置中换用webview粘贴模式。报错信息：${err}, ${typeof err}`);
-        }
+        toast.error(`无法粘贴系统剪贴板图片，可尝试 WebView 模式: ${String(err)}`);
       }
     }
   }

@@ -17,7 +17,7 @@ function loadSettings(): Record<string, unknown> {
   let savedSettings: Record<string, unknown> = {};
   for (const directory of resolveProjectGraphAppDataDirectories()) {
     try {
-      const value: unknown = JSON.parse(readFileSync(join(directory, "settings.json"), "utf8"));
+      const value: unknown = JSON.parse(readFileSync(join(directory, "stores", "settings.json"), "utf8"));
       if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid Settings store");
       savedSettings = value as Record<string, unknown>;
       break;

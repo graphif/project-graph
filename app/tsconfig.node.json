@@ -6,5 +6,5 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true
   },
-  "include": ["vite.config.ts", "scripts", "vite-plugins"]
+  "include": ["vite.config.ts", "mygo.config.ts", "scripts", "vite-plugins"]
 }

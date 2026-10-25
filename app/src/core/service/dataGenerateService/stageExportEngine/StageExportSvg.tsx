@@ -13,7 +13,7 @@ import { Color, colorInvert, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import React from "react";
 import ReactDOMServer from "react-dom/server";
-import { writeFile } from "@tauri-apps/plugin-fs";
+import { writeFile } from "@/platform/files";
 import mime from "mime";
 
 export interface SvgExportConfig {

@@ -15,8 +15,8 @@ import { isMac } from "@/utils/platform";
 import { readCachedPrgThumbnail, readPrgThumbnailBlob, refreshPrgThumbnailCache } from "@/utils/readPrgThumbnail";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { invoke } from "@tauri-apps/api/core";
-import { open } from "@tauri-apps/plugin-dialog";
+import { Files } from "@/generated/mygo";
+import { open } from "@/platform/dialogs";
 import { useAtom } from "jotai";
 import {
   DoorClosed,
@@ -187,10 +187,7 @@ export default function RecentFilesWindow({ tabId }: { tabId: string }) {
 
       // 递归读取文件夹中的所有.prg文件
       setIsLoading(true);
-      const files: string[] = await invoke("read_folder_recursive", {
-        path: folderPath,
-        fileExts: [".prg"],
-      });
+      const files = await Files.readRecursive(folderPath, [".prg"]);
 
       if (files.length === 0) {
         toast.info("未找到.prg文件");

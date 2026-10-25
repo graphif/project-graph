@@ -1,47 +1,26 @@
-import { getVersion } from "@tauri-apps/api/app";
-import { invoke } from "@tauri-apps/api/core";
-import { isWeb } from "@/utils/platform";
+import { getVersion } from "@/platform/app";
+import { Native } from "@/platform/desktop";
 
 export async function writeStdout(content: string): Promise<void> {
-  if (!isWeb) {
-    return invoke("write_stdout", { content });
-  }
+  return Native.writeStdout(content);
 }
 
 export async function writeStderr(content: string): Promise<void> {
-  if (isWeb) {
-    console.error("STDERR:", content);
-  } else {
-    return invoke("write_stderr", { content });
-  }
+  return Native.writeStderr(content);
 }
 
 export async function openDevtools(): Promise<void> {
-  if (!isWeb) {
-    return invoke("open_devtools");
-  }
+  return Native.openDevtools();
 }
 
 export async function exit(code: number = 0): Promise<void> {
-  if (isWeb) {
-    window.close();
-  } else {
-    return invoke("exit", { code });
-  }
+  return Native.exit(code);
 }
 
 export async function getAppVersion(): Promise<string> {
-  if (isWeb) {
-    return "0.0.0-web";
-  } else {
-    return getVersion();
-  }
+  return getVersion();
 }
 
 export async function getDeviceId(): Promise<string> {
-  if (isWeb) {
-    return "web";
-  } else {
-    return invoke("get_device_id");
-  }
+  return Native.deviceID();
 }

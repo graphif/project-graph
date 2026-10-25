@@ -23,17 +23,14 @@ import {
   tabsAtom,
 } from "@/state";
 import WelcomeWindow from "@/sub/WelcomeWindow";
-import { getVersion } from "@tauri-apps/api/app";
-import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { arch, platform, version } from "@tauri-apps/plugin-os";
-import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
+import { getVersion } from "@/platform/app";
+import { Native } from "@/platform/desktop";
+import { getCurrentWindow } from "@/platform/window";
 import { useAtom } from "jotai";
 import { Copy, Minus, Pin, PinOff, Square, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { cpuInfo } from "tauri-plugin-system-info-api";
 import CommandPalette from "./CommandPalette";
 import { DropWindowCover } from "./DropWindowCover";
 import DockedArea from "./components/docked-area";
@@ -41,7 +38,7 @@ import RenderOverlays from "./components/overlay-host";
 import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import { checkAndFixShortcutStorage } from "./core/service/controlService/shortcutKeysEngine/ShortcutKeyFixer";
 import { cn } from "./utils/cn";
-import { isLinux, isMac, isWindows } from "./utils/platform";
+import { isMac, isWindows } from "./utils/platform";
 
 export default function App() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -56,18 +53,6 @@ export default function App() {
   const [uiScalePercent, setUiScalePercent] = useState(Settings.uiScalePercent);
 
   const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
-
-  const handleTitleBarMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
-    if ((event.target as Element).closest('[role="tablist"]')) return;
-    if (event.buttons !== 1) return;
-
-    if (event.detail === 2) {
-      void getCurrentWindow().toggleMaximize();
-      return;
-    }
-
-    void getCurrentWindow().startDragging();
-  };
 
   // const { t } = useTranslation("app");
 
@@ -133,9 +118,6 @@ export default function App() {
       setUiScalePercent(value);
     });
 
-    // 恢复窗口位置大小
-    restoreStateCurrent(StateFlags.SIZE | StateFlags.POSITION | StateFlags.MAXIMIZED);
-
     // setIsWide(window.innerWidth / window.innerHeight > 1.8);
 
     const unlisten1 = getCurrentWindow().onResized(() => {
@@ -148,14 +130,10 @@ export default function App() {
     if (!telemetryEventSent) {
       setTelemetryEventSent(true);
       (async () => {
-        const cpu = await cpuInfo();
+        const system = await Native.systemInfo();
         await Telemetry.event("启动应用", {
           version: await getVersion(),
-          os: platform(),
-          arch: arch(),
-          osVersion: isLinux ? `${await invoke("get_distribution")} ${version()}` : version(),
-          cpu: cpu.cpus[0].brand,
-          cpuCount: cpu.cpu_count,
+          ...system,
         });
       })();
     }
@@ -181,7 +159,6 @@ export default function App() {
     setIsClassroomMode(Settings.isClassroomMode);
   }, [Settings.isClassroomMode]);
 
-  // https://github.com/tauri-apps/tauri/issues/5812
   const isOnResizedDisabled = useRef(false);
   function isMaximizedWorkaround() {
     isOnResizedDisabled.current = true;
@@ -231,9 +208,7 @@ export default function App() {
      * 关闭窗口时的事件监听
      */
     getCurrentWindow()
-      .onCloseRequested(async (e) => {
-        e.preventDefault();
-
+      .onCloseRequested(async () => {
         // 检查是否有未保存的项目
         const unsavedTabs = tabs.filter(
           (tab): tab is Project =>
@@ -270,7 +245,6 @@ export default function App() {
         }
         Telemetry.event("关闭应用");
         // 保存窗口位置
-        await saveWindowState(StateFlags.SIZE | StateFlags.POSITION | StateFlags.MAXIMIZED);
         await getCurrentWindow().destroy();
       })
       .then((it) => {
@@ -346,29 +320,6 @@ export default function App() {
           !isMac && "rounded-lg",
         )}
         style={{ "--pg-ui-scale": uiScalePercent / 100 } as React.CSSProperties}
-        onMouseDownCapture={(event) => {
-          if (!isMac || event.button !== 0) return;
-          const navigation = event.currentTarget.querySelector("#pg-titlebar-navigation");
-          if (!navigation?.childElementCount) return;
-          const target = event.target as Element;
-          if (
-            target.closest(
-              "button, a, input, select, textarea, [contenteditable=true], [role=tablist], [role=menu], [role=menubar], [data-pg-docked-tab-id]",
-            )
-          )
-            return;
-          const toolbar = event.currentTarget.querySelector("[data-pg-titlebar]");
-          const tabBar = event.currentTarget.querySelector("[data-pg-tab-bar]");
-          const top = event.currentTarget.getBoundingClientRect().top;
-          const bottom = Math.max(
-            toolbar?.getBoundingClientRect().bottom ?? top,
-            tabBar?.getBoundingClientRect().bottom ?? top,
-          );
-          if (event.clientY < top || event.clientY >= bottom) return;
-          event.preventDefault();
-          event.stopPropagation();
-          handleTitleBarMouseDown(event);
-        }}
         onContextMenu={(event) => {
           if ((event.target as Element).closest('[data-slot="context-menu-trigger"]')) return;
           event.preventDefault();
@@ -381,8 +332,8 @@ export default function App() {
           <>
             <div
               aria-hidden="true"
+              data-pg-titlebar-drag
               className="absolute top-0 right-3 left-[100px] z-20 h-[calc(0.5rem*var(--pg-ui-scale))] sm:h-[calc(1rem*var(--pg-ui-scale))]"
-              onMouseDown={handleTitleBarMouseDown}
             />
             {/* Native traffic lights do not follow the application's UI zoom. */}
             <div className="absolute top-[2px] left-[71px] z-20 h-7">
@@ -409,12 +360,7 @@ export default function App() {
               isClassroomMode && "opacity-0",
             )}
           >
-            <div
-              className="scrollbar-hide flex h-full min-w-0 items-center overflow-x-auto rounded-full"
-              onMouseDown={(event) => {
-                if (event.target === event.currentTarget) handleTitleBarMouseDown(event);
-              }}
-            >
+            <div className="scrollbar-hide flex h-full min-w-0 items-center overflow-x-auto rounded-full">
               <div
                 className="pointer-events-none flex h-full w-max shrink-0 items-center gap-1 *:pointer-events-auto"
                 style={isMac ? { paddingLeft: "calc(100px / var(--pg-ui-scale))" } : undefined}
@@ -429,14 +375,8 @@ export default function App() {
                 isMac &&
                   "scrollbar-hide pointer-events-auto justify-end overflow-x-auto rounded-full empty:pointer-events-none",
               )}
-              onMouseDown={handleTitleBarMouseDown}
             />
-            <div
-              className="flex h-full min-w-0 items-center justify-end"
-              onMouseDown={(event) => {
-                if (event.target === event.currentTarget) handleTitleBarMouseDown(event);
-              }}
-            >
+            <div className="flex h-full min-w-0 items-center justify-end">
               <div className="bg-background pointer-events-auto flex h-full shrink-0 items-center gap-2 rounded-full px-2 shadow-xs">
                 <div className="hidden sm:block">
                   <ThemeModeSwitch />
@@ -470,75 +410,9 @@ export default function App() {
 
         <CommandPalette zoomStyle={zoomStyle} />
         <RenderOverlays />
-        {/* macOS uses native decorated-window resize regions; Tauri resize dragging is unsupported there. */}
-        {!isMac && <WindowResizeHandles />}
       </div>
     </>
   );
-}
-
-function WindowResizeHandles() {
-  const [enabled, setEnabled] = useState(false);
-  const [hoveredDirection, setHoveredDirection] = useState<string | null>(null);
-
-  useEffect(() => {
-    const appWindow = getCurrentWindow();
-    let disposed = false;
-    const update = async () => {
-      const [maximized, fullscreen, resizable] = await Promise.all([
-        appWindow.isMaximized(),
-        appWindow.isFullscreen(),
-        appWindow.isResizable(),
-      ]);
-      if (!disposed) setEnabled(resizable && !maximized && !fullscreen);
-    };
-    const unlisten = appWindow.onResized(() => void update());
-    void update();
-    return () => {
-      disposed = true;
-      void unlisten.then((stop) => stop());
-    };
-  }, []);
-
-  if (!enabled) return null;
-
-  const handles = [
-    ["North", "top-0 right-3 left-3 h-1.5 cursor-ns-resize", "h-0.5 w-10 rounded-full"],
-    ["South", "bottom-0 right-3 left-3 h-1.5 cursor-ns-resize", "h-0.5 w-10 rounded-full"],
-    ["West", "top-3 bottom-3 left-0 w-1.5 cursor-ew-resize", "h-10 w-0.5 rounded-full"],
-    ["East", "top-3 bottom-3 right-0 w-1.5 cursor-ew-resize", "h-10 w-0.5 rounded-full"],
-    ["NorthWest", "top-0 left-0 size-3 cursor-nwse-resize", "size-2 rounded-tl border-t-2 border-l-2"],
-    ["NorthEast", "top-0 right-0 size-3 cursor-nesw-resize", "size-2 rounded-tr border-t-2 border-r-2"],
-    ["SouthWest", "bottom-0 left-0 size-3 cursor-nesw-resize", "size-2 rounded-bl border-b-2 border-l-2"],
-    ["SouthEast", "bottom-0 right-0 size-3 cursor-nwse-resize", "size-2 rounded-br border-b-2 border-r-2"],
-  ] as const;
-
-  return handles.map(([direction, area, grip]) => (
-    <div
-      key={direction}
-      aria-hidden="true"
-      className={cn("absolute z-50 flex touch-none items-center justify-center", area)}
-      onPointerEnter={() => setHoveredDirection(direction)}
-      onPointerMove={() => setHoveredDirection(direction)}
-      onPointerLeave={() => setHoveredDirection((current) => (current === direction ? null : current))}
-      onPointerCancel={() => setHoveredDirection(null)}
-      onPointerDown={(event) => {
-        if (event.button !== 0) return;
-        event.preventDefault();
-        event.stopPropagation();
-        void getCurrentWindow().startResizeDragging(direction);
-      }}
-    >
-      <span
-        className={cn(
-          "border-foreground/50 cursor-inherit pointer-events-none transition-opacity",
-          hoveredDirection === direction ? "opacity-100" : "opacity-0",
-          direction.length <= 5 && "bg-foreground/50",
-          grip,
-        )}
-      />
-    </div>
-  ));
 }
 
 /**
@@ -578,13 +452,13 @@ function WindowButtons() {
     };
   }, []);
   const checkoutWindowsAlwaysTop = async () => {
-    const tauriWindow = getCurrentWindow();
+    const desktopWindow = getCurrentWindow();
     if (isWindowAlwaysOnTop) {
       setIsWindowAlwaysOnTop(false);
-      await tauriWindow.setAlwaysOnTop(false);
+      await desktopWindow.setAlwaysOnTop(false);
     } else {
       setIsWindowAlwaysOnTop(true);
-      await tauriWindow.setAlwaysOnTop(true);
+      await desktopWindow.setAlwaysOnTop(true);
     }
   };
 

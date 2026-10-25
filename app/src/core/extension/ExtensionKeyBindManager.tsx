@@ -1,6 +1,6 @@
 import { transEmacsKeyWinToMac } from "@/utils/emacs";
 import { isMac } from "@/utils/platform";
-import { createStore } from "@/utils/store";
+import { createStore } from "@/platform/store";
 import { KeyBindsUI, type KeyBindIcon } from "../service/controlService/shortcutKeysEngine/KeyBindsUI";
 
 export interface ExtensionKeyBindRegisterOptions {

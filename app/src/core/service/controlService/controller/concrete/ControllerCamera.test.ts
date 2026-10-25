@@ -17,7 +17,7 @@ vi.mock("@/core/service/feedbackService/effectEngine/concrete/MouseTipFeedbackEf
   MouseTipFeedbackEffect: {},
 }));
 vi.mock("@/utils/externalOpen", () => ({ openBrowserOrFileByEntity: vi.fn() }));
-vi.mock("@/utils/platform", () => ({ isMac: false, isIpad: false }));
+vi.mock("@/utils/platform", () => ({ isMac: false }));
 vi.stubGlobal("WheelEvent", { DOM_DELTA_PIXEL: 0 });
 
 import { ControllerCameraClass } from "./ControllerCamera";

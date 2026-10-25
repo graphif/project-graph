@@ -1,7 +1,7 @@
-import packageJson from "../../../package.json" with { type: "json" };
+import { appVersion } from "../../mygo.config";
 import { runProjectGraphCliProcess } from "./ProjectGraphCli";
 
 await runProjectGraphCliProcess({
-  version: packageJson.version,
+  version: appVersion,
   loadRuntime: () => import("./ProjectGraphCliDevelopmentRuntime"),
 });

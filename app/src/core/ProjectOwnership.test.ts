@@ -1,9 +1,16 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
 import { Dialog } from "@/components/ui/dialog";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadWithProjectOwnership, ProjectOwnershipError } from "./ProjectOwnership";
 
-vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn(), isTauri: vi.fn() }));
+const invoke = vi.hoisted(() => vi.fn<(command: string, payload?: unknown) => Promise<any>>());
+const promote = vi.hoisted(() => vi.fn(async () => undefined));
+vi.mock("@/platform/desktop", () => ({
+  Ownership: {
+    acquire: (projectPath: string) => invoke("acquire_desktop_project_ownership", { projectPath }),
+    release: (ownershipId: string) => invoke("release_desktop_project_ownership", { ownershipId }),
+    makeConnectable: promote,
+  },
+}));
 vi.mock("@/core/OpenProjectRuntimeHost", () => ({
   ensureOpenProjectRuntimeBridgeListener: vi.fn(async () => undefined),
 }));
@@ -22,7 +29,6 @@ vi.mock("i18next", () => ({
 }));
 
 const invokeMock = vi.mocked(invoke);
-const isTauriMock = vi.mocked(isTauri);
 
 describe("desktop Project ownership lifecycle", () => {
   it("reloads an orphaned backend lease after a frontend reload", async () => {
@@ -39,7 +45,7 @@ describe("desktop Project ownership lifecycle", () => {
   });
   beforeEach(() => {
     invokeMock.mockReset();
-    isTauriMock.mockReturnValue(true);
+    promote.mockReset().mockResolvedValue(undefined);
     vi.mocked(Dialog.buttons).mockClear();
   });
 
@@ -173,14 +179,12 @@ describe("desktop Project ownership lifecycle", () => {
     });
   });
 
-  it("keeps the web Project loading path unchanged", async () => {
-    isTauriMock.mockReturnValue(false);
-    const load = vi.fn(async (ownership) => ownership ?? "web-project");
-
-    await expect(loadWithProjectOwnership("/projects/graph.prg", load)).resolves.toEqual({
-      status: "opened",
-      value: "web-project",
+  it("does not load without a working desktop host", async () => {
+    invokeMock.mockRejectedValueOnce(new Error("Desktop host missing"));
+    const load = vi.fn();
+    await expect(loadWithProjectOwnership("/projects/graph.prg", load)).rejects.toMatchObject({
+      code: "PROJECT_LOAD_FAILED",
     });
-    expect(invokeMock).not.toHaveBeenCalled();
+    expect(load).not.toHaveBeenCalled();
   });
 });

@@ -38,24 +38,16 @@ export default defineConfig({
 
   // 不清屏，方便看rust报错
   clearScreen: false,
-  // tauri需要固定的端口
+  // The desktop host connects to a fixed development port.
   server: {
     host,
     port: 1420,
     // 端口冲突时直接报错，不尝试下一个可用端口
     strictPort: true,
     watch: {
-      ignored: ["**/src-tauri/**"],
+      ignored: ["**/.mygo/**", "**/build/**"],
     },
   },
-
-  // 2024年10月3日发现 pnpm build 会报错，
-  // Top-level await is not available in the configured target environment
-  // 添加下面的配置解决了
-  // 2024/10/05 main.tsx去掉了顶层await，所以不需要这个配置
-  // build: {
-  //   target: "esnext",
-  // },
 
   // 环境变量前缀
   // 只有名字以LR_开头的环境变量才会被注入到前端

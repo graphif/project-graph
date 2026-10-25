@@ -14,14 +14,18 @@
       "cache": true,
       "inputs": ["{projectRoot}/src/**/*.{ts,tsx}"]
     },
-    "tauri:dev": {
-      "cache": false,
-      "continuous": true
-    },
-    "tauri:build": {
-      "dependsOn": ["build", "^build"],
-      "outputs": ["{projectRoot}/src-tauri/target/release/bundle/**"],
-      "cache": true
+    "build:desktop": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "default",
+        "{projectRoot}/**/*.go",
+        "{projectRoot}/go.mod",
+        "{projectRoot}/go.sum",
+        "{projectRoot}/mygo.config.ts",
+        "{projectRoot}/resources/**/*"
+      ],
+      "outputs": ["{projectRoot}/build/**"],
+      "cache": false
     },
     "sync-locales": {
       "cache": false

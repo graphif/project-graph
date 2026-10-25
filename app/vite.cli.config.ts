@@ -1,20 +1,19 @@
 import path from "node:path";
 import { defineConfig } from "vite";
+import { appVersion } from "./mygo.config";
 import {
   projectGraphCliRuntimeCompatibilityPlugin,
   projectGraphCliRuntimeStubDescriptors,
   resolveProjectGraphCliRuntimeStubs,
 } from "./src/cli/ProjectGraphCliRuntimeCompatibility";
 
-const version = process.env.PROJECT_GRAPH_CLI_VERSION;
-if (!version) throw new Error("PROJECT_GRAPH_CLI_VERSION is required");
 const runtimeStubs = resolveProjectGraphCliRuntimeStubs(new URL("./src/cli/", import.meta.url).href);
 
 export default defineConfig({
   logLevel: "silent",
   plugins: [projectGraphCliRuntimeCompatibilityPlugin(runtimeStubs)],
   define: {
-    __PROJECT_GRAPH_CLI_VERSION__: JSON.stringify(version),
+    __PROJECT_GRAPH_CLI_VERSION__: JSON.stringify(appVersion),
   },
   resolve: {
     alias: [

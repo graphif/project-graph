@@ -1,4 +1,4 @@
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+import { fetch as desktopFetch } from "@/platform/http";
 import { z } from "zod";
 
 const openRouterModelResponseSchema = z.object({
@@ -21,7 +21,7 @@ export type AIModelContextWindowOptions = {
 
 export async function resolveAIModelContextWindow(
   options: AIModelContextWindowOptions,
-  fetchImpl: typeof globalThis.fetch = tauriFetch,
+  fetchImpl: typeof globalThis.fetch = desktopFetch,
 ): Promise<AIModelContextWindow | null> {
   if (Number.isInteger(options.manualTokenLimit) && options.manualTokenLimit > 0) {
     return { tokenLimit: options.manualTokenLimit, source: "manual" };

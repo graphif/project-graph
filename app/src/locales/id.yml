@@ -531,13 +531,13 @@ settings:
     title: Mode Tempel Clipboard
     description: |
       Pilih teknologi yang digunakan saat menempel konten dari clipboard sistem.
-      Mode "Otomatis" secara otomatis memilih metode terbaik berdasarkan OS (macOS menggunakan Web Clipboard API, yang lain menggunakan Tauri native API).
+      Mode "Otomatis" secara otomatis memilih metode terbaik berdasarkan OS (macOS menggunakan Web Clipboard API, yang lain menggunakan MyGo native API).
       Mode "WebView" selalu menggunakan Web Clipboard API.
-      Mode "Tauri" selalu menggunakan Tauri native API.
+      Mode "Native" selalu menggunakan MyGo native API.
     options:
       auto: Otomatis
       webview: WebView
-      tauri: Tauri
+      native: Native
   isPauseRenderWhenManipulateOvertime:
     title: Jeda Render Saat Tidak Beroperasi Panggung Selama Waktu Tertentu
     description: |

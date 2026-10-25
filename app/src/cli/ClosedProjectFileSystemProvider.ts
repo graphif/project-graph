@@ -4,7 +4,7 @@ import { constants } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import type { FileSystemProvider } from "@/core/interfaces/Service";
 import { RuntimeCleanupError } from "@/core/RuntimeCleanup";
-import type { DirEntry } from "@tauri-apps/plugin-fs";
+import type { DirEntry } from "@/platform/files";
 import type { URI } from "vscode-uri";
 
 export class FileSystemProviderFile implements FileSystemProvider {

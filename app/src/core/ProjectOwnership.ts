@@ -5,7 +5,7 @@ import {
   type OpenProjectRuntimeHostRegistration,
   registerOpenProjectRuntimeHost,
 } from "@/core/OpenProjectRuntimeHost";
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { Ownership } from "@/platform/desktop";
 import i18next from "i18next";
 import type { URI } from "vscode-uri";
 
@@ -45,9 +45,7 @@ export class ProjectOwnershipLease {
 
   async makeConnectable(): Promise<void> {
     try {
-      await invoke<void>("make_desktop_project_ownership_connectable", {
-        ownershipId: this.ownershipId,
-      });
+      await Ownership.makeConnectable(this.ownershipId);
     } catch (error) {
       throw toProjectOwnershipError(error);
     }
@@ -55,9 +53,7 @@ export class ProjectOwnershipLease {
 
   dispose(): Promise<void> {
     if (this.disposed) return Promise.resolve();
-    this.disposePromise ??= invoke<void>("release_desktop_project_ownership", {
-      ownershipId: this.ownershipId,
-    })
+    this.disposePromise ??= Ownership.release(this.ownershipId)
       .then(() => {
         this.disposed = true;
       })
@@ -212,14 +208,10 @@ type ProjectOwnershipSaveReservation =
   | { status: "already_open"; ownershipId: string; canonicalPath: string };
 
 async function reserveProjectOwnershipForSave(projectPath: string): Promise<ProjectOwnershipSaveReservation> {
-  if (!isTauri()) return { status: "reserved", ownership: undefined };
-
   let acquisition: DesktopOwnershipAcquisition;
   try {
     await ensureOpenProjectRuntimeBridgeListener();
-    acquisition = await invoke<DesktopOwnershipAcquisition>("acquire_desktop_project_ownership_for_save", {
-      projectPath,
-    });
+    acquisition = await acquire(projectPath, true);
   } catch (error) {
     throw toProjectOwnershipError(error);
   }
@@ -241,16 +233,10 @@ export async function loadWithProjectOwnership<T>(
   load: (ownership: ProjectOwnershipLease | undefined) => Promise<T>,
   hasFrontendOwner: (ownershipId: string, canonicalPath: string) => boolean = () => true,
 ): Promise<ProjectOwnershipLoadResult<T>> {
-  if (!isTauri()) {
-    return { status: "opened", value: await load(undefined) };
-  }
-
   let acquisition: DesktopOwnershipAcquisition;
   try {
     await ensureOpenProjectRuntimeBridgeListener();
-    acquisition = await invoke<DesktopOwnershipAcquisition>("acquire_desktop_project_ownership", {
-      projectPath,
-    });
+    acquisition = await acquire(projectPath, false);
   } catch (error) {
     throw toProjectOwnershipError(error);
   }
@@ -264,11 +250,19 @@ export async function loadWithProjectOwnership<T>(
 
   const ownership = new ProjectOwnershipLease(acquisition.ownershipId, acquisition.canonicalPath);
   try {
-    return { status: "opened", value: await load(ownership) };
+    const value = await load(ownership);
+    await ownership.makeConnectable();
+    return { status: "opened", value };
   } catch (error) {
     await releaseProjectOwnershipWithRetry(ownership);
     throw error;
   }
+}
+
+async function acquire(path: string, forSave: boolean): Promise<DesktopOwnershipAcquisition> {
+  const acquisition = await Ownership.acquire(path, forSave);
+  if (acquisition.status !== "acquired" && acquisition.status !== "already_owned") throw acquisition;
+  return acquisition as DesktopOwnershipAcquisition;
 }
 
 function toProjectOwnershipError(error: unknown): ProjectOwnershipError {

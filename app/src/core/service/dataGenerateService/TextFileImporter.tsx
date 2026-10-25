@@ -3,8 +3,8 @@ import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { open } from "@tauri-apps/plugin-dialog";
-import { readFile } from "@tauri-apps/plugin-fs";
+import { open } from "@/platform/dialogs";
+import { readFile } from "@/platform/files";
 
 export namespace TextFileImporter {
   export async function importTextFiles(project: Project): Promise<number> {

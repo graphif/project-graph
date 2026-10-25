@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { MCP } from "@/platform/desktop";
 import { jsonSchema, type ToolSet } from "ai";
 import { z } from "zod/v4";
 import type { AIMCPServerConfig, AIMCPToolDescriptor } from "./AIMCPConfig";
@@ -23,7 +23,7 @@ function toStdioCommandConfig(config: AIMCPStdioConfig) {
     serverName: config.name,
     command: config.transport.command,
     args: config.transport.args,
-    cwd: config.transport.cwd,
+    cwd: config.transport.cwd ?? "",
     env: config.transport.env ?? {},
   };
 }
@@ -45,17 +45,14 @@ function parseStdioTools(serverName: string, value: unknown): AIMCPToolDescripto
 
 export async function startStdioMCPServer(config: AIMCPStdioConfig): Promise<AIMCPToolDescriptor[]> {
   try {
-    return parseStdioTools(
-      config.name,
-      await invoke<unknown>("mcp_stdio_start", { config: toStdioCommandConfig(config) }),
-    );
+    return parseStdioTools(config.name, await MCP.start(toStdioCommandConfig(config)));
   } catch (error) {
     throw new Error(`${config.name}: ${getErrorMessage(error)}`, { cause: error });
   }
 }
 
 async function listStdioMCPTools(serverName: string): Promise<AIMCPToolDescriptor[]> {
-  return parseStdioTools(serverName, await invoke<unknown>("mcp_stdio_list_tools", { serverName }));
+  return parseStdioTools(serverName, await MCP.listTools(serverName));
 }
 
 export async function ensureStdioMCPServer(config: AIMCPStdioConfig): Promise<AIMCPToolDescriptor[]> {
@@ -76,7 +73,7 @@ export async function ensureStdioMCPServer(config: AIMCPStdioConfig): Promise<AI
 
 export async function stopStdioMCPServer(serverName: string): Promise<void> {
   try {
-    await invoke("mcp_stdio_stop", { serverName });
+    await MCP.stop(serverName);
   } catch (error) {
     throw new Error(`${serverName}: ${getErrorMessage(error)}`, { cause: error });
   }
@@ -104,11 +101,7 @@ export function createStdioMCPTools(
           throw new Error(`MCP stdio tool ${config.name}/${descriptor.name} arguments must be an object`);
         }
         try {
-          return await invoke<unknown>("mcp_stdio_call_tool", {
-            serverName: config.name,
-            toolName: descriptor.name,
-            arguments: input,
-          });
+          return await MCP.callTool(config.name, descriptor.name, input as Record<string, unknown>);
         } catch (error) {
           throw new Error(`${config.name}/${descriptor.name}: ${getErrorMessage(error)}`, { cause: error });
         }

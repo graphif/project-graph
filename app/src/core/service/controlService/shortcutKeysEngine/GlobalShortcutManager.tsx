@@ -1,5 +1,5 @@
-import { register, unregisterAll, isRegistered, unregister } from "@tauri-apps/plugin-global-shortcut";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { register, unregisterAll, isRegistered, unregister } from "@/platform/shortcuts";
+import { getCurrentWindow } from "@/platform/window";
 import { Settings } from "../../Settings";
 import { toast } from "sonner";
 
@@ -46,7 +46,7 @@ export class GlobalShortcutManager {
     }
 
     this.isInitialized = true;
-    Settings.watch("allowGlobalHotKeys", (v) => {
+    this.settingsUnsubscribe = Settings.watch("allowGlobalHotKeys", (v) => {
       // v 是变化后的值
       if (v) {
         this.updateShortcuts();
@@ -54,6 +54,7 @@ export class GlobalShortcutManager {
         unregisterAll();
       }
     });
+    if (Settings.allowGlobalHotKeys) await this.updateShortcuts();
   }
 
   // 更新快捷键注册状态
@@ -107,7 +108,6 @@ export class GlobalShortcutManager {
   private async handleShowWindow() {
     console.log("开始呼出窗口");
     const window = getCurrentWindow();
-    // Tauri v2 中 show() 不会自动从最小化恢复，需要显式调用 unminimize
     await window.unminimize();
     await window.show();
     await window.setSkipTaskbar(false);

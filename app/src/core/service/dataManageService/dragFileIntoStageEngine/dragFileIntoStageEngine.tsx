@@ -4,7 +4,7 @@ import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { readFile, stat } from "@tauri-apps/plugin-fs";
+import { readFile, stat } from "@/platform/files";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
 import { onOpenFile } from "../../GlobalMenu";

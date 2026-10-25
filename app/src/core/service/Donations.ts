@@ -1,4 +1,4 @@
-import { fetch } from "@tauri-apps/plugin-http";
+import { fetch } from "@/platform/http";
 import { accountServiceBaseUrl } from "./AuthClient";
 
 export interface DonationData {

@@ -1,8 +1,6 @@
 import { cn } from "./utils/cn";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { listen } from "@tauri-apps/api/event";
+import { onFileDrop } from "mygo-runtime";
 import { useEffect, useRef, useState } from "react";
-import { isMac } from "./utils/platform";
 import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import { isMediaFilePath } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
 import type { Project } from "./core/Project";
@@ -42,11 +40,8 @@ export const DropWindowCover = ({ project }: { project: Project }) => {
       rafRef.current = null;
     };
 
-    const unlistenPromise = listen<PgDragDropPayload>("pg-drag-drop", async (event) => {
-      const payload = event.payload;
-      const size = await getCurrentWindow().outerSize();
-      const scaleFactor = await getCurrentWindow().scaleFactor();
-      const logicalHeight = isMac ? size.height / scaleFactor : size.height;
+    const handle = (payload: PgDragDropPayload) => {
+      const logicalHeight = window.innerHeight;
       const getDropLocation = (y: number) =>
         y <= logicalHeight / 3 ? "top" : y <= (logicalHeight / 3) * 2 ? "middle" : "bottom";
 
@@ -76,9 +71,7 @@ export const DropWindowCover = ({ project }: { project: Project }) => {
         }, fadeOutMs);
 
         if (payload.text && payload.text.trim().length > 0) {
-          const worldPos = project.renderer.transformView2World(
-            new Vector(payload.x / scaleFactor, payload.y / scaleFactor),
-          );
+          const worldPos = project.renderer.transformView2World(new Vector(payload.x, payload.y));
           const textNode = new TextNode(project, {
             text: payload.text.trim(),
             collisionBox: new CollisionBox([new Rectangle(worldPos, new Vector(300, 150))]),
@@ -104,11 +97,39 @@ export const DropWindowCover = ({ project }: { project: Project }) => {
           }
         }
       }
-    });
+    };
+    const unlisten = onFileDrop(({ paths, x, y }) => handle({ kind: "drop", paths, x, y, text: null }));
+    const drag = (event: DragEvent) => {
+      event.preventDefault();
+      handle({
+        kind: event.type === "dragleave" ? "leave" : "over",
+        paths: [],
+        text: null,
+        x: event.clientX,
+        y: event.clientY,
+      });
+    };
+    const drop = (event: DragEvent) => {
+      event.preventDefault();
+      if (event.dataTransfer?.files.length) return;
+      handle({
+        kind: "drop",
+        paths: [],
+        text: event.dataTransfer?.getData("text/plain") ?? null,
+        x: event.clientX,
+        y: event.clientY,
+      });
+    };
+    window.addEventListener("dragover", drag);
+    window.addEventListener("dragleave", drag);
+    window.addEventListener("drop", drop);
 
     return () => {
       cancelAnimation();
-      unlistenPromise.then((f) => f()).catch(() => {});
+      unlisten();
+      window.removeEventListener("dragover", drag);
+      window.removeEventListener("dragleave", drag);
+      window.removeEventListener("drop", drop);
     };
   }, [project]);
 

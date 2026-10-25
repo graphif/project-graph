@@ -848,7 +848,7 @@ async function recognizeImage(dataUrl: string, prompt: string): Promise<string> 
   const [{ Settings }, { createOpenAICompatible }, { fetch }, { generateText }] = await Promise.all([
     import("@/core/service/Settings"),
     import("@ai-sdk/openai-compatible"),
-    import("@tauri-apps/plugin-http"),
+    import("@/platform/http"),
     import("ai"),
   ]);
   const provider = createOpenAICompatible({

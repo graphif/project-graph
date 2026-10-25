@@ -3,7 +3,7 @@ import type { ActivatedSkillSnapshot } from "./AISkills";
 
 const stores = vi.hoisted(() => new Map<string, Map<string, unknown>>());
 
-vi.mock("@tauri-apps/plugin-store", () => ({
+vi.mock("@/platform/store", () => ({
   LazyStore: class {
     private readonly values: Map<string, unknown>;
 

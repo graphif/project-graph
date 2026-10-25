@@ -82,7 +82,7 @@ import { File } from "lucide-react";
 import md5 from "md5";
 import mime from "mime";
 import React from "react";
-import { save as saveDialog } from "@tauri-apps/plugin-dialog";
+import { save as saveDialog } from "@/platform/dialogs";
 import { URI } from "vscode-uri";
 import { CollaborationService } from "./service/collaboration/CollaborationService";
 import { AutoSaveBackupService } from "./service/dataFileService/AutoSaveBackupService";

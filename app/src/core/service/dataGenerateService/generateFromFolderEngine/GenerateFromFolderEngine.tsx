@@ -1,6 +1,6 @@
 import { Color, Vector } from "@graphif/data-structures";
 import { Project, service } from "@/core/Project";
-import { invoke } from "@tauri-apps/api/core";
+import { Files, type Folder as FolderEntry } from "@/generated/mygo";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
@@ -26,7 +26,7 @@ export class GenerateFromFolder {
     // 当前的放置点位
     const currentLocation = this.project.camera.location.clone();
     const dfs = (fEntry: FolderEntry, currentSection: Section | null = null) => {
-      if (fEntry.is_file) {
+      if (!fEntry.isDirectory) {
         // 是文件，创建文本节点
         const textNode = new TextNode(this.project, {
           text: fEntry.name,
@@ -145,16 +145,8 @@ export class GenerateFromFolder {
 /**
  * 文件结构类型
  */
-export type FolderEntry = {
-  name: string;
-  path: string;
-  is_file: boolean;
-  children?: FolderEntry[];
-};
-
 function readFolderStructure(path: string): Promise<FolderEntry> {
-  // 不可能是isWeb的情况了
-  return invoke("read_folder_structure", { path });
+  return Files.readStructure(path);
 }
 
 /**

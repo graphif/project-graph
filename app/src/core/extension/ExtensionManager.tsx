@@ -1,5 +1,5 @@
-import { appDataDir, join } from "@tauri-apps/api/path";
-import { exists, mkdir, readDir } from "@tauri-apps/plugin-fs";
+import { appDataDir, join } from "@/platform/path";
+import { exists, mkdir, readDir } from "@/platform/files";
 import { URI } from "vscode-uri";
 import { FileSystemProviderFile } from "../fileSystemProvider/FileSystemProviderFile";
 import { Settings } from "../service/Settings";

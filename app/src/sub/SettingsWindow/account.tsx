@@ -6,7 +6,7 @@ import { UserState } from "@/core/service/UserState";
 import type { AuthUser } from "@/state";
 import { currentUserAtom, store } from "@/state";
 import { getAppVersion, getDeviceId } from "@/utils/otherApi";
-import { open } from "@tauri-apps/plugin-shell";
+import { open } from "@/platform/shell";
 import { useAtom } from "jotai";
 import { ExternalLink, LoaderCircle, LogIn, LogOut, Mail } from "lucide-react";
 import { useState } from "react";

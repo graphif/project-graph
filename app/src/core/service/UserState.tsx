@@ -1,7 +1,7 @@
 import { FeatureFlags } from "@/core/service/FeatureFlags";
 import type { AuthUser } from "@/state";
-import { createStore } from "@/utils/store";
-import { Store } from "@tauri-apps/plugin-store";
+import { createStore } from "@/platform/store";
+import type { Store } from "@/platform/store";
 
 export interface StoredSession {
   user: AuthUser;

@@ -8,7 +8,7 @@ import {
   transformedKeys,
 } from "@/utils/emacs";
 import { isMac } from "@/utils/platform";
-import { createStore } from "@/utils/store";
+import { createStore } from "@/platform/store";
 import { Queue } from "@graphif/data-structures";
 import { proxy } from "comlink";
 import type { LucideProps } from "lucide-react";

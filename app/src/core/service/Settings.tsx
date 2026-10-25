@@ -6,7 +6,7 @@ import {
 } from "@/core/service/ProjectToolSettingsSchema";
 import { DEFAULT_SUB_WINDOW_OPEN_MODES, subWindowOpenModesSchema } from "@/core/subWindowOpenModes";
 import { isMac } from "@/utils/platform";
-import { LazyStore } from "@tauri-apps/plugin-store";
+import { LazyStore } from "@/platform/store";
 import i18next from "i18next";
 import { useEffect, useState } from "react";
 import z from "zod";
@@ -217,7 +217,7 @@ export const settingsSchema = z.object({
   textNodePasteSizeAdjustMode: z
     .union([z.literal("auto"), z.literal("manual"), z.literal("autoByLength")])
     .default("autoByLength"),
-  clipboardPasteMode: z.union([z.literal("auto"), z.literal("webview"), z.literal("tauri")]).default("auto"),
+  clipboardPasteMode: z.union([z.literal("auto"), z.literal("webview"), z.literal("native")]).default("auto"),
   resizePastedImages: z.boolean().default(true),
   maxPastedImageSize: projectToolSettingSchemas.maxPastedImageSize,
   compressImageToWebp: z.boolean().default(true),

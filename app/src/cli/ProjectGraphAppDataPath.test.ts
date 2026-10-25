@@ -6,35 +6,31 @@ import {
 } from "./ProjectGraphAppDataPath";
 
 describe("Project Graph app-data paths", () => {
-  it("matches the Tauri bundle-identifier path on macOS", () => {
+  it("uses the new desktop identity on macOS", () => {
     expect(resolveProjectGraphAppDataDirectories("darwin", {}, "/Users/alice")).toEqual([
-      "/Users/alice/Library/Application Support/liren.project-graph",
+      "/Users/alice/Library/Application Support/dev.graphif.prg",
     ]);
   });
 
-  it("uses roaming app data on Windows and retains the former macOS-style fallback", () => {
+  it("uses roaming app data on Windows without old business data fallback", () => {
     expect(
       resolveProjectGraphAppDataDirectories(
         "win32",
         { APPDATA: "C:\\Users\\alice\\AppData\\Roaming" },
         "C:\\Users\\alice",
       ),
-    ).toEqual([
-      "C:\\Users\\alice\\AppData\\Roaming\\liren.project-graph",
-      "C:\\Users\\alice\\Library\\Application Support\\liren.project-graph",
-    ]);
+    ).toEqual(["C:\\Users\\alice\\AppData\\Roaming\\dev.graphif.prg"]);
   });
 
-  it("uses XDG data on Linux and retains the former macOS-style fallback", () => {
-    expect(resolveProjectGraphAppDataDirectories("linux", { XDG_DATA_HOME: "/data/alice" }, "/home/alice")).toEqual([
-      "/data/alice/liren.project-graph",
-      "/home/alice/Library/Application Support/liren.project-graph",
-    ]);
+  it("matches the Go configuration directory on Linux", () => {
+    expect(resolveProjectGraphAppDataDirectories("linux", { XDG_CONFIG_HOME: "/config/alice" }, "/home/alice")).toEqual(
+      ["/config/alice/dev.graphif.prg"],
+    );
   });
 
   it("stores Project ownership under the native per-user app-data directory", () => {
     expect(resolveProjectGraphOwnershipDirectory("darwin", {}, "/Users/alice")).toBe(
-      "/Users/alice/Library/Application Support/liren.project-graph/project-ownership",
+      "/Users/alice/Library/Application Support/dev.graphif.prg/project-ownership",
     );
     expect(
       resolveProjectGraphOwnershipDirectory(
@@ -42,9 +38,9 @@ describe("Project Graph app-data paths", () => {
         { APPDATA: "C:\\Users\\alice\\AppData\\Roaming" },
         "C:\\Users\\alice",
       ),
-    ).toBe("C:\\Users\\alice\\AppData\\Roaming\\liren.project-graph\\project-ownership");
-    expect(resolveProjectGraphOwnershipDirectory("linux", { XDG_DATA_HOME: "/data/alice" }, "/home/alice")).toBe(
-      "/data/alice/liren.project-graph/project-ownership",
+    ).toBe("C:\\Users\\alice\\AppData\\Roaming\\dev.graphif.prg\\project-ownership");
+    expect(resolveProjectGraphOwnershipDirectory("linux", { XDG_CONFIG_HOME: "/config/alice" }, "/home/alice")).toBe(
+      "/config/alice/dev.graphif.prg/project-ownership",
     );
   });
 

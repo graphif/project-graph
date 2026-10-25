@@ -33,7 +33,8 @@ export const projectGraphCliRuntimeStubDescriptors: readonly {
   },
   { matcher: /^(?:.*\/)?feedbackService\/SoundService$/, stubKey: "soundService" },
   { matcher: "@/core/service/feedbackService/SoundService", stubKey: "soundService" },
-  { matcher: "@tauri-apps/plugin-http", stubKey: "http" },
+  { matcher: "@/platform/http", stubKey: "http" },
+  { matcher: /^(?:.*\/)?platform\/http(?:\.ts)?$/, stubKey: "http" },
   {
     matcher: /^(?:.*\/)?core\/service\/dataManageService\/aiEngine\/ModelImageEncoder(?:\.tsx)?$/,
     stubKey: "modelImageEncoder",

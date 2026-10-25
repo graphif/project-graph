@@ -2,7 +2,7 @@
 
 Configuration is read from `components.json`.
 
-> **IMPORTANT:** Always run commands using the project's package runner: `npx shadcn@latest`, `pnpm dlx shadcn@latest`, or `bunx --bun shadcn@latest`. Check `packageManager` from project context to choose the right one. Examples below use `npx shadcn@latest` but substitute the correct runner for the project.
+> **IMPORTANT:** This repository uses `bunx --bun shadcn@latest`. Examples below use `npx shadcn@latest`; substitute the Bun runner for this project.
 
 > **IMPORTANT:** Only use the flags documented below. Do not invent or guess flags — if a flag isn't listed here, it doesn't exist. The CLI auto-detects the package manager from the project's lockfile; there is no `--package-manager` flag.
 
@@ -199,7 +199,7 @@ Displays project info and `components.json` configuration. Run this first to dis
 | `tailwindConfigFile` | `string`  | Path to the Tailwind config file                                   |
 | `tailwindCssFile`    | `string`  | Path to the global CSS file                                        |
 | `aliasPrefix`        | `string`  | Import alias prefix (e.g. `@`, `~`, `@/`)                          |
-| `packageManager`     | `string`  | Detected package manager (`npm`, `pnpm`, `yarn`, `bun`)            |
+| `packageManager`     | `string`  | Detected package manager (`bun` in this repository)                |
 
 **Components.json fields:**
 

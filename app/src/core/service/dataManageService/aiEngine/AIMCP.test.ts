@@ -9,7 +9,7 @@ import {
 } from "./AIMCP";
 
 vi.mock("@ai-sdk/mcp", () => ({ createMCPClient: vi.fn() }));
-vi.mock("@tauri-apps/plugin-http", () => ({ fetch: vi.fn() }));
+vi.mock("@/platform/http", () => ({ fetch: vi.fn() }));
 
 describe("AIMCP tool adaptation", () => {
   it("normalizes server names into stable readable slugs", () => {

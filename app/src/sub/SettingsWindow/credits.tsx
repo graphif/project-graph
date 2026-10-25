@@ -5,7 +5,7 @@ import { fetchDonations, type DonationData } from "@/core/service/Donations";
 import { Telemetry } from "@/core/service/Telemetry";
 import { isDevAtom } from "@/state";
 import { cn } from "@/utils/cn";
-import { open } from "@tauri-apps/plugin-shell";
+import { open } from "@/platform/shell";
 import { useAtom } from "jotai";
 import {
   AlertCircle,

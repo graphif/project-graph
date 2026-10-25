@@ -11,11 +11,11 @@ vi.mock("@/core/service/Settings", () => ({
     autoBackupStrategy: "sideBySide",
   },
 }));
-vi.mock("@tauri-apps/api/path", () => ({
+vi.mock("@/platform/path", () => ({
   appCacheDir: vi.fn(),
   join: vi.fn(async (...parts: string[]) => parts.join("/")),
 }));
-vi.mock("@tauri-apps/plugin-fs", () => ({
+vi.mock("@/platform/files", () => ({
   exists: vi.fn(),
   writeFile: vi.fn(),
   readDir: vi.fn(async () => []),

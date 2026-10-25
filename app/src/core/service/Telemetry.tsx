@@ -1,6 +1,6 @@
 import { FeatureFlags } from "@/core/service/FeatureFlags";
 import { getDeviceId } from "@/utils/otherApi";
-import { fetch } from "@tauri-apps/plugin-http";
+import { fetch } from "@/platform/http";
 import { Settings } from "./Settings";
 
 export namespace Telemetry {

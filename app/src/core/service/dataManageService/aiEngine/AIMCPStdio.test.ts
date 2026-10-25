@@ -1,9 +1,17 @@
-import { invoke } from "@tauri-apps/api/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AIMCPServerConfig } from "./AIMCPConfig";
 import { createStdioMCPTools, ensureStdioMCPServer, startStdioMCPServer, stopStdioMCPServer } from "./AIMCPStdio";
 
-vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn() }));
+const invoke = vi.hoisted(() => vi.fn<(command: string, payload?: unknown) => Promise<any>>());
+vi.mock("@/platform/desktop", () => ({
+  MCP: {
+    start: (config: any) => invoke("mcp_stdio_start", { config: { ...config, cwd: config.cwd || undefined } }),
+    listTools: (serverName: string) => invoke("mcp_stdio_list_tools", { serverName }),
+    stop: (serverName: string) => invoke("mcp_stdio_stop", { serverName }),
+    callTool: (serverName: string, toolName: string, args: unknown) =>
+      invoke("mcp_stdio_call_tool", { serverName, toolName, arguments: args }),
+  },
+}));
 
 const invokeMock = vi.mocked(invoke);
 
@@ -20,7 +28,7 @@ function config(): AIMCPServerConfig & { transport: { type: "stdio"; command: st
 describe("AIMCP stdio bridge", () => {
   beforeEach(() => invokeMock.mockReset());
 
-  it("starts a process through Tauri and keeps the raw tool schema", async () => {
+  it("starts a process through MyGo and keeps the raw tool schema", async () => {
     const inputSchema = { type: "object", properties: { path: { type: "string" } } };
     invokeMock.mockResolvedValueOnce([{ name: "read_file", description: "Read a file", inputSchema }]);
 
@@ -45,7 +53,7 @@ describe("AIMCP stdio bridge", () => {
     });
   });
 
-  it("creates approval-gated AI SDK tools that invoke the Rust client", async () => {
+  it("creates approval-gated AI SDK tools that invoke the Go client", async () => {
     invokeMock.mockResolvedValueOnce({ content: [{ type: "text", text: "ok" }] });
     const tools = createStdioMCPTools(
       config(),

@@ -9,8 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Themes } from "@/core/service/Themes";
 import { PrgMetadata } from "@/types/metadata";
 import { Decoder, Encoder } from "@msgpack/msgpack";
-import { appDataDir, join } from "@tauri-apps/api/path";
-import { mkdir, writeFile } from "@tauri-apps/plugin-fs";
+import { appDataDir, join } from "@/platform/path";
+import { mkdir, writeFile } from "@/platform/files";
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipReader } from "@zip.js/zip.js";
 import {
   Blocks,

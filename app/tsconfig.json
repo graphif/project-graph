@@ -30,6 +30,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "tests"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src", "tests", "mygo.config.ts"]
 }

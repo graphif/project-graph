@@ -7,18 +7,7 @@ import {
 } from "@/core/service/dataManageService/aiEngine/BuiltInToolRegistry";
 import { classifyBuiltInToolRuntimeError } from "@/core/service/dataManageService/aiEngine/BuiltInToolRuntimeError";
 import type { AIObjectReferenceErrorCode } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-
-type RuntimeInvocation =
-  | {
-      kind?: "invoke";
-      requestId: string;
-      projectPath: string;
-      toolName: string;
-      input: unknown;
-    }
-  | { kind: "cancel"; requestId: string };
+import { Bridge, events } from "@/platform/desktop";
 
 type RuntimeResponse =
   | { ok: true; value: unknown }
@@ -143,32 +132,31 @@ const bridgeInvocationControllers = new Map<string, AbortController>();
 let bridgeListenerPromise: Promise<void> | undefined;
 
 export function ensureOpenProjectRuntimeBridgeListener(): Promise<void> {
-  bridgeListenerPromise ??= listen<RuntimeInvocation>("project-runtime-invocation", async ({ payload }) => {
-    try {
-      if (payload.kind === "cancel") {
-        bridgeInvocationControllers.get(payload.requestId)?.abort();
-        return;
-      }
-      const host = runtimeHosts.get(payload.projectPath);
-      const abortController = new AbortController();
-      bridgeInvocationControllers.set(payload.requestId, abortController);
-      let response: RuntimeResponse;
+  bridgeListenerPromise ??= Promise.resolve(
+    events.projectRuntimeInvocation.on(async (payload) => {
       try {
-        response = host
-          ? await host.invoke(payload.toolName, payload.input, abortController.signal)
-          : unavailableResponse();
-      } finally {
-        bridgeInvocationControllers.delete(payload.requestId);
+        if (payload.kind === "cancel") {
+          bridgeInvocationControllers.get(payload.requestId)?.abort();
+          return;
+        }
+        const host = runtimeHosts.get(payload.projectPath);
+        const abortController = new AbortController();
+        bridgeInvocationControllers.set(payload.requestId, abortController);
+        let response: RuntimeResponse;
+        try {
+          response = host
+            ? await host.invoke(payload.toolName, payload.input, abortController.signal)
+            : unavailableResponse();
+        } finally {
+          bridgeInvocationControllers.delete(payload.requestId);
+        }
+        const delivered = await Bridge.respond(payload.requestId, response);
+        if (!delivered) return;
+      } catch (error) {
+        window.dispatchEvent(new ErrorEvent("error", { error }));
       }
-      const delivered = await invoke<boolean>("respond_project_runtime_bridge", {
-        requestId: payload.requestId,
-        response,
-      });
-      if (!delivered) return;
-    } catch (error) {
-      window.dispatchEvent(new ErrorEvent("error", { error }));
-    }
-  }).then(() => undefined);
+    }),
+  ).then(() => undefined);
   return bridgeListenerPromise;
 }
 

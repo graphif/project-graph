@@ -8,7 +8,7 @@ import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/
 import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
 import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { getTextSize } from "@/utils/font";
-import { isFrame, isMac } from "@/utils/platform";
+import { isMac } from "@/utils/platform";
 import { Color, mixColors, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Rectangle } from "@graphif/shapes";
 import i18next from "i18next";
@@ -821,7 +821,7 @@ export class Renderer {
 
   /** 画debug信息 */
   private renderDebugDetails() {
-    if (!Settings.showDebug || isFrame) {
+    if (!Settings.showDebug) {
       return;
     }
 

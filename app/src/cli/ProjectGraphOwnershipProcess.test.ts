@@ -6,12 +6,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { holdProjectOwnership, isProjectOwned, releaseProjectOwnership } from "./ProjectGraphOwnershipProcess";
 
-const helperPath = fileURLToPath(
-  new URL(
-    `../../src-tauri/target/debug/project-graph-ownership-helper${process.platform === "win32" ? ".exe" : ""}`,
-    import.meta.url,
-  ),
-);
+const helperPath = fileURLToPath(new URL("../../cmd/project-graph-ownership-helper/main.go", import.meta.url));
 const directories: string[] = [];
 
 function fixture() {
@@ -27,19 +22,23 @@ afterEach(() => {
 });
 
 describe("portable ownership processes", () => {
-  it.each([undefined, "tcp://127.0.0.1:43123"])("holds and releases ownership (%s)", async (endpoint) => {
-    const { directory, projectPath } = fixture();
-    expect(isProjectOwned(helperPath, projectPath, directory)).toBe(false);
-    const holder = await holdProjectOwnership(helperPath, projectPath, directory, endpoint);
-    try {
-      expect(isProjectOwned(helperPath, projectPath, directory)).toBe(true);
-    } finally {
-      const exited = once(holder, "exit");
-      holder.stdin.end();
-      await exited;
-    }
-    expect(isProjectOwned(helperPath, projectPath, directory)).toBe(false);
-  });
+  it.each([undefined, "tcp://127.0.0.1:43123"])(
+    "holds and releases ownership (%s)",
+    async (endpoint) => {
+      const { directory, projectPath } = fixture();
+      expect(isProjectOwned(helperPath, projectPath, directory)).toBe(false);
+      const holder = await holdProjectOwnership(helperPath, projectPath, directory, endpoint);
+      try {
+        expect(isProjectOwned(helperPath, projectPath, directory)).toBe(true);
+      } finally {
+        const exited = once(holder, "exit");
+        holder.stdin.end();
+        await exited;
+      }
+      expect(isProjectOwned(helperPath, projectPath, directory)).toBe(false);
+    },
+    30_000,
+  );
 
   it("reports a missing helper immediately for probes and holders", async () => {
     const { directory, projectPath } = fixture();

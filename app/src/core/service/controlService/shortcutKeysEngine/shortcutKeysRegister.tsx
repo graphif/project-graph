@@ -19,10 +19,8 @@ import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
 import { TabWorkspace } from "@/core/TabWorkspace";
 import { TestTab } from "@/core/TestTab";
 import { activeTabAtom, commandPaletteVisibleAtom, isWindowMaxsizedAtom, store, tabsAtom } from "@/state";
-import { LogicalSize } from "@tauri-apps/api/dpi";
-import { Image as TauriImage } from "@tauri-apps/api/image";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { writeImage, writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { getCurrentWindow } from "@/platform/window";
+import { writeImage, writeText } from "@/platform/clipboard";
 // import ColorWindow from "@/sub/ColorWindow";
 import EditUrlNodeLinkWindow from "@/sub/EditUrlNodeLinkWindow";
 import FindWindow from "@/sub/FindWindow";
@@ -58,10 +56,10 @@ import { Color, Vector } from "@graphif/data-structures";
 import { serialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import { Encoder } from "@msgpack/msgpack";
-import { appCacheDir, appDataDir, dataDir, join, tempDir } from "@tauri-apps/api/path";
-import { open, save } from "@tauri-apps/plugin-dialog";
-import { exists, mkdir, writeFile } from "@tauri-apps/plugin-fs";
-import { open as shellOpen } from "@tauri-apps/plugin-shell";
+import { appCacheDir, appDataDir, dataDir, join, tempDir } from "@/platform/path";
+import { open, save } from "@/platform/dialogs";
+import { exists, mkdir, writeFile } from "@/platform/files";
+import { open as shellOpen } from "@/platform/shell";
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
 import i18next from "i18next";
 import {
@@ -445,7 +443,7 @@ export const allKeyBinds: KeyBindItem[] = [
       // 设置窗口大小为设置中的迷你窗口大小
       const width = Settings.windowCollapsingWidth;
       const height = Settings.windowCollapsingHeight;
-      await window.setSize(new LogicalSize(width, height));
+      await window.setSize({ width, height });
     },
   },
 
@@ -2222,8 +2220,7 @@ export const allKeyBinds: KeyBindItem[] = [
 
       try {
         const arrayBuffer = await blob.arrayBuffer();
-        const tauriImage = await TauriImage.fromBytes(new Uint8Array(arrayBuffer));
-        await writeImage(tauriImage);
+        await writeImage(new Uint8Array(arrayBuffer));
         if (selectedImageNodes.length === 1) {
           toast.success("已将选中的图片复制到系统剪贴板");
         } else {

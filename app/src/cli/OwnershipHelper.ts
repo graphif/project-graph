@@ -1,4 +1,5 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { helperCommand } from "./helper-command";
 import type { Project } from "@/core/Project";
 import type { AIObjectReferenceSnapshot } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
 
@@ -41,7 +42,10 @@ export class OwnershipHelperLease {
   }
 
   terminate(): void {
-    if (!this.released) this.child.kill();
+    if (!this.released) {
+      this.released = true;
+      stopHelper(this.child);
+    }
   }
 }
 
@@ -79,7 +83,7 @@ function helperProcessFailure(child: ChildProcessWithoutNullStreams): OwnershipH
 function rejectAdditionalOutput(child: ChildProcessWithoutNullStreams): void {
   const onData = () => {
     helperProtocolErrors.set(child, invalidHelperResponse());
-    child.kill();
+    stopHelper(child);
   };
   child.stdout.once("data", onData);
   child.once("close", () => child.stdout.off("data", onData));
@@ -106,15 +110,25 @@ function ownershipHelperPath(): string {
 
 function startOwnershipHelper(args: string[]): ChildProcessWithoutNullStreams {
   try {
-    const child = spawn(ownershipHelperPath(), args, {
+    const invocation = helperCommand(ownershipHelperPath(), args);
+    const child = spawn(invocation.command, invocation.args, {
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: true,
     });
+    if (invocation.development) developmentHelpers.add(child);
     child.stderr.resume();
     return child;
   } catch {
     throw helperUnavailable();
   }
+}
+const developmentHelpers = new WeakSet<ChildProcessWithoutNullStreams>();
+
+function stopHelper(child: ChildProcessWithoutNullStreams): void {
+  // Killing `go run` leaves its native child holding locks; EOF releases both processes.
+  if (developmentHelpers.has(child)) {
+    if (!child.stdin.writableEnded) child.stdin.end();
+  } else child.kill();
 }
 
 function waitForExit(
@@ -144,7 +158,7 @@ function readResponse(child: ChildProcessWithoutNullStreams, abortSignal?: Abort
     };
     const fail = (error: OwnershipHelperError) => {
       cleanup();
-      child.kill();
+      stopHelper(child);
       reject(error);
     };
     const onData = (chunk: Buffer | string) => {
@@ -162,7 +176,7 @@ function readResponse(child: ChildProcessWithoutNullStreams, abortSignal?: Abort
     const onClose = () => fail(invalidHelperResponse());
     const onAbort = () => {
       cleanup();
-      child.kill();
+      stopHelper(child);
       reject(helperFailed());
     };
     child.stdout.on("data", onData);
@@ -178,7 +192,8 @@ async function requireExitCode(child: ChildProcessWithoutNullStreams, expectedCo
   const exit = await waitForExit(child);
   const protocolError = helperProtocolErrors.get(child);
   if (protocolError) throw protocolError;
-  if (exit.code !== expectedCode || exit.signal !== null) throw invalidHelperResponse();
+  const code = developmentHelpers.has(child) && expectedCode === 75 ? 1 : expectedCode;
+  if (exit.code !== code || exit.signal !== null) throw invalidHelperResponse();
 }
 
 function isProjectOwner(value: unknown): value is ProjectOwner {
@@ -209,7 +224,7 @@ export async function acquireProjectOwnership(
   const child = startOwnershipHelper(["try-hold-project", canonicalPath]);
   const response = await readResponse(child, abortSignal);
   if (!response || typeof response !== "object" || !("status" in response)) {
-    child.kill();
+    stopHelper(child);
     throw invalidHelperResponse();
   }
   if (
@@ -239,7 +254,7 @@ export async function acquireProjectOwnership(
     await requireExitCode(child, 1);
     throw projectFailure(response.code);
   }
-  child.kill();
+  stopHelper(child);
   throw invalidHelperResponse();
 }
 
@@ -277,7 +292,7 @@ export async function loadProjectReferences(
     await requireExitCode(child, 1);
     throw new Error("Project Object Reference store could not be loaded.");
   }
-  child.kill();
+  stopHelper(child);
   throw invalidHelperResponse();
 }
 
@@ -314,6 +329,6 @@ export async function saveProjectReferences(
     await requireExitCode(child, 1);
     throw new Error("Project Object Reference store could not be saved.");
   }
-  child.kill();
+  stopHelper(child);
   throw invalidHelperResponse();
 }

@@ -6,7 +6,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Encoder } from "@msgpack/msgpack";
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
-import packageJson from "../../../package.json" with { type: "json" };
+import { appVersion } from "../../mygo.config";
 import { LATEST_PROJECT_VERSION } from "../core/ProjectFile";
 
 export const NODE_COUNT = 5_000;
@@ -17,19 +17,14 @@ const SAMPLE_COUNT = 20;
 const P95 = 0.95;
 const MAXIMUM_P95_MS = 5_000;
 const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
-const ownershipHelperPath = fileURLToPath(
-  new URL(
-    `../../src-tauri/target/debug/project-graph-ownership-helper${process.platform === "win32" ? ".exe" : ""}`,
-    import.meta.url,
-  ),
-);
+const ownershipHelperPath = fileURLToPath(new URL("../../cmd/project-graph-ownership-helper/main.go", import.meta.url));
 const artifactPath = join(repositoryRoot, "benchmarks", "project-graph-cli-cold-start", "GRAPH-27.json");
 
 export type BenchmarkEnvironment = {
   hardware: { model: string; chip: string; memoryBytes: number };
   macOS: { productVersion: string; buildVersion: string };
   node: string;
-  pnpm: string;
+  bun: string;
   projectGraphRuntime: string;
 };
 
@@ -112,7 +107,7 @@ export function buildBenchmarkArtifact(options: {
   return {
     benchmark: "GRAPH-27",
     generatedAt: options.generatedAt,
-    command: "pnpm benchmark:cli:cold-start",
+    command: "bun run benchmark:cli:cold-start",
     tool: "get_all_nodes",
     measurement: {
       start: "Project Graph CLI process start",
@@ -162,8 +157,8 @@ function collectEnvironment(): BenchmarkEnvironment {
       buildVersion: commandOutput("/usr/bin/sw_vers", ["-buildVersion"]),
     },
     node: process.version,
-    pnpm: commandOutput("pnpm", ["--version"]),
-    projectGraphRuntime: packageJson.version,
+    bun: commandOutput("bun", ["--version"]),
+    projectGraphRuntime: appVersion,
   };
 }
 
@@ -176,8 +171,8 @@ async function runColdStartSample(options: {
   const startedAt = process.hrtime.bigint();
   const result = await new Promise<{ exitCode: number | null; stderr: string }>((resolveResult, reject) => {
     const child = spawn(
-      "pnpm",
-      ["cli", "--", "tool", "invoke", "get_all_nodes", "--project", options.projectPath, "--input", "{}"],
+      "bun",
+      ["run", "cli", "tool", "invoke", "get_all_nodes", "--project", options.projectPath, "--input", "{}"],
       {
         cwd: repositoryRoot,
         env: {

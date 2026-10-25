@@ -1,9 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { URI } from "vscode-uri";
 
-vi.mock("@tauri-apps/api/core", () => ({ invoke: vi.fn() }));
-
-import { invoke } from "@tauri-apps/api/core";
+const invoke = vi.hoisted(() => vi.fn<(command: string, payload?: unknown) => Promise<any>>());
+vi.mock("@/platform/desktop", () => ({
+  References: {
+    load: (projectUri: string, legacyProjectUri: string) =>
+      invoke("load_project_reference_snapshot", { projectUri, ...(legacyProjectUri ? { legacyProjectUri } : {}) }),
+    save: (projectUri: string, references: unknown) =>
+      invoke("save_project_reference_snapshot", { projectUri, references }),
+  },
+}));
 import { AIProjectReferenceStore } from "./AIProjectReferenceStore";
 
 const snapshot = {
@@ -21,7 +27,7 @@ describe("AI Project Reference Store", () => {
     vi.mocked(invoke).mockReset();
   });
 
-  it("loads a Project snapshot through the cross-process Tauri store command", async () => {
+  it("loads a Project snapshot through the cross-process Go store", async () => {
     vi.mocked(invoke).mockResolvedValueOnce(snapshot);
 
     await expect(AIProjectReferenceStore.load(project("/projects/graph.prg"))).resolves.toEqual(snapshot);
@@ -30,7 +36,7 @@ describe("AI Project Reference Store", () => {
     });
   });
 
-  it("keeps renderer writes ordered while delegating atomic updates to Tauri", async () => {
+  it("keeps renderer writes ordered while delegating atomic updates to Go", async () => {
     let releaseFirst: (() => void) | undefined;
     vi.mocked(invoke)
       .mockReturnValueOnce(new Promise<void>((resolve) => (releaseFirst = resolve)))

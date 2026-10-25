@@ -16,12 +16,7 @@ import type {
 import { isProjectOwned } from "./ProjectGraphOwnershipProcess";
 
 const repositoryRoot = fileURLToPath(new URL("../../..", import.meta.url));
-const ownershipHelperPath = fileURLToPath(
-  new URL(
-    `../../src-tauri/target/debug/project-graph-ownership-helper${process.platform === "win32" ? ".exe" : ""}`,
-    import.meta.url,
-  ),
-);
+const ownershipHelperPath = fileURLToPath(new URL("../../cmd/project-graph-ownership-helper/main.go", import.meta.url));
 
 type InvocationDefinition = Omit<CliDesktopAcceptanceInvocation, "projectPath" | "invocationPath"> & {
   fixture?: "image" | "graph";
@@ -226,13 +221,13 @@ async function waitForVite(port: number, process: ManagedProcess): Promise<void>
 async function waitForState(
   path: string,
   phase: CliDesktopAcceptanceState["phase"],
-  tauri: ManagedProcess,
+  desktop: ManagedProcess,
 ): Promise<CliDesktopAcceptanceState> {
   const deadline = Date.now() + 600_000;
   let lastState: CliDesktopAcceptanceState | undefined;
   while (Date.now() < deadline) {
-    if (tauri.child.exitCode !== null || tauri.child.signalCode !== null) {
-      throw new Error(`Tauri exited early:\n${tauri.output()}`);
+    if (desktop.child.exitCode !== null || desktop.child.signalCode !== null) {
+      throw new Error(`MyGo exited early:\n${desktop.output()}`);
     }
     if (existsSync(path)) {
       try {
@@ -251,7 +246,7 @@ async function waitForState(
     await delay(50);
   }
   throw new Error(
-    `Timed out waiting for desktop acceptance phase ${phase}; last state: ${JSON.stringify(lastState)}:\n${tauri.output()}`,
+    `Timed out waiting for desktop acceptance phase ${phase}; last state: ${JSON.stringify(lastState)}:\n${desktop.output()}`,
   );
 }
 
@@ -263,7 +258,7 @@ function runCli(
   return new Promise((resolve, reject) => {
     const adapter = process.env.PROJECT_GRAPH_CLI_ACCEPTANCE_ADAPTER;
     const usesWindowsAdapter = adapter !== undefined && process.platform === "win32";
-    const command = usesWindowsAdapter ? (process.env.ComSpec ?? "cmd.exe") : (adapter ?? "pnpm");
+    const command = usesWindowsAdapter ? (process.env.ComSpec ?? "cmd.exe") : (adapter ?? "node");
     const commandArguments = adapter
       ? usesWindowsAdapter
         ? [
@@ -273,7 +268,7 @@ function runCli(
             `"${[adapter, ...args].map((argument) => `"${argument.replaceAll('"', '""')}"`).join(" ")}"`,
           ]
         : args
-      : ["cli", "--", ...args];
+      : [join(repositoryRoot, "packages/project-graph-cli/src/cli.mjs"), ...args];
     const child = spawn(command, commandArguments, {
       cwd: repositoryRoot,
       env: {
@@ -320,9 +315,8 @@ async function runAcceptance(): Promise<void> {
   const completionPath = join(temporaryDirectory, "complete");
   const referenceStorePath = join(temporaryDirectory, "ai-project-references.json");
   const ownershipDirectory = join(temporaryDirectory, "project-ownership");
-  const configPath = join(temporaryDirectory, "tauri-acceptance.json");
   let vite: ManagedProcess | undefined;
-  let tauri: ManagedProcess | undefined;
+  let desktop: ManagedProcess | undefined;
   try {
     const invocations: CliDesktopAcceptanceInvocation[] = [];
     for (const [index, definition] of invocationDefinitions.entries()) {
@@ -354,34 +348,11 @@ async function runAcceptance(): Promise<void> {
     };
     writeFileSync(manifestPath, JSON.stringify(manifest));
     const port = await getAvailablePort();
-    writeFileSync(
-      configPath,
-      JSON.stringify({
-        identifier: "liren.project-graph.cli-desktop-acceptance",
-        build: { devUrl: `http://127.0.0.1:${port}` },
-        app: {
-          windows: [
-            {
-              label: "main",
-              title: "Project Graph CLI Desktop Acceptance",
-              url: "/index.html?cli-desktop-acceptance=1",
-              width: 1200,
-              height: 800,
-              x: -10_000,
-              y: -10_000,
-              decorations: false,
-              transparent: true,
-              visible: true,
-              focus: false,
-              skipTaskbar: true,
-            },
-          ],
-        },
-      }),
-    );
     const environment = {
       ...process.env,
       NO_COLOR: "1",
+      PROJECT_GRAPH_ACCEPTANCE_PORT: String(port),
+      PROJECT_GRAPH_ACCEPTANCE_DIRECTORY: temporaryDirectory,
       PROJECT_GRAPH_CLI_DESKTOP_ACCEPTANCE_MANIFEST_PATH: manifestPath,
       PROJECT_GRAPH_CLI_DESKTOP_ACCEPTANCE_STATE_PATH: statePath,
       PROJECT_GRAPH_CLI_DESKTOP_ACCEPTANCE_COMPLETION_PATH: completionPath,
@@ -389,27 +360,13 @@ async function runAcceptance(): Promise<void> {
       PROJECT_GRAPH_OWNERSHIP_DIRECTORY: ownershipDirectory,
     };
     vite = startManagedProcess(
-      process.platform === "win32" ? "pnpm.exe" : "pnpm",
-      [
-        "--filter",
-        "@graphif/project-graph",
-        "exec",
-        "vite",
-        "--host",
-        "127.0.0.1",
-        "--port",
-        String(port),
-        "--strictPort",
-      ],
+      "bun",
+      ["run", "--cwd", "app", "vite", "--host", "127.0.0.1", "--port", String(port), "--strictPort"],
       environment,
     );
     await waitForVite(port, vite);
-    tauri = startManagedProcess(
-      process.platform === "win32" ? "pnpm.exe" : "pnpm",
-      ["--filter", "@graphif/project-graph", "exec", "tauri", "dev", "--no-watch", "--config", configPath],
-      environment,
-    );
-    const ready = (await waitForState(statePath, "ready", tauri)) as Extract<
+    desktop = startManagedProcess("bun", ["run", "--cwd", "app", "dev"], environment);
+    const ready = (await waitForState(statePath, "ready", desktop)) as Extract<
       CliDesktopAcceptanceState,
       { phase: "ready" }
     >;
@@ -530,7 +487,7 @@ async function runAcceptance(): Promise<void> {
     }
     assertProjectOwned(savedDraftProjectPath, ownershipDirectory);
     writeFileSync(completionPath, "complete");
-    const verified = (await waitForState(statePath, "verified", tauri)) as Extract<
+    const verified = (await waitForState(statePath, "verified", desktop)) as Extract<
       CliDesktopAcceptanceState,
       { phase: "verified" }
     >;
@@ -545,8 +502,11 @@ async function runAcceptance(): Promise<void> {
     process.stdout.write(
       `${JSON.stringify({ tools: invocations.length, categories: ready.categories, desktopContext: "unchanged" })}\n`,
     );
+  } catch (error) {
+    if (desktop) process.stderr.write(`MyGo desktop output:\n${desktop.output().slice(-16000)}\n`);
+    throw error;
   } finally {
-    await stopManagedProcess(tauri);
+    await stopManagedProcess(desktop);
     await stopManagedProcess(vite);
     rmSync(temporaryDirectory, { recursive: true, force: true });
   }

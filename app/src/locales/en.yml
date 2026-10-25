@@ -63,7 +63,7 @@ about:
     importantAnnouncement: Important Announcement
   intro:
   - Software Introduction
-  - This is a tool based on the Tauri framework for quickly drawing node 
+  - This is a tool based on the MyGo framework for quickly drawing node
     diagrams, which can be used for project topology diagrams and quick 
     brainstorming drafts
   - Xmind can only be used to draw tree-structured diagrams. FigJam and draw.io 
@@ -977,13 +977,13 @@ settings:
     title: Clipboard Paste Mode
     description: |
       Select the technology used when pasting content from the system clipboard.
-      "Auto" mode automatically selects the best method based on the OS (macOS uses Web Clipboard API, others use Tauri native API).
+      "Auto" mode automatically selects the best method based on the OS (macOS uses Web Clipboard API, others use MyGo native API).
       "WebView" mode always uses the Web Clipboard API.
-      "Tauri" mode always uses the Tauri native API.
+      "Native" mode always uses the MyGo native API.
     options:
       auto: Auto
       webview: WebView
-      tauri: Tauri
+      native: Native
   autoBackupLimitCount:
     title: Max Auto Backup Count
     description: "The maximum number of auto-backups, beyond which old backup files

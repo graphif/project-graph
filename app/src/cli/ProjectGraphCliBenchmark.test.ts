@@ -80,14 +80,14 @@ describe("Project Graph CLI cold-start benchmark", () => {
         hardware: { model: "Mac", chip: "Apple Silicon", memoryBytes: 16 },
         macOS: { productVersion: "26.0", buildVersion: "25A1" },
         node: "v26.0.0",
-        pnpm: "11.3.0",
+        bun: "1.4.4",
         projectGraphRuntime: "1.0.0",
       },
     });
 
     expect(artifact).toMatchObject({
       benchmark: "GRAPH-27",
-      command: "pnpm benchmark:cli:cold-start",
+      command: "bun run benchmark:cli:cold-start",
       tool: "get_all_nodes",
       measurement: {
         start: "Project Graph CLI process start",
@@ -110,7 +110,7 @@ describe("Project Graph CLI cold-start benchmark", () => {
         hardware: { model: "Mac", chip: "Apple Silicon", memoryBytes: 16 },
         macOS: { productVersion: "26.0", buildVersion: "25A1" },
         node: "v26.0.0",
-        pnpm: "11.3.0",
+        bun: "1.4.4",
         projectGraphRuntime: "1.0.0",
       },
     });
