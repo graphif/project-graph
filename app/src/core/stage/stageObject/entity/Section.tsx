@@ -1,12 +1,12 @@
 import { Project } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { NodeMoveShadowEffect } from "@/core/service/feedbackService/effectEngine/concrete/NodeMoveShadowEffect";
 import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
 import { getTextSize } from "@/utils/font";
-import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
+import { Color, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Line, Rectangle, Shape } from "@graphif/shapes";
 import { Value } from "platejs";
@@ -163,11 +163,27 @@ export class Section extends ConnectableEntity {
         new Vector(Math.max(titleSize.x + Renderer.NODE_PADDING * 2, 100), 100),
       );
     } else {
+      const bounds = this.children.map((child) => child.collisionBox.getRectangle());
+      const descendants = new Set<Entity>();
+      const collect = (entity: Entity) => {
+        if (descendants.has(entity)) return;
+        descendants.add(entity);
+        if (entity instanceof Section && !entity.isCollapsed) entity.children.forEach(collect);
+      };
+      this.children.forEach(collect);
+      // 只包含端点全部在框内的包围线；跨分组连线不能反过来撑大两边的框。
+      for (const edge of this.project.stageManager.getAssociations()) {
+        if (
+          edge instanceof MultiTargetUndirectedEdge &&
+          edge.renderType !== "line" &&
+          edge.associationList.length >= 2 &&
+          edge.associationList.every((node) => descendants.has(node))
+        ) {
+          bounds.push(edge.collisionBox.getRectangle());
+        }
+      }
       // 调整展开状态
-      rectangle = Rectangle.getBoundingRectangle(
-        this.children.map((child) => child.collisionBox.getRectangle()),
-        30,
-      );
+      rectangle = Rectangle.getBoundingRectangle(bounds, 30);
       rectangle.size.x = Math.max(rectangle.size.x, titleSize.x + Renderer.NODE_PADDING * 2);
       // 留白范围在上面调整
       rectangle.location = rectangle.location.subtract(new Vector(0, titleBarHeight));
@@ -239,31 +255,39 @@ export class Section extends ConnectableEntity {
   }
 
   move(delta: Vector): void {
-    // 让自己移动
-    for (const shape of this.collisionBox.shapes) {
-      if (shape instanceof Line) {
-        shape.start = shape.start.add(delta);
-        shape.end = shape.end.add(delta);
-      } else if (shape instanceof Rectangle) {
-        shape.location = shape.location.add(delta);
+    const outermostMove = this.project.sectionMoveDepth === 0;
+    this.project.sectionMoveDepth++;
+    try {
+      // 让自己移动
+      for (const shape of this.collisionBox.shapes) {
+        if (shape instanceof Line) {
+          shape.start = shape.start.add(delta);
+          shape.end = shape.end.add(delta);
+        } else if (shape instanceof Rectangle) {
+          shape.location = shape.location.add(delta);
+        }
       }
-    }
-    // 让内部元素也移动
-    for (const child of this.children) {
-      // 跳过已被选中的子元素，避免重复移动（解决速度叠加bug）
-      if (child.isSelected) {
-        continue;
+      // 让内部元素也移动
+      for (const child of this.children) {
+        // 跳过已被选中的子元素，避免重复移动（解决速度叠加bug）
+        if (child.isSelected) {
+          continue;
+        }
+        child.move(delta);
       }
-      child.move(delta);
+    } finally {
+      this.project.sectionMoveDepth--;
     }
 
     // 移动雪花特效
     if (!this.isHiddenBySectionCollapse) {
-      this.project.effects.addEffect(new NodeMoveShadowEffect(new ProgressNumber(0, 30), this.rectangle, delta));
+      this.project.effects.addMoveShadow(this.rectangle, delta);
     }
-    this.updateFatherSectionByMove();
-    // 移动其他实体，递归碰撞
-    this.updateOtherEntityLocationByMove();
+    if (outermostMove) {
+      this.updateFatherSectionByMove();
+      // 移动其他实体，递归碰撞
+      this.updateOtherEntityLocationByMove();
+    }
   }
   protected override collideWithOtherEntity(other: Entity): void {
     if (!Settings.isEnableEntityCollision) {

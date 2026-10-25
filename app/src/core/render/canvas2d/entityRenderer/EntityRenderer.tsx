@@ -1,4 +1,5 @@
 import { Project, service } from "@/core/Project";
+import { Renderer } from "@/core/render/canvas2d/renderer";
 import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
@@ -6,6 +7,7 @@ import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 import { ExtensionEntity } from "@/core/stage/stageObject/entity/ExtensionEntity";
 import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
 import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
+import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
 import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
@@ -187,6 +189,8 @@ export class EntityRenderer {
       this.project.svgNodeRenderer.render(entity);
     } else if (entity instanceof LatexNode) {
       this.project.latexNodeRenderer.render(entity);
+    } else if (entity instanceof MediaNode) {
+      this.project.mediaNodeRenderer.render(entity);
     } else if (entity instanceof ReferenceBlockNode) {
       this.project.referenceBlockRenderer.render(entity);
     } else if (entity instanceof ExtensionEntity) {
@@ -281,6 +285,7 @@ export class EntityRenderer {
         imageNode.bitmap!,
         this.project.renderer.transformWorld2View(imageNode.rectangle.location),
         imageNode.scale,
+        Renderer.NODE_ROUNDED_RADIUS,
       );
     } else if (imageNode.state === "notFound") {
       this.project.textRenderer.renderTextFromCenter(
@@ -298,6 +303,7 @@ export class EntityRenderer {
         Color.Red.toNewAlpha(0.5),
         Color.Red.clone(),
         2 * this.project.camera.currentScale,
+        Renderer.NODE_ROUNDED_RADIUS,
       );
     }
 

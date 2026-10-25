@@ -1,4 +1,19 @@
+windowControls:
+  alwaysOnTop: 窗口置頂
+
+projectStatus:
+  emptyCanvas: 畫布裡沒有節點
+  noVisibleNodes: 當前視野內沒有可見節點，點擊按鈕復位
+  fitView: 適應視野
+  nodes: "{{count}} 節點"
+  edges: "{{count}} 連線"
+  selected: "已選 {{count}}"
+  saved: 已保存
+  stashed: 已暫存
+  unsaved: 有未保存的修改
+
 welcome:
+  aboutDescription: 用節點連接想法，用圖譜整理知識。Project Graph 為頭腦風暴、知識管理和項目規劃提供自由畫布，通過連線與自動佈局，讓複雜思路變得清晰。
   slogan: 基於圖論的思維框架圖繪製軟件
   slogans:
     - 基於圖論的思維框架圖繪製軟件
@@ -151,7 +166,6 @@ settings:
     ai:
       title: AI
       api: API
-      ocr: 筆跡識別
     automation:
       title: 自動化
       autoNamer: 自動命名
@@ -447,6 +461,11 @@ settings:
     title: 始終顯示節點詳細信息
     description: |
       開啟後，無需鼠標移動到節點上時，才顯示節點的詳細信息。
+  exportMermaidIncludeNodeDetails:
+    title: 包含節點詳情
+    description: |
+      導出 Mermaid 時，將節點和分組框的詳情作為註釋附在源碼中，方便保存或交給 AI 閱讀。
+      註釋不會顯示在渲染後的圖中；此選擇會自動保存。
   nodeDetailsPanel:
     title: 節點詳細信息面板
     options:
@@ -1149,6 +1168,11 @@ settings:
       密鑰將會明文存儲在本地
   aiModel:
     title: AI 模型
+  aiCustomHeaders:
+    title: AI 請求頭
+    description: |
+      每行一個請求頭，格式為“名稱: 值”，以 # 開頭的行會被忽略
+      例如 OpenCode 推理 API 需要：x-opencode-org-id: 你的組織ID
   aiContextWindow:
     title: AI 上下文窗口大小
     description: |
@@ -1157,11 +1181,6 @@ settings:
     title: 顯示 AI 消耗的token數
     description: |
       啟用後，在 AI 操作時顯示消耗的token數
-  enableOCR:
-    title: 啟用筆跡 OCR
-    description: |
-      開啟後，使用畫筆繪製的內容會在鬆手後自動進行 OCR 識別，轉換為文字節點
-      需要下載 OCR 模型才能使用
   aiAutoApproveMcpTools:
     title: 自動批准 MCP 工具
     description: |
@@ -1294,6 +1313,9 @@ effects:
     title: 劈砍時的刀光
     description: |
       劈砍時，出現類似水果忍者一樣的刀光
+  ConnectionPulseEffect:
+    title: 連線光點
+    description: 連接節點時顯示短暫的細光點。
   LineEffect:
     title: 直線段淡出效果
     description: |
@@ -2718,3 +2740,14 @@ common:
     editingMode: 正在編輯模式
     lineBreak: 換行
     exitEdit: 退出編輯模式
+
+projectOwnership:
+  alreadyOpen: 已切換到打開的標籤頁。
+  notFound: 項目文件不存在。
+  busy: 該項目正在被另一個 Project Graph 進程使用。
+  loadFailed: 無法取得項目所有權。
+  openFailedTitle: 打開項目失敗
+  releaseFailedTitle: 釋放項目所有權失敗
+  releaseFailedMessage: "項目已關閉，但無法釋放它的所有權鎖。請選擇“重試”再次嘗試。\n\n錯誤信息：{{error}}"
+  retry: 重試
+  ok: 確定

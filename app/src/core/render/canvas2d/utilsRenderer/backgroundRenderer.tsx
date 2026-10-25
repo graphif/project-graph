@@ -1,4 +1,4 @@
-import { Color, Vector } from "@graphif/data-structures";
+import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
 
@@ -15,19 +15,26 @@ export class BackgroundRenderer {
   renderDotBackground(viewRect: Rectangle) {
     const currentGap = this.getCurrentGap();
     const gridColor = this.project.stageStyleManager.currentStyle.GridNormal;
-    const mainColor = this.project.stageStyleManager.currentStyle.GridHeavy;
+    const axisColor = this.project.stageStyleManager.currentStyle.GridHeavy;
+    const dots = new Path2D();
+    const axisDots = new Path2D();
 
     for (const y of this.getLocationYIterator(viewRect, currentGap)) {
       for (const x of this.getLocationXIterator(viewRect, currentGap)) {
-        this.project.shapeRenderer.renderCircle(
-          this.project.renderer.transformWorld2View(new Vector(x, y)),
-          1,
-          x === 0 || y === 0 ? mainColor : gridColor,
-          Color.Transparent,
-          0,
-        );
+        const location = this.project.renderer.transformWorld2View(new Vector(x, y));
+        const onAxis = x === 0 || y === 0;
+        const radius = onAxis ? 1.5 : 1;
+        const path = onAxis ? axisDots : dots;
+        path.moveTo(location.x + radius, location.y);
+        path.arc(location.x, location.y, radius, 0, 2 * Math.PI);
       }
     }
+
+    const ctx = this.project.canvas.ctx;
+    ctx.fillStyle = gridColor.toString();
+    ctx.fill(dots);
+    ctx.fillStyle = axisColor.toString();
+    ctx.fill(axisDots);
   }
 
   /**

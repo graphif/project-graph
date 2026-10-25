@@ -1,3 +1,4 @@
+import { ConnectionPulseEffect } from "@/core/service/feedbackService/effectEngine/concrete/ConnectionPulseEffect";
 import { CircleFlameEffect } from "@/core/service/feedbackService/effectEngine/concrete/CircleFlameEffect";
 import { LineCuttingEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineCuttingEffect";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
@@ -86,17 +87,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       end = targetRect.getLineIntersectionPoint(line);
     }
 
-    return [
-      new CircleFlameEffect(new ProgressNumber(0, 15), start, 80, new Color(83, 175, 29, 1)),
-      new LineCuttingEffect(
-        new ProgressNumber(0, 30),
-        start,
-        end,
-        new Color(78, 201, 176, 1),
-        new Color(83, 175, 29, 1),
-        20,
-      ),
-    ];
+    return [new ConnectionPulseEffect(start, end)];
   }
 
   public renderNormalState(edge: LineEdge): void {
@@ -173,13 +164,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       edgeWidth = edge.source.getBorderWidth();
     }
 
-    const curve = new SymmetryCurve(
-      start,
-      startDirection,
-      end,
-      endDirection,
-      Math.max(edgeWidth * 25, Math.abs(Math.min(Math.abs(start.x - end.x), Math.abs(start.y - end.y))) / 2),
-    );
+    const curve = new SymmetryCurve(start, startDirection, end, endDirection);
 
     // 曲线模式先不屏蔽箭头，有点不美观，空出来一段距离
     this.renderArrowCurve(
@@ -336,13 +321,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       svgEdgeWidth = edge.source.getBorderWidth();
     }
 
-    const curve = new SymmetryCurve(
-      start,
-      startDirection,
-      end,
-      endDirection,
-      Math.max(svgEdgeWidth * 25, Math.abs(Math.min(Math.abs(start.x - end.x), Math.abs(start.y - end.y))) / 2),
-    );
+    const curve = new SymmetryCurve(start, startDirection, end, endDirection);
 
     const bezier = curve.bezier;
 
@@ -412,7 +391,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       Edge.getNormalVectorByRate(rate) ??
       (isStartExactPosition ? direction.normalize() : rect.getNormalVectorAt(start));
     this.renderArrowCurve(
-      new SymmetryCurve(start, startDirection, end, endDirection, Math.abs(end.subtract(start).magnitude()) / 2),
+      new SymmetryCurve(start, startDirection, end, endDirection),
       this.project.stageStyleManager.currentStyle.StageObjectBorder,
     );
   }
@@ -453,7 +432,7 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
       (isEndExactPosition ? lineDirection.multiply(-1) : endRect.getNormalVectorAt(end));
 
     this.renderArrowCurve(
-      new SymmetryCurve(start, startDirection, end, endDirection, Math.abs(end.subtract(start).magnitude()) / 2),
+      new SymmetryCurve(start, startDirection, end, endDirection),
       this.project.stageStyleManager.currentStyle.StageObjectBorder,
     );
   }
@@ -463,6 +442,9 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
    * @param curve
    */
   private renderArrowCurve(curve: SymmetryCurve, color: Color, width = 2, edge?: LineEdge): void {
+    if (edge?.isSelected) {
+      color = this.project.stageStyleManager.currentStyle.CollideBoxSelected;
+    }
     // 绘制曲线本体
     curve.endDirection = curve.endDirection.normalize();
     curve.startDirection = curve.startDirection.normalize();
@@ -509,6 +491,18 @@ export class SymmetryCurveEdgeRenderer extends EdgeRendererClass {
     // }
     // 根据 lineType 选择渲染方式
     const lineType = edge?.lineType || "solid";
+    const warning = edge && this.project.controller.cutting.warningAssociations.includes(edge);
+    if (edge && (warning || this.project.mouseInteraction.hoverEdges.some((hovered) => hovered.uuid === edge.uuid))) {
+      // 高亮复用已按箭头类型裁剪的曲线，不能用独立计算的碰撞箱代替。
+      this.project.worldRenderUtils.renderSymmetryCurve(
+        curve,
+        (warning
+          ? this.project.stageStyleManager.currentStyle.effects.warningShadow
+          : this.project.stageStyleManager.currentStyle.CollideBoxPreSelected
+        ).toNewAlpha(0.35),
+        width * this.project.camera.currentScale + 4,
+      );
+    }
     if (lineType === "dashed") {
       this.project.worldRenderUtils.renderDashedSymmetryCurve(
         curve,

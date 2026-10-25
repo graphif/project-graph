@@ -25,7 +25,7 @@ export class RectangleRenderEffect extends Effect {
       this.fillColor,
       mixColors(this.strokeColor, this.strokeColor.toTransparent(), this.timeProgress.rate),
       this.strokeWidth * project.camera.currentScale,
-      this.roundedRadius * project.camera.currentScale,
+      this.roundedRadius,
     );
   }
 
@@ -36,7 +36,6 @@ export class RectangleRenderEffect extends Effect {
       Color.Transparent,
       project.stageStyleManager.currentStyle.CollideBoxPreSelected,
       2,
-      0,
     );
   }
 

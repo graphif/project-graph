@@ -17,7 +17,10 @@ export namespace ExtensionManager {
   export async function getExtensions() {
     const extensionsDir = await getExtensionsDir();
     if (!(await exists(extensionsDir))) {
-      await mkdir(extensionsDir);
+      // 首次启动时 appDataDir 本身可能还不存在（其他 service 的 store.save() 可能尚未建出父目录），
+      // 必须递归创建，否则会 ENOENT 导致整个启动链中断、窗口透明空白。
+      // https://github.com/graphif/project-graph/issues/782
+      await mkdir(extensionsDir, { recursive: true });
     }
     const entries = await readDir(extensionsDir);
     return entries.map((it) => it.name);

@@ -144,6 +144,11 @@ export class SectionMethods {
       this.bigTitleActiveCache.set(section, false);
       return false;
     }
+    // 虚线边框和无边框的Section不进入大标题形态
+    if (section.borderStyle === "dashed" || section.borderStyle === "none") {
+      this.bigTitleActiveCache.set(section, false);
+      return false;
+    }
     if (Settings.sectionBitTitleRenderType === "none") {
       this.bigTitleActiveCache.set(section, false);
       return false;

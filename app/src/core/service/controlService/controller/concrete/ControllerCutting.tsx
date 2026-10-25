@@ -5,6 +5,7 @@ import { CircleFlameEffect } from "@/core/service/feedbackService/effectEngine/c
 import { LineCuttingEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineCuttingEffect";
 import { PenStrokeDeletedEffect } from "@/core/service/feedbackService/effectEngine/concrete/PenStrokeDeletedEffect";
 import { RectangleSplitTwoPartEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleSplitTwoPartEffect";
+import { Renderer } from "@/core/render/canvas2d/renderer";
 import { SoundService } from "@/core/service/feedbackService/SoundService";
 import { Settings } from "@/core/service/Settings";
 import { Association } from "@/core/stage/stageObject/abstract/Association";
@@ -263,7 +264,11 @@ export class ControllerCuttingClass extends ControllerClass {
 
   public mouseMoveOutWindowForcedShutdown(outsideLocation: Vector) {
     super.mouseMoveOutWindowForcedShutdown(outsideLocation);
-    this.project.controller.cutting.mouseUpFunction(outsideLocation);
+    this.isUsing = false;
+    this.warningEntity = [];
+    this.warningSections = [];
+    this.warningAssociations = [];
+    this.twoPointsMap = {};
   }
 
   // private clearWarningObject() {
@@ -373,6 +378,11 @@ export class ControllerCuttingClass extends ControllerClass {
               fillColor,
               this.project.stageStyleManager.currentStyle.StageObjectBorder,
               2,
+              entity instanceof TextNode
+                ? entity.getBorderRadius()
+                : entity instanceof Section
+                  ? Renderer.NODE_ROUNDED_RADIUS
+                  : 0,
             ),
           );
         }

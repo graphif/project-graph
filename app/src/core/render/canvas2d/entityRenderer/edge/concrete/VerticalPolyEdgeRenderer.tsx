@@ -1,6 +1,7 @@
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Line } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
+import { ConnectionPulseEffect } from "@/core/service/feedbackService/effectEngine/concrete/ConnectionPulseEffect";
 import { CircleFlameEffect } from "@/core/service/feedbackService/effectEngine/concrete/CircleFlameEffect";
 import { LineCuttingEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineCuttingEffect";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
@@ -80,17 +81,7 @@ export class VerticalPolyEdgeRenderer extends EdgeRendererClass {
       end = targetRect.getLineIntersectionPoint(line);
     }
 
-    return [
-      new CircleFlameEffect(new ProgressNumber(0, 15), start, 80, new Color(83, 175, 29, 1)),
-      new LineCuttingEffect(
-        new ProgressNumber(0, 30),
-        start,
-        end,
-        new Color(78, 201, 176, 1),
-        new Color(83, 175, 29, 1),
-        20,
-      ),
-    ];
+    return [new ConnectionPulseEffect(start, end)];
   }
 
   /**

@@ -1,4 +1,5 @@
 import { Project, service } from "@/core/Project";
+import { superellipseRect } from "@/utils/superellipse";
 import { Vector } from "@graphif/data-structures";
 
 /**
@@ -19,14 +20,33 @@ export class ImageRenderer {
     source: Exclude<CanvasImageSource, VideoFrame | SVGElement>,
     location: Vector,
     scale: number = 1 / (window.devicePixelRatio || 1),
+    radius: number = 0,
   ) {
-    this.project.canvas.ctx.drawImage(
-      source,
-      location.x,
-      location.y,
-      source.width * scale * this.project.camera.currentScale,
-      source.height * scale * this.project.camera.currentScale,
-    );
+    const ctx = this.project.canvas.ctx;
+    if (radius > 0) {
+      ctx.save();
+      ctx.beginPath();
+      superellipseRect(
+        ctx,
+        location.x,
+        location.y,
+        source.width * scale * this.project.camera.currentScale,
+        source.height * scale * this.project.camera.currentScale,
+        radius,
+      );
+      ctx.clip();
+    }
+    try {
+      this.project.canvas.ctx.drawImage(
+        source,
+        location.x,
+        location.y,
+        source.width * scale * this.project.camera.currentScale,
+        source.height * scale * this.project.camera.currentScale,
+      );
+    } finally {
+      if (radius > 0) ctx.restore();
+    }
   }
 
   /**
@@ -39,16 +59,11 @@ export class ImageRenderer {
     bitmap: ImageBitmap | undefined,
     location: Vector,
     scale: number = 1 / (window.devicePixelRatio || 1),
+    radius: number = 0,
   ) {
     if (!bitmap) {
       return;
     }
-    this.project.canvas.ctx.drawImage(
-      bitmap,
-      location.x,
-      location.y,
-      bitmap.width * scale * this.project.camera.currentScale,
-      bitmap.height * scale * this.project.camera.currentScale,
-    );
+    this.renderImageElement(bitmap, location, scale, radius);
   }
 }

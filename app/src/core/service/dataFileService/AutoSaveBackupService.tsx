@@ -21,6 +21,7 @@ export class AutoSaveBackupService {
   private lastBackupHash = "";
 
   private lastSaveTime = 0;
+  private isBackingUp = false;
 
   constructor(private readonly project: Project) {
     this.lastBackupTime = Date.now();
@@ -33,13 +34,13 @@ export class AutoSaveBackupService {
     const now = Date.now();
 
     // 检查是否达到备份间隔时间（转换为毫秒）
-    if (Settings.autoBackup) {
+    if (Settings.autoBackup && !this.isBackingUp && !this.project.isSaving) {
       if (now - this.lastBackupTime >= Settings.autoBackupInterval * 1000) {
         this.lastBackupTime = now;
-        this.autoBackup();
+        void this.runAutoBackup();
       }
     }
-    if (Settings.autoSave) {
+    if (Settings.autoSave && !this.isBackingUp && !this.project.isSaving) {
       if (now - this.lastSaveTime >= Settings.autoSaveInterval * 1000) {
         this.lastSaveTime = now;
         this.autoSave();
@@ -48,12 +49,21 @@ export class AutoSaveBackupService {
   }
 
   private async autoSave() {
-    if (!this.project.uri || this.project.isDraft) {
+    if (!this.project.uri || this.project.isDraft || this.project.isCollab || this.project.isSaving) {
       // 临时草稿先不备份
       return;
     }
     if (this.project.projectState === ProjectState.Unsaved) {
-      this.project.save({ includeThumbnail: false });
+      await this.project.save({ includeThumbnail: false });
+    }
+  }
+
+  private async runAutoBackup() {
+    this.isBackingUp = true;
+    try {
+      await this.autoBackup();
+    } finally {
+      this.isBackingUp = false;
     }
   }
 

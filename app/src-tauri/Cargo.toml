@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
+default-run = "project-graph"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,44 +13,59 @@ name = "project_graph_lib"
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.6.0", features = [] }
+tauri-build = { version = "2.7.4", features = [] }
 
 [dependencies]
-tauri = { version = "2.11.5", features = [
+tauri = { version = "2.12.5", features = [
   "macos-private-api",
   "image-png",
   "devtools",
 ] }
-tauri-plugin-shell = "2.3.0"
+tauri-plugin-shell = "2.5.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tauri-plugin-os = "2.3.0"
-tauri-plugin-dialog = "2.7.1"
-tauri-plugin-store = "2.3.0"
-tauri-plugin-http = { version = "2.5.9", features = ["unsafe-headers"] }
-tauri-plugin-clipboard-manager = "2.3.0"
+tauri-plugin-os = "2.4.0"
+tauri-plugin-dialog = "2.8.3"
+tauri-plugin-store = "2.5.0"
+tauri-plugin-http = { version = "2.8.3", features = ["unsafe-headers"] }
+tauri-plugin-clipboard-manager = "2.5.0"
 base64 = "0.22.1"
-tauri-plugin-process = "2"
-tauri-plugin-fs = "2.5.1"
+tauri-plugin-process = "2.4.0"
+tauri-plugin-fs = "2.7.1"
 tauri-plugin-devtools = "2.0.0"
-tauri-plugin-global-shortcut = "2.3.0"
-tauri-plugin-deep-link = "2"
+tauri-plugin-global-shortcut = "2.4.1"
+tauri-plugin-deep-link = "2.6.2"
 regex = "1.12.3"
+dirs = "6"
+sha2 = "0.10.9"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-aha = { version = "0.2.6", features = ["metal"] }
-
-[target.'cfg(target_os = "linux")'.dependencies]
-aha = { version = "0.2.6", features = [] }
-tauri-runtime-cef = { path = "vendor/tauri-runtime-cef" }
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSApplication", "NSMenu", "NSMenuItem", "NSImage", "NSView", "NSWindow", "NSCursor", "NSResponder"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSString", "NSGeometry"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-aha = { version = "0.2.6" }
+windows = { version = "0.62", features = [
+  "Win32_Foundation",
+  "Win32_System_Com",
+  "Win32_System_Com_StructuredStorage",
+  "Win32_System_Ole",
+  "Win32_System_Memory",
+  "Win32_UI_Shell",
+  "Win32_UI_WindowsAndMessaging",
+  "Win32_Graphics_Gdi",
+  "Win32_System_SystemServices",
+] }
+windows-core = "0.62"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# shortcut: deep-link 2.6.2 requires the two-field ParseOption; remove when the plugin supports newer rust-ini.
+rust-ini = "=0.21.1"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-cli = "2"
-tauri-plugin-updater = "2"
-tauri-plugin-window-state = "2"
+tauri-plugin-cli = "2.5.0"
+tauri-plugin-updater = "2.14.0"
+tauri-plugin-window-state = "2.5.0"
 tauri-plugin-system-info = "2.0.9"
 rmcp = { version = "2.2.0", default-features = false, features = [
   "client",
@@ -63,10 +79,6 @@ tokio = { version = "1", features = [
   "process",
   "sync",
 ] }
-
-[patch.crates-io]
-esaxx-rs = { path = "vendor/esaxx-rs" }
-sentencepiece-sys = { path = "vendor/sentencepiece-sys" }
 
 [profile.release]
 codegen-units = 1 # Allows LLVM to perform better optimization.

@@ -12,9 +12,11 @@ export function renderArcEdge(
   if (edge.source.isHiddenBySectionCollapse && edge.target.isHiddenBySectionCollapse) {
     return;
   }
-  const edgeColor = edge.color.equals(Color.Transparent)
-    ? project.stageStyleManager.currentStyle.StageObjectBorder
-    : edge.color;
+  const edgeColor = edge.isSelected
+    ? project.stageStyleManager.currentStyle.CollideBoxSelected
+    : edge.color.equals(Color.Transparent)
+      ? project.stageStyleManager.currentStyle.StageObjectBorder
+      : edge.color;
   const ctx = project.canvas.ctx;
 
   const geo = edge.arcGeometry;
@@ -162,11 +164,6 @@ export function renderArcEdge(
 
   // 画箭头（在 clippedEnd 处，沿切线方向）
   renderArrowHead(endPoint, edge.getArrowDirection().normalize(), (15 * edge.edgeWidth) / 2, edgeColor);
-
-  // 选中状态：绘制绿色碰撞箱
-  if (edge.isSelected) {
-    project.collisionBoxRenderer.render(edge.collisionBox, project.stageStyleManager.currentStyle.CollideBoxSelected);
-  }
 
   ctx.restore();
 }

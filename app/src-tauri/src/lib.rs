@@ -1,9 +1,25 @@
+#[cfg(debug_assertions)]
+mod cli_desktop_acceptance;
 mod cmd;
+#[cfg(target_os = "macos")]
+mod macos_resize_cursor;
+mod project_ownership;
+pub mod project_reference_store;
+#[cfg(target_os = "windows")]
+mod custom_drag_drop;
+mod project_runtime_bridge;
 
-use std::sync::{Mutex, OnceLock};
-use tauri::{Emitter, Listener, Manager, State};
+pub mod ownership_helper {
+    pub use crate::project_ownership::{
+        acquire_project_ownership, try_acquire_project_ownership, CanonicalProjectPath,
+        ProjectOwner, ProjectOwnership, ProjectOwnershipError,
+    };
+}
 
-// 这两行可能不能去掉，否则会导致linux打包软件报错
+use std::sync::{Arc, Mutex, OnceLock};
+use tauri::{Manager, State};
+
+#[cfg(target_os = "linux")]
 use std::path::Path;
 
 pub static APP_HANDLE: OnceLock<tauri::AppHandle> = OnceLock::new();
@@ -44,17 +60,13 @@ pub fn run() {
         }
     }
 
-    // CEF 单 binary 自举：子进程 re-exec 本程序时必须在任何 Tauri 初始化前分流。
-    #[cfg(target_os = "linux")]
-    tauri_runtime_cef::dispatch_cef_subprocess();
-
-    #[cfg(target_os = "linux")]
-    let builder = tauri::Builder::<tauri_runtime_cef::Cef<tauri::EventLoopMessage>>::new();
-    #[cfg(not(target_os = "linux"))]
     let builder = tauri::Builder::default();
 
     builder
         .manage(PendingOpenFiles::default())
+        .manage(Arc::new(
+            project_ownership::DesktopProjectOwnershipManager::default(),
+        ))
         .manage(cmd::mcp::McpStdioManager::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -65,6 +77,13 @@ pub fn run() {
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
+            #[cfg(target_os = "macos")]
+            if let Some(window) = app.get_webview_window("main") {
+                macos_resize_cursor::install(&window)?;
+            }
+            app.manage(project_runtime_bridge::ProjectRuntimeBridgeManager::start(
+                app.handle().clone(),
+            )?);
             #[cfg(debug_assertions)]
             {
                 app.handle().plugin(tauri_plugin_devtools::init())?;
@@ -84,20 +103,31 @@ pub fn run() {
                 app.handle()
                     .plugin(tauri_plugin_global_shortcut::Builder::new().build())?;
             }
+            #[cfg(target_os = "windows")]
+            custom_drag_drop::install(app.handle().clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            #[cfg(target_os = "macos")]
+            cmd::macos_menu::style_macos_menu_icons,
             cmd::device::get_device_id,
+            #[cfg(debug_assertions)]
+            cli_desktop_acceptance::load_cli_desktop_acceptance_manifest,
+            #[cfg(debug_assertions)]
+            cli_desktop_acceptance::write_cli_desktop_acceptance_state,
+            #[cfg(debug_assertions)]
+            cli_desktop_acceptance::wait_for_cli_desktop_acceptance_completion,
             write_stdout,
             write_stderr,
             exit,
             take_pending_open_files,
-            #[cfg(desktop)]
-            cmd::paddle::get_aha_directory,
-            #[cfg(desktop)]
-            cmd::paddle::paddleocr_vl_1_6_model_exists,
-            #[cfg(desktop)]
-            cmd::paddle::paddleocr_vl_1_6_generate,
+            project_ownership::acquire_desktop_project_ownership,
+            project_ownership::acquire_desktop_project_ownership_for_save,
+            project_ownership::make_desktop_project_ownership_connectable,
+            project_ownership::release_desktop_project_ownership,
+            project_reference_store::load_project_reference_snapshot,
+            project_reference_store::save_project_reference_snapshot,
+            project_runtime_bridge::respond_project_runtime_bridge,
             cmd::fs::read_folder_structure,
             cmd::fs::exists,
             cmd::fs::read_folder,

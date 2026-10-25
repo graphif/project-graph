@@ -1,15 +1,15 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Project Graph",
-  "version": "0.0.0-dev",
+  "version": "4.2.6-alpha1",
   "identifier": "liren.project-graph",
   "build": {
-    "beforeDevCommand": "",
+    "beforeDevCommand": "pnpm --filter @graphif/project-graph dev",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "",
-    "beforeBundleCommand": "node ./scripts/collect-cef-linux.js",
+    "beforeBundleCommand": "node ./scripts/prepare-bundle.js",
     "frontendDist": "../dist",
-    "removeUnusedCommands": true
+    "removeUnusedCommands": false
   },
   "app": {
     "windows": [
@@ -21,6 +21,7 @@
         "height": 800,
         "decorations": false,
         "transparent": true,
+        "noRedirectionBitmap": true,
         "visible": false
       }
     ],
@@ -52,27 +53,17 @@
     },
     "linux": {
       "appimage": {
-        "bundleMediaFramework": true,
-        "files": {
-          "/usr/lib/project-graph/": "cef-linux-runtime/"
-        }
-      },
-      "deb": {
-        "files": {
-          "/usr/lib/project-graph/": "cef-linux-runtime/"
-        }
-      },
-      "rpm": {
-        "compression": {
-          "type": "none"
-        },
-        "files": {
-          "/usr/lib/project-graph/": "cef-linux-runtime/"
-        }
+        "bundleMediaFramework": true
       }
     },
     "macOS": {
-      "minimumSystemVersion": "11.0"
+      "minimumSystemVersion": "11.0",
+      "dmg": {
+        "background": "dmg/background.png",
+        "windowSize": { "width": 720, "height": 460 },
+        "appPosition": { "x": 184, "y": 254 },
+        "applicationFolderPosition": { "x": 536, "y": 254 }
+      }
     },
     "fileAssociations": [
       {

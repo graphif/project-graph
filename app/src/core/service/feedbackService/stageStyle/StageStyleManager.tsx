@@ -11,8 +11,8 @@ export class StageStyleManager {
 
   // 软件启动运行一次
   constructor() {
-    Settings.watch("theme", async (value) => {
-      this.currentStyle = await StageStyle.styleFromTheme(value);
+    Settings.watch("theme", (value) => {
+      this.currentStyle = StageStyle.styleFromTheme(value);
     });
   }
 }

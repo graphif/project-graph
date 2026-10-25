@@ -1,4 +1,5 @@
 import { Settings } from "@/core/service/Settings";
+import { DEFAULT_FONT_FAMILY, MAC_DEFAULT_FONT_FAMILY } from "@/core/service/ProjectToolSettingsSchema";
 import { MaxSizeCache, Vector } from "@graphif/data-structures";
 
 const _canvas = document.createElement("canvas");
@@ -7,17 +8,56 @@ const _context = _canvas.getContext("2d");
 const _cache = new MaxSizeCache<string, number>(10000);
 const _fontDescriptorCache = new MaxSizeCache<string, string>(100);
 const REFERENCE_FONT_SIZE = 100;
+const canvasFonts = new WeakMap<CanvasRenderingContext2D, { requested: string; actual: string }>();
+
+export function setCanvasFont(context: CanvasRenderingContext2D, font: string): void {
+  const previous = canvasFonts.get(context);
+  const actual = context.font;
+  // Canvas 会将 normal 字重、引号等规范化，不能直接与请求字符串比较。
+  // 仍需检查实际状态，因为其他绘制代码和 restore() 都可能改变字体。
+  if (previous?.requested === font && previous.actual === actual) return;
+  if (actual !== font) context.font = font;
+  canvasFonts.set(context, { requested: font, actual: context.font });
+}
+const isCanvasFontLoaded = () =>
+  document.fonts
+    ? Array.from(document.fonts).some(
+        (face) => face.family.replaceAll('"', "") === "Project Graph Canvas" && face.status === "loaded",
+      )
+    : false;
+let bundledCanvasFontReady = isCanvasFontLoaded();
+document.fonts?.addEventListener("loadingdone", () => {
+  bundledCanvasFontReady = isCanvasFontLoaded();
+});
 
 export function getFontIdentity(fontFamily?: string, fontWeight?: string): string {
-  return JSON.stringify([fontWeight || "normal", fontFamily || Settings.defaultFontFamily]);
+  return JSON.stringify([
+    fontWeight || "normal",
+    fontFamily || Settings.defaultFontFamily,
+    isBundledCanvasFont(fontFamily) && bundledCanvasFontReady,
+  ]);
 }
 
-function resolveFontFamily(fontFamily?: string, fontWeight?: string): string {
+export function isBundledCanvasFont(fontFamily?: string, fontWeight?: string): boolean {
+  // 桌面端不使用 MSDF，也不替换系统字体，避免异步字体加载后节点尺寸与文字脱节。
+  if (typeof window !== "undefined" && "__TAURI_INTERNALS__" in window) return false;
+  return (
+    !fontFamily &&
+    (!fontWeight || fontWeight === "normal" || fontWeight === "400") &&
+    (Settings.defaultFontFamily === DEFAULT_FONT_FAMILY || Settings.defaultFontFamily === MAC_DEFAULT_FONT_FAMILY)
+  );
+}
+
+export function resolveFontFamily(fontFamily?: string, fontWeight?: string): string {
   const cacheKey = getFontIdentity(fontFamily, fontWeight);
   const cached = _fontDescriptorCache.get(cacheKey);
   if (cached !== undefined) return cached;
 
-  const resolvedFamily = fontFamily ? `"${fontFamily}"` : Settings.defaultFontFamily;
+  const resolvedFamily = fontFamily
+    ? `"${fontFamily}"`
+    : isBundledCanvasFont(fontFamily, fontWeight)
+      ? `"Project Graph Canvas", ${Settings.defaultFontFamily}`
+      : Settings.defaultFontFamily;
   _fontDescriptorCache.set(cacheKey, resolvedFamily);
   return resolvedFamily;
 }
@@ -54,7 +94,7 @@ export function getTextSize(text: string, size: number, fontFamily?: string, fon
     throw new Error("Failed to get canvas context");
   }
 
-  _context.font = resolveFont(REFERENCE_FONT_SIZE, fontFamily, fontWeight);
+  setCanvasFont(_context, resolveFont(REFERENCE_FONT_SIZE, fontFamily, fontWeight));
   const metrics = _context.measureText(text);
   if (useCache) {
     _cache.set(cacheKey, metrics.width);

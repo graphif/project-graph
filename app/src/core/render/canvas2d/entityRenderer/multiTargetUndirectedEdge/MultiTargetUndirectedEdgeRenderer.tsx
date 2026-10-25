@@ -10,12 +10,6 @@ export class MultiTargetUndirectedEdgeRenderer {
   constructor(private readonly project: Project) {}
 
   render(edge: MultiTargetUndirectedEdge) {
-    if (edge.isSelected) {
-      this.project.collisionBoxRenderer.render(
-        edge.collisionBox,
-        this.project.stageStyleManager.currentStyle.CollideBoxSelected,
-      );
-    }
     if (edge.associationList.length < 2) {
       // 特殊情况，出问题了属于是
       if (edge.associationList.length === 1) {
@@ -45,9 +39,11 @@ export class MultiTargetUndirectedEdgeRenderer {
 
     // 正常情况, target >= 2
     const centerLocation = edge.centerLocation;
-    const edgeColor = edge.color.equals(Color.Transparent)
-      ? this.project.stageStyleManager.currentStyle.StageObjectBorder
-      : edge.color;
+    const edgeColor = edge.isSelected
+      ? this.project.stageStyleManager.currentStyle.CollideBoxSelected
+      : edge.color.equals(Color.Transparent)
+        ? this.project.stageStyleManager.currentStyle.StageObjectBorder
+        : edge.color;
     // 画文字
     if (edge.text !== "") {
       // 画文字
@@ -167,7 +163,7 @@ export class MultiTargetUndirectedEdgeRenderer {
     // 保证首尾相接
     convexPoints.push(convexPoints[0]);
     const lineType = edge.lineType || "solid";
-    const strokeWidth = this.project.camera.currentScale <= 0.065 ? 8 : 8 * this.project.camera.currentScale;
+    const strokeWidth = 8 * this.project.camera.currentScale;
     const viewPoints = convexPoints.map((point) => this.project.renderer.transformWorld2View(point));
     if (lineType === "dashed") {
       const dashLen = 10 * this.project.camera.currentScale;
@@ -227,7 +223,7 @@ export class MultiTargetUndirectedEdgeRenderer {
       }
     }
 
-    const strokeWidth = this.project.camera.currentScale <= 0.065 ? 8 : 8 * this.project.camera.currentScale;
+    const strokeWidth = 8 * this.project.camera.currentScale;
     const lineType = edge.lineType || "solid";
     const viewCenter = this.project.renderer.transformWorld2View(center);
     const viewRadius = maxDistance * this.project.camera.currentScale;

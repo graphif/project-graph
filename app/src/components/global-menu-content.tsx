@@ -19,6 +19,8 @@ import { Settings } from "@/core/service/Settings";
 import { activeResourceTabAtom } from "@/state";
 import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
 import { PathString } from "@/utils/pathString";
+import { isMac } from "@/utils/platform";
+import NativeMacosMenu, { nativeMacosMenuIds } from "./native-macos-menu";
 import { useAtom } from "jotai";
 import type { LucideProps } from "lucide-react";
 import * as LucideIcons from "lucide-react";
@@ -88,6 +90,7 @@ function RecentFilesSection() {
 // ----------------- 主组件 -----------------
 
 export default function GlobalMenuContent() {
+  const [nativeMenuReady, setNativeMenuReady] = useState(false);
   const [tab] = useAtom(activeResourceTabAtom);
   const activeProject = tab instanceof Project ? tab : undefined;
   const [config] = Settings.use("globalMenuConfig");
@@ -149,6 +152,7 @@ export default function GlobalMenuContent() {
 
   const renderTopMenu = (top: GlobalMenuConfigItem): ReactNode => {
     if (top.type !== "topMenu") return null;
+    if (isMac && nativeMenuReady && nativeMacosMenuIds.has(top.id)) return null;
     if (!isVisible(top)) return null;
     const uiKb = KeyBindsUI.getUIKeyBind(top.id);
     const staticKb = allKeyBinds.find((k) => k.id === top.id);
@@ -166,5 +170,15 @@ export default function GlobalMenuContent() {
     );
   };
 
-  return <Menubar className="shrink-0">{config.map(renderTopMenu)}</Menubar>;
+  const topMenus = config.map(renderTopMenu).filter(Boolean);
+  return (
+    <>
+      {isMac && <NativeMacosMenu onReady={setNativeMenuReady} />}
+      {topMenus.length > 0 && (
+        <Menubar className="bg-background shrink-0 rounded-full px-2 sm:rounded-full sm:px-2 [&_[data-slot=menubar-trigger]]:rounded-full">
+          {topMenus}
+        </Menubar>
+      )}
+    </>
+  );
 }

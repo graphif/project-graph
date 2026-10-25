@@ -48,7 +48,7 @@ export class ControllerEntityCreateClass extends ControllerClass {
       this.createConnectPoint(pressLocation, sections);
     } else if (Settings.doubleClickEmptySpaceAction === "createTextNode") {
       // 双击创建节点
-      this.project.controllerUtils.addTextNodeByLocation(pressLocation, true);
+      this.project.controllerUtils.addTextNodeByLocation(pressLocation, true, true);
     }
   };
 

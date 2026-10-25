@@ -1,4 +1,5 @@
 import { Project, service } from "@/core/Project";
+import { superellipseRect } from "@/utils/superellipse";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
@@ -74,7 +75,8 @@ export class ShapeRenderer {
     radius: number = 0,
   ): void {
     this.project.canvas.ctx.beginPath();
-    this.project.canvas.ctx.roundRect(
+    superellipseRect(
+      this.project.canvas.ctx,
       centerLocation.x - width / 2,
       centerLocation.y - height / 2,
       width,
@@ -97,13 +99,20 @@ export class ShapeRenderer {
    * @param radius
    */
   renderRect(rect: Rectangle, color: Color, strokeColor: Color, strokeWidth: number, radius: number = 0) {
+    const fill = color.a > 0;
+    const stroke = strokeWidth > 0 && strokeColor.a > 0;
+    if (!fill && !stroke) return;
     this.project.canvas.ctx.beginPath();
-    this.project.canvas.ctx.roundRect(rect.location.x, rect.location.y, rect.size.x, rect.size.y, radius);
-    this.project.canvas.ctx.fillStyle = color.toString();
-    this.project.canvas.ctx.fill();
-    this.project.canvas.ctx.lineWidth = strokeWidth;
-    this.project.canvas.ctx.strokeStyle = strokeColor.toString();
-    this.project.canvas.ctx.stroke();
+    superellipseRect(this.project.canvas.ctx, rect.location.x, rect.location.y, rect.size.x, rect.size.y, radius);
+    if (fill) {
+      this.project.canvas.ctx.fillStyle = color.toString();
+      this.project.canvas.ctx.fill();
+    }
+    if (stroke) {
+      this.project.canvas.ctx.lineWidth = strokeWidth;
+      this.project.canvas.ctx.strokeStyle = strokeColor.toString();
+      this.project.canvas.ctx.stroke();
+    }
   }
 
   renderDashedRect(
@@ -116,7 +125,7 @@ export class ShapeRenderer {
   ) {
     this.project.canvas.ctx.setLineDash([dashLength, dashLength]);
     this.project.canvas.ctx.beginPath();
-    this.project.canvas.ctx.roundRect(rect.location.x, rect.location.y, rect.size.x, rect.size.y, radius);
+    superellipseRect(this.project.canvas.ctx, rect.location.x, rect.location.y, rect.size.x, rect.size.y, radius);
     this.project.canvas.ctx.fillStyle = color.toString();
     this.project.canvas.ctx.fill();
     this.project.canvas.ctx.lineWidth = strokeWidth;
@@ -146,7 +155,7 @@ export class ShapeRenderer {
     this.project.canvas.ctx.shadowOffsetX = shadowOffsetX;
     this.project.canvas.ctx.shadowOffsetY = shadowOffsetY;
     this.project.canvas.ctx.beginPath();
-    this.project.canvas.ctx.roundRect(rect.location.x, rect.location.y, rect.size.x, rect.size.y, radius);
+    superellipseRect(this.project.canvas.ctx, rect.location.x, rect.location.y, rect.size.x, rect.size.y, radius);
     this.project.canvas.ctx.fillStyle = fillColor.toString();
     this.project.canvas.ctx.fill();
     this.project.canvas.ctx.lineWidth = strokeWidth;
@@ -183,9 +192,12 @@ export class ShapeRenderer {
     this.project.canvas.ctx.closePath();
     this.project.canvas.ctx.fillStyle = fillColor.toString();
     this.project.canvas.ctx.fill();
-    this.project.canvas.ctx.lineWidth = strokeWidth;
-    this.project.canvas.ctx.strokeStyle = strokeColor.toString();
-    this.project.canvas.ctx.stroke();
+    // Canvas 会忽略 lineWidth = 0，继续 stroke 会沿用上一个图形的线宽。
+    if (strokeWidth > 0 && strokeColor.a > 0) {
+      this.project.canvas.ctx.lineWidth = strokeWidth;
+      this.project.canvas.ctx.strokeStyle = strokeColor.toString();
+      this.project.canvas.ctx.stroke();
+    }
   }
 
   /**

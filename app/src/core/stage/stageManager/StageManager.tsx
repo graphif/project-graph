@@ -195,18 +195,30 @@ export class StageManager {
    * 包含了对Edge几何组偏移索引的更新（多重边/双向边自动散开）
    */
   updateReferences() {
+    // 一次性建立 uuid -> ConnectableEntity 索引。
+    // 原实现是「实体 × 关系」双层全量遍历：每个实体都重新扫描一次关系列表，
+    // 数千节点/边的工程下单次调用即 O(N*E)，连接、删除等高频路径会卡顿。
+    const connectableEntities = new Map<string, ConnectableEntity>();
     for (const entity of this.getEntities()) {
       // 实体是可连接类型
       if (entity instanceof ConnectableEntity) {
-        for (const edge of this.getAssociations()) {
-          if (edge instanceof Edge) {
-            if (edge.source.unknown && edge.source.uuid === entity.uuid) {
-              edge.source = entity;
-            }
-            if (edge.target.unknown && edge.target.uuid === entity.uuid) {
-              edge.target = entity;
-            }
-          }
+        connectableEntities.set(entity.uuid, entity);
+      }
+    }
+    for (const edge of this.getAssociations()) {
+      if (!(edge instanceof Edge)) {
+        continue;
+      }
+      if (edge.source.unknown) {
+        const entity = connectableEntities.get(edge.source.uuid);
+        if (entity) {
+          edge.source = entity;
+        }
+      }
+      if (edge.target.unknown) {
+        const entity = connectableEntities.get(edge.target.uuid);
+        if (entity) {
+          edge.target = entity;
         }
       }
     }
@@ -277,7 +289,6 @@ export class StageManager {
       entityMap.set(entity.uuid, entity);
       entity.parentSection = null;
       entity.sectionDepth = 0;
-      entity.nearestLockedAncestorSection = null;
       if (entity instanceof Section) {
         originalChildrenMap.set(entity.uuid, [...entity.children]);
       }
@@ -323,7 +334,7 @@ export class StageManager {
     }
 
     for (const entity of this.topLevelEntities) {
-      this.assignSectionRuntimeInfo(entity, 0, null);
+      this.assignSectionRuntimeInfo(entity, 0);
     }
 
     for (const entity of entities) {
@@ -370,15 +381,13 @@ export class StageManager {
     return validCandidates[0];
   }
 
-  private assignSectionRuntimeInfo(entity: Entity, depth: number, lockedAncestor: Section | null) {
+  private assignSectionRuntimeInfo(entity: Entity, depth: number) {
     entity.sectionDepth = depth;
-    entity.nearestLockedAncestorSection = lockedAncestor;
     if (!(entity instanceof Section)) {
       return;
     }
-    const nextLockedAncestor = entity.locked ? entity : lockedAncestor;
     for (const child of entity.children) {
-      this.assignSectionRuntimeInfo(child, depth + 1, nextLockedAncestor);
+      this.assignSectionRuntimeInfo(child, depth + 1);
     }
   }
 

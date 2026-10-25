@@ -1,16 +1,20 @@
 import { Project, service } from "@/core/Project";
+import { MsdfTextAtlasRenderer } from "@/core/render/canvas2d/basicRenderer/msdfTextAtlas";
 import { Settings } from "@/core/service/Settings";
 import {
   getFontIdentity,
   getTextSize,
+  isBundledCanvasFont,
   replaceTextWhenProtect,
   resolveFont,
+  setCanvasFont,
   textToTextArray as splitTextToLines,
 } from "@/utils/font";
 import { Color, LruCache, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
 const TEXT_RENDER_SIZE = 100;
+const sharedMsdfTextAtlasRenderer = new MsdfTextAtlasRenderer();
 
 /**
  * 专门用于在Canvas上渲染文字
@@ -93,16 +97,24 @@ export class TextRenderer {
     if (!visibleRun) return;
 
     const ctx = this.project.canvas.ctx;
+    if (
+      size >= 24 &&
+      isBundledCanvasFont(fontFamily, fontWeight) &&
+      sharedMsdfTextAtlasRenderer.drawLine(ctx, visibleRun.text, new Vector(visibleRun.left, location.y), size, color)
+    ) {
+      return;
+    }
+    // 固定字号复用浏览器的文字排版；相机缩放通过变换实现。
     const font = resolveFont(TEXT_RENDER_SIZE, fontFamily, fontWeight);
     const fillStyle = color.toString();
     if (ctx.textBaseline !== "middle") ctx.textBaseline = "middle";
     if (ctx.textAlign !== "left") ctx.textAlign = "left";
-    if (ctx.font !== font) ctx.font = font;
+    setCanvasFont(ctx, font);
     if (ctx.fillStyle !== fillStyle) ctx.fillStyle = fillStyle;
     ctx.save();
-    ctx.translate(visibleRun.left, location.y);
+    ctx.translate(visibleRun.left, location.y + size / 2);
     ctx.scale(size / TEXT_RENDER_SIZE, size / TEXT_RENDER_SIZE);
-    ctx.fillText(visibleRun.text, 0, TEXT_RENDER_SIZE / 2);
+    ctx.fillText(visibleRun.text, 0, 0);
     ctx.restore();
   }
 
@@ -207,16 +219,12 @@ export class TextRenderer {
     color: Color,
     fontFamily?: string,
     fontWeight?: string,
+    minimumFontSize: number = 0,
   ): void {
     if (text.trim().length === 0) return;
-    this.renderTextFromCenter(
-      text,
-      rectangle.center,
-      this.getFontSizeByRectangleSize(text, rectangle, fontFamily, fontWeight).y,
-      color,
-      fontFamily,
-      fontWeight,
-    );
+    const size = this.getFontSizeByRectangleSize(text, rectangle, fontFamily, fontWeight).y;
+    if (size < minimumFontSize) return;
+    this.renderTextFromCenter(text, rectangle.center, size, color, fontFamily, fontWeight);
   }
 
   private getFontSizeByRectangleSize(
@@ -329,7 +337,7 @@ export class TextRenderer {
     fontFamily?: string,
     fontWeight?: string,
   ): void {
-    if (text.trim().length === 0) return;
+    if (text.trim().length === 0 || !Number.isFinite(size) || size <= 0) return;
     if (Settings.textIntegerLocationAndSizeRender) {
       centerLocation = centerLocation.toInteger();
       size = Math.round(size);
@@ -338,23 +346,52 @@ export class TextRenderer {
     }
     text = this.prepareText(text);
     const textLineArray = this.textToTextArrayWrapCache(text, size, limitWidth, fontFamily, fontWeight);
+    const visibleLines: { line: string; offset: number; width: number }[] = [];
+    const { w, h } = this.project.renderer;
+    // 留出字形外伸及描边余量，边缘文字不能因为中心在屏幕外而消失。
+    const margin = size * 1.5;
+    for (let i = 0; i < textLineArray.length; i++) {
+      const offset = (i - (textLineArray.length - 1) / 2) * lineHeight;
+      const y = centerLocation.y + offset * size;
+      if (h > 0 && (y + margin < 0 || y - margin > h)) continue;
+      const line = textLineArray[i];
+      const width = getTextSize(line, size, fontFamily, fontWeight).x;
+      if (w > 0 && (centerLocation.x + width / 2 + margin < 0 || centerLocation.x - width / 2 - margin > w)) {
+        continue;
+      }
+      visibleLines.push({ line, offset, width });
+    }
+    if (visibleLines.length === 0) return;
     const ctx = this.project.canvas.ctx;
-    const renderScale = size / TEXT_RENDER_SIZE;
+    const useMsdf = size >= 24 && isBundledCanvasFont(fontFamily, fontWeight);
+    const fallbackLines = visibleLines.filter(({ line, offset, width }) => {
+      if (!useMsdf) return true;
+      const lineTopY = centerLocation.y + offset * size - size / 2;
+      const lineLeftX = centerLocation.x - width / 2;
+      return !sharedMsdfTextAtlasRenderer.drawLine(
+        ctx,
+        line,
+        new Vector(lineLeftX, lineTopY),
+        size,
+        fillColor,
+        strokeColor,
+      );
+    });
+    if (fallbackLines.length === 0) return;
 
     ctx.save();
     ctx.translate(centerLocation.x, centerLocation.y);
-    ctx.scale(renderScale, renderScale);
+    ctx.scale(size / TEXT_RENDER_SIZE, size / TEXT_RENDER_SIZE);
     ctx.textBaseline = "middle";
     ctx.textAlign = "center";
-    ctx.font = resolveFont(TEXT_RENDER_SIZE, fontFamily, fontWeight);
+    setCanvasFont(ctx, resolveFont(TEXT_RENDER_SIZE, fontFamily, fontWeight));
     ctx.lineJoin = "round";
     ctx.strokeStyle = strokeColor.toString();
     ctx.lineWidth = TEXT_RENDER_SIZE * 0.4;
     ctx.fillStyle = fillColor.toString();
 
-    for (let i = 0; i < textLineArray.length; i++) {
-      const line = textLineArray[i];
-      const y = (i - (textLineArray.length - 1) / 2) * TEXT_RENDER_SIZE * lineHeight;
+    for (const { line, offset } of fallbackLines) {
+      const y = offset * TEXT_RENDER_SIZE;
       ctx.strokeText(line, 0, y);
       ctx.fillText(line, 0, y);
     }

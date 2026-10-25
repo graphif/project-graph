@@ -25,10 +25,11 @@ export class Renderer {
   static FONT_SIZE = 32;
   static NODE_PADDING = 14;
   /// 节点的圆角半径
-  static NODE_ROUNDED_RADIUS = 8;
+  static NODE_ROUNDED_RADIUS = 16;
 
   w = 0;
   h = 0;
+  private pixelRatio = 0;
   // let canvasRect: Rectangle;
   renderedEdges: number = 0;
 
@@ -55,9 +56,11 @@ export class Renderer {
    * 它能让画布的大小和屏幕的大小保持一致
    */
   resizeWindow(newW: number, newH: number) {
-    const scale = window.devicePixelRatio;
+    const scale = window.devicePixelRatio || 1;
+    if (this.w === newW && this.h === newH && this.pixelRatio === scale) return;
     this.w = newW;
     this.h = newH;
+    this.pixelRatio = scale;
     this.project.canvas.element.width = newW * scale;
     this.project.canvas.element.height = newH * scale;
     this.project.canvas.element.style.width = `${newW}px`;
@@ -84,6 +87,9 @@ export class Renderer {
   }
 
   private tick_() {
+    if (this.pixelRatio !== (window.devicePixelRatio || 1)) {
+      this.resizeWindow(this.w, this.h);
+    }
     this.updateFPS();
     const viewRectangle = this.getCoverWorldRectangle();
     this.renderBackground();
@@ -101,7 +107,6 @@ export class Renderer {
     this.project.keyBindHintEngine.render();
     this.renderSpecialKeys();
     this.renderCenterPointer();
-    this.renderZoomLevelStage();
     this.renderDebugDetails();
   }
 
@@ -153,28 +158,6 @@ export class Renderer {
       ctx.fillText(chat.text, location.x + 21, location.y + 29);
       ctx.restore();
     }
-  }
-
-  private renderZoomLevelStage() {
-    if (isFrame) return;
-
-    const currentScale = this.project.camera.currentScale;
-    if (!Number.isFinite(currentScale) || currentScale <= 0) return;
-
-    const base = 3;
-    const stage =
-      currentScale >= 1
-        ? Math.floor(Math.log(currentScale) / Math.log(base)) + 1
-        : -(Math.floor(Math.log(0.1 / currentScale) / Math.log(base)) + 1);
-
-    const margin = 10;
-    const fontSize = 12;
-    this.project.textRenderer.renderTempText(
-      `Z${stage}`,
-      new Vector(margin, this.h - margin - fontSize),
-      fontSize,
-      this.project.stageStyleManager.currentStyle.DetailsDebugText,
-    );
   }
 
   private renderMainStageElements(viewRectangle: Rectangle) {
@@ -275,6 +258,11 @@ export class Renderer {
       if (this.project.sectionMethods.isAssociationCoveredByBigTitleSection(edge)) {
         continue;
       }
+      if (edge instanceof LineEdge && Settings.lineStyle === "straight") continue;
+      if (edge instanceof LineEdge && Settings.lineStyle === "bezier") {
+        const view = this.project.edgeRenderer.getEdgeView(edge);
+        if (view.source.uuid !== view.target.uuid) continue;
+      }
       this.project.collisionBoxRenderer.render(
         edge.collisionBox,
         this.project.stageStyleManager.currentStyle.CollideBoxPreSelected,
@@ -344,6 +332,7 @@ export class Renderer {
           this.project.stageStyleManager.currentStyle.SelectRectangleFill,
           this.project.stageStyleManager.currentStyle.SelectRectangleBorder,
           1,
+          Renderer.NODE_ROUNDED_RADIUS,
         );
         // 碰撞框选的提示
         if (shouldShowText) {
@@ -361,11 +350,14 @@ export class Renderer {
           this.project.stageStyleManager.currentStyle.SelectRectangleFill,
           Color.Transparent,
           0,
+          Renderer.NODE_ROUNDED_RADIUS,
         );
-        this.project.shapeRenderer.renderCameraShapeBorder(
+        this.project.shapeRenderer.renderDashedRect(
           this.transformWorld2View(rectangle),
+          Color.Transparent,
           this.project.stageStyleManager.currentStyle.SelectRectangleBorder,
           1,
+          Renderer.NODE_ROUNDED_RADIUS,
         );
         // 完全覆盖框选的提示
         if (shouldShowText) {
@@ -532,7 +524,7 @@ export class Renderer {
                 Color.Transparent,
                 mixColors(this.project.stageStyleManager.currentStyle.StageObjectBorder, Color.Transparent, 0.5),
                 2 * this.project.camera.currentScale,
-                Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+                Renderer.NODE_ROUNDED_RADIUS,
               );
             }
           }
@@ -597,7 +589,7 @@ export class Renderer {
         Color.Transparent,
         this.project.stageStyleManager.currentStyle.StageObjectBorder.toNewAlpha(0.8),
         2 * this.project.camera.currentScale,
-        Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+        Renderer.NODE_ROUNDED_RADIUS,
       );
     }
 
@@ -609,7 +601,7 @@ export class Renderer {
       Color.Transparent,
       Color.Green.toNewAlpha(0.5),
       2,
-      Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+      Renderer.NODE_ROUNDED_RADIUS,
     );
     this.project.shapeRenderer.renderDashedRect(
       new Rectangle(
@@ -619,7 +611,7 @@ export class Renderer {
       Color.Transparent,
       Color.Green.toNewAlpha(0.5),
       2,
-      Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+      Renderer.NODE_ROUNDED_RADIUS,
     );
 
     this.renderJumpLine(boundingRectangle.leftTop, targetBoundingRectangle.leftTop);
@@ -692,6 +684,12 @@ export class Renderer {
     }
     // 待删除的边
     for (const association of this.project.controller.cutting.warningAssociations) {
+      if (
+        association instanceof LineEdge &&
+        (Settings.lineStyle === "straight" ||
+          (Settings.lineStyle === "bezier" && association.source !== association.target))
+      )
+        continue;
       this.project.collisionBoxRenderer.render(
         association.collisionBox,
         this.project.stageStyleManager.currentStyle.effects.warningShadow.toNewAlpha(0.5),
@@ -738,17 +736,37 @@ export class Renderer {
       if (this.project.sectionMethods.isAssociationHiddenByBigTitleSection(association)) {
         continue;
       }
-      if (association instanceof MultiTargetUndirectedEdge) {
-        this.project.multiTargetUndirectedEdgeRenderer.render(association);
+      const ctx = this.project.canvas.ctx;
+      ctx.save();
+      // 连线在图片上方绘制，但不能覆盖端点文本；逐个裁剪也能处理节点重叠。
+      for (const entity of association.associationList) {
+        if (
+          !("clipConnectionToBoundary" in entity) ||
+          !entity.clipConnectionToBoundary ||
+          ("isHiddenBySectionCollapse" in entity && entity.isHiddenBySectionCollapse)
+        )
+          continue;
+        const rect = this.transformWorld2View(entity.collisionBox.getRectangle());
+        ctx.beginPath();
+        ctx.rect(0, 0, this.w, this.h);
+        ctx.rect(rect.left, rect.top, rect.width, rect.height);
+        ctx.clip("evenodd");
       }
-      if (association instanceof LineEdge) {
-        this.project.edgeRenderer.renderLineEdge(association);
-      }
-      if (association instanceof CubicCatmullRomSplineEdge) {
-        this.project.edgeRenderer.renderCrEdge(association);
-      }
-      if (association instanceof ArcEdge) {
-        this.project.edgeRenderer.renderArcEdge(association);
+      try {
+        if (association instanceof MultiTargetUndirectedEdge) {
+          this.project.multiTargetUndirectedEdgeRenderer.render(association);
+        }
+        if (association instanceof LineEdge) {
+          this.project.edgeRenderer.renderLineEdge(association);
+        }
+        if (association instanceof CubicCatmullRomSplineEdge) {
+          this.project.edgeRenderer.renderCrEdge(association);
+        }
+        if (association instanceof ArcEdge) {
+          this.project.edgeRenderer.renderArcEdge(association);
+        }
+      } finally {
+        ctx.restore();
       }
       this.renderedEdges++;
     }
@@ -839,11 +857,11 @@ export class Renderer {
     for (const [k, v] of Object.entries(this.timings)) {
       detailsData.push(`render time:${k}: ${v.toFixed(2)}`);
     }
-    for (const line of detailsData) {
+    for (const [index, line] of detailsData.entries()) {
       this.project.textRenderer.renderTempText(
         line,
-        new Vector(10, 80 + detailsData.indexOf(line) * 12),
-        10,
+        new Vector(10, 80 + index * 15),
+        12,
         this.project.stageStyleManager.currentStyle.DetailsDebugText,
       );
     }

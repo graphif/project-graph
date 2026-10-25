@@ -13,6 +13,7 @@ export interface IntersectionResult {
  * 线段类
  */
 export class Line extends Shape {
+  static readonly pointHitTolerance = 12;
   @serializable
   start: Vector;
   @serializable
@@ -72,7 +73,7 @@ export class Line extends Shape {
   }
 
   isPointIn(point: Vector): boolean {
-    return this.isPointNearLine(point, 12);
+    return this.isPointNearLine(point, Line.pointHitTolerance);
   }
 
   isCollideWithRectangle(rectangle: Rectangle): boolean {

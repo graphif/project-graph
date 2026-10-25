@@ -1,4 +1,19 @@
+windowControls:
+  alwaysOnTop: 窗口置顶
+
+projectStatus:
+  emptyCanvas: 画布里没有节点
+  noVisibleNodes: 当前视野内没有可见节点，点击按钮复位
+  fitView: 适应视野
+  nodes: "{{count}} 节点"
+  edges: "{{count}} 连线"
+  selected: "已选 {{count}}"
+  saved: 已保存
+  stashed: 已暂存
+  unsaved: 有未保存的修改
+
 welcome:
+  aboutDescription: 用节点连接想法，用图谱整理知识。Project Graph 为头脑风暴、知识管理和项目规划提供自由画布，通过连线与自动布局，让复杂思路变得清晰。
   slogan: 基于图论的思维框架图绘制软件
   slogans:
     - 基于图论的思维框架图绘制软件
@@ -151,7 +166,6 @@ settings:
     ai:
       title: AI
       api: API
-      ocr: 笔迹识别
     automation:
       title: 自动化
       autoNamer: 自动命名
@@ -447,6 +461,11 @@ settings:
     title: 始终显示节点详细信息
     description: |
       开启后，无需鼠标移动到节点上时，才显示节点的详细信息。
+  exportMermaidIncludeNodeDetails:
+    title: 包含节点详情
+    description: |
+      导出 Mermaid 时，将节点和分组框的详情作为注释附在源码中，方便保存或交给 AI 阅读。
+      注释不会显示在渲染后的图中；此选择会自动保存。
   nodeDetailsPanel:
     title: 节点详细信息面板
     options:
@@ -1149,6 +1168,11 @@ settings:
       密钥将会明文存储在本地
   aiModel:
     title: AI 模型
+  aiCustomHeaders:
+    title: AI 请求头
+    description: |
+      每行一个请求头，格式为“名称: 值”，以 # 开头的行会被忽略
+      例如 OpenCode 推理 API 需要：x-opencode-org-id: 你的组织ID
   aiContextWindow:
     title: AI 上下文窗口大小
     description: |
@@ -1157,11 +1181,6 @@ settings:
     title: 显示 AI 消耗的token数
     description: |
       启用后，在 AI 操作时显示消耗的token数
-  enableOCR:
-    title: 启用笔迹 OCR
-    description: |
-      开启后，使用画笔绘制的内容会在松手后自动进行 OCR 识别，转换为文字节点
-      需要下载 OCR 模型才能使用
   aiAutoApproveMcpTools:
     title: 自动批准 MCP 工具
     description: |
@@ -1294,6 +1313,9 @@ effects:
     title: 劈砍时的刀光
     description: |
       劈砍时，出现类似水果忍者一样的刀光
+  ConnectionPulseEffect:
+    title: 连线光点
+    description: 连接节点时显示短暂的细光点。
   LineEffect:
     title: 直线段淡出效果
     description: |
@@ -2718,3 +2740,14 @@ common:
     editingMode: 正在编辑模式
     lineBreak: 换行
     exitEdit: 退出编辑模式
+
+projectOwnership:
+  alreadyOpen: 已切换到打开的标签页。
+  notFound: 项目文件不存在。
+  busy: 该项目正在被另一个 Project Graph 进程使用。
+  loadFailed: 无法取得项目所有权。
+  openFailedTitle: 打开项目失败
+  releaseFailedTitle: 释放项目所有权失败
+  releaseFailedMessage: "项目已关闭，但无法释放它的所有权锁。请选择“重试”再次尝试。\n\n错误信息：{{error}}"
+  retry: 重试
+  ok: 确定

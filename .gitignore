@@ -34,3 +34,6 @@ backup_*
 .ayuecode/tool-results
 
 .godot/
+graphify-out
+test.prg
+

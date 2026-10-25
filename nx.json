@@ -13,12 +13,10 @@
       "cache": true
     },
     "dev": {
-      "dependsOn": ["^build"],
       "cache": false,
       "continuous": true
     },
     "tauri:dev": {
-      "dependsOn": ["^build"],
       "cache": false,
       "continuous": true
     },

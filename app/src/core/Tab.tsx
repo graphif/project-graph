@@ -73,7 +73,8 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
   }
 
   removeAllListeners(event?: string | symbol): this {
-    this.eventEmitter.removeAllListeners(event);
+    if (event === undefined) this.eventEmitter.removeAllListeners();
+    else this.eventEmitter.removeAllListeners(event);
     return this;
   }
 
@@ -120,25 +121,22 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
   loop() {
     if (this.rafHandle !== -1) return;
 
-    const startTime = performance.now();
-    let ticksExecuted = 0;
+    let nextTickTime: number | undefined;
+    let previousMaxFps = 0;
 
     const animationFrame = (time: number) => {
       const isFocused = document.hasFocus();
       const maxFps = Math.max(1, isFocused ? Settings.maxFps : Settings.maxFpsUnfocused);
       const timeStep = 1000 / maxFps;
-      const totalElapsed = time - startTime;
-      const expectedTicks = Math.floor(totalElapsed / timeStep);
-      let ticksNeeded = expectedTicks - ticksExecuted;
-      if (ticksNeeded > 10) {
-        ticksExecuted = expectedTicks;
-        ticksNeeded = 0;
-      }
-      while (ticksNeeded > 0) {
+      if (nextTickTime === undefined || previousMaxFps !== maxFps) nextTickTime = time;
+      previousMaxFps = maxFps;
+      if (time + 0.1 >= nextTickTime) {
         this.tick();
-        ticksExecuted++;
-        ticksNeeded--;
+        // 保留刷新周期之间的余量，避免 144Hz 屏幕上的 120fps 限制退化为 72fps。
+        nextTickTime += timeStep;
+        if (nextTickTime < time - timeStep) nextTickTime = time + timeStep;
       }
+      if (this.rafHandle === -1) return;
       this.rafHandle = requestAnimationFrame(animationFrame);
     };
 
@@ -184,16 +182,18 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
 
   async dispose() {
     this.pause();
-    const promises: Promise<void>[] = [];
-    for (const service of this.services.values()) {
-      const result = service.dispose?.();
-      if (result instanceof Promise) {
-        promises.push(result);
-      }
-    }
-    await Promise.allSettled(promises);
+    const cleanupTasks = Array.from(this.services.values(), (service) =>
+      Promise.resolve().then(() => service.dispose?.()),
+    );
+    const cleanupResults = await Promise.allSettled(cleanupTasks);
     this.services.clear();
+    this.fileSystemProviders.clear();
     this.tickableServices.length = 0;
+    this.removeAllListeners();
+    const cleanupErrors = cleanupResults
+      .filter((result): result is PromiseRejectedResult => result.status === "rejected")
+      .map(({ reason }) => reason);
+    if (cleanupErrors.length > 0) throw new AggregateError(cleanupErrors, "Tab cleanup failed");
   }
 
   get isRunning(): boolean {

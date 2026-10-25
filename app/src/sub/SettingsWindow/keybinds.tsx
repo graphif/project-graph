@@ -235,7 +235,7 @@ export default function KeyBindsPage() {
           icon={getKeyBindIcon()}
           title={t(`${id}.title`, { defaultValue: id })}
           description={t(`${id}.description`, { defaultValue: "" })}
-          className="border-accent border-b"
+          className="border-accent rounded-none border-b"
           extra={
             conflicts.length > 0 ? (
               <div className="w-full">
@@ -318,8 +318,8 @@ export default function KeyBindsPage() {
     });
 
   return (
-    <div className="flex h-full">
-      <Sidebar className="h-full overflow-auto">
+    <div className="flex h-full min-h-0">
+      <Sidebar className="h-full overflow-hidden">
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupContent>
@@ -492,7 +492,7 @@ export default function KeyBindsPage() {
           </SidebarGroup>
         </SidebarContent>
       </Sidebar>
-      <div className="mx-auto flex w-2/3 flex-col overflow-auto">
+      <div className="mx-auto flex min-h-0 w-2/3 min-w-0 flex-col overflow-auto py-2">
         {currentGroup === "search" ? (
           <>
             <Input
@@ -500,6 +500,7 @@ export default function KeyBindsPage() {
               onChange={(e) => setSearchKeyword(e.target.value)}
               placeholder="搜索..."
               autoFocus
+              className="shrink-0"
             />
             {searchKeyword === "" && (
               <>

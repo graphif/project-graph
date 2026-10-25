@@ -29,8 +29,9 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { arch, platform, version } from "@tauri-apps/plugin-os";
 import { restoreStateCurrent, saveWindowState, StateFlags } from "@tauri-apps/plugin-window-state";
 import { useAtom } from "jotai";
-import { ChevronsLeftRight, Copy, Minus, Pin, PinOff, Square, X } from "lucide-react";
+import { Copy, Minus, Pin, PinOff, Square, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { cpuInfo } from "tauri-plugin-system-info-api";
 import CommandPalette from "./CommandPalette";
@@ -52,12 +53,12 @@ export default function App() {
   // const [isWide, setIsWide] = useState(false);
   const [telemetryEventSent, setTelemetryEventSent] = useState(false);
   const [isClassroomMode, setIsClassroomMode] = useAtom(isClassroomModeAtom);
-  const [windowBackgroundAlpha, setWindowBackgroundAlpha] = useState(Settings.windowBackgroundAlpha);
   const [uiScalePercent, setUiScalePercent] = useState(Settings.uiScalePercent);
 
   const contextMenuTriggerRef = useRef<HTMLDivElement>(null);
 
   const handleTitleBarMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+    if ((event.target as Element).closest('[role="tablist"]')) return;
     if (event.buttons !== 1) return;
 
     if (event.detail === 2) {
@@ -98,8 +99,8 @@ export default function App() {
     });
 
     // 监听主题样式切换
-    Settings.watch("theme", async (value) => {
-      const theme = await Themes.applyThemeById(value);
+    Settings.watch("theme", (value) => {
+      const theme = Themes.applyThemeById(value);
       if (!theme) return;
       if (theme.metadata.type === "light") {
         Settings.lightTheme = value;
@@ -124,11 +125,6 @@ export default function App() {
       if (Settings.themeMode === "dark" && Settings.theme !== value) {
         Settings.theme = value;
       }
-    });
-
-    // 监听窗口背景不透明度
-    const unwatchWindowBackgroundAlpha = Settings.watch("windowBackgroundAlpha", (value) => {
-      setWindowBackgroundAlpha(value);
     });
 
     // 初始化 UI 缩放（只缩放 UI 组件层，不缩放 Canvas 画布）
@@ -176,7 +172,6 @@ export default function App() {
       unlisten1?.then((f) => f());
       KeyBindsUI.uiStopListen();
       // 清理全局快捷键资源
-      unwatchWindowBackgroundAlpha();
       unwatchUiScale();
       globalShortcutManager.dispose();
     };
@@ -345,10 +340,35 @@ export default function App() {
 
   return (
     <>
-      {/* 这是一个底层的 div，用于在拖拽改变窗口大小时填充背景，防止窗口出现透明闪烁 */}
-      <div className="fixed inset-0 z-[-1] bg-(--stage-background)" style={{ opacity: windowBackgroundAlpha }} />
       <div
-        className="relative flex h-full w-full flex-col overflow-clip rounded-lg sm:gap-2"
+        className={cn(
+          "has-[[data-pg-settings-view]]:bg-background/[0.9516] relative flex h-full w-full flex-col overflow-clip sm:gap-2",
+          !isMac && "rounded-lg",
+        )}
+        style={{ "--pg-ui-scale": uiScalePercent / 100 } as React.CSSProperties}
+        onMouseDownCapture={(event) => {
+          if (!isMac || event.button !== 0) return;
+          const navigation = event.currentTarget.querySelector("#pg-titlebar-navigation");
+          if (!navigation?.childElementCount) return;
+          const target = event.target as Element;
+          if (
+            target.closest(
+              "button, a, input, select, textarea, [contenteditable=true], [role=tablist], [role=menu], [role=menubar], [data-pg-docked-tab-id]",
+            )
+          )
+            return;
+          const toolbar = event.currentTarget.querySelector("[data-pg-titlebar]");
+          const tabBar = event.currentTarget.querySelector("[data-pg-tab-bar]");
+          const top = event.currentTarget.getBoundingClientRect().top;
+          const bottom = Math.max(
+            toolbar?.getBoundingClientRect().bottom ?? top,
+            tabBar?.getBoundingClientRect().bottom ?? top,
+          );
+          if (event.clientY < top || event.clientY >= bottom) return;
+          event.preventDefault();
+          event.stopPropagation();
+          handleTitleBarMouseDown(event);
+        }}
         onContextMenu={(event) => {
           if ((event.target as Element).closest('[data-slot="context-menu-trigger"]')) return;
           event.preventDefault();
@@ -357,33 +377,77 @@ export default function App() {
         {/* Canvas content - NOT zoomed */}
         <DockedArea onTabClick={handleTabClick} onTabClose={handleTabClose} isClassroomMode={isClassroomMode} />
 
+        {isMac && (
+          <>
+            <div
+              aria-hidden="true"
+              className="absolute top-0 right-3 left-[100px] z-20 h-[calc(0.5rem*var(--pg-ui-scale))] sm:h-[calc(1rem*var(--pg-ui-scale))]"
+              onMouseDown={handleTitleBarMouseDown}
+            />
+            {/* Native traffic lights do not follow the application's UI zoom. */}
+            <div className="absolute top-[2px] left-[71px] z-20 h-7">
+              <WindowButtons />
+            </div>
+          </>
+        )}
+
         {/* Zoomed UI layer - 缩放所有 DOM UI 元素，不缩放 Canvas 画布 */}
         <div
           style={zoomStyle}
-          className="pointer-events-none relative z-10 flex h-full w-full flex-col *:pointer-events-auto"
+          className={cn(
+            "pointer-events-none relative z-10 flex h-full w-full flex-col",
+            !isMac && "*:pointer-events-auto",
+          )}
         >
           {/* 菜单 | 标签页 | ...移动窗口区域... | 窗口控制按钮 */}
           <div
+            data-pg-titlebar
             className={cn(
-              "bg-background z-10 flex h-4 items-center border-b transition-all hover:opacity-100 sm:h-8 sm:gap-2",
+              "z-10 grid h-8 shrink-0 grid-cols-[minmax(0,max-content)_minmax(min(30%,18rem),1fr)_max-content] items-center gap-2 px-1 py-1 transition-opacity hover:opacity-100 has-[#pg-titlebar-navigation:empty]:grid-cols-[minmax(0,max-content)_minmax(0,1fr)_max-content] sm:h-14 sm:gap-4 sm:px-3 sm:py-2",
+              isMac &&
+                "pointer-events-none grid-cols-[35%_minmax(0,1fr)_max-content] has-[#pg-titlebar-navigation:empty]:grid-cols-[35%_minmax(0,1fr)_max-content] sm:h-14 sm:pt-4 sm:pb-0",
               isClassroomMode && "opacity-0",
             )}
           >
             <div
-              className="hover:bg-primary/25 h-full min-w-6 cursor-grab transition-colors active:cursor-grabbing sm:hidden"
+              className="scrollbar-hide flex h-full min-w-0 items-center overflow-x-auto rounded-full"
+              onMouseDown={(event) => {
+                if (event.target === event.currentTarget) handleTitleBarMouseDown(event);
+              }}
+            >
+              <div
+                className="pointer-events-none flex h-full w-max shrink-0 items-center gap-1 *:pointer-events-auto"
+                style={isMac ? { paddingLeft: "calc(100px / var(--pg-ui-scale))" } : undefined}
+              >
+                <GlobalMenu />
+              </div>
+            </div>
+            <div
+              id="pg-titlebar-navigation"
+              className={cn(
+                "flex h-full min-w-0 items-center justify-center",
+                isMac &&
+                  "scrollbar-hide pointer-events-auto justify-end overflow-x-auto rounded-full empty:pointer-events-none",
+              )}
               onMouseDown={handleTitleBarMouseDown}
             />
-            {isMac && <WindowButtons />}
-            <GlobalMenu />
-            <div className="h-full flex-1 cursor-grab active:cursor-grabbing" onMouseDown={handleTitleBarMouseDown} />
-            <div className="hidden sm:block">
-              <ThemeModeSwitch />
+            <div
+              className="flex h-full min-w-0 items-center justify-end"
+              onMouseDown={(event) => {
+                if (event.target === event.currentTarget) handleTitleBarMouseDown(event);
+              }}
+            >
+              <div className="bg-background pointer-events-auto flex h-full shrink-0 items-center gap-2 rounded-full px-2 shadow-xs">
+                <div className="hidden sm:block">
+                  <ThemeModeSwitch />
+                </div>
+                {!isMac && <WindowButtons />}
+              </div>
             </div>
-            {!isMac && <WindowButtons />}
           </div>
 
           {/* 右键菜单 */}
-          <ContextMenu>
+          <ContextMenu modal={false}>
             <ContextMenuTrigger>
               <div ref={contextMenuTriggerRef} />
             </ContextMenuTrigger>
@@ -406,18 +470,113 @@ export default function App() {
 
         <CommandPalette zoomStyle={zoomStyle} />
         <RenderOverlays />
+        {/* macOS uses native decorated-window resize regions; Tauri resize dragging is unsupported there. */}
+        {!isMac && <WindowResizeHandles />}
       </div>
     </>
   );
+}
+
+function WindowResizeHandles() {
+  const [enabled, setEnabled] = useState(false);
+  const [hoveredDirection, setHoveredDirection] = useState<string | null>(null);
+
+  useEffect(() => {
+    const appWindow = getCurrentWindow();
+    let disposed = false;
+    const update = async () => {
+      const [maximized, fullscreen, resizable] = await Promise.all([
+        appWindow.isMaximized(),
+        appWindow.isFullscreen(),
+        appWindow.isResizable(),
+      ]);
+      if (!disposed) setEnabled(resizable && !maximized && !fullscreen);
+    };
+    const unlisten = appWindow.onResized(() => void update());
+    void update();
+    return () => {
+      disposed = true;
+      void unlisten.then((stop) => stop());
+    };
+  }, []);
+
+  if (!enabled) return null;
+
+  const handles = [
+    ["North", "top-0 right-3 left-3 h-1.5 cursor-ns-resize", "h-0.5 w-10 rounded-full"],
+    ["South", "bottom-0 right-3 left-3 h-1.5 cursor-ns-resize", "h-0.5 w-10 rounded-full"],
+    ["West", "top-3 bottom-3 left-0 w-1.5 cursor-ew-resize", "h-10 w-0.5 rounded-full"],
+    ["East", "top-3 bottom-3 right-0 w-1.5 cursor-ew-resize", "h-10 w-0.5 rounded-full"],
+    ["NorthWest", "top-0 left-0 size-3 cursor-nwse-resize", "size-2 rounded-tl border-t-2 border-l-2"],
+    ["NorthEast", "top-0 right-0 size-3 cursor-nesw-resize", "size-2 rounded-tr border-t-2 border-r-2"],
+    ["SouthWest", "bottom-0 left-0 size-3 cursor-nesw-resize", "size-2 rounded-bl border-b-2 border-l-2"],
+    ["SouthEast", "bottom-0 right-0 size-3 cursor-nwse-resize", "size-2 rounded-br border-b-2 border-r-2"],
+  ] as const;
+
+  return handles.map(([direction, area, grip]) => (
+    <div
+      key={direction}
+      aria-hidden="true"
+      className={cn("absolute z-50 flex touch-none items-center justify-center", area)}
+      onPointerEnter={() => setHoveredDirection(direction)}
+      onPointerMove={() => setHoveredDirection(direction)}
+      onPointerLeave={() => setHoveredDirection((current) => (current === direction ? null : current))}
+      onPointerCancel={() => setHoveredDirection(null)}
+      onPointerDown={(event) => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        void getCurrentWindow().startResizeDragging(direction);
+      }}
+    >
+      <span
+        className={cn(
+          "border-foreground/50 cursor-inherit pointer-events-none transition-opacity",
+          hoveredDirection === direction ? "opacity-100" : "opacity-0",
+          direction.length <= 5 && "bg-foreground/50",
+          grip,
+        )}
+      />
+    </div>
+  ));
 }
 
 /**
  * 窗口右上角的最小化，最大化，关闭等按钮
  */
 function WindowButtons() {
+  const { t } = useTranslation("windowControls");
+  const [isWindowFocused, setIsWindowFocused] = useState(false);
+  const [isNativeDark, setIsNativeDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
   const [maximized] = useAtom(isWindowMaxsizedAtom);
   const [isClickThroughEnabled] = useAtom(isClickThroughEnabledAtom);
   const [isWindowAlwaysOnTop, setIsWindowAlwaysOnTop] = useAtom(isWindowAlwaysOnTopAtom);
+  useEffect(() => {
+    if (!isMac) return;
+    const appWindow = getCurrentWindow();
+    let disposed = false;
+    let focusChanged = false;
+    let themeChanged = false;
+    const unlistenTheme = appWindow.onThemeChanged(({ payload }) => {
+      themeChanged = true;
+      if (!disposed) setIsNativeDark(payload === "dark");
+    });
+    void appWindow.theme().then((theme) => {
+      if (!disposed && !themeChanged && theme !== null) setIsNativeDark(theme === "dark");
+    });
+    const unlisten = appWindow.onFocusChanged(({ payload }) => {
+      focusChanged = true;
+      if (!disposed) setIsWindowFocused(payload);
+    });
+    void appWindow.isFocused().then((focused) => {
+      if (!disposed && !focusChanged) setIsWindowFocused(focused);
+    });
+    return () => {
+      disposed = true;
+      void unlisten.then((stop) => stop());
+      void unlistenTheme.then((stop) => stop());
+    };
+  }, []);
   const checkoutWindowsAlwaysTop = async () => {
     const tauriWindow = getCurrentWindow();
     if (isWindowAlwaysOnTop) {
@@ -430,41 +589,41 @@ function WindowButtons() {
   };
 
   return (
-    <div className="bg-background flex h-full items-center">
+    <div className={cn("flex h-full items-center", !isMac && "rounded-full [&_button]:rounded-full")}>
       {isClickThroughEnabled && <span className="text-destructive font-bold">Alt + 2关闭窗口穿透点击</span>}
       {isMac ? (
-        <span className="flex *:flex *:size-3 sm:px-2 sm:*:m-1">
-          <div
-            className="hidden cursor-pointer items-center justify-center rounded-full bg-red-400 text-red-800 hover:scale-110"
-            onClick={() => getCurrentWindow().close()}
-          >
-            <X strokeWidth={3} size={10} />
-          </div>
-          <div
-            className="hidden cursor-pointer items-center justify-center rounded-full bg-yellow-400 text-yellow-800 hover:scale-110"
-            onClick={() => getCurrentWindow().minimize()}
-          >
-            <Minus strokeWidth={3} size={10} />
-          </div>
-          <div
-            className="hidden cursor-pointer items-center justify-center rounded-full bg-green-400 text-green-800 hover:scale-110"
-            onClick={() => {
-              getCurrentWindow()
-                .isFullscreen()
-                .then((res) => getCurrentWindow().setFullscreen(!res));
-            }}
-          >
-            <ChevronsLeftRight strokeWidth={3} size={10} className="rotate-45" />
-          </div>
-          <div
-            className="cursor-pointer items-center justify-center rounded-full bg-blue-400 text-blue-800 hover:scale-110"
+        <span className="flex items-center pr-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="group size-7 rounded-full hover:bg-transparent dark:hover:bg-transparent"
+            aria-label={t("alwaysOnTop")}
+            aria-pressed={isWindowAlwaysOnTop}
+            title={t("alwaysOnTop")}
             onClick={async (e) => {
               e.stopPropagation();
-              checkoutWindowsAlwaysTop();
+              await checkoutWindowsAlwaysTop();
             }}
           >
-            {isWindowAlwaysOnTop ? <Pin size={10} /> : <PinOff size={10} />}
-          </div>
+            <span
+              className={cn(
+                "flex size-3.5 items-center justify-center rounded-full border [corner-shape:round]",
+                isWindowFocused
+                  ? "border-blue-600/30 bg-blue-400 text-blue-950 group-hover:bg-blue-300"
+                  : isNativeDark
+                    ? "border-white/10 bg-[#3b3c41] text-neutral-500"
+                    : "border-black/10 bg-[#cdced0] text-neutral-500",
+                isWindowFocused && isWindowAlwaysOnTop && "bg-blue-500 group-hover:bg-blue-400",
+              )}
+            >
+              {isWindowFocused &&
+                (isWindowAlwaysOnTop ? (
+                  <Pin className="size-2.5 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100" />
+                ) : (
+                  <PinOff className="size-2.5 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100" />
+                ))}
+            </span>
+          </Button>
         </span>
       ) : (
         <span className="flex h-full flex-row sm:gap-1">

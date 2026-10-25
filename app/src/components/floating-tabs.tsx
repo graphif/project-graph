@@ -47,7 +47,7 @@ export default function FloatingTabs({
             className={cn(
               "outline-primary pointer-events-auto absolute flex flex-col overflow-hidden shadow-md outline-0 transition",
               "data-closed:scale-90 data-closed:opacity-0",
-              activeTab === tab && "outline-4",
+              activeTab === tab && "outline-1",
             )}
             onClick={() => onClickInner(tab)}
             onMouseDown={(e) => {

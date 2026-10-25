@@ -7,31 +7,12 @@ import { URI } from "vscode-uri";
 import { PenStrokeSegment } from "./stageObject/entity/PenStroke";
 import { Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
+import { compareProjectVersions, LATEST_PROJECT_VERSION } from "../ProjectFile";
 import { DetailsManager } from "./stageObject/tools/entityDetailsManager";
 
 export namespace ProjectUpgrader {
   /** N系列的最新版本 */
-  export const NLatestVersion = "2.7.0";
-
-  /**
-   * 比较两个版本号字符串（格式：x.y.z）
-   * @param version1 版本1
-   * @param version2 版本2
-   * @returns 如果 version1 < version2 返回 -1，如果 version1 > version2 返回 1，如果相等返回 0
-   */
-  function compareVersion(version1: string, version2: string): number {
-    const v1Parts = version1.split(".").map(Number);
-    const v2Parts = version2.split(".").map(Number);
-    const maxLength = Math.max(v1Parts.length, v2Parts.length);
-
-    for (let i = 0; i < maxLength; i++) {
-      const v1Part = v1Parts[i] || 0;
-      const v2Part = v2Parts[i] || 0;
-      if (v1Part < v2Part) return -1;
-      if (v1Part > v2Part) return 1;
-    }
-    return 0;
-  }
+  export const NLatestVersion = LATEST_PROJECT_VERSION;
 
   /**
    * 1.0~1.8 系列版本的json文件升级，
@@ -365,37 +346,37 @@ export namespace ProjectUpgrader {
     const currentVersion = metadata?.version || "2.0.0";
 
     // 如果版本小于 2.1.0，需要升级
-    if (compareVersion(currentVersion, "2.1.0") < 0) {
+    if (compareProjectVersions(currentVersion, "2.1.0") < 0) {
       [data, metadata] = convertN1toN2(data, metadata);
     }
 
     // 如果版本小于 2.2.0，需要升级
-    if (compareVersion(currentVersion, "2.2.0") < 0) {
+    if (compareProjectVersions(currentVersion, "2.2.0") < 0) {
       [data, metadata] = convertN2toN3(data, metadata);
     }
 
     // 如果版本小于 2.3.0，需要升级
-    if (compareVersion(currentVersion, "2.3.0") < 0) {
+    if (compareProjectVersions(currentVersion, "2.3.0") < 0) {
       [data, metadata] = convertN3toN4(data, metadata);
     }
 
     // 如果版本小于 2.4.0，需要升级
-    if (compareVersion(currentVersion, "2.4.0") < 0) {
+    if (compareProjectVersions(currentVersion, "2.4.0") < 0) {
       [data, metadata] = convertN4toN5(data, metadata);
     }
 
     // 如果版本小于 2.5.0，需要升级
-    if (compareVersion(currentVersion, "2.5.0") < 0) {
+    if (compareProjectVersions(currentVersion, "2.5.0") < 0) {
       [data, metadata] = convertN5toN6(data, metadata);
     }
 
     // 如果版本小于 2.6.0，需要升级
-    if (compareVersion(currentVersion, "2.6.0") < 0) {
+    if (compareProjectVersions(currentVersion, "2.6.0") < 0) {
       [data, metadata] = convertN6toN7(data, metadata);
     }
 
     // 如果版本小于 2.7.0，需要升级
-    if (compareVersion(currentVersion, "2.7.0") < 0) {
+    if (compareProjectVersions(currentVersion, "2.7.0") < 0) {
       [data, metadata] = convertN7toN8(data, metadata);
     }
 

@@ -24,6 +24,8 @@ const tabsListVariants = cva(
     variants: {
       variant: {
         default: "bg-muted",
+        capsule:
+          "bg-background text-foreground h-full rounded-full p-1 shadow-xs [corner-shape:round] group-data-[orientation=horizontal]/tabs:h-full [&_[data-slot=tabs-trigger]]:text-foreground",
         line: "gap-1 bg-transparent",
       },
     },
@@ -58,15 +60,12 @@ function TabsList({
       return;
     }
 
-    const activeRect = active.getBoundingClientRect();
-    const listRect = list.getBoundingClientRect();
-
     requestAnimationFrame(() => {
       setIndicator({
-        left: activeRect.left - listRect.left,
-        top: activeRect.top - listRect.top,
-        width: activeRect.width,
-        height: activeRect.height,
+        left: active.offsetLeft,
+        top: active.offsetTop,
+        width: active.offsetWidth,
+        height: active.offsetHeight,
         ready: true,
       });
     });
@@ -110,7 +109,10 @@ function TabsList({
         aria-hidden
         data-slot="tabs-indicator"
         className={cn(
-          "bg-background dark:border-input dark:bg-input/30 pointer-events-none absolute rounded-md border border-transparent shadow-sm transition-all duration-300 ease-in-out",
+          "pointer-events-none absolute rounded-md border border-transparent transition-all duration-300 ease-in-out",
+          variant === "capsule"
+            ? "bg-accent rounded-full [corner-shape:round]"
+            : "bg-background dark:border-input dark:bg-input/30 shadow-sm",
           "group-data-[variant=line]/tabs-list:border-b-foreground group-data-[variant=line]/tabs-list:rounded-none group-data-[variant=line]/tabs-list:border-b-2 group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:shadow-none group-data-[variant=line]/tabs-list:dark:bg-transparent",
           !indicator.ready && "opacity-0",
         )}
@@ -131,6 +133,7 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
+        "group-data-[variant=capsule]/tabs-list:rounded-full group-data-[variant=capsule]/tabs-list:[corner-shape:round] group-data-[variant=capsule]/tabs-list:focus-visible:border-transparent group-data-[variant=capsule]/tabs-list:focus-visible:ring-2 group-data-[variant=capsule]/tabs-list:focus-visible:outline-none group-data-[variant=capsule]/tabs-list:focus-visible:ring-inset",
         "text-foreground/60 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring data-[state=active]:text-foreground dark:text-muted-foreground dark:hover:text-foreground dark:data-[state=active]:text-foreground relative z-10 inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-colors group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}

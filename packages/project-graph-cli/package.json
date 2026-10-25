@@ -1,0 +1,12 @@
+{
+  "name": "@graphif/project-graph-cli",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "bin": {
+    "cli": "src/cli.mjs"
+  },
+  "dependencies": {
+    "tsx": "^4.21.0"
+  }
+}

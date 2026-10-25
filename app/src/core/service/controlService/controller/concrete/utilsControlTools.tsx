@@ -6,15 +6,14 @@ import { LogicNodeNameToRenderNameMap } from "@/core/service/dataGenerateService
 import { CrossFileContentQuery } from "@/core/service/dataGenerateService/crossFileContentQuery";
 import { TextNodeSmartTools } from "@/core/service/dataManageService/textNodeSmartTools";
 import { ReferenceManager } from "@/core/stage/stageManager/concreteMethods/StageReferenceManager";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
+import { convertLatexNodes } from "@/core/stage/stageObject/tools/convertLatexNodes";
 import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { TabWorkspace } from "@/core/TabWorkspace";
 import { activeTabAtom, store, tabsAtom } from "@/state";
 import AutoCompleteWindow from "@/sub/AutoCompleteWindow";
 import { DateChecker } from "@/utils/dateChecker";
 import { PathString } from "@/utils/pathString";
-import { Vector } from "@graphif/data-structures";
+import { extractLatexSource } from "@/utils/latex";
 import { Rectangle } from "@graphif/shapes";
 import Fuse from "fuse.js";
 import katex from "katex";
@@ -112,36 +111,11 @@ export async function autoChangeTextNodeToReferenceBlock(project: Project, textN
 
 /**
  * 自动将文本节点转换为 LaTeX 公式节点
- * 检测文本是否以 $ 开头和结尾（且长度 > 2），若是则创建 LatexNode 替换 TextNode
+ * 识别完整公式，替换节点时保留连线、分组和 UUID。
  */
 export async function autoChangeTextNodeToLatexNode(project: Project, textNode: TextNode) {
-  const text = textNode.text.trim();
-  // 格式检测：以 $ 开头和结尾，且中间有内容
-  if (!(text.startsWith("$") && text.endsWith("$") && text.length > 2)) {
-    return;
-  }
-  // 防止误匹配 $$ 空公式（即 text = "$$"）
-  const latexSource = text.slice(1, -1).trim();
-  if (!latexSource) {
-    return;
-  }
-
-  const location = textNode.collisionBox.getRectangle().location.clone();
-
-  // 创建 LatexNode，放置在原 TextNode 相同位置
-  const latexNode = new LatexNode(project, {
-    latexSource,
-    fontScaleLevel: 0,
-    collisionBox: new CollisionBox([new Rectangle(location, Vector.getZero())]),
-  });
-
-  // 删除旧 TextNode（会自动清理关联边）
-  project.deleteManager.deleteEntities([textNode]);
-
-  // 添加新 LatexNode
-  project.stageManager.add(latexNode);
-  latexNode.isSelected = true;
-
+  if (convertLatexNodes(project, [textNode]) === 0) return;
+  project.stageManager.updateReferences();
   project.historyManager.recordStep();
 }
 
@@ -242,6 +216,8 @@ export class LatexPreviewManager {
    * @param cursor 光标位置（selectionStart）
    */
   static getInlineLatexAtCursor(value: string, cursor: number): string | null {
+    const completeFormula = extractLatexSource(value);
+    if (completeFormula !== null) return completeFormula;
     const pos = Math.max(0, Math.min(cursor, value.length));
     const dollarIndices: number[] = [];
     for (let i = 0; i < value.length; i++) {

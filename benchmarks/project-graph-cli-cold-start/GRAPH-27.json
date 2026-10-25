@@ -1,0 +1,54 @@
+{
+  "benchmark": "GRAPH-27",
+  "generatedAt": "2026-08-11T03:58:05.308Z",
+  "command": "pnpm benchmark:cli:cold-start",
+  "tool": "get_all_nodes",
+  "measurement": {
+    "start": "Project Graph CLI process start",
+    "end": "selected executor immediately before invocation",
+    "excludes": "tool execution",
+    "processIsolation": "20 independent cold CLI processes",
+    "osFileCache": "not cleared"
+  },
+  "fixture": {
+    "schemaVersion": "2.7.0",
+    "sha256": "cee79237ae7dff9b941da62f138753bb347d33091202a759f1978d38d9d3289f",
+    "textNodes": 5000,
+    "lineEdges": 10000,
+    "attachments": {
+      "count": 8,
+      "totalPayloadBytes": 524288
+    }
+  },
+  "threshold": {
+    "sampleCount": 20,
+    "percentile": 0.95,
+    "nearestRank": 19,
+    "maximumMs": 5000
+  },
+  "samplesMs": [
+    3725.343, 3463.299, 3476.995, 3498.602, 3476.899, 3505.874, 3494.892, 3493.928, 3507.825, 3655.553, 3524.032,
+    3698.403, 3573.681, 3490.595, 3616.252, 3529.75, 3797.202, 3601.653, 3623.012, 3546.718
+  ],
+  "summary": {
+    "minimumMs": 3463.299,
+    "maximumMs": 3797.202,
+    "meanMs": 3565.025,
+    "p95Ms": 3725.343,
+    "passed": true
+  },
+  "environment": {
+    "hardware": {
+      "model": "Mac16,10",
+      "chip": "Apple M4",
+      "memoryBytes": 17179869184
+    },
+    "macOS": {
+      "productVersion": "26.5.2",
+      "buildVersion": "25F84"
+    },
+    "node": "v26.7.0",
+    "pnpm": "11.3.0",
+    "projectGraphRuntime": "1.0.0"
+  }
+}

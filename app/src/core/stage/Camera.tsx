@@ -4,7 +4,6 @@ import { Settings } from "@/core/service/Settings";
 import { SoundService } from "../service/feedbackService/SoundService";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { Direction } from "@/types/directions";
-import { isMac } from "@/utils/platform";
 import { Queue, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";
@@ -19,6 +18,9 @@ import { toast } from "sonner";
  */
 @service("camera")
 export class Camera {
+  static validScale(value: number, fallback: number): number {
+    return Number.isFinite(value) && value > 0 ? value : fallback;
+  }
   /**
    * 空气摩擦力速度指数
    * 指数=2，表示 f = -k * v^2
@@ -123,7 +125,7 @@ export class Camera {
   tick() {
     // --- 初次打开文件的时候，重制视野
     this.tickIndex++; // 从0开始
-    if (this.tickIndex >= 3 && this.tickIndex <= 10 && !this.hasResetOnOpen) {
+    if (this.tickIndex >= 3 && !this.hasResetOnOpen) {
       this.reset(); // 刚打开文件的时候，重制视野。如果画布还没挂载（w=0或h=0），会在后续tick中重试
     }
 
@@ -140,38 +142,8 @@ export class Camera {
       return;
     }
 
-    const minScaleLimit = 0.0000000001;
-    const minScaleBounceTarget = 0.0000000002;
-    const maxScaleLimit = 100_0000_0000;
-
-    if (this.currentScale < minScaleLimit) {
-      if (Settings.cameraZoomOutLimitBehavior === "micro") {
-        this.currentScale = maxScaleLimit;
-        this.targetScale = maxScaleLimit;
-      } else if (Settings.cameraZoomOutLimitBehavior === "reset") {
-        this.currentScale = 1;
-        this.targetScale = 1;
-      } else {
-        this.targetScale = minScaleBounceTarget;
-      }
-    }
-    if (this.currentScale > maxScaleLimit) {
-      if (Settings.cameraZoomInLimitBehavior === "micro") {
-        this.currentScale = maxScaleLimit;
-        this.targetScale = maxScaleLimit;
-      } else if (Settings.cameraZoomInLimitBehavior === "reset") {
-        this.currentScale = 1;
-        this.targetScale = 1;
-      } else {
-        this.currentScale = 0.001;
-        this.targetScale = 0.01;
-        if (isMac) {
-          toast(
-            "视野已经放大到极限了！默认快捷键F可根据内容重置视野，mac在刚启动软件的若干秒内鼠标滚轮可能过于灵敏，导致缩放过快",
-          );
-        }
-      }
-    }
+    this.currentScale = Camera.validScale(this.currentScale, 1);
+    this.targetScale = Camera.validScale(this.targetScale, this.currentScale);
     // 冲击式移动
     if (!this.shockMoveDiffLocationsQueue.isEmpty()) {
       const diffLocation = this.shockMoveDiffLocationsQueue.dequeue();
@@ -209,8 +181,9 @@ export class Camera {
 
     /** 鼠标交互位置的view坐标系相对于画面左上角的坐标 */
     const diffViewVector = this.project.renderer.transformWorld2View(this.targetLocationByScale);
+    const previousScale = this.currentScale;
     this.dealCameraScaleInTick();
-    if (Settings.scaleCameraByMouseLocation) {
+    if (Settings.scaleCameraByMouseLocation && this.currentScale !== previousScale) {
       if (this.tickNumber > this.allowScaleFollowMouseLocationTicks) {
         this.setLocationByOtherLocation(this.targetLocationByScale, diffViewVector);
       }
@@ -221,12 +194,7 @@ export class Camera {
     if (this.isStartZoomOut) {
       this.targetScale *= 0.95;
     }
-    if (Settings.cameraZoomInLimitBehavior === "micro" && this.targetScale > maxScaleLimit) {
-      this.targetScale = maxScaleLimit;
-    }
-    if (Settings.cameraZoomOutLimitBehavior === "macro" && this.targetScale < minScaleBounceTarget) {
-      this.targetScale = minScaleBounceTarget;
-    }
+    this.targetScale = Camera.validScale(this.targetScale, this.currentScale);
     this.tickNumber++;
   }
   /**
@@ -284,11 +252,28 @@ export class Camera {
    * 清除移动动力、速度、缩放操作
    */
   stopImmediately() {
+    this.targetScale = this.currentScale;
     this.accelerateCommander = Vector.getZero();
     this.speed = Vector.getZero();
     this.isStartZoomIn = false;
     this.isStartZoomOut = false;
     this.shockMoveDiffLocationsQueue.clear();
+  }
+
+  applyGesture(previous: Vector, current: Vector, scaleFactor: number) {
+    if (!Number.isFinite(scaleFactor) || scaleFactor <= 0) return;
+    const anchor = this.project.renderer.transformView2World(previous);
+    this.stopImmediately();
+    this.currentScale = Camera.validScale(this.currentScale * scaleFactor, this.currentScale);
+    this.targetScale = this.currentScale;
+    const center = new Vector(this.project.renderer.w / 2, this.project.renderer.h / 2);
+    this.location = anchor.subtract(current.subtract(center).subtract(this.shakeLocation).divide(this.currentScale));
+    this.targetLocationByScale = anchor;
+  }
+
+  panByViewDelta(delta: Vector) {
+    this.stopImmediately();
+    this.location = this.location.add(delta.divide(this.currentScale));
   }
 
   /**
@@ -297,6 +282,8 @@ export class Camera {
    * @returns 缩放前后变化的比值
    */
   private dealCameraScaleInTick() {
+    // 直接手势已经设置了精确缩放值，不能再由逐帧舍入改变它。
+    if (this.currentScale === this.targetScale) return 1;
     let newCurrentScale = this.currentScale;
 
     if (this.currentScale < this.targetScale) {
@@ -309,10 +296,6 @@ export class Camera {
         this.currentScale - (this.currentScale - this.targetScale) * Settings.scaleExponent,
         this.targetScale,
       );
-    }
-    // 性能优化之，将缩放小数点保留四位
-    if (this.currentScale > 0.01) {
-      newCurrentScale = parseFloat(newCurrentScale.toFixed(4));
     }
     const diff = newCurrentScale / this.currentScale;
     this.currentScale = newCurrentScale;
@@ -345,6 +328,7 @@ export class Camera {
       Math.min(this.project.renderer.h / allEntitiesSize.y, this.project.renderer.w / allEntitiesSize.x),
     );
     this.targetScale = this.currentScale;
+    this.stopImmediately();
     SoundService.play.viewAdjustSoundFile();
   }
 

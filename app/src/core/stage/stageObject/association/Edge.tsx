@@ -39,6 +39,16 @@ export abstract class Edge extends ConnectableAssociation {
    */
   abstract get textRectangle(): Rectangle;
 
+  private bodyLineCache?: {
+    source: ConnectableEntity;
+    target: ConnectableEntity;
+    sourceRectangle: Rectangle;
+    targetRectangle: Rectangle;
+    sourceRate: Vector;
+    targetRate: Vector;
+    line: Line;
+  };
+
   /**
    * 获取两个实体之间的直线
    * 此直线两端在两个实体外接矩形的边缘，延长后可过两个实体外接矩形的中心
@@ -48,21 +58,34 @@ export abstract class Edge extends ConnectableAssociation {
     const sourceRectangle = this.source.collisionBox.getRectangle();
     const targetRectangle = this.target.collisionBox.getRectangle();
 
+    const cached = this.bodyLineCache;
+    if (
+      cached &&
+      cached.source === this.source &&
+      cached.target === this.target &&
+      cached.sourceRectangle.location.equals(sourceRectangle.location) &&
+      cached.sourceRectangle.size.equals(sourceRectangle.size) &&
+      cached.targetRectangle.location.equals(targetRectangle.location) &&
+      cached.targetRectangle.size.equals(targetRectangle.size) &&
+      cached.sourceRate.equals(this.sourceRectangleRate) &&
+      cached.targetRate.equals(this.targetRectangleRate)
+    )
+      return cached.line;
+
     const sourceInner = sourceRectangle.getInnerLocationByRateVector(this.sourceRectangleRate);
     const targetInner = targetRectangle.getInnerLocationByRateVector(this.targetRectangleRate);
     const edgeCenterLine = new Line(sourceInner, targetInner);
     let startPoint: Vector;
     let endPoint: Vector;
 
-    // Only the center rate (0.5, 0.5) requires computing the intersection with the
-    // bounding rectangle edge. All other rates use the exact rate position directly.
     const isCenterRate = (rate: Vector): boolean => rate.x === 0.5 && rate.y === 0.5;
 
     if (this.source instanceof ConnectPoint) {
       startPoint = this.source.geometryCenter;
     } else if (!isCenterRate(this.sourceRectangleRate)) {
-      // Non-center rate: use exact edge center for sentinel values, or inner position for image/precise rates
-      startPoint = Edge.getExactEdgePositionByRate(sourceRectangle, this.sourceRectangleRate) ?? edgeCenterLine.start;
+      startPoint =
+        Edge.getExactEdgePositionByRate(sourceRectangle, this.sourceRectangleRate) ??
+        (this.source.clipConnectionToBoundary ? sourceRectangle.getLineIntersectionPoint(edgeCenterLine) : sourceInner);
     } else {
       // Center rate: clip to the bounding rectangle edge along the connection direction
       startPoint = sourceRectangle.getLineIntersectionPoint(edgeCenterLine);
@@ -70,13 +93,24 @@ export abstract class Edge extends ConnectableAssociation {
     if (this.target instanceof ConnectPoint) {
       endPoint = this.target.geometryCenter;
     } else if (!isCenterRate(this.targetRectangleRate)) {
-      // Non-center rate: use exact edge center for sentinel values, or inner position for image/precise rates
-      endPoint = Edge.getExactEdgePositionByRate(targetRectangle, this.targetRectangleRate) ?? edgeCenterLine.end;
+      endPoint =
+        Edge.getExactEdgePositionByRate(targetRectangle, this.targetRectangleRate) ??
+        (this.target.clipConnectionToBoundary ? targetRectangle.getLineIntersectionPoint(edgeCenterLine) : targetInner);
     } else {
       // Center rate: clip to the bounding rectangle edge along the connection direction
       endPoint = targetRectangle.getLineIntersectionPoint(edgeCenterLine);
     }
-    return new Line(startPoint, endPoint);
+    const line = new Line(startPoint, endPoint);
+    this.bodyLineCache = {
+      source: this.source,
+      target: this.target,
+      sourceRectangle: sourceRectangle.clone(),
+      targetRectangle: targetRectangle.clone(),
+      sourceRate: this.sourceRectangleRate.clone(),
+      targetRate: this.targetRectangleRate.clone(),
+      line,
+    };
+    return line;
   }
 
   /**

@@ -22,6 +22,7 @@ import { exists } from "@tauri-apps/plugin-fs";
 import "driver.js/dist/driver.css";
 import i18next from "i18next";
 import { Provider } from "jotai";
+import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { ErrorBoundary } from "react-error-boundary";
 import { initReactI18next } from "react-i18next";
@@ -42,43 +43,77 @@ if (import.meta.env.DEV && isMobile) {
 
 const el = document.getElementById("root")!;
 
-// 兜底：任何原因导致 React 渲染中断时，窗口也要可见，避免应用"隐形"
 let cliMode = false;
-setTimeout(() => {
-  if (!cliMode && !isWeb) void getCurrentWindow().show();
-}, 5000);
+let appRendered = false;
 
 // 建议挂载根节点前的一系列操作统一写成函数，
 // 在这里看着清爽一些，像一个列表清单一样。也方便调整顺序
 
 (async () => {
-  const matches = !isWeb && isDesktop ? await getMatches() : null;
-  const isCliMode = isDesktop && matches?.args.output?.occurrences === 1;
-  cliMode = isCliMode;
-  await Promise.all([
-    RecentFileManager.init(),
-    StartFilesManager.init(),
-    ColorManager.init(),
-    Tutorials.init(),
-    UserState.init(),
-    QuickSettingsManager.init(),
-    ExtensionManager.init(),
-  ]);
-  // 这些东西依赖上面的东西，所以单独一个Promise.all
-  await Promise.all([loadLanguageFiles(), loadSyncModules(), initAuth()]);
-  await renderApp(isCliMode);
-  await loadStartFile();
-  if (!isCliMode) {
-    await ensureStartupDraftAndWelcome();
-  }
-  if (isCliMode) {
-    try {
-      await runCli(matches);
-      exit();
-    } catch (e) {
-      writeStderr(String(e));
-      exit(1);
+  const isCliDesktopAcceptance =
+    import.meta.env.DEV && new URLSearchParams(window.location.search).has("cli-desktop-acceptance");
+  try {
+    if (isCliDesktopAcceptance) {
+      await invoke("write_cli_desktop_acceptance_state", {
+        state: { phase: "initializing", step: "application" },
+      });
     }
+    const matches = !isCliDesktopAcceptance && !isWeb && isDesktop ? await getMatches() : null;
+    const isCliMode = isDesktop && matches?.args.output?.occurrences === 1;
+    cliMode = isCliMode || isCliDesktopAcceptance;
+    await Promise.all([
+      RecentFileManager.init(),
+      StartFilesManager.init(),
+      ColorManager.init(),
+      Tutorials.init(),
+      UserState.init(),
+      QuickSettingsManager.init(),
+      // 扩展加载失败不应阻断主程序启动（否则 renderApp 不会执行，窗口为空白）
+      ExtensionManager.init().catch((e) => {
+        console.error("[ExtensionManager] 扩展初始化失败，已跳过：", e);
+      }),
+    ]);
+    if (isCliDesktopAcceptance) {
+      await invoke("write_cli_desktop_acceptance_state", {
+        state: { phase: "initializing", step: "application-services" },
+      });
+    }
+    // 这些东西依赖上面的东西，所以单独一个Promise.all
+    await Promise.all([loadLanguageFiles(), loadSyncModules(), ...(isCliDesktopAcceptance ? [] : [initAuth()])]);
+    await renderApp(isCliMode, isCliDesktopAcceptance);
+    appRendered = true;
+    if (isCliDesktopAcceptance) {
+      await invoke("write_cli_desktop_acceptance_state", {
+        state: { phase: "initializing", step: "application-rendered" },
+      });
+      const { runProjectGraphCliDesktopAcceptanceHost } = await import("./cli/ProjectGraphCliDesktopAcceptanceHost");
+      await runProjectGraphCliDesktopAcceptanceHost();
+      return;
+    }
+    await loadStartFile();
+    if (!isCliMode) {
+      await ensureStartupDraftAndWelcome();
+    }
+    if (isCliMode) {
+      try {
+        await runCli(matches);
+        exit();
+      } catch (e) {
+        writeStderr(String(e));
+        exit(1);
+      }
+    }
+  } catch (error) {
+    if (isCliDesktopAcceptance) {
+      await invoke("write_cli_desktop_acceptance_state", {
+        state: { phase: "error", message: error instanceof Error ? (error.stack ?? error.message) : String(error) },
+      });
+    }
+    if (!appRendered && !cliMode && !isCliDesktopAcceptance) {
+      await renderStartupError(error);
+      return;
+    }
+    throw error;
   }
 })();
 
@@ -117,7 +152,7 @@ async function initAuth() {
 
 /** 加载语言文件 */
 async function loadLanguageFiles() {
-  i18next.use(initReactI18next).init({
+  await i18next.use(initReactI18next).init({
     lng: Settings.language,
     // debug会影响性能，并且没什么用，所以关掉
     // debug: import.meta.env.DEV,
@@ -136,11 +171,13 @@ async function loadLanguageFiles() {
 }
 
 /** 渲染应用 */
-async function renderApp(cli: boolean = false) {
+async function renderApp(cli: boolean = false, cliDesktopAcceptance: boolean = false) {
   const root = createRoot(el);
   if (cli) {
     await getCurrentWindow().hide();
     await getCurrentWindow().setSkipTaskbar(true);
+    root.render(<></>);
+  } else if (cliDesktopAcceptance) {
     root.render(<></>);
   } else {
     // if (isMobile) {
@@ -159,6 +196,11 @@ async function renderApp(cli: boolean = false) {
       </Provider>,
     );
   }
+}
+
+async function renderStartupError(error: unknown) {
+  flushSync(() => createRoot(el).render(<Fallback error={error} resetErrorBoundary={() => location.reload()} />));
+  if (!isWeb) await getCurrentWindow().show();
 }
 
 async function loadStartFile() {

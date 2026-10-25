@@ -30,7 +30,8 @@ vi.mock("@/core/service/dataManageService/imageNodeFactory", () => ({
 vi.mock("./imageNodeFinder", () => ({ findFirstImageInChildren: () => undefined }));
 vi.mock("./OpenverseImageSearch", () => ({ findDownloadableOpenverseImage: async () => undefined }));
 
-import { AITools } from "./AITools";
+import { createBuiltInToolAgentTools } from "./BuiltInToolAgentAdapter";
+import { getBuiltInToolWindowEntries } from "./BuiltInToolWindowAdapter";
 import { AIObjectReferenceRegistry } from "./AIObjectReferenceRegistry";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import { Edge } from "@/core/stage/stageObject/association/Edge";
@@ -39,7 +40,7 @@ import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
 function getTool(name: string) {
-  const tool = AITools.tools.find((candidate) => candidate.name === name);
+  const tool = getBuiltInToolWindowEntries().find((candidate) => candidate.name === name);
   if (!tool) throw new Error(`Missing tool: ${name}`);
   return tool;
 }
@@ -94,7 +95,7 @@ describe("AI layout tool schemas", () => {
 
     expect(tool.parameters.safeParse({ refs: ["n1", "n2"] }).success).toBe(true);
     expect(getFields(tool.parameters)).toEqual(["refs"]);
-    expect(AITools.tools.some((candidate) => candidate.name.includes("placement"))).toBe(false);
+    expect(getBuiltInToolWindowEntries().some((candidate) => candidate.name.includes("placement"))).toBe(false);
   });
 
   it("does not expose coordinates on text or image creation and editing tools", () => {
@@ -131,7 +132,7 @@ describe("AI layout tool schemas", () => {
       autoLayout: { autoLayoutDAG },
     };
     const references = new AIObjectReferenceRegistry(project as never);
-    const tools = AITools.createTools(project as never, references) as unknown as Record<
+    const tools = createBuiltInToolAgentTools(project as never, references) as unknown as Record<
       string,
       { execute: (data: unknown) => Promise<string> }
     >;
@@ -162,7 +163,7 @@ describe("AI layout tool schemas", () => {
       autoLayout: { autoLayoutDAG },
     };
     const references = new AIObjectReferenceRegistry(project as never);
-    const tools = AITools.createTools(project as never, references) as unknown as Record<
+    const tools = createBuiltInToolAgentTools(project as never, references) as unknown as Record<
       string,
       { execute: (data: unknown) => Promise<string> }
     >;
@@ -193,7 +194,7 @@ describe("AI node deletion tools", () => {
     const association = { uuid: "edge", associationList: [deleted, remaining] };
     const fixture = createDeletionProject([deleted, remaining], [association]);
     const references = new AIObjectReferenceRegistry(fixture.project as never);
-    const tools = AITools.createTools(fixture.project as never, references) as unknown as Record<
+    const tools = createBuiltInToolAgentTools(fixture.project as never, references) as unknown as Record<
       string,
       { execute: (data: unknown) => Promise<string> }
     >;
@@ -216,7 +217,7 @@ describe("AI node deletion tools", () => {
     const firstRef = references.getOrCreateRef(first);
     const staleRef = references.getOrCreateRef(stale);
     fixture.removeEntityFromStage(stale);
-    const tools = AITools.createTools(fixture.project as never, references) as unknown as Record<
+    const tools = createBuiltInToolAgentTools(fixture.project as never, references) as unknown as Record<
       string,
       { execute: (data: unknown) => Promise<string> }
     >;
@@ -235,7 +236,7 @@ describe("AI node deletion tools", () => {
     const references = new AIObjectReferenceRegistry(fixture.project as never);
     const firstRef = references.getOrCreateRef(first);
     const secondRef = references.getOrCreateRef(second);
-    const tools = AITools.createTools(fixture.project as never, references) as unknown as Record<
+    const tools = createBuiltInToolAgentTools(fixture.project as never, references) as unknown as Record<
       string,
       { execute: (data: unknown) => Promise<string> }
     >;
@@ -254,7 +255,7 @@ describe("AI node deletion tools", () => {
     remaining.isSelected = false;
     const fixture = createDeletionProject([selected, remaining]);
     const references = new AIObjectReferenceRegistry(fixture.project as never);
-    const tools = AITools.createTools(fixture.project as never, references) as unknown as Record<
+    const tools = createBuiltInToolAgentTools(fixture.project as never, references) as unknown as Record<
       string,
       { execute: (data: unknown) => Promise<string> }
     >;

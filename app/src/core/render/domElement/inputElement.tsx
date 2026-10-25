@@ -25,7 +25,7 @@ export class InputElement {
   input(
     location: Vector,
     defaultValue: string,
-    onChange: (value: string) => void = () => {},
+    onChange: (value: string, element: HTMLInputElement) => void = () => {},
     style: Partial<CSSStyleDeclaration> = {},
   ): Promise<string> {
     return new Promise((resolve) => {
@@ -61,14 +61,14 @@ export class InputElement {
       const onOutsideClick = (event: Event) => {
         if (!inputElement.contains(event.target as Node)) {
           resolve(inputElement.value);
-          onChange(inputElement.value);
+          onChange(inputElement.value, inputElement);
           document.body.removeEventListener("mousedown", onOutsideClick);
           removeElement();
         }
       };
       const onOutsideWheel = () => {
         resolve(inputElement.value);
-        onChange(inputElement.value);
+        onChange(inputElement.value, inputElement);
         document.body.removeEventListener("mousedown", onOutsideClick);
         removeElement();
       };
@@ -83,7 +83,7 @@ export class InputElement {
 
       inputElement.addEventListener("input", () => {
         this.project.controller.resetCountdownTimer();
-        onChange(inputElement.value);
+        onChange(inputElement.value, inputElement);
         adjustSize();
       });
       inputElement.addEventListener("blur", () => {
@@ -99,7 +99,7 @@ export class InputElement {
           return;
         }
         resolve(inputElement.value);
-        onChange(inputElement.value);
+        onChange(inputElement.value, inputElement);
         document.body.removeEventListener("mousedown", onOutsideClick);
         removeElement();
       });
@@ -119,7 +119,7 @@ export class InputElement {
         if (event.key === "Enter") {
           if (!(event.isComposing || isComposing)) {
             resolve(inputElement.value);
-            onChange(inputElement.value);
+            onChange(inputElement.value, inputElement);
             document.body.removeEventListener("mousedown", onOutsideClick);
             removeElement();
           }
@@ -213,9 +213,10 @@ export class InputElement {
           const measuredWidth = measureTextWidth(fullText);
           textareaElement.style.width = `${measuredWidth + 2}px`;
         }
-        // 高度：auto → scrollHeight（两种模式都需要）
-        textareaElement.style.height = "auto";
-        textareaElement.style.height = `${textareaElement.scrollHeight}px`;
+        if (style.height === undefined) {
+          textareaElement.style.height = "auto";
+          textareaElement.style.height = `${textareaElement.scrollHeight}px`;
+        }
       };
 
       // 初始化时立即调整一次，防止初始渲染就换行

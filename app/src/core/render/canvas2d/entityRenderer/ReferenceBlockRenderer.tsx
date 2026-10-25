@@ -1,4 +1,5 @@
 import { Project, service } from "@/core/Project";
+import { Renderer } from "@/core/render/canvas2d/renderer";
 import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { Color, Vector } from "@graphif/data-structures";
@@ -23,6 +24,7 @@ export class ReferenceBlockRenderer {
       Color.Transparent,
       this.project.stageStyleManager.currentStyle.StageObjectBorder,
       1 * this.project.camera.currentScale,
+      Renderer.NODE_ROUNDED_RADIUS,
     );
 
     // 先渲染图片内容
@@ -83,6 +85,7 @@ export class ReferenceBlockRenderer {
         referenceBlockNode.bitmap,
         this.project.renderer.transformWorld2View(referenceBlockNode.collisionBox.getRectangle().location),
         referenceBlockNode.scale,
+        Renderer.NODE_ROUNDED_RADIUS,
       );
 
       if (referenceBlockNode.state === "success") {

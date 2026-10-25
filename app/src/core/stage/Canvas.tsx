@@ -16,6 +16,7 @@ export class Canvas {
     public element: HTMLCanvasElement = document.createElement("canvas"),
   ) {
     element.tabIndex = -1;
+    element.style.touchAction = "none";
     // 鼠标移动到画布上开始tick
     element.addEventListener("mousemove", () => {
       if (document.querySelector("[data-radix-popper-content-wrapper]")) {
@@ -91,6 +92,7 @@ export class Canvas {
     this.resizeObserver?.disconnect();
     wrapper.innerHTML = "";
     wrapper.appendChild(this.element);
+    this.project.renderer.resizeWindow(wrapper.clientWidth, wrapper.clientHeight);
     // 监听画布大小变化
     this.resizeObserver = new ResizeObserver(() => {
       this.project.renderer.resizeWindow(wrapper.clientWidth, wrapper.clientHeight);

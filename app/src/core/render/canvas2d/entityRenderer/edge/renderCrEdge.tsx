@@ -13,12 +13,13 @@ export function renderCrEdge(
     return;
   }
   const crShape = edge.getShape();
-  const edgeColor = edge.color.a === 0 ? project.stageStyleManager.currentStyle.StageObjectBorder : edge.color;
+  const edgeColor = edge.isSelected
+    ? project.stageStyleManager.currentStyle.CollideBoxSelected
+    : edge.color.a === 0
+      ? project.stageStyleManager.currentStyle.StageObjectBorder
+      : edge.color;
   // 画曲线
   project.worldRenderUtils.renderCubicCatmullRomSpline(crShape, edgeColor, 2);
-  if (edge.isSelected) {
-    project.collisionBoxRenderer.render(edge.collisionBox, project.stageStyleManager.currentStyle.CollideBoxSelected);
-  }
   // 画控制点们
   for (const point of crShape.controlPoints) {
     project.shapeRenderer.renderCircle(

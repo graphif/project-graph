@@ -1,8 +1,10 @@
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { fetchDonations, type DonationData } from "@/core/service/Donations";
 import { Telemetry } from "@/core/service/Telemetry";
 import { isDevAtom } from "@/state";
 import { cn } from "@/utils/cn";
-import { fetch } from "@tauri-apps/plugin-http";
 import { open } from "@tauri-apps/plugin-shell";
 import { useAtom } from "jotai";
 import {
@@ -19,13 +21,6 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import "./assets/font.css";
-
-interface DonationData {
-  user: string;
-  note?: string;
-  amount: number;
-  currency?: string;
-}
 
 // 此列表为2025年的捐赠记录，自2026年起将不再写入源代码，转为云控。
 const donations_: DonationData[] = [
@@ -237,29 +232,43 @@ export default function CreditsTab() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState("");
+  const requestRef = useRef<AbortController | null>(null);
   const [isTableMode, setIsTableMode] = useState(true);
 
-  const loadDonations = () => {
+  const loadDonations = async () => {
+    requestRef.current?.abort();
+    const request = new AbortController();
+    requestRef.current = request;
     setIsLoading(true);
-    setIsError(false);
-
-    fetch(import.meta.env.LR_API_BASE_URL + "/api/donations")
-      .then((res) => res.json())
-      .then((data) => {
-        setDonations(data);
-      })
-      .catch((e) => {
-        console.log(e);
-        setIsError(true);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    setError("");
+    const timeout = setTimeout(() => request.abort(), 15000);
+    try {
+      const data = await fetchDonations(request.signal);
+      if (requestRef.current === request) setDonations(data);
+    } catch (e) {
+      if (requestRef.current === request) {
+        setError(
+          request.signal.aborted
+            ? "请求超时，请检查网络后重试"
+            : e instanceof Error
+              ? e.message
+              : "无法连接支持者名单服务，请稍后重试",
+        );
+      }
+    } finally {
+      clearTimeout(timeout);
+      if (requestRef.current === request) setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     loadDonations();
+    return () => {
+      const request = requestRef.current;
+      requestRef.current = null;
+      request?.abort();
+    };
   }, []);
 
   // 计算从2024年9月1日到现在的天数
@@ -300,8 +309,8 @@ export default function CreditsTab() {
   }, [hasSentScrollToBottom]);
 
   return (
-    <div ref={containerRef} className="mx-auto flex w-2/3 flex-col overflow-auto py-4" style={{ maxHeight: "80vh" }}>
-      <div className="mb-4 flex gap-4">
+    <div ref={containerRef} className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-8">
+      <div className="flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-center sm:justify-between">
         {isDev ? (
           <>
             <div className="bg-muted/50 flex flex-1 flex-col gap-2 rounded-lg border p-4">
@@ -336,52 +345,68 @@ export default function CreditsTab() {
             </div>
           </>
         ) : (
-          <div className="bg-muted/50 flex flex-1 flex-col items-center gap-2 rounded-lg border p-4 text-sm">
-            <p className="text-center">在过去的{actualDays}个日夜中，是屏幕前您的认可与支持，给了我们最温暖的鼓励</p>
-            <p className="text-xs opacity-50">您的支持可以让开发者的维护更持久，激励我们研究并创新</p>
-            <div className="flex flex-nowrap items-center justify-center gap-1">
-              <Heart className="size-4" />
-              <span className="text-sm">谨以此墙，致敬所有同行者</span>
-            </div>
+          <div className="flex flex-1 flex-col gap-2">
+            <h1 className="flex items-center gap-2 text-2xl font-semibold">
+              <Heart className="size-6" />
+              感谢每一份支持
+            </h1>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              一起走过 {actualDays} 天。感谢你们帮助 Project Graph 持续维护、改进与创新。
+            </p>
           </div>
         )}
 
-        <div
-          className="bg-muted/50 group flex flex-1 cursor-pointer flex-col justify-center gap-2 rounded-lg border p-4 **:cursor-pointer"
+        <Button
+          variant="outline"
+          className="self-start sm:self-center"
           onClick={() => {
             Telemetry.event("credits_donate_clicked");
             open("https://graphif.dev/donate");
           }}
         >
-          <div className="flex items-center justify-center gap-2">
-            <ExternalLink className="h-5 w-5" />
-            <span className="text-lg">前往捐赠页面</span>
-          </div>
-          <div className="flex items-end justify-center gap-2 text-center">
-            <span className="underline-offset-4 group-hover:underline">graphif.dev/donate</span>
-          </div>
-        </div>
+          <ExternalLink data-icon="inline-start" />
+          支持项目
+        </Button>
       </div>
-      <div className="mb-4 flex items-center justify-end gap-4">
-        <button
-          onClick={loadDonations}
-          disabled={isLoading}
-          className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-sm transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+      <div className="flex flex-wrap items-center gap-3">
+        <h2 className="mr-auto text-lg font-medium">
+          支持记录{" "}
+          <span className="text-muted-foreground text-sm">{donations.length > 0 ? `${donations.length} 条` : ""}</span>
+        </h2>
+        <Button variant="ghost" size="sm" onClick={loadDonations} disabled={isLoading}>
+          <RefreshCw data-icon="inline-start" className={cn(isLoading && "animate-spin")} />
           <span>刷新</span>
-        </button>
+        </Button>
         <div className="flex items-center gap-2">
           <Table className="h-4 w-4" />
           <span className="text-sm">表格</span>
         </div>
-        <Switch checked={isTableMode} onCheckedChange={setIsTableMode} />
+        <Switch
+          aria-label="瀑布流视图"
+          checked={!isTableMode}
+          onCheckedChange={(checked) => setIsTableMode(!checked)}
+        />
         <div className="flex items-center gap-2">
           <LayoutGrid className="h-4 w-4" />
           <span className="text-sm">瀑布流</span>
         </div>
       </div>
-      {isLoading && (
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle />
+          <AlertTitle>暂时无法更新支持者名单</AlertTitle>
+          <AlertDescription>
+            <p>
+              {error}
+              {donations.length > 0 ? "，当前保留上次加载的记录。" : "。你也可以前往捐赠页面查看。"}
+            </p>
+            <Button variant="outline" size="sm" onClick={loadDonations} disabled={isLoading}>
+              重试
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+      {isLoading && donations.length === 0 && (
         <div className="bg-muted/50 mb-4 inline-flex w-full break-inside-avoid flex-col gap-2 rounded-lg border p-4">
           <div className="flex items-center justify-center gap-2">
             <Loader className="h-5 w-5 animate-spin" />
@@ -389,48 +414,47 @@ export default function CreditsTab() {
           </div>
         </div>
       )}
-      {!isLoading && !isError && isTableMode && (
-        <div className="flex flex-col overflow-hidden rounded-lg border" style={{ maxHeight: "calc(80vh - 200px)" }}>
-          <table className="w-full">
-            <thead className="bg-muted/50 sticky top-0 z-10">
+      {!isLoading && !error && donations.length === 0 && (
+        <p className="text-muted-foreground py-12 text-center">暂无公开的支持记录，感谢你的关注。</p>
+      )}
+      {donations.length > 0 && isTableMode && (
+        <div className="overflow-x-auto rounded-xl border">
+          <table className="w-full min-w-[480px] text-left">
+            <thead className="bg-muted">
               <tr>
                 <th className="px-3 py-2 text-left text-sm font-medium">用户</th>
                 <th className="px-3 py-2 text-left text-sm font-medium">留言</th>
                 <th className="px-3 py-2 text-right text-sm font-medium">金额</th>
               </tr>
             </thead>
+            <tbody className="divide-y">
+              {[...donations].reverse().map((donation, index) => (
+                <tr key={index} className={cn(donation.amount < 0 && "bg-destructive/10")}>
+                  <td className="px-3 py-1.5 text-sm">
+                    <div className="flex items-center gap-2">
+                      {donation.amount < 0 ? <Server className="size-4" /> : <User className="size-4" />}
+                      <span>{donation.user || "匿名"}</span>
+                    </div>
+                  </td>
+                  <td className="text-muted-foreground px-3 py-1.5 text-sm">{donation.note || "-"}</td>
+                  <td className="px-3 py-1.5 text-right">
+                    <span
+                      className={cn(
+                        "font-[DINPro] font-bold whitespace-nowrap",
+                        donation.amount < 0 ? "text-red-500" : "text-green-500",
+                      )}
+                    >
+                      {donation.amount} {donation.currency || "CNY"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
-          <div className="flex-1 overflow-auto">
-            <table className="w-full">
-              <tbody className="divide-y">
-                {[...donations].reverse().map((donation, index) => (
-                  <tr key={index} className={cn(donation.amount < 0 && "bg-destructive/10")}>
-                    <td className="px-3 py-1.5 text-sm">
-                      <div className="flex items-center gap-2">
-                        {donation.amount < 0 ? <Server className="size-4" /> : <User className="size-4" />}
-                        <span>{donation.user || "匿名"}</span>
-                      </div>
-                    </td>
-                    <td className="text-muted-foreground px-3 py-1.5 text-sm">{donation.note || "-"}</td>
-                    <td className="px-3 py-1.5 text-right">
-                      <span
-                        className={cn(
-                          "font-[DINPro] font-bold whitespace-nowrap",
-                          donation.amount < 0 ? "text-red-500" : "text-green-500",
-                        )}
-                      >
-                        {donation.amount} {donation.currency || "CNY"}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       )}
-      {!isLoading && !isError && !isTableMode && (
-        <div className="columns-1 gap-4 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5">
+      {donations.length > 0 && !isTableMode && (
+        <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
           {[...donations].reverse().map((donation, index) => (
             <Donation
               key={index}
@@ -440,14 +464,6 @@ export default function CreditsTab() {
               currency={donation.currency}
             />
           ))}
-        </div>
-      )}
-      {!isLoading && isError && (
-        <div className="flex h-64 w-full flex-col justify-center">
-          <div className="flex items-center justify-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            <span className="text-lg">支持者名单加载失败，请检查网络，或更新到最新版本，或联系开发者以获取帮助</span>
-          </div>
         </div>
       )}
     </div>

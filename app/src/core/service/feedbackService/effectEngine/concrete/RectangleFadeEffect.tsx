@@ -1,4 +1,5 @@
 import { Project } from "@/core/Project";
+import { Renderer } from "@/core/render/canvas2d/renderer";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
 import { Color, mixColors, ProgressNumber } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -26,6 +27,7 @@ export class RectangleFadeEffect extends Effect {
       mixColors(this.fillColor, Color.Transparent, this.timeProgress.rate),
       mixColors(this.strokeColor, Color.Transparent, this.timeProgress.rate),
       this.strokeWidth,
+      Renderer.NODE_ROUNDED_RADIUS,
     );
   }
 }

@@ -90,6 +90,16 @@ export class CubicBezierCurve extends Shape {
   private static segment = 40;
 
   isPointIn(point: Vector): boolean {
+    // 曲线及采样折线都在控制点凸包内；保留线段的命中容差再做粗筛。
+    const tolerance = Line.pointHitTolerance;
+    if (
+      point.x < Math.min(this.start.x, this.ctrlPt1.x, this.ctrlPt2.x, this.end.x) - tolerance ||
+      point.x > Math.max(this.start.x, this.ctrlPt1.x, this.ctrlPt2.x, this.end.x) + tolerance ||
+      point.y < Math.min(this.start.y, this.ctrlPt1.y, this.ctrlPt2.y, this.end.y) - tolerance ||
+      point.y > Math.max(this.start.y, this.ctrlPt1.y, this.ctrlPt2.y, this.end.y) + tolerance
+    ) {
+      return false;
+    }
     let lastPoint = this.start;
     for (let i = 1; i <= CubicBezierCurve.segment; i++) {
       const line = new Line(lastPoint, this.getPointByT(i / CubicBezierCurve.segment));
@@ -142,9 +152,20 @@ export class SymmetryCurve extends Shape {
     public startDirection: Vector,
     public end: Vector,
     public endDirection: Vector,
-    public bending: number,
+    public bending = SymmetryCurve.defaultBending(start, startDirection, end, endDirection),
   ) {
     super();
+  }
+
+  private static defaultBending(start: Vector, startDirection: Vector, end: Vector, endDirection: Vector): number {
+    const delta = end.subtract(start);
+    let bending = delta.magnitude() / 2;
+    // 面向彼此的控制点不能越过间距中点，否则短连线会被挤出急弯。
+    for (const direction of [startDirection.normalize(), endDirection.normalize().multiply(-1)]) {
+      const forwardGap = delta.x * direction.x + delta.y * direction.y;
+      if (forwardGap > 0) bending = Math.min(bending, forwardGap / 2);
+    }
+    return bending;
   }
 
   get bezier(): CubicBezierCurve {

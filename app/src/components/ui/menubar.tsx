@@ -5,6 +5,28 @@ import * as React from "react";
 import { SoundService } from "@/core/service/feedbackService/SoundService";
 import { cn } from "@/utils/cn";
 
+function useMenuPlacement(forwardedRef: React.Ref<HTMLDivElement> | undefined) {
+  const [placed, setPlaced] = React.useState(false);
+  const [element, ref] = React.useState<HTMLDivElement | null>(null);
+  React.useImperativeHandle(forwardedRef, () => element!, [element]);
+  React.useLayoutEffect(() => {
+    setPlaced(false);
+    if (!element) return;
+    // Radix Popper 在定位前设置内联 animation:none，完成后移除。
+    const observer = new MutationObserver(update);
+    function update() {
+      if (element && element.style.animationName !== "none" && element.style.animation !== "none") {
+        setPlaced(true);
+        observer.disconnect();
+      }
+    }
+    observer.observe(element, { attributes: true, attributeFilter: ["style"] });
+    update();
+    return () => observer.disconnect();
+  }, [element]);
+  return { placed, ref };
+}
+
 function Menubar({ className, ...props }: React.ComponentProps<typeof MenubarPrimitive.Root>) {
   return (
     <MenubarPrimitive.Root
@@ -52,11 +74,13 @@ function MenubarTrigger({ className, ...props }: React.ComponentProps<typeof Men
 
 function MenubarContent({
   className,
+  ref,
   align = "start",
   alignOffset = -4,
   sideOffset = 8,
   ...props
 }: React.ComponentProps<typeof MenubarPrimitive.Content>) {
+  const placement = useMenuPlacement(ref);
   return (
     <MenubarPortal>
       <MenubarPrimitive.Content
@@ -65,10 +89,12 @@ function MenubarContent({
         alignOffset={alignOffset}
         sideOffset={sideOffset}
         className={cn(
-          "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[12rem] origin-(--radix-menubar-content-transform-origin) overflow-hidden rounded-md border p-1 shadow-md",
+          "bg-popover text-popover-foreground z-50 min-w-[12rem] overflow-hidden rounded-xl border p-1 shadow-md [corner-shape:round]",
           className,
         )}
         {...props}
+        ref={placement.ref}
+        data-pg-menu-positioned={placement.placed}
       />
     </MenubarPortal>
   );
@@ -220,16 +246,21 @@ function MenubarSubTrigger({
   );
 }
 
-function MenubarSubContent({ className, ...props }: React.ComponentProps<typeof MenubarPrimitive.SubContent>) {
+function MenubarSubContent({ className, ref, ...props }: React.ComponentProps<typeof MenubarPrimitive.SubContent>) {
+  const placement = useMenuPlacement(ref);
   return (
-    <MenubarPrimitive.SubContent
-      data-slot="menubar-sub-content"
-      className={cn(
-        "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem] origin-(--radix-menubar-content-transform-origin) overflow-hidden rounded-md border p-1 shadow-lg",
-        className,
-      )}
-      {...props}
-    />
+    <MenubarPortal>
+      <MenubarPrimitive.SubContent
+        data-slot="menubar-sub-content"
+        className={cn(
+          "bg-popover text-popover-foreground z-50 min-w-[8rem] overflow-hidden rounded-xl border p-1 shadow-lg [corner-shape:round]",
+          className,
+        )}
+        {...props}
+        ref={placement.ref}
+        data-pg-menu-positioned={placement.placed}
+      />
+    </MenubarPortal>
   );
 }
 

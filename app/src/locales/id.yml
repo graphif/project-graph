@@ -1,3 +1,11 @@
+projectStatus:
+  nodes: "{{count}} simpul"
+  edges: "{{count}} koneksi"
+  selected: "{{count}} dipilih"
+  saved: Tersimpan
+  stashed: Disimpan sementara
+  unsaved: Perubahan belum disimpan
+
 welcome:
   slogan: Perangkat Lunak Pemetaan Kerangka Berpikir Berbasis Teori Graf
   slogans:
@@ -150,7 +158,6 @@ settings:
     ai:
       title: AI
       api: API
-      ocr: Pengenalan Tulisan Tangan
     automation:
       title: Otomatisasi
       autoNamer: Penamaan Otomatis
@@ -430,6 +437,11 @@ settings:
     title: Selalu Tampilkan Detail Node
     description: |
       Saat diaktifkan, detail node akan ditampilkan tanpa perlu mengarahkan mouse ke node.
+  exportMermaidIncludeNodeDetails:
+    title: Sertakan Detail Node
+    description: |
+      Tambahkan detail node dan kotak grup sebagai komentar saat mengekspor Mermaid, untuk disimpan atau dibagikan ke AI.
+      Komentar tidak tampil pada diagram. Pilihan ini disimpan secara otomatis.
   nodeDetailsPanel:
     title: Panel Detail Node
     options:
@@ -1124,6 +1136,11 @@ settings:
       Kunci akan disimpan sebagai teks biasa secara lokal
   aiModel:
     title: Model AI
+  aiCustomHeaders:
+    title: Header Permintaan AI
+    description: |
+      Satu header per baris, format "Nama: Nilai". Baris yang diawali # diabaikan.
+      Contoh untuk API inferensi OpenCode: x-opencode-org-id: id-organisasi-anda
   aiContextWindow:
     title: Ukuran jendela konteks AI
     description: |
@@ -1132,12 +1149,6 @@ settings:
     title: Tampilkan Jumlah Token AI
     description: |
       Saat diaktifkan, tampilkan jumlah token untuk operasi AI
-  enableOCR:
-    title: Aktifkan OCR Tulisan Tangan
-    description: |
-      Saat diaktifkan, goresan tangan akan secara otomatis dikenali melalui OCR
-      setelah Anda berhenti menggambar, dan diubah menjadi node teks
-      Memerlukan pengunduhan model OCR
   aiAutoApproveMcpTools:
     title: Setujui alat MCP secara otomatis
     description: |
@@ -2502,3 +2513,14 @@ common:
     editingMode: Mode Edit
     lineBreak: Baris Baru
     exitEdit: Keluar Mode Edit
+
+projectOwnership:
+  alreadyOpen: Beralih ke tab yang terbuka.
+  notFound: File proyek tidak ditemukan.
+  busy: Proyek ini sedang digunakan oleh proses Project Graph lain.
+  loadFailed: Kepemilikan proyek tidak dapat diperoleh.
+  openFailedTitle: Gagal membuka proyek
+  releaseFailedTitle: Gagal melepaskan kepemilikan proyek
+  releaseFailedMessage: "Proyek telah ditutup, tetapi kunci kepemilikannya tidak dapat dilepaskan. Pilih Coba lagi untuk mencoba lagi.\n\nKesalahan: {{error}}"
+  retry: Coba lagi
+  ok: OK

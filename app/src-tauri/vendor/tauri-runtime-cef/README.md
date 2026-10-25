@@ -173,5 +173,5 @@ pin，最后按 `third-patches/cef/README.md` 修复并重新生成 patch series
 ## 当前限制
 
 - CEF Views 对部分 Tauri window API 没有等价能力；运行时对这些 API 返回保守值或 no-op。
-- Linux CEF 窗口固定采用 X11/ANGLE GL 配置；原生 Wayland 路径尚未接入。
+- Linux 的 CEF 和 GTK/Tao 固定使用原生 Wayland，GPU 采用 ANGLE GL；需要 Wayland 桌面会话，不回退到 X11/XWayland。后端由运行时内部设置，无需额外传入命令行参数。
 - Windows 下 tauri `theme` 恒报 Light；`shadow` / `drag_and_drop` 为 best-effort。

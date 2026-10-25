@@ -1,3 +1,11 @@
+projectStatus:
+  nodes: "{{count}} 節點"
+  edges: "{{count}} 連線"
+  selected: "已選 {{count}}"
+  saved: 已儲存
+  stashed: 已暫存
+  unsaved: 有未儲存的修改
+
 welcome:
   slogan: 基於圖論的思維框架圖繪製軟體
   slogans:
@@ -198,7 +206,6 @@ settings:
     ai:
       title: AI
       api: API
-      ocr: 筆跡辨識
     automation:
       title: 自動化
       autoNamer: 自動命名
@@ -476,6 +483,11 @@ settings:
   alwaysShowDetails:
     title: 始終顯示節點詳細資訊
     description: 開啟後，無需滑鼠移動到節點上時，才顯示節點的詳細資訊。
+  exportMermaidIncludeNodeDetails:
+    title: 包含節點詳情
+    description: |
+      匯出 Mermaid 時，將節點與分組框的詳情以註解附在原始碼中，方便儲存或交給 AI 閱讀。
+      註解不會顯示在渲染後的圖中；這個選擇會自動儲存。
   nodeDetailsPanel:
     title: 節點詳細資訊面板
     options:
@@ -1127,6 +1139,11 @@ settings:
       '
   aiModel:
     title: AI 模型
+  aiCustomHeaders:
+    title: AI 請求標頭
+    description: |
+      一行一個請求標頭，格式係「名稱: 值」，以 # 開頭嗰啲會唔理
+      例如 OpenCode 推理 API 要：x-opencode-org-id: 你嘅組織ID
   aiContextWindow:
     title: AI 上下文視窗大小
     description: 輸入 0 時自動從 OpenRouter 取得；其他相容服務可手動填寫模型的上下文 token 上限
@@ -1134,11 +1151,6 @@ settings:
     title: 顯示 AI 消耗的token數
     description: |
       啟用後，在 AI 操作時顯示消耗的token數
-  enableOCR:
-    title: 啟用筆跡 OCR
-    description: |
-      開啟後，使用畫筆繪製的內容會在鬆手後自動進行 OCR 辨識，轉換為文字節點
-      需要下載 OCR 模型才能使用
   aiAutoApproveMcpTools:
     title: 自動批准 MCP 工具
     description: |
@@ -2436,3 +2448,14 @@ common:
     editingMode: 正在編輯模式
     lineBreak: 換行
     exitEdit: 退出編輯模式
+
+projectOwnership:
+  alreadyOpen: 已經切換到開啟的分頁。
+  notFound: 找不到專案檔案。
+  busy: 這個專案正在被另一個 Project Graph 程序使用。
+  loadFailed: 無法取得專案所有權。
+  openFailedTitle: 開啟專案失敗
+  releaseFailedTitle: 釋放專案所有權失敗
+  releaseFailedMessage: "專案已關閉，但無法釋放它的所有權鎖。請按「重試」再試一次。\n\n錯誤資訊：{{error}}"
+  retry: 重試
+  ok: 確定

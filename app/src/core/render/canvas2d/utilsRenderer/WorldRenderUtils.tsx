@@ -1,6 +1,7 @@
 import { Color, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, CubicCatmullRomSpline, Rectangle, SymmetryCurve } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
+import { superellipseRect } from "@/utils/superellipse";
 
 /**
  * 一些基础的渲染图形
@@ -202,7 +203,8 @@ export class WorldRenderUtils {
     this.project.canvas.ctx.shadowBlur = shadowBlur;
     // 绘制矩形
     this.project.canvas.ctx.beginPath();
-    this.project.canvas.ctx.roundRect(
+    superellipseRect(
+      this.project.canvas.ctx,
       rectangle.location.x,
       rectangle.location.y,
       rectangle.size.x,

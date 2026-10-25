@@ -1,20 +1,89 @@
-import { Entity } from "../abstract/StageEntity";
-import { BasicBlocksKit } from "@/components/editor/plugins/basic-blocks-kit";
-import { BasicMarksKit } from "@/components/editor/plugins/basic-marks-kit";
-import { CodeBlockKit } from "@/components/editor/plugins/code-block-kit";
-import { FixedToolbarKit } from "@/components/editor/plugins/fixed-toolbar-kit";
-import { FloatingToolbarKit } from "@/components/editor/plugins/floating-toolbar-kit";
-import { FontKit } from "@/components/editor/plugins/font-kit";
-import { LinkKit } from "@/components/editor/plugins/link-kit";
-import { ListKit } from "@/components/editor/plugins/list-kit";
-import { MathKit } from "@/components/editor/plugins/math-kit";
-import { TableKit } from "@/components/editor/plugins/table-kit";
+import type { Entity } from "../abstract/StageEntity";
+import {
+  BaseBlockquotePlugin,
+  BaseH1Plugin,
+  BaseH2Plugin,
+  BaseH3Plugin,
+  BaseH4Plugin,
+  BaseH5Plugin,
+  BaseH6Plugin,
+  BaseHorizontalRulePlugin,
+  BaseBoldPlugin,
+  BaseCodePlugin,
+  BaseHighlightPlugin,
+  BaseItalicPlugin,
+  BaseKbdPlugin,
+  BaseStrikethroughPlugin,
+  BaseSubscriptPlugin,
+  BaseSuperscriptPlugin,
+  BaseUnderlinePlugin,
+} from "@platejs/basic-nodes";
+import {
+  BaseFontBackgroundColorPlugin,
+  BaseFontColorPlugin,
+  BaseFontFamilyPlugin,
+  BaseFontSizePlugin,
+} from "@platejs/basic-styles";
+import { BaseCodeBlockPlugin, BaseCodeLinePlugin, BaseCodeSyntaxPlugin } from "@platejs/code-block";
+import { BaseIndentPlugin } from "@platejs/indent";
+import { BaseLinkPlugin } from "@platejs/link";
+import { BaseListPlugin } from "@platejs/list";
+import { BaseEquationPlugin, BaseInlineEquationPlugin } from "@platejs/math";
+import { BaseTablePlugin, BaseTableRowPlugin, BaseTableCellPlugin, BaseTableCellHeaderPlugin } from "@platejs/table";
 import { MarkdownPlugin, remarkMdx, remarkMention } from "@platejs/markdown";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
-import { Value } from "platejs";
-import { createPlateEditor } from "platejs/react";
+import { toast } from "sonner";
+import { type Value, createSlateEditor, BaseParagraphPlugin } from "platejs";
+
+const conversionPlugins = [
+  BaseParagraphPlugin,
+  BaseBlockquotePlugin,
+  BaseH1Plugin,
+  BaseH2Plugin,
+  BaseH3Plugin,
+  BaseH4Plugin,
+  BaseH5Plugin,
+  BaseH6Plugin,
+  BaseHorizontalRulePlugin,
+  BaseBoldPlugin,
+  BaseCodePlugin,
+  BaseHighlightPlugin,
+  BaseItalicPlugin,
+  BaseKbdPlugin,
+  BaseStrikethroughPlugin,
+  BaseSubscriptPlugin,
+  BaseSuperscriptPlugin,
+  BaseUnderlinePlugin,
+  BaseFontBackgroundColorPlugin,
+  BaseFontColorPlugin,
+  BaseFontFamilyPlugin,
+  BaseFontSizePlugin,
+  BaseCodeBlockPlugin,
+  BaseCodeLinePlugin,
+  BaseCodeSyntaxPlugin,
+  BaseIndentPlugin,
+  BaseListPlugin,
+  BaseLinkPlugin,
+  BaseEquationPlugin,
+  BaseInlineEquationPlugin,
+  BaseTablePlugin,
+  BaseTableRowPlugin,
+  BaseTableCellPlugin,
+  BaseTableCellHeaderPlugin,
+];
+
+function createConversionEditor() {
+  return createSlateEditor({
+    plugins: [
+      ...conversionPlugins,
+      MarkdownPlugin.configure({ options: { remarkPlugins: [remarkMath, remarkGfm, remarkMdx, remarkMention] } }),
+    ],
+  });
+}
+
+let conversionEditor: ReturnType<typeof createConversionEditor> | undefined;
 
 /**
  * 详细信息管理器
@@ -45,27 +114,28 @@ export class DetailsManager {
     if (this.isEmpty()) {
       return "";
     } else {
-      return DetailsManager.detailsToMarkdown(this.entity.details);
+      return this.getCachedDetails().markdown;
     }
   }
 
-  private cacheMap: Map<Value, string> = new Map();
+  private cacheMap = new WeakMap<Value, { markdown: string; stageText: string }>();
+
+  private getCachedDetails() {
+    const details = this.entity.details;
+    let cached = this.cacheMap.get(details);
+    if (!cached) {
+      const markdown = DetailsManager.detailsToMarkdown(details);
+      cached = { markdown, stageText: markdown.replace("\n\n", "\n") };
+      this.cacheMap.set(details, cached);
+    }
+    return cached;
+  }
   /**
    * 获取用于渲染在舞台上的字符串
    * @returns
    */
   public getRenderStageString(): string {
-    if (this.isEmpty()) {
-      return "";
-    } else {
-      if (this.cacheMap.has(this.entity.details)) {
-        return this.cacheMap.get(this.entity.details)!;
-      } else {
-        const markdown = DetailsManager.detailsToMarkdown(this.entity.details).replace("\n\n", "\n");
-        this.cacheMap.set(this.entity.details, markdown);
-        return markdown;
-      }
-    }
+    return this.isEmpty() ? "" : this.getCachedDetails().stageText;
   }
 
   /**
@@ -75,26 +145,8 @@ export class DetailsManager {
    * @returns markdown字符串
    */
   public static detailsToMarkdown(details: Value) {
+    const editor = (conversionEditor ??= createConversionEditor());
     try {
-      const editor = createPlateEditor({
-        plugins: [
-          ...FloatingToolbarKit,
-          ...FixedToolbarKit,
-          ...BasicMarksKit,
-          ...BasicBlocksKit,
-          ...FontKit,
-          ...TableKit,
-          ...MathKit,
-          ...CodeBlockKit,
-          ...ListKit,
-          ...LinkKit,
-          MarkdownPlugin.configure({
-            options: {
-              remarkPlugins: [remarkMath, remarkGfm, remarkMdx, remarkMention],
-            },
-          }),
-        ],
-      });
       editor.children = details;
       const markdown = editor.api.markdown.serialize();
       return markdown;
@@ -103,27 +155,16 @@ export class DetailsManager {
       // 这里先记录一个触发错误的情况，就是富文本
       // [{"children":[{"text":"gfw的泄露","fontFamily":"\"PingFang SC\", HarmonyOS_Regular, \"Helvetica Neue\", \"Microsoft YaHei\", sans-serif","fontSize":"17px","backgroundColor":"rgb(255, 255, 255)","color":"rgb(47, 50, 56)"}],"type":"p","id":"EVpKUIdRu5"}]
 
-      console.error(error);
+      toast.error(`详情转换失败：${String(error)}`);
       return JSON.stringify(details);
+    } finally {
+      // 转换器跨工程复用，不能持有上一个工程的详情对象。
+      editor.children = [];
     }
   }
 
   public static markdownToDetails(md: string) {
-    const editor = createPlateEditor({
-      plugins: [
-        ...FloatingToolbarKit,
-        ...FixedToolbarKit,
-        ...BasicMarksKit,
-        ...BasicBlocksKit,
-        ...FontKit,
-        ...TableKit,
-        ...MathKit,
-        ...CodeBlockKit,
-        ...ListKit,
-        ...LinkKit,
-        MarkdownPlugin,
-      ],
-    });
+    const editor = (conversionEditor ??= createConversionEditor());
     const value = editor.api.markdown.deserialize(md, {
       remarkPlugins: [remarkGfm, remarkMath, remarkBreaks],
     });

@@ -50,7 +50,7 @@ export namespace Themes {
     return ids.map((id) => extensionThemes.get(id)).filter((t): t is Theme => t !== undefined);
   }
 
-  export async function getThemeById(id: string) {
+  export function getThemeById(id: string) {
     // 先尝试找内置主题
     const builtinTheme = builtinThemes.find((theme) => theme.metadata.id === id);
     if (builtinTheme) return builtinTheme;
@@ -82,13 +82,13 @@ export namespace Themes {
    * 将主题CSS挂载到网页上，并返回主题对象。
    * 注意：此函数不修改任何 Settings 值，调用者需自行设置 Settings.theme 来持久化。
    */
-  export async function applyThemeById(themeId: string): Promise<Theme | undefined> {
-    const theme = await getThemeById(themeId);
+  export function applyThemeById(themeId: string): Theme | undefined {
+    const theme = getThemeById(themeId);
     if (!theme) return undefined;
-    await applyTheme(theme.content, theme.metadata.type);
+    applyTheme(theme.content, theme.metadata.type);
     return theme;
   }
-  export async function applyTheme(themeContent: any, type?: "light" | "dark") {
+  export function applyTheme(themeContent: any, type?: "light" | "dark") {
     let styleEl = document.querySelector("#pg-theme");
     if (!styleEl) {
       styleEl = document.createElement("style");

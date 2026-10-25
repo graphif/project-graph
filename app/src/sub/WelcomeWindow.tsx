@@ -5,6 +5,7 @@ import { RecentFileManager } from "@/core/service/dataFileService/RecentFileMana
 import { closeEmptyDrafts, onNewDraft, onOpenFile } from "@/core/service/GlobalMenu";
 import { Telemetry } from "@/core/service/Telemetry";
 import { Tutorials } from "@/core/service/Tutorials";
+import { Settings } from "@/core/service/Settings";
 import { createSubWindow } from "@/core/subWindowOpen";
 import { TabWorkspace } from "@/core/TabWorkspace";
 import { store, tabsAtom } from "@/state";
@@ -35,7 +36,7 @@ import {
   TableProperties,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { cpuInfo } from "tauri-plugin-system-info-api";
@@ -87,7 +88,30 @@ function isWelcomeTab(tab: { id: string }): boolean {
   return welcomeTabIds.has(tab.id);
 }
 
+function getWelcomeRect() {
+  const scale = Settings.uiScalePercent / 100;
+  const viewport = new Vector(innerWidth / scale, innerHeight / scale);
+  const size = new Vector(Math.min(960, viewport.x * 0.85), Math.min(640, viewport.y * 0.8));
+  return new Rectangle(viewport.subtract(size).divide(2), size);
+}
+
 export default function WelcomeWindow({ tabId }: { tabId: string }) {
+  useLayoutEffect(() => {
+    const recenter = () => {
+      const tab = TabWorkspace.get(tabId);
+      if (!tab || tab.layout !== "floating" || tab.closing) return;
+      // floatingRect 使用缩放后的 UI 坐标，不能再按未缩放的视口裁剪。
+      tab.floatingRect = getWelcomeRect();
+      store.set(tabsAtom, [...store.get(tabsAtom)]);
+    };
+    recenter();
+    window.addEventListener("resize", recenter);
+    const unwatch = Settings.watch("uiScalePercent", recenter);
+    return () => {
+      window.removeEventListener("resize", recenter);
+      unwatch();
+    };
+  }, [tabId]);
   const [recentFiles, setRecentFiles] = useState<RecentFileManager.RecentFile[]>([]);
   const { t } = useTranslation("welcome");
   const [appVersion, setAppVersion] = useState("unknown");
@@ -351,7 +375,7 @@ export default function WelcomeWindow({ tabId }: { tabId: string }) {
                     try {
                       await openProject(file.uri, "欢迎页面-最近打开的文件");
                     } catch (e) {
-                      toast.error(e as string);
+                      toast.error(String(e));
                     }
                     setIsLoading(false);
                     setLastClickFileURIPath("");
@@ -408,7 +432,7 @@ WelcomeWindow.open = () => {
 
   const tab = createSubWindow("WelcomeWindow", {
     children: (componentTab) => <WelcomeWindow tabId={componentTab.id} />,
-    rect: Rectangle.inCenter(new Vector(Math.min(960, innerWidth * 0.85), Math.min(640, innerHeight * 0.8))),
+    rect: getWelcomeRect(),
     canDock: false,
     closable: false,
     titleBarOverlay: true,

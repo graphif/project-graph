@@ -1,6 +1,5 @@
 import type { Project } from "@/core/Project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { NodeMoveShadowEffect } from "@/core/service/feedbackService/effectEngine/concrete/NodeMoveShadowEffect";
 import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
 import type { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
@@ -8,7 +7,7 @@ import type { ResizeAble } from "@/core/stage/stageObject/abstract/StageObjectIn
 import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
 import { Section } from "@/core/stage/stageObject/entity/Section";
 import { getMultiLineTextSize } from "@/utils/font";
-import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
+import { Color, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import type { Value } from "platejs";
@@ -21,6 +20,10 @@ import type { Value } from "platejs";
 @passExtraAtArg1
 @passObject
 export class TextNode extends ConnectableEntity implements ResizeAble {
+  public override get clipConnectionToBoundary(): boolean {
+    return true;
+  }
+
   @id
   @serializable
   uuid: string;
@@ -187,10 +190,10 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
   }
 
   /**
-   * 动态圆角半径，与字体大小等比缩放
+   * 与其他节点共用圆角半径，避免字号改变外框风格。
    */
   public getBorderRadius(): number {
-    return (this.fontSizeCache / Renderer.FONT_SIZE) * Renderer.NODE_ROUNDED_RADIUS;
+    return Renderer.NODE_ROUNDED_RADIUS;
   }
 
   /**
@@ -377,7 +380,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
 
     // 移动雪花特效
     if (!this.isHiddenBySectionCollapse) {
-      this.project.effects.addEffect(new NodeMoveShadowEffect(new ProgressNumber(0, 30), this.rectangle, delta));
+      this.project.effects.addMoveShadow(this.rectangle, delta);
     }
     this.updateFatherSectionByMove();
     // 移动其他实体，递归碰撞

@@ -88,7 +88,7 @@ export const ProjectTabs = memo(function ProjectTabs({
       data-pg-tab-bar
       data-pg-tab-group-bar-id={groupId}
       className={cn(
-        "scrollbar-hide hover:bg-primary/20 z-10 flex h-4 overflow-x-auto whitespace-nowrap transition-colors hover:opacity-100 sm:h-6 sm:gap-1",
+        "scrollbar-hide z-10 flex h-8 items-center gap-1.5 overflow-x-auto px-3 py-1 whitespace-nowrap transition-opacity hover:opacity-100",
         isClassroomMode && "opacity-0",
       )}
       onScroll={handleScroll}
@@ -98,8 +98,10 @@ export const ProjectTabs = memo(function ProjectTabs({
           <Button
             data-pg-docked-tab-id={tab.id}
             className={cn(
-              "hover:bg-primary/20 outline-inset text-foreground h-full cursor-pointer rounded-none px-2 hover:opacity-100 sm:rounded-sm",
-              activeTab === tab ? "bg-primary text-primary-foreground" : "bg-card text-card-foreground opacity-70",
+              "outline-inset h-full shrink-0 cursor-pointer rounded-full px-3 shadow-xs",
+              activeTab === tab
+                ? "bg-primary/20 text-foreground hover:bg-primary/25 ring-primary/40 ring-1 ring-inset"
+                : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground",
               tab instanceof Project && tab.isSaving && "animate-pulse",
             )}
             onMouseDown={(e) => {

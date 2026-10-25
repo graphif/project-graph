@@ -1,5 +1,8 @@
 import { Settings } from "@/core/service/Settings";
 import { cn } from "@/utils/cn";
+import { runThemeTransition } from "@/utils/themeTransition";
+import { useRef } from "react";
+import { flushSync } from "react-dom";
 import { Moon, Sun } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Switch } from "./ui/switch";
@@ -9,21 +12,31 @@ export default function ThemeModeSwitch() {
   const { t } = useTranslation("settings");
   const [themeMode] = Settings.use("themeMode");
   const isDark = themeMode === "dark";
-
+  const switchRef = useRef<HTMLDivElement>(null);
   const handleToggle = () => {
-    Settings.themeMode = isDark ? "light" : "dark";
+    const rect = switchRef.current?.getBoundingClientRect();
+    const origin = rect
+      ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+      : { x: innerWidth / 2, y: 0 };
+    void runThemeTransition(origin, () => {
+      flushSync(() => {
+        Settings.themeMode = Settings.themeMode === "dark" ? "light" : "dark";
+      });
+    });
   };
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <div
+          ref={switchRef}
           className={cn(
             "bg-background outline-accent-foreground/10 relative h-6 w-11 cursor-pointer overflow-hidden rounded-full shadow-xs outline-1",
           )}
         >
           {/* Hidden default thumb */}
           <Switch
+            aria-label={isDark ? "切换为浅色主题" : "切换为深色主题"}
             checked={isDark}
             onCheckedChange={handleToggle}
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"

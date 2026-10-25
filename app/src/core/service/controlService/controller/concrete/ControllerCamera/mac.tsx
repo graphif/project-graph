@@ -1,5 +1,4 @@
 import { Project } from "@/core/Project";
-import { MouseTipFeedbackEffect } from "@/core/service/feedbackService/effectEngine/concrete/MouseTipFeedbackEffect";
 import { Settings } from "@/core/service/Settings";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
@@ -136,11 +135,10 @@ export class ControllerCameraMac {
       this.handleDrageMoveEntityByTwoFingerMove(event);
       return;
     }
-    const dx = event.deltaX / 400;
-    const dy = event.deltaY / 400;
-    const diffLocation = new Vector(dx, dy).multiply((Settings.moveAmplitude * 50) / this.project.camera.currentScale);
+    const diffLocation = new Vector(event.deltaX, event.deltaY).multiply(
+      Settings.moveAmplitude / (4 * this.project.camera.currentScale),
+    );
     this.project.camera.location = this.project.camera.location.add(diffLocation);
-    this.project.effects.addEffect(MouseTipFeedbackEffect.directionObject(diffLocation));
   }
 
   private handleRectangleSelectByTwoFingerMove(event: WheelEvent) {

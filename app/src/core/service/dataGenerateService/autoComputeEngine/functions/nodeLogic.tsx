@@ -710,10 +710,8 @@ export namespace NodeLogic {
         return [str];
       }
       // state 是当前逻辑节点本身存储的状态
-      let state = delayStates.get(selfUUID);
-      if (state === undefined) {
+      if (!delayStates.has(selfUUID)) {
         delayStates.set(selfUUID, []);
-        state = [];
       }
       // 在未来的(step + delayTime)刻时把str输出
       // TODO: step

@@ -808,11 +808,10 @@ mod imp {
     /// CEF 再 exec 本进程并带上 `--type=...` 时，此处 `execute_process` 会接管并
     /// `exit`；browser 进程拿到 `-1` 后继续 `cef_initialize`。
     pub fn dispatch_cef_subprocess() {
-        // Select X11 before CEF parses
-        // the process environment or launches any child process.
+        // GTK/Tao and CEF must use Wayland so native touchpad gestures reach the page.
         #[cfg(target_os = "linux")]
         unsafe {
-            std::env::set_var("GDK_BACKEND", "x11");
+            std::env::set_var("GDK_BACKEND", "wayland");
         }
         #[cfg(target_os = "macos")]
         {
@@ -893,12 +892,10 @@ mod imp {
             ) {
                 let Some(cl) = command_line else { return };
                 #[cfg(target_os = "linux")]
-                if cl.has_switch(Some(&CefString::from("ozone-platform"))) == 0 {
-                    cl.append_switch_with_value(
-                        Some(&CefString::from("ozone-platform")),
-                        Some(&CefString::from("x11")),
-                    );
-                }
+                cl.append_switch_with_value(
+                    Some(&CefString::from("ozone-platform")),
+                    Some(&CefString::from("wayland")),
+                );
                 cl.append_switch(Some(&CefString::from("no-sandbox")));
                 #[cfg(target_os = "macos")]
                 cl.append_switch(Some(&CefString::from("use-mock-keychain")));
@@ -1565,12 +1562,16 @@ mod imp {
     /// 打印 "Opening in existing browser session." 并返回 false → `initialize_cef`
     /// panic(见 issue:开发启动时弹出一个 Chrome 窗口后崩溃)。按构建 profile 隔离即可:
     /// 安装态恒为 release,`bun dev` 恒为 debug,两者目录不再冲突。
-    fn cef_cache_dir_name() -> String {
-        if cfg!(debug_assertions) {
-            format!("project-graph-cef-dev-{}", rand::random::<u64>())
-        } else {
-            "project-graph-cef".into()
-        }
+    fn cef_cache_dir_name() -> &'static str {
+        static NAME: OnceLock<String> = OnceLock::new();
+        NAME.get_or_init(|| {
+            if cfg!(debug_assertions) {
+                format!("project-graph-cef-dev-{}", rand::random::<u64>())
+            } else {
+                "project-graph-cef".into()
+            }
+        })
+        .as_str()
     }
 
     /// CEF 缓存/用户数据目录(cookies、缓存等)。
@@ -1914,7 +1915,7 @@ mod imp {
     fn create_cef_runtime<T: UserEvent>(args: RuntimeInitArgs, any_thread: bool) -> Result<Cef<T>> {
         #[cfg(target_os = "linux")]
         unsafe {
-            std::env::set_var("GDK_BACKEND", "x11");
+            std::env::set_var("GDK_BACKEND", "wayland");
         }
         eprintln!(
             "[cef-runtime] runtime init backend=windowed initialized={}",
@@ -2423,7 +2424,7 @@ mod imp {
         /// CEF Views 的外部消息泵。
         ///
         /// 这条路径不进入 tao `run_return`:CEF Views 自己创建真实窗口,并且
-        /// Linux 上必须持续泵 GLib/X11；Windows 上必须持续泵 Win32 messages。
+        /// Linux 上必须持续泵 GLib/Wayland；Windows 上必须持续泵 Win32 messages。
         /// Tauri runtime 消息从 `CefContext` 队列 drain。
         fn run_loop<F: FnMut(RunEvent<T>) + 'static>(mut self, mut callback: F, once: bool) -> i32 {
             eprintln!("[cef-runtime] windowed pure CEF platform pump started");

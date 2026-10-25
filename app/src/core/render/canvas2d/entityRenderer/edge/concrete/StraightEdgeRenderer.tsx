@@ -1,9 +1,8 @@
-import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
+import { Color, Vector } from "@graphif/data-structures";
 import { Line } from "@graphif/shapes";
 import { Project, service } from "@/core/Project";
-import { CircleFlameEffect } from "@/core/service/feedbackService/effectEngine/concrete/CircleFlameEffect";
+import { ConnectionPulseEffect } from "@/core/service/feedbackService/effectEngine/concrete/ConnectionPulseEffect";
 import { EdgeCutEffect } from "@/core/service/feedbackService/effectEngine/concrete/EdgeCutEffect";
-import { LineCuttingEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineCuttingEffect";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
 import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
@@ -69,28 +68,29 @@ export class StraightEdgeRenderer extends EdgeRendererClass {
       end = targetRect.getLineIntersectionPoint(line);
     }
 
-    return [
-      new CircleFlameEffect(
-        new ProgressNumber(0, 15),
-        start,
-        80,
-        this.project.stageStyleManager.currentStyle.effects.successShadow.clone(),
-      ),
-      new LineCuttingEffect(
-        new ProgressNumber(0, 30),
-        start,
-        end,
-        this.project.stageStyleManager.currentStyle.effects.successShadow.clone(),
-        this.project.stageStyleManager.currentStyle.effects.successShadow.clone(),
-        20,
-      ),
-    ];
+    return [new ConnectionPulseEffect(start, end)];
   }
 
   private renderLine(start: Vector, end: Vector, edge: LineEdge, width: number): void {
     const edgeColor = edge.color.equals(Color.Transparent)
       ? this.project.stageStyleManager.currentStyle.StageObjectBorder
       : edge.color;
+    const warning = this.project.controller.cutting.warningAssociations.includes(edge);
+    if (warning || this.project.mouseInteraction.hoverEdges.some((hovered) => hovered.uuid === edge.uuid)) {
+      const ctx = this.project.canvas.ctx;
+      ctx.save();
+      ctx.lineCap = "round";
+      this.project.curveRenderer.renderSolidLine(
+        start,
+        end,
+        (warning
+          ? this.project.stageStyleManager.currentStyle.effects.warningShadow
+          : this.project.stageStyleManager.currentStyle.CollideBoxPreSelected
+        ).toNewAlpha(0.35),
+        width + 4,
+      );
+      ctx.restore();
+    }
 
     const lineType = edge.lineType || "solid";
     if (lineType === "dashed") {

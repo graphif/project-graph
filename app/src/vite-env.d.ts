@@ -16,3 +16,32 @@ interface ImportMetaEnv {
 interface Window {
   ipc_bridge: any
 }
+
+declare module "@mapbox/tiny-sdf" {
+  export interface TinySDFOptions {
+    fontSize?: number;
+    buffer?: number;
+    radius?: number;
+    cutoff?: number;
+    fontFamily?: string;
+    fontWeight?: string | number;
+    fontStyle?: string;
+  }
+
+  export interface TinySDFGlyph {
+    data: Uint8ClampedArray;
+    width: number;
+    height: number;
+    glyphWidth: number;
+    glyphHeight: number;
+    glyphTop: number;
+    glyphLeft: number;
+    glyphAdvance: number;
+  }
+
+  export default class TinySDF {
+    constructor(options?: TinySDFOptions);
+    draw(char: string): TinySDFGlyph;
+  }
+}
+

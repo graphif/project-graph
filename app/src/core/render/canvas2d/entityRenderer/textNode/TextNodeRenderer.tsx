@@ -35,6 +35,7 @@ export class TextNodeRenderer {
 
     // 强制隐藏开关优先级最高（true = 强制隐藏所有边框）；否则根据节点自身的 borderStyle 决定
     const effectiveBorderStyle = Settings.forceHideTextNodeBorder ? "none" : node.borderStyle;
+    const viewBorderWidth = node.getBorderWidth() * this.project.camera.currentScale;
 
     const nodeViewRect = new Rectangle(
       this.project.renderer.transformWorld2View(node.rectangle.location),
@@ -43,28 +44,16 @@ export class TextNodeRenderer {
 
     if (effectiveBorderStyle === "none") {
       // 无边框：只渲染背景填充，不绘制边框
-      this.project.shapeRenderer.renderRect(
-        nodeViewRect,
-        fillColor,
-        Color.Transparent,
-        0,
-        node.getBorderRadius() * this.project.camera.currentScale,
-      );
+      this.project.shapeRenderer.renderRect(nodeViewRect, fillColor, Color.Transparent, 0, node.getBorderRadius());
     } else if (effectiveBorderStyle === "dashed") {
       // 虚线边框：先渲染背景，再渲染虚线边框
-      this.project.shapeRenderer.renderRect(
-        nodeViewRect,
-        fillColor,
-        Color.Transparent,
-        0,
-        node.getBorderRadius() * this.project.camera.currentScale,
-      );
+      this.project.shapeRenderer.renderRect(nodeViewRect, fillColor, Color.Transparent, 0, node.getBorderRadius());
       this.project.shapeRenderer.renderDashedRect(
         nodeViewRect,
         Color.Transparent,
         this.project.stageStyleManager.currentStyle.StageObjectBorder,
-        node.getBorderWidth() * this.project.camera.currentScale,
-        node.getBorderRadius() * this.project.camera.currentScale,
+        viewBorderWidth,
+        node.getBorderRadius(),
         12 * this.project.camera.currentScale,
       );
     } else {
@@ -73,8 +62,8 @@ export class TextNodeRenderer {
         nodeViewRect,
         fillColor,
         this.project.stageStyleManager.currentStyle.StageObjectBorder,
-        node.getBorderWidth() * this.project.camera.currentScale,
-        node.getBorderRadius() * this.project.camera.currentScale,
+        viewBorderWidth,
+        node.getBorderRadius(),
       );
     }
 
@@ -90,6 +79,15 @@ export class TextNodeRenderer {
     }
 
     if (node.isEditing) {
+      this.project.shapeRenderer.renderRect(
+        nodeViewRect,
+        Color.Transparent,
+        this.project.stageStyleManager.currentStyle.effects.successShadow.toNewAlpha(
+          Settings.textNodeEditModeOutlineOpacity,
+        ),
+        1,
+        node.getBorderRadius(),
+      );
       // 在外面增加一个虚线框
       this.project.collisionBoxRenderer.render(
         node.collisionBox,
@@ -638,7 +636,7 @@ export class TextNodeRenderer {
           node.color,
           new Color(255, 0, 0, 0.5),
           Random.randomFloat(1, 10) * this.project.camera.currentScale,
-          node.getBorderRadius() * this.project.camera.currentScale,
+          node.getBorderRadius(),
         );
       }
     } else {

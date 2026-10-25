@@ -5,8 +5,9 @@ import { Color, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import katex from "katex";
+import { toast } from "sonner";
 // 以 raw CSS 字符串形式 import katex 样式，用于嵌入 SVG foreignObject
-import katexCssRaw from "katex/dist/katex.min.css?inline";
+import { katexEmbeddedCss } from "@/utils/katexEmbeddedCss";
 
 /**
  * LaTeX 公式节点
@@ -55,6 +56,7 @@ export class LatexNode extends ConnectableEntity {
    * LatexNodeRenderer 在每帧对比"应显示颜色"与此值，不一致时触发重新渲染。
    */
   currentRenderedColorCss: string = "";
+  private renderVersion = 0;
 
   /** 节点是否被选中 */
   _isSelected: boolean = false;
@@ -177,60 +179,71 @@ export class LatexNode extends ConnectableEntity {
    * @param colorCss 公式颜色（CSS color 字符串，如 "rgba(255,0,0,0.5)" / "#ffffff"）
    */
   private async renderLatexToImage(latex: string, colorCss: string = "#000000"): Promise<void> {
+    const version = ++this.renderVersion;
     if (!latex.trim()) {
       this.state = "error";
       return;
     }
     this.state = "loading";
-
+    let measureDiv: HTMLDivElement | undefined;
+    let url: string | undefined;
     try {
       // 1. 使用 katex 渲染为 HTML 字符串
       const htmlContent = katex.renderToString(latex, {
-        throwOnError: false,
+        throwOnError: true,
         displayMode: true,
         errorColor: "#cc0000",
         output: "htmlAndMathml",
       });
 
       // 2. 获取 katex CSS（直接使用静态 import 的 CSS 字符串）
-      const katexCss = katexCssRaw;
+      const katexCss = katexEmbeddedCss;
 
       // 3. 先将 HTML 注入隐藏 div，测量实际渲染尺寸
-      const measureDiv = document.createElement("div");
-      measureDiv.style.cssText = "position:fixed;left:-9999px;top:-9999px;visibility:hidden;font-size:32px;";
+      measureDiv = document.createElement("div");
+      measureDiv.style.cssText =
+        "position:fixed;left:-9999px;top:-9999px;visibility:hidden;display:inline-block;font-size:32px;";
       measureDiv.innerHTML = `<style>${katexCss}</style>${htmlContent}`;
       document.body.appendChild(measureDiv);
 
       // 等待浏览器布局
       await new Promise((resolve) => requestAnimationFrame(resolve));
+      await document.fonts.ready;
+      // KaTeX 的公式编号采用绝对定位，需显式留出空间，否则缩成图片后会压住公式。
+      for (const tag of measureDiv.querySelectorAll<HTMLElement>(".tag")) {
+        if (tag.parentElement) tag.parentElement.style.paddingRight = `${tag.getBoundingClientRect().width + 32}px`;
+      }
 
-      const measuredWidth = measureDiv.offsetWidth || 200;
-      const measuredHeight = measureDiv.offsetHeight || 60;
-      document.body.removeChild(measureDiv);
+      const measuredWidth = Math.ceil(measureDiv.getBoundingClientRect().width) || 200;
+      const measuredHeight = Math.ceil(measureDiv.getBoundingClientRect().height) || 60;
+      measureDiv.remove();
+      if (version !== this.renderVersion) return;
 
       // 4. 构造 SVG，用 foreignObject 包裹 katex HTML
       //    通过 color CSS 属性让 katex 公式颜色跟随传入的 colorCss
-      const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${measuredWidth}" height="${measuredHeight}">
-  <defs>
-    <style>${katexCss}</style>
-  </defs>
-  <foreignObject width="${measuredWidth}" height="${measuredHeight}">
-    <div xmlns="http://www.w3.org/1999/xhtml" style="color:${colorCss};font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;box-sizing:border-box;">
-      ${htmlContent}
-    </div>
-  </foreignObject>
-</svg>`;
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", String(measuredWidth));
+      svg.setAttribute("height", String(measuredHeight));
+      const foreignObject = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+      foreignObject.setAttribute("width", String(measuredWidth));
+      foreignObject.setAttribute("height", String(measuredHeight));
+      measureDiv.style.cssText = `color:${colorCss};font-size:32px;width:${measuredWidth}px;height:${measuredHeight}px;box-sizing:border-box;`;
+      foreignObject.appendChild(measureDiv);
+      svg.appendChild(foreignObject);
+      // innerHTML 的 &nbsp; 等 HTML 实体不适用于 SVG XML，必须按命名空间序列化。
+      const svgContent = new XMLSerializer().serializeToString(svg);
 
       // 5. 转为 Blob URL 并加载为 Image
       const svgBlob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
-      const url = URL.createObjectURL(svgBlob);
+      url = URL.createObjectURL(svgBlob);
 
       const img = new Image();
-      img.src = url;
-
       await new Promise<void>((resolve, reject) => {
         img.onload = () => {
-          URL.revokeObjectURL(url);
+          if (version !== this.renderVersion) {
+            resolve();
+            return;
+          }
           this.svgOriginalSize = new Vector(measuredWidth, measuredHeight);
           this.image = img;
           // 记录本次渲染使用的颜色，供 LatexNodeRenderer 对比
@@ -245,14 +258,18 @@ export class LatexNode extends ConnectableEntity {
           resolve();
         };
         img.onerror = () => {
-          URL.revokeObjectURL(url);
-          this.state = "error";
           reject(new Error("图片加载失败"));
         };
+        img.src = url!;
       });
     } catch (e) {
-      console.error("LaTeX 渲染失败:", e);
-      this.state = "error";
+      if (version === this.renderVersion) {
+        this.state = "error";
+        toast.error(`LaTeX 渲染失败：${String(e)}`);
+      }
+    } finally {
+      measureDiv?.remove();
+      if (url) URL.revokeObjectURL(url);
     }
   }
 

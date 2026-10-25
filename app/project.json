@@ -7,7 +7,6 @@
       "outputs": ["{projectRoot}/dist/**"]
     },
     "dev": {
-      "dependsOn": ["^build"],
       "cache": false,
       "continuous": true
     },
@@ -16,7 +15,6 @@
       "inputs": ["{projectRoot}/src/**/*.{ts,tsx}"]
     },
     "tauri:dev": {
-      "dependsOn": ["^build"],
       "cache": false,
       "continuous": true
     },

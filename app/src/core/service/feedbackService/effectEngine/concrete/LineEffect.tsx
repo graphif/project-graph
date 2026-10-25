@@ -28,14 +28,14 @@ export class LineEffect extends Effect {
     );
   }
 
-  static rectangleEdgeTip(fromLocation: Vector, toLocation: Vector) {
+  static rectangleEdgeTip(fromLocation: Vector, toLocation: Vector, color: Color = Color.White) {
     return new LineEffect(
-      new ProgressNumber(0, 70),
+      new ProgressNumber(0, 18),
       fromLocation,
       toLocation,
-      Color.Green.clone(),
-      Color.Green.clone(),
-      15,
+      color.toNewAlpha(0.5),
+      color.toNewAlpha(0.5),
+      1,
     );
   }
 

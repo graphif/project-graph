@@ -258,7 +258,7 @@ export class Extension extends Tab {
                       await Tutorials.finish("thirdPartyExtensionsWarning");
                     }
                     const base = await join(await appDataDir(), "extensions", self.metadata.extension?.id || "unknown");
-                    await mkdir(base);
+                    await mkdir(base, { recursive: true });
                     await writeFile(
                       await join(base, "metadata.msgpack"),
                       new Uint8Array(new Encoder().encode(self.metadata)),

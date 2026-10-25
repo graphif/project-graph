@@ -22,6 +22,7 @@ export class RectangleSplitTwoPartEffect extends Effect {
     fillColor: Color,
     strokeColor: Color,
     strokeWidth: number,
+    cornerRadius = 0,
   ) {
     super(new ProgressNumber(0, time));
     this.initFillColor = fillColor.clone();
@@ -100,10 +101,10 @@ export class RectangleSplitTwoPartEffect extends Effect {
       const poly3 = [rightTop, rightBottom, innerPt];
       const poly4 = [leftBottom, rightBottom, innerPt];
       this.splitedRectangles.push(
-        new SplitedRectangle(poly1, fillColor, strokeColor, strokeWidth),
-        new SplitedRectangle(poly2, fillColor, strokeColor, strokeWidth),
-        new SplitedRectangle(poly3, fillColor, strokeColor, strokeWidth),
-        new SplitedRectangle(poly4, fillColor, strokeColor, strokeWidth),
+        new SplitedRectangle(poly1, fillColor, strokeColor, strokeWidth, rectangle, cornerRadius),
+        new SplitedRectangle(poly2, fillColor, strokeColor, strokeWidth, rectangle, cornerRadius),
+        new SplitedRectangle(poly3, fillColor, strokeColor, strokeWidth, rectangle, cornerRadius),
+        new SplitedRectangle(poly4, fillColor, strokeColor, strokeWidth, rectangle, cornerRadius),
       );
       for (const rect of this.splitedRectangles) {
         rect.speed = new Vector(0, -Random.randomInt(1, 10)).rotateDegrees(Random.randomInt(-45, 45));
@@ -118,8 +119,8 @@ export class RectangleSplitTwoPartEffect extends Effect {
     }
 
     this.splitedRectangles.push(
-      new SplitedRectangle(poly1, fillColor, strokeColor, strokeWidth),
-      new SplitedRectangle(poly2, fillColor, strokeColor, strokeWidth),
+      new SplitedRectangle(poly1, fillColor, strokeColor, strokeWidth, rectangle, cornerRadius),
+      new SplitedRectangle(poly2, fillColor, strokeColor, strokeWidth, rectangle, cornerRadius),
     );
     this.splitedRectangles.sort((a, b) => a.center.x - b.center.x);
     this.splitedRectangles[0].speed = new Vector(-Random.randomInt(1, 10), -Random.randomInt(0, 3));
@@ -151,6 +152,7 @@ class SplitedRectangle {
   // 当前速度
   public speed = new Vector(0, 0);
   public accleration = new Vector(0, 0);
+  private readonly roundedCorners: boolean[];
 
   /**
    * 多边形的顶点，按照一个时针方向排列，起点和终点不重复出现在数组中。
@@ -161,10 +163,17 @@ class SplitedRectangle {
     public fillColor: Color,
     public strokeColor: Color,
     private strokeWidth: number,
+    rectangle: Rectangle,
+    private cornerRadius: number,
   ) {
     if (polygon.length < 3 || polygon.length > 5) {
       throw new Error("Polygon must have 3 or 5 points");
     }
+    this.roundedCorners = polygon.map(
+      (point) =>
+        (point.x === rectangle.left || point.x === rectangle.right) &&
+        (point.y === rectangle.top || point.y === rectangle.bottom),
+    );
   }
 
   get center(): Vector {
@@ -195,12 +204,32 @@ class SplitedRectangle {
   }
 
   render(project: Project) {
-    project.shapeRenderer.renderPolygonAndFill(
-      this.polygon.map((v) => project.renderer.transformWorld2View(v)),
-      this.fillColor,
-      this.strokeColor,
-      this.strokeWidth * project.camera.currentScale,
-      "round",
-    );
+    const points = this.polygon.map((point) => project.renderer.transformWorld2View(point));
+    const ctx = project.canvas.ctx;
+    ctx.beginPath();
+    const last = points[points.length - 1];
+    ctx.moveTo((last.x + points[0].x) / 2, (last.y + points[0].y) / 2);
+    for (let i = 0; i < points.length; i++) {
+      const point = points[i];
+      if (this.roundedCorners[i] && this.cornerRadius > 0) {
+        const previous = points[(i + points.length - 1) % points.length];
+        const next = points[(i + 1) % points.length];
+        const radius = Math.min(
+          this.cornerRadius * project.camera.currentScale,
+          point.distance(previous) / 2,
+          point.distance(next) / 2,
+        );
+        ctx.arcTo(point.x, point.y, next.x, next.y, radius);
+      } else {
+        ctx.lineTo(point.x, point.y);
+      }
+    }
+    ctx.closePath();
+    ctx.fillStyle = this.fillColor.toString();
+    ctx.fill();
+    ctx.lineJoin = "round";
+    ctx.lineWidth = this.strokeWidth * project.camera.currentScale;
+    ctx.strokeStyle = this.strokeColor.toString();
+    ctx.stroke();
   }
 }

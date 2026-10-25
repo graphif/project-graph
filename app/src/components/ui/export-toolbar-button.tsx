@@ -6,7 +6,7 @@ import type { DropdownMenuProps } from "@radix-ui/react-dropdown-menu";
 
 import { MarkdownPlugin } from "@platejs/markdown";
 import { ArrowDownToLineIcon } from "lucide-react";
-import { createSlateEditor, serializeHtml } from "platejs";
+import { createSlateEditor, serializeHtml, NodeApi } from "platejs";
 import { useEditorRef } from "platejs/react";
 
 import {
@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { BaseEditorKit } from "@/components/editor/editor-base-kit";
+import { ensureCodeLanguage } from "@/utils/codeHighlight";
 
 import { EditorStatic } from "./editor-static";
 import { ToolbarButton } from "./toolbar";
@@ -94,6 +95,11 @@ export function ExportToolbarButton(props: DropdownMenuProps) {
   };
 
   const exportToHtml = async () => {
+    await Promise.all(
+      Array.from(NodeApi.elements(editor), ([node]) =>
+        ensureCodeLanguage(typeof node.lang === "string" ? node.lang : undefined),
+      ),
+    );
     const editorStatic = createSlateEditor({
       plugins: BaseEditorKit,
       value: editor.children,

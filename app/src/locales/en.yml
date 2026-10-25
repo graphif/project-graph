@@ -1,4 +1,19 @@
+windowControls:
+  alwaysOnTop: Keep window on top
+
+projectStatus:
+  emptyCanvas: No nodes on the canvas
+  noVisibleNodes: No visible nodes in this view. Click to reset.
+  fitView: Fit view
+  nodes: "{{count}} nodes"
+  edges: "{{count}} edges"
+  selected: "{{count}} selected"
+  saved: Saved
+  stashed: Stashed locally
+  unsaved: Unsaved changes
+
 welcome:
+  aboutDescription: Connect ideas with nodes and organize knowledge with graphs. Project Graph provides a freeform canvas for brainstorming, knowledge management, and project planning. Connections and automatic layouts help make complex ideas clear.
   slogan: Infinite canvas mind mapping software based on graph theory
   slogans:
     - Infinite canvas mind mapping software based on graph theory
@@ -289,6 +304,11 @@ settings:
     title: Always Show Node Details
     description: |
       When enabled, node details will be displayed without needing to hover the mouse over the node.
+  exportMermaidIncludeNodeDetails:
+    title: Include Node Details
+    description: |
+      Append node and section details as comments when exporting Mermaid, for saving or sharing with AI.
+      Comments are not displayed in the rendered diagram. This preference is saved automatically.
   nodeDetailsPanel:
     title: Node Details Panel
     options:
@@ -1065,6 +1085,11 @@ settings:
       The key will be stored in plain text locally
   aiModel:
     title: AI Model
+  aiCustomHeaders:
+    title: AI Request Headers
+    description: |
+      One header per line, in "Name: Value" format. Lines starting with # are ignored.
+      Example for the OpenCode inference API: x-opencode-org-id: your-org-id
   aiContextWindow:
     title: AI context window size
     description: |
@@ -1073,12 +1098,6 @@ settings:
     title: Show AI token count
     description: |
       When enabled, shows the token count for AI operations
-  enableOCR:
-    title: Enable Handwriting OCR
-    description: |
-      When enabled, handwritten strokes will be automatically recognized via OCR
-      after you stop drawing, and converted to text nodes
-      Requires downloading the OCR model
   aiAutoApproveMcpTools:
     title: Automatically approve MCP tools
     description: |
@@ -2018,6 +2037,9 @@ effects:
   LineCuttingEffect:
     description: "When cutting, a blade light like the Fruit Ninja will appear.\n"
     title: Line Cutting Blade Light Effect
+  ConnectionPulseEffect:
+    title: Connection pulse
+    description: A short light pulse when connecting nodes.
   LineEffect:
     title: Line Fade Out Effect
     description: "Ghost Trails for Subtree Drag-Rotation\n"
@@ -2530,3 +2552,14 @@ common:
     editingMode: Editing Mode
     lineBreak: New Line
     exitEdit: Exit Edit Mode
+
+projectOwnership:
+  alreadyOpen: Switched to the open tab.
+  notFound: Project file does not exist.
+  busy: This Project is being used by another Project Graph process.
+  loadFailed: Project ownership could not be acquired.
+  openFailedTitle: Failed to open Project
+  releaseFailedTitle: Failed to release Project ownership
+  releaseFailedMessage: "The Project was closed, but its ownership lock could not be released. Select Retry to try again.\n\nError: {{error}}"
+  retry: Retry
+  ok: OK

@@ -7,9 +7,7 @@ type SerializableClass = {
 };
 
 let getOriginalNameOf: (class_: SerializableClass) => string = (class_) => class_.className ?? class_.name;
-export function configureSerializer(
-  getOriginalNameOfFn: (class_: SerializableClass) => string,
-) {
+export function configureSerializer(getOriginalNameOfFn: (class_: SerializableClass) => string) {
   getOriginalNameOf = (class_) => (class_.className === undefined ? class_.name : getOriginalNameOfFn(class_));
 }
 
@@ -70,7 +68,7 @@ export function serialize(originalObj: any): any {
     } else if (typeof obj === "object") {
       const className = getOriginalNameOf(obj.constructor);
       if (!className) {
-        throw TypeError("[Serializer] Cannot find class name of", obj);
+        throw TypeError("[Serializer] Cannot determine serialized type for", obj);
       }
       if (className === "Object") {
         return obj;

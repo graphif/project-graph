@@ -8,6 +8,7 @@ import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
 @service("mouseInteraction")
 export class MouseInteraction {
   constructor(private readonly project: Project) {}
+  private pendingLocation: Vector | null = null;
 
   /**
    * 鼠标悬浮的边
@@ -27,29 +28,36 @@ export class MouseInteraction {
   private _hoverMultiTargetEdges: MultiTargetUndirectedEdge[] = [];
 
   get hoverEdges(): Edge[] {
+    this.flushPendingMove();
     return this._hoverEdges;
   }
 
   get firstHoverEdge(): Edge | undefined {
+    this.flushPendingMove();
     return this._hoverEdges.length > 0 ? this._hoverEdges[0] : undefined;
   }
 
   get hoverSections(): Section[] {
+    this.flushPendingMove();
     return this._hoverSections;
   }
 
   get hoverConnectPoints(): ConnectPoint[] {
+    this.flushPendingMove();
     return this._hoverConnectPoints;
   }
 
   get firstHoverSection(): Section | undefined {
+    this.flushPendingMove();
     return this._hoverSections.length > 0 ? this._hoverSections[0] : undefined;
   }
   get hoverMultiTargetEdges(): MultiTargetUndirectedEdge[] {
+    this.flushPendingMove();
     return this._hoverMultiTargetEdges;
   }
 
   get firstHoverMultiTargetEdge(): MultiTargetUndirectedEdge | undefined {
+    this.flushPendingMove();
     return this._hoverMultiTargetEdges.length > 0 ? this._hoverMultiTargetEdges[0] : undefined;
   }
 
@@ -59,6 +67,13 @@ export class MouseInteraction {
    * @param mouseWorldLocation
    */
   public updateByMouseMove(mouseWorldLocation: Vector): void {
+    this.pendingLocation = mouseWorldLocation.clone();
+  }
+
+  private flushPendingMove(): void {
+    const mouseWorldLocation = this.pendingLocation;
+    if (!mouseWorldLocation) return;
+    this.pendingLocation = null;
     // 更新 Edge状态
     this._hoverEdges = [];
     for (const edge of this.project.stageManager.getEdges()) {

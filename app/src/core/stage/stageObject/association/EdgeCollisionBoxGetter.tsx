@@ -5,8 +5,6 @@ import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox
 import { Circle, Line, SymmetryCurve } from "@graphif/shapes";
 import { ConnectPoint } from "../entity/ConnectPoint";
 import { ImageNode } from "../entity/ImageNode";
-import { Section } from "../entity/Section";
-import { TextNode } from "../entity/TextNode";
 import { Vector } from "@graphif/data-structures";
 
 export namespace EdgeCollisionBoxGetter {
@@ -18,6 +16,19 @@ export namespace EdgeCollisionBoxGetter {
   }
 
   let currentStyle: Settings["lineStyle"];
+  const cache = new WeakMap<
+    LineEdge,
+    {
+      bodyLine: Line;
+      style: Settings["lineStyle"];
+      shiftingIndex: number;
+      autoWidth: boolean;
+      edgeWidth: number;
+      sourceUuid: string;
+      targetUuid: string;
+      box: CollisionBox;
+    }
+  >();
 
   function updateState(style: Settings["lineStyle"]) {
     currentStyle = style;
@@ -28,6 +39,36 @@ export namespace EdgeCollisionBoxGetter {
    * @param edge
    */
   export function getCollisionBox(edge: LineEdge): CollisionBox {
+    const bodyLine = edge.bodyLine;
+    const cached = cache.get(edge);
+    const edgeWidth = edge.edgeWidth;
+    if (
+      cached &&
+      cached.bodyLine === bodyLine &&
+      cached.style === currentStyle &&
+      cached.shiftingIndex === edge.shiftingIndex &&
+      cached.autoWidth === Settings.enableAutoEdgeWidth &&
+      cached.edgeWidth === edgeWidth &&
+      cached.sourceUuid === edge.source.uuid &&
+      cached.targetUuid === edge.target.uuid
+    ) {
+      return cached.box;
+    }
+    const box = computeCollisionBox(edge);
+    cache.set(edge, {
+      bodyLine,
+      style: currentStyle,
+      shiftingIndex: edge.shiftingIndex,
+      autoWidth: Settings.enableAutoEdgeWidth,
+      edgeWidth,
+      sourceUuid: edge.source.uuid,
+      targetUuid: edge.target.uuid,
+      box,
+    });
+    return box;
+  }
+
+  function computeCollisionBox(edge: LineEdge): CollisionBox {
     if (edge.source.uuid === edge.target.uuid) {
       // 是一个自环，碰撞箱是圆形
       const sourceEntityRect = edge.source.collisionBox.getRectangle();
@@ -106,29 +147,9 @@ export namespace EdgeCollisionBoxGetter {
         return isExact ? lineDirection.multiply(-1) : targetRect.getNormalVectorAt(end);
       })();
 
-      // Mirror the edgeWidth calculation from renderNormalState so bending matches the visual curve.
-      let edgeWidth = 2;
-      if (Settings.enableAutoEdgeWidth && edge.target instanceof Section && edge.source instanceof Section) {
-        const rect1 = edge.source.collisionBox.getRectangle();
-        const rect2 = edge.target.collisionBox.getRectangle();
-        edgeWidth = Math.min(
-          Math.min(Math.max(rect1.width, rect1.height), Math.max(rect2.width, rect2.height)) / 100,
-          100,
-        );
-      } else if (edge.source instanceof TextNode) {
-        edgeWidth = edge.source.getBorderWidth();
-      }
-
-      // const endNormal = edge.target.collisionBox.getRectangle().getNormalVectorAt(end);
-      return new CollisionBox([
-        new SymmetryCurve(
-          start,
-          startDirection,
-          end.add(endDirection.multiply(15 / 2)),
-          endDirection,
-          Math.max(edgeWidth * 25, Math.abs(Math.min(Math.abs(start.x - end.x), Math.abs(start.y - end.y))) / 2),
-        ),
-      ]);
+      const curve = new SymmetryCurve(start, startDirection, end, endDirection);
+      curve.end = end.add(endDirection.multiply(15 / 2));
+      return new CollisionBox([curve]);
     }
   }
 

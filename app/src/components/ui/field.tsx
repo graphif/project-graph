@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { QuickSettingsManager } from "@/core/service/QuickSettingsManager";
 import { Settings, settingsSchema } from "@/core/service/Settings";
@@ -14,6 +15,59 @@ import { ChevronRight, Pin, PinOff, RotateCw } from "lucide-react";
 import React, { CSSProperties, Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+
+function RangeNumberInput({
+  value,
+  min,
+  max,
+  step,
+  settingKey,
+  onChange,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  settingKey: keyof Settings;
+  onChange: (value: number) => void;
+}) {
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
+
+  const commit = (raw: string) => {
+    const parsed = parseFloat(raw);
+    if (Number.isNaN(parsed)) {
+      setDraft(String(value));
+      return;
+    }
+    if (parsed < min) {
+      toast.warning(`最小值为 ${min}，已自动修正`, { id: `field-clamp-${settingKey}`, duration: 2000 });
+    } else if (parsed > max) {
+      toast.warning(`最大值为 ${max}，已自动修正`, { id: `field-clamp-${settingKey}`, duration: 2000 });
+    }
+    const next = Math.min(max, Math.max(min, parsed));
+    onChange(next);
+    setDraft(String(next));
+  };
+
+  return (
+    <Input
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={(e) => commit(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+      }}
+      type="number"
+      min={min}
+      max={max}
+      step={step}
+      className="w-24"
+    />
+  );
+}
 
 export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof Settings; extra?: React.ReactNode }) {
   const [value, setValue] = React.useState<any>(Settings[settingKey]);
@@ -75,7 +129,7 @@ export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof 
       title={t(`${settingKey}.title`)}
       description={t(`${settingKey}.description`, { defaultValue: "" })}
       icon={<Icon />}
-      className="border-accent hover:bg-accent border-b transition not-hover:rounded-none"
+      className="border-accent hover:bg-accent rounded-xl border-b transition-colors [corner-shape:round]"
       titleExtra={
         showPin && (
           <Tooltip>
@@ -92,12 +146,21 @@ export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof 
       }
     >
       <RotateCw
-        className="text-panel-details-text h-4 w-4 cursor-pointer opacity-0 group-hover/field:opacity-100 hover:rotate-180"
+        className="text-muted-foreground h-4 w-4 cursor-pointer opacity-0 group-hover/field:opacity-100 hover:rotate-180"
         onClick={() => setValue((schema as any)._def.defaultValue)}
       />
       {extra}
       {innerTypeName === "string" ? (
-        <Input value={value} onChange={(e) => setValue(e.target.value)} className="w-64" />
+        settingKey === "aiCustomHeaders" ? (
+          <Textarea
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            rows={3}
+            className="w-64 font-mono text-xs"
+          />
+        ) : (
+          <Input value={value} onChange={(e) => setValue(e.target.value)} className="w-64" />
+        )
       ) : innerTypeName === "number" && bag.minimum !== undefined && bag.maximum !== undefined ? (
         <>
           <Slider
@@ -108,25 +171,13 @@ export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof 
             step={bag.format === "safeint" ? 1 : 0.01}
             className="w-48"
           />
-          <Input
+          <RangeNumberInput
             value={value}
-            onChange={(e) => {
-              const parsed = parseFloat(e.target.value);
-              if (Number.isNaN(parsed)) return;
-              const min = bag.minimum;
-              const max = bag.maximum;
-              if (parsed < min) {
-                toast.warning(`最小值为 ${min}，已自动修正`, { id: `field-clamp-${settingKey}`, duration: 2000 });
-              } else if (parsed > max) {
-                toast.warning(`最大值为 ${max}，已自动修正`, { id: `field-clamp-${settingKey}`, duration: 2000 });
-              }
-              setValue(Math.min(max, Math.max(min, parsed)));
-            }}
-            type="number"
             min={bag.minimum}
             max={bag.maximum}
             step={bag.format === "safeint" ? 1 : 0.01}
-            className="w-24"
+            settingKey={settingKey}
+            onChange={setValue}
           />
         </>
       ) : innerTypeName === "number" ? (
@@ -240,7 +291,7 @@ export function Field({
               {title}
               {titleExtra}
             </span>
-            <span className="text-panel-details-text text-xs font-light opacity-60 select-text">
+            <span className="text-muted-foreground text-xs select-text">
               {description.split("\n").map((dd, ii) => (
                 <p key={ii} className="text-xs">
                   {dd}
@@ -323,7 +374,7 @@ export function FieldGroup({
   return (
     <div className={cn("flex w-full flex-col gap-2", className)}>
       <div
-        className="text-settings-text my-2 flex cursor-pointer items-center gap-2 pt-4 pl-4 text-sm opacity-60 hover:opacity-100"
+        className="text-muted-foreground hover:text-foreground my-2 flex cursor-pointer items-center gap-2 pt-4 pl-4 text-sm"
         onClick={handleToggle}
       >
         <span>{icon}</span>
@@ -331,7 +382,7 @@ export function FieldGroup({
         <ChevronRight className={cn(isOpen && "rotate-90")} />
       </div>
 
-      {description && isOpen && <div className="text-panel-details-text pl-4 text-xs">{description}</div>}
+      {description && isOpen && <div className="text-muted-foreground pl-4 text-xs">{description}</div>}
 
       <div ref={contentRef} className="overflow-hidden rounded-xl transition-all" style={{ height }}>
         {shouldMount && (

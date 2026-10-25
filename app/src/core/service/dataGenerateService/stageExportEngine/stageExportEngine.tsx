@@ -5,6 +5,7 @@ import { PlainTextExporter } from "./PlainTextExporter";
 import { MarkdownExporter } from "./MarkdownExporter";
 import { TabExporter } from "./TabExporter";
 import { MermaidExporter } from "./MermaidExporter";
+import { Settings } from "@/core/service/Settings";
 
 /**
  * 专注于导出各种格式内容的引擎
@@ -62,6 +63,6 @@ export class StageExport {
    * 使用 subgraph ... end 来定义子图。
    */
   public getMermaidTextByEntities(entities: Entity[]): string {
-    return this.mermaidExporter.export(entities);
+    return this.mermaidExporter.export(entities, Settings.exportMermaidIncludeNodeDetails);
   }
 }

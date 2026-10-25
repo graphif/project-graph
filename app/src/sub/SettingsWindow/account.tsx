@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/core/service/AuthClient";
+import { accountServiceBaseUrl, authClient } from "@/core/service/AuthClient";
 import { FeatureFlags } from "@/core/service/FeatureFlags";
 import { UserState } from "@/core/service/UserState";
 import type { AuthUser } from "@/state";
@@ -18,7 +18,7 @@ export default function AccountTab() {
   if (!FeatureFlags.USER || !authClient) {
     return (
       <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
-        云服务功能未启用（缺少 LR_API_BASE_URL 环境变量）
+        账户服务地址无效，请检查服务配置。
       </div>
     );
   }
@@ -51,6 +51,7 @@ function LoginForm({ onLogin }: { onLogin: (user: AuthUser) => void }) {
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
+    if (loading) return;
     if (!email.trim()) {
       setError("请输入邮箱");
       return;
@@ -63,7 +64,7 @@ function LoginForm({ onLogin }: { onLogin: (user: AuthUser) => void }) {
     setError("");
     try {
       const { data, error: authError } = await authClient!.signIn.email(
-        { email, password },
+        { email: email.trim(), password },
         {
           headers: {
             "x-app-name": "Project Graph",
@@ -76,10 +77,12 @@ function LoginForm({ onLogin }: { onLogin: (user: AuthUser) => void }) {
         setError(authError.message ?? "登录失败，请检查邮箱和密码");
         return;
       }
-      if (data?.user) {
-        await UserState.setSession({ user: data.user as AuthUser, token: data.token ?? "" });
-        onLogin(data.user as AuthUser);
+      if (!data?.user || !data.token) {
+        setError("登录未完成，账户服务没有返回有效会话，请重试");
+        return;
       }
+      await UserState.setSession({ user: data.user as AuthUser, token: data.token });
+      onLogin(data.user as AuthUser);
       toast.success("登录成功");
     } catch (e) {
       console.error("Login error", e);
@@ -90,7 +93,7 @@ function LoginForm({ onLogin }: { onLogin: (user: AuthUser) => void }) {
   };
 
   const handleRegister = () => {
-    open(import.meta.env.LR_API_BASE_URL!);
+    void open(`${accountServiceBaseUrl}/register`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -102,7 +105,7 @@ function LoginForm({ onLogin }: { onLogin: (user: AuthUser) => void }) {
       <div className="space-y-1 text-center">
         <LogIn className="mx-auto size-8 opacity-50" />
         <h2 className="text-lg font-medium">登录</h2>
-        <p className="text-muted-foreground text-xs">登录后可同步和备份你的数据</p>
+        <p className="text-muted-foreground text-xs">使用 Graphif 账户登录</p>
       </div>
 
       <div className="w-full space-y-3">

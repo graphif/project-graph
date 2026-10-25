@@ -17,7 +17,6 @@ import { averageColors, Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";
 import { v4 } from "uuid";
-import AIWindow, { setAIWindowInitialText } from "@/sub/AIWindow";
 
 export namespace TextNodeSmartTools {
   /**
@@ -639,6 +638,7 @@ export namespace TextNodeSmartTools {
     }
     const texts = selectedTextNodes.map((node) => (node as TextNode).text);
     const combinedText = texts.join("\n\n");
+    const { default: AIWindow, setAIWindowInitialText } = await import("@/sub/AIWindow");
     setAIWindowInitialText(combinedText, "请分析以下文本的结构，提取关键概念和关系，生成树形节点图：");
     AIWindow.open();
   }
@@ -650,6 +650,7 @@ export namespace TextNodeSmartTools {
     }
     const texts = selectedTextNodes.map((node) => (node as TextNode).text);
     const combinedText = texts.join("\n\n");
+    const { default: AIWindow, setAIWindowInitialText } = await import("@/sub/AIWindow");
     setAIWindowInitialText(combinedText, "请分析以下文本中的因果关系、条件关系、时间顺序等逻辑关系，生成网状关系图：");
     AIWindow.open();
   }
@@ -661,6 +662,7 @@ export namespace TextNodeSmartTools {
     }
     const texts = selectedTextNodes.map((node) => (node as TextNode).text);
     const combinedText = texts.join("\n\n");
+    const { default: AIWindow, setAIWindowInitialText } = await import("@/sub/AIWindow");
     setAIWindowInitialText(combinedText, "请总结以下文本的核心内容：");
     AIWindow.open();
   }

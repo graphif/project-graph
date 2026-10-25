@@ -21,7 +21,7 @@ export class CopyEngineText {
   constructor(private project: Project) {}
 
   async copyEnginePastePlainText(item: string) {
-    let entity: Entity | null = null;
+    let entity: Entity;
     const collisionBox = new CollisionBox([
       new Rectangle(this.project.renderer.transformView2World(MouseLocation.vector()), Vector.getZero()),
     ]);
@@ -113,8 +113,6 @@ export class CopyEngineText {
           const pasteMode = Settings.textNodePasteSizeAdjustMode;
 
           let sizeAdjust: "auto" | "manual";
-          let isBigContent = false;
-
           switch (pasteMode) {
             case "manual":
               sizeAdjust = "manual";
@@ -126,8 +124,8 @@ export class CopyEngineText {
               sizeAdjust = "auto";
               break;
             case "autoByLength":
-            default:
-              isBigContent = item.length > threshold;
+            default: {
+              const isBigContent = item.length > threshold;
               sizeAdjust = isBigContent ? "manual" : "auto";
               if (isBigContent) {
                 collisionBox = new CollisionBox([
@@ -138,6 +136,7 @@ export class CopyEngineText {
                 ]);
               }
               break;
+            }
           }
 
           // Debug mode toast

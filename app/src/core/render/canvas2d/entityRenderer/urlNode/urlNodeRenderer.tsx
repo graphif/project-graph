@@ -27,7 +27,7 @@ export class UrlNodeRenderer {
       urlNode.color,
       this.project.stageStyleManager.currentStyle.StageObjectBorder,
       2 * this.project.camera.currentScale,
-      Renderer.NODE_ROUNDED_RADIUS * this.project.camera.currentScale,
+      Renderer.NODE_ROUNDED_RADIUS,
     );
     const titleFontSize = Renderer.FONT_SIZE * this.project.camera.currentScale;
     // 视野缩放过小就不渲染内部文字和分界线

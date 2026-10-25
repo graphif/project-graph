@@ -52,9 +52,16 @@ export abstract class Entity extends StageObject {
 
   /**
    * 运行时最近的锁定祖先 Section。
-   * 用于后续把锁定判断从全局扫描收敛到沿父链查询。
+   * 沿父链读取当前状态，避免锁定切换后缓存过期。
    */
-  public nearestLockedAncestorSection: Section | null = null;
+  public get nearestLockedAncestorSection(): Section | null {
+    let current = this.parentSection;
+    while (current) {
+      if (current.locked) return current;
+      current = current.parentSection;
+    }
+    return null;
+  }
 
   /** 用于交互使用，比如鼠标悬浮显示details */
   public isMouseHover: boolean = false;
@@ -80,6 +87,7 @@ export abstract class Entity extends StageObject {
    * 每次父框 adjustLocationAndSize 后，调用碰撞求解器推开与其重叠的同级分支。
    */
   protected updateFatherSectionByMove() {
+    if (this.project.sectionMoveDepth > 0) return;
     let current = this.parentSection;
     while (current) {
       current.adjustLocationAndSize();
@@ -93,7 +101,7 @@ export abstract class Entity extends StageObject {
    * 此函数在move函数中被调用，更新
    */
   protected updateOtherEntityLocationByMove() {
-    if (!Settings.isEnableEntityCollision) {
+    if (!Settings.isEnableEntityCollision || this.project.sectionMoveDepth > 0) {
       return;
     }
     for (const entity of this.project.stageManager.getEntities()) {
@@ -119,13 +127,16 @@ export abstract class Entity extends StageObject {
     }
 
     // 两者相交，需要调整位置
-    const overlapSize = selfRectangle.getOverlapSize(otherRectangle);
-    let moveDelta;
-    if (Math.abs(overlapSize.x) < Math.abs(overlapSize.y)) {
-      moveDelta = new Vector(overlapSize.x * Math.sign(otherRectangle.center.x - selfRectangle.center.x), 0);
-    } else {
-      moveDelta = new Vector(0, overlapSize.y * Math.sign(otherRectangle.center.y - selfRectangle.center.y));
-    }
+    // Equal centers still need a nonzero direction; intersection size alone also cannot separate contained rectangles.
+    const dx =
+      otherRectangle.center.x >= selfRectangle.center.x
+        ? selfRectangle.right - otherRectangle.left
+        : selfRectangle.left - otherRectangle.right;
+    const dy =
+      otherRectangle.center.y >= selfRectangle.center.y
+        ? selfRectangle.bottom - otherRectangle.top
+        : selfRectangle.top - otherRectangle.bottom;
+    const moveDelta = Math.abs(dx) < Math.abs(dy) ? new Vector(dx, 0) : new Vector(0, dy);
     other.move(moveDelta);
   }
   /**

@@ -17,3 +17,17 @@ catalog:
   jotai: ^2.12.5
   vitest: 4.1.5
   unplugin-original-class-name: ^1.0.1
+
+minimumReleaseAgeExclude:
+  - "@tauri-apps/cli-darwin-arm64@2.12.4"
+  - "@tauri-apps/cli-darwin-x64@2.12.4"
+  - "@tauri-apps/cli-linux-arm-gnueabihf@2.12.4"
+  - "@tauri-apps/cli-linux-arm64-gnu@2.12.4"
+  - "@tauri-apps/cli-linux-arm64-musl@2.12.4"
+  - "@tauri-apps/cli-linux-riscv64-gnu@2.12.4"
+  - "@tauri-apps/cli-linux-x64-gnu@2.12.4"
+  - "@tauri-apps/cli-linux-x64-musl@2.12.4"
+  - "@tauri-apps/cli-win32-arm64-msvc@2.12.4"
+  - "@tauri-apps/cli-win32-ia32-msvc@2.12.4"
+  - "@tauri-apps/cli-win32-x64-msvc@2.12.4"
+  - "@tauri-apps/cli@2.12.4"

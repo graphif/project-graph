@@ -1,4 +1,5 @@
 import { Renderer } from "@/core/render/canvas2d/renderer";
+import { superellipseSvgPath } from "@/utils/superellipse";
 import { Settings } from "@/core/service/Settings";
 import { getTextSize, textToTextArray } from "@/utils/font";
 import { Color, Vector } from "@graphif/data-structures";
@@ -141,14 +142,15 @@ export namespace SvgUtils {
 
   export function rectangle(rectangle: Rectangle, fillColor: Color, strokeColor: Color, strokeWidth: number) {
     return (
-      <rect
+      <path
         key={v4()}
-        x={rectangle.location.x.toFixed(1)}
-        y={rectangle.location.y.toFixed(1)}
-        width={rectangle.size.x.toFixed(1)}
-        height={rectangle.size.y.toFixed(1)}
-        rx={Renderer.NODE_ROUNDED_RADIUS}
-        ry={Renderer.NODE_ROUNDED_RADIUS}
+        d={superellipseSvgPath(
+          rectangle.location.x,
+          rectangle.location.y,
+          rectangle.size.x,
+          rectangle.size.y,
+          Renderer.NODE_ROUNDED_RADIUS,
+        )}
         fill={fillColor.toString()}
         stroke={strokeColor.toString()}
         strokeWidth={strokeWidth}

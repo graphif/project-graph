@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="720" height="460" viewBox="0 0 720 460">
+  <defs>
+    <linearGradient id="folder" x2="0" y2="1"><stop stop-color="#8ad0f6"/><stop offset="1" stop-color="#57a9df"/></linearGradient>
+  </defs>
+  <g transform="translate(481 213)">
+    <path d="M0 12Q0 5 7 5H42L52 15H103Q110 15 110 22V79Q110 87 102 87H8Q0 87 0 79Z" fill="#78bfea" stroke="#61a9d5"/>
+    <path d="M0 28Q0 21 7 21H103Q110 21 110 28V79Q110 87 102 87H8Q0 87 0 79Z" fill="url(#folder)" stroke="#63b2df"/>
+    <g stroke="#357daa" stroke-width="5.5" stroke-linecap="round" opacity=".75">
+      <path d="M43 69L61 37M51 37L70 69M37 59H73"/>
+    </g>
+    <path d="M3 77H13V72L23 81L13 90V85H3Z" fill="white" stroke="#658698" stroke-width=".7"/>
+  </g>
+  <g font-family="Noto Sans CJK SC, sans-serif" font-size="13" text-anchor="middle" fill="#263d3a">
+    <text x="184" y="333">Project Graph</text>
+    <text x="536" y="333">Applications</text>
+  </g>
+</svg>

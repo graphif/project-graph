@@ -12,4 +12,8 @@ export abstract class ConnectableEntity extends Entity {
   abstract geometryCenter: Vector;
 
   public unknown = false;
+
+  public get clipConnectionToBoundary(): boolean {
+    return false;
+  }
 }

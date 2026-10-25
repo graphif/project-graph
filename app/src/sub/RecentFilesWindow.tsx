@@ -257,7 +257,7 @@ export default function RecentFilesWindow({ tabId }: { tabId: string }) {
       await onOpenFile(file.uri, "历史界面-最近打开的文件");
       void TabWorkspace.close(tabId);
     } catch (error) {
-      toast.error(error as string);
+      toast.error(String(error));
     }
   };
 

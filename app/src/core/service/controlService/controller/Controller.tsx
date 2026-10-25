@@ -21,6 +21,8 @@ import { ControllerSectionEditClass } from "@/core/service/controlService/contro
 import { CursorNameEnum } from "@/types/cursors";
 import { isMac } from "@/utils/platform";
 import { Settings } from "../../Settings";
+import { ControllerClass } from "./ControllerClass";
+import { ControllerInput } from "./ControllerInput";
 
 /**
  * 控制器，控制鼠标、键盘事件
@@ -72,9 +74,9 @@ export class Controller {
   readonly lastSelectedEntityUUID: Set<string> = new Set();
   readonly lastSelectedEdgeUUID: Set<string> = new Set();
 
-  touchStartLocation = Vector.getZero();
-  touchStartDistance = 0;
-  touchDelta = Vector.getZero();
+  private readonly input: ControllerInput;
+  private readonly controllers: ControllerClass[] = [];
+  private isCameraPointerGesture = false;
 
   lastClickTime = 0;
   lastClickLocation = Vector.getZero();
@@ -104,21 +106,28 @@ export class Controller {
    */
   readonly edgeHoverTolerance = 10;
 
+  private cancelInput(location: Vector) {
+    this.pressingKeySet.clear();
+    this.project.camera.stopImmediately();
+    this.camera.cancelGesture();
+    this.isMouseDown.fill(false);
+    this.isMovingEdge = false;
+    this.isCameraPointerGesture = false;
+    for (const controller of this.controllers) controller.mouseMoveOutWindowForcedShutdown(location);
+    this.setCursorName(CursorNameEnum.Default);
+  }
+
+  private dispatch(callback: (controller: ControllerClass) => void) {
+    for (const controller of this.controllers) {
+      if (controller.shouldHandleInteraction) callback(controller);
+    }
+  }
+
   /**
    * 初始化函数在页面挂在的时候调用，将事件绑定到Canvas上
    * @param this.project.canvas.element
    */
   constructor(private readonly project: Project) {
-    // 绑定事件
-    this.project.canvas.element.addEventListener("keydown", this.keydown.bind(this));
-    this.project.canvas.element.addEventListener("keyup", this.keyup.bind(this));
-    this.project.canvas.element.addEventListener("pointerdown", this.mousedown.bind(this));
-    this.project.canvas.element.addEventListener("pointerup", this.mouseup.bind(this));
-    this.project.canvas.element.addEventListener("touchstart", this.touchstart.bind(this), false);
-    this.project.canvas.element.addEventListener("touchmove", this.touchmove.bind(this), false);
-    this.project.canvas.element.addEventListener("touchend", this.touchend.bind(this), false);
-    this.project.canvas.element.addEventListener("wheel", this.mousewheel.bind(this), false);
-    this.project.canvas.element.addEventListener("pointerleave", this.pointerleave.bind(this));
     // 所有的具体的功能逻辑封装成控制器对象
     // 当有新功能时新建控制器对象，并在这里初始化
     Object.values(import.meta.glob("./concrete/*.tsx", { eager: true }))
@@ -129,34 +138,78 @@ export class Controller {
         let id = k.replace("Controller", "").replace("Class", "");
         id = id[0].toLowerCase() + id.slice(1);
         this[id as keyof this] = inst;
+        this.controllers.push(inst);
       });
+    this.input = new ControllerInput(project.canvas.element, (x, y) => project.canvas.clientToView(x, y), {
+      down: (event) => {
+        this.mousedown(event);
+        this.camera.mousedown(event);
+        this.isCameraPointerGesture = this.camera.isUsingMouseGrabMove;
+        if (!this.isCameraPointerGesture)
+          this.dispatch((c) => {
+            if (c !== this.camera) c.mousedown(event);
+          });
+      },
+      move: (event) => {
+        this.resetCountdownTimer();
+        if (this.isCameraPointerGesture) this.camera.mousemove(event);
+        else this.dispatch((c) => c.mousemove(event));
+      },
+      up: (event) => {
+        this.mouseup(event);
+        if (this.isCameraPointerGesture) this.camera.mouseup(event);
+        else this.dispatch((c) => c.mouseup(event));
+      },
+      doubleClick: (event) => {
+        if (this.isCameraPointerGesture) this.camera.mouseDoubleClick(event);
+        else this.dispatch((c) => c.mouseDoubleClick(event));
+      },
+      wheel: (event) => {
+        this.mousewheel(event);
+        this.dispatch((c) => c.mousewheel(event));
+      },
+      keydown: (event) => {
+        this.keydown(event);
+        this.dispatch((c) => c.keydown(event));
+      },
+      keyup: (event) => {
+        this.keyup(event);
+        this.dispatch((c) => c.keyup(event));
+      },
+      touchstart: (event) => {
+        this.resetCountdownTimer();
+        this.dispatch((c) => c.touchstart(event));
+      },
+      touchmove: (event) => {
+        this.resetCountdownTimer();
+        this.dispatch((c) => c.touchmove(event));
+      },
+      touchend: (event) => {
+        this.resetCountdownTimer();
+        for (const c of this.controllers) c.touchend(event);
+      },
+      cancel: (location) => this.cancelInput(location),
+      mouseChord: () => {
+        this.resetCountdownTimer();
+        if (!Settings.viewerMode) Settings.mouseLeftMode = Settings.mouseLeftMode === "draw" ? "selectAndMove" : "draw";
+      },
+    });
   }
   dispose() {
-    Object.values(this).forEach((v) => {
-      if (v instanceof Controller) {
-        v.dispose();
-      }
-    });
-    this.project.canvas.element.removeEventListener("keydown", this.keydown.bind(this));
-    this.project.canvas.element.removeEventListener("keyup", this.keyup.bind(this));
-    this.project.canvas.element.removeEventListener("pointerdown", this.mousedown.bind(this));
-    this.project.canvas.element.removeEventListener("pointerup", this.mouseup.bind(this));
-    this.project.canvas.element.removeEventListener("touchstart", this.touchstart.bind(this), false);
-    this.project.canvas.element.removeEventListener("touchmove", this.touchmove.bind(this), false);
-    this.project.canvas.element.removeEventListener("touchend", this.touchend.bind(this), false);
-    this.project.canvas.element.removeEventListener("wheel", this.mousewheel.bind(this), false);
-    this.project.canvas.element.removeEventListener("pointerleave", this.pointerleave.bind(this));
+    this.input.dispose();
+    for (const controller of this.controllers) controller.dispose();
+    this.controllers.length = 0;
   }
 
   // 以下事件处理函数仅为Controller总控制器修改重要属性使用。不涉及具体的功能逻辑。
 
-  private mousedown(event: MouseEvent) {
+  private mousedown(event: PointerEvent) {
     // event.preventDefault();
     this.handleMousedown(event.button, event.clientX, event.clientY);
     this.resetCountdownTimer();
   }
 
-  private mouseup(event: MouseEvent) {
+  private mouseup(event: PointerEvent) {
     // event.preventDefault();
     this.handleMouseup(event.button, event.clientX, event.clientY);
     this.resetCountdownTimer();
@@ -166,20 +219,6 @@ export class Controller {
     event.preventDefault();
     // 禁用鼠标滚轮缩放
     this.resetCountdownTimer();
-  }
-
-  private pointerleave(_event: PointerEvent) {
-    if (!this.isMouseDown.some(Boolean)) return;
-    for (let i = 0; i < this.isMouseDown.length; i++) {
-      this.isMouseDown[i] = false;
-    }
-    this.isMovingEdge = false;
-    const mouseLocation = new Vector(_event.clientX, _event.clientY);
-    for (const v of Object.values(this)) {
-      if (v && typeof (v as Record<string, unknown>).mouseMoveOutWindowForcedShutdown === "function") {
-        (v as Record<string, (p: Vector) => void>)["mouseMoveOutWindowForcedShutdown"](mouseLocation);
-      }
-    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -248,76 +287,6 @@ export class Controller {
       this.project.rectangleSelect.shutDown();
     }
     this.resetCountdownTimer();
-  }
-
-  // touch相关的事件有待重构到具体的功能逻辑中
-
-  private touchstart(e: TouchEvent) {
-    e.preventDefault();
-
-    if (e.touches.length === 1) {
-      this.handleMousedown(0, e.touches[0].clientX, e.touches[0].clientY);
-    }
-    if (e.touches.length === 2) {
-      const touch1 = Vector.fromTouch(e.touches[0]);
-      const touch2 = Vector.fromTouch(e.touches[1]);
-      const center = Vector.average(touch1, touch2);
-      this.touchStartLocation = center;
-
-      // 计算初始两指间距离
-      this.touchStartDistance = touch1.distance(touch2);
-    }
-    this.resetCountdownTimer();
-  }
-
-  private touchmove(e: TouchEvent) {
-    this.resetCountdownTimer();
-    e.preventDefault();
-
-    if (e.touches.length === 1) {
-      // HACK: 重构后touch方法就有问题了
-    }
-    if (e.touches.length === 2) {
-      const touch1 = Vector.fromTouch(e.touches[0]);
-      const touch2 = Vector.fromTouch(e.touches[1]);
-      const center = Vector.average(touch1, touch2);
-      this.touchDelta = center.subtract(this.touchStartLocation);
-
-      // 计算当前两指间的距离
-      const currentDistance = touch1.distance(touch2);
-      const scaleRatio = currentDistance / this.touchStartDistance;
-
-      // 缩放画面
-      this.project.camera.targetScale *= scaleRatio;
-      this.touchStartDistance = currentDistance; // 更新距离
-
-      // 更新中心点位置
-      this.touchStartLocation = center;
-
-      // 移动画面
-      this.project.camera.location = this.project.camera.location.subtract(
-        this.touchDelta.multiply(1 / this.project.camera.currentScale),
-      );
-    }
-  }
-
-  private touchend(e: TouchEvent) {
-    this.resetCountdownTimer();
-    e.preventDefault();
-    if (e.changedTouches.length === 1) {
-      // HACK: 重构后touch方法就有问题了
-      this.handleMouseup(0, e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-    }
-    // 移动画面
-    this.project.camera.accelerateCommander = this.touchDelta
-      .multiply(-1)
-      .multiply(this.project.camera.currentScale)
-      .limitX(-1, 1)
-      .limitY(-1, 1);
-    this.touchDelta = Vector.getZero();
-    setTimeout(() => {
-      this.project.camera.accelerateCommander = Vector.getZero();
-    }, 100);
   }
 }
 

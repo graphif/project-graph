@@ -1,6 +1,9 @@
 import { Project, service } from "@/core/Project";
 import { Settings } from "@/core/service/Settings";
 import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { NodeMoveShadowEffect } from "@/core/service/feedbackService/effectEngine/concrete/NodeMoveShadowEffect";
+import { ProgressNumber, Vector } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
 import { getOriginalNameOf } from "virtual:original-class-name";
 
 /**
@@ -14,6 +17,14 @@ export class Effects {
   constructor(private readonly project: Project) {}
 
   private effects: Effect[] = [];
+  private lastMoveShadowTime = -Infinity;
+
+  public addMoveShadow(rectangle: Rectangle, delta: Vector) {
+    const now = performance.now();
+    if (delta.magnitude() < 1 || now - this.lastMoveShadowTime < 50) return;
+    this.lastMoveShadowTime = now;
+    this.addEffect(new NodeMoveShadowEffect(new ProgressNumber(0, 30), rectangle, delta));
+  }
 
   public addEffect(effect: Effect) {
     if (!(Settings.effectsPerferences[getOriginalNameOf(effect.constructor)] ?? true)) {

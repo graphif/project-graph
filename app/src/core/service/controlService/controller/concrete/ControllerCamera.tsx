@@ -2,15 +2,15 @@
  * 存放具体的控制器实例
  */
 
-import { ArrayFunctions } from "@/core/algorithm/arrayFunctions";
 import { Settings } from "@/core/service/Settings";
+import { Camera } from "@/core/stage/Camera";
 import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
 import { ControllerCameraMac } from "@/core/service/controlService/controller/concrete/ControllerCamera/mac";
 import { MouseTipFeedbackEffect } from "@/core/service/feedbackService/effectEngine/concrete/MouseTipFeedbackEffect";
 import { CursorNameEnum } from "@/types/cursors";
 import { openBrowserOrFileByEntity } from "@/utils/externalOpen";
 import { isIpad, isMac } from "@/utils/platform";
-import { LimitLengthQueue, Vector } from "@graphif/data-structures";
+import { Vector } from "@graphif/data-structures";
 
 /**
  *
@@ -24,13 +24,18 @@ export class ControllerCameraClass extends ControllerClass {
 
   // 是否正在使用
   public isUsingMouseGrabMove = false;
-  private lastMousePressLocation: Vector[] = [Vector.getZero(), Vector.getZero(), Vector.getZero()];
+  private dragButton: number | null = null;
+  private lastDragPoint = Vector.getZero();
   /**
    * 是否正在使用空格+左键 拖动视野
    */
   public isPreGrabbingWhenSpace = false;
 
   private mac = new ControllerCameraMac(this.project);
+  private previousPinchPoint: Vector | null = null;
+  private previousWheelPinchPoint: Vector | null = null;
+  private lastWheelPinchTime = 0;
+  private lastZoomFeedbackTime = -Infinity;
 
   public keydown: (event: KeyboardEvent) => void = (event: KeyboardEvent) => {
     if (this.project.controller.isCameraLocked) {
@@ -59,7 +64,7 @@ export class ControllerCameraClass extends ControllerClass {
     if (key === " ") {
       if (this.isPreGrabbingWhenSpace) {
         this.isPreGrabbingWhenSpace = false;
-        this.project.controller.setCursorName(CursorNameEnum.Default);
+        if (!this.isUsingMouseGrabMove) this.project.controller.setCursorName(CursorNameEnum.Default);
       }
     }
   };
@@ -68,21 +73,21 @@ export class ControllerCameraClass extends ControllerClass {
     if (this.project.controller.isCameraLocked) {
       return;
     }
-    if (event.button === 0 && this.project.controller.pressingKeySet.has(" ") && Settings.enableSpaceKeyMouseLeftDrag) {
+    const point = new Vector(event.clientX, event.clientY);
+    const spaceDrag =
+      event.button === 0 && this.project.controller.pressingKeySet.has(" ") && Settings.enableSpaceKeyMouseLeftDrag;
+    const middleDrag = event.button === 1 && !event.ctrlKey && Settings.mouseRightDragBackground !== "moveCamera";
+    const rightDrag =
+      event.button === 2 &&
+      Settings.mouseRightDragBackground === "moveCamera" &&
+      this.project.stageManager.findEntityByLocation(this.project.renderer.transformView2World(point)) === null;
+    if (spaceDrag || middleDrag || rightDrag) {
+      this.dragButton = event.button;
+      this.lastDragPoint = point;
+      this.isUsingMouseGrabMove = true;
+      this.project.camera.stopImmediately();
       this.project.controller.setCursorName(CursorNameEnum.Grabbing);
-      this.isUsingMouseGrabMove = true;
     }
-    if (event.button === 1 && Settings.mouseRightDragBackground !== "moveCamera") {
-      // 中键按下
-      this.isUsingMouseGrabMove = true;
-    }
-    if (Settings.mouseRightDragBackground === "moveCamera" && event.button === 2) {
-      // 右键按下
-      this.isUsingMouseGrabMove = true;
-    }
-    const pressWorldLocation = this.project.renderer.transformView2World(new Vector(event.clientX, event.clientY));
-    // 获取左右中键
-    this.lastMousePressLocation[event.button] = pressWorldLocation;
 
     if (this.isUsingMouseGrabMove && Settings.autoRefreshStageByMouseAction) {
       // 开始刷新舞台
@@ -110,48 +115,17 @@ export class ControllerCameraClass extends ControllerClass {
     if (!this.isUsingMouseGrabMove) {
       return;
     }
-    // 空格+左键 拖动视野
-    if (
-      this.project.controller.pressingKeySet.has(" ") &&
-      this.project.controller.isMouseDown[0] &&
-      Settings.enableSpaceKeyMouseLeftDrag
-    ) {
-      this.moveCameraByMouseMove(event.clientX, event.clientY, 0);
-      return;
-    }
-    // 中键按下拖动视野
-    if (this.project.controller.isMouseDown[1] && Settings.mouseRightDragBackground !== "moveCamera") {
-      if (event.ctrlKey) {
-        // ctrl键按下时,不允许移动视野
-        return;
-      }
-      this.moveCameraByMouseMove(event.clientX, event.clientY, 1);
-      this.project.controller.setCursorName(CursorNameEnum.Grabbing);
-    }
-    // 侧键按下拖动视野
-    if (this.project.controller.isMouseDown[4]) {
-      this.moveCameraByMouseMove(event.clientX, event.clientY, 4);
-      this.project.controller.setCursorName(CursorNameEnum.Grabbing);
-    }
-    if (Settings.mouseRightDragBackground === "moveCamera" && this.project.controller.isMouseDown[2]) {
-      // 还要保证这个鼠标位置没有悬浮在什么东西上
-      const mouseLocation = new Vector(event.clientX, event.clientY);
-      const worldLocation = this.project.renderer.transformView2World(mouseLocation);
-      const entity = this.project.stageManager.findEntityByLocation(worldLocation);
-      if (this.project.controller.nodeConnection.isUsing) {
-        return;
-      }
-      if (entity !== null) {
-        return;
-      }
-      this.moveCameraByMouseMove(event.clientX, event.clientY, 2);
-      this.project.controller.setCursorName(CursorNameEnum.Grabbing);
-    }
+    if (this.dragButton === null || !this.project.controller.isMouseDown[this.dragButton]) return;
+    if (this.dragButton === 2 && this.project.controller.nodeConnection.isUsing) return;
+    const point = new Vector(event.clientX, event.clientY);
+    this.project.camera.panByViewDelta(this.lastDragPoint.subtract(point));
+    this.lastDragPoint = point;
   };
 
   public mouseMoveOutWindowForcedShutdown(vectorObject: Vector) {
     super.mouseMoveOutWindowForcedShutdown(vectorObject);
     this.isUsingMouseGrabMove = false;
+    this.dragButton = null;
     this.project.controller.setCursorName(CursorNameEnum.Default);
   }
 
@@ -160,14 +134,7 @@ export class ControllerCameraClass extends ControllerClass {
    * @param event - 鼠标事件
    */
   public mouseup = (event: MouseEvent) => {
-    if (this.project.controller.isCameraLocked) {
-      return;
-    }
-    if (event.button === 4) {
-      // this.project.camera.currentScale = this.recordCameraScale;
-      // this.project.camera.currentScale = this.recordCameraScale;
-      // // this.project.camera.location = this.recordCameraLocation.clone();
-    }
+    if (event.button !== this.dragButton) return;
     if (!this.isUsingMouseGrabMove) {
       return;
     }
@@ -187,6 +154,7 @@ export class ControllerCameraClass extends ControllerClass {
       this.project.controller.setCursorName(CursorNameEnum.Default);
     }
     this.isUsingMouseGrabMove = false;
+    this.dragButton = null;
   };
 
   /**
@@ -202,6 +170,14 @@ export class ControllerCameraClass extends ControllerClass {
     }
     // 涂鸦模式下的量角器，禁止滚动
     if (Settings.mouseLeftMode === "draw" && this.project.controller.pressingKeySet.has("shift")) {
+      return;
+    }
+    if (
+      event.ctrlKey &&
+      !this.project.controller.pressingKeySet.has("control") &&
+      event.deltaMode === WheelEvent.DOM_DELTA_PIXEL
+    ) {
+      if (Settings.enableWindowsTouchPad) this.handleTouchPadPinch(event);
       return;
     }
     // 禁用触控板在这里的滚动
@@ -233,6 +209,66 @@ export class ControllerCameraClass extends ControllerClass {
 
     this.mousewheelFunction(event);
   };
+
+  private handleTouchPadPinch(event: WheelEvent) {
+    const point = new Vector(event.clientX, event.clientY);
+    const previousPoint =
+      event.timeStamp - this.lastWheelPinchTime < 250 ? (this.previousWheelPinchPoint ?? point) : point;
+    this.project.camera.applyGesture(previousPoint, point, Math.exp(-event.deltaY * 0.01));
+    this.previousWheelPinchPoint = point;
+    this.lastWheelPinchTime = event.timeStamp;
+    this.wheelGesture = "touchpad";
+    this.lastWheelEventTime = event.timeStamp;
+  }
+
+  public touchstart = (event: TouchEvent) => {
+    this.previousPinchPoint = event.touches.length === 2 ? this.getTouchMidpoint(event.touches) : null;
+    this.previousTouchDistance = event.touches.length === 2 ? this.getTouchDistance(event.touches) : 0;
+  };
+
+  public cancelGesture() {
+    this.previousPinchPoint = null;
+    this.previousTouchDistance = 0;
+    this.previousWheelPinchPoint = null;
+    this.wheelGesture = null;
+    this.isUsingMouseGrabMove = false;
+    this.dragButton = null;
+    this.isPreGrabbingWhenSpace = false;
+  }
+
+  public touchmove = (event: TouchEvent) => {
+    if (event.touches.length !== 2 || this.project.controller.isCameraLocked) return;
+    event.preventDefault();
+    const midpoint = this.getTouchMidpoint(event.touches);
+    const previous = this.previousPinchPoint;
+    const distance = this.getTouchDistance(event.touches);
+    if (previous && this.previousTouchDistance > 0 && distance > 0) {
+      this.project.camera.applyGesture(previous, midpoint, distance / this.previousTouchDistance);
+    }
+    this.previousPinchPoint = midpoint;
+    this.previousTouchDistance = distance;
+  };
+
+  public touchend = (event: TouchEvent) => {
+    if (event.touches.length !== 2) {
+      this.previousPinchPoint = null;
+      this.previousTouchDistance = 0;
+    }
+  };
+
+  private previousTouchDistance = 0;
+
+  private getTouchMidpoint(touches: TouchList): Vector {
+    const first = this.project.canvas.clientToView(touches[0].clientX, touches[0].clientY);
+    const second = this.project.canvas.clientToView(touches[1].clientX, touches[1].clientY);
+    return first.add(second).divide(2);
+  }
+
+  private getTouchDistance(touches: TouchList): number {
+    const first = this.project.canvas.clientToView(touches[0].clientX, touches[0].clientY);
+    const second = this.project.canvas.clientToView(touches[1].clientX, touches[1].clientY);
+    return first.distance(second);
+  }
 
   private dealStealthMode(event: WheelEvent) {
     if (Settings.isStealthModeEnabled && this.project.controller.pressingKeySet.has("shift")) {
@@ -269,7 +305,7 @@ export class ControllerCameraClass extends ControllerClass {
     const worldLocation = this.project.renderer.transformView2World(mouseLocation);
     this.project.camera.targetLocationByScale = worldLocation;
 
-    if (this.project.controller.pressingKeySet.has("shift")) {
+    if (event.shiftKey || this.project.controller.pressingKeySet.has("shift")) {
       const overrideDeltaY = Settings.mouseWheelWithShiftModeReverse ? -event.deltaY : undefined;
       if (Settings.mouseWheelWithShiftMode === "zoom") {
         this.zoomCameraByMouseWheel(event, overrideDeltaY);
@@ -283,6 +319,8 @@ export class ControllerCameraClass extends ControllerClass {
         this.zoomUIMethod(event, overrideDeltaY);
       }
     } else if (
+      event.ctrlKey ||
+      event.metaKey ||
       this.project.controller.pressingKeySet.has("control") ||
       this.project.controller.pressingKeySet.has("meta")
     ) {
@@ -299,7 +337,7 @@ export class ControllerCameraClass extends ControllerClass {
       } else if (Settings.mouseWheelWithCtrlMode === "zoomUI") {
         this.zoomUIMethod(event, overrideDeltaY);
       }
-    } else if (this.project.controller.pressingKeySet.has("alt")) {
+    } else if (event.altKey || this.project.controller.pressingKeySet.has("alt")) {
       const overrideDeltaY = Settings.mouseWheelWithAltModeReverse ? -event.deltaY : undefined;
       if (Settings.mouseWheelWithAltMode === "zoom") {
         this.zoomCameraByMouseWheel(event, overrideDeltaY);
@@ -358,20 +396,8 @@ export class ControllerCameraClass extends ControllerClass {
     }
   };
 
-  /**
-   * 根据鼠标移动位置移动摄像机
-   * @param x - 鼠标在X轴的坐标
-   * @param y - 鼠标在Y轴的坐标
-   * @param mouseIndex - 鼠标按钮索引
-   */
-  private moveCameraByMouseMove(x: number, y: number, mouseIndex: number) {
-    const currentMouseMoveLocation = this.project.renderer.transformView2World(new Vector(x, y));
-    const diffLocation = currentMouseMoveLocation.subtract(this.lastMousePressLocation[mouseIndex]);
-    this.project.effects.addEffect(MouseTipFeedbackEffect.default("drag"));
-    this.project.camera.location = this.project.camera.location.subtract(diffLocation);
-  }
-
   private moveCameraByTouchPadTwoFingerMove(event: WheelEvent) {
+    this.project.camera.targetScale = this.project.camera.currentScale;
     if (isMac) {
       this.mac.moveCameraByTouchPadTwoFingerMove(event);
       return;
@@ -380,11 +406,7 @@ export class ControllerCameraClass extends ControllerClass {
     if (Math.abs(event.deltaX) < 0.01 && Math.abs(event.deltaY) < 0.01) {
       return;
     }
-    const dx = event.deltaX / 500;
-    const dy = event.deltaY / 500;
-    const diffLocation = new Vector(dx, dy).multiply((Settings.moveAmplitude * 50) / this.project.camera.currentScale);
-    this.project.effects.addEffect(MouseTipFeedbackEffect.directionObject(diffLocation));
-    this.project.camera.location = this.project.camera.location.add(diffLocation);
+    this.project.camera.panByViewDelta(new Vector(event.deltaX, event.deltaY).multiply(Settings.moveAmplitude / 8));
   }
 
   private zoomCameraByMouseWheel(event: WheelEvent, overrideDeltaY?: number) {
@@ -393,27 +415,27 @@ export class ControllerCameraClass extends ControllerClass {
       // mac电脑滚动一格滚轮会触发很多次事件。这个列表里是每个事件的deltaY
       // [7, 7, 7, 7, 6, 7, 7, 6, 5, 5, 4, 4, 3, 3, 3, 2, 2, 1, 1, 1, 1, 1]
       if (Settings.macMouseWheelIsSmoothed) {
-        // 盲猜是开了平滑滚动了
-        this.project.camera.targetScale *= 1 + deltaY / 500;
-      } else {
-        // 如果没有开平滑滚动
-        if (deltaY > 0) {
-          this.project.camera.targetScale *= 0.8;
-          this.project.effects.addEffect(MouseTipFeedbackEffect.default("shrink"));
-        } else if (deltaY < 0) {
-          this.project.camera.targetScale *= 1.2;
-          this.project.effects.addEffect(MouseTipFeedbackEffect.default("expand"));
-        }
-      }
-    } else {
-      if (deltaY > 0) {
-        this.project.camera.targetScale *= 0.8;
-        this.project.effects.addEffect(MouseTipFeedbackEffect.default("shrink"));
-      } else if (deltaY < 0) {
-        this.project.camera.targetScale *= 1.2;
-        this.project.effects.addEffect(MouseTipFeedbackEffect.default("expand"));
+        this.applyWheelZoom(-deltaY, event.timeStamp, event.deltaMode);
+        return;
       }
     }
+    this.applyWheelZoom(deltaY, event.timeStamp, event.deltaMode);
+  }
+
+  private applyWheelZoom(deltaY: number, timeStamp: number, deltaMode: number) {
+    if (deltaY === 0) return;
+    const wheelSteps = Math.min(2, Math.abs(deltaY) / (deltaMode === WheelEvent.DOM_DELTA_LINE ? 3 : 100));
+    const camera = this.project.camera;
+    const scale = camera.targetScale;
+    const nextScale = scale * Math.exp(-Math.sign(deltaY) * 0.14 * wheelSteps);
+    camera.targetScale = Camera.validScale(nextScale, scale);
+    this.addZoomFeedback(deltaY > 0 ? "shrink" : "expand", timeStamp);
+  }
+
+  private addZoomFeedback(type: "shrink" | "expand", timeStamp: number) {
+    if (timeStamp - this.lastZoomFeedbackTime < 100) return;
+    this.lastZoomFeedbackTime = timeStamp;
+    this.project.effects.addEffect(MouseTipFeedbackEffect.default(type));
   }
 
   private moveYCameraByMouseWheel(event: WheelEvent, overrideDeltaY?: number) {
@@ -481,13 +503,7 @@ export class ControllerCameraClass extends ControllerClass {
   }
 
   private zoomCameraByMouseSideWheel(event: WheelEvent) {
-    if (event.deltaX > 0) {
-      this.project.camera.targetScale *= 0.8;
-      this.project.effects.addEffect(MouseTipFeedbackEffect.default("shrink"));
-    } else if (event.deltaX < 0) {
-      this.project.camera.targetScale *= 1.2;
-      this.project.effects.addEffect(MouseTipFeedbackEffect.default("expand"));
-    }
+    this.applyWheelZoom(event.deltaX, event.timeStamp, event.deltaMode);
   }
 
   private moveYCameraByMouseSideWheel(event: WheelEvent) {
@@ -528,83 +544,33 @@ export class ControllerCameraClass extends ControllerClass {
     }
   }
 
-  /**
-   *
-   * 区分滚轮和触摸板的核心函数
-   * 返回true：是鼠标滚轮事件
-   * 返回false：是触摸板事件
-   * @param event
-   * @returns
-   */
+  private wheelGesture: "mouse" | "touchpad" | null = null;
+  private lastWheelEventTime = 0;
+
   private isMouseWheel(event: WheelEvent): boolean {
     if (isIpad || isMac) {
       return this.mac.isMouseWheel(event);
     }
 
-    // 不是mac系统 ======
-
-    if (event.deltaX !== 0 && event.deltaY !== 0) {
-      // 斜向滚动肯定不是鼠标滚轮。因为滚轮只有横向滚轮和竖向滚轮
-      return false;
-    }
-    if (event.deltaX === 0 && event.deltaY === 0) {
-      // 无意义的滚动事件
-      return false;
-    }
-
-    // 纯竖向滚动
-    if (event.deltaX === 0 && event.deltaY !== 0) {
-      const distance = Math.abs(event.deltaY);
-      if (distance < 20) {
-        // 缓慢滚动是触摸板
-        return false;
-      }
-      if (this.addDistanceNumberAndDetect(distance)) {
-        return true;
-      }
-    }
-
-    // 纯横向滚动
-    if (event.deltaX !== 0 && event.deltaY === 0) {
-      const distance = Math.abs(event.deltaX);
-      if (distance < 20) {
-        // 缓慢滚动是触摸板
-        return false;
-      }
-      if (this.addDistanceNumberAndDetect(distance)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private addDistanceNumberAndDetect(distance: number): boolean {
-    // 开始序列化检测
-    this.detectDeltaY.enqueue(distance);
-    const multiArray = this.detectDeltaY.multiGetTail(4);
-    if (multiArray.length >= 4) {
-      if (ArrayFunctions.isSame(multiArray)) {
-        // 检测到关键数字
-        this.importantNumbers.add(distance);
-        // 连续4个都一样，说明是滚轮
-        // 实测发现连续三个都一样，用滚轮极小概率触发。四个都一样几乎不太可能了
-        return true;
-      }
-    } else {
-      // 长度还不足 说明刚打开软件，可能拨动了两下滚轮，也可能滑动了一下触摸板
-      // 先按滚轮算
+    const now = event.timeStamp;
+    if (event.deltaMode !== WheelEvent.DOM_DELTA_PIXEL) {
+      this.wheelGesture = "mouse";
+      this.lastWheelEventTime = now;
       return true;
     }
-
-    // 是整数倍
-    for (const importNumber of this.importantNumbers) {
-      if (distance % importNumber === 0) {
-        return true;
-      }
+    // 斜向的像素滚动可以确认触控板，覆盖首帧大位移造成的滚轮误判。
+    if (event.deltaMode === WheelEvent.DOM_DELTA_PIXEL && event.deltaX !== 0 && event.deltaY !== 0) {
+      this.wheelGesture = "touchpad";
     }
-    return false;
+    if (this.wheelGesture === null || now - this.lastWheelEventTime > 250) {
+      // WheelEvent 不提供设备类型；按一次手势的首个事件判定并锁定，
+      // 避免高精度滚轮的末尾小 delta 把缩放突然切成画布拖动。
+      const discrete = event.deltaMode !== WheelEvent.DOM_DELTA_PIXEL;
+      const diagonal = event.deltaX !== 0 && event.deltaY !== 0;
+      const wheelStep = Math.max(Math.abs(event.deltaX), Math.abs(event.deltaY)) >= 60;
+      this.wheelGesture = discrete || (wheelStep && !diagonal) ? "mouse" : "touchpad";
+    }
+    this.lastWheelEventTime = now;
+    return this.wheelGesture === "mouse";
   }
-
-  private detectDeltaY: LimitLengthQueue<number> = new LimitLengthQueue<number>(100);
-  private importantNumbers: Set<number> = new Set<number>([]); // 100, 133, 138, 166
 }

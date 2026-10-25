@@ -44,7 +44,7 @@ stage:
   DetailsDebugText: "rgba(110, 115, 141, 0.8)"
   SelectRectangleBorder: "rgba(138, 173, 244, 0.5)"
   SelectRectangleFill: "rgba(138, 173, 244, 0.12)"
-  StageObjectBorder: "#5b6078"
+  StageObjectBorder: "#939ab7"
   NodeDetailsText: "#cad3f5"
   CollideBoxPreSelected: "rgba(166, 218, 149, 0.3)"
   CollideBoxSelected: "rgba(166, 218, 149, 0.55)"

@@ -40,6 +40,8 @@ export abstract class StageObject {
     this._isSelected = value;
   }
 
+  public dispose?(): void | Promise<void>;
+
   /**
    * 防止孪生同步循环触发的标志
    * 当此对象正在被 StageSyncAssociationManager 写入同步内容时为 true，

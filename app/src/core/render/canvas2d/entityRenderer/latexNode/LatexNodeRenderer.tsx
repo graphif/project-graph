@@ -1,4 +1,5 @@
 import { Project, service } from "@/core/Project";
+import { Renderer } from "@/core/render/canvas2d/renderer";
 import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -35,7 +36,7 @@ export class LatexNodeRenderer {
         new Color(128, 128, 128, 0.1),
         this.project.stageStyleManager.currentStyle.StageObjectBorder,
         1 * scale,
-        4 * scale,
+        Renderer.NODE_ROUNDED_RADIUS,
       );
       this.project.textRenderer.renderTextFromCenter(
         "渲染中...",
@@ -54,7 +55,7 @@ export class LatexNodeRenderer {
         new Color(255, 0, 0, 0.1),
         new Color(255, 80, 80, 0.8),
         1 * scale,
-        4 * scale,
+        Renderer.NODE_ROUNDED_RADIUS,
       );
       this.project.textRenderer.renderTextFromCenter(
         "LaTeX 渲染错误",

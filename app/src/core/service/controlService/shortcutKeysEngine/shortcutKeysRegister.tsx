@@ -29,7 +29,6 @@ import FindWindow from "@/sub/FindWindow";
 // import KeyboardRecentFilesWindow from "@/sub/KeyboardRecentFilesWindow";
 import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
 import AIToolsWindow from "@/sub/AIToolsWindow";
-import AIWindow from "@/sub/AIWindow";
 import AttachmentsWindow from "@/sub/AttachmentsWindow";
 import LogicNodePanel from "@/sub/AutoComputeWindow";
 import BackgroundManagerWindow from "@/sub/BackgroundManagerWindow";
@@ -42,7 +41,6 @@ import GenerateNodeTree, {
   GenerateNodeTreeByMarkdown,
 } from "@/sub/GenerateNodeWindow";
 import NewExportPngWindow from "@/sub/NewExportPngWindow";
-import NodeDetailsWindow from "@/sub/NodeDetailsWindow";
 import OnboardingWindow from "@/sub/OnboardingWindow";
 import OutlineWindow from "@/sub/OutlineWindow";
 import RecentFilesWindow from "@/sub/RecentFilesWindow";
@@ -1535,16 +1533,16 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "C-s",
     icon: Save,
     when: whenHasProject,
-    onPress: () => {
+    onPress: async () => {
       const tab = store.get(activeTabAtom);
       const activeProject = tab instanceof Project ? tab : undefined;
       if (activeProject) {
         activeProject.camera.clearMoveCommander();
-        activeProject.save();
+        await activeProject.save();
         if (Settings.clearHistoryWhenManualSave) {
           activeProject.historyManager.clearHistory();
         }
-        RecentFileManager.addRecentFileByUri(activeProject.uri);
+        await RecentFileManager.addRecentFileByUri(activeProject.uri);
       }
     },
   },
@@ -2933,6 +2931,7 @@ export const allKeyBinds: KeyBindItem[] = [
           edge.renderType = "line";
         }
       }
+      project!.stageManager.updateReferences();
       project!.historyManager.recordStep();
     },
   },
@@ -3364,9 +3363,8 @@ export const allKeyBinds: KeyBindItem[] = [
         filters: [{ name: "Project Graph", extensions: ["prg"] }],
       });
       if (!path) return;
-      p.uri = URI.file(path);
+      await p.saveAs(URI.file(path));
       await RecentFileManager.addRecentFileByUri(p.uri);
-      await p.save();
     },
   },
   {
@@ -3915,7 +3913,8 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "",
     icon: ExternalLink,
     when: whenHasProject,
-    onPress: () => {
+    onPress: async () => {
+      const { default: AIWindow } = await import("@/sub/AIWindow");
       AIWindow.open();
     },
   },
@@ -4358,7 +4357,8 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "",
     icon: LayoutPanelTop,
     when: whenAlways,
-    onPress: () => {
+    onPress: async () => {
+      const { default: NodeDetailsWindow } = await import("@/sub/NodeDetailsWindow");
       NodeDetailsWindow.open();
     },
   },
