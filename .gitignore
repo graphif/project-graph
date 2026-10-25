@@ -32,3 +32,5 @@ backup_*
 # Claude Code 本地配置
 .claude/settings.local.json
 .ayuecode/tool-results
+
+.godot/
