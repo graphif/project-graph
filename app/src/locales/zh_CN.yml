@@ -1,6 +1,9 @@
 windowControls:
   alwaysOnTop: 窗口置顶
 
+nodeDetailsWindow:
+  title: 详细信息
+
 projectStatus:
   emptyCanvas: 画布里没有节点
   noVisibleNodes: 当前视野内没有可见节点，点击按钮复位

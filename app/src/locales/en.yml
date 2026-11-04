@@ -1,6 +1,9 @@
 windowControls:
   alwaysOnTop: Keep window on top
 
+nodeDetailsWindow:
+  title: Details
+
 projectStatus:
   emptyCanvas: No nodes on the canvas
   noVisibleNodes: No visible nodes in this view. Click to reset.

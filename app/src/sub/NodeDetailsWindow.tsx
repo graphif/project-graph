@@ -14,6 +14,7 @@ import { TabWorkspace } from "@/core/TabWorkspace";
 import { store, tabsAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
+import i18next from "i18next";
 import { Value } from "platejs";
 import { Plate, usePlateEditor } from "platejs/react";
 import { useEffect } from "react";
@@ -68,6 +69,7 @@ NodeDetailsWindow.open = (value?: Value, onChange?: (value: Value) => void) => {
   }
 
   const tab = createSubWindow("NodeDetailsWindow", {
+    title: i18next.t("title", { ns: "nodeDetailsWindow", defaultValue: "详细信息" }),
     children: (componentTab) => <NodeDetailsWindow tabId={componentTab.id} value={value} onChange={onChange} />,
     rect: new Rectangle(
       new Vector(innerWidth * 0.75, innerHeight * 0.1),
