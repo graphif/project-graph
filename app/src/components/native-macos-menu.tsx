@@ -105,7 +105,8 @@ export default function NativeMacosMenu({ onReady }: { onReady: (ready: boolean)
         const defaults = await menu.items();
         defaults.forEach(own);
         for (const entry of defaults) {
-          if (entry instanceof Submenu && ["File", "Edit", "View", "Help"].includes(await entry.text())) {
+          // macOS text editing shortcuts require the native commands in the default Edit menu.
+          if (entry instanceof Submenu && ["File", "View", "Help"].includes(await entry.text())) {
             await menu.remove(entry);
           }
         }

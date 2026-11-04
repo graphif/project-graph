@@ -47,6 +47,7 @@ vi.mock("@tauri-apps/api/menu", () => {
     }
     async close() {}
   }
+  class PredefinedMenuItem extends MenuItem {}
   class Submenu extends MenuItem {
     async text() {
       return this.options.text;
@@ -81,7 +82,12 @@ vi.mock("@tauri-apps/api/menu", () => {
             ],
           }),
           new Submenu({ text: "File" }),
-          new Submenu({ text: "Edit" }),
+          new Submenu({
+            text: "Edit",
+            items: ["Undo", "Redo", "Separator", "Cut", "Copy", "Paste", "SelectAll"].map(
+              (item) => new PredefinedMenuItem({ item }),
+            ),
+          }),
           new Submenu({ text: "View" }),
           new Submenu({ text: "Help" }),
           new Submenu({ text: "Window", items: [new MenuItem({ text: "Minimize" })] }),
@@ -103,12 +109,13 @@ vi.mock("@tauri-apps/api/menu", () => {
     Menu,
     Submenu,
     MenuItem,
-    PredefinedMenuItem: MenuItem,
+    PredefinedMenuItem,
   };
 });
 
 import NativeMacosMenu from "./native-macos-menu";
 import { Project } from "@/core/Project";
+import { PredefinedMenuItem } from "@tauri-apps/api/menu";
 
 beforeEach(() => {
   state.config = [
@@ -153,20 +160,41 @@ describe("macOS system menus", () => {
     await vi.waitFor(() => expect(ready).toHaveBeenCalledWith(true));
     const entries = state.installed.options.items;
     const expected = ["file", "actions", "view", "ai", "extensions", "window"];
-    expect(entries.map((entry: any) => entry.options.text)).toEqual(["Project Graph", ...expected]);
-    expect(entries.slice(1).map((entry: any) => entry.options.icon.id)).toEqual(expected);
+    expect(entries.map((entry: any) => entry.options.text)).toEqual(["Project Graph", "Edit", ...expected]);
+    expect(entries.slice(2).map((entry: any) => entry.options.icon.id)).toEqual(expected);
     expect(state.invoke).toHaveBeenCalledWith("style_macos_menu_icons", {
       icons: expected.map((title) => ({ title, width: 52 })),
     });
-    expect(entries[6].options.items[0].options.text).toBe("Minimize");
-    expect(entries[6].options.systemWindowMenu).toBe(true);
-    const recent = entries[1].options.items[0].options.items[0];
+    const windowMenu = entries.find((entry: any) => entry.options.text === "window");
+    expect(windowMenu.options.items[0].options.text).toBe("Minimize");
+    expect(windowMenu.options.systemWindowMenu).toBe(true);
+    const recent = entries.find((entry: any) => entry.options.text === "file").options.items[0].options.items[0];
     expect(recent.options.text).toBe("recent.prg");
     recent.options.action();
     expect(state.openFile).toHaveBeenCalledOnce();
     expect(entries[0].options.items.map((item: any) => item.options.text)).toEqual(["settings", "Services", "Quit"]);
     entries[0].options.items[0].options.items[0].options.action();
     await vi.waitFor(() => expect(state.bindings.get("openSettings").onPress).toHaveBeenCalledOnce());
+  });
+
+  it.each([true, false])("preserves native text editing commands when actions visibility is %s", async (visible) => {
+    state.config.find((item) => item.id === "actions").visible = visible;
+    const ready = vi.fn();
+    NativeMacosMenu({ onReady: ready });
+    await vi.waitFor(() => expect(ready).toHaveBeenCalledWith(true));
+    const editMenu = state.installed.options.items.find((entry: any) => entry.options.text === "Edit");
+    expect(editMenu).toBeDefined();
+    const items = editMenu.options.items;
+    expect(items.map((item: any) => item.options.item)).toEqual([
+      "Undo",
+      "Redo",
+      "Separator",
+      "Cut",
+      "Copy",
+      "Paste",
+      "SelectAll",
+    ]);
+    expect(items.every((item: any) => item instanceof PredefinedMenuItem)).toBe(true);
   });
 
   it("uses the latest project and rechecks the command condition at click time", async () => {
