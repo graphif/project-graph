@@ -71,7 +71,7 @@ function SplitView({
       </div>
       <div
         className={cn(
-          "bg-border hover:bg-primary z-20 shrink-0 touch-none transition-colors",
+          "bg-background z-20 shrink-0 touch-none",
           horizontal ? "w-1 cursor-col-resize" : "h-1 cursor-row-resize",
         )}
         onPointerDown={(event) => {
@@ -93,7 +93,9 @@ function SplitView({
           window.addEventListener("pointermove", onMove);
           window.addEventListener("pointerup", onUp);
         }}
-      />
+      >
+        <div className="bg-border hover:bg-primary size-full cursor-[inherit] transition-colors" />
+      </div>
       <div className="min-h-0 min-w-0 flex-1">{renderNode(node.children[1])}</div>
     </div>
   );
@@ -171,9 +173,9 @@ export default function DockedArea({
         key={node.id}
         data-pg-tab-group-id={node.id}
         className={cn(
-          "relative flex size-full min-h-0 min-w-0 flex-col overflow-hidden",
-          root?.type === "split" && "border-border border",
-          root?.type === "split" && activeGroupId === node.id && "border-primary/60",
+          "has-[[data-pg-opaque-panel]]:bg-background relative flex size-full min-h-0 min-w-0 flex-col overflow-hidden",
+          root?.type === "split" && "border-background outline-border border outline-1 -outline-offset-1",
+          root?.type === "split" && activeGroupId === node.id && "outline-primary/60",
         )}
         onPointerDownCapture={() => {
           if (activeTab && store.get(activeTabAtom) !== activeTab) TabWorkspace.focus(activeTab.id);
