@@ -524,7 +524,6 @@ export default function RecentFilesWindow({ tabId }: { tabId: string }) {
 
   return (
     <div
-      data-pg-opaque-panel
       className={cn("flex h-full flex-col items-center gap-2")}
       onMouseMove={() => {
         hasMouseMovedRef.current = true;

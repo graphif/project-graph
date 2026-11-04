@@ -17,7 +17,7 @@ import { toast } from "sonner";
 export default function TagWindow() {
   const [tab] = useAtom(activeResourceTabAtom);
   const project = tab instanceof Project ? tab : undefined;
-  if (!project) return <div data-pg-opaque-panel className="h-full" />;
+  if (!project) return <></>;
 
   const [tagNameList, setTagNameList] = React.useState<
     { tagName: string; uuid: string; color: [number, number, number, number] }[]
@@ -66,7 +66,7 @@ export default function TagWindow() {
   };
 
   return (
-    <div data-pg-opaque-panel className="flex h-full flex-col">
+    <div className="flex h-full flex-col">
       <div className="flex justify-center gap-2">
         <Tooltip>
           <TooltipTrigger>
