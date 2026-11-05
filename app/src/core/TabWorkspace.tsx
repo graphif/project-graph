@@ -55,7 +55,6 @@ function preferMainGroup(root: TabGroupNode | null) {
  */
 function dockToSideGroup(tabId: string, edge: FixedSideEdge) {
   const fixedId = FIXED_SIDE_GROUP_IDS[edge];
-  removeFromGroup(tabId);
   let root = store.get(tabGroupRootAtom);
 
   if (findTabGroup(root, fixedId)) {
@@ -129,15 +128,22 @@ export namespace TabWorkspace {
     store.set(tabGroupRootAtom, root);
   }
 
-  export function open<T extends Tab>(tab: T): T {
+  export function open<T extends Tab>(tab: T, splitEdge?: TabDropEdge): T {
     tab.floatingRect = constrainRect(tab.floatingRect);
     tab.zIndex = maxZIndex() + 1;
     store.set(tabsAtom, [...store.get(tabsAtom), tab]);
-    if (tab.layout === "docked") {
+    if (tab.layout === "docked" && (splitEdge === "left" || splitEdge === "right")) {
+      dockToSideGroup(tab.id, splitEdge);
+    } else if (tab.layout === "docked") {
       const root = store.get(tabGroupRootAtom);
       const target = findTabGroup(root, store.get(activeGroupIdAtom) ?? "") ?? getTabGroups(root)[0];
       if (target) {
-        store.set(tabGroupRootAtom, insertTabIntoGroup(root, target.id, tab.id));
+        store.set(
+          tabGroupRootAtom,
+          splitEdge
+            ? splitTabGroup(root, target.id, createTabGroup([tab.id]), splitEdge)
+            : insertTabIntoGroup(root, target.id, tab.id),
+        );
       } else {
         const group = createTabGroup([tab.id]);
         store.set(tabGroupRootAtom, group);
@@ -158,23 +164,15 @@ export namespace TabWorkspace {
   }
 
   export function create(options: ComponentTabOptions): ComponentTab {
-    const tab = open(
+    return open(
       new ComponentTab({
         ...options,
         contextResourceTab:
           options.contextResourceTab ??
           (options.contextTarget === "activeResourceTab" ? store.get(activeResourceTabAtom) : undefined),
       }),
+      options.splitEdge,
     );
-    if (tab.layout === "docked" && options.splitEdge) {
-      if (options.splitEdge === "left" || options.splitEdge === "right") {
-        focus(tab.id);
-        dockToSideGroup(tab.id, options.splitEdge);
-      } else {
-        split(tab.id, options.splitEdge);
-      }
-    }
-    return tab;
   }
 
   export function get(id: string) {
