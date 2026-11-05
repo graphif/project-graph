@@ -88,10 +88,14 @@ export const ProjectTabs = memo(function ProjectTabs({
       data-pg-tab-bar
       data-pg-tab-group-bar-id={groupId}
       className={cn(
-        "scrollbar-hide z-10 flex h-8 items-center gap-1.5 overflow-x-auto px-3 py-1 whitespace-nowrap transition-opacity hover:opacity-100",
+        "hover:bg-background/60 scrollbar-hide z-10 flex h-8 items-center gap-1.5 overflow-x-auto px-3 py-1 whitespace-nowrap transition-[background-color,opacity] duration-150 hover:opacity-100",
         isClassroomMode && "opacity-0",
       )}
       onScroll={handleScroll}
+      onWheel={(event) => {
+        if (event.shiftKey || event.ctrlKey || event.deltaX !== 0) return;
+        event.currentTarget.scrollLeft += event.deltaY;
+      }}
     >
       {tabs.map((tab) => (
         <TabContextMenu key={tab.id} tab={tab} onClose={onTabClose}>

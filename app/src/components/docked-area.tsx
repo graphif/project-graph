@@ -5,7 +5,6 @@ import { TabGroupNode } from "@/core/TabGroup";
 import { TabWorkspace } from "@/core/TabWorkspace";
 import { activeGroupIdAtom, activeTabAtom, store, tabDropTargetAtom, tabGroupRootAtom, tabsAtom } from "@/state";
 import { cn } from "@/utils/cn";
-import { isMac } from "@/utils/platform";
 import { useAtomValue } from "jotai";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -186,7 +185,6 @@ export default function DockedArea({
           className={cn(
             "relative z-10 shrink-0",
             atWindowTop && "pt-[calc(2rem*var(--pg-ui-scale,1))] sm:pt-[calc(3.5rem*var(--pg-ui-scale,1))]",
-            atWindowTop && isMac && root?.type === "group" && "w-[35%] pt-7 sm:pt-7",
           )}
         >
           <ProjectTabs
