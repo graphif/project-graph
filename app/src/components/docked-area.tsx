@@ -5,8 +5,9 @@ import { TabGroupNode } from "@/core/TabGroup";
 import { TabWorkspace } from "@/core/TabWorkspace";
 import { activeGroupIdAtom, activeTabAtom, store, tabDropTargetAtom, tabGroupRootAtom, tabsAtom } from "@/state";
 import { cn } from "@/utils/cn";
+import { isMac } from "@/utils/platform";
 import { useAtomValue } from "jotai";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "./ui/button";
 
@@ -140,15 +141,43 @@ function DropPreview({ groupId }: { groupId: string }) {
 export default function DockedArea({
   onTabClick,
   onTabClose,
+  onTitleBarMouseDown,
   isClassroomMode,
 }: {
   onTabClick: (tab: Tab) => void;
   onTabClose: (tab: Tab) => void;
+  onTitleBarMouseDown: (event: React.MouseEvent<HTMLDivElement>) => void;
   isClassroomMode: boolean;
 }) {
   const root = useAtomValue(tabGroupRootAtom);
   const tabs = useAtomValue(tabsAtom);
   const activeGroupId = useAtomValue(activeGroupIdAtom);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const tabSpace = document.querySelector<HTMLElement>("[data-pg-titlebar-tab-space]");
+    if (!container || !tabSpace) return;
+    const topBars = container.querySelectorAll<HTMLElement>("[data-pg-window-top-tabs]");
+    const update = () => {
+      const space = tabSpace.getBoundingClientRect();
+      const minimumWidth = 96 * (Number(getComputedStyle(container).getPropertyValue("--pg-ui-scale")) || 1);
+      for (const bar of topBars) {
+        const rect = bar.getBoundingClientRect();
+        const left = Math.min(rect.right, Math.max(rect.left, space.left));
+        const right = Math.max(left, Math.min(rect.right, space.right));
+        const separateRow = right - left < Math.min(rect.width, minimumWidth);
+        bar.toggleAttribute("data-pg-tabs-separate-row", separateRow);
+        bar.style.paddingLeft = separateRow ? "" : `${left - rect.left}px`;
+        bar.style.paddingRight = separateRow ? "" : `${rect.right - right}px`;
+      }
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(container);
+    observer.observe(tabSpace);
+    update();
+    return () => observer.disconnect();
+  }, [root]);
 
   const renderNode = (node: TabGroupNode, atWindowTop = true): React.ReactNode => {
     if (node.type === "split") {
@@ -182,19 +211,29 @@ export default function DockedArea({
         }}
       >
         <div
+          data-pg-window-top-tabs={atWindowTop ? "" : undefined}
           className={cn(
-            "relative z-10 shrink-0",
-            atWindowTop && "pt-[calc(2rem*var(--pg-ui-scale,1))] sm:pt-[calc(3.5rem*var(--pg-ui-scale,1))]",
+            "relative z-10 flex shrink-0 items-center",
+            atWindowTop &&
+              "h-[calc(2rem*var(--pg-ui-scale,1))] data-[pg-tabs-separate-row]:h-auto data-[pg-tabs-separate-row]:pt-[calc(2rem*var(--pg-ui-scale,1))] sm:h-[calc(3.5rem*var(--pg-ui-scale,1))] sm:data-[pg-tabs-separate-row]:pt-[calc(3.5rem*var(--pg-ui-scale,1))]",
+            atWindowTop && isMac && "sm:pt-[calc(1rem*var(--pg-ui-scale,1))]",
           )}
+          onMouseDown={(event) => {
+            if (atWindowTop && !(event.target as Element).closest("[data-pg-docked-tab-id]")) {
+              onTitleBarMouseDown(event);
+            }
+          }}
         >
-          <ProjectTabs
-            groupId={node.id}
-            tabs={groupTabs}
-            activeTab={activeTab}
-            onTabClick={onTabClick}
-            onTabClose={onTabClose}
-            isClassroomMode={isClassroomMode}
-          />
+          <div className="min-w-0 flex-1" style={{ zoom: "var(--pg-ui-scale, 1)" }}>
+            <ProjectTabs
+              groupId={node.id}
+              tabs={groupTabs}
+              activeTab={activeTab}
+              onTabClick={onTabClick}
+              onTabClose={onTabClose}
+              isClassroomMode={isClassroomMode}
+            />
+          </div>
         </div>
         <div
           className={cn(
@@ -212,5 +251,9 @@ export default function DockedArea({
     );
   };
 
-  return <div className="absolute inset-0 min-h-0 min-w-0 overflow-hidden">{root && renderNode(root)}</div>;
+  return (
+    <div ref={containerRef} className="absolute inset-0 min-h-0 min-w-0 overflow-hidden">
+      {root && renderNode(root)}
+    </div>
+  );
 }
