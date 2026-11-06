@@ -19,10 +19,10 @@ export const nativeMacosMenuIds = new Set([
   "file",
   "actions",
   "view",
+  "settings",
   "ai",
   "extensions",
   "window",
-  "settings",
   "about",
 ]);
 
@@ -110,16 +110,13 @@ export default function NativeMacosMenu({ onReady }: { onReady: (ready: boolean)
             await menu.remove(entry);
           }
         }
-        const settings = config.find((item) => item.id === "settings" && item.type === "topMenu");
         const about = config.find((item) => item.id === "about" && item.type === "topMenu");
         const applicationMenu = defaults[0];
         if (!(applicationMenu instanceof Submenu)) throw new Error("Application menu is unavailable");
         const previousAbout = await applicationMenu.removeAt(0);
         if (previousAbout) own(previousAbout);
-        const applicationItems: ConfigItem[] = [
-          ...(settings ? [{ ...settings, type: "sub" as const }] : []),
-          ...(about?.visible !== false ? (about?.children ?? []).filter((item) => item.id !== "openAboutWindow") : []),
-        ];
+        const applicationItems: ConfigItem[] =
+          about?.visible !== false ? (about?.children ?? []).filter((item) => item.id !== "openAboutWindow") : [];
         let applicationIndex = 0;
         for (const item of applicationItems) {
           const built = await buildItem(item);
@@ -127,7 +124,7 @@ export default function NativeMacosMenu({ onReady }: { onReady: (ready: boolean)
         }
         let windowMenu: Submenu | undefined;
         for (const id of nativeMacosMenuIds) {
-          if (id === "settings" || id === "about") continue;
+          if (id === "about") continue;
           const top = config.find((item) => item.id === id && item.type === "topMenu");
           if (!top || top.visible === false) continue;
           const built = await buildItem(top);

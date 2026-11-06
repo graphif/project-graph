@@ -120,7 +120,17 @@ import { PredefinedMenuItem } from "@tauri-apps/api/menu";
 beforeEach(() => {
   state.config = [
     { type: "topMenu", id: "about", children: [{ type: "item", id: "openAboutWindow" }] },
-    { type: "topMenu", id: "settings", children: [{ type: "item", id: "openSettings" }] },
+    {
+      type: "topMenu",
+      id: "settings",
+      children: [
+        { type: "item", id: "clickAppMenuSettingsButton" },
+        { type: "item", id: "openConfigFolder" },
+        { type: "item", id: "openCacheFolder" },
+        { type: "item", id: "openDefaultBackupFolder" },
+        { type: "item", id: "openCustomBackupFolder" },
+      ],
+    },
     { type: "topMenu", id: "ai", children: [{ type: "item", id: "openAI" }] },
     { type: "topMenu", id: "window", children: [] },
     {
@@ -133,7 +143,9 @@ beforeEach(() => {
     { type: "topMenu", id: "extensions", children: [] },
   ];
   state.bindings.clear();
-  state.bindings.set("openSettings", { onPress: vi.fn() });
+  for (const item of state.config.find((item) => item.id === "settings").children) {
+    state.bindings.set(item.id, { onPress: vi.fn() });
+  }
   state.bindings.set("openAboutWindow", { onPress: vi.fn() });
   state.project = undefined;
   state.installed = undefined;
@@ -154,12 +166,12 @@ beforeEach(() => {
 });
 
 describe("macOS system menus", () => {
-  it("replaces About with Settings in the application menu and preserves system actions", async () => {
+  it("exposes Settings in the menu bar and preserves system actions", async () => {
     const ready = vi.fn();
     NativeMacosMenu({ onReady: ready });
     await vi.waitFor(() => expect(ready).toHaveBeenCalledWith(true));
     const entries = state.installed.options.items;
-    const expected = ["file", "actions", "view", "ai", "extensions", "window"];
+    const expected = ["file", "actions", "view", "settings", "ai", "extensions", "window"];
     expect(entries.map((entry: any) => entry.options.text)).toEqual(["Project Graph", "Edit", ...expected]);
     expect(entries.slice(2).map((entry: any) => entry.options.icon.id)).toEqual(expected);
     expect(state.invoke).toHaveBeenCalledWith("style_macos_menu_icons", {
@@ -172,9 +184,28 @@ describe("macOS system menus", () => {
     expect(recent.options.text).toBe("recent.prg");
     recent.options.action();
     expect(state.openFile).toHaveBeenCalledOnce();
-    expect(entries[0].options.items.map((item: any) => item.options.text)).toEqual(["settings", "Services", "Quit"]);
-    entries[0].options.items[0].options.items[0].options.action();
-    await vi.waitFor(() => expect(state.bindings.get("openSettings").onPress).toHaveBeenCalledOnce());
+    expect(entries[0].options.items.map((item: any) => item.options.text)).toEqual(["Services", "Quit"]);
+    const settings = entries.find((entry: any) => entry.options.text === "settings").options.items;
+    expect(settings.map((item: any) => item.options.text)).toEqual([
+      "clickAppMenuSettingsButton",
+      "openConfigFolder",
+      "openCacheFolder",
+      "openDefaultBackupFolder",
+      "openCustomBackupFolder",
+    ]);
+    for (const item of settings) {
+      expect(item.options.enabled).toBe(true);
+      item.options.action();
+      await vi.waitFor(() => expect(state.bindings.get(item.options.text).onPress).toHaveBeenCalledWith(undefined));
+    }
+  });
+
+  it("respects the visibility of the Settings menu", async () => {
+    state.config.find((item) => item.id === "settings").visible = false;
+    const ready = vi.fn();
+    NativeMacosMenu({ onReady: ready });
+    await vi.waitFor(() => expect(ready).toHaveBeenCalledWith(true));
+    expect(state.installed.options.items.some((entry: any) => entry.options.text === "settings")).toBe(false);
   });
 
   it.each([true, false])("preserves native text editing commands when actions visibility is %s", async (visible) => {

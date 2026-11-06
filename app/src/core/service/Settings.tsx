@@ -795,6 +795,8 @@ export const settingsSchema = z.object({
           { type: "item", id: "resetAllKeyBinds", icon: "Radiation" },
           { type: "item", id: "openConfigFolder", icon: "FolderCog" },
           { type: "item", id: "openCacheFolder", icon: "FolderOpen" },
+          { type: "item", id: "openDefaultBackupFolder", icon: "FolderClock" },
+          { type: "item", id: "openCustomBackupFolder", icon: "FolderClock" },
         ],
       },
       // ===================== AI =====================
