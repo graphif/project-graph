@@ -20,34 +20,46 @@ Go 主要负责本地文件等系统能力；绝大部分业务逻辑在前端�
 
 - Frontend Vite project: `/app`
 - Go / MyGo: `/app/main.go`、`/app/internal/desktop`
+- 应用装配与启动流程：`/app/src/application`
+- 首次引导与旧数据迁移：`/app/src/features/onboarding`
+- MyGo 平台适配（文件、存储、窗口、HTTP）：`/app/src/platform`
 - UI components: `/app/src/components`
 - i18n locales: `/app/src/locales`
 - React state (Jotai 等): `/app/src/state.tsx` 及附近
 
 ### `app/src/core`（核心业务）
 
-| 路径                              | 职责                                                                            |
-| --------------------------------- | ------------------------------------------------------------------------------- |
-| `Project.tsx`                     | 单个工程/项目实例的入口与生命周期                                               |
-| `Tab*.ts(x)` / `TabWorkspace.tsx` | 标签页与工作区                                                                  |
-| `loadAllServices.tsx`             | 注册/加载全部服务                                                               |
-| `algorithm/`                      | 通用算法与几何工具                                                              |
-| `stage/`                          | 舞台：`Camera`、`Canvas`、舞台对象（`stageObject`）、舞台管理（`stageManager`） |
-| `render/`                         | 渲染：`canvas2d`、`svg`、`3d`、`domElement`                                     |
-| `service/`                        | 业务服务（见下）                                                                |
-| `extension/`                      | 扩展系统运行时与 API                                                            |
-| `fileSystemProvider/`             | 文件系统抽象（草稿/本地文件等）                                                 |
-| `interfaces/`                     | 核心接口（如 `Service`）                                                        |
-| `subWindowOpen*.ts`               | 子窗口打开方式                                                                  |
+| 路径                            | 职责                                                                                      |
+| ------------------------------- | ----------------------------------------------------------------------------------------- |
+| `project.tsx`                   | 单个工程/项目实例的入口与生命周期                                                         |
+| `tab.tsx` / `tab-workspace.tsx` | 标签页与工作区                                                                            |
+| `load-all-services.tsx`         | 注册/加载全部服务                                                                         |
+| `algorithm/`                    | 通用算法与几何工具                                                                        |
+| `stage/`                        | 舞台：`camera.ts`、`canvas.ts`、舞台对象（`stage-object/`）、舞台管理（`stage-manager/`） |
+| `render/`                       | 渲染：`canvas2d`、`svg`、`3d`、`domElement`                                               |
+| `service/`                      | 业务服务（见下）                                                                          |
+| `extension/`                    | 扩展系统运行时与 API                                                                      |
+| `file-system-provider/`         | 文件系统抽象（草稿/本地文件等）                                                           |
+| `interfaces/`                   | 核心接口（如 `Service`）                                                                  |
+| `sub-window-open.ts`            | 子窗口打开方式                                                                            |
+| `persistence/`                  | 显式 codec、旧文件读取、JSON PRG writer                                                   |
 
 `service/` 主要子目录：
 
-- `controlService/` — 输入控制、快捷键、框选、自动布局等
-- `dataFileService/` — 工程文件读写
-- `dataGenerateService/` — 数据生成
-- `dataManageService/` — 内容搜索、复制、AI、节点工具等
-- `feedbackService/` — 特效、音效、舞台样式、颜色
-- `Settings.tsx` 等 — 设置、主题、菜单、教程等全局服务
+- `control-service/` — 输入控制、快捷键、框选、自动布局等
+- `data-file-service/` — 工程文件读写
+- `data-generate-service/` — 数据生成
+- `data-manage-service/` — 内容搜索、复制、AI、节点工具等
+- `feedback-service/` — 特效、音效、舞台样式、颜色
+- `settings.tsx`、`themes.tsx` 等 — 设置、主题、菜单、教程等全局服务
+
+### 命名约定
+
+- 目录与文件统一 **kebab-case**；`app/src` 内不含大写开头的文件或目录。
+- 只有包含 JSX 的文件用 `.tsx`，其余用 `.ts`。
+- 不新增 `index.tsx` barrel；显式引用实际文件。
+- TS 符号按语义惯例：组件/类/类型/接口用 PascalCase，函数/变量用 camelCase，常量用 UPPER_SNAKE_CASE。
+- 协议标识（序列化 `kind`、设置键、子窗口 ID、快捷键 ID）不随文件改名而改变。
 
 ### Packages（`/packages`）
 

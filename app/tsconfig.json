@@ -22,7 +22,8 @@
 
     // 其他
     "experimentalDecorators": true, // 开启装饰器
-    "emitDecoratorMetadata": true,
+    // Serialization uses explicit symbol metadata, not eager design:type class references.
+    "emitDecoratorMetadata": false,
     "preserveSymlinks": false,
 
     "baseUrl": ".",

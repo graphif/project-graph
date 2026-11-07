@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatEmacsKey } from "@/utils/emacs";
-import { formatKeyBindSequence, formatSigalKeyForDisplay, getModifierDisplayTexts } from "@/utils/keyDisplay";
+import { formatKeyBindSequence, formatSigalKeyForDisplay, getModifierDisplayTexts } from "@/utils/key-display";
 import { Check, Delete, Info } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -116,7 +116,7 @@ export default function KeyBind({
       <Button onClick={startInput} variant={choosing ? "outline" : "default"} className="gap-0">
         {value
           ? formatKeyBindSequence(value.trim()).map((item, index) => (
-              <span key={index} className="not-first:before:content-[',_'] flex gap-1 font-bold">
+              <span key={index} className="flex gap-1 font-bold not-first:before:content-[',_']">
                 {item.modifiers.map((modifier, modIndex) => (
                   <span className="bg-card text-foreground rounded-sm px-1 font-semibold" key={modIndex}>
                     {modifier}
@@ -153,7 +153,7 @@ export function RenderKey({ data }: { data: ReturnType<typeof import("@/utils/em
   const modifiers = getModifierDisplayTexts(data);
   const keyShow = formatSigalKeyForDisplay(data.key);
   return (
-    <span className="not-first:before:content-[',_'] flex gap-1 font-bold">
+    <span className="flex gap-1 font-bold not-first:before:content-[',_']">
       {modifiers.map((modifier, index) => (
         <span className="bg-card text-foreground rounded-sm px-1 font-semibold" key={index}>
           {modifier}

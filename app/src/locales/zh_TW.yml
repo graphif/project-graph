@@ -2464,9 +2464,6 @@ keyBinds:
   devNodeDetails:
     title: 節點詳情
     description: 打開節點詳情面板
-  devOnboarding:
-    title: 新手引導
-    description: 重新打開新手引導窗口
   devOpenTestWindow:
     title: 打開測試窗口
     description: 打開開發者測試窗口
@@ -2740,6 +2737,48 @@ common:
     editingMode: 正在編輯模式
     lineBreak: 換行
     exitEdit: 退出編輯模式
+
+onboarding:
+  progress: 初次設置
+  next: 下一步
+  back: 上一步
+  continue: 繼續
+  finish: 開始創作
+  close: 關閉
+  retry: 重新檢測
+  failed: 操作失敗，可以重試
+  website: 官網與手動下載入口
+  welcome:
+    title: 歡迎使用 Project Graph
+    subtitle: 為下一個想法準備一張安靜、開放的畫布。
+    language: 語言
+  migration:
+    title: 遷移舊版數據
+    subtitle: 將舊版 Project Graph 的數據遷移到新版。
+    checking: 正在查找舊版數據……
+    found: 找到了你的舊版數據
+    not-detected: 沒有發現舊版數據，可以直接繼續
+    failed: 暫時無法查找舊版數據，請重試
+    running: 請先保存並關閉舊版 Project Graph，再重新檢測
+    contents: 設置、最近文件記錄、草稿、AI 會話和擴展將一起遷移，項目文件仍保留在原來的位置。
+    import: 一鍵遷移
+    importing: 正在遷移，請稍候……
+    imported: 遷移完成
+    report: "已遷移 {{imported}} 個數據文件，可以繼續設置了。舊版數據已保留。"
+    safety: 舊版數據不會被刪除。遷移會替換新版對應數據；如果是第一次使用，可以跳過。這是唯一的遷移入口。
+    skip: 跳過遷移
+  appearance:
+    title: 調整成你的樣子
+    subtitle: 選擇喜歡的配色和大小，之後隨時可以修改。
+    theme: 配色主題
+    scale: 界面縮放
+    preview: 下一個想法，從一個節點開始。
+    light: 淺色
+    dark: 深色
+  ready:
+    title: 一切就緒
+    subtitle: 你的畫布已經準備好了。
+    safety: 外觀和操作習慣隨時可以在設置中調整。確認遷移結果前，請保留舊版數據和項目文件。
 
 projectOwnership:
   alreadyOpen: 已切換到打開的標籤頁。

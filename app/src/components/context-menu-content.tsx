@@ -6,14 +6,14 @@ import {
   ContextMenuSubContent,
   ContextMenuSubTrigger,
 } from "@/components/ui/context-menu";
-import { Project } from "@/core/Project";
-import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
-import { allKeyBinds } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
-import { ColorManager } from "@/core/service/feedbackService/ColorManager";
-import { Settings } from "@/core/service/Settings";
+import { Project } from "@/core/project";
+import { KeyBindsUI } from "@/core/service/control-service/shortcut-keys-engine/key-binds-ui";
+import { allKeyBinds } from "@/core/service/control-service/shortcut-keys-engine/shortcut-keys-register";
+import { ColorManager } from "@/core/service/feedback-service/color-manager";
+import { Settings } from "@/core/service/settings";
 import { activeResourceTabAtom } from "@/state";
-import ColorPaletteWindow from "@/sub/ColorPaletteWindow";
-import ColorWindow from "@/sub/ColorWindow";
+import ColorPaletteWindow from "@/sub/color-palette-window";
+import ColorWindow from "@/sub/color-window";
 import { Color } from "@graphif/data-structures";
 import { useAtom } from "jotai";
 import type { LucideProps } from "lucide-react";

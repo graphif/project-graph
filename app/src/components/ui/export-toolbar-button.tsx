@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { BaseEditorKit } from "@/components/editor/editor-base-kit";
-import { ensureCodeLanguage } from "@/utils/codeHighlight";
+import { ensureCodeLanguage } from "@/utils/code-highlight";
 
 import { EditorStatic } from "./editor-static";
 import { ToolbarButton } from "./toolbar";

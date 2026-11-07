@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({
   isMyGo: vi.fn(() => true),
   read: vi.fn<(...args: unknown[]) => Promise<Record<string, unknown>>>(),
   set: vi.fn<(...args: unknown[]) => Promise<void>>(),
+  setMany: vi.fn<(...args: unknown[]) => Promise<void>>(),
   delete: vi.fn(),
   clear: vi.fn(),
 }));
@@ -17,9 +18,17 @@ beforeEach(() => {
   mocks.isMyGo.mockReturnValue(true);
   mocks.read.mockResolvedValue({});
   mocks.set.mockResolvedValue();
+  mocks.setMany.mockResolvedValue();
 });
 
 describe("MyGo stores", () => {
+  it("awaits an atomic batch and exposes failures for retry", async () => {
+    const store = new LazyStore("settings.json");
+    mocks.setMany.mockRejectedValueOnce(new Error("disk full"));
+    await expect(store.setMany({ theme: "light", language: "en" })).rejects.toThrow("disk full");
+    await expect(store.setMany({ theme: "light", language: "en" })).resolves.toBeUndefined();
+    expect(mocks.setMany).toHaveBeenLastCalledWith("settings.json", { theme: "light", language: "en" });
+  });
   it("uses the typed Go service for lazy stores without initializing on import", async () => {
     const store = new LazyStore("settings.json");
     expect(mocks.read).not.toHaveBeenCalled();

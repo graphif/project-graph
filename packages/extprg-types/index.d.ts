@@ -19,7 +19,6 @@ import type {
   WheelEvent,
 } from "react";
 import type { Camera, Folder, LucideProps, X, ZoomIn, ZoomOut } from "lucide-react";
-import type { Decoder, Encoder } from "@msgpack/msgpack";
 import type { DefaultChatTransport, UIMessage } from "ai";
 import type { JSONSchema } from "zod/v4/core";
 import type { ProxyMethods } from "comlink";
@@ -72,6 +71,25 @@ declare const buttonVariants: (
         ClassProp)
     | undefined,
 ) => string;
+/**
+ * 算法门面：负责投影数据、调用算法、校验结果并在一个事务里应用补丁。
+ * 业务代码只通过 project.algorithms 使用算法，不直接拼桥消息。
+ */
+declare interface Algorithms {
+  readonly project: Project;
+  layoutDag(
+    entities: Array<ConnectableEntity | SerializedObject<"ConnectableEntity">>,
+    options: undefined | DAGLayoutOptions | SerializedObject<"DAGLayoutOptions">,
+  ): Promise<DAGLayoutResult>;
+}
+declare type DAGLayoutResult = {
+  movedCount: number;
+  internalEdgeCount: number;
+};
+declare type DAGLayoutOptions = {
+  horizontalSpacing?: number;
+  verticalSpacing?: number;
+};
 declare const entity_create: (
   typeName: string,
   data: any,
@@ -139,6 +157,7 @@ declare interface FileSystemProvider {
     uri: URI | SerializedObject<"URI">,
     content: Uint8Array<ArrayBufferLike> | SerializedObject<"Uint8Array">,
   ): Promise<void>;
+  writeNew?: ((uri: URI, content: Uint8Array<ArrayBufferLike>) => Promise<void>) | undefined;
   remove(uri: URI | SerializedObject<"URI">): Promise<void>;
   exists(uri: URI | SerializedObject<"URI">): Promise<boolean>;
   mkdir(uri: URI | SerializedObject<"URI">): Promise<void>;
@@ -147,6 +166,14 @@ declare interface FileSystemProvider {
 declare interface Service {
   tick?: (() => void) | undefined;
   dispose?: (() => void | Promise<void>) | undefined;
+}
+declare interface ProjectOwnershipLease {
+  disposePromise?: Promise<void> | undefined;
+  disposed: boolean;
+  readonly ownershipId: string;
+  readonly canonicalPath: string;
+  makeConnectable(): Promise<void>;
+  dispose(): Promise<void>;
 }
 /**
  * “工程”
@@ -164,6 +191,8 @@ declare interface Project {
   _isSaving: boolean;
   readonly projectOwnership: ProjectOwnershipLifecycle;
   stage: StageObject[];
+  readonly stageCleanupTasks: Set<Promise<void>>;
+  replaceStage(stage: Array<StageObject | SerializedObject<"StageObject">>): void;
   sectionMoveDepth: number;
   tags: string[];
   /**
@@ -171,12 +200,7 @@ declare interface Project {
    * value: Blob
    */
   attachments: Map<string, Blob>;
-  /**
-   * 创建Encoder对象比直接用encode()快
-   * @see https://github.com/msgpack/msgpack-javascript#reusing-encoder-and-decoder-instances
-   */
-  encoder: Encoder<undefined>;
-  decoder: Decoder<undefined>;
+  requiresLegacySaveAs: boolean;
   attachProjectOwnership(ownership: ProjectOwnershipLease | SerializedObject<"ProjectOwnershipLease">): void;
   projectOwnerIdentity: string | undefined;
   canonicalProjectPath: string | undefined;
@@ -214,7 +238,7 @@ declare interface Project {
   metadata: PrgMetadata;
   readme?: string | undefined;
   wasUpgraded: boolean;
-  getFileContent(options: { includeThumbnail?: boolean | undefined }): Promise<Uint8Array<ArrayBuffer>>;
+  getFileContent(options: { includeThumbnail?: boolean | undefined }): Promise<Uint8Array<ArrayBufferLike>>;
   /**
    * 备份用：生成项目内容的哈希值，用于检测内容是否发生变化
    */
@@ -252,6 +276,7 @@ declare interface Project {
   complexityDetector: ComplexityDetector;
   aiEngine: AIEngine;
   copyEngine: CopyEngine;
+  algorithms: Algorithms;
   autoLayout: AutoLayout;
   autoLayoutFastTree: AutoLayoutFastTree;
   layoutManager: LayoutManager;
@@ -556,14 +581,6 @@ declare enum ProjectState {
    * 未上传到云端，也未暂存到本地
    */
   Unsaved,
-}
-declare interface ProjectOwnershipLease {
-  disposePromise?: Promise<void> | undefined;
-  disposed: boolean;
-  readonly ownershipId: string;
-  readonly canonicalPath: string;
-  makeConnectable(): Promise<void>;
-  dispose(): Promise<void>;
 }
 /**
  * 关于各种曲线和直线的渲染
@@ -1404,6 +1421,81 @@ declare interface VerticalPolyEdgeRenderer {
   isNormalState(edge: LineEdge | SerializedObject<"LineEdge">): boolean;
 }
 /**
+ * 不同类型的边的渲染器 基类
+ *
+ * 形态：
+ *   正常形态
+ *   自环形态
+ *   偏移形态（未实现）
+ *
+ * 交互时状态 阴影：
+ *   鼠标悬浮阴影
+ *   选中阴影
+ *   即将删除警告阴影
+ *
+ * 虚拟连线：
+ *   鼠标拖拽时还未连接到目标
+ *   鼠标拖拽时吸附到目标
+ *
+ * 特效：
+ *   连接成功特效
+ *   删除斩断特效
+ */
+declare interface EdgeRendererClass {
+  isCycleState(edge: LineEdge | SerializedObject<"LineEdge">): boolean;
+  isNormalState(edge: LineEdge | SerializedObject<"LineEdge">): boolean;
+  /**
+   * 绘制正常看到的状态
+   */
+  renderNormalState(edge: LineEdge | SerializedObject<"LineEdge">): void;
+  /**
+   * 绘制双向线的偏移状态
+   */
+  renderShiftingState(edge: LineEdge | SerializedObject<"LineEdge">): void;
+  /**
+   * 绘制自环状态
+   */
+  renderCycleState(edge: LineEdge | SerializedObject<"LineEdge">): void;
+  getNormalStageSvg(edge: LineEdge | SerializedObject<"LineEdge">): ReactNode;
+  getShiftingStageSvg(edge: LineEdge | SerializedObject<"LineEdge">): ReactNode;
+  getCycleStageSvg(edge: LineEdge | SerializedObject<"LineEdge">): ReactNode;
+  /**
+   * 绘制鼠标连线移动时的虚拟连线效果
+   * @param startNode
+   * @param mouseLocation 世界坐标系
+   */
+  renderVirtualEdge(
+    startNode: ConnectableEntity | SerializedObject<"ConnectableEntity">,
+    mouseLocation: Vector | SerializedObject<"Vector">,
+    sourceRectangleRate: undefined | Vector | SerializedObject<"Vector">,
+  ): void;
+  /**
+   * 绘制鼠标连线移动到目标节点上吸附住 时候虚拟连线效果
+   * @param startNode
+   * @param endNode
+   */
+  renderVirtualConfirmedEdge(
+    startNode: ConnectableEntity | SerializedObject<"ConnectableEntity">,
+    endNode: ConnectableEntity | SerializedObject<"ConnectableEntity">,
+    sourceRectangleRate: undefined | Vector | SerializedObject<"Vector">,
+    targetRectangleRate: undefined | Vector | SerializedObject<"Vector">,
+  ): void;
+  /**
+   * 获取这个线在切断时的特效
+   * 外层将在切断时根据此函数来获取特效并自动加入到渲染器中
+   */
+  getCuttingEffects(edge: Edge | SerializedObject<"Edge">): Effect[];
+  /**
+   * 获取这个线在连接成功时的特效
+   */
+  getConnectedEffects(
+    startNode: ConnectableEntity | SerializedObject<"ConnectableEntity">,
+    toNode: ConnectableEntity | SerializedObject<"ConnectableEntity">,
+    sourceRectangleRate: undefined | Vector | SerializedObject<"Vector">,
+    targetRectangleRate: undefined | Vector | SerializedObject<"Vector">,
+  ): Effect[];
+}
+/**
  * 边的总渲染器单例
  */
 declare interface EdgeRenderer {
@@ -1530,81 +1622,6 @@ declare interface EdgeRenderer {
     size: number,
     edgeColor: Color | SerializedObject<"Color">,
   ): ReactNode;
-}
-/**
- * 不同类型的边的渲染器 基类
- *
- * 形态：
- *   正常形态
- *   自环形态
- *   偏移形态（未实现）
- *
- * 交互时状态 阴影：
- *   鼠标悬浮阴影
- *   选中阴影
- *   即将删除警告阴影
- *
- * 虚拟连线：
- *   鼠标拖拽时还未连接到目标
- *   鼠标拖拽时吸附到目标
- *
- * 特效：
- *   连接成功特效
- *   删除斩断特效
- */
-declare interface EdgeRendererClass {
-  isCycleState(edge: LineEdge | SerializedObject<"LineEdge">): boolean;
-  isNormalState(edge: LineEdge | SerializedObject<"LineEdge">): boolean;
-  /**
-   * 绘制正常看到的状态
-   */
-  renderNormalState(edge: LineEdge | SerializedObject<"LineEdge">): void;
-  /**
-   * 绘制双向线的偏移状态
-   */
-  renderShiftingState(edge: LineEdge | SerializedObject<"LineEdge">): void;
-  /**
-   * 绘制自环状态
-   */
-  renderCycleState(edge: LineEdge | SerializedObject<"LineEdge">): void;
-  getNormalStageSvg(edge: LineEdge | SerializedObject<"LineEdge">): ReactNode;
-  getShiftingStageSvg(edge: LineEdge | SerializedObject<"LineEdge">): ReactNode;
-  getCycleStageSvg(edge: LineEdge | SerializedObject<"LineEdge">): ReactNode;
-  /**
-   * 绘制鼠标连线移动时的虚拟连线效果
-   * @param startNode
-   * @param mouseLocation 世界坐标系
-   */
-  renderVirtualEdge(
-    startNode: ConnectableEntity | SerializedObject<"ConnectableEntity">,
-    mouseLocation: Vector | SerializedObject<"Vector">,
-    sourceRectangleRate: undefined | Vector | SerializedObject<"Vector">,
-  ): void;
-  /**
-   * 绘制鼠标连线移动到目标节点上吸附住 时候虚拟连线效果
-   * @param startNode
-   * @param endNode
-   */
-  renderVirtualConfirmedEdge(
-    startNode: ConnectableEntity | SerializedObject<"ConnectableEntity">,
-    endNode: ConnectableEntity | SerializedObject<"ConnectableEntity">,
-    sourceRectangleRate: undefined | Vector | SerializedObject<"Vector">,
-    targetRectangleRate: undefined | Vector | SerializedObject<"Vector">,
-  ): void;
-  /**
-   * 获取这个线在切断时的特效
-   * 外层将在切断时根据此函数来获取特效并自动加入到渲染器中
-   */
-  getCuttingEffects(edge: Edge | SerializedObject<"Edge">): Effect[];
-  /**
-   * 获取这个线在连接成功时的特效
-   */
-  getConnectedEffects(
-    startNode: ConnectableEntity | SerializedObject<"ConnectableEntity">,
-    toNode: ConnectableEntity | SerializedObject<"ConnectableEntity">,
-    sourceRectangleRate: undefined | Vector | SerializedObject<"Vector">,
-    targetRectangleRate: undefined | Vector | SerializedObject<"Vector">,
-  ): Effect[];
 }
 /**
  * 仅仅渲染一个节点右上角的按钮
@@ -2158,6 +2175,101 @@ declare interface InputElement {
   addFailEffect(withToast: boolean): void;
   readonly project: Project;
 }
+/** 持久化成员（按账号） */
+declare type CollabMember = {
+  userId: string;
+  role: CollabRole;
+  name: string;
+  email: string;
+};
+/** 在线连接（按 session，同用户多端各一条） */
+declare type CollabPresence = {
+  sessionId: string;
+  userId: string;
+  role: CollabRole;
+  name: string;
+  email: string;
+  color: string;
+};
+declare type CollabRole = "owner" | "editor" | "viewer";
+declare type ServerToClientMessage =
+  | {
+      type: "joined";
+      roomId: string;
+      version: number;
+      stage: StageMapDoc;
+      tags: string[];
+      references: {
+        sections: Record<string, string[]>;
+        files: string[];
+      };
+      members: CollabMember[];
+      presences: CollabPresence[];
+      you: CollabPresence;
+    }
+  | {
+      type: "op";
+      version: number;
+      delta: unknown;
+      from: string;
+      opId: string;
+    }
+  | {
+      type: "reject";
+      baseVersion: number;
+      serverVersion: number;
+      reason: string;
+      stage?: StageMapDoc;
+      tags?: string[];
+      references?: {
+        sections: Record<string, string[]>;
+        files: string[];
+      };
+    }
+  | {
+      type: "presence";
+      event: "join" | "leave";
+      presence: CollabPresence;
+    }
+  | {
+      type: "cursor";
+      sessionId: string;
+      x: number | null;
+      y: number | null;
+    }
+  | {
+      type: "cursor_chat";
+      sessionId: string;
+      x: number | null;
+      y: number | null;
+      text: string;
+    }
+  /** @deprecated 兼容旧服务端，按 userId 处理 */
+  | {
+      type: "member";
+      event: "join" | "leave" | "role";
+      member: CollabMember;
+    }
+  | {
+      type: "attachment";
+      attachmentId: string;
+      contentType: string;
+    }
+  | {
+      type: "error";
+      message: string;
+    }
+  | {
+      type: "pong";
+    }
+  | {
+      type: "auth_ok";
+      user: {
+        id: string;
+        email: string;
+        name: string;
+      };
+    };
 declare interface CollaborationService {
   transport: CollabTransport;
   roomId: string | null;
@@ -2291,101 +2403,6 @@ declare type RemoteCursor = {
 declare type RemoteCursorChat = RemoteCursor & {
   text: string;
 };
-/** 持久化成员（按账号） */
-declare type CollabMember = {
-  userId: string;
-  role: CollabRole;
-  name: string;
-  email: string;
-};
-/** 在线连接（按 session，同用户多端各一条） */
-declare type CollabPresence = {
-  sessionId: string;
-  userId: string;
-  role: CollabRole;
-  name: string;
-  email: string;
-  color: string;
-};
-declare type CollabRole = "owner" | "editor" | "viewer";
-declare type ServerToClientMessage =
-  | {
-      type: "joined";
-      roomId: string;
-      version: number;
-      stage: StageMapDoc;
-      tags: string[];
-      references: {
-        sections: Record<string, string[]>;
-        files: string[];
-      };
-      members: CollabMember[];
-      presences: CollabPresence[];
-      you: CollabPresence;
-    }
-  | {
-      type: "op";
-      version: number;
-      delta: unknown;
-      from: string;
-      opId: string;
-    }
-  | {
-      type: "reject";
-      baseVersion: number;
-      serverVersion: number;
-      reason: string;
-      stage?: StageMapDoc;
-      tags?: string[];
-      references?: {
-        sections: Record<string, string[]>;
-        files: string[];
-      };
-    }
-  | {
-      type: "presence";
-      event: "join" | "leave";
-      presence: CollabPresence;
-    }
-  | {
-      type: "cursor";
-      sessionId: string;
-      x: number | null;
-      y: number | null;
-    }
-  | {
-      type: "cursor_chat";
-      sessionId: string;
-      x: number | null;
-      y: number | null;
-      text: string;
-    }
-  /** @deprecated 兼容旧服务端，按 userId 处理 */
-  | {
-      type: "member";
-      event: "join" | "leave" | "role";
-      member: CollabMember;
-    }
-  | {
-      type: "attachment";
-      attachmentId: string;
-      contentType: string;
-    }
-  | {
-      type: "error";
-      message: string;
-    }
-  | {
-      type: "pong";
-    }
-  | {
-      type: "auth_ok";
-      user: {
-        id: string;
-        email: string;
-        name: string;
-      };
-    };
 /**
  * 协作协议层文档：uuid → 序列化对象。
  * 内部引用用 { $u: uuid }，避免数组路径 $ 引用在 map 中失效。
@@ -2521,43 +2538,16 @@ declare interface AutoLayoutFastTree {
     direction: "X" | "Y",
   ): void;
 }
+/**
+ * DAG 布局的算法内核在 Go 侧（app/internal/algorithm），
+ * 这里只负责把业务动作转交给算法门面 project.algorithms。
+ */
 declare interface AutoLayout {
   readonly project: Project;
-  /**
-   * DAG布局算法输入数据结构
-   */
-  getDAGLayoutInput(entities: Array<ConnectableEntity | SerializedObject<"ConnectableEntity">>): {
-    nodes: { id: string; rectangle: Rectangle }[];
-    edges: { from: string; to: string }[];
-  };
-  /**
-   * DAG布局算法接口
-   * @param input 包含节点和边的DAG结构
-   * @returns 每个节点的新位置 { [nodeId: string]: Vector }
-   */
-  computeDAGLayout(input: { nodes: { id: string; rectangle: Rectangle }[]; edges: { from: string; to: string }[] }): {
-    [nodeId: string]: Vector;
-  };
-  /**
-   * 使用Kahn算法对DAG进行拓扑排序，并计算节点层数
-   * @param nodes 节点数组
-   * @param edges 边数组
-   * @returns 包含拓扑排序结果和节点层数映射的对象
-   */
-  topologicalSort(
-    nodes: Array<{ id: string; rectangle: Rectangle }>,
-    edges: Array<{ from: string; to: string }>,
-  ): { order: string[]; levels: Map<string, number> };
-  /**
-   * DAG布局主函数
-   * @param entities 选中的实体列表
-   */
-  autoLayoutDAG(entities: Array<ConnectableEntity | SerializedObject<"ConnectableEntity">>): DAGLayoutResult;
+  autoLayoutDAG(
+    entities: Array<ConnectableEntity | SerializedObject<"ConnectableEntity">>,
+  ): Promise<{ movedCount: number; internalEdgeCount: number }>;
 }
-declare type DAGLayoutResult = {
-  movedCount: number;
-  internalEdgeCount: number;
-};
 /**
  * 关系的重新塑性控制器
  *
@@ -2665,6 +2655,26 @@ declare interface ControllerCameraClass {
   lastMoveLocation: Vector;
   shouldHandleInteraction: boolean;
   dispose(): void;
+}
+declare interface ControllerContextMenuClass {
+  /** view */
+  mouseDownLocation: Vector;
+  mousedown(event: MouseEvent | SerializedObject<"MouseEvent">): void;
+  mouseup(event: MouseEvent | SerializedObject<"MouseEvent">): void;
+  readonly project: Project;
+  lastMoveLocation: Vector;
+  allowViewerModeInteraction: boolean;
+  shouldHandleInteraction: boolean;
+  keydown(event: KeyboardEvent | SerializedObject<"KeyboardEvent">): void;
+  keyup(event: KeyboardEvent | SerializedObject<"KeyboardEvent">): void;
+  mousemove(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  mousewheel(event: WheelEvent | SerializedObject<"WheelEvent">): void;
+  mouseDoubleClick(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  touchstart(event: TouchEvent | SerializedObject<"TouchEvent">): void;
+  touchmove(event: TouchEvent | SerializedObject<"TouchEvent">): void;
+  touchend(event: TouchEvent | SerializedObject<"TouchEvent">): void;
+  dispose(): void;
+  mouseMoveOutWindowForcedShutdown(_outsideLocation: Vector | SerializedObject<"Vector">): void;
 }
 declare interface ControllerCuttingClass {
   _controlKeyEventRegistered: boolean;
@@ -3137,6 +3147,50 @@ declare interface ControllerSectionEditClass {
   mouseMoveOutWindowForcedShutdown(_outsideLocation: Vector | SerializedObject<"Vector">): void;
 }
 /**
+ * 管理文本节点编辑时的自动补全弹窗。
+ *
+ * 支持两种触发格式：
+ * - `#...` — 模糊匹配逻辑节点名称
+ * - `[[...]]` — 模糊匹配最近文件名，含 `[[文件名#Section名]]` 格式
+ */
+declare interface AutoCompleteManager {
+  currentTabId: string | undefined;
+  readonly project: Project;
+  /** 根据当前输入文本决定触发哪种补全，无匹配前缀则不做任何事 */
+  handle(...args: [text: string, node: TextNode, ele: HTMLTextAreaElement, setWindowId: (id: string) => void]): void;
+  /** 根据当前输入文本决定触发哪种补全，无匹配前缀则不做任何事 */
+  handle(
+    ...args: [text: string, node: TextNode, ele: HTMLTextAreaElement, setWindowId: (id: string) => void]
+  ): void | undefined;
+  openWindow(
+    node: TextNode | SerializedObject<"TextNode">,
+    entries: Record<string, string> | SerializedObject<"Record">,
+    onSelect: (value: string) => void,
+    setWindowId: (id: string) => void,
+  ): void;
+  handleLogic(
+    text: string,
+    node: TextNode | SerializedObject<"TextNode">,
+    ele: HTMLTextAreaElement | SerializedObject<"HTMLTextAreaElement">,
+    setWindowId: (id: string) => void,
+  ): void;
+  handleReference(
+    ...args: [text: string, node: TextNode, ele: HTMLTextAreaElement, setWindowId: (id: string) => void]
+  ): Promise<void> | undefined;
+  handleReferenceFile(
+    searchText: string,
+    node: TextNode | SerializedObject<"TextNode">,
+    ele: HTMLTextAreaElement | SerializedObject<"HTMLTextAreaElement">,
+    setWindowId: (id: string) => void,
+  ): Promise<void>;
+  handleReferenceSection(
+    searchText: string,
+    node: TextNode | SerializedObject<"TextNode">,
+    ele: HTMLTextAreaElement | SerializedObject<"HTMLTextAreaElement">,
+    setWindowId: (id: string) => void,
+  ): Promise<void>;
+}
+/**
  * 这里是专门存放代码相同的地方
  *    因为有可能多个控制器公用同一个代码，
  */
@@ -3186,49 +3240,65 @@ declare interface ControllerUtils {
   selectedEntityNormalizing(): void;
   editSectionTitle(section: Section | SerializedObject<"Section">): void;
 }
-/**
- * 管理文本节点编辑时的自动补全弹窗。
- *
- * 支持两种触发格式：
- * - `#...` — 模糊匹配逻辑节点名称
- * - `[[...]]` — 模糊匹配最近文件名，含 `[[文件名#Section名]]` 格式
- */
-declare interface AutoCompleteManager {
-  currentTabId: string | undefined;
+declare interface ControllerClass {
   readonly project: Project;
-  /** 根据当前输入文本决定触发哪种补全，无匹配前缀则不做任何事 */
-  handle(...args: [text: string, node: TextNode, ele: HTMLTextAreaElement, setWindowId: (id: string) => void]): void;
-  /** 根据当前输入文本决定触发哪种补全，无匹配前缀则不做任何事 */
-  handle(
-    ...args: [text: string, node: TextNode, ele: HTMLTextAreaElement, setWindowId: (id: string) => void]
-  ): void | undefined;
-  openWindow(
-    node: TextNode | SerializedObject<"TextNode">,
-    entries: Record<string, string> | SerializedObject<"Record">,
-    onSelect: (value: string) => void,
-    setWindowId: (id: string) => void,
-  ): void;
-  handleLogic(
-    text: string,
-    node: TextNode | SerializedObject<"TextNode">,
-    ele: HTMLTextAreaElement | SerializedObject<"HTMLTextAreaElement">,
-    setWindowId: (id: string) => void,
-  ): void;
-  handleReference(
-    ...args: [text: string, node: TextNode, ele: HTMLTextAreaElement, setWindowId: (id: string) => void]
-  ): Promise<void> | undefined;
-  handleReferenceFile(
-    searchText: string,
-    node: TextNode | SerializedObject<"TextNode">,
-    ele: HTMLTextAreaElement | SerializedObject<"HTMLTextAreaElement">,
-    setWindowId: (id: string) => void,
-  ): Promise<void>;
-  handleReferenceSection(
-    searchText: string,
-    node: TextNode | SerializedObject<"TextNode">,
-    ele: HTMLTextAreaElement | SerializedObject<"HTMLTextAreaElement">,
-    setWindowId: (id: string) => void,
-  ): Promise<void>;
+  lastMoveLocation: Vector;
+  allowViewerModeInteraction: boolean;
+  shouldHandleInteraction: boolean;
+  keydown(event: KeyboardEvent | SerializedObject<"KeyboardEvent">): void;
+  keyup(event: KeyboardEvent | SerializedObject<"KeyboardEvent">): void;
+  mousedown(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  mouseup(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  mousemove(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  mousewheel(event: WheelEvent | SerializedObject<"WheelEvent">): void;
+  mouseDoubleClick(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  touchstart(event: TouchEvent | SerializedObject<"TouchEvent">): void;
+  touchmove(event: TouchEvent | SerializedObject<"TouchEvent">): void;
+  touchend(event: TouchEvent | SerializedObject<"TouchEvent">): void;
+  dispose(): void;
+  mouseMoveOutWindowForcedShutdown(_outsideLocation: Vector | SerializedObject<"Vector">): void;
+}
+/** DOM 输入只在这里归一化，业务控制器接收画布坐标。 */
+declare interface ControllerInput {
+  press: { id: number; button: number; location: Vector; dragged: boolean } | null;
+  lastClick: { button: number; location: Vector; time: number } | null;
+  touchMode: "idle" | "single" | "multi";
+  location: Vector;
+  chordPointerId: number | null;
+  suppressContextMenu: boolean;
+  readonly element: HTMLCanvasElement;
+  readonly clientToView: (x: number, y: number) => Vector;
+  readonly handlers: ControllerInputHandlers;
+  viewEvent(event: T | SerializedObject<"T">): T;
+  down(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  move(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  up(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  pointerdown(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  pointermove(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  pointerup(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  pointercancel(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  consumeMouseChord(event: PointerEvent | SerializedObject<"PointerEvent">): boolean;
+  touchPointer(touch: Touch | SerializedObject<"Touch">, type: string): PointerEvent;
+  touchstart(event: TouchEvent | SerializedObject<"TouchEvent">): void;
+  touchmove(event: TouchEvent | SerializedObject<"TouchEvent">): void;
+  touchend(event: TouchEvent | SerializedObject<"TouchEvent">): void;
+  cancel(): void;
+  readonly listeners: Record<string, EventListener>;
+  dispose(): void;
+}
+declare interface ControllerInputHandlers {
+  down(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  move(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  up(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  doubleClick(event: PointerEvent | SerializedObject<"PointerEvent">): void;
+  mouseChord(): void;
+  wheel(event: WheelEvent | SerializedObject<"WheelEvent">): void;
+  keydown(event: KeyboardEvent | SerializedObject<"KeyboardEvent">): void;
+  keyup(event: KeyboardEvent | SerializedObject<"KeyboardEvent">): void;
+  touchstart(event: TouchEvent | SerializedObject<"TouchEvent">): void;
+  touchmove(event: TouchEvent | SerializedObject<"TouchEvent">): void;
+  touchend(event: TouchEvent | SerializedObject<"TouchEvent">): void;
+  cancel(location: Vector | SerializedObject<"Vector">): void;
 }
 /**
  * 控制器，控制鼠标、键盘事件
@@ -3329,6 +3399,7 @@ declare interface Controller {
   keyup(event: KeyboardEvent | SerializedObject<"KeyboardEvent">): void;
   associationReshape: ControllerAssociationReshapeClass;
   camera: ControllerCameraClass;
+  contextMenu: ControllerContextMenuClass;
   cutting: ControllerCuttingClass;
   edgeEdit: ControllerEdgeEditClass;
   entityClickSelectAndMove: ControllerEntityClickSelectAndMoveClass;
@@ -3344,66 +3415,26 @@ declare interface Controller {
   sectionEdit: ControllerSectionEditClass;
   imageScale: ControllerImageScaleClass;
 }
-declare interface ControllerClass {
-  readonly project: Project;
-  lastMoveLocation: Vector;
-  allowViewerModeInteraction: boolean;
-  shouldHandleInteraction: boolean;
-  keydown(event: KeyboardEvent | SerializedObject<"KeyboardEvent">): void;
-  keyup(event: KeyboardEvent | SerializedObject<"KeyboardEvent">): void;
-  mousedown(event: PointerEvent | SerializedObject<"PointerEvent">): void;
-  mouseup(event: PointerEvent | SerializedObject<"PointerEvent">): void;
-  mousemove(event: PointerEvent | SerializedObject<"PointerEvent">): void;
-  mousewheel(event: WheelEvent | SerializedObject<"WheelEvent">): void;
-  mouseDoubleClick(event: PointerEvent | SerializedObject<"PointerEvent">): void;
-  touchstart(event: TouchEvent | SerializedObject<"TouchEvent">): void;
-  touchmove(event: TouchEvent | SerializedObject<"TouchEvent">): void;
-  touchend(event: TouchEvent | SerializedObject<"TouchEvent">): void;
-  dispose(): void;
-  mouseMoveOutWindowForcedShutdown(_outsideLocation: Vector | SerializedObject<"Vector">): void;
-}
-/** DOM 输入只在这里归一化，业务控制器接收画布坐标。 */
-declare interface ControllerInput {
-  press: { id: number; button: number; location: Vector; dragged: boolean } | null;
-  lastClick: { button: number; location: Vector; time: number } | null;
-  touchMode: "idle" | "single" | "multi";
-  location: Vector;
-  chordPointerId: number | null;
-  suppressContextMenu: boolean;
-  readonly element: HTMLCanvasElement;
-  readonly clientToView: (x: number, y: number) => Vector;
-  readonly handlers: ControllerInputHandlers;
-  viewEvent(event: T | SerializedObject<"T">): T;
-  down(event: PointerEvent | SerializedObject<"PointerEvent">): void;
-  move(event: PointerEvent | SerializedObject<"PointerEvent">): void;
-  up(event: PointerEvent | SerializedObject<"PointerEvent">): void;
-  pointerdown(event: PointerEvent | SerializedObject<"PointerEvent">): void;
-  pointermove(event: PointerEvent | SerializedObject<"PointerEvent">): void;
-  pointerup(event: PointerEvent | SerializedObject<"PointerEvent">): void;
-  pointercancel(event: PointerEvent | SerializedObject<"PointerEvent">): void;
-  consumeMouseChord(event: PointerEvent | SerializedObject<"PointerEvent">): boolean;
-  touchPointer(touch: Touch | SerializedObject<"Touch">, type: string): PointerEvent;
-  touchstart(event: TouchEvent | SerializedObject<"TouchEvent">): void;
-  touchmove(event: TouchEvent | SerializedObject<"TouchEvent">): void;
-  touchend(event: TouchEvent | SerializedObject<"TouchEvent">): void;
-  cancel(): void;
-  readonly listeners: Record<string, EventListener>;
-  dispose(): void;
-}
-declare interface ControllerInputHandlers {
-  down(event: PointerEvent | SerializedObject<"PointerEvent">): void;
-  move(event: PointerEvent | SerializedObject<"PointerEvent">): void;
-  up(event: PointerEvent | SerializedObject<"PointerEvent">): void;
-  doubleClick(event: PointerEvent | SerializedObject<"PointerEvent">): void;
-  mouseChord(): void;
-  wheel(event: WheelEvent | SerializedObject<"WheelEvent">): void;
-  keydown(event: KeyboardEvent | SerializedObject<"KeyboardEvent">): void;
-  keyup(event: KeyboardEvent | SerializedObject<"KeyboardEvent">): void;
-  touchstart(event: TouchEvent | SerializedObject<"TouchEvent">): void;
-  touchmove(event: TouchEvent | SerializedObject<"TouchEvent">): void;
-  touchend(event: TouchEvent | SerializedObject<"TouchEvent">): void;
-  cancel(location: Vector | SerializedObject<"Vector">): void;
-}
+declare const controllerClasses: {
+  associationReshape: typeof ControllerAssociationReshapeClass;
+  camera: typeof ControllerCameraClass;
+  contextMenu: typeof ControllerContextMenuClass;
+  cutting: typeof ControllerCuttingClass;
+  edgeEdit: typeof ControllerEdgeEditClass;
+  entityClickSelectAndMove: typeof ControllerEntityClickSelectAndMoveClass;
+  entityCreate: typeof ControllerEntityCreateClass;
+  layerMoving: typeof ControllerLayerMovingClass;
+  entityResize: typeof ControllerEntityResizeClass;
+  extensionEntityClick: typeof ControllerExtensionEntityClickClass;
+  imageScale: typeof ControllerImageScaleClass;
+  nodeConnection: typeof ControllerNodeConnectionClass;
+  nodeEdit: typeof ControllerNodeEditClass;
+  penStrokeControl: typeof ControllerPenStrokeControlClass;
+  penStrokeDrawing: typeof ControllerPenStrokeDrawingClass;
+  rectangleSelect: typeof ControllerRectangleSelectClass;
+  sectionEdit: typeof ControllerSectionEditClass;
+};
+declare type ControllerConstructor = new (project: Project) => ControllerClass;
 /**
  * 纯键盘控制的相关引擎
  */
@@ -4742,6 +4773,19 @@ declare interface ContentSearch {
    */
   previousSearchResult(): void;
 }
+declare interface CopyEngineImage {
+  project: Project;
+  pasteImageFromSystemClipboard(): Promise<void>;
+  pasteImageBlob(blob: Blob | SerializedObject<"Blob">): Promise<void>;
+  pasteImageFromWebClipboard(): Promise<false | undefined>;
+}
+/**
+ * 专门处理文本粘贴的服务
+ */
+declare interface CopyEngineText {
+  project: Project;
+  copyEnginePastePlainText(item: string): Promise<void>;
+}
 /**
  * 专门用来管理节点复制的引擎
  */
@@ -4768,19 +4812,6 @@ declare interface CopyEngine {
   readSystemClipboardAndPaste(): Promise<void>;
   pasteFromWebClipboard(): Promise<void>;
   pasteFromSystemClipboard(): Promise<void>;
-}
-declare interface CopyEngineImage {
-  project: Project;
-  pasteImageFromSystemClipboard(): Promise<void>;
-  pasteImageBlob(blob: Blob | SerializedObject<"Blob">): Promise<void>;
-  pasteImageFromWebClipboard(): Promise<false | undefined>;
-}
-/**
- * 专门处理文本粘贴的服务
- */
-declare interface CopyEngineText {
-  project: Project;
-  copyEnginePastePlainText(item: string): Promise<void>;
 }
 /**
  * 特效机器
@@ -6224,6 +6255,7 @@ declare interface parserResult {
 }
 declare interface ReferenceManager {
   readonly project: Project;
+  createProject(uri: URI | SerializedObject<"URI">): Promise<Project>;
   /**
    * 处理引用按钮点击事件
    * O(N) 需要查找每一个引用的Section
@@ -6521,7 +6553,7 @@ declare interface HistoryManager {
    * @param index 历史记录索引
    * @returns 舞台对象
    */
-  get(index: number): Record<string, any>[];
+  get(index: number): StageObject[];
   /**
    * 清空历史记录
    */
@@ -6536,7 +6568,7 @@ declare interface HistoryManagerAbs {
   recordStep(): void;
   undo(): void;
   redo(): void;
-  get(index: number): Record<string, any>[];
+  get(index: number): StageObject[];
   clearHistory(): void;
 }
 /**
@@ -6863,6 +6895,13 @@ declare interface ConnectableEntity {
   unknown: boolean;
   clipConnectionToBoundary: boolean;
   /**
+   * 实体的稳定类型标识。
+   *
+   * 它与持久化 DTO 的 `kind` 一致，供界面展示和协议判断使用。
+   * 不能依赖类名或文件名：产物压缩会改写类名，那会让协议值失去稳定性。
+   */
+  readonly kind: string;
+  /**
    * 将某个物体移动某个距离
    * @param delta
    */
@@ -6953,6 +6992,13 @@ declare interface ConnectableEntity {
  */
 declare interface Entity {
   /**
+   * 实体的稳定类型标识。
+   *
+   * 它与持久化 DTO 的 `kind` 一致，供界面展示和协议判断使用。
+   * 不能依赖类名或文件名：产物压缩会改写类名，那会让协议值失去稳定性。
+   */
+  readonly kind: string;
+  /**
    * 将某个物体移动某个距离
    * @param delta
    */
@@ -7037,6 +7083,17 @@ declare interface Entity {
    */
   _isSyncing: boolean;
 }
+declare interface ResizeAble {
+  /**
+   * 拽住右下角的拖拽点拖拽，来改变大小
+   * @param delta
+   */
+  resizeHandle(delta: Vector | SerializedObject<"Vector">): void;
+  /**
+   * 获取改变大小的拖拽区域
+   */
+  getResizeHandleRect(): Rectangle;
+}
 /**
  * 一切舞台上的东西
  * 都具有碰撞箱，uuid
@@ -7061,17 +7118,6 @@ declare interface StageObject {
    * 所有舞台对象在未来都有可能被加上同步关系，因此放在基类中。
    */
   _isSyncing: boolean;
-}
-declare interface ResizeAble {
-  /**
-   * 拽住右下角的拖拽点拖拽，来改变大小
-   * @param delta
-   */
-  resizeHandle(delta: Vector | SerializedObject<"Vector">): void;
-  /**
-   * 获取改变大小的拖拽区域
-   */
-  getResizeHandleRect(): Rectangle;
 }
 /**
  * 圆弧有向边
@@ -7727,6 +7773,7 @@ declare interface CollisionBox {
  * 质点不再区分膨胀状态和收缩状态
  */
 declare interface ConnectPoint {
+  readonly kind: "connect-point";
   geometryCenter: Vector;
   isHiddenBySectionCollapse: boolean;
   collisionBox: CollisionBox;
@@ -7810,6 +7857,7 @@ declare interface ConnectPoint {
   _isSyncing: boolean;
 }
 declare interface ExtensionEntity {
+  readonly kind: "extension-entity";
   geometryCenter: Vector;
   uuid: string;
   extensionId: string;
@@ -7917,6 +7965,7 @@ declare interface ExtensionEntityConfig {
  *
  */
 declare interface ImageNode {
+  readonly kind: "image-node";
   isHiddenBySectionCollapse: boolean;
   uuid: string;
   collisionBox: CollisionBox;
@@ -7937,10 +7986,11 @@ declare interface ImageNode {
   bitmap: ImageBitmap | undefined;
   disposed: boolean;
   readonly pendingBitmapTasks: Set<Promise<void>>;
-  state: "loading" | "success" | "notFound";
+  state: "success" | "loading" | "notFound";
   readonly project: Project;
   unknown: boolean;
   onReady?: (() => void) | undefined;
+  initializeResources(): void;
   loadBitmap(bitmapPromise: Promise<ImageBitmap> | SerializedObject<"Promise">, onLoaded: () => void): void;
   dispose(): Promise<void>;
   scaleUpdate(scaleDiff: number): void;
@@ -8055,6 +8105,7 @@ declare type ImageNodeOptions = {
  * 缩放方式与文本节点一致，使用 fontScaleLevel 指数缩放。
  */
 declare interface LatexNode {
+  readonly kind: "latex-node";
   uuid: string;
   /**
    * LaTeX 源代码字符串（不含 $ 符号），如 "E=mc^2"
@@ -8069,23 +8120,27 @@ declare interface LatexNode {
   fontScaleLevel: number;
   isHiddenBySectionCollapse: boolean;
   /** 渲染结果图片 */
-  image: HTMLImageElement;
+  image: HTMLImageElement | undefined;
   /** 渲染后 SVG 的原始像素尺寸 */
   svgOriginalSize: Vector;
   /** 渲染状态 */
-  state: "loading" | "error" | "success";
+  state: "error" | "success" | "loading";
   /**
    * 当前图片实际渲染时使用的颜色（CSS color 字符串，如 rgba(...) / #rrggbb）。
    * LatexNodeRenderer 在每帧对比"应显示颜色"与此值，不一致时触发重新渲染。
    */
   currentRenderedColorCss: string;
   renderVersion: number;
+  disposed: boolean;
+  cancelImageLoad: (() => void) | undefined;
   /** 节点是否被选中 */
   _isSelected: boolean;
   isSelected: boolean;
   rectangle: Rectangle;
   geometryCenter: Vector;
   readonly project: Project;
+  initializeResources(): void;
+  dispose(): void;
   /**
    * 获取当前缩放倍数
    * 公式：2^(fontScaleLevel / 2)
@@ -8183,7 +8238,6 @@ declare interface LatexNode {
    * 默认为 true，SyncAssociation 等纯数据关系对象应覆盖为 false
    */
   isPhysical: boolean;
-  dispose?: (() => void | Promise<void>) | undefined;
   /**
    * 防止孪生同步循环触发的标志
    * 当此对象正在被 StageSyncAssociationManager 写入同步内容时为 true，
@@ -8194,6 +8248,7 @@ declare interface LatexNode {
 }
 declare type MediaKind = "audio" | "video";
 declare interface MediaNode {
+  readonly kind: "media-node";
   isHiddenBySectionCollapse: boolean;
   uuid: string;
   collisionBox: CollisionBox;
@@ -8216,6 +8271,7 @@ declare interface MediaNode {
   readonly project: Project;
   unknown: boolean;
   onReady?: (() => void) | undefined;
+  initializeResources(): void;
   loadMedia(): Promise<void>;
   loadVideo(blob: Blob | SerializedObject<"Blob">): Promise<void>;
   loadAudio(blob: Blob | SerializedObject<"Blob">): Promise<void>;
@@ -8304,6 +8360,7 @@ declare type MediaNodeOptions = {
   title?: string;
 };
 declare interface PenStroke {
+  readonly kind: "pen-stroke";
   /** 涂鸦不参与吸附对齐 */
   isAlignExcluded: boolean;
   isHiddenBySectionCollapse: boolean;
@@ -8394,6 +8451,7 @@ declare interface PenStrokeSegment {
  * 以静态图片的方式渲染在舞台上
  */
 declare interface ReferenceBlockNode {
+  readonly kind: "reference-block";
   isHiddenBySectionCollapse: boolean;
   uuid: string;
   collisionBox: CollisionBox;
@@ -8412,12 +8470,18 @@ declare interface ReferenceBlockNode {
    */
   _isSelected: boolean;
   bitmap: ImageBitmap | undefined;
-  state: "loading" | "success" | "notFound";
+  disposed: boolean;
+  resourceVersion: number;
+  readonly pendingTasks: Set<Promise<void>>;
+  state: "success" | "loading" | "notFound";
   readonly project: Project;
   unknown: boolean;
+  initializeResources(): void;
+  trackTask(task: Promise<void> | SerializedObject<"Promise">): void;
+  dispose(): Promise<void>;
   isSelected: boolean;
-  loadImageFromAttachment(): void;
-  generateScreenshot(): Promise<void>;
+  loadImageFromAttachment(version: number): Promise<void>;
+  generateScreenshot(version: number): Promise<void>;
   updateCollisionBox(): void;
   scaleUpdate(scaleDiff: number): void;
   rectangle: Rectangle;
@@ -8499,7 +8563,6 @@ declare interface ReferenceBlockNode {
    * 默认为 true，SyncAssociation 等纯数据关系对象应覆盖为 false
    */
   isPhysical: boolean;
-  dispose?: (() => void | Promise<void>) | undefined;
   /**
    * 防止孪生同步循环触发的标志
    * 当此对象正在被 StageSyncAssociationManager 写入同步内容时为 true，
@@ -8509,6 +8572,7 @@ declare interface ReferenceBlockNode {
   _isSyncing: boolean;
 }
 declare interface Section {
+  readonly kind: "section";
   /**
    * 节点是否被选中
    */
@@ -8538,6 +8602,8 @@ declare interface Section {
   isHiddenBySectionCollapse: boolean;
   readonly project: Project;
   unknown: boolean;
+  expandedRectangle: Rectangle;
+  initializeCollapsedGeometry(): void;
   rename(newName: string): void;
   /**
    * 根据子内容 自动调整分组框的位置和大小
@@ -8631,6 +8697,7 @@ declare interface Section {
  * Svg 节点
  */
 declare interface SvgNode {
+  readonly kind: "svg-node";
   color: Color;
   uuid: string;
   scale: number;
@@ -8638,8 +8705,13 @@ declare interface SvgNode {
   attachmentId: string;
   isHiddenBySectionCollapse: boolean;
   originalSize: Vector;
-  image: HTMLImageElement;
+  image: HTMLImageElement | undefined;
+  resourceUrl: string | undefined;
+  disposed: boolean;
   readonly project: Project;
+  initializeResources(): void;
+  releaseImage(): void;
+  dispose(): void;
   geometryCenter: Vector;
   scaleUpdate(scaleDiff: number): void;
   move(delta: Vector | SerializedObject<"Vector">): void;
@@ -8719,7 +8791,6 @@ declare interface SvgNode {
   isPhysical: boolean;
   _isSelected: boolean;
   isSelected: boolean;
-  dispose?: (() => void | Promise<void>) | undefined;
   /**
    * 防止孪生同步循环触发的标志
    * 当此对象正在被 StageSyncAssociationManager 写入同步内容时为 true，
@@ -8734,6 +8805,7 @@ declare interface SvgNode {
  * 2024年10月20日：Node 改名为 TextNode，防止与 原生 Node 类冲突
  */
 declare interface TextNode {
+  readonly kind: "text-node";
   clipConnectionToBoundary: boolean;
   uuid: string;
   text: string;
@@ -8784,6 +8856,7 @@ declare interface TextNode {
   isHiddenBySectionCollapse: boolean;
   readonly project: Project;
   unknown: boolean;
+  initializeGeometry(): void;
   /**
    * 字体大小缓存，避免重复计算
    */
@@ -8921,6 +8994,7 @@ declare interface TextNode {
  * 一旦创建，url就不能改了，因为也不涉及修改。
  */
 declare interface UrlNode {
+  readonly kind: "url-node";
   uuid: string;
   title: string;
   url: string;
@@ -9273,6 +9347,35 @@ declare interface Folder {
   path: string;
   isDirectory: boolean;
   children: Folder[];
+}
+/** LayoutDAGRequest is the wire contract of the DAG layout task. */
+declare interface LayoutDAGRequest {
+  projectId: string;
+  requestId: string;
+  inputRevision: string;
+  nodes: LayoutNode[];
+  edges: LayoutEdge[];
+  options: LayoutOptions;
+}
+/** LayoutEdge is a directed relation between two layout nodes. */
+declare interface LayoutEdge {
+  id: string;
+  from: string;
+  to: string;
+}
+/** LayoutNode is the minimal projection of a stage node a layout needs. */
+declare interface LayoutNode {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  locked: boolean;
+}
+/** LayoutOptions carries the spacing rules of one layout run. */
+declare interface LayoutOptions {
+  horizontalSpacing: number;
+  verticalSpacing: number;
 }
 declare const fetch: {
   (input: RequestInfo | URL, init?: RequestInit | undefined): Promise<Response>;

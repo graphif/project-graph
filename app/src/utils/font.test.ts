@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 const host = vi.hoisted(() => ({ isMyGo: vi.fn(() => false) }));
 vi.mock("mygo-runtime", () => host);
 
-vi.mock("@/core/service/Settings", () => ({ Settings: { defaultFontFamily: "sans-serif" } }));
-vi.mock("@/core/service/ProjectToolSettingsSchema", () => ({
+vi.mock("@/core/service/settings", () => ({ Settings: { defaultFontFamily: "sans-serif" } }));
+vi.mock("@/core/service/project-tool-settings-schema", () => ({
   DEFAULT_FONT_FAMILY: "sans-serif",
   MAC_DEFAULT_FONT_FAMILY: "sans-serif",
 }));

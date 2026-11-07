@@ -2271,9 +2271,6 @@ controlSettingsGroup:
   devNodeDetails:
     title: Node Details
     description: Open the node details panel
-  devOnboarding:
-    title: Onboarding
-    description: Reopen the onboarding wizard
   devOpenTestWindow:
     title: Open Test Window
     description: Open the developer test window
@@ -2552,6 +2549,48 @@ common:
     editingMode: Editing Mode
     lineBreak: New Line
     exitEdit: Exit Edit Mode
+
+onboarding:
+  progress: Setup
+  next: Next
+  back: Back
+  continue: Continue
+  finish: Start creating
+  close: Close
+  retry: Check again
+  failed: Operation failed — you can retry
+  website: Website and manual downloads
+  welcome:
+    title: Welcome to Project Graph
+    subtitle: A calm, open canvas for your next idea.
+    language: Language
+  migration:
+    title: Migrate data from the previous version
+    subtitle: Import data from the previous Project Graph into this version.
+    checking: Looking for your previous data…
+    found: Found your previous data
+    not-detected: No previous data found. You can continue.
+    failed: Could not find your previous data. Please try again.
+    running: Save and close the previous Project Graph, then check again.
+    contents: Settings, recent files, drafts, AI conversations, and extensions move together. Project files stay in their original locations.
+    import: Transfer my data
+    importing: Transferring your data. Please wait…
+    imported: Transfer complete
+    report: "Transferred {{imported}} data files. You can continue with setup. Your previous data is still there."
+    safety: Your previous data is kept. Transferring replaces matching data in this version. New here? You can skip this step. Data transfer is only available during setup.
+    skip: Skip transfer
+  appearance:
+    title: Make it yours
+    subtitle: Pick a look and size that feels right. You can change both later.
+    theme: Color theme
+    scale: Interface scale
+    preview: Your next idea starts with a node.
+    light: Light
+    dark: Dark
+  ready:
+    title: You are all set
+    subtitle: Your canvas is ready when you are.
+    safety: You can adjust appearance and controls in Settings at any time. Keep your previous data and project files until you have checked the transfer.
 
 projectOwnership:
   alreadyOpen: Switched to the open tab.

@@ -3,7 +3,7 @@ import { parseEmacsKey } from "@/utils/emacs";
 import { ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RenderKey } from "./ui/key-bind";
-import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
+import { KeyBindsUI } from "@/core/service/control-service/shortcut-keys-engine/key-binds-ui";
 
 export default function KeyTooltip({ keyId, children = <></> }: { keyId: string; children: ReactNode }) {
   const [keySeq, setKeySeq] = useState<ReturnType<typeof parseEmacsKey>[number][]>();

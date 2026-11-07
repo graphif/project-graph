@@ -7,8 +7,12 @@ on:
 permissions:
   contents: read
 jobs:
-  windows:
-    runs-on: windows-latest
+  checks:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -23,5 +27,18 @@ jobs:
           cache-dependency-path: app/go.sum
       - run: bun install --frozen-lockfile
       - run: bun run --cwd app type-check
+      - run: bun run lint
       - run: go -C app test ./...
-      - run: bunx vitest run app/src/platform app/src/core/ProjectOwnership.test.ts app/src/core/OpenProjectRuntimeHost.test.ts app/src/cli/OwnershipHelper.test.ts app/src/cli/ProjectGraphOwnershipProcess.test.ts app/src/cli/ProjectGraphAppDataPath.test.ts app/src/cli/app-version.test.ts
+      - name: Run desktop verification batch
+        run: >-
+          bunx vitest run
+          app/src/platform
+          app/src/core/persistence
+          app/src/application
+          app/src/features/onboarding
+          app/src/core/project-ownership.test.ts
+          app/src/core/open-project-runtime-host.test.ts
+          app/src/cli/ownership-helper.test.ts
+          app/src/cli/project-graph-ownership-process.test.ts
+          app/src/cli/project-graph-app-data-path.test.ts
+          app/src/cli/app-version.test.ts

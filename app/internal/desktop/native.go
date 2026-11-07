@@ -48,6 +48,16 @@ func (Native) Open(path string) error {
 	}
 	return mygo.Shell.OpenPath(path)
 }
+
+func (Native) OpenUninstallLocation() error {
+	if runtime.GOOS == "windows" {
+		return mygo.Shell.OpenExternal("ms-settings:appsfeatures")
+	}
+	if runtime.GOOS == "darwin" {
+		return mygo.Shell.OpenPath("/Applications")
+	}
+	return mygo.Shell.OpenPath("/usr/share/applications")
+}
 func (Native) WriteText(text string)            { mygo.Clipboard.WriteText(text) }
 func (Native) ReadText() string                 { return mygo.Clipboard.ReadText() }
 func (Native) WriteImage(png []byte) error      { return mygo.Clipboard.WriteImage(png) }

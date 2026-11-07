@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 
+	"github.com/graphif/project-graph/app/internal/algorithm"
 	"github.com/graphif/project-graph/app/internal/desktop"
 )
 
@@ -16,11 +18,19 @@ func output(value any) {
 	}
 }
 func run() int {
+	if len(os.Args) < 2 {
+		fmt.Fprintln(os.Stderr, "expected command")
+		return 1
+	}
+	command := os.Args[1]
+	if command == "layout-dag" {
+		return runLayoutDAG()
+	}
 	if len(os.Args) < 3 {
 		fmt.Fprintln(os.Stderr, "expected command and project path")
 		return 1
 	}
-	command, path := os.Args[1], os.Args[2]
+	path := os.Args[2]
 	if command == "try-hold-project" || command == "hold-connectable-project" {
 		endpoint := ""
 		if len(os.Args) > 3 {
@@ -84,4 +94,22 @@ func run() int {
 		fmt.Fprintln(os.Stderr, "unknown helper command")
 		return 1
 	}
+}
+
+// runLayoutDAG answers a layout request on stdin with the computed
+// positions on stdout. The standalone CLI has no MyGo runtime, so it calls
+// the same pure algorithm package through this subcommand.
+func runLayoutDAG() int {
+	var request algorithm.LayoutDAGRequest
+	if err := json.NewDecoder(io.LimitReader(os.Stdin, 64*1024*1024)).Decode(&request); err != nil {
+		fmt.Fprintln(os.Stderr, "invalid layout request")
+		return 1
+	}
+	response, err := algorithm.LayoutDAG(context.Background(), request)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		return 1
+	}
+	output(response)
+	return 0
 }

@@ -1,6 +1,6 @@
-import { Settings } from "@/core/service/Settings";
+import { Settings } from "@/core/service/settings";
 import { cn } from "@/utils/cn";
-import { runThemeTransition } from "@/utils/themeTransition";
+import { runThemeTransition } from "@/utils/theme-transition";
 import { useRef } from "react";
 import { flushSync } from "react-dom";
 import { Moon, Sun } from "lucide-react";

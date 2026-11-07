@@ -1,0 +1,66 @@
+{
+  "cases": [
+    {
+      "name": "tree-with-diamond-island-and-locked-node",
+      "request": {
+        "projectId": "fixture-project",
+        "requestId": "fixture-request",
+        "inputRevision": "fixture-revision",
+        "nodes": [
+          { "id": "root", "x": 10, "y": 20, "width": 100, "height": 50 },
+          { "id": "left", "x": 0, "y": 0, "width": 160, "height": 50 },
+          { "id": "right", "x": 0, "y": 0, "width": 80, "height": 50 },
+          { "id": "leaf", "x": 0, "y": 0, "width": 80, "height": 50 },
+          { "id": "island", "x": 5, "y": 5, "width": 40, "height": 40 },
+          { "id": "locked", "x": 0, "y": 0, "width": 60, "height": 60, "locked": true }
+        ],
+        "edges": [
+          { "id": "e1", "from": "root", "to": "left" },
+          { "id": "e2", "from": "root", "to": "right" },
+          { "id": "e3", "from": "left", "to": "leaf" },
+          { "id": "e4", "from": "right", "to": "leaf" }
+        ],
+        "options": { "horizontalSpacing": 150, "verticalSpacing": 100 }
+      },
+      "expected": {
+        "positions": [
+          { "id": "root", "x": 10, "y": 20 },
+          { "id": "island", "x": 10, "y": 120 },
+          { "id": "left", "x": 260, "y": 20 },
+          { "id": "right", "x": 260, "y": 120 },
+          { "id": "leaf", "x": 570, "y": 20 }
+        ],
+        "cycleNodeIds": [],
+        "warnings": []
+      }
+    },
+    {
+      "name": "root-with-a-cycle",
+      "request": {
+        "projectId": "fixture-project",
+        "requestId": "fixture-request-cycle",
+        "inputRevision": "fixture-revision-cycle",
+        "nodes": [
+          { "id": "root", "x": 0, "y": 0, "width": 50, "height": 50 },
+          { "id": "a", "x": 0, "y": 0, "width": 50, "height": 50 },
+          { "id": "b", "x": 0, "y": 0, "width": 50, "height": 50 }
+        ],
+        "edges": [
+          { "id": "e1", "from": "root", "to": "a" },
+          { "id": "e2", "from": "a", "to": "b" },
+          { "id": "e3", "from": "b", "to": "a" }
+        ],
+        "options": { "horizontalSpacing": 150, "verticalSpacing": 100 }
+      },
+      "expected": {
+        "positions": [
+          { "id": "root", "x": 0, "y": 0 },
+          { "id": "b", "x": 0, "y": 100 },
+          { "id": "a", "x": 200, "y": 0 }
+        ],
+        "cycleNodeIds": ["a", "b"],
+        "warnings": ["the graph contains a cycle; the affected nodes are laid out on level zero"]
+      }
+    }
+  ]
+}

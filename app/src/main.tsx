@@ -1,68 +1,18 @@
-import { Toaster } from "@/components/ui/sonner";
-import { authClient } from "@/core/service/AuthClient";
-import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
-import { StartFilesManager } from "@/core/service/dataFileService/StartFilesManager";
-import { ColorManager } from "@/core/service/feedbackService/ColorManager";
-import { QuickSettingsManager } from "@/core/service/QuickSettingsManager";
-import { Settings } from "@/core/service/Settings";
-import { Tutorials } from "@/core/service/Tutorials";
-import { UserState } from "@/core/service/UserState";
-import { EdgeCollisionBoxGetter } from "@/core/stage/stageObject/association/EdgeCollisionBoxGetter";
-import { type AuthUser, currentUserAtom, isAuthLoadingAtom, store, tabsAtom } from "@/state";
-import { Acceptance, Host, events } from "@/platform/desktop";
+import { Acceptance, Host } from "@/platform/desktop";
+import { LazyStore } from "@/platform/store";
 import { getCurrentWindow } from "@/platform/window";
-import "driver.js/dist/driver.css";
+import { loadOnboarding } from "@/features/onboarding/onboarding-state";
 import i18next from "i18next";
-import { Provider } from "jotai";
 import { createRoot } from "react-dom/client";
-import { ErrorBoundary } from "react-error-boundary";
 import { initReactI18next } from "react-i18next";
-import { toast } from "sonner";
-import { URI } from "vscode-uri";
-import App from "./App";
-import { ExtensionManager } from "./core/extension/ExtensionManager";
-import { handleDeepLink } from "./core/service/dataFileService/DeepLinkHandler";
-import { onNewDraft, onOpenFile } from "./core/service/GlobalMenu";
-import WelcomeWindow from "./sub/WelcomeWindow";
 import "./css/index.css";
-import Fallback from "./Fallback";
 
 const root = createRoot(document.getElementById("root")!);
 const acceptance = import.meta.env.DEV && new URLSearchParams(location.search).has("cli-desktop-acceptance");
-let opening = Promise.resolve();
-
-function processOpenRequests() {
-  opening = opening
-    .then(async () => {
-      const pending = await Host.pendingOpenRequests();
-      if (pending.rejected) toast.error(`Too many open requests: ${pending.rejected} rejected.`);
-      for (const request of pending.items ?? []) {
-        try {
-          if (request.kind === "url") await handleDeepLink([request.target]);
-          else await onOpenFile(URI.file(request.target), "MyGo");
-        } catch (error) {
-          toast.error(String(error));
-        }
-        await Host.acknowledgeOpenRequests([request.id]);
-      }
-    })
-    .catch((error: unknown) => {
-      toast.error(`Cannot process open requests: ${String(error)}`);
-    });
-  return opening;
-}
 
 async function start() {
   await Host.bootstrap();
-  await Promise.all([
-    RecentFileManager.init(),
-    StartFilesManager.init(),
-    ColorManager.init(),
-    Tutorials.init(),
-    UserState.init(),
-    QuickSettingsManager.init(),
-  ]);
+  const { Settings } = await import("@/core/service/settings");
   await i18next.use(initReactI18next).init({
     lng: Settings.language,
     debug: false,
@@ -77,56 +27,41 @@ async function start() {
       id: (await import("./locales/id.yml")).default,
     },
   });
-  EdgeCollisionBoxGetter.init();
-  MouseLocation.init();
-  if (acceptance) {
-    const { runProjectGraphCliDesktopAcceptanceHost } = await import("./cli/ProjectGraphCliDesktopAcceptanceHost");
-    await runProjectGraphCliDesktopAcceptanceHost();
-    return;
+  const storage = new LazyStore("onboarding.json");
+  const state = acceptance
+    ? undefined
+    : await loadOnboarding(storage, {
+        language: Settings.language,
+        theme: Settings.theme,
+        uiScalePercent: Settings.uiScalePercent,
+      });
+  if (state && !state.completedAt) {
+    const { Onboarding } = await import("@/features/onboarding/onboarding");
+    await new Promise<void>((resolve) =>
+      root.render(<Onboarding storage={storage} initial={state} onComplete={resolve} />),
+    );
   }
-  root.render(
-    <Provider store={store}>
-      <Toaster richColors visibleToasts={5} expand />
-      <ErrorBoundary FallbackComponent={Fallback}>
-        <App />
-      </ErrorBoundary>
-    </Provider>,
-  );
-  await getCurrentWindow().show();
-  await ExtensionManager.init();
-  await initAuth();
-  events.openRequestsChanged.on(() => {
-    void processOpenRequests();
-  });
-  await processOpenRequests();
-  if (store.get(tabsAtom).length === 0) {
-    await onNewDraft();
-    WelcomeWindow.open();
-  }
-}
-
-async function initAuth() {
-  try {
-    if (!authClient) return;
-    const session = await UserState.getSession();
-    if (session?.token) {
-      const { data } = await authClient.getSession();
-      if (data?.user) store.set(currentUserAtom, data.user as AuthUser);
-      else await UserState.clearSession();
-    }
-  } catch (error) {
-    toast.error(`Authentication failed: ${String(error)}`);
-  } finally {
-    store.set(isAuthLoadingAtom, false);
-  }
+  // Workspace imports register background services; keep them behind the durable completion marker.
+  const { startWorkspace } = await import("@/application/start-workspace");
+  await startWorkspace(root, !!state && !state.completedAt, acceptance);
 }
 
 void start().catch(async (error: unknown) => {
+  root.render(
+    <main className="bg-background text-foreground flex min-h-screen flex-col items-center justify-center gap-6 p-8">
+      <h1>Project Graph could not start</h1>
+      <pre className="max-w-full overflow-auto whitespace-pre-wrap" role="alert">
+        {String(error)}
+      </pre>
+      <button type="button" onClick={() => location.reload()}>
+        Retry / 重试
+      </button>
+    </main>,
+  );
+  await getCurrentWindow().show();
   if (acceptance)
     await Acceptance.writeState({
       phase: "error",
       message: error instanceof Error ? (error.stack ?? error.message) : String(error),
     });
-  root.render(<Fallback error={error} resetErrorBoundary={() => location.reload()} />);
-  void getCurrentWindow().show();
 });

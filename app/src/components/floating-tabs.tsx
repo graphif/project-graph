@@ -1,7 +1,7 @@
 import TabContextMenu from "@/components/tab-context-menu";
 import { SimpleCard } from "@/components/ui/card";
-import { ComponentTab, Tab } from "@/core/Tab";
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { ComponentTab, Tab } from "@/core/tab";
+import { TabWorkspace } from "@/core/tab-workspace";
 import { activeTabAtom, tabsAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { Vector } from "@graphif/data-structures";

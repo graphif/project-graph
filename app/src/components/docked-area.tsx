@@ -1,8 +1,8 @@
-import { ProjectTabs } from "@/ProjectTabs";
-import { Project, ProjectState } from "@/core/Project";
-import { Tab } from "@/core/Tab";
-import { TabGroupNode } from "@/core/TabGroup";
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { ProjectTabs } from "@/project-tabs";
+import { Project, ProjectState } from "@/core/project";
+import { Tab } from "@/core/tab";
+import { TabGroupNode } from "@/core/tab-group";
+import { TabWorkspace } from "@/core/tab-workspace";
 import { activeGroupIdAtom, activeTabAtom, store, tabDropTargetAtom, tabGroupRootAtom, tabsAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { isMac } from "@/utils/platform";

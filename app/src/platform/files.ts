@@ -18,6 +18,9 @@ export async function readFile(path: string) {
 export async function writeFile(path: string, content: Uint8Array) {
   await Files.write(path, encodeBytes(content));
 }
+export async function writeNewFile(path: string, content: Uint8Array) {
+  await Files.writeNew(path, encodeBytes(content));
+}
 export const readDir = Files.readDir;
 export const exists = Files.exists;
 export const rename = Files.rename;

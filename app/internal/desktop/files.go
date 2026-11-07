@@ -52,6 +52,18 @@ func (Files) Write(path string, content []byte) error {
 	return replaceFile(root, filepath.Base(path), content, mode)
 }
 
+func (Files) WriteNew(path string, content []byte) error {
+	if err := validateFilePath(path); err != nil {
+		return err
+	}
+	root, err := os.OpenRoot(filepath.Dir(path))
+	if err != nil {
+		return err
+	}
+	defer root.Close()
+	return publishFile(root, filepath.Base(path), content, 0600, true)
+}
+
 func (Files) ReadDir(path string) ([]DirectoryEntry, error) {
 	if err := validateFilePath(path); err != nil {
 		return nil, err

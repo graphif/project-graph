@@ -1462,9 +1462,6 @@ controlSettingsGroup:
   devNodeDetails:
     title: 節點詳情
     description: 打開節點詳情面板
-  devOnboarding:
-    title: 新手引導
-    description: 重新打開新手引導窗口
   devOpenTestWindow:
     title: 打開測試窗口
     description: 打開開發者測試窗口

@@ -1515,9 +1515,6 @@ controlSettingsGroup:
   devNodeDetails:
     title: Node Details
     description: Open the node details panel
-  devOnboarding:
-    title: Onboarding
-    description: Reopen the onboarding wizard
   devOpenTestWindow:
     title: Open Test Window
     description: Open the developer test window

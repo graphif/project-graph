@@ -2,7 +2,7 @@ import * as MenubarPrimitive from "@radix-ui/react-menubar";
 import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
 import * as React from "react";
 
-import { SoundService } from "@/core/service/feedbackService/SoundService";
+import { SoundService } from "@/core/service/feedback-service/sound-service";
 import { cn } from "@/utils/cn";
 
 function useMenuPlacement(forwardedRef: React.Ref<HTMLDivElement> | undefined) {

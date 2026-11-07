@@ -13,7 +13,15 @@ export default [
   },
   // https://github.com/eslint/eslint/discussions/18304
   {
-    ignores: ["app/dist/**/*", "app/build/**/*", "app/.mygo/**/*", "app/src/generated/**/*", "app/src/components/ui/**/*", "!.storybook"],
+    ignores: [
+      "dist/**/*",
+      "app/dist/**/*",
+      "app/build/**/*",
+      "app/.mygo/**/*",
+      "app/src/generated/**/*",
+      "app/src/components/ui/**/*",
+      "!.storybook",
+    ],
   },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,

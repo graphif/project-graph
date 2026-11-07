@@ -1,4 +1,4 @@
-import { Settings } from "@/core/service/Settings";
+import { Settings } from "@/core/service/settings";
 import { Button } from "./ui/button";
 import { Toolbar } from "./ui/toolbar";
 import { MousePointer, Pencil, Waypoints } from "lucide-react";
@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { cn } from "@/utils/cn";
-import { ColorManager } from "@/core/service/feedbackService/ColorManager";
+import { ColorManager } from "@/core/service/feedback-service/color-manager";
 import { Color } from "@graphif/data-structures";
 import { useAtom } from "jotai";
 import { isClassroomModeAtom } from "@/state";

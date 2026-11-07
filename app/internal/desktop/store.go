@@ -60,6 +60,10 @@ func writeStore(root *os.Root, name string, values map[string]any) error {
 }
 
 func replaceFile(root *os.Root, name string, data []byte, mode os.FileMode) error {
+	return publishFile(root, name, data, mode, false)
+}
+
+func publishFile(root *os.Root, name string, data []byte, mode os.FileMode, exclusive bool) error {
 	temporary := "." + rand.Text() + ".tmp"
 	file, err := root.OpenFile(temporary, os.O_WRONLY|os.O_CREATE|os.O_EXCL, mode)
 	if err != nil {
@@ -73,6 +77,10 @@ func replaceFile(root *os.Root, name string, data []byte, mode os.FileMode) erro
 	closeErr := file.Close()
 	if err := errors.Join(writeErr, closeErr); err != nil {
 		return err
+	}
+	if exclusive {
+		// Linking publishes complete bytes atomically and never replaces a file or symlink.
+		return root.Link(temporary, name)
 	}
 	return root.Rename(temporary, name)
 }
@@ -89,6 +97,10 @@ func (s *Stores) Read(name string) (map[string]any, error) {
 }
 
 func (s *Stores) Set(name, key string, value any) error {
+	return s.SetMany(name, map[string]any{key: value})
+}
+
+func (s *Stores) SetMany(name string, updates map[string]any) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	root, err := s.open(name)
@@ -100,7 +112,9 @@ func (s *Stores) Set(name, key string, value any) error {
 	if err != nil {
 		return err
 	}
-	values[key] = value
+	for key, value := range updates {
+		values[key] = value
+	}
 	return writeStore(root, name, values)
 }
 

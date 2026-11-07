@@ -5,7 +5,7 @@ import {
   projectGraphCliRuntimeCompatibilityPlugin,
   projectGraphCliRuntimeStubDescriptors,
   resolveProjectGraphCliRuntimeStubs,
-} from "./src/cli/ProjectGraphCliRuntimeCompatibility";
+} from "./src/cli/project-graph-cli-runtime-compatibility";
 
 const runtimeStubs = resolveProjectGraphCliRuntimeStubs(new URL("./src/cli/", import.meta.url).href);
 

@@ -22,17 +22,17 @@ vi.mock("@/platform/desktop", () => ({
     },
   },
 }));
-vi.mock("@/core/service/GlobalMenu", () => ({ onOpenFile: state.openFile }));
-vi.mock("@/core/service/dataFileService/RecentFileManager", () => ({
+vi.mock("@/core/service/global-menu", () => ({ onOpenFile: state.openFile }));
+vi.mock("@/core/service/data-file-service/recent-file-manager", () => ({
   RecentFileManager: { getRecentFiles: async () => [{ uri: { toString: () => "/test/recent.prg" }, time: 1 }] },
 }));
-vi.mock("@/utils/pathString", () => ({ PathString: { absolute2file: (path: string) => path.split("/").at(-1) } }));
-vi.mock("@/core/Project", () => ({ Project: class {} }));
-vi.mock("@/core/service/Settings", () => ({ Settings: { use: () => [state.config] } }));
-vi.mock("@/core/service/controlService/shortcutKeysEngine/KeyBindsUI", () => ({
+vi.mock("@/utils/path-string", () => ({ PathString: { absolute2file: (path: string) => path.split("/").at(-1) } }));
+vi.mock("@/core/project", () => ({ Project: class {} }));
+vi.mock("@/core/service/settings", () => ({ Settings: { use: () => [state.config] } }));
+vi.mock("@/core/service/control-service/shortcut-keys-engine/key-binds-ui", () => ({
   KeyBindsUI: { getUIKeyBind: (id: string) => state.bindings.get(id) },
 }));
-vi.mock("@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister", () => ({ allKeyBinds: [] }));
+vi.mock("@/core/service/control-service/shortcut-keys-engine/shortcut-keys-register", () => ({ allKeyBinds: [] }));
 vi.mock("@/state", () => ({ activeResourceTabAtom: {}, store: { get: () => state.project } }));
 vi.mock("jotai", () => ({ useAtomValue: () => state.project }));
 vi.mock("react", () => ({
@@ -45,7 +45,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 import NativeMacosMenu from "./native-macos-menu";
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 
 beforeEach(() => {
   state.cleanup?.();

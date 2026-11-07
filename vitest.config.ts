@@ -1,20 +1,9 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
+import { appVersion } from "./app/mygo.config";
 
 export default defineConfig({
-  plugins: [
-    {
-      name: "test-original-class-name",
-      resolveId(id) {
-        return id === "virtual:original-class-name" ? `\0${id}` : undefined;
-      },
-      load(id) {
-        return id === "\0virtual:original-class-name"
-          ? "export const getOriginalNameOf = value => value.name"
-          : undefined;
-      },
-    },
-  ],
+  define: { __PROJECT_GRAPH_CLI_VERSION__: JSON.stringify(appVersion) },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "app/src"),

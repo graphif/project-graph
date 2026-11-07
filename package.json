@@ -43,10 +43,10 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "cli": "node ./packages/project-graph-cli/src/cli.mjs",
-    "benchmark:cli:cold-start": "bun run --cwd app ./src/cli/ProjectGraphCliBenchmark.ts",
-    "test:cli:desktop": "bun run --cwd app ./src/cli/ProjectGraphCliDesktopAcceptance.ts",
+    "benchmark:cli:cold-start": "bun run --cwd app ./src/cli/project-graph-cli-benchmark.ts",
+    "test:cli:desktop": "bun run --cwd app ./src/cli/project-graph-cli-desktop-acceptance.ts",
     "format": "prettier --write .",
-    "test": "vitest run --exclude app/src/cli/ProjectGraphCliProduction.test.ts && vitest run app/src/cli/ProjectGraphCliProduction.test.ts",
+    "test": "vitest run --exclude app/src/cli/project-graph-cli-production.test.ts && vitest run app/src/cli/project-graph-cli-production.test.ts",
     "prepublish": "bun run build:packages",
     "publish": "nx run-many -t release"
   },

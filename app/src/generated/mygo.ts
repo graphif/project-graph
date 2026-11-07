@@ -61,6 +61,74 @@ export interface Folder {
   children: Folder[];
 }
 
+/** LayoutDAGRequest is the wire contract of the DAG layout task. */
+export interface LayoutDAGRequest {
+  projectId: string;
+  requestId: string;
+  inputRevision: string;
+  nodes: LayoutNode[];
+  edges: LayoutEdge[];
+  options: LayoutOptions;
+}
+
+/**
+ * LayoutDAGResponse is the wire contract of the DAG layout result. The
+ * identifiers of the request are echoed so the caller can drop a result that
+ * belongs to a superseded or edited input.
+ */
+export interface LayoutDAGResponse {
+  projectId: string;
+  requestId: string;
+  inputRevision: string;
+  positions: LayoutPosition[];
+  cycleNodeIds?: string[];
+  warnings?: string[];
+}
+
+/** LayoutEdge is a directed relation between two layout nodes. */
+export interface LayoutEdge {
+  id: string;
+  from: string;
+  to: string;
+}
+
+/** LayoutNode is the minimal projection of a stage node a layout needs. */
+export interface LayoutNode {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  locked: boolean;
+}
+
+/** LayoutOptions carries the spacing rules of one layout run. */
+export interface LayoutOptions {
+  horizontalSpacing: number;
+  verticalSpacing: number;
+}
+
+/** LayoutPosition is one resolved node position. */
+export interface LayoutPosition {
+  id: string;
+  x: number;
+  y: number;
+}
+
+export interface LegacyDetection {
+  status: string;
+  installations: LegacyInstallation[];
+  dataDirectories: string[];
+  running: boolean;
+  errors: string[];
+}
+
+export interface LegacyInstallation {
+  path: string;
+  version: string;
+  evidence: string;
+}
+
 export interface MCPConfig {
   serverName: string;
   command: string;
@@ -75,6 +143,13 @@ export interface MenuEntry {
   separator: boolean;
   disabled: boolean;
   children: MenuEntry[];
+}
+
+export interface MigrationReport {
+  category: string;
+  imported: number;
+  omitted: number;
+  completedAt: string;
 }
 
 export interface OpenRequest {
@@ -136,6 +211,18 @@ export const Stores = {
   set(name: string, key: string, value: unknown): Promise<void> {
     return call("Stores.Set", name, key, value);
   },
+  setMany(name: string, updates: Record<string, unknown>): Promise<void> {
+    return call("Stores.SetMany", name, updates);
+  },
+} as const;
+
+export const Migration = {
+  detect(): Promise<LegacyDetection> {
+    return call("Migration.Detect");
+  },
+  importAll(): Promise<MigrationReport> {
+    return call("Migration.ImportAll");
+  },
 } as const;
 
 export const Native = {
@@ -174,6 +261,9 @@ export const Native = {
   },
   openDevtools(): Promise<void> {
     return call("Native.OpenDevtools");
+  },
+  openUninstallLocation(): Promise<void> {
+    return call("Native.OpenUninstallLocation");
   },
   path(name: string): Promise<string> {
     return call("Native.Path", name);
@@ -271,6 +361,9 @@ export const Files = {
   write(path: string, content: string): Promise<void> {
     return call("Files.Write", path, content);
   },
+  writeNew(path: string, content: string): Promise<void> {
+    return call("Files.WriteNew", path, content);
+  },
 } as const;
 
 export const Dialogs = {
@@ -279,6 +372,21 @@ export const Dialogs = {
   },
   save(options: FileDialogOptions): Promise<string> {
     return call("Dialogs.Save", options);
+  },
+} as const;
+
+/**
+ * Algorithms exposes the pure computation kernels to the page. The binding
+ * only moves data across the bridge: validation and the algorithm itself live
+ * in the algorithm package, which the standalone helper calls as well.
+ */
+export const Algorithms = {
+  /**
+   * LayoutDAG lays out a directed graph and answers with the positions of the
+   * nodes that may move.
+   */
+  layoutDAG(request: LayoutDAGRequest): Promise<LayoutDAGResponse> {
+    return call("Algorithms.LayoutDAG", request);
   },
 } as const;
 

@@ -4,6 +4,7 @@ import { Stores } from "@/generated/mygo";
 export interface Store {
   get<T>(key: string): Promise<T | undefined>;
   set(key: string, value: unknown): Promise<void>;
+  setMany(values: Record<string, unknown>): Promise<void>;
   delete(key: string): Promise<boolean>;
   clear(): Promise<void>;
   entries<T>(): Promise<[string, T][]>;
@@ -28,6 +29,10 @@ export class DesktopStore implements Store {
 
   set(key: string, value: unknown) {
     return this.enqueue(() => Stores.set(this.name, key, value));
+  }
+
+  setMany(values: Record<string, unknown>) {
+    return this.enqueue(() => Stores.setMany(this.name, values));
   }
 
   delete(key: string) {
@@ -72,6 +77,10 @@ export class LazyStore implements Store {
 
   async set(key: string, value: unknown) {
     await (await this.load()).set(key, value);
+  }
+
+  async setMany(values: Record<string, unknown>) {
+    await (await this.load()).setMany(values);
   }
 
   async delete(key: string) {

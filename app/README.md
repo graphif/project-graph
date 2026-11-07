@@ -85,7 +85,7 @@ bun run dev
 | `bun run test`                  | 运行 Vitest 测试    |
 | `bun run lint`                  | 检查代码规范        |
 
-Go 服务验证使用 `go -C app test ./...`；修改绑定后执行 `bun run --cwd app mygo:generate`。CLI 开发测试通过 `go run` 启动 Go 所有权 helper，无需预先生成可执行文件，也无需 `lockf`。测试 `ProjectGraphCliProduction.test.ts` 会触发打包，不作为静态验证命令运行。
+Go 服务验证使用 `go -C app test ./...`；修改绑定后执行 `bun run --cwd app mygo:generate`。CLI 开发测试通过 `go run` 启动 Go 所有权 helper，无需预先生成可执行文件，也无需 `lockf`。测试 `project-graph-cli-production.test.ts` 会触发打包，不作为静态验证命令运行。
 
 `bun run test` 使用 Vitest；不要用 `bun test` 替代。依赖版本由 `bun.lock` 锁定，共享版本在根 `package.json` 的 `workspaces.catalog` 中维护。安装脚本仅信任 `trustedDependencies` 中显式批准的依赖；新增原生依赖时先审查脚本，不要批量信任。独立 CLI 仍使用 Node，不要求最终用户安装 Bun。
 

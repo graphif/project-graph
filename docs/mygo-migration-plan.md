@@ -2,6 +2,8 @@
 
 日期：2026-10-25。工作分支：`mygo`，基于 `master` 创建。迁移已开始，以下为目标方案与当前实施记录；未完成项不能按目标描述视为已交付。
 
+**当前整体状态（2026-11-07）**：P0–P4 的可由 Agent 验证部分已完成——Bun/Nx/MyGo 工具链、显式 codec 与旧文件读取、JSON PRG writer、onboarding 与一键全量旧数据迁移、Go DAG 布局切片、§3.1 全局路径整理、§7.7 构建 tricks 清理、CI/发布 gate 均已落地并通过类型检查、lint、Go 单测与全量 Vitest（109 个文件 / 722 项通过 / 5 项跳过）。P5 的**跨平台安装包签名、公证与真实更新通道验收**必须在授权的发布环境由维护者执行，Agent 不运行生产构建、不伪造签名密钥，也不以 tsc 代替该验收。以下按日期分节记录实施过程，最新一节为准。
+
 ### 当前实施进度（2026-10-25）
 
 - Bun 1.4.4 workspaces/catalog 与冻结锁文件已切换，Nx 已升级至 24.0.1；旧包管理器配置、锁文件与缓存索引已删除。
@@ -15,13 +17,38 @@
 
 本轮不创建提交，不运行生产构建；只接入 updater 官方插件，不伪造更新公钥或发布密钥。
 
+### 结构整理实施进度（2026-11-07）
+
+- **§3.1 全局 kebab-case 整理完成**：`app/src` 下 43 个目录、390 个文件完成改名（含 `Project.tsx → project.tsx`、`Settings.tsx → settings.tsx`、`Tab.tsx → tab.tsx`、`stageObject → stage-object`、`dataManageService → data-manage-service` 等）。改名只动路径，不改协议标识：序列化 `kind`、设置键、子窗口 ID、快捷键 ID、扩展公开符号全部保持原值。
+- **`.tsx` / `.ts` 边界按规范收敛**：294 个不含 JSX 的 `.tsx` 文件改为 `.ts`（含 `renderer.tsx`、`graph-methods.tsx`、`line-edge.tsx`、`text-node.tsx` 等）；剩余 `.tsx` 全部含 JSX。同步修正了依赖旧扩展名的运行期字符串：CLI `moduleId`、`/src/cli/closed-project-invocation.ts` 的 Vite SSR URL、`workspace-imports.test.ts` 的源码路径清单与生产测试的入口路径。
+- **不新增 `index.tsx` 落实到位**：`sub/settings-window/` 下三个 `index.tsx` 页面改为 `settings-window.tsx`、`customization/customization.tsx`、`themes/themes.tsx`，引用方改为显式路径。
+- **§7.7 构建/初始化 tricks 清理**：`Controller` 不再用 `import.meta.glob` 扫描目录、也不再从导出类名反推属性 id，改为显式的 `controllerClasses` 实例表（`id` 显式声明，顺序与历史派发顺序一致，并补上此前被 glob 隐式创建但未登记类型的 `contextMenu`）。`unplugin-original-class-name` 仅保留在独立发布的 `packages/data-structures` 与 `packages/shapes` 内部，应用侧不再依赖类名做持久化或行为判断。
+- **发布与 CI 路径对齐**：`desktop-check.yml` 改为 Windows/macOS/Linux 三平台矩阵，补上 lint 与 codec/旧文件 fixture/版本规则检查；CI 中的测试路径全部指向改名后的文件。根 `package.json` 与 `app/README.md` 中的 CLI 脚本与测试路径同步更新。
+- **新增轻量约定检查**：`app/src/application/workspace-conventions.test.ts` 在 CI 中守住 kebab-case 命名、`.tsx` 仅用于 JSX、无 `index.tsx` 入口，以及 `core` 不反向导入 `features`。
+- **验证结果**：`bun run --cwd app type-check` 通过；`bun run lint` 通过（含 51 个文件的 Prettier 收敛与根 `dist/` Godot 导出产物的忽略规则）；`go -C app test ./...` 通过（`internal/algorithm`、`internal/desktop`）；全量 `vitest run --exclude app/src/cli/project-graph-cli-production.test.ts` 为 109 个文件通过、722 项通过 / 5 项跳过，其中 CLI 进程契约 55 项通过、`workspace-imports` + `bun-toolchain` 13 项通过、`workspace-conventions` 4 项通过。`packages/extprg-types/index.d.ts` 已按改名后的工作区重新生成（新增 `Algorithms` DAG 布局声明，不再引用 `@msgpack/msgpack`），`go tool mygo generate` 确认 `app/src/generated/mygo.ts` 为最新。
+- **顺带修复的运行期路径缺陷**：改名后遗留的三类硬编码字符串已定位并修正——CLI 的 `moduleId` 列表、`project-graph-cli-development-runtime.ts` 中指向 `/src/cli/closed-project-invocation.ts` 的 Vite SSR URL、以及 `project-graph-cli-production.test.ts` 的入口路径。此前 CLI 进程契约整批 33 项失败正是由后者引起（模块加载失败被统一错误码掩盖）。
+- **删除网页版遗留**：无任何引用方的 `app/proxy.html`（纯网页版/iframe 模式的空壳页）已删除，`vite.config.ts` 的 `rollupOptions.input.proxy` 一并移除；`isWeb` / `isFrame` / `isMobile` / `WebStore` 等浏览器分支在应用代码中已不存在。
+- **仍未验收（需授权发布环境）**：跨平台安装包签名与公证、`go tool mygo build -upload` 的真实 draft Release 创建与更新通道、旧版卸载提示的真实系统入口验收。Agent 不运行生产构建，也不以 tsc 代替这三项。
+- **`packages/` 文件名保留原状**：独立发布的 `packages/shapes`、`packages/data-structures` 维持 PascalCase 文件名，其 `index.ts` 导出与包版本不变；改名会改变已发布包的文件布局，属于公开契约变更，不在本次路径整理范围内。
+
+### 数据边界实施进度（2026-10-26）
+
+- 已实现 `core/persistence/text-graph.ts` 的纯 Zod DTO：Vector、Rectangle、Color、富文本、TextNode、ConnectPoint、Section、ImageNode、MediaNode 与 LineEdge；使用固定 kind、ID 引用和显式舞台顺序。schema 推导类型，具名字段投影保留浮点精度，解码器实例独立且工厂表不可变。
+- 已实现对应的 `_/$` legacy reader：按字段名读取，支持前向引用、内联首次定义、重复端点和自环，不修改冻结输入；校验 ID、端点类型、排序、非法路径与深度/数量。桌面打开文件与独立 CLI 已接入**上述六类对象组成的舞台**的显式读取；TextNode/Section 几何初始化与数据构造分开。Section 先分配再链接 children，读取历史矩形/四边线/标题碰撞箱，保留折叠、锁定与样式，拒绝分组环和超深逻辑嵌套；共享 child 的运行时父级仍由原 StageManager 规范化。
+- ImageNode/MediaNode 显式保留附件 ID、几何、富文本、图片缩放/背景和音视频类型/标题；缺失附件保持 notFound。工厂推迟位图/媒体加载，桌面在完整图链接和初始几何恢复后启动资源，独立 CLI 不启动浏览器资源 API；CLI 的 StageManager 仍按原行为重算分组几何，不宣称保留原始分组尺寸。附件二进制仍由 PRG 容器承载，粘贴 DTO 重映射不改附件 ID。
+- PRG 读取增加 ZIP 条目/路径/重复名/目录冲突、压缩前后大小和 CRC 检查，拒绝缺失舞台、新旧关键条目混合以及尚未启用的新格式。附件仅在整个容器解析成功后提交，解析失败不覆盖调用方已有附件。MessagePack 解码限长，并校验普通数据深度、tags/references/metadata 与 UTF-8 README；显式非法旧版本不再被当成当前版本，缺 metadata 的历史容器仍按既有 2.0.0 解释。
+- 已添加无 UI/宿主 mock 的纯数据 fixture、负向类型检查与真实独立 CLI 回归；DTO 层演示冻结撤销快照和粘贴 ID 重映射，**不是**已切换生产 HistoryManager/CopyEngine。CLI 模型创建失败返回稳定 load error，并释放临时项目。完整 CLI 文件连同数据/历史清理测试的一批为 94 项通过、5 项跳过；最终补充后定向回归为 53 项通过（与前批重叠，不累加为独立总数）。最终 TypeScript、定向 ESLint、Prettier 与 diff 检查通过；未运行生产构建或跨平台桌面验收。
+- 本批补充嵌套分组/质点/图片/音视频 fixture、非法字段/分组环/逻辑深度检查、资源延迟初始化测试和真实 CLI 读写重开回归。最终纯数据/资源/生命周期定向批次 78 项通过；固定代码后的完整 CLI 文件 53 项通过、5 项跳过（此前跨越代码修改的那批结果作废）。两批覆盖有交集，不累加为独立总数。未执行生产构建或桌面媒体实机验收。
+- **边界仍未整体替换**：SVG、涂鸦、URL、引用块、扩展实体、其他关系等混合舞台暂走旧 reader，已在接线处标明限制；模型导入的 UI 依赖尚未整体拆除。旧 writer、撤销/协作/剪贴板/扩展 RPC 仍待迁移；未启用新 JSON PRG writer，未移除独立发布包 `@graphif/serializer` 的旧 API，不以本切片冒充 P0/P1 完成。
+- 后续顺序：补齐其余 kind 的 schema/工厂/旧文件 fixture → 切换各边界并验证事务与协议兼容 → 再启用新 JSON writer、软件版本 envelope 和旧文件首次转换备份。Onboarding、主动旧数据迁移、Go 算法试验与发布签名仍按原阶段推进。
+
 ## 1. 已确定的产品与技术方向
 
 - 只做 Windows/macOS/Linux 桌面应用，使用 MyGo **Web Frontend 模式**：Go 宿主 + 系统 WebView + React/TypeScript/Canvas。这里的 Web Frontend 是桌面 UI 技术，不是网页版产品。
 - 删除独立网页版、嵌入式 iframe 模式及其专用入口、存储 fallback、部署配置与文档；不再为普通浏览器提供可运行的完整应用。开发时仍使用 Vite，测试仍可使用 DOM 环境，两者不等于保留网页版。
 - 新 app ID 为 **`dev.graphif.prg`**；原 `liren.project-graph` 仅用于旧版检测、用户主动迁移和必要的跨版本进程协调，不作为新业务数据身份。
 - 新版全新初始化，不自动读取、复用或搬迁 Tauri 的设置、账号、缓存、扩展和其他业务数据。检测到旧版后，在 onboarding 第二页提示用户主动迁移并卸载旧版。
-- 新增带 Motion 动画的首次启动 onboarding：第一页欢迎，第二页旧版检测/迁移，后续设置主题、操作习惯，再进入编辑器。
+- 新增带 Motion 动画的首次启动 onboarding：欢迎、可选旧版迁移、外观和确认四步；不在首次启动中虚构操作习惯或试用画布。
 - 前端目录、文件命名与职责分层统一纳入迁移范围，不只整理新增代码。消除 serializer 对反射、类名、模块加载副作用与构造参数顺序的依赖；兼容读取既有 `.prg`，新格式显式版本化，外部 API 变化有兼容边界。
 - 包管理与项目开发工具切换到 **Bun**，保留 Nx 任务编排，除非实测存在阻断。不再维护 pnpm 工具链。
 - **本期接入 MyGo updater**：使用官方 updater 插件、签名更新与 GitHub Release；提供检查、下载、安装和安全重启。官网保留首次安装与更新失败时的下载入口，不复用 Tauri 的更新协议/密钥。
@@ -177,7 +204,7 @@ export default defineConfig({
 | 1：欢迎               | 简洁品牌介绍、节点图动效、语言入口、开始按钮                                  | 键盘可操作；点击开始后进入旧版检查                                             |
 | 2：旧版检测与数据迁移 | 已安装旧版、仅发现旧数据、未发现、检测失败四类状态；明确说明新旧身份/数据隔离 | 显式迁移、手动选择旧目录、稍后处理；提示并提供系统卸载入口，绝不静默迁移或卸载 |
 | 3：外观               | 明/暗主题及现有配色、界面缩放，实时预览                                       | 复用实际主题能力；返回/取消可恢复预览，完成后持久化                            |
-| 4：操作习惯           | 鼠标/触控板习惯、滚轮缩放或平移、右键拖动、空格拖动画布；小型试用画布         | 预设映射到现有设置键，不重写输入控制器；支持恢复默认                           |
+| 4：确认并进入工作区   | 显示完成提示和安全提醒                                                        | 不修改真实输入控制器设置；操作偏好仍在设置中按实际功能调整                     |
 | 5：准备就绪           | 设置摘要、手动下载新版的官网入口、进入工作区                                  | 设置与完成标记成功落盘后才进入编辑器                                           |
 
 第二页固定存在：无旧版时显示“未检测到旧版，可直接继续”，并保留手动选择。检测失败不能伪装成未安装；显示原因和重试。跳过者可以完成引导，之后从设置重新打开迁移页。
@@ -187,7 +214,7 @@ export default defineConfig({
 - 使用已有 `motion`，从 `motion/react` 接入页面切换、步骤进度和预览过渡；少量有意义动画，不为每个控件添加弹簧。遵循 reduced-motion，关闭位移和循环动画，信息不依赖动效表达。
 - 复用现有主题控件、shadcn 和项目 Dialog/toast；支持焦点管理、屏幕阅读器、键盘前进/返回、小窗口与高 DPI，不新增一套设计系统。
 - 复用 `theme/themeMode/lightTheme/darkTheme/uiScalePercent`、`mouseWheelMode`、`mouseWheelWithCtrlMode`、`mouseRightDragBackground`、`enableSpaceKeyMouseLeftDrag` 等 schema。系统跟随主题目前不是 `themeMode` 的已有值，若纳入产品需按 create-setting-item skill 扩展，不能只做一个无效 UI 选项。
-- 不把临时左键绘图/连线模式当成长期“操作习惯”预设：当前 `Settings` 每次启动会将 `mouseLeftMode` 重置为 `selectAndMove`；引导选项必须与真实重启行为一致。
+- 首次启动不展示虚构的“操作习惯”或试用画布；避免在没有真实校准依据时写入鼠标、滚轮等输入设置。
 - 先存 onboarding 草稿和步骤；最终设置及 `onboardingVersion/completedAt` 在新数据目录提交。中途退出可恢复，写失败不标完成；普通更新不重复引导。必要新增设置遵循 create-setting-item skill。
 - 外部双击文件、deep link、CLI 请求在引导期间进入有界待处理队列；完成后按序去重处理。独立 CLI 不被交互式引导卡住，使用明确默认值/可见错误；没有 UI ready 时不能把桌面项目误标为 connectable。
 - 引导文案维护 `en.yml/zh_CN.yml`，其他手写语言按需补齐，不手改自动生成的 `zh_TW.yml`。
