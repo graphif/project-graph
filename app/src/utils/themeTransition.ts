@@ -18,15 +18,27 @@ export function runThemeTransition(origin: Origin, update: () => void): Promise<
   svg.setAttribute("height", "0");
   svg.setAttribute("aria-hidden", "true");
   svg.style.position = "fixed";
-  const mask = document.createElementNS(ns, "mask");
-  mask.id = "pg-theme-ripple-mask";
-  mask.setAttribute("maskUnits", "userSpaceOnUse");
-  mask.setAttribute("x", "0");
-  mask.setAttribute("y", "0");
-  mask.setAttribute("width", String(innerWidth));
-  mask.setAttribute("height", String(innerHeight));
-  mask.style.maskType = "luminance";
-  svg.append(mask);
+  const createMask = (id: string) => {
+    const mask = document.createElementNS(ns, "mask");
+    mask.id = id;
+    mask.setAttribute("maskUnits", "userSpaceOnUse");
+    mask.setAttribute("x", "0");
+    mask.setAttribute("y", "0");
+    mask.setAttribute("width", String(innerWidth));
+    mask.setAttribute("height", String(innerHeight));
+    mask.style.maskType = "luminance";
+    return mask;
+  };
+  const mask = createMask("pg-theme-ripple-mask");
+  const oldMask = createMask("pg-theme-ripple-old-mask");
+  const oldBase = document.createElementNS(ns, "rect");
+  oldBase.setAttribute("x", "0");
+  oldBase.setAttribute("y", "0");
+  oldBase.setAttribute("width", String(innerWidth));
+  oldBase.setAttribute("height", String(innerHeight));
+  oldBase.setAttribute("fill", "white");
+  oldMask.append(oldBase);
+  svg.append(mask, oldMask);
   document.body.append(svg);
   root.dataset.themeTransition = "ripple";
   let count = 0;
@@ -35,40 +47,54 @@ export function runThemeTransition(origin: Origin, update: () => void): Promise<
   const starts: (() => void)[] = [];
   const animations = new Set<Animation>();
   const transition = document.startViewTransition(update);
+  const cleanupFinished = (target: SVGCircleElement, radius: number) => {
+    target.setAttribute("r", String(radius));
+    target.dataset.finished = "true";
+    let previous = target.previousElementSibling;
+    while (previous && (previous as SVGElement).dataset.finished === "true") {
+      const older = previous.previousElementSibling;
+      previous.remove();
+      previous = older;
+    }
+  };
   const add = ({ x, y }: Origin) => {
     count++;
     pending++;
-    const circle = document.createElementNS(ns, "circle");
     const cx = Math.max(0, Math.min(innerWidth, x));
     const cy = Math.max(0, Math.min(innerHeight, y));
     const radius = Math.ceil(Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy))) + 2;
-    circle.setAttribute("cx", String(cx));
-    circle.setAttribute("cy", String(cy));
-    circle.setAttribute("r", "0");
-    circle.setAttribute("fill", count % 2 ? "white" : "black");
+    const createCircle = (fill: string) => {
+      const circle = document.createElementNS(ns, "circle");
+      circle.setAttribute("cx", String(cx));
+      circle.setAttribute("cy", String(cy));
+      circle.setAttribute("r", "0");
+      circle.setAttribute("fill", fill);
+      return circle;
+    };
+    const isOdd = count % 2 === 1;
+    const circle = createCircle(isOdd ? "white" : "black");
+    const oldCircle = createCircle(isOdd ? "black" : "white");
     mask.append(circle);
+    oldMask.append(oldCircle);
     const start = () => {
-      const animation = circle.animate(
-        { r: ["0px", `${radius}px`] },
-        {
-          duration: 480,
-          easing: "cubic-bezier(0.16, 1, 0.3, 1)",
-          fill: "forwards",
-        },
-      );
+      const keyframes = { r: ["0px", `${radius}px`] };
+      const options: KeyframeAnimationOptions = {
+        duration: 480,
+        easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+        fill: "forwards",
+      };
+      const animation = circle.animate(keyframes, options);
+      const oldAnimation = oldCircle.animate(keyframes, options);
       animations.add(animation);
+      animations.add(oldAnimation);
       animation.onfinish = () => {
-        circle.setAttribute("r", String(radius));
-        circle.dataset.finished = "true";
         // 满屏的波纹已覆盖旧层，不再保留之前完成的遮罩。
-        let previous = circle.previousElementSibling;
-        while (previous && (previous as SVGElement).dataset.finished === "true") {
-          const older = previous.previousElementSibling;
-          previous.remove();
-          previous = older;
-        }
+        cleanupFinished(circle, radius);
+        cleanupFinished(oldCircle, radius);
         animation.cancel();
+        oldAnimation.cancel();
         animations.delete(animation);
+        animations.delete(oldAnimation);
         pending--;
         if (pending === 0) {
           // 偶数次点击回到原主题；动画期间复用同一对主题快照。
