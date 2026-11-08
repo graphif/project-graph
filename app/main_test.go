@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"net"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -72,6 +74,75 @@ func TestCLILocalCommands(t *testing.T) {
 			}
 			if test.json && !json.Valid(output) {
 				t.Fatalf("invalid JSON: %s", output)
+			}
+		})
+	}
+}
+
+func TestDMABufSafe(t *testing.T) {
+	runtimeDir := t.TempDir()
+	listener, err := net.Listen("unix", filepath.Join(runtimeDir, "wayland-1"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer listener.Close()
+
+	makeHost := func(t *testing.T, files map[string]string) string {
+		root := t.TempDir()
+		renderDir := filepath.Join(root, "dev", "dri")
+		if err := os.MkdirAll(renderDir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(renderDir, "renderD128"), nil, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		for name, content := range files {
+			p := filepath.Join(root, name)
+			if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(p, []byte(content), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+		return root
+	}
+
+	baseEnv := map[string]string{
+		"WAYLAND_DISPLAY": "wayland-1",
+		"XDG_RUNTIME_DIR": runtimeDir,
+	}
+	withEnv := func(overrides ...string) func(string) string {
+		env := make(map[string]string, len(baseEnv)+len(overrides)/2)
+		for k, v := range baseEnv {
+			env[k] = v
+		}
+		for i := 0; i < len(overrides); i += 2 {
+			env[overrides[i]] = overrides[i+1]
+		}
+		return func(key string) string { return env[key] }
+	}
+
+	for _, tc := range []struct {
+		name   string
+		getenv func(string) string
+		files  map[string]string
+		want   bool
+	}{
+		{"wayland mesa laptop", withEnv(), map[string]string{"sys/class/dmi/id/product_name": "XPS 13\n"}, true},
+		{"gdk backend x11", withEnv("GDK_BACKEND", "x11"), nil, false},
+		{"missing wayland display", withEnv("WAYLAND_DISPLAY", ""), nil, false},
+		{"software gl", withEnv("LIBGL_ALWAYS_SOFTWARE", "1"), nil, false},
+		{"llvmpipe", withEnv("GALLIUM_DRIVER", "llvmpipe"), nil, false},
+		{"nvidia module", withEnv(), map[string]string{"sys/module/nvidia/version": "550.0"}, false},
+		{"nvidia device", withEnv(), map[string]string{"dev/nvidia0": ""}, false},
+		{"docker container", withEnv(), map[string]string{".dockerenv": ""}, false},
+		{"qemu vm", withEnv(), map[string]string{"sys/class/dmi/id/sys_vendor": "QEMU\n"}, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			root := makeHost(t, tc.files)
+			if got := dmabufSafe(tc.getenv, root); got != tc.want {
+				t.Fatalf("dmabufSafe() = %v, want %v", got, tc.want)
 			}
 		})
 	}

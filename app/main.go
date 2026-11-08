@@ -166,7 +166,74 @@ func runCLI(ctx context.Context, args []string) int {
 	return 0
 }
 
+// mygo v0.6.4 disables WebKitGTK's DMA-BUF renderer everywhere on Linux to
+// avoid blank windows on NVIDIA, virtual machines, and containers, which forces
+// every frame through the CPU and drops canvas rendering to ~25fps on
+// Wayland + Mesa (Intel/AMD). Enable the DMA-BUF renderer automatically when
+// running on a safe Wayland + Mesa host unless the user set the variable.
+func preferDMABufRenderer() {
+	if runtime.GOOS != "linux" || os.Getenv("WEBKIT_DISABLE_DMABUF_RENDERER") != "" {
+		return
+	}
+	if !dmabufSafe(os.Getenv, "/") {
+		return
+	}
+	if err := os.Setenv("WEBKIT_DISABLE_DMABUF_RENDERER", "0"); err != nil {
+		log.Print(err)
+	}
+}
+
+func dmabufSafe(getenv func(string) string, root string) bool {
+	if backend, _, _ := strings.Cut(getenv("GDK_BACKEND"), ","); backend != "" && backend != "*" && backend != "wayland" {
+		return false
+	}
+	socket := getenv("WAYLAND_DISPLAY")
+	if socket == "" {
+		return false
+	}
+	if !filepath.IsAbs(socket) {
+		dir := getenv("XDG_RUNTIME_DIR")
+		if dir == "" {
+			return false
+		}
+		socket = filepath.Join(dir, socket)
+	}
+	if fi, err := os.Stat(socket); err != nil || fi.Mode()&os.ModeSocket == 0 {
+		return false
+	}
+	if sw := strings.ToLower(getenv("LIBGL_ALWAYS_SOFTWARE")); sw != "" && sw != "0" && sw != "false" {
+		return false
+	}
+	gallium := getenv("GALLIUM_DRIVER")
+	if gallium == "llvmpipe" || gallium == "softpipe" {
+		return false
+	}
+	for _, p := range []string{"sys/module/nvidia", "proc/driver/nvidia/version", "dev/nvidiactl", ".dockerenv", "run/.containerenv", "dev/dxg"} {
+		if _, err := os.Stat(filepath.Join(root, p)); err == nil {
+			return false
+		}
+	}
+	if nvidia, _ := filepath.Glob(filepath.Join(root, "dev", "nvidia*")); len(nvidia) > 0 {
+		return false
+	}
+	for _, f := range []string{"product_name", "sys_vendor"} {
+		b, _ := os.ReadFile(filepath.Join(root, "sys/class/dmi/id", f))
+		s := strings.ToLower(string(b))
+		for _, vm := range []string{"virtualbox", "vmware", "qemu", "kvm", "bochs", "parallels", "xen", "hyper-v", "virtual machine", "bhyve"} {
+			if strings.Contains(s, vm) {
+				return false
+			}
+		}
+	}
+	renderNodes, _ := filepath.Glob(filepath.Join(root, "dev", "dri", "renderD*"))
+	if len(renderNodes) == 0 {
+		renderNodes, _ = filepath.Glob(filepath.Join(root, "sys", "class", "drm", "renderD*"))
+	}
+	return len(renderNodes) > 0
+}
+
 func runGUI() {
+	preferDMABufRenderer()
 	paths, err := desktop.ResolvePaths(mygo.IsDev())
 	if err != nil {
 		log.Fatal(err)
