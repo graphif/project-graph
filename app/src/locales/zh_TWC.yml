@@ -1239,10 +1239,8 @@ effects:
 
       由於不夠美觀，已經廢棄，不會出現'
   EntityCreateFlashEffect:
-    title: 实体边框发光效果
-    description: '在ctrl+滾輪轉動實體樹、縮放圖片、建立節點等情況下出現
-
-      若渲染效能較差，建議關閉此選項'
+    title: 節點建立輪廓
+    description: 建立節點時，淡淡的輪廓輕輕收攏並淡出
   EntityCreateLineEffect:
     title: 实体散发电路板式线条辐射效果
     description: '已经废弃，不会出现

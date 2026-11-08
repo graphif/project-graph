@@ -1238,10 +1238,9 @@ effects:
       Saat entitas dibuat, debu muncul di sekitar entitas
       Karena tidak cukup estetis, sudah ditinggalkan, tidak akan muncul
   EntityCreateFlashEffect:
-    title: Efek Bercahaya Batas Entitas
+    title: Garis Tepi Node Baru
     description: |
-      Muncul dalam situasi seperti putar pohon entitas dengan ctrl+roda, zoom gambar, buat node, dll.
-      Jika performa render buruk, disarankan menonaktifkan ini
+      Saat node dibuat, garis tepi tipis merapat perlahan lalu memudar.
   EntityCreateLineEffect:
     title: Efek Radiasi Garis Sirkuit dari Entitas
     description: |
