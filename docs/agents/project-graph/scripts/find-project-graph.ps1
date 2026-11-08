@@ -7,7 +7,7 @@ if ($env:PROJECT_GRAPH_CLI) {
   exit 0
 }
 
-$command = Get-Command project-graph.exe -ErrorAction SilentlyContinue
+$command = Get-Command "Project Graph.exe" -ErrorAction SilentlyContinue
 if ($command -and (Test-Path -LiteralPath $command.Source -PathType Leaf)) {
   Write-Output ([IO.Path]::GetFullPath($command.Source))
   exit 0
@@ -23,7 +23,7 @@ foreach ($location in $locations) {
   if (-not $properties) { continue }
   foreach ($value in @($properties.CliPath, $properties.InstallLocation)) {
     if (-not $value) { continue }
-    $candidate = if ([IO.Path]::GetExtension($value) -ieq ".exe") { $value } else { Join-Path $value "project-graph.exe" }
+    $candidate = if ([IO.Path]::GetExtension($value) -ieq ".exe") { $value } else { Join-Path $value "Project Graph.exe" }
     if (Test-Path -LiteralPath $candidate -PathType Leaf) {
       Write-Output ([IO.Path]::GetFullPath($candidate))
       exit 0

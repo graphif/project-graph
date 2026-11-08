@@ -5,7 +5,7 @@ description: Use Project Graph through its CLI to inspect and edit a .prg graph 
 
 # Project Graph CLI
 
-Use the installed `project-graph` executable as the only interface for changing a Project Graph file. The CLI connects to the GUI; it does not edit `.prg` files directly. The GUI can be started and the requested project can be opened automatically.
+Use the installed Project Graph application executable as the only interface for changing a Project Graph file. The same executable provides CLI commands and the GUI; there is no separate CLI binary. The CLI connects to the GUI; it does not edit `.prg` files directly. The GUI can be started and the requested project can be opened automatically. In the examples, `project-graph` means the resolved application path; quote paths containing spaces (on PowerShell, use `& $path tool list`).
 
 ## Locate the CLI
 

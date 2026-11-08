@@ -9,8 +9,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"runtime"
 	"time"
 )
 
@@ -75,25 +73,13 @@ func Connect(ctx context.Context, path string, launch func() error) (Session, er
 }
 
 func LaunchGUI() error {
-	path := os.Getenv("PROJECT_GRAPH_GUI")
-	if path == "" {
-		cli, err := os.Executable()
-		if err != nil {
-			return err
-		}
-		name := "Project Graph"
-		if runtime.GOOS == "windows" {
-			name += ".exe"
-		}
-		directory := filepath.Dir(cli)
-		if runtime.GOOS == "darwin" {
-			directory = filepath.Join(directory, "MacOS")
-		}
-		path = filepath.Join(directory, name)
+	path, err := os.Executable()
+	if err != nil {
+		return err
 	}
 	info, err := os.Stat(path)
 	if err != nil {
-		return fmt.Errorf("GUI_EXECUTABLE_NOT_FOUND: %w; set PROJECT_GRAPH_GUI", err)
+		return fmt.Errorf("GUI_EXECUTABLE_NOT_FOUND: %w", err)
 	}
 	if !info.Mode().IsRegular() {
 		return errors.New("GUI executable is not a regular file")
