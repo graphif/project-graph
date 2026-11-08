@@ -128,7 +128,7 @@
     "@zip.js/zip.js": "^2.8.26",
     "ai": "^6.0.174",
     "bcrypt": "^6.0.0",
-    "better-auth": "^1.6.11",
+    "better-auth": "^1.7.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
