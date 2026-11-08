@@ -195,7 +195,9 @@ export const ProjectTabs = memo(function ProjectTabs({
                 <Tooltip>
                   {/* 醒目提醒用户，崩溃了丢了文件别怪开发者提醒不到位 */}
                   <TooltipTrigger>
-                    <CircleAlert className="*:text-destructive! text-destructive!" />
+                    <span className="flex size-4 items-center justify-center">
+                      <CircleAlert className="*:text-destructive! text-destructive!" />
+                    </span>
                   </TooltipTrigger>
                   <TooltipContent>未保存！</TooltipContent>
                 </Tooltip>
