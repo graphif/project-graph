@@ -11,34 +11,6 @@ import i18next from "i18next";
 import { useEffect, useState } from "react";
 import z from "zod";
 
-type GlobalMenuNode = {
-  type: string;
-  id: string;
-  label?: string;
-  icon?: string;
-  visible?: boolean;
-  children?: GlobalMenuNode[];
-};
-
-function cloneGlobalMenuNode<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value));
-}
-
-function mergeGlobalMenuConfig(current: GlobalMenuNode[], defaults: GlobalMenuNode[]): GlobalMenuNode[] {
-  const merged = cloneGlobalMenuNode(current);
-  for (const defaultItem of defaults) {
-    const currentItem = merged.find((item) => item.id === defaultItem.id);
-    if (!currentItem) {
-      merged.push(cloneGlobalMenuNode(defaultItem));
-      continue;
-    }
-    if (currentItem.children && defaultItem.children) {
-      currentItem.children = mergeGlobalMenuConfig(currentItem.children, defaultItem.children);
-    }
-  }
-  return merged;
-}
-
 const projectToolSettingSchemas = createProjectToolSettingSchemas(
   isMac ? MAC_DEFAULT_FONT_FAMILY : DEFAULT_FONT_FAMILY,
 );
@@ -970,48 +942,6 @@ if (rawSettings.mouseLeftMode !== "selectAndMove") {
   await store.save();
 }
 
-// 检查菜单配置中是否存在指定 id 的节点（用于版本升级时的配置重置判断）
-function hasMenuId(nodes: GlobalMenuNode[], id: string): boolean {
-  for (const node of nodes) {
-    if (node.id === id) return true;
-    if (node.children && hasMenuId(node.children, id)) return true;
-  }
-  return false;
-}
-
-const mergedGlobalMenuConfig = mergeGlobalMenuConfig(
-  savedSettings.globalMenuConfig as GlobalMenuNode[],
-  defaultSettings.globalMenuConfig as GlobalMenuNode[],
-);
-// 检查是否缺少 extensions 顶级菜单（旧版本用户升级后需要重置以保证顺序正确）
-const globalMenuNeedsReset = !hasMenuId(mergedGlobalMenuConfig, "extensions");
-const finalGlobalMenuConfig = globalMenuNeedsReset
-  ? (defaultSettings.globalMenuConfig as GlobalMenuNode[])
-  : mergedGlobalMenuConfig;
-if (JSON.stringify(finalGlobalMenuConfig) !== JSON.stringify(savedSettings.globalMenuConfig)) {
-  savedSettings.globalMenuConfig = finalGlobalMenuConfig as Settings["globalMenuConfig"];
-  await store.set("globalMenuConfig", finalGlobalMenuConfig);
-  await store.save();
-}
-
-const mergedContextMenuConfig = mergeGlobalMenuConfig(
-  savedSettings.contextMenuConfig as GlobalMenuNode[],
-  defaultSettings.contextMenuConfig as GlobalMenuNode[],
-);
-// 检查是否缺少 edge-arrow-type 子菜单或 text-node-border-style 子菜单（旧版本用户）
-// 若缺少，说明是旧配置，直接重置为默认值以保证顺序正确
-const contextMenuNeedsReset =
-  !hasMenuId(mergedContextMenuConfig, "edge-arrow-type") ||
-  !hasMenuId(mergedContextMenuConfig, "text-node-border-style");
-const finalContextMenuConfig = contextMenuNeedsReset
-  ? (defaultSettings.contextMenuConfig as GlobalMenuNode[])
-  : mergedContextMenuConfig;
-if (JSON.stringify(finalContextMenuConfig) !== JSON.stringify(savedSettings.contextMenuConfig)) {
-  savedSettings.contextMenuConfig = finalContextMenuConfig as Settings["contextMenuConfig"];
-  await store.set("contextMenuConfig", finalContextMenuConfig);
-  await store.save();
-}
-
 export async function flushSettingsLoadErrors() {
   if (hasFlushedSettingsLoadErrors || pendingSettingsLoadErrorKeys.size === 0) {
     return;
@@ -1044,10 +974,7 @@ export async function flushSettingsLoadErrors() {
 const settingsTarget = {
   ...savedSettings,
   watch: () => () => {},
-  use: <T extends keyof Settings>(): [Settings[T], (newValue: Settings[T]) => void] => [
-    undefined as any,
-    () => {},
-  ],
+  use: <T extends keyof Settings>(): [Settings[T], (newValue: Settings[T]) => void] => [undefined as any, () => {}],
 };
 
 export async function persistSettings(values: Partial<Settings>): Promise<void> {
