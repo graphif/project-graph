@@ -60,10 +60,13 @@ function isSerializedObject(value: unknown): value is Record<string, unknown> & 
 }
 
 function getByPath(root: unknown, path: string): unknown {
-  const segments = path.split("/").filter((s) => s !== "");
+  const segments = path
+    .slice(1)
+    .split("/")
+    .map((segment) => segment.replaceAll("~1", "/").replaceAll("~0", "~"));
   let result: unknown = root;
   for (const segment of segments) {
-    if (result == null || (typeof result !== "object" && !Array.isArray(result))) {
+    if (result == null || typeof result !== "object" || !Object.hasOwn(result, segment)) {
       return undefined;
     }
     result = (result as Record<string, unknown>)[segment];
@@ -81,7 +84,8 @@ function indexPaths(value: unknown, path: string, pathToValue: Map<string, unkno
   if ("$" in value && Object.keys(value).length === 1) return;
   for (const [key, child] of Object.entries(value)) {
     if (key === "_") continue;
-    indexPaths(child, `${path}/${key}`, pathToValue);
+    if (key === "customData" && value._ === "ExtensionEntity") continue;
+    indexPaths(child, `${path}/${key.replaceAll("~", "~0").replaceAll("/", "~1")}`, pathToValue);
   }
 }
 
@@ -94,40 +98,45 @@ export function stageArrayToMap(serializedStage: unknown[]): StageMapDoc {
   const pathToValue = new Map<string, unknown>();
   indexPaths(serializedStage, "", pathToValue);
 
-  for (const item of serializedStage) {
-    if (!isSerializedObject(item) || typeof item.uuid !== "string") continue;
-    order.push(item.uuid);
-  }
-
-  function resolveUuidFromPath(path: string): string | undefined {
+  function resolveValueFromPath(path: string): unknown {
     const normalized = path.startsWith("/") ? path : `/${path}`;
-    const target = pathToValue.get(normalized) ?? pathToValue.get(path) ?? getByPath(serializedStage, normalized);
-    if (isSerializedObject(target) && typeof target.uuid === "string") {
-      return target.uuid;
-    }
-    return undefined;
+    return pathToValue.get(normalized) ?? pathToValue.get(path) ?? getByPath(serializedStage, normalized);
   }
 
-  function rewrite(value: unknown): unknown {
+  for (const item of serializedStage) {
+    const target = isPlainObject(item) && typeof item.$ === "string" ? resolveValueFromPath(item.$) : item;
+    if (isSerializedObject(target) && typeof target.uuid === "string") order.push(target.uuid);
+  }
+
+  const expandingReferences = new Set<string>();
+  function rewrite(value: unknown, root = false): unknown {
     if (Array.isArray(value)) {
-      return value.map(rewrite);
+      return value.map((child) => rewrite(child));
     }
     if (!isPlainObject(value)) return value;
+    if (!root && isSerializedObject(value) && typeof value.uuid === "string") return { $u: value.uuid };
     if ("$" in value && typeof value.$ === "string" && Object.keys(value).length === 1) {
-      const uuid = resolveUuidFromPath(value.$);
-      if (uuid) return { $u: uuid };
-      return value;
+      const target = resolveValueFromPath(value.$);
+      if (isSerializedObject(target) && typeof target.uuid === "string") return { $u: target.uuid };
+      if (target === undefined || expandingReferences.has(value.$)) {
+        throw new Error(`Invalid collaboration value reference: ${value.$}`);
+      }
+      // Value objects have no UUID, so inline them before map ordering changes their paths.
+      expandingReferences.add(value.$);
+      const result = rewrite(target);
+      expandingReferences.delete(value.$);
+      return result;
     }
     const result: Record<string, unknown> = {};
     for (const [key, child] of Object.entries(value)) {
-      result[key] = rewrite(child);
+      result[key] = key === "customData" && value._ === "ExtensionEntity" ? structuredClone(child) : rewrite(child);
     }
     return result;
   }
 
-  for (const item of serializedStage) {
+  for (const item of pathToValue.values()) {
     if (!isSerializedObject(item) || typeof item.uuid !== "string") continue;
-    objects[item.uuid] = rewrite(structuredClone(item));
+    objects[item.uuid] = rewrite(item, true);
   }
 
   return { objects, order };
@@ -162,7 +171,7 @@ export function stageMapToArray(doc: StageMapDoc): unknown[] {
     }
     const result: Record<string, unknown> = {};
     for (const [key, child] of Object.entries(value)) {
-      result[key] = rewrite(child);
+      result[key] = key === "customData" && value._ === "ExtensionEntity" ? structuredClone(child) : rewrite(child);
     }
     return result;
   }

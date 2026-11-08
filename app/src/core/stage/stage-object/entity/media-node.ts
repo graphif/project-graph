@@ -4,7 +4,7 @@ import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectabl
 import { ResizeAble } from "@/core/stage/stage-object/abstract/stage-object-interface";
 import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Vector } from "@graphif/data-structures";
-import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import type { Value } from "platejs";
 
@@ -22,20 +22,18 @@ type MediaNodeOptions = {
   title?: string;
 };
 
-@passExtraAtArg1
-@passObject
+@serializableType("MediaNode", {
+  fields: ["details", "uuid", "collisionBox", "attachmentId", "mediaKind", "title"],
+  id: "uuid",
+  construct: "object",
+  extra: "first",
+})
 export class MediaNode extends ConnectableEntity implements ResizeAble {
   isHiddenBySectionCollapse: boolean = false;
-  @id
-  @serializable
   public uuid: string;
-  @serializable
   public collisionBox: CollisionBox;
-  @serializable
   public attachmentId: string;
-  @serializable
   public mediaKind: MediaKind;
-  @serializable
   public title: string;
 
   _isSelected: boolean = false;

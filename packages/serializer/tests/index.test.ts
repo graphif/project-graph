@@ -153,8 +153,7 @@ describe("数组序列化", () => {
   const serialized = [1, "2", true, { name: "Traveller", age: 1000 }, [1, 2, 3]];
 
   test("序列化数组", () => {
-    const serialized = serialize(arr);
-    expect(serialized).toEqual(serialized);
+    expect(serialize(arr)).toEqual(serialized);
   });
   test("反序列化数组", () => {
     const deserialized = deserialize(serialized);

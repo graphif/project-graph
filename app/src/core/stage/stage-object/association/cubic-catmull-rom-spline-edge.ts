@@ -9,6 +9,7 @@ import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectabl
 import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { Edge } from "@/core/stage/stage-object/association/edge";
+import { serializableType } from "@graphif/serializer";
 
 /**
  * CR曲线连线
@@ -16,6 +17,44 @@ import { Edge } from "@/core/stage/stage-object/association/edge";
  * alpha 不用自己修改了，这个是0.5固定值了，只会微微影响形状
  * tension 控制曲线的弯曲程度，0是折线。
  */
+@serializableType("CubicCatmullRomSplineEdge", {
+  fields: [
+    "associationList",
+    "sourceRectangleRate",
+    "targetRectangleRate",
+    "uuid",
+    "text",
+    "color",
+    "alpha",
+    "tension",
+    "controlPoints",
+  ],
+  id: "uuid",
+  create: (data, project) => {
+    const [source, target] = data.associationList as ConnectableEntity[];
+    const color = (data.color ?? Color.Transparent) as Color;
+    const sourceRate = (data.sourceRectangleRate ?? Vector.same(0.5)) as Vector;
+    const targetRate = (data.targetRectangleRate ?? Vector.same(0.5)) as Vector;
+    return new CubicCatmullRomSplineEdge(
+      project,
+      {
+        type: "core:cublic_catmull_rom_spline_edge",
+        uuid: data.uuid,
+        source: source.uuid,
+        target: target.uuid,
+        text: data.text ?? "",
+        color: [color.r, color.g, color.b, color.a],
+        sourceRectRate: [sourceRate.x, sourceRate.y],
+        targetRectRate: [targetRate.x, targetRate.y],
+        alpha: data.alpha ?? 0.5,
+        tension: data.tension ?? 0,
+        controlPoints: (data.controlPoints as Vector[]).map(({ x, y }) => [x, y]),
+      },
+      false,
+      { source, target },
+    );
+  },
+})
 export class CubicCatmullRomSplineEdge extends Edge {
   public uuid: string;
   public text: string;
@@ -101,6 +140,7 @@ export class CubicCatmullRomSplineEdge extends Edge {
     // this._target = this.project.stageManager.getTextNodeByUUID(target) as TextNode;
     this._source = endpoints?.source ?? new TextNode(this.project, { uuid: source }, true);
     this._target = endpoints?.target ?? new TextNode(this.project, { uuid: target }, true);
+    this.associationList = [this._source, this._target];
     this.uuid = uuid;
     this.text = text;
     this.alpha = alpha;

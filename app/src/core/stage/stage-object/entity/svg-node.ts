@@ -3,26 +3,24 @@ import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectabl
 import { ResizeAble } from "@/core/stage/stage-object/abstract/stage-object-interface";
 import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Color, Vector } from "@graphif/data-structures";
-import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import type { Value } from "platejs";
 
 /**
  * Svg 节点
  */
-@passExtraAtArg1
-@passObject
+@serializableType("SvgNode", {
+  fields: ["details", "color", "uuid", "scale", "collisionBox", "attachmentId"],
+  id: "uuid",
+  construct: "object",
+  extra: "first",
+})
 export class SvgNode extends ConnectableEntity implements ResizeAble {
-  @serializable
   color: Color = Color.Transparent;
-  @id
-  @serializable
   uuid: string;
-  @serializable
   scale: number;
-  @serializable
   collisionBox: CollisionBox;
-  @serializable
   attachmentId: string;
   isHiddenBySectionCollapse: boolean = false;
 

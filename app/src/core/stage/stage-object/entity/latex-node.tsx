@@ -2,7 +2,7 @@ import { Project } from "@/core/project";
 import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
 import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Color, Vector } from "@graphif/data-structures";
-import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import katex from "katex";
 import { toast } from "sonner";
@@ -16,30 +16,28 @@ import { katexEmbeddedCss } from "@/utils/katex-embedded-css";
  * 持久化只存储 LaTeX 字符串，SVG 渲染结果在运行时动态生成。
  * 缩放方式与文本节点一致，使用 fontScaleLevel 指数缩放。
  */
-@passExtraAtArg1
-@passObject
+@serializableType("LatexNode", {
+  fields: ["details", "uuid", "latexSource", "collisionBox", "color", "fontScaleLevel"],
+  id: "uuid",
+  construct: "object",
+  extra: "first",
+})
 export class LatexNode extends ConnectableEntity {
-  @id
-  @serializable
   uuid: string;
 
   /**
    * LaTeX 源代码字符串（不含 $ 符号），如 "E=mc^2"
    */
-  @serializable
   latexSource: string;
 
-  @serializable
   public collisionBox: CollisionBox;
 
-  @serializable
   color: Color = Color.Transparent;
 
   /**
    * 字体缩放级别，与 TextNode 一致
    * 公式大小缩放公式：scale = 2^(fontScaleLevel / 2)
    */
-  @serializable
   public fontScaleLevel: number = 0;
 
   isHiddenBySectionCollapse: boolean = false;

@@ -2,7 +2,6 @@ import { Settings } from "@/core/service/settings";
 import { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
 import type { Section } from "@/core/stage/stage-object/entity/section";
 import { Vector } from "@graphif/data-structures";
-import { serializable } from "@graphif/serializer";
 import { Circle, Rectangle } from "@graphif/shapes";
 import type { Value } from "platejs";
 import { DetailsManager } from "../tools/entity-details-manager";
@@ -35,7 +34,6 @@ export abstract class Entity extends StageObject {
    *  { type: 'h1', children: [{ text: 'And this heading.' }] }
    * ]
    */
-  @serializable
   public details: Value = [];
 
   /**

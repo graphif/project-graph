@@ -3,15 +3,19 @@ import { Project } from "@/core/project";
 import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
 import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Vector } from "@graphif/data-structures";
-import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import type { Value } from "platejs";
 
 /**
  * 质点不再区分膨胀状态和收缩状态
  */
-@passExtraAtArg1
-@passObject
+@serializableType("ConnectPoint", {
+  fields: ["details", "collisionBox", "uuid"],
+  id: "uuid",
+  construct: "object",
+  extra: "first",
+})
 export class ConnectPoint extends ConnectableEntity {
   // 坍缩状态半径
   static CONNECT_POINT_SHRINK_RADIUS = 15;
@@ -24,10 +28,7 @@ export class ConnectPoint extends ConnectableEntity {
 
   isHiddenBySectionCollapse: boolean = false;
 
-  @serializable
   collisionBox: CollisionBox;
-  @id
-  @serializable
   uuid: string;
 
   get radius(): number {

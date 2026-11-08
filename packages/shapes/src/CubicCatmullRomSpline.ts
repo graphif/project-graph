@@ -1,4 +1,5 @@
 import { Vector } from "@graphif/data-structures";
+import { serializableType } from "@graphif/serializer";
 import { Line } from "./Line";
 import { Rectangle } from "./Rectangle";
 import { Shape } from "./Shape";
@@ -6,6 +7,7 @@ import { Shape } from "./Shape";
 /**
  * CR曲线形状
  */
+@serializableType("CubicCatmullRomSpline", { fields: ["controlPoints", "alpha", "tension"] })
 export class CubicCatmullRomSpline extends Shape {
   public controlPoints: Vector[];
   public alpha: number;

@@ -2,7 +2,7 @@ import type { Project } from "@/core/project";
 import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
 import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Color, Vector } from "@graphif/data-structures";
-import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Line } from "@graphif/shapes";
 import type { Value } from "platejs";
 
@@ -10,10 +10,9 @@ import type { Value } from "platejs";
  * 一笔画中的某一个小段
  * 起始点，结束点，宽度
  */
+@serializableType("PenStrokeSegment", { fields: ["location", "pressure"] })
 export class PenStrokeSegment {
-  @serializable
   location: Vector;
-  @serializable
   pressure: number;
   constructor(location: Vector, pressure: number) {
     this.location = location;
@@ -21,18 +20,19 @@ export class PenStrokeSegment {
   }
 }
 
-@passExtraAtArg1
-@passObject
+@serializableType("PenStroke", {
+  fields: ["details", "uuid", "segments", "color"],
+  id: "uuid",
+  construct: "object",
+  extra: "first",
+})
 export class PenStroke extends Entity {
   /** 涂鸦不参与吸附对齐 */
   public isAlignExcluded: boolean = true;
 
   public isHiddenBySectionCollapse: boolean = false;
-  // @serializable
   collisionBox: CollisionBox = new CollisionBox([]);
 
-  @id
-  @serializable
   public uuid: string;
 
   move(delta: Vector): void {
@@ -59,9 +59,7 @@ export class PenStroke extends Entity {
     }
   }
 
-  @serializable
   public segments: PenStrokeSegment[] = [];
-  @serializable
   public color: Color = Color.Transparent;
 
   public getPath(): Vector[] {

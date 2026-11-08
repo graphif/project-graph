@@ -1,6 +1,6 @@
 import type { Project } from "@/core/project";
 import { Vector } from "@graphif/data-structures";
-import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import { ConnectableEntity } from "../abstract/connectable-entity";
 import { CollisionBox } from "../collision-box/collision-box";
@@ -11,27 +11,26 @@ export interface ExtensionEntityConfig {
   collisionBox: CollisionBox;
 }
 
-@passExtraAtArg1
-@passObject
+@serializableType("ExtensionEntity", {
+  fields: ["details", "uuid", "extensionId", "typeName", "customData", "collisionBox"],
+  rawFields: ["customData"],
+  id: "uuid",
+  construct: "object",
+  extra: "first",
+})
 export class ExtensionEntity extends ConnectableEntity {
   public get geometryCenter(): Vector {
     return this.rectangle.center;
   }
 
-  @id
-  @serializable
   uuid: string;
 
-  @serializable
   public extensionId = "";
 
-  @serializable
   public typeName = "";
 
-  @serializable
   public customData: any = {};
 
-  @serializable
   public collisionBox: CollisionBox;
 
   public isHiddenBySectionCollapse = false;

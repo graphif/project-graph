@@ -23,13 +23,13 @@ afterEach(() => {
 });
 
 describe("workspace module initialization", () => {
-  it("does not register application models with the reflection serializer", async () => {
+  it("does not use reflection serializer decorators or metadata", async () => {
     const root = path.resolve("app/src");
     const files = (await readdir(root, { recursive: true })).filter((file) => /\.tsx?$/.test(file));
     for (const file of files) {
       const source = await readFile(path.join(root, file), "utf8");
-      expect(source, file).not.toMatch(/from\s+["']@graphif\/serializer["']/);
       expect(source, file).not.toMatch(/^\s*@(?:serializable|passObject|passExtraAtArg1|id)\b/m);
+      expect(source, file).not.toMatch(/Reflect\.(?:getMetadata|defineMetadata|hasMetadata|metadata)\b/);
     }
   });
 
@@ -79,6 +79,123 @@ describe("workspace module initialization", () => {
     expect(restored.shapes[0]).toBeInstanceOf(Rectangle);
     expect(restored.getRectangle().location).toEqual(new Vector(1, 2));
     expect(restored.getRectangle().size).toEqual(new Vector(30, 40));
+  }, 30_000);
+
+  it("restores historical TextNode data and round-trips every model with explicit serializer schemas", async () => {
+    vi.stubGlobal("AudioContext", class {});
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    const { Project } = await import("@/core/project");
+    const { serialize, deserialize } = await import("@graphif/serializer");
+    const { TextNode } = await import("@/core/stage/stage-object/entity/text-node");
+    const { ImageNode } = await import("@/core/stage/stage-object/entity/image-node");
+    const { MediaNode } = await import("@/core/stage/stage-object/entity/media-node");
+    const { SvgNode } = await import("@/core/stage/stage-object/entity/svg-node");
+    const { LatexNode } = await import("@/core/stage/stage-object/entity/latex-node");
+    const { ReferenceBlockNode } = await import("@/core/stage/stage-object/entity/reference-block-node");
+    const { Vector } = await import("@graphif/data-structures");
+    const font = await import("@/utils/font");
+    vi.spyOn(font, "getTextSize").mockImplementation(() => new Vector(80, 40));
+    vi.spyOn(font, "getMultiLineTextSize").mockImplementation(() => new Vector(80, 40));
+    for (const type of [ImageNode, MediaNode, SvgNode, LatexNode, ReferenceBlockNode]) {
+      vi.spyOn(type.prototype, "initializeResources").mockImplementation(() => {});
+    }
+    const { decodeStageGraph } = await import("./read-legacy-stage");
+    const { createStageTextGraphCodec } = await import("./create-text-graph-codec");
+    const { encodeLegacyGraphWire } = await import("@/core/persistence/legacy-graph-wire");
+    const { stageArrayToMap, stageMapToArray } = await import("@/core/service/collaboration/stage-map");
+    const { parseProjectFile } = await import("@/core/project-file");
+    const { parseTextGraph, graphObjectSchemas } = await import("@/core/persistence/text-graph");
+    const project = Project.newDraft();
+    try {
+      const legacy = {
+        _: "TextNode",
+        details: [],
+        uuid: "77a1bef4-703b-499f-a80b-9dec547bbe50",
+        text: "The Merchant of Venice",
+        collisionBox: {
+          _: "CollisionBox",
+          shapes: [
+            {
+              _: "Rectangle",
+              location: { _: "Vector", x: -66.41, y: -148.58 },
+              size: { _: "Vector", x: 382.14, y: 76 },
+            },
+          ],
+        },
+        color: { _: "Color", r: 0, g: 0, b: 0, a: 0 },
+        fontScaleLevel: 0,
+        sizeAdjust: "auto",
+        fontFamily: "",
+        fontWeight: "",
+        borderStyle: "solid",
+      };
+      const node = deserialize(legacy, project) as InstanceType<typeof TextNode>;
+      expect(node).toBeInstanceOf(TextNode);
+      expect(node.text).toBe("The Merchant of Venice");
+      expect(serialize(node)).toEqual(legacy);
+
+      const rectangle = { location: { x: 1.23456789, y: -3.456789 }, size: { x: 123.45, y: 67.89 } };
+      const objects = [
+        { kind: "text-node", id: "text", rectangle, text: "Text" },
+        { kind: "connect-point", id: "point", rectangle },
+        { kind: "image-node", id: "image", rectangle, attachmentId: "asset" },
+        { kind: "media-node", id: "media", rectangle, attachmentId: "asset", mediaKind: "audio" },
+        { kind: "url-node", id: "url", rectangle, url: "https://example.com" },
+        { kind: "svg-node", id: "svg", rectangle, attachmentId: "asset" },
+        { kind: "pen-stroke", id: "stroke", segments: [{ location: { x: 2.3456789, y: 5.6 }, pressure: 0.125 }] },
+        { kind: "reference-block", id: "reference", rectangle, attachmentId: "asset", fileName: "Other" },
+        {
+          kind: "extension-entity",
+          id: "extension",
+          rectangle,
+          extensionId: "test",
+          typeName: "widget",
+          customData: { _: "Content", $: "literal" },
+        },
+        { kind: "latex-node", id: "latex", rectangle, latexSource: "x^2" },
+        { kind: "section", id: "group", rectangle, childIds: ["text"], isCollapsed: true },
+        { kind: "line-edge", id: "line", sourceId: "text", targetId: "text" },
+        { kind: "arc-edge", id: "arc", sourceId: "text", targetId: "point", offset: -2.3456789 },
+        {
+          kind: "spline-edge",
+          id: "spline",
+          sourceId: "text",
+          targetId: "point",
+          controlPoints: [0, 1, 2, 3].map((x) => ({ x, y: x / 3 })),
+        },
+        {
+          kind: "multi-target-edge",
+          id: "multi",
+          memberIds: ["text", "point"],
+          rectRates: [
+            { x: 0.25, y: 0.75 },
+            { x: 0.5, y: 0.5 },
+          ],
+        },
+        { kind: "sync-association", id: "sync-a", memberIds: ["sync-b", "line"], keys: ["text"] },
+        { kind: "sync-association", id: "sync-b", memberIds: ["sync-a", "multi"], keys: ["color"] },
+      ];
+      const graph = parseTextGraph({ objects, order: objects.map(({ id }) => id) });
+      expect(new Set(graph.objects.map(({ kind }) => kind)).size).toBe(Object.keys(graphObjectSchemas).length);
+      project.stage = decodeStageGraph(graph, project, { initializeGeometry: false });
+      const wire = JSON.parse(JSON.stringify(serialize(project.stage)));
+      const before = structuredClone(wire);
+      const restored = deserialize(wire, project);
+      expect(createStageTextGraphCodec().encode(restored)).toEqual(graph);
+      expect(createStageTextGraphCodec().encode(deserialize(encodeLegacyGraphWire(graph), project))).toEqual(graph);
+      const collaboration = stageArrayToMap(wire);
+      collaboration.order.reverse();
+      const synced = createStageTextGraphCodec().encode(deserialize(stageMapToArray(collaboration), project));
+      expect(synced.objects).toEqual([...graph.objects].reverse());
+      expect(synced.order).toEqual([...graph.order].reverse());
+      expect(wire).toEqual(before);
+      expect(serialize(deserialize(wire, project))).toEqual(serialize(restored));
+      const saved = await parseProjectFile(await project.getFileContent({ includeThumbnail: false }), new Map());
+      if (saved.format !== "legacy") throw new Error("Expected existing MessagePack PRG format");
+      expect(createStageTextGraphCodec().encode(deserialize(saved.serializedStageObjects, project))).toEqual(graph);
+    } finally {
+      await project.dispose();
+    }
   }, 30_000);
 
   it("round-trips every real stage model through JSON PRG without registering class names", async () => {

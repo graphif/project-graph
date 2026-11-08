@@ -7,7 +7,7 @@ import { ResizeAble } from "@/core/stage/stage-object/abstract/stage-object-inte
 import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { PathString } from "@/utils/path-string";
 import { Vector } from "@graphif/data-structures";
-import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import { Section } from "./section";
 import { RectangleLittleNoteEffect } from "@/core/service/feedback-service/effect-engine/concrete/rectangle-little-note-effect";
@@ -18,30 +18,27 @@ import type { Value } from "platejs";
  * 用于跨文件引用其他prg文件中的Section内容
  * 以静态图片的方式渲染在舞台上
  */
-@passExtraAtArg1
-@passObject
+@serializableType("ReferenceBlockNode", {
+  fields: ["details", "uuid", "collisionBox", "fileName", "sectionName", "scale", "attachmentId"],
+  id: "uuid",
+  construct: "object",
+  extra: "first",
+})
 export class ReferenceBlockNode extends ConnectableEntity implements ResizeAble {
   isHiddenBySectionCollapse: boolean = false;
-  @id
-  @serializable
   public uuid: string;
-  @serializable
   public collisionBox: CollisionBox;
 
   /**
    * 引用的文件名，不包括文件扩展名
    */
-  @serializable
   public fileName: string;
 
   /**
    * 引用的分组框名，为空表示引用整个文件
    */
-  @serializable
   public sectionName: string;
-  @serializable
   scale: number;
-  @serializable
   attachmentId: string;
 
   /**

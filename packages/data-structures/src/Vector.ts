@@ -1,9 +1,8 @@
-import { serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 
+@serializableType("Vector", { fields: ["x", "y"] })
 export class Vector {
-  @serializable
   x: number;
-  @serializable
   y: number;
 
   constructor(x: number, y: number) {

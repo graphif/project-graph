@@ -1,12 +1,12 @@
 import { Vector } from "@graphif/data-structures";
-import { serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Line, Rectangle, Shape } from "@graphif/shapes";
 
 /**
  * 碰撞箱类
  */
+@serializableType("CollisionBox", { fields: ["shapes"] })
 export class CollisionBox {
-  @serializable
   shapes: Shape[] = [];
 
   constructor(shapes: Shape[]) {

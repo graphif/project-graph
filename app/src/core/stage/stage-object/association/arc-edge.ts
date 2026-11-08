@@ -1,6 +1,6 @@
 import { Color, Vector } from "@graphif/data-structures";
 import { Line, Rectangle } from "@graphif/shapes";
-import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { getMultiLineTextSize } from "@/utils/font";
 import { Project } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
@@ -186,19 +186,28 @@ function isPointOnArc(
  * 通过 offset 控制弧线的弯曲方向和程度。
  * arc() 端点被裁剪到节点矩形边缘上，确保箭头不重叠。
  */
-@passExtraAtArg1
-@passObject
+@serializableType("ArcEdge", {
+  fields: [
+    "associationList",
+    "targetRectangleRate",
+    "sourceRectangleRate",
+    "uuid",
+    "text",
+    "color",
+    "lineType",
+    "arrowType",
+    "offset",
+    "textPosition",
+  ],
+  id: "uuid",
+  construct: "object",
+  extra: "first",
+})
 export class ArcEdge extends Edge {
-  @id
-  @serializable
   public uuid: string;
-  @serializable
   public text: string;
-  @serializable
   public color: Color = Color.Transparent;
-  @serializable
   public lineType: string = "solid";
-  @serializable
   public arrowType: string = "default";
 
   /**
@@ -207,14 +216,12 @@ export class ArcEdge extends Edge {
    * 正数 = 向 AB 连线左侧弯曲
    * 负数 = 向 AB 连线右侧弯曲
    */
-  @serializable
   public offset: number = 0;
 
   /**
    * 弧线上文字的位置比例。
    * 0.0 = 靠近源节点，0.5 = 中间，1.0 = 靠近目标节点
    */
-  @serializable
   public textPosition: number = 0.5;
 
   /**

@@ -2,7 +2,6 @@ import { ConnectableAssociation } from "@/core/stage/stage-object/abstract/assoc
 import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
 import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Vector } from "@graphif/data-structures";
-import { serializable } from "@graphif/serializer";
 import { Line, Rectangle } from "@graphif/shapes";
 import { ConnectPoint } from "../entity/connect-point";
 
@@ -126,9 +125,7 @@ export abstract class Edge extends ConnectableAssociation {
     return this.target.collisionBox.getRectangle().getInnerLocationByRateVector(this.targetRectangleRate);
   }
 
-  @serializable
   public targetRectangleRate: Vector = new Vector(0.5, 0.5);
-  @serializable
   public sourceRectangleRate: Vector = new Vector(0.5, 0.5);
 
   /**

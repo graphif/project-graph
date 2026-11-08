@@ -5,7 +5,7 @@ import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectabl
 import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { getTextSize } from "@/utils/font";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
-import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import type { Value } from "platejs";
 
@@ -14,20 +14,18 @@ import type { Value } from "platejs";
  * 通过在舞台上ctrl+v触发创建
  * 一旦创建，url就不能改了，因为也不涉及修改。
  */
-@passExtraAtArg1
-@passObject
+@serializableType("UrlNode", {
+  fields: ["details", "uuid", "title", "url", "color", "collisionBox"],
+  id: "uuid",
+  construct: "object",
+  extra: "first",
+})
 export class UrlNode extends ConnectableEntity {
-  @id
-  @serializable
   uuid: string;
-  @serializable
   title: string;
   // 网页链接
-  @serializable
   url: string;
-  @serializable
   color: Color;
-  @serializable
   public collisionBox: CollisionBox;
 
   static width: number = 300;

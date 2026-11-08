@@ -6,7 +6,7 @@ import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectabl
 import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { getMultiLineTextSize } from "@/utils/font";
 import { Color, Vector } from "@graphif/data-structures";
-import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Line, Rectangle, Shape } from "@graphif/shapes";
 
 /**
@@ -51,11 +51,25 @@ export type UndirectedEdgeArrowShape =
  * 超边。
  * 以后可以求最大强独立集
  */
-@passExtraAtArg1
-@passObject
+@serializableType("MultiTargetUndirectedEdge", {
+  fields: [
+    "associationList",
+    "uuid",
+    "text",
+    "color",
+    "rectRates",
+    "centerRate",
+    "arrow",
+    "arrowType",
+    "renderType",
+    "lineType",
+    "padding",
+  ],
+  id: "uuid",
+  construct: "object",
+  extra: "first",
+})
 export class MultiTargetUndirectedEdge extends ConnectableAssociation {
-  @id
-  @serializable
   public uuid: string;
 
   get collisionBox(): CollisionBox {
@@ -148,23 +162,14 @@ export class MultiTargetUndirectedEdge extends ConnectableAssociation {
     }
   }
 
-  @serializable
   public text: string;
-  @serializable
   public color: Color;
-  @serializable
   public rectRates: Vector[];
-  @serializable
   public centerRate: Vector;
-  @serializable
   public arrow: UndirectedEdgeArrowType = "none";
-  @serializable
   public arrowType: UndirectedEdgeArrowShape = "default";
-  @serializable
   public renderType: MultiTargetUndirectedEdgeRenderType = "line";
-  @serializable
   public lineType: UndirectedEdgeLineType = "solid";
-  @serializable
   public padding: number;
 
   public rename(text: string) {

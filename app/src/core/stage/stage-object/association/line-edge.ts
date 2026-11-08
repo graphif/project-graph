@@ -7,22 +7,29 @@ import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-
 import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { getMultiLineTextSize } from "@/utils/font";
 import { Color, Vector } from "@graphif/data-structures";
-import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 
-@passExtraAtArg1
-@passObject
+@serializableType("LineEdge", {
+  fields: [
+    "associationList",
+    "targetRectangleRate",
+    "sourceRectangleRate",
+    "uuid",
+    "text",
+    "color",
+    "lineType",
+    "arrowType",
+  ],
+  id: "uuid",
+  construct: "object",
+  extra: "first",
+})
 export class LineEdge extends Edge {
-  @id
-  @serializable
   public uuid: string;
-  @serializable
   public text: string;
-  @serializable
   public color: Color = Color.Transparent;
-  @serializable
   public lineType: string = "solid";
-  @serializable
   public arrowType: string = "default";
 
   get collisionBox(): CollisionBox {

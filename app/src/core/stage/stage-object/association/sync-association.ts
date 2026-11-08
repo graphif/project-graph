@@ -3,7 +3,7 @@ import { Association } from "@/core/stage/stage-object/abstract/association";
 import { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
 import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Color } from "@graphif/data-structures";
-import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import { Vector } from "@graphif/data-structures";
 
@@ -24,11 +24,14 @@ export type SyncableKey = "text" | "color" | "details";
  * - 成员数量 >= 2 时有效；若成员被删除导致只剩 1 个，整个关系对象会被自动清理
  * - 支持任意数量的成员，修改一个成员会同步至同组所有其他成员
  */
-@passExtraAtArg1
-@passObject
+@serializableType("SyncAssociation", {
+  fields: ["associationList", "uuid", "keys", "color"],
+  deferredFields: ["associationList"],
+  id: "uuid",
+  construct: "object",
+  extra: "first",
+})
 export class SyncAssociation extends Association {
-  @id
-  @serializable
   public uuid: string;
 
   /**
@@ -37,13 +40,11 @@ export class SyncAssociation extends Association {
    * "color"：同步节点背景颜色
    * "details"：同步节点富文本详情
    */
-  @serializable
   public keys: SyncableKey[];
 
   /**
    * 参与同步的所有成员（宽泛接受 StageObject，未来可扩展）
    */
-  @serializable
   public override associationList: StageObject[] = [];
 
   /**

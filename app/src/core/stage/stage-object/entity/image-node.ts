@@ -6,7 +6,7 @@ import { Settings } from "@/core/service/settings";
 import { applyBlackAndWhite } from "@/core/service/data-manage-service/image-utils";
 import { toast } from "sonner";
 import { Vector } from "@graphif/data-structures";
-import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import type { Value } from "platejs";
 
@@ -33,23 +33,21 @@ type ImageNodeOptions = {
  *   base64EncodeError
  *
  */
-@passExtraAtArg1
-@passObject
+@serializableType("ImageNode", {
+  fields: ["details", "uuid", "collisionBox", "attachmentId", "scale", "isBackground"],
+  id: "uuid",
+  construct: "object",
+  extra: "first",
+})
 export class ImageNode extends ConnectableEntity implements ResizeAble {
   isHiddenBySectionCollapse: boolean = false;
-  @id
-  @serializable
   public uuid: string;
-  @serializable
   public collisionBox: CollisionBox;
-  @serializable
   attachmentId: string;
-  @serializable
   scale: number;
   /**
    * 是否为背景图片
    */
-  @serializable
   isBackground: boolean = false;
   /**
    * 节点是否被选中

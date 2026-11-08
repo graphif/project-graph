@@ -7,23 +7,38 @@ import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-
 import { MultiTargetUndirectedEdge } from "@/core/stage/stage-object/association/muti-target-undirected-edge";
 import { getTextSize } from "@/utils/font";
 import { Color, Vector } from "@graphif/data-structures";
-import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Line, Rectangle, Shape } from "@graphif/shapes";
 import { Value } from "platejs";
 
-@passExtraAtArg1
-@passObject
+@serializableType("Section", {
+  fields: [
+    "details",
+    "uuid",
+    "_collisionBoxNormal",
+    "collisionBox",
+    "color",
+    "text",
+    "children",
+    "isCollapsed",
+    "locked",
+    "borderStyle",
+  ],
+  id: "uuid",
+  create: (data, project) => {
+    const section = new Section(project, data, false, { deferGeometry: true });
+    section.initializeCollapsedGeometry();
+    return section;
+  },
+})
 export class Section extends ConnectableEntity {
   /**
    * 节点是否被选中
    */
   _isSelected: boolean = false;
-  @id
-  @serializable
   public uuid: string;
   _isEditingTitle: boolean = false;
   private _collisionBoxWhenCollapsed: CollisionBox;
-  @serializable
   private _collisionBoxNormal: CollisionBox;
 
   public get isEditingTitle() {
@@ -71,26 +86,20 @@ export class Section extends ConnectableEntity {
     return new CollisionBox([collapsedRectangle]);
   }
 
-  @serializable
   color: Color = Color.Transparent;
-  @serializable
   text: string;
-  @serializable
   children: Entity[];
 
   /** 是否是折叠状态 */
-  @serializable
   isCollapsed: boolean;
   /**
    * 是否锁定 Section 内部物体
    * 当 locked 为 true 时，Section 内部的所有物体都不能移动或删除
    */
-  @serializable
   locked: boolean = false;
   /**
    * 边框样式：实线、虚线、无边框
    */
-  @serializable
   borderStyle: "solid" | "dashed" | "none" = "solid";
   isHiddenBySectionCollapse = false;
 

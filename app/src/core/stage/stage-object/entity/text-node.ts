@@ -8,7 +8,7 @@ import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-
 import { Section } from "@/core/stage/stage-object/entity/section";
 import { getMultiLineTextSize } from "@/utils/font";
 import { Color, Vector } from "@graphif/data-structures";
-import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import type { Value } from "platejs";
 
@@ -17,28 +17,36 @@ import type { Value } from "platejs";
  * 文字节点类
  * 2024年10月20日：Node 改名为 TextNode，防止与 原生 Node 类冲突
  */
-@passExtraAtArg1
-@passObject
+@serializableType("TextNode", {
+  fields: [
+    "details",
+    "uuid",
+    "text",
+    "collisionBox",
+    "color",
+    "fontScaleLevel",
+    "sizeAdjust",
+    "fontFamily",
+    "fontWeight",
+    "borderStyle",
+  ],
+  id: "uuid",
+  create: (data, project) => new TextNode(project, data, false, { deferGeometry: true }),
+})
 export class TextNode extends ConnectableEntity implements ResizeAble {
   public override get clipConnectionToBoundary(): boolean {
     return true;
   }
 
-  @id
-  @serializable
   uuid: string;
-  @serializable
   text: string;
-  @serializable
   public collisionBox: CollisionBox;
-  @serializable
   color: Color = Color.Transparent;
 
   /**
    * 字体缩放级别，整数，基准值为0，对应默认字体大小
    * 计算公式：finalFontSize = Renderer.FONT_SIZE * Math.pow(2, fontScaleLevel)
    */
-  @serializable
   public fontScaleLevel: number = 0;
 
   public static enableResizeCharCount = 20;
@@ -48,25 +56,21 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
    * auto：自动缩紧
    * manual：手动调整宽度，高度自动撑开。
    */
-  @serializable
   public sizeAdjust: string = "auto";
 
   /**
    * 自定义字体，空字符串表示使用默认字体
    */
-  @serializable
   public fontFamily: string = "";
 
   /**
    * 自定义字重，空字符串表示使用 normal
    */
-  @serializable
   public fontWeight: string = "";
 
   /**
    * 边框样式：实线、虚线、无边框
    */
-  @serializable
   public borderStyle: "solid" | "dashed" | "none" = "solid";
 
   /**
