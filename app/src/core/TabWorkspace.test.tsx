@@ -51,7 +51,51 @@ describe("TabWorkspace", () => {
   afterEach(() => {
     vi.clearAllTimers();
     vi.useRealTimers();
+    vi.restoreAllMocks();
+    document.body.replaceChildren();
   });
+
+  it.each(["horizontal", "vertical"] as const)(
+    "accepts drops after compact tabs without changing edge splits in a %s layout",
+    (direction) => {
+      for (let i = 0; i < 2; i++) {
+        const left = direction === "horizontal" ? i * 600 : 0;
+        const top = direction === "vertical" ? i * 400 : 0;
+        const group = document.createElement("section");
+        group.dataset.pgTabGroupId = `group-${i}`;
+        group.innerHTML = `
+          <div data-pg-tab-bar-drop-zone>
+            <div data-pg-tab-bar><button data-pg-docked-tab-id="tab-${i}">Tab</button></div>
+          </div>
+        `;
+        document.body.append(group);
+        vi.spyOn(group, "getBoundingClientRect").mockReturnValue(new DOMRect(left, top, 600, 400));
+        vi.spyOn(group.querySelector("[data-pg-tab-bar-drop-zone]")!, "getBoundingClientRect").mockReturnValue(
+          new DOMRect(left + 20, top + 24, 560, 32),
+        );
+        vi.spyOn(group.querySelector("[data-pg-tab-bar]")!, "getBoundingClientRect").mockReturnValue(
+          new DOMRect(left + 20, top + 24, 160, 32),
+        );
+        vi.spyOn(group.querySelector("button")!, "getBoundingClientRect").mockReturnValue(
+          new DOMRect(left + 32, top + 28, 136, 24),
+        );
+      }
+
+      for (let i = 0; i < 2; i++) {
+        const left = direction === "horizontal" ? i * 600 : 0;
+        const top = direction === "vertical" ? i * 400 : 0;
+        const groupId = `group-${i}`;
+        expect(TabWorkspace.getDropTarget(left + 50, top + 40)).toEqual({ groupId, index: 0 });
+        expect(TabWorkspace.getDropTarget(left + 400, top + 40)).toEqual({ groupId, index: 1 });
+        expect(TabWorkspace.getDropTarget(left + 400, top + 40, true)).toEqual({ groupId, index: 1 });
+        expect(TabWorkspace.getDropTarget(left + 300, top + 80)).toEqual({ groupId, edge: "top" });
+        expect(TabWorkspace.getDropTarget(left + 300, top + 80, true)).toBeNull();
+        expect(TabWorkspace.getDropTarget(left + 10, top + 200)).toEqual({ groupId, edge: "left" });
+        expect(TabWorkspace.getDropTarget(left + 590, top + 200)).toEqual({ groupId, edge: "right" });
+        expect(TabWorkspace.getDropTarget(left + 300, top + 390)).toEqual({ groupId, edge: "bottom" });
+      }
+    },
+  );
 
   it.each(["left", "right", "top", "bottom"] as const)(
     "keeps the selected file when opening a %s panel",

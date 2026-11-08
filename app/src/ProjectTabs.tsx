@@ -88,7 +88,7 @@ export const ProjectTabs = memo(function ProjectTabs({
       data-pg-tab-bar
       data-pg-tab-group-bar-id={groupId}
       className={cn(
-        "hover:bg-background/60 scrollbar-hide z-10 flex h-8 items-center gap-1.5 overflow-x-auto px-3 py-1 whitespace-nowrap transition-[background-color,opacity] duration-150 hover:opacity-100",
+        "hover:bg-background/60 scrollbar-hide pointer-events-auto z-10 flex h-8 w-max max-w-full items-center gap-1.5 overflow-x-auto px-3 py-1 whitespace-nowrap transition-[background-color,opacity] duration-150 hover:opacity-100",
         isClassroomMode && "opacity-0",
       )}
       onScroll={handleScroll}

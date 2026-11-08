@@ -353,7 +353,7 @@ export default function App() {
           const target = event.target as Element;
           if (
             target.closest(
-              "button, a, input, select, textarea, [contenteditable=true], [role=tablist], [role=menu], [role=menubar], [data-pg-docked-tab-id]",
+              "canvas, button, a, input, select, textarea, [contenteditable=true], [role=tablist], [role=menu], [role=menubar], [data-pg-docked-tab-id]",
             )
           )
             return;
@@ -404,7 +404,7 @@ export default function App() {
             className={cn(
               "z-10 grid h-8 shrink-0 grid-cols-[minmax(0,max-content)_minmax(0,1fr)_max-content] items-center gap-2 px-1 py-1 transition-opacity hover:opacity-100 sm:h-14 sm:gap-4 sm:px-3 sm:py-2",
               isMac &&
-                "has-[[data-pg-titlebar-menu]:empty]:grid-cols-[minmax(0,1fr)_max-content] has-[[data-pg-titlebar-menu]:empty]:pl-0 sm:pt-4 sm:pb-0",
+                "has-[[data-pg-titlebar-menu]:empty]:grid-cols-[minmax(0,1fr)_max-content] has-[[data-pg-titlebar-menu]:empty]:pl-0 sm:pt-6 sm:pb-0",
               isClassroomMode && "opacity-0",
             )}
           >

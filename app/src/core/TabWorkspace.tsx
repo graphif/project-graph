@@ -383,7 +383,8 @@ export namespace TabWorkspace {
     if (!groupId) return null;
     const rect = container.getBoundingClientRect();
     const tabBar = container.querySelector<HTMLElement>("[data-pg-tab-bar]");
-    const overTabBar = tabBar ? containsPoint(tabBar.getBoundingClientRect()) : false;
+    const dropZone = container.querySelector<HTMLElement>("[data-pg-tab-bar-drop-zone]") ?? tabBar;
+    const overTabBar = dropZone ? containsPoint(dropZone.getBoundingClientRect()) : false;
     if (tabBarOnly && !overTabBar) return null;
     const edgeWidth = Math.min(rect.width * 0.25, 100);
     const edgeHeight = Math.min(rect.height * 0.25, 100);

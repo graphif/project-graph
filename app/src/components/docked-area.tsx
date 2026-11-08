@@ -213,10 +213,10 @@ export default function DockedArea({
         <div
           data-pg-window-top-tabs={atWindowTop ? "" : undefined}
           className={cn(
-            "relative z-10 flex shrink-0 items-center",
+            "pointer-events-none relative z-10 flex shrink-0 items-center",
             atWindowTop &&
               "h-[calc(2rem*var(--pg-ui-scale,1))] data-[pg-tabs-separate-row]:h-auto data-[pg-tabs-separate-row]:pt-[calc(2rem*var(--pg-ui-scale,1))] sm:h-[calc(3.5rem*var(--pg-ui-scale,1))] sm:data-[pg-tabs-separate-row]:pt-[calc(3.5rem*var(--pg-ui-scale,1))]",
-            atWindowTop && isMac && "sm:pt-[calc(1rem*var(--pg-ui-scale,1))]",
+            atWindowTop && isMac && "sm:pt-[calc(1.5rem*var(--pg-ui-scale,1))]",
           )}
           onMouseDown={(event) => {
             if (atWindowTop && !(event.target as Element).closest("[data-pg-docked-tab-id]")) {
@@ -224,7 +224,7 @@ export default function DockedArea({
             }
           }}
         >
-          <div className="min-w-0 flex-1" style={{ zoom: "var(--pg-ui-scale, 1)" }}>
+          <div data-pg-tab-bar-drop-zone className="min-w-0 flex-1" style={{ zoom: "var(--pg-ui-scale, 1)" }}>
             <ProjectTabs
               groupId={node.id}
               tabs={groupTabs}
