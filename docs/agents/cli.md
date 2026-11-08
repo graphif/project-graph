@@ -1,42 +1,37 @@
-# Project Graph CLI development
+# Project Graph CLI
 
-The repository-local Project Graph CLI requires Node.js 26 or newer, Bun 1.4.4, and workspace dependencies installed with `bun install --frozen-lockfile`. The distributed CLI remains a Node program; Bun is a development tool, not an end-user runtime requirement.
+Project Graph 的自动化入口是 `project-graph` 纯 Go 可执行文件。CLI 不直接读写 `.prg` 文件，所有工程操作都通过本地 IPC 转发给 GUI，由 GUI 当前工程实例执行并保存。
 
-Run commands from the repository root:
-
-```sh
-bun run --silent cli --help
-bun run --silent cli --version
-bun run --silent cli tool list
-bun run --silent cli tool describe get_all_nodes
-bun run --silent cli tool invoke get_all_nodes --project /absolute/path/to/project.prg --input '{}'
-```
-
-Operational success writes exactly one JSON value to stdout and nothing to stderr. Failure writes no stdout and one JSON error object to stderr. Bun's `--silent` suppresses its own script echo; automation can also invoke `node packages/project-graph-cli/src/cli.mjs` directly. Discovery is Project-independent and does not start the desktop application.
-
-`tool invoke` canonicalizes the explicit `.prg` Project Path. When the desktop application owns that path, the invocation uses the matching Open Project, including its live unsaved graph, selection, and viewport. Otherwise, the 19 closed-capable tools run against a one-shot Project loaded from disk; the 6 selection tools and 4 viewport tools return `PROJECT_MUST_BE_OPEN`. Closed Project mutations are saved only after successful execution, while Open Project mutations remain unsaved live state.
-
-SIGINT and SIGTERM request cooperative cancellation. A handled cancellation writes no stdout, writes one `CANCELLED` JSON error to stderr, and exits with code 130. Closed Project cancellation before persistence does not save a partial result. Effects already performed against an Open Project, the network, or a model are not rolled back.
-
-This signal contract requires catchable signals. Windows `child.kill("SIGINT"/"SIGTERM")` force-terminates the process instead; it does not guarantee a `CANCELLED` response. Helper stdin closure still releases the native ownership lock, and the host bridge cancels work when the client disconnects.
-
-Cancellation has no invocation timeout and does not hard-kill a handler. A handler that consumes its `AbortSignal` can stop promptly; existing handlers that do not consume it may finish their current work before the CLI reports cancellation. There is no cancel subcommand, stdin cancellation message, or crash/power-loss rollback guarantee.
-
-## Production runtime materialization
-
-`bun install --frozen-lockfile` prepares a self-contained `packages/project-graph-cli-runtime/node_modules` tree via its workspace hoisting barrier. Materialization copies that tree without development dependencies or repository symlinks; run it on the target OS/architecture so Sharp and the native ownership helper match the payload. It invokes a Vite build and is not a static validation command.
-
-Build the native ownership helper for the current target, then materialize the precompiled Node runtime into an empty output directory:
+## Commands
 
 ```sh
-go -C app test ./...
-# Release packaging only; do not run during agent validation:
-# go -C app build -o build/project-graph-ownership-helper ./cmd/project-graph-ownership-helper
-PROJECT_GRAPH_OWNERSHIP_HELPER_PATH="$PWD/app/build/project-graph-ownership-helper" \
-bun run --cwd app materialize:cli --outDir /absolute/path/to/empty-output
-node /absolute/path/to/empty-output/project-graph.mjs --version
+project-graph --help
+project-graph --version
+project-graph tool list
+project-graph tool describe get_all_nodes
+project-graph tool invoke get_all_nodes --project /absolute/path/to/project.prg --input '{}'
+project-graph request status <request-id>
 ```
 
-The CLI version and materialized package version both come from `app/mygo.config.ts`; there is no environment override. The materialized directory contains the precompiled CLI entry and chunks, production Node dependencies, and the target-native ownership helper. It does not interpret TypeScript, start Vite at runtime, download dependencies, fall back to `PATH`, or bundle a Node executable. A later integration package must add a fixed Node runtime and invoke this exact package-local entry.
+`tool list` 和 `tool describe` 不需要 GUI。`tool invoke` 会连接已经运行的 GUI；GUI 未运行时，CLI 会启动它并等待 automation bridge 就绪。目标工程没有打开时，GUI 会自动打开该工程并通过 toast 提示用户。
 
-Development process tests launch `app/cmd/project-graph-ownership-helper/main.go` through `go run`; packaged runtimes require a target-native executable and do not require Go. Windows uses native file locks and Unix uses flock. Packaged desktop applications, signing, installation and target-native payloads still require separate release acceptance.
+CLI 输出结构化 JSON。每个调用都包含请求 ID、工具结果、是否应用修改以及是否已持久化。连接中断或超时后不要重复执行修改请求，先用 `request status <request-id>` 查询结果。
+
+同一工程的请求在 GUI 内按顺序执行。修改工具执行成功后由 GUI 保存；保存失败会返回 `PROJECT_SAVE_FAILED`，这表示画布内存可能已经改变但文件没有写入成功。读取工具不会强制保存。
+
+旧工程格式升级需要显式授权：只有在调用中添加 `--allow-upgrade` 才允许升级。CLI 不会替用户确认升级或覆盖未保存的内存状态。
+
+## Image files
+
+`get_image_file` 接收 ImageNode 或包含图片的 Section 引用，把附件导出到应用缓存目录的 `ai-exports` 子目录，并返回本地 `path` 与 `mimeType`。外部 Agent 直接读取该路径；不再提供 `recognize_image` 或应用内图像识别窗口。
+
+## Development
+
+在仓库根目录执行：
+
+```sh
+go -C app test ./internal/automation ./cmd/project-graph ./internal/desktop
+bun run --cwd app automation:catalog
+```
+
+工具目录由前端工具定义生成到 `app/internal/automation/tools.json`。CLI 不依赖 Bun、Node.js、MyGo 或 MCP 运行时。

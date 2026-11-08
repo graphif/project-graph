@@ -8,6 +8,10 @@ import {
 import { classifyBuiltInToolRuntimeError } from "@/core/service/dataManageService/aiEngine/BuiltInToolRuntimeError";
 import type { AIObjectReferenceErrorCode } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
 import { Bridge, events } from "@/platform/desktop";
+import { prepareProjectReferences } from "@/core/automation/project-references";
+import { getBuiltInToolDefinition } from "@/core/service/data-manage-service/ai-engine/built-in-tool-registry";
+import { toast } from "sonner";
+import { URI } from "vscode-uri";
 
 type RuntimeResponse =
   | { ok: true; value: unknown }
@@ -20,6 +24,7 @@ type RuntimeResponse =
           | "PROJECT_REFERENCE_SAVE_FAILED"
           | "RUNTIME_CLEANUP_FAILED"
           | "CANCELLED"
+          | "PROJECT_SAVE_FAILED"
           | AIObjectReferenceErrorCode;
         message: string;
         details?: { ref: string } | { executionError: { code: string; message: string; details?: unknown } };
@@ -93,7 +98,7 @@ export class OpenProjectRuntimeHost {
     let response: RuntimeResponse;
     try {
       if (abortSignal.aborted) return cancelledResponse();
-      const references = await this.project.aiEngine.prepareProjectReferences(this.project);
+      const references = await prepareProjectReferences(this.project);
       if (abortSignal.aborted) return cancelledResponse();
       const host = createLiveProjectBuiltInToolRuntimeHost(this.project, references);
       unsubscribe = references.subscribe(() => {
@@ -101,7 +106,19 @@ export class OpenProjectRuntimeHost {
       });
       try {
         const value = await invokeBuiltInTool(toolName, input, host, { abortSignal });
-        response = abortSignal.aborted ? cancelledResponse() : { ok: true, value: value === undefined ? null : value };
+        response = { ok: true, value: value === undefined ? null : value };
+        const persistence = getBuiltInToolDefinition(toolName)?.persistence;
+        if (persistence === "project" || persistence === "project-and-references") {
+          try {
+            await this.project.save();
+          } catch (error) {
+            toast.error(`CLI 修改已应用，但保存失败：${String(error)}`);
+            response = {
+              ok: false,
+              error: { code: "PROJECT_SAVE_FAILED", message: `Changes applied but not saved: ${String(error)}` },
+            };
+          }
+        }
       } catch (error) {
         response = failedInvocationResponse(error, abortSignal);
       }
@@ -130,6 +147,27 @@ export class OpenProjectRuntimeHost {
 const runtimeHosts = new Map<string, OpenProjectRuntimeHost>();
 const bridgeInvocationControllers = new Map<string, AbortController>();
 let bridgeListenerPromise: Promise<void> | undefined;
+const openingRuntimeProjects = new Map<string, Promise<void>>();
+
+async function ensureRuntimeProject(path: string, allowUpgrade = false): Promise<void> {
+  if (runtimeHosts.has(path)) return;
+  let pending = openingRuntimeProjects.get(path);
+  if (!pending) {
+    pending = (async () => {
+      const { onOpenFile } = await import("@/core/service/global-menu");
+      const project = await onOpenFile(URI.file(path), "CLI", { allowUpgrade });
+      if (!project) throw new Error("PROJECT_LOAD_FAILED");
+      toast.success(`已通过 CLI 打开工程：${URI.file(path).path.split("/").pop()}`);
+    })();
+    openingRuntimeProjects.set(path, pending);
+    void pending
+      .finally(() => openingRuntimeProjects.delete(path))
+      .catch((error: unknown) => {
+        toast.error(String(error));
+      });
+  }
+  await pending;
+}
 
 export function ensureOpenProjectRuntimeBridgeListener(): Promise<void> {
   bridgeListenerPromise ??= Promise.resolve(
@@ -139,14 +177,17 @@ export function ensureOpenProjectRuntimeBridgeListener(): Promise<void> {
           bridgeInvocationControllers.get(payload.requestId)?.abort();
           return;
         }
-        const host = runtimeHosts.get(payload.projectPath);
         const abortController = new AbortController();
         bridgeInvocationControllers.set(payload.requestId, abortController);
         let response: RuntimeResponse;
         try {
+          await ensureRuntimeProject(payload.projectPath, payload.allowUpgrade);
+          const host = runtimeHosts.get(payload.projectPath);
           response = host
             ? await host.invoke(payload.toolName, payload.input, abortController.signal)
             : unavailableResponse();
+        } catch (error) {
+          response = { ok: false, error: { code: "TOOL_EXECUTION_FAILED", message: String(error) } };
         } finally {
           bridgeInvocationControllers.delete(payload.requestId);
         }

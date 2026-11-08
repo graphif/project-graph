@@ -38,7 +38,7 @@ const expectedToolNames = [
   "sort_selected_nodes_by_y",
   "sort_selected_nodes_by_x",
   "search_and_add_image_node",
-  "recognize_image",
+  "get_image_file",
 ] as const;
 
 function expectDeepFrozen(value: unknown, seen = new WeakSet<object>()): void {
@@ -129,7 +129,7 @@ describe("Built-in Tool Registry catalog", () => {
       "change_edge_text",
       "breadth_expand_node",
       "depth_expand_node",
-      "recognize_image",
+      "get_image_file",
     ]);
     expect(namesFor("live-selection")).toEqual([
       "delete_selected_nodes",
@@ -163,20 +163,11 @@ describe("Built-in Tool Registry catalog", () => {
     );
   });
 
-  it("declares the closed external dependencies on recognize_image", () => {
-    const definition = builtInToolCatalog.find(({ name }) => name === "recognize_image");
+  it("declares the closed dependencies on get_image_file", () => {
+    const definition = builtInToolCatalog.find(({ name }) => name === "get_image_file");
 
     expect(definition).toMatchObject({
-      capabilities: expect.arrayContaining([
-        "project",
-        "references",
-        "attachments",
-        "dom",
-        "image",
-        "settings",
-        "network",
-        "model",
-      ]),
+      capabilities: expect.arrayContaining(["project", "references", "attachments", "image"]),
     });
   });
 });

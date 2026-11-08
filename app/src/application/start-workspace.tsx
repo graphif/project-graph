@@ -9,7 +9,8 @@ import { Tutorials } from "@/core/service/tutorials";
 import { UserState } from "@/core/service/user-state";
 import { EdgeCollisionBoxGetter } from "@/core/stage/stage-object/association/edge-collision-box-getter";
 import { type AuthUser, currentUserAtom, isAuthLoadingAtom, store, tabsAtom } from "@/state";
-import { Host, events } from "@/platform/desktop";
+import { Host, Bridge, events } from "@/platform/desktop";
+import { ensureOpenProjectRuntimeBridgeListener } from "@/core/open-project-runtime-host";
 import { getCurrentWindow } from "@/platform/window";
 import "driver.js/dist/driver.css";
 import { Provider } from "jotai";
@@ -47,7 +48,7 @@ function processOpenRequests() {
   return opening;
 }
 
-export async function startWorkspace(root: Root, fresh: boolean, acceptance: boolean) {
+export async function startWorkspace(root: Root, fresh: boolean) {
   await Promise.all([
     RecentFileManager.init(),
     StartFilesManager.init(),
@@ -58,11 +59,6 @@ export async function startWorkspace(root: Root, fresh: boolean, acceptance: boo
   ]);
   EdgeCollisionBoxGetter.init();
   MouseLocation.init();
-  if (acceptance) {
-    const { runProjectGraphCliDesktopAcceptanceHost } = await import("@/cli/project-graph-cli-desktop-acceptance-host");
-    await runProjectGraphCliDesktopAcceptanceHost();
-    return;
-  }
   root.render(
     <Provider store={store}>
       <Toaster richColors visibleToasts={5} expand />
@@ -73,6 +69,8 @@ export async function startWorkspace(root: Root, fresh: boolean, acceptance: boo
   );
   await getCurrentWindow().show();
   await ExtensionManager.init();
+  await ensureOpenProjectRuntimeBridgeListener();
+  await Bridge.ready();
   await initAuth();
   events.openRequestsChanged.on(() => {
     void processOpenRequests();

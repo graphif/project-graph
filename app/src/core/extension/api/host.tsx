@@ -129,15 +129,9 @@ export function extensionHostApiFactory(extension: Extension) {
       };
     },
     async settings_getGlobal(key: string): Promise<any> {
-      if (key === "aiApiKey") {
-        throw new Error("出于安全考虑，扩展无法访问 aiApiKey 设置项");
-      }
       return (Settings as any)[key];
     },
     async settings_setGlobal(key: string, value: unknown): Promise<any> {
-      if (key === "aiApiBaseUrl") {
-        throw new Error("出于安全考虑，扩展无法修改 aiApiBaseUrl 设置项");
-      }
       return ((Settings as any)[key] = value);
     },
 

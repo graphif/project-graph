@@ -629,41 +629,4 @@ export namespace TextNodeSmartTools {
     project.stageManager.delete(selectedNode);
     await project.referenceManager.insertRefDataToSourcePrgFile(fileName, sectionName);
   }
-
-  export async function generateTreeBySelectedTextNodeTextWithAI(project: Project) {
-    const selectedTextNodes = project.stageManager.getSelectedEntities().filter((it) => it instanceof TextNode);
-    if (selectedTextNodes.length === 0) {
-      toast.error("请先选中文本节点");
-      return;
-    }
-    const texts = selectedTextNodes.map((node) => (node as TextNode).text);
-    const combinedText = texts.join("\n\n");
-    const { default: AIWindow, setAIWindowInitialText } = await import("@/sub/AIWindow");
-    setAIWindowInitialText(combinedText, "请分析以下文本的结构，提取关键概念和关系，生成树形节点图：");
-    AIWindow.open();
-  }
-  export async function generateNetBySelectedTextNodeTextWithAI(project: Project) {
-    const selectedTextNodes = project.stageManager.getSelectedEntities().filter((it) => it instanceof TextNode);
-    if (selectedTextNodes.length === 0) {
-      toast.error("请先选中文本节点");
-      return;
-    }
-    const texts = selectedTextNodes.map((node) => (node as TextNode).text);
-    const combinedText = texts.join("\n\n");
-    const { default: AIWindow, setAIWindowInitialText } = await import("@/sub/AIWindow");
-    setAIWindowInitialText(combinedText, "请分析以下文本中的因果关系、条件关系、时间顺序等逻辑关系，生成网状关系图：");
-    AIWindow.open();
-  }
-  export async function generateSummaryBySelectedTextNodeTextWithAI(project: Project) {
-    const selectedTextNodes = project.stageManager.getSelectedEntities().filter((it) => it instanceof TextNode);
-    if (selectedTextNodes.length === 0) {
-      toast.error("请先选中文本节点");
-      return;
-    }
-    const texts = selectedTextNodes.map((node) => (node as TextNode).text);
-    const combinedText = texts.join("\n\n");
-    const { default: AIWindow, setAIWindowInitialText } = await import("@/sub/AIWindow");
-    setAIWindowInitialText(combinedText, "请总结以下文本的核心内容：");
-    AIWindow.open();
-  }
 }

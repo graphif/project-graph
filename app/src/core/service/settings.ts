@@ -126,13 +126,6 @@ export const settingsSchema = z.object({
     .default("default"),
   enableDragEdgeRotateStructure: z.boolean().default(true),
   enableCtrlWheelRotateStructure: z.boolean().default(false),
-  aiApiBaseUrl: projectToolSettingSchemas.aiApiBaseUrl,
-  aiApiKey: projectToolSettingSchemas.aiApiKey,
-  aiModel: projectToolSettingSchemas.aiModel,
-  aiCustomHeaders: projectToolSettingSchemas.aiCustomHeaders,
-  aiContextWindow: z.number().int().nonnegative().default(0),
-  aiShowTokenCount: z.boolean().default(false),
-  aiAutoApproveMcpTools: z.boolean().default(false),
   mouseRightDragBackground: z.union([z.literal("cut"), z.literal("moveCamera")]).default("cut"),
   enableSpaceKeyMouseLeftDrag: z.boolean().default(true),
   enableDragAutoAlign: z.boolean().default(false),
@@ -795,16 +788,6 @@ export const settingsSchema = z.object({
           { type: "item", id: "resetAllKeyBinds", icon: "Radiation" },
           { type: "item", id: "openConfigFolder", icon: "FolderCog" },
           { type: "item", id: "openCacheFolder", icon: "FolderOpen" },
-        ],
-      },
-      // ===================== AI =====================
-      {
-        type: "topMenu",
-        id: "ai",
-        icon: "Bot",
-        children: [
-          { type: "item", id: "openAIPanel", icon: "ExternalLink" },
-          { type: "item", id: "openAITools", icon: "Wrench" },
         ],
       },
       {

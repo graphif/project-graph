@@ -15,6 +15,7 @@
     "mygo:generate": "go tool mygo generate",
     "mygo:doctor": "go tool mygo doctor",
     "mygo:smoke": "go run ./cmd/mygo-smoke",
+    "automation:catalog": "bun run ./scripts/export-tool-catalog.ts",
     "build": "vite build",
     "materialize:cli": "bun run ./scripts/materialize-cli.ts",
     "type-check": "tsc --noEmit",
@@ -22,9 +23,6 @@
     "sync-locales": "tsx ./scripts/sync-locales.ts"
   },
   "dependencies": {
-    "@ai-sdk/mcp": "^1.0.61",
-    "@ai-sdk/openai-compatible": "^2.0.45",
-    "@ai-sdk/react": "^3.0.176",
     "@ariakit/react": "^0.4.26",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/react": "^0.4.0",
@@ -40,7 +38,6 @@
     "@msgpack/msgpack": "^3.1.2",
     "@mygo-plugins/fetch": "0.6.4",
     "@octokit/rest": "^22.0.0",
-    "@platejs/ai": "^49.2.14",
     "@platejs/basic-nodes": "^49.0.0",
     "@platejs/basic-styles": "^49.0.0",
     "@platejs/callout": "^49.0.0",
@@ -113,7 +110,6 @@
     "@udecode/utils": "^52.3.4",
     "@vitejs/plugin-react-oxc": "^0.4.3",
     "@zip.js/zip.js": "^2.8.26",
-    "ai": "^6.0.174",
     "bcrypt": "^6.0.0",
     "better-auth": "^1.6.11",
     "class-variance-authority": "^0.7.1",

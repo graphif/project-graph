@@ -13,8 +13,8 @@ import { Rectangle } from "@graphif/shapes";
 import type { BuiltInToolExecutor } from "./BuiltInToolRegistry";
 import { findFirstImageInChildren } from "./imageNodeFinder";
 import type { ImageOrientation, OpenverseImageCandidate } from "./OpenverseImageSearch";
-import { parseAIRequestHeaders } from "./AIRequestHeaders";
-import { resolveHttpRequestBody } from "./AIHttpBody";
+import { appCacheDir, join } from "@/platform/path";
+import { mkdir, writeFile } from "@/platform/files";
 
 const builtInToolExecutorLoaders: Record<string, () => BuiltInToolExecutor> = {};
 
@@ -808,81 +808,25 @@ addExecutor(
       };
     },
 );
-addExecutor("recognize_image", () => async (project, { ref, prompt }, references) => {
-  const [{ encodeModelImageDataUrl }, { Settings }] = await Promise.all([
-    import("@/core/service/dataManageService/aiEngine/ModelImageEncoder"),
-    import("@/core/service/Settings"),
-  ]);
+addExecutor("get_image_file", () => async (project, { ref }, references) => {
   const obj = references.resolve(ref, "node");
-  const imageNode = (
+  const imageNode =
     obj instanceof ImageNode
       ? obj
       : findFirstImageInChildren(
           obj instanceof Section ? obj.children : [],
-          (n) => n instanceof ImageNode,
-          (n) => (n instanceof Section ? n.children : undefined),
-        )
-  ) as ImageNode | undefined;
-  if (!imageNode) {
-    return { success: false, error: "该节点不是 ImageNode，且其内部未找到图片" };
-  }
+          (node) => node instanceof ImageNode,
+          (node) => (node instanceof Section ? node.children : undefined),
+        );
+  if (!(imageNode instanceof ImageNode)) return { success: false, error: "节点中未找到图片" };
   const blob = project.attachments.get(imageNode.attachmentId);
-  if (!blob) {
-    return { success: false, error: "图片数据未找到（附件可能已丢失）" };
-  }
-  try {
-    const dataUrl = await encodeModelImageDataUrl(blob, Settings.maxPastedImageSize);
-    const description = await recognizeImage(dataUrl, prompt);
-    return { success: true, description };
-  } catch (e) {
-    return { success: false, error: e instanceof Error ? e.message : "图片识别失败" };
-  }
+  if (!blob) return { success: false, error: "图片数据未找到（附件可能已丢失）" };
+  const extension = blob.type.split("/")[1]?.replace(/[^a-z0-9]/gi, "") || "bin";
+  const exportDirectory = await join(await appCacheDir(), "ai-exports");
+  await mkdir(exportDirectory, { recursive: true });
+  const path = await join(exportDirectory, `${imageNode.attachmentId}.${extension}`);
+  await writeFile(path, new Uint8Array(await blob.arrayBuffer()));
+  return { success: true, path, mimeType: blob.type || "application/octet-stream" };
 });
 
 Object.freeze(builtInToolExecutorLoaders);
-
-async function recognizeImage(dataUrl: string, prompt: string): Promise<string> {
-  const { getCliDesktopAcceptanceRecognition } = await import("./CliDesktopAcceptanceAdapter");
-  const acceptanceRecognition = getCliDesktopAcceptanceRecognition();
-  if (acceptanceRecognition) return acceptanceRecognition;
-  const [{ Settings }, { createOpenAICompatible }, { fetch }, { generateText }] = await Promise.all([
-    import("@/core/service/Settings"),
-    import("@ai-sdk/openai-compatible"),
-    import("@/platform/http"),
-    import("ai"),
-  ]);
-  const provider = createOpenAICompatible({
-    name: "project-graph",
-    baseURL: Settings.aiApiBaseUrl,
-    apiKey: Settings.aiApiKey || undefined,
-    fetch: async (url: any, init: any) => {
-      const response = await fetch(url.toString(), {
-        ...init,
-        body: await resolveHttpRequestBody(init?.body),
-        headers: {
-          ...(init?.headers instanceof Headers ? Object.fromEntries(init.headers.entries()) : init?.headers),
-          ...parseAIRequestHeaders(Settings.aiCustomHeaders),
-        },
-        mode: "cors",
-      });
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => "unknown error");
-        throw new Error(`图像识别请求失败 (${response.status}): ${errorText}`);
-      }
-      return response;
-    },
-  });
-  const result = await generateText({
-    model: provider.chatModel(Settings.aiModel),
-    messages: [
-      {
-        role: "user",
-        content: [
-          { type: "text", text: prompt },
-          { type: "image", image: dataUrl },
-        ],
-      },
-    ],
-  });
-  return result.text;
-}

@@ -233,7 +233,7 @@ export class Project extends Tab {
   /**
    * 服务加载完成后再调用
    */
-  async init() {
+  async init(options: { automation?: boolean; allowUpgrade?: boolean } = {}) {
     if (!(await this.fs.exists(this.uri))) {
       return;
     }
@@ -248,7 +248,12 @@ export class Project extends Tab {
       // 检查并确认升级
       const currentVersion = metadata?.version || "2.0.0";
       const latestVersion = ProjectUpgrader.NLatestVersion;
-      const confirmed = await this.checkAndConfirmUpgrade(currentVersion, latestVersion);
+      if (options.automation) {
+        const difference = compareProjectVersions(currentVersion, latestVersion);
+        if (difference > 0) throw new Error("PROJECT_VERSION_UNSUPPORTED");
+        if (difference < 0 && !options.allowUpgrade) throw new Error("PROJECT_UPGRADE_REQUIRED");
+      }
+      const confirmed = options.automation || (await this.checkAndConfirmUpgrade(currentVersion, latestVersion));
       if (!confirmed) return; // 用户取消升级，不打开文件，跳过 this.projectState = ProjectState.Saved
 
       // 升级数据
@@ -274,6 +279,7 @@ export class Project extends Tab {
 
       this.wasUpgraded = currentVersion !== latestVersion;
     } catch (e) {
+      if (options.automation) throw e;
       console.warn(e);
       const errorMessage = `打开文件时发生错误，文件内容可能已损坏或与当前软件版本不兼容。\n\n错误信息：${e}`;
       const result = await Dialog.buttons("文件解析失败", errorMessage, [

@@ -19,7 +19,6 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import Fuse from "fuse.js";
 import {
   Bot,
-  Brain,
   Bug,
   ChevronRight,
   Cpu,
@@ -50,7 +49,6 @@ import {
   TextCursorInput,
   TextQuote,
   Touchpad,
-  Unplug,
   Wrench,
   Zap,
 } from "lucide-react";
@@ -426,24 +424,9 @@ export const categories = {
     ],
     experimental: ["compatibilityMode", "isEnableEntityCollision"],
   },
-  ai: {
-    api: [
-      "aiApiBaseUrl",
-      "aiApiKey",
-      "aiModel",
-      "aiCustomHeaders",
-      "aiContextWindow",
-      "aiShowTokenCount",
-      "aiAutoApproveMcpTools",
-    ],
-  },
 };
 
 export const categoryIcons = {
-  ai: {
-    icon: Brain,
-    api: Unplug,
-  },
   automation: {
     icon: Bot,
     autoNamer: SquareFunction,

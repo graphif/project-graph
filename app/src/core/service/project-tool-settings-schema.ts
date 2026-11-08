@@ -28,10 +28,6 @@ export function createProjectToolSettingSchemas(defaultFontFamily: string) {
     moveAmplitude: z.number().min(0).max(10).default(2),
     effectsPerferences: z.record(z.string(), z.boolean()).default({}),
     maxPastedImageSize: z.number().int().min(256).max(8192).default(1920),
-    aiApiBaseUrl: z.string().default("https://generativelanguage.googleapis.com/v1beta/openai/"),
-    aiApiKey: z.string().default(""),
-    aiModel: z.string().default("gemini-2.5-flash"),
-    aiCustomHeaders: z.string().default(""),
   };
 }
 

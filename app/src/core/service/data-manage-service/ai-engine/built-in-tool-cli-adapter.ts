@@ -1,5 +1,5 @@
 import z from "zod/v4";
-import { builtInToolCatalog, getBuiltInToolDefinition, type BuiltInToolDefinition } from "./BuiltInToolRegistry";
+import { builtInToolCatalog, getBuiltInToolDefinition, type BuiltInToolDefinition } from "./built-in-tool-registry";
 
 export type BuiltInToolCliEntry = {
   name: string;

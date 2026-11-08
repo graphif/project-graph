@@ -4,8 +4,6 @@ export const SUB_WINDOW_OPEN_MODES = ["floating", "docked", "dockedLeft", "docke
 export type SubWindowOpenMode = (typeof SUB_WINDOW_OPEN_MODES)[number];
 
 export const SUB_WINDOW_IDS = [
-  "AIToolsWindow",
-  "AIWindow",
   "AttachmentsWindow",
   "AutoCompleteWindow",
   "LogicNodePanel",
@@ -47,8 +45,6 @@ export const subWindowOpenModeSchema = z.enum(SUB_WINDOW_OPEN_MODES);
 
 /** Defaults from product decisions; users can override in customization settings. */
 export const DEFAULT_SUB_WINDOW_OPEN_MODES = {
-  AIToolsWindow: "floating",
-  AIWindow: "dockedRight",
   AttachmentsWindow: "dockedRight",
   AutoCompleteWindow: "floating",
   LogicNodePanel: "floating",

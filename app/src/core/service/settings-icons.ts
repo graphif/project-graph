@@ -8,7 +8,6 @@ import {
   ArrowRightFromLine,
   ArrowUpDown,
   Blend,
-  Braces,
   Bug,
   Calculator,
   CaseSensitive,
@@ -75,7 +74,6 @@ import {
   ScanEye,
   ScanText,
   Shapes,
-  ShieldCheck,
   Skull,
   Slash,
   Space,
@@ -269,7 +267,4 @@ export const settingsIcons = {
   colorPanelMouseEnterPreview: Mouse,
   maxFps: Timer,
   maxFpsUnfocused: Timer,
-  aiContextWindow: Gauge,
-  aiAutoApproveMcpTools: ShieldCheck,
-  aiCustomHeaders: Braces,
 };

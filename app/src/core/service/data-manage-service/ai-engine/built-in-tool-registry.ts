@@ -518,16 +518,13 @@ const definitions: BuiltInToolDefinition[] = [
     persistence: "project-and-references",
   }),
   defineTool({
-    name: "recognize_image",
+    name: "get_image_file",
     description:
-      "识别指定节点中的图片内容并返回文字描述。传入ImageNode引用或包含图片的Section引用，并用prompt描述识别目标。",
+      "将指定节点中的图片导出到应用缓存目录，并返回外部 Agent 可读取的本地文件路径。传入ImageNode引用或包含图片的Section引用。",
     inputSchema: z.object({
       ref: nodeRefSchema.describe("ImageNode引用，或包含图片的Section引用"),
-      prompt: z
-        .string()
-        .describe('向图像识别模型提问的提示词，例如"这张图片里有哪些文字？"或"描述图片中的主要物体和场景"。'),
     }),
-    capabilities: ["project", "references", "attachments", "dom", "settings", "image", "network", "model"],
+    capabilities: ["project", "references", "attachments", "image"],
     projectReferences: { reads: true, allocates: false },
     cancellation: "none",
     transaction: "none",

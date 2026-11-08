@@ -25,8 +25,6 @@ const MODE_LABELS: Record<SubWindowOpenMode, string> = {
 };
 
 const WINDOW_LABELS: Record<SubWindowId, string> = {
-  AIToolsWindow: "AI 工具列表",
-  AIWindow: "AI 助手",
   AttachmentsWindow: "附件管理器",
   AutoCompleteWindow: "自动补全",
   LogicNodePanel: "逻辑节点",

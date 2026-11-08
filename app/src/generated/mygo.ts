@@ -129,14 +129,6 @@ export interface LegacyInstallation {
   evidence: string;
 }
 
-export interface MCPConfig {
-  serverName: string;
-  command: string;
-  args: string[];
-  cwd: string;
-  env: Record<string, string>;
-}
-
 export interface MenuEntry {
   id: string;
   label: string;
@@ -180,6 +172,7 @@ export interface RuntimeInvocation {
   projectPath: string;
   toolName: string;
   input: unknown;
+  allowUpgrade: boolean;
 }
 
 // ---- Services ----
@@ -391,6 +384,9 @@ export const Algorithms = {
 } as const;
 
 export const Bridge = {
+  ready(): Promise<void> {
+    return call("Bridge.Ready");
+  },
   respond(requestID: string, response: unknown): Promise<boolean> {
     return call("Bridge.Respond", requestID, response);
   },
@@ -414,34 +410,6 @@ export const References = {
   },
   save(projectURI: string, snapshot: Record<string, unknown>): Promise<void> {
     return call("References.Save", projectURI, snapshot);
-  },
-} as const;
-
-export const MCP = {
-  callTool(name: string, tool: string, arguments_: Record<string, unknown>): Promise<unknown> {
-    return call("MCP.CallTool", name, tool, arguments_);
-  },
-  listTools(name: string): Promise<unknown> {
-    return call("MCP.ListTools", name);
-  },
-  start(config: MCPConfig): Promise<unknown> {
-    return call("MCP.Start", config);
-  },
-  stop(name: string): Promise<void> {
-    return call("MCP.Stop", name);
-  },
-} as const;
-
-/** Acceptance is bound only by the development host. */
-export const Acceptance = {
-  manifest(): Promise<unknown> {
-    return call("Acceptance.Manifest");
-  },
-  waitForCompletion(): Promise<void> {
-    return call("Acceptance.WaitForCompletion");
-  },
-  writeState(state: Record<string, unknown>): Promise<void> {
-    return call("Acceptance.WriteState", state);
   },
 } as const;
 

@@ -1,4 +1,4 @@
-import { Acceptance, Host } from "@/platform/desktop";
+import { Host } from "@/platform/desktop";
 import { LazyStore } from "@/platform/store";
 import { getCurrentWindow } from "@/platform/window";
 import { loadOnboarding } from "@/features/onboarding/onboarding-state";
@@ -8,7 +8,6 @@ import { initReactI18next } from "react-i18next";
 import "./css/index.css";
 
 const root = createRoot(document.getElementById("root")!);
-const acceptance = import.meta.env.DEV && new URLSearchParams(location.search).has("cli-desktop-acceptance");
 
 async function start() {
   await Host.bootstrap();
@@ -28,13 +27,11 @@ async function start() {
     },
   });
   const storage = new LazyStore("onboarding.json");
-  const state = acceptance
-    ? undefined
-    : await loadOnboarding(storage, {
-        language: Settings.language,
-        theme: Settings.theme,
-        uiScalePercent: Settings.uiScalePercent,
-      });
+  const state = await loadOnboarding(storage, {
+    language: Settings.language,
+    theme: Settings.theme,
+    uiScalePercent: Settings.uiScalePercent,
+  });
   if (state && !state.completedAt) {
     const { Onboarding } = await import("@/features/onboarding/onboarding");
     await new Promise<void>((resolve) =>
@@ -43,7 +40,7 @@ async function start() {
   }
   // Workspace imports register background services; keep them behind the durable completion marker.
   const { startWorkspace } = await import("@/application/start-workspace");
-  await startWorkspace(root, !!state && !state.completedAt, acceptance);
+  await startWorkspace(root, !!state && !state.completedAt);
 }
 
 void start().catch(async (error: unknown) => {
@@ -59,9 +56,4 @@ void start().catch(async (error: unknown) => {
     </main>,
   );
   await getCurrentWindow().show();
-  if (acceptance)
-    await Acceptance.writeState({
-      phase: "error",
-      message: error instanceof Error ? (error.stack ?? error.message) : String(error),
-    });
 });

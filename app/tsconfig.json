@@ -31,5 +31,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "tests", "mygo.config.ts"]
+  "include": ["src", "tests", "mygo.config.ts"],
+  "exclude": ["src/cli"]
 }

@@ -29,12 +29,11 @@ export function FloatingToolbar({
   const editorId = useEditorId();
   const focusedEditorId = useEventEditorValue("focus");
   const isFloatingLinkOpen = !!usePluginOption({ key: KEYS.link }, "mode");
-  const isAIChatOpen = usePluginOption({ key: KEYS.aiChat }, "open");
 
   const floatingToolbarState = useFloatingToolbarState({
     editorId,
     focusedEditorId,
-    hideToolbar: isFloatingLinkOpen || isAIChatOpen,
+    hideToolbar: isFloatingLinkOpen,
     ...state,
     floatingOptions: {
       middleware: [
@@ -62,7 +61,7 @@ export function FloatingToolbar({
         {...rootProps}
         ref={ref}
         className={cn(
-          "scrollbar-hide bg-popover absolute z-50 overflow-x-auto whitespace-nowrap rounded-md border p-1 opacity-100 shadow-md print:hidden",
+          "scrollbar-hide bg-popover absolute z-50 overflow-x-auto rounded-md border p-1 whitespace-nowrap opacity-100 shadow-md print:hidden",
           "max-w-[80vw]",
           className,
         )}

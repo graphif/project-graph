@@ -26,7 +26,6 @@ import EditUrlNodeLinkWindow from "@/sub/EditUrlNodeLinkWindow";
 import FindWindow from "@/sub/FindWindow";
 // import KeyboardRecentFilesWindow from "@/sub/KeyboardRecentFilesWindow";
 import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
-import AIToolsWindow from "@/sub/AIToolsWindow";
 import AttachmentsWindow from "@/sub/AttachmentsWindow";
 import LogicNodePanel from "@/sub/AutoComputeWindow";
 import BackgroundManagerWindow from "@/sub/BackgroundManagerWindow";
@@ -236,7 +235,6 @@ import {
   View,
   Wand2,
   Workflow,
-  Wrench,
   X,
   Zap,
   ZoomIn,
@@ -3246,34 +3244,6 @@ export const allKeyBinds: KeyBindItem[] = [
     },
   },
 
-  /*------- AI 操作相关 -------*/
-  {
-    id: "generateTreeBySelectedTextNodeTextWithAI",
-    defaultKey: "g e n t t",
-    icon: Sparkles,
-    when: whenHasSelectedTextNodes,
-    onPress: (project) => {
-      if (project) TextNodeSmartTools.generateTreeBySelectedTextNodeTextWithAI(project);
-    },
-  },
-  {
-    id: "generateNetBySelectedTextNodeTextWithAI",
-    defaultKey: "g e n n t",
-    icon: Sparkles,
-    when: whenHasSelectedTextNodes,
-    onPress: (project) => {
-      if (project) TextNodeSmartTools.generateNetBySelectedTextNodeTextWithAI(project);
-    },
-  },
-  {
-    id: "generateSummaryBySelectedTextNodeTextWithAI",
-    defaultKey: "g e n s t",
-    icon: Sparkles,
-    when: whenHasSelectedTextNodes,
-    onPress: (project) => {
-      if (project) TextNodeSmartTools.generateSummaryBySelectedTextNodeTextWithAI(project);
-    },
-  },
   /*------- 字体相关 -------*/
   {
     id: "setFontFamily",
@@ -3902,26 +3872,6 @@ export const allKeyBinds: KeyBindItem[] = [
         await mkdir(extensionsDir, { recursive: true });
       }
       shellOpen(extensionsDir);
-    },
-  },
-  // ===================== AI 菜单 =====================
-  {
-    id: "openAIPanel",
-    defaultKey: "",
-    icon: ExternalLink,
-    when: whenHasProject,
-    onPress: async () => {
-      const { default: AIWindow } = await import("@/sub/AIWindow");
-      AIWindow.open();
-    },
-  },
-  {
-    id: "openAITools",
-    defaultKey: "",
-    icon: Wrench,
-    when: whenHasProject,
-    onPress: () => {
-      AIToolsWindow.open();
     },
   },
   // ===================== Window 菜单 =====================

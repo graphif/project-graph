@@ -184,7 +184,11 @@ function focusExistingTab(tab: Project | Extension) {
   toast.success(i18next.t("projectOwnership.alreadyOpen"));
 }
 
-export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise<Project | undefined> {
+export async function onOpenFile(
+  uri?: URI,
+  source: string = "unknown",
+  options: { allowUpgrade?: boolean } = {},
+): Promise<Project | undefined> {
   if (!uri) {
     const path = await open({
       directory: false,
@@ -202,7 +206,7 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
         (tab instanceof Project || tab instanceof Extension) && tab.uri.toString() === uri.toString(),
     );
   if (textuallyMatchingTab) {
-    focusExistingTab(textuallyMatchingTab);
+    if (source !== "CLI") focusExistingTab(textuallyMatchingTab);
     return textuallyMatchingTab as any;
   }
 
@@ -274,12 +278,13 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
       }
       const existing = registered ?? (await opening.promise);
       if (!existing) throw new ProjectOwnershipError("PROJECT_BUSY");
-      focusExistingTab(existing);
+      if (source !== "CLI") focusExistingTab(existing);
       return existing;
     }
     tab = result.value;
   } catch (e) {
     if (e instanceof ProjectOwnershipError) {
+      if (source === "CLI") throw e;
       await Dialog.buttons(i18next.t("projectOwnership.openFailedTitle"), e.message, [
         { id: "ok", label: i18next.t("projectOwnership.ok") },
       ]);
@@ -292,7 +297,9 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
     await toast
       .promise(
         async () => {
-          await tab.init();
+          if (source === "CLI" && tab instanceof Project)
+            await tab.init({ automation: true, allowUpgrade: options.allowUpgrade });
+          else await tab.init();
           if (tab instanceof Project) {
             if (tab.projectState !== ProjectState.Saved) {
               throw new Error("USER_CANCELLED");
@@ -332,7 +339,8 @@ export async function onOpenFile(uri?: URI, source: string = "unknown"): Promise
               project &&
               Settings.autoImportTxtFileWhenOpenPrg &&
               source !== "ReferenceBlockNode跳转打开-prg文件" &&
-              source !== "ReferencesWindow跳转打开-prg文件"
+              source !== "ReferencesWindow跳转打开-prg文件" &&
+              source !== "CLI"
             ) {
               setTimeout(async () => {
                 try {

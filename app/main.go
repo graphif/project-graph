@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"os"
-	"path/filepath"
 	"runtime"
 
 	"github.com/egoist/mygo"
@@ -21,14 +20,6 @@ func main() {
 	paths, err := desktop.ResolvePaths(mygo.IsDev())
 	if err != nil {
 		log.Fatal(err)
-	}
-	acceptance := mygo.IsDev() && os.Getenv("PROJECT_GRAPH_CLI_DESKTOP_ACCEPTANCE_MANIFEST_PATH") != ""
-	if acceptance {
-		directory := os.Getenv("PROJECT_GRAPH_ACCEPTANCE_DIRECTORY")
-		if !filepath.IsAbs(directory) {
-			log.Fatal("desktop acceptance requires an absolute isolated directory")
-		}
-		paths = desktop.Paths{UserData: filepath.Join(directory, "data"), Cache: filepath.Join(directory, "cache"), Logs: filepath.Join(directory, "logs")}
 	}
 	mygo.App.SetPath(mygo.PathUserData, paths.UserData)
 	mygo.App.SetPath(mygo.PathCache, paths.Cache)
@@ -54,11 +45,6 @@ func main() {
 	ownership := desktop.NewOwnership("")
 	mygo.Bind(ownership)
 	mygo.Bind(desktop.NewReferences(paths.UserData))
-	mcp := desktop.NewMCP(mygo.App.Version())
-	mygo.Bind(mcp)
-	if mygo.IsDev() {
-		mygo.Bind(&desktop.Acceptance{})
-	}
 
 	enqueue := func(kind, target string) {
 		if err := desktop.Enqueue(host, kind, target); err != nil {
@@ -68,31 +54,21 @@ func main() {
 	}
 	mygo.App.OnOpenFile(func(path string) { enqueue("file", path) })
 	mygo.App.OnOpenURL(func(rawURL string) { enqueue("url", rawURL) })
-	if !acceptance && os.Getenv("MYGO_GENERATE") == "" && !mygo.App.RequestSingleInstanceLock() {
+	if os.Getenv("MYGO_GENERATE") == "" && !mygo.App.RequestSingleInstanceLock() {
 		return
 	}
 
 	var window *mygo.Window
 	openWindow := func() {
-		url := "/"
-		if acceptance {
-			url = "/?cli-desktop-acceptance=1"
-		}
 		options := mygo.WindowOptions{
-			Title: "Project Graph", URL: url, Width: 1280, Height: 800,
+			Title: "Project Graph", URL: "/", Width: 1280, Height: 800,
 			MinWidth: 720, MinHeight: 480, StateKey: "workspace", Frameless: true,
 		}
 		if runtime.GOOS == "darwin" {
 			options.Frameless = false
 			options.TitleBarStyle = mygo.TitleBarHiddenInset
 		}
-		if acceptance {
-			options.StateKey = ""
-		}
 		window = mygo.NewWindow(options)
-		if acceptance {
-			window.SetSkipTaskbar(true)
-		}
 		window.OnClose(func(event *mygo.CloseEvent) { event.PreventDefault(); desktop.WindowCloseRequested.Emit(window, true) })
 		window.OnClosed(func() { window = nil })
 	}
@@ -110,11 +86,15 @@ func main() {
 			return
 		}
 		desktop.SetOwnershipEndpoint(ownership, endpoint)
+		if err := desktop.PublishAutomation(bridge, paths.UserData, endpoint); err != nil {
+			mygo.Dialog.Error("Cannot publish automation endpoint", err.Error())
+			mygo.App.Quit()
+			return
+		}
 		openWindow()
 	})
 	defer desktop.CloseBridge(bridge)
 	defer desktop.CloseOwnership(ownership)
-	defer desktop.CloseMCP(mcp)
 	mygo.App.OnWindowAllClosed(func() {
 		if runtime.GOOS != "darwin" {
 			mygo.App.Quit()

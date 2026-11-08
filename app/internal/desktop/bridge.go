@@ -4,7 +4,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
+	"github.com/graphif/project-graph/app/internal/automation"
 	"net"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -12,25 +15,30 @@ import (
 )
 
 type RuntimeInvocation struct {
-	Kind        string `json:"kind"`
-	RequestID   string `json:"requestId"`
-	ProjectPath string `json:"projectPath"`
-	ToolName    string `json:"toolName"`
-	Input       any    `json:"input"`
+	Kind         string `json:"kind"`
+	RequestID    string `json:"requestId"`
+	ProjectPath  string `json:"projectPath"`
+	ToolName     string `json:"toolName"`
+	Input        any    `json:"input"`
+	AllowUpgrade bool   `json:"allowUpgrade"`
 }
 
 var ProjectRuntimeInvocation = mygo.NewEvent[RuntimeInvocation]("project-runtime-invocation")
 
 type Bridge struct {
-	mu       sync.Mutex
-	listener net.Listener
-	pending  map[string]chan any
-	closed   chan struct{}
-	emit     func(RuntimeInvocation) error
+	mu                sync.Mutex
+	listener          net.Listener
+	pending           map[string]chan any
+	closed            chan struct{}
+	emit              func(RuntimeInvocation) error
+	ready             bool
+	automationSession automation.Session
+	sessionPath       string
+	records           map[string]*automationRecord
 }
 
 func NewBridge() *Bridge {
-	return &Bridge{pending: map[string]chan any{}, closed: make(chan struct{}), emit: ProjectRuntimeInvocation.Broadcast}
+	return &Bridge{pending: map[string]chan any{}, records: map[string]*automationRecord{}, closed: make(chan struct{}), emit: ProjectRuntimeInvocation.Broadcast}
 }
 func StartBridge(b *Bridge) (string, error) {
 	b.mu.Lock()
@@ -62,6 +70,15 @@ func StartBridge(b *Bridge) (string, error) {
 func (b *Bridge) Respond(requestID string, response any) bool {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+	if record := b.records[requestID]; record != nil {
+		if record.response != nil {
+			return false
+		}
+		record.response = response
+		record.completed = time.Now()
+		close(record.done)
+		return true
+	}
 	channel, ok := b.pending[requestID]
 	if !ok {
 		return false
@@ -69,6 +86,18 @@ func (b *Bridge) Respond(requestID string, response any) bool {
 	delete(b.pending, requestID)
 	channel <- response
 	return true
+}
+
+func (b *Bridge) Ready() { b.mu.Lock(); b.ready = true; b.mu.Unlock() }
+
+func PublishAutomation(b *Bridge, userData, endpoint string) error {
+	token, err := automation.NewID()
+	if err != nil {
+		return err
+	}
+	b.automationSession = automation.Session{Endpoint: endpoint, Token: token, Protocol: automation.ProtocolVersion}
+	b.sessionPath = filepath.Join(userData, "automation-session.json")
+	return automation.PublishSession(b.sessionPath, b.automationSession)
 }
 func (b *Bridge) serve(connection net.Conn) {
 	defer connection.Close()
@@ -80,7 +109,17 @@ func (b *Bridge) serve(connection net.Conn) {
 	if !scanner.Scan() {
 		return
 	}
+	b.mu.Lock()
+	authenticated := b.automationSession.Token != ""
+	b.mu.Unlock()
+	if authenticated {
+		b.serveAutomation(connection, scanner.Bytes())
+		return
+	}
 	var request struct {
+		Token           string `json:"token"`
+		Protocol        int    `json:"protocol"`
+		Kind            string `json:"kind"`
 		RequestID       string `json:"requestId"`
 		ProjectPath     string `json:"projectPath"`
 		ToolName        string `json:"toolName"`
@@ -90,6 +129,19 @@ func (b *Bridge) serve(connection net.Conn) {
 	if json.Unmarshal(scanner.Bytes(), &request) != nil {
 		respond(failure)
 		return
+	}
+	if request.Token != "" || request.Protocol != 0 {
+		if request.Token != b.automationSession.Token || request.Protocol != automation.ProtocolVersion {
+			respond(map[string]any{"ok": false, "error": map[string]string{"code": "PROTOCOL_VERSION_MISMATCH", "message": "Invalid automation credentials or protocol"}})
+			return
+		}
+		if request.Kind == "ping" {
+			b.mu.Lock()
+			ready := b.ready
+			b.mu.Unlock()
+			respond(map[string]any{"ok": ready})
+			return
+		}
 	}
 	if request.CancelRequestID != "" {
 		b.emit(RuntimeInvocation{Kind: "cancel", RequestID: request.CancelRequestID})
@@ -118,7 +170,7 @@ func (b *Bridge) serve(connection net.Conn) {
 	b.pending[request.RequestID] = channel
 	b.mu.Unlock()
 	defer func() { b.mu.Lock(); delete(b.pending, request.RequestID); b.mu.Unlock() }()
-	if err := b.emit(RuntimeInvocation{"invoke", request.RequestID, canonical, request.ToolName, request.Input}); err != nil {
+	if err := b.emit(RuntimeInvocation{Kind: "invoke", RequestID: request.RequestID, ProjectPath: canonical, ToolName: request.ToolName, Input: request.Input}); err != nil {
 		respond(failure)
 		return
 	}
@@ -163,6 +215,11 @@ func CloseBridge(b *Bridge) error {
 	default:
 	}
 	close(b.closed)
+	if b.sessionPath != "" {
+		if session, err := automation.ReadSession(b.sessionPath); err == nil && session.Token == b.automationSession.Token {
+			os.Remove(b.sessionPath)
+		}
+	}
 	if b.listener == nil {
 		return nil
 	}
