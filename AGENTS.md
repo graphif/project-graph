@@ -115,4 +115,18 @@ Rust 主要负责本地文件等系统能力；绝大部分业务逻辑在前端
 
 ## Commit Message
 
-使用 [Conventional Commits](https://www.conventionalcommits.org/)，例如：`feat: ...`、`fix: ...`、`refactor: ...`。
+使用 [Conventional Commits](https://www.conventionalcommits.org/)。
+
+- 标题保留 `feat:`、`fix:`、`refactor:` 等英文类型前缀，冒号后的描述必须使用中文，例如：`fix: 减弱节点创建动画`。
+- 提交正文（详细信息）必须注明实际使用的 AI 工具及模型名称、版本；有多个工具或模型参与时分别列出。无法确认模型的具体版本时如实注明，不要猜测。
+
+格式示例（提交时替换占位内容）：
+
+```text
+fix: 减弱节点创建动画
+
+将绿色外发光替换为轻微收拢并淡出的细轮廓。
+
+AI 工具：<实际使用的 AI 工具名称>
+AI 模型：<实际使用的模型名称及版本>
+```
