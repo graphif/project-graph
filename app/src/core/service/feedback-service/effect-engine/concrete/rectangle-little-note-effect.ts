@@ -1,15 +1,16 @@
 import { Color, mixColors, ProgressNumber } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Random } from "@/core/algorithm/random";
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
+import { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
 
 /**
  * 用于逻辑节点执行了一次效果
  * 附着在矩形上，从中心向外扩散
  */
 export class RectangleLittleNoteEffect extends Effect {
+  static readonly effectId = "RectangleLittleNoteEffect";
   private currentRect: Rectangle;
 
   constructor(

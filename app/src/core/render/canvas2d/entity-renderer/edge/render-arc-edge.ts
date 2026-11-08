@@ -1,8 +1,8 @@
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
-import { ArcEdge } from "@/core/stage/stageObject/association/ArcEdge";
-import { Project } from "@/core/Project";
+import { ArcEdge } from "@/core/stage/stage-object/association/arc-edge";
+import { Project } from "@/core/project";
 
 export function renderArcEdge(
   project: Project,

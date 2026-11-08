@@ -1,12 +1,12 @@
-import type { Project } from "@/core/Project";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
+import type { Project } from "@/core/project";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { DetailsManager } from "@/core/stage/stage-object/tools/entity-details-manager";
 import { MonoStack } from "@graphif/data-structures";
 import { Vector } from "@graphif/data-structures";
-import { parseMarkdownToJSON, type MarkdownNode } from "@/utils/markdownParse";
-import { BaseImporter } from "./BaseImporter";
+import { parseMarkdownToJSON, type MarkdownNode } from "@/utils/markdown-parse";
+import { BaseImporter } from "./base-importer";
 import { Rectangle } from "@graphif/shapes";
 
 /**

@@ -1,11 +1,11 @@
-import { ArrayFunctions } from "@/core/algorithm/arrayFunctions";
-import { Project, service } from "@/core/Project";
-import { EntityAlignEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityAlignEffect";
-import { RectangleRenderEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleRenderEffect";
-import { SoundService } from "@/core/service/feedbackService/SoundService";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { showTreeValidationErrors } from "@/utils/treeValidation";
+import { ArrayFunctions } from "@/core/algorithm/array-functions";
+import { Project, service } from "@/core/project";
+import { EntityAlignEffect } from "@/core/service/feedback-service/effect-engine/concrete/entity-align-effect";
+import { RectangleRenderEffect } from "@/core/service/feedback-service/effect-engine/concrete/rectangle-render-effect";
+import { SoundService } from "@/core/service/feedback-service/sound-service";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { showTreeValidationErrors } from "@/utils/tree-validation";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 

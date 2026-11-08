@@ -1,20 +1,20 @@
-import { Project } from "@/core/Project";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { Project } from "@/core/project";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { SvgNode } from "@/core/stage/stage-object/entity/svg-node";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { readFile, stat } from "@/platform/files";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
-import { onOpenFile } from "../../GlobalMenu";
-import { PathString } from "@/utils/pathString";
-import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
-import { Settings } from "@/core/service/Settings";
-import { prepareImageBlobForImport } from "../imageUtils";
-import { createImageNodeFromBlob } from "../imageNodeFactory";
-import { createMediaNodeFromBlob } from "../mediaNodeFactory";
-import type { MediaKind } from "@/core/stage/stageObject/entity/MediaNode";
+import { onOpenFile } from "../../global-menu";
+import { PathString } from "@/utils/path-string";
+import { DetailsManager } from "@/core/stage/stage-object/tools/entity-details-manager";
+import { Settings } from "@/core/service/settings";
+import { prepareImageBlobForImport } from "../image-utils";
+import { createImageNodeFromBlob } from "../image-node-factory";
+import { createMediaNodeFromBlob } from "../media-node-factory";
+import type { MediaKind } from "@/core/stage/stage-object/entity/media-node";
 
 export const MEDIA_TYPE_INFO: Record<string, { mime: string; kind: MediaKind }> = {
   mp3: { mime: "audio/mpeg", kind: "audio" },

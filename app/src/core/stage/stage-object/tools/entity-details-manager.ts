@@ -1,4 +1,4 @@
-import type { Entity } from "../abstract/StageEntity";
+import type { Entity } from "../abstract/stage-entity";
 import {
   BaseBlockquotePlugin,
   BaseH1Plugin,

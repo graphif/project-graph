@@ -1,13 +1,14 @@
 import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Random } from "@/core/algorithm/random";
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 
 /**
  * 方块的爆炸粉尘效果
  */
 export class ExplodeDashEffect extends Effect {
+  static readonly effectId = "ExplodeDashEffect";
   ashLocationArray: Vector[] = [];
   ashSpeedArray: Vector[] = [];
 

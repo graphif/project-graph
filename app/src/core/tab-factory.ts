@@ -1,8 +1,8 @@
 import { Uint8ArrayReader, ZipReader } from "@zip.js/zip.js";
 import { URI } from "vscode-uri";
-import { Project } from "./Project";
-import { Extension } from "./extension/Extension";
-import { FileSystemProvider } from "./interfaces/Service";
+import { Project } from "./project";
+import { Extension } from "./extension/extension";
+import { FileSystemProvider } from "./interfaces/service";
 
 export namespace TabFactory {
   export async function create(uri: URI, fs: FileSystemProvider): Promise<Project | Extension> {

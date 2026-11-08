@@ -1,10 +1,10 @@
 import { Dialog } from "@/components/ui/dialog";
-import type { Project } from "@/core/Project";
+import type { Project } from "@/core/project";
 import {
   ensureOpenProjectRuntimeBridgeListener,
   type OpenProjectRuntimeHostRegistration,
   registerOpenProjectRuntimeHost,
-} from "@/core/OpenProjectRuntimeHost";
+} from "@/core/open-project-runtime-host";
 import { Ownership } from "@/platform/desktop";
 import i18next from "i18next";
 import type { URI } from "vscode-uri";

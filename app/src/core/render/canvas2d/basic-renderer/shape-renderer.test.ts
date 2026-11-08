@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import type { Project } from "@/core/Project";
-vi.mock("@/core/Project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
-import { ShapeRenderer } from "./shapeRenderer";
+import type { Project } from "@/core/project";
+vi.mock("@/core/project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
+import { ShapeRenderer } from "./shape-renderer";
 
 describe("polygon outlines", () => {
   it("skips invisible rectangle passes without inheriting a previous stroke", () => {

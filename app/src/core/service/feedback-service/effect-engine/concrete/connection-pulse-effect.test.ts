@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { Color, Vector } from "@graphif/data-structures";
-import type { Project } from "@/core/Project";
-import { ConnectionPulseEffect } from "./ConnectionPulseEffect";
+import type { Project } from "@/core/project";
+import { ConnectionPulseEffect } from "./connection-pulse-effect";
 
 describe("connection pulse", () => {
   it.each([0.1, 1, 8])("keeps its screen width and short trail at zoom %s", (zoom) => {

@@ -1,7 +1,7 @@
-import { ConnectableAssociation } from "@/core/stage/stageObject/abstract/Association";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
+import { ConnectableAssociation } from "@/core/stage/stage-object/abstract/association";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { Edge } from "@/core/stage/stage-object/association/edge";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stage-object/association/muti-target-undirected-edge";
 
 export type GraphStructureType = "isolated" | "path" | "star" | "tree" | "dag" | "cyclic";
 

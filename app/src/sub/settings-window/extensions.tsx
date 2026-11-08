@@ -8,8 +8,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Extension } from "@/core/extension/Extension";
-import { ExtensionManager } from "@/core/extension/ExtensionManager";
+import { Extension } from "@/core/extension/extension";
+import { ExtensionManager } from "@/core/extension/extension-manager";
 import { open } from "@/platform/shell";
 import { Blocks, RefreshCcw, Store } from "lucide-react";
 import { useEffect, useState } from "react";

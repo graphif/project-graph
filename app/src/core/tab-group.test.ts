@@ -9,7 +9,7 @@ import {
   removeTabFromGroups,
   splitTabGroup,
   updateTabSplitSizes,
-} from "./TabGroup";
+} from "./tab-group";
 
 describe("TabGroup", () => {
   it("splits groups on either side", () => {

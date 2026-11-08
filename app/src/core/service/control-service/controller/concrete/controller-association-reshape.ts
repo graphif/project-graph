@@ -1,6 +1,6 @@
-import { Settings } from "@/core/service/Settings";
-import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
-import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
+import { Settings } from "@/core/service/settings";
+import { ControllerClass } from "@/core/service/control-service/controller/controller-class";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stage-object/association/muti-target-undirected-edge";
 import { CursorNameEnum } from "@/types/cursors";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";

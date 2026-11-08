@@ -11,14 +11,14 @@
  * 新增函数时请同步补充 @complexity 说明，保持文件风格一致。
  */
 
-import { Project, service } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
-import { Association } from "@/core/stage/stageObject/abstract/Association";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
-import { Section } from "@/core/stage/stageObject/entity/Section";
+import { Project, service } from "@/core/project";
+import { Settings } from "@/core/service/settings";
+import { Association } from "@/core/stage/stage-object/abstract/association";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
+import { Edge } from "@/core/stage/stage-object/association/edge";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stage-object/association/muti-target-undirected-edge";
+import { Section } from "@/core/stage/stage-object/entity/section";
 import { Vector } from "@graphif/data-structures";
 
 @service("sectionMethods")

@@ -1,5 +1,5 @@
 import { createStore } from "@/platform/store";
-import { allKeyBinds } from "./shortcutKeysRegister";
+import { allKeyBinds } from "./shortcut-keys-register";
 import { isMac } from "@/utils/platform";
 import { Dialog } from "@/components/ui/dialog";
 

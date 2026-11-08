@@ -3,12 +3,12 @@ import { CubicCatmullRomSpline, Rectangle } from "@graphif/shapes";
 import { v4 as uuidv4 } from "uuid";
 import { Serialized } from "@/types/node";
 import { getMultiLineTextSize } from "@/utils/font";
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { Edge } from "@/core/stage/stage-object/association/edge";
 
 /**
  * CR曲线连线
@@ -94,12 +94,13 @@ export class CubicCatmullRomSplineEdge extends Edge {
       targetRectRate,
     }: Serialized.CubicCatmullRomSplineEdge /** true表示解析状态，false表示解析完毕 */,
     public unknown = false,
+    endpoints?: { source: ConnectableEntity; target: ConnectableEntity },
   ) {
     super();
     // this._source = this.project.stageManager.getTextNodeByUUID(source) as TextNode;
     // this._target = this.project.stageManager.getTextNodeByUUID(target) as TextNode;
-    this._source = new TextNode(this.project, { uuid: source }, true);
-    this._target = new TextNode(this.project, { uuid: target }, true);
+    this._source = endpoints?.source ?? new TextNode(this.project, { uuid: source }, true);
+    this._target = endpoints?.target ?? new TextNode(this.project, { uuid: target }, true);
     this.uuid = uuid;
     this.text = text;
     this.alpha = alpha;

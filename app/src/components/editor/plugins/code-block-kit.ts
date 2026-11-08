@@ -1,7 +1,7 @@
 "use client";
 
 import { CodeBlockPlugin, CodeLinePlugin, CodeSyntaxPlugin } from "@platejs/code-block/react";
-import { codeHighlighter as lowlight } from "@/utils/codeHighlight";
+import { codeHighlighter as lowlight } from "@/utils/code-highlight";
 
 import { CodeBlockElement, CodeLineElement, CodeSyntaxLeaf } from "@/components/ui/code-block-node";
 

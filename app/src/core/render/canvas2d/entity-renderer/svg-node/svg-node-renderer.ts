@@ -1,5 +1,5 @@
-import { Project, service } from "@/core/Project";
-import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
+import { Project, service } from "@/core/project";
+import { SvgNode } from "@/core/stage/stage-object/entity/svg-node";
 import { Rectangle } from "@graphif/shapes";
 
 /**
@@ -38,6 +38,7 @@ export class SvgNodeRenderer {
         2 * this.project.camera.currentScale,
       );
     }
+    if (!svgNode.image) return;
     this.project.imageRenderer.renderImageElement(
       svgNode.image,
       this.project.renderer.transformWorld2View(svgNode.collisionBox.getRectangle().location),

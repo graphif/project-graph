@@ -1,7 +1,7 @@
-import { Project, service } from "@/core/Project";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { Project, service } from "@/core/project";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { Edge } from "@/core/stage/stage-object/association/edge";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle, Line } from "@graphif/shapes";
 

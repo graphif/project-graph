@@ -3,10 +3,10 @@ import {
   createProjectToolSettingSchemas,
   DEFAULT_FONT_FAMILY,
   MAC_DEFAULT_FONT_FAMILY,
-} from "@/core/service/ProjectToolSettingsSchema";
-import { DEFAULT_SUB_WINDOW_OPEN_MODES, subWindowOpenModesSchema } from "@/core/subWindowOpenModes";
-import { isMac } from "@/utils/platform";
+} from "@/core/service/project-tool-settings-schema";
+import { DEFAULT_SUB_WINDOW_OPEN_MODES, subWindowOpenModesSchema } from "@/core/sub-window-open-modes";
 import { LazyStore } from "@/platform/store";
+import { isMac } from "@/utils/platform";
 import i18next from "i18next";
 import { useEffect, useState } from "react";
 import z from "zod";
@@ -1041,70 +1041,97 @@ export async function flushSettingsLoadErrors() {
   pendingSettingsLoadErrorValues.clear();
 }
 
+const settingsTarget = {
+  ...savedSettings,
+  watch: () => () => {},
+  use: <T extends keyof Settings>(): [Settings[T], (newValue: Settings[T]) => void] => [
+    undefined as any,
+    () => {},
+  ],
+};
+
+export async function persistSettings(values: Partial<Settings>): Promise<void> {
+  const parsed = Object.fromEntries(
+    Object.entries(values).map(([key, value]) => [key, settingsSchema.shape[key as keyof Settings].parse(value)]),
+  );
+  await store.setMany(parsed);
+  for (const [key, value] of Object.entries(parsed)) {
+    Reflect.set(settingsTarget, key, value);
+    listeners[key]?.forEach((callback) => callback(value));
+  }
+}
+
+export async function refreshSettings(): Promise<void> {
+  const values = Object.fromEntries(await store.entries());
+  for (const key of Object.keys(settingsSchema.shape) as (keyof Settings)[]) {
+    const result = settingsSchema.shape[key].safeParse(values[key]);
+    const value = key === "mouseLeftMode" ? "selectAndMove" : result.success ? result.data : defaultSettings[key];
+    Reflect.set(settingsTarget, key, value);
+    listeners[key]?.forEach((callback) => callback(value));
+    if (!result.success) {
+      pendingSettingsLoadErrorKeys.add(key);
+      pendingSettingsLoadErrorValues.set(key, values[key]);
+    }
+  }
+}
+
 export const Settings = new Proxy<
   Settings & {
     watch: (key: keyof Settings, callback: (value: any) => void) => () => void;
     use: <T extends keyof Settings>(key: T) => [Settings[T], (newValue: Settings[T]) => void];
   }
->(
-  {
-    ...savedSettings,
-    watch: () => () => {},
-    use: () => [undefined as any, () => {}],
+>(settingsTarget, {
+  set: (target, key, value, receiver) => {
+    if (typeof key === "symbol") {
+      throw new Error(`不能设置symbol属性: ${String(key)}`);
+    }
+    if (!(key in target)) {
+      throw new Error(`没有这个设置项: ${key}`);
+    }
+    store.set(key, value);
+    listeners[key]?.forEach((cb) => cb(value));
+    return Reflect.set(target, key, value, receiver);
   },
-  {
-    set: (target, key, value, receiver) => {
-      if (typeof key === "symbol") {
-        throw new Error(`不能设置symbol属性: ${String(key)}`);
+  get: (target, key, receiver) => {
+    switch (key) {
+      case "watch": {
+        return (key: keyof Settings, callback: (value: any) => void) => {
+          if (!listeners[key]) {
+            listeners[key] = [];
+          }
+          listeners[key].push(callback);
+          callback(target[key]);
+          return () => {
+            listeners[key] = listeners[key]?.filter((cb) => cb !== callback);
+          };
+        };
       }
-      if (!(key in target)) {
-        throw new Error(`没有这个设置项: ${key}`);
-      }
-      store.set(key, value);
-      listeners[key]?.forEach((cb) => cb(value));
-      return Reflect.set(target, key, value, receiver);
-    },
-    get: (target, key, receiver) => {
-      switch (key) {
-        case "watch": {
-          return (key: keyof Settings, callback: (value: any) => void) => {
+      case "use": {
+        return <T extends keyof Settings>(key: T) => {
+          const [value, setValue] = useState(target[key]);
+          useEffect(() => {
             if (!listeners[key]) {
               listeners[key] = [];
             }
-            listeners[key].push(callback);
-            callback(target[key]);
+            listeners[key].push(setValue);
             return () => {
-              listeners[key] = listeners[key]?.filter((cb) => cb !== callback);
+              listeners[key] = listeners[key]?.filter((cb) => cb !== setValue);
             };
-          };
-        }
-        case "use": {
-          return <T extends keyof Settings>(key: T) => {
-            const [value, setValue] = useState(target[key]);
-            useEffect(() => {
-              if (!listeners[key]) {
-                listeners[key] = [];
-              }
-              listeners[key].push(setValue);
-              return () => {
-                listeners[key] = listeners[key]?.filter((cb) => cb !== setValue);
-              };
-            }, []);
-            return [
-              value,
-              (newValue: Settings[T]) => {
-                console.log(newValue);
-                store.set(key, newValue);
-                Reflect.set(target, key, newValue);
-                listeners[key]?.forEach((cb) => cb(newValue));
-              },
-            ];
-          };
-        }
-        default: {
-          return Reflect.get(target, key, receiver);
-        }
+          }, []);
+          return [
+            value,
+            (newValue: Settings[T]) => {
+              console.log(newValue);
+              store.set(key, newValue);
+              Reflect.set(target, key, newValue);
+              listeners[key]?.forEach((cb) => cb(newValue));
+            },
+          ];
+        };
       }
-    },
+      default: {
+        return Reflect.get(target, key, receiver);
+      }
+    }
   },
-);
+});

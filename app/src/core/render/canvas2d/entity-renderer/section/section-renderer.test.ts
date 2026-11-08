@@ -1,17 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import type { Project } from "@/core/Project";
-import type { Section } from "@/core/stage/stageObject/entity/Section";
+import type { Project } from "@/core/project";
+import type { Section } from "@/core/stage/stage-object/entity/section";
 
-vi.mock("@/core/Project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
+vi.mock("@/core/project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
 vi.mock("@/core/render/canvas2d/renderer", () => ({
   Renderer: { FONT_SIZE: 16, NODE_PADDING: 4, NODE_ROUNDED_RADIUS: 12 },
 }));
-vi.mock("@/core/service/Settings", () => ({ Settings: { sectionBigTitleOpacity: 0.5 } }));
+vi.mock("@/core/service/settings", () => ({ Settings: { sectionBigTitleOpacity: 0.5 } }));
 vi.mock("@/utils/font", () => ({ getTextSize: vi.fn() }));
-import { SectionRenderer } from "./SectionRenderer";
-import { Settings } from "@/core/service/Settings";
+import { SectionRenderer } from "./section-renderer";
+import { Settings } from "@/core/service/settings";
 
 describe("section overview title detail", () => {
   it("clips the title strip from the full section outline", () => {

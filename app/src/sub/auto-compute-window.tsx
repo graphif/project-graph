@@ -1,12 +1,12 @@
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 import {
   LogicNodeNameEnum,
   LogicNodeNameToArgsTipsMap,
   LogicNodeNameToRenderNameMap,
-} from "@/core/service/dataGenerateService/autoComputeEngine/logicNodeNameEnum";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { createSubWindow } from "@/core/subWindowOpen";
+} from "@/core/service/data-generate-service/auto-compute-engine/logic-node-name-enum";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { createSubWindow } from "@/core/sub-window-open";
 import { activeResourceTabAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { Vector } from "@graphif/data-structures";

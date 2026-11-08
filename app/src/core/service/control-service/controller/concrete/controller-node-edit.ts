@@ -1,18 +1,18 @@
-import { Project } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
-import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
-import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
-import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
-import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
-import { MediaPlaybackManager } from "@/core/service/mediaPlaybackService/MediaPlaybackManager";
+import { Project } from "@/core/project";
+import { Settings } from "@/core/service/settings";
+import { ControllerClass } from "@/core/service/control-service/controller/controller-class";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { UrlNode } from "@/core/stage/stage-object/entity/url-node";
+import { ReferenceBlockNode } from "@/core/stage/stage-object/entity/reference-block-node";
+import { LatexNode } from "@/core/stage/stage-object/entity/latex-node";
+import { MediaNode } from "@/core/stage/stage-object/entity/media-node";
+import { MediaPlaybackManager } from "@/core/service/media-playback-service/media-playback-manager";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 import { open } from "@/platform/shell";
-import { MouseLocation } from "../../MouseLocation";
+import { MouseLocation } from "../../mouse-location";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import LatexEditWindow from "@/sub/LatexEditWindow";
+import LatexEditWindow from "@/sub/latex-edit-window";
 /**
  * 包含编辑节点文字，编辑详细信息等功能的控制器
  *

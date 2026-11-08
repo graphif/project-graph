@@ -1,5 +1,4 @@
-import { service } from "@/core/interfaces/service";
-import type { Project } from "@/core/project";
+import { service, type Project } from "@/core/project";
 import { Settings } from "@/core/service/settings";
 import type { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
 import { requestDAGLayout } from "@/platform/algorithms";

@@ -1,10 +1,10 @@
 import { appDataDir, join } from "@/platform/path";
 import { exists, mkdir, readDir } from "@/platform/files";
 import { URI } from "vscode-uri";
-import { FileSystemProviderFile } from "../fileSystemProvider/FileSystemProviderFile";
-import { Settings } from "../service/Settings";
-import { Extension } from "./Extension";
-import { ExtensionRuntime } from "./ExtensionRuntime";
+import { FileSystemProviderFile } from "../file-system-provider/file-system-provider-file";
+import { Settings } from "../service/settings";
+import { Extension } from "./extension";
+import { ExtensionRuntime } from "./extension-runtime";
 
 export namespace ExtensionManager {
   const extensions: Map<string, Extension> = new Map();

@@ -36,7 +36,7 @@ export function createStageTextGraphCodec() {
     textNode: {
       matches: (model): model is TextNode => model instanceof TextNode,
       encode: (model: TextNode) => ({
-        kind: model.kind,
+        kind: "text-node",
         id: model.uuid,
         text: model.text,
         rectangle: { location: vectorData(model.rectangle.location), size: vectorData(model.rectangle.size) },
@@ -72,7 +72,7 @@ export function createStageTextGraphCodec() {
     connectPoint: {
       matches: (model): model is ConnectPoint => model instanceof ConnectPoint,
       encode: (model: ConnectPoint) => ({
-        kind: model.kind,
+        kind: "connect-point",
         id: model.uuid,
         rectangle: {
           location: vectorData(model.collisionBox.getRectangle().location),
@@ -92,7 +92,7 @@ export function createStageTextGraphCodec() {
     imageNode: {
       matches: (model): model is ImageNode => model instanceof ImageNode,
       encode: (model: ImageNode) => ({
-        kind: model.kind,
+        kind: "image-node",
         id: model.uuid,
         rectangle: { location: vectorData(model.rectangle.location), size: vectorData(model.rectangle.size) },
         details: detailsData(model.details),
@@ -121,7 +121,7 @@ export function createStageTextGraphCodec() {
     mediaNode: {
       matches: (model): model is MediaNode => model instanceof MediaNode,
       encode: (model: MediaNode) => ({
-        kind: model.kind,
+        kind: "media-node",
         id: model.uuid,
         rectangle: { location: vectorData(model.rectangle.location), size: vectorData(model.rectangle.size) },
         details: detailsData(model.details),
@@ -150,7 +150,7 @@ export function createStageTextGraphCodec() {
     urlNode: {
       matches: (model): model is UrlNode => model instanceof UrlNode,
       encode: (model: UrlNode) => ({
-        kind: model.kind,
+        kind: "url-node",
         id: model.uuid,
         rectangle: { location: vectorData(model.rectangle.location), size: vectorData(model.rectangle.size) },
         details: detailsData(model.details),
@@ -173,7 +173,7 @@ export function createStageTextGraphCodec() {
     svgNode: {
       matches: (model): model is SvgNode => model instanceof SvgNode,
       encode: (model: SvgNode) => ({
-        kind: model.kind,
+        kind: "svg-node",
         id: model.uuid,
         rectangle: {
           location: vectorData(model.collisionBox.getRectangle().location),
@@ -203,7 +203,7 @@ export function createStageTextGraphCodec() {
     penStroke: {
       matches: (model): model is PenStroke => model instanceof PenStroke,
       encode: (model: PenStroke) => ({
-        kind: model.kind,
+        kind: "pen-stroke",
         id: model.uuid,
         segments: model.segments.map(({ location, pressure }) => ({ location: vectorData(location), pressure })),
         color: colorData(model.color),
@@ -222,7 +222,7 @@ export function createStageTextGraphCodec() {
     referenceBlock: {
       matches: (model): model is ReferenceBlockNode => model instanceof ReferenceBlockNode,
       encode: (model: ReferenceBlockNode) => ({
-        kind: model.kind,
+        kind: "reference-block",
         id: model.uuid,
         rectangle: { location: vectorData(model.rectangle.location), size: vectorData(model.rectangle.size) },
         details: detailsData(model.details),
@@ -254,7 +254,7 @@ export function createStageTextGraphCodec() {
       encode: (model: ExtensionEntity) => {
         assertBoundedData(model.customData);
         return {
-          kind: model.kind,
+          kind: "extension-entity",
           id: model.uuid,
           rectangle: { location: vectorData(model.rectangle.location), size: vectorData(model.rectangle.size) },
           details: detailsData(model.details),
@@ -278,7 +278,7 @@ export function createStageTextGraphCodec() {
     latexNode: {
       matches: (model): model is LatexNode => model instanceof LatexNode,
       encode: (model: LatexNode) => ({
-        kind: model.kind,
+        kind: "latex-node",
         id: model.uuid,
         rectangle: { location: vectorData(model.rectangle.location), size: vectorData(model.rectangle.size) },
         details: detailsData(model.details),
@@ -305,7 +305,7 @@ export function createStageTextGraphCodec() {
     section: {
       matches: (model): model is Section => model instanceof Section,
       encode: (model: Section) => ({
-        kind: model.kind,
+        kind: "section",
         id: model.uuid,
         rectangle: {
           location: vectorData(model.expandedRectangle.location),

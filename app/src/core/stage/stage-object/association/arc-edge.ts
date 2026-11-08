@@ -2,14 +2,14 @@ import { Color, Vector } from "@graphif/data-structures";
 import { Line, Rectangle } from "@graphif/shapes";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { getMultiLineTextSize } from "@/utils/font";
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { Settings } from "@/core/service/Settings";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { Edge } from "@/core/stage/stage-object/association/edge";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { Settings } from "@/core/service/settings";
 
 /**
  * 三点定圆的辅助结果

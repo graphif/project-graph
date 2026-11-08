@@ -1,4 +1,4 @@
-import { FeatureFlags } from "@/core/service/FeatureFlags";
+import { FeatureFlags } from "@/core/service/feature-flags";
 import type { AuthUser } from "@/state";
 import { createStore } from "@/platform/store";
 import type { Store } from "@/platform/store";

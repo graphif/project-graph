@@ -1,7 +1,7 @@
-import type { Project } from "@/core/Project";
-import type { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
+import type { Project } from "@/core/project";
+import type { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { DetailsManager } from "@/core/stage/stage-object/tools/entity-details-manager";
 
 /**
  * 纯文本格式导出器

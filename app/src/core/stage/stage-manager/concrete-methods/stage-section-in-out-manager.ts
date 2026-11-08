@@ -1,10 +1,10 @@
-import { Project, service } from "@/core/Project";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
-import { CollisionBox } from "../../stageObject/collisionBox/collisionBox";
+import { Project, service } from "@/core/project";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { Edge } from "@/core/stage/stage-object/association/edge";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stage-object/association/muti-target-undirected-edge";
+import { CollisionBox } from "../../stage-object/collision-box/collision-box";
 
 /**
  * 管理所有东西进出StageSection的逻辑

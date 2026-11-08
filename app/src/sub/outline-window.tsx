@@ -5,10 +5,10 @@ import {
   GRAPH_STRUCTURE_TYPE_LABELS,
   type GraphStructure,
   type GraphStructureType,
-} from "@/core/algorithm/graphStructureAnalysis";
-import { Project } from "@/core/Project";
-import { ConnectableAssociation } from "@/core/stage/stageObject/abstract/Association";
-import { createSubWindow } from "@/core/subWindowOpen";
+} from "@/core/algorithm/graph-structure-analysis";
+import { Project } from "@/core/project";
+import { ConnectableAssociation } from "@/core/stage/stage-object/abstract/association";
+import { createSubWindow } from "@/core/sub-window-open";
 import { activeResourceTabAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { Vector } from "@graphif/data-structures";

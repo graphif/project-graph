@@ -1,11 +1,12 @@
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
-import { RateFunctions } from "@/core/service/feedbackService/effectEngine/mathTools/rateFunctions";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
+import { RateFunctions } from "@/core/service/feedback-service/effect-engine/math-tools/rate-functions";
 
 export class EntityJumpMoveEffect extends Effect {
+  static readonly effectId = "EntityJumpMoveEffect";
   constructor(
     public time: number,
     public rectStart: Rectangle,

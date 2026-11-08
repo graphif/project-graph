@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Project } from "@/core/Project";
-import { createSubWindow } from "@/core/subWindowOpen";
+import { Project } from "@/core/project";
+import { createSubWindow } from "@/core/sub-window-open";
 import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";

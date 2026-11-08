@@ -1,8 +1,8 @@
-import { Project, service } from "@/core/Project";
-import { easeOutExpo } from "@/core/service/feedbackService/effectEngine/mathTools/easings";
-import { Settings } from "@/core/service/Settings";
-import { SoundService } from "../service/feedbackService/SoundService";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Project, service } from "@/core/project";
+import { easeOutExpo } from "@/core/service/feedback-service/effect-engine/math-tools/easings";
+import { Settings } from "@/core/service/settings";
+import { SoundService } from "../service/feedback-service/sound-service";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
 import { Direction } from "@/types/directions";
 import { Queue, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";

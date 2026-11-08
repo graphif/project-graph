@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/utils/platform", () => ({ family: () => "unix" }));
 
-vi.mock("@/core/Project", () => ({ Project: class {}, service: () => () => {}, ProjectState: { Unsaved: "unsaved" } }));
-vi.mock("@/core/service/Settings", () => ({
+vi.mock("@/core/project", () => ({ Project: class {}, service: () => () => {}, ProjectState: { Unsaved: "unsaved" } }));
+vi.mock("@/core/service/settings", () => ({
   Settings: {
     autoSave: true,
     autoBackup: false,
@@ -25,9 +25,9 @@ vi.mock("@/platform/files", () => ({
 }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
-import { AutoSaveBackupService } from "./AutoSaveBackupService";
-import { Settings } from "@/core/service/Settings";
-import type { Project } from "@/core/Project";
+import { AutoSaveBackupService } from "./auto-save-backup-service";
+import { Settings } from "@/core/service/settings";
+import type { Project } from "@/core/project";
 
 afterEach(() => {
   vi.restoreAllMocks();

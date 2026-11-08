@@ -1,6 +1,6 @@
 import { store, activeResourceTabAtom } from "@/state";
-import type { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
-import type { Project } from "@/core/Project";
+import type { MediaNode } from "@/core/stage/stage-object/entity/media-node";
+import type { Project } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { toast } from "sonner";
 

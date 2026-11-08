@@ -1,10 +1,10 @@
-import { Project, service } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
-import { RectangleFadeEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleFadeEffect";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { Section } from "@/core/stage/stageObject/entity/Section";
+import { Project, service } from "@/core/project";
+import { Settings } from "@/core/service/settings";
+import { RectangleFadeEffect } from "@/core/service/feedback-service/effect-engine/concrete/rectangle-fade-effect";
+import { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
+import { Edge } from "@/core/stage/stage-object/association/edge";
+import { ImageNode } from "@/core/stage/stage-object/entity/image-node";
+import { Section } from "@/core/stage/stage-object/entity/section";
 import { isMac } from "@/utils/platform";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";

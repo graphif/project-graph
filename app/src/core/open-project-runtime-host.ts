@@ -1,12 +1,12 @@
-import type { Project } from "@/core/Project";
-import { finalizeRuntimeCleanup } from "@/core/RuntimeCleanup";
-import { AIProjectReferenceStore } from "@/core/service/dataManageService/aiEngine/AIProjectReferenceStore";
+import type { Project } from "@/core/project";
+import { finalizeRuntimeCleanup } from "@/core/runtime-cleanup";
+import { AIProjectReferenceStore } from "@/core/service/data-manage-service/ai-engine/ai-project-reference-store";
 import {
   createLiveProjectBuiltInToolRuntimeHost,
   invokeBuiltInTool,
-} from "@/core/service/dataManageService/aiEngine/BuiltInToolRegistry";
-import { classifyBuiltInToolRuntimeError } from "@/core/service/dataManageService/aiEngine/BuiltInToolRuntimeError";
-import type { AIObjectReferenceErrorCode } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
+} from "@/core/service/data-manage-service/ai-engine/built-in-tool-registry";
+import { classifyBuiltInToolRuntimeError } from "@/core/service/data-manage-service/ai-engine/built-in-tool-runtime-error";
+import type { AIObjectReferenceErrorCode } from "@/core/service/data-manage-service/ai-engine/ai-object-reference-registry";
 import { Bridge, events } from "@/platform/desktop";
 import { prepareProjectReferences } from "@/core/automation/project-references";
 import { getBuiltInToolDefinition } from "@/core/service/data-manage-service/ai-engine/built-in-tool-registry";

@@ -1,5 +1,5 @@
 import Tree from "@/components/ui/tree";
-import { createSubWindow } from "@/core/subWindowOpen";
+import { createSubWindow } from "@/core/sub-window-open";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 

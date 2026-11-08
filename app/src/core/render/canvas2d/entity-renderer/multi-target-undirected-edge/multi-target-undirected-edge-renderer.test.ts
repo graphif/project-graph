@@ -1,15 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import type { Project } from "@/core/Project";
-import type { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
+import type { Project } from "@/core/project";
+import type { MultiTargetUndirectedEdge } from "@/core/stage/stage-object/association/muti-target-undirected-edge";
 
-vi.mock("@/core/Project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
+vi.mock("@/core/project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
 vi.mock("@/core/render/canvas2d/renderer", () => ({ Renderer: {} }));
-vi.mock("@/core/stage/stageObject/association/MutiTargetUndirectedEdge", () => ({
+vi.mock("@/core/stage/stage-object/association/muti-target-undirected-edge", () => ({
   MultiTargetUndirectedEdge: class {},
 }));
-import { MultiTargetUndirectedEdgeRenderer } from "./MultiTargetUndirectedEdgeRenderer";
+import { MultiTargetUndirectedEdgeRenderer } from "./multi-target-undirected-edge-renderer";
 
 describe("zoomed-out enclosure strokes", () => {
   it.each([0.03, 0.064, 0.065, 0.066, 1])("scales all circle and hull line styles at %s", (scale) => {

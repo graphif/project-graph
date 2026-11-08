@@ -1,4 +1,4 @@
-import { builtInToolCatalog, type BuiltInToolDefinition } from "./BuiltInToolRegistry";
+import { builtInToolCatalog, type BuiltInToolDefinition } from "./built-in-tool-registry";
 
 export type BuiltInToolWindowEntry = {
   name: string;

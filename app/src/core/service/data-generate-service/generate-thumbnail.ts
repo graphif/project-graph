@@ -1,4 +1,4 @@
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 import { sleep } from "@/utils/sleep";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";

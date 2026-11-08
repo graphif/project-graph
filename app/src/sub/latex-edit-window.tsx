@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { Project } from "@/core/Project";
-import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
-import { createSubWindow } from "@/core/subWindowOpen";
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { Project } from "@/core/project";
+import { MouseLocation } from "@/core/service/control-service/mouse-location";
+import { LatexNode } from "@/core/stage/stage-object/entity/latex-node";
+import { createSubWindow } from "@/core/sub-window-open";
+import { TabWorkspace } from "@/core/tab-workspace";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import katex from "katex";

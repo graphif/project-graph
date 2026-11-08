@@ -1,7 +1,7 @@
-import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
-import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
+import { ControllerClass } from "@/core/service/control-service/controller/controller-class";
+import { ImageNode } from "@/core/stage/stage-object/entity/image-node";
+import { ReferenceBlockNode } from "@/core/stage/stage-object/entity/reference-block-node";
+import { SvgNode } from "@/core/stage/stage-object/entity/svg-node";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 

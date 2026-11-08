@@ -1,4 +1,4 @@
-import { ExtensionEntityConfig } from "../stage/stageObject/entity/ExtensionEntity";
+import { ExtensionEntityConfig } from "../stage/stage-object/entity/extension-entity";
 
 export interface ClickEventPayload {
   relativeWorldX: number;

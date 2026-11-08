@@ -1,4 +1,4 @@
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
+import { ImageNode } from "@/core/stage/stage-object/entity/image-node";
 import { dirname, join } from "@/platform/path";
 import { exists, writeFile } from "@/platform/files";
 import mime from "mime";

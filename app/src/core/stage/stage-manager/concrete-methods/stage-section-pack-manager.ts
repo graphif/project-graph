@@ -1,19 +1,19 @@
 // import { Section } from "@/core/stageObject/entity/Section";
 // import { Entity } from "@/core/stageObject/StageEntity";
-import { Project, service } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Project, service } from "@/core/project";
+import { Settings } from "@/core/service/settings";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { Edge } from "@/core/stage/stage-object/association/edge";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { ConnectPoint } from "@/core/stage/stage-object/entity/connect-point";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { toast } from "sonner";
 import { v4 } from "uuid";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { ConnectableEntity } from "../../stageObject/abstract/ConnectableEntity";
-import { SoundService } from "@/core/service/feedbackService/SoundService";
+import { ConnectableEntity } from "../../stage-object/abstract/connectable-entity";
+import { SoundService } from "@/core/service/feedback-service/sound-service";
 
 /**
  * 管理所有东西进出StageSection的逻辑

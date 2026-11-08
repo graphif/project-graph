@@ -1,7 +1,7 @@
-import { extensionObjectRegistry } from "@/core/extension/ExtensionObjectRegistry";
-import { Project } from "@/core/Project";
-import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
-import { ExtensionEntity } from "@/core/stage/stageObject/entity/ExtensionEntity";
+import { extensionObjectRegistry } from "@/core/extension/extension-object-registry";
+import { Project } from "@/core/project";
+import { ControllerClass } from "@/core/service/control-service/controller/controller-class";
+import { ExtensionEntity } from "@/core/stage/stage-object/entity/extension-entity";
 import { Vector } from "@graphif/data-structures";
 
 export class ControllerExtensionEntityClickClass extends ControllerClass {

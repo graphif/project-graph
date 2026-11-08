@@ -1,10 +1,10 @@
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 import { readImage } from "@/platform/clipboard";
-import { MouseLocation } from "../../controlService/MouseLocation";
-import { Settings } from "@/core/service/Settings";
-import { applyBlackAndWhite, prepareImageBlobForImport } from "../imageUtils";
+import { MouseLocation } from "../../control-service/mouse-location";
+import { Settings } from "@/core/service/settings";
+import { applyBlackAndWhite, prepareImageBlobForImport } from "../image-utils";
 import { toast } from "sonner";
-import { createImageNodeFromBlob } from "../imageNodeFactory";
+import { createImageNodeFromBlob } from "../image-node-factory";
 
 export class CopyEngineImage {
   constructor(private project: Project) {}

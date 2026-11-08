@@ -1,7 +1,7 @@
-import { Project, service } from "@/core/Project";
-import { KeyboardOnlyDirectionController } from "@/core/service/controlService/keyboardOnlyEngine/keyboardOnlyDirectionController";
-import { NewTargetLocationSelector } from "@/core/service/controlService/keyboardOnlyEngine/newTargetLocationSelector";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Project, service } from "@/core/project";
+import { KeyboardOnlyDirectionController } from "@/core/service/control-service/keyboard-only-engine/keyboard-only-direction-controller";
+import { NewTargetLocationSelector } from "@/core/service/control-service/keyboard-only-engine/new-target-location-selector";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
 import { Direction } from "@/types/directions";
 import { Vector } from "@graphif/data-structures";
 import { toast } from "sonner";

@@ -1,7 +1,7 @@
 import { Dialog } from "@/components/ui/dialog";
-import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
-import type { Edge } from "@/core/stage/stageObject/association/Edge";
-import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
+import { ControllerClass } from "@/core/service/control-service/controller/controller-class";
+import type { Edge } from "@/core/stage/stage-object/association/edge";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stage-object/association/muti-target-undirected-edge";
 
 /**
  * 包含编辑节点文字，编辑详细信息等功能的控制器

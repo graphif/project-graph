@@ -3,9 +3,9 @@ import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
 const setting = vi.hoisted(() => ({ style: (() => {}) as (value: string) => void }));
-vi.mock("@/core/Project", () => ({ Project: class {} }));
+vi.mock("@/core/project", () => ({ Project: class {} }));
 vi.mock("@/core/render/canvas2d/renderer", () => ({ Renderer: { FONT_SIZE: 24 } }));
-vi.mock("@/core/service/Settings", () => ({
+vi.mock("@/core/service/settings", () => ({
   Settings: {
     enableAutoEdgeWidth: false,
     watch: (_key: string, callback: (value: string) => void) => {
@@ -15,18 +15,18 @@ vi.mock("@/core/service/Settings", () => ({
   },
 }));
 vi.mock("@/utils/font", () => ({ getMultiLineTextSize: () => new Vector(20, 20) }));
-vi.mock("../abstract/ConnectableEntity", () => ({ ConnectableEntity: class {} }));
-vi.mock("../entity/ConnectPoint", () => ({ ConnectPoint: class {} }));
-vi.mock("../entity/TextNode", () => ({ TextNode: class {} }));
-vi.mock("../entity/Section", () => ({ Section: class {} }));
-vi.mock("../entity/ImageNode", () => ({ ImageNode: class {} }));
+vi.mock("../abstract/connectable-entity", () => ({ ConnectableEntity: class {} }));
+vi.mock("../entity/connect-point", () => ({ ConnectPoint: class {} }));
+vi.mock("../entity/text-node", () => ({ TextNode: class {} }));
+vi.mock("../entity/section", () => ({ Section: class {} }));
+vi.mock("../entity/image-node", () => ({ ImageNode: class {} }));
 
-import { CollisionBox } from "../collisionBox/collisionBox";
-import { TextNode } from "../entity/TextNode";
-import { Section } from "../entity/Section";
-import { LineEdge } from "./LineEdge";
-import { EdgeCollisionBoxGetter } from "./EdgeCollisionBoxGetter";
-import { Settings } from "@/core/service/Settings";
+import { CollisionBox } from "../collision-box/collision-box";
+import { TextNode } from "../entity/text-node";
+import { Section } from "../entity/section";
+import { LineEdge } from "./line-edge";
+import { EdgeCollisionBoxGetter } from "./edge-collision-box-getter";
+import { Settings } from "@/core/service/settings";
 
 function node(x: number) {
   return Object.assign(Object.create(TextNode.prototype), {

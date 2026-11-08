@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import type { Project } from "@/core/Project";
+import type { Project } from "@/core/project";
 
-vi.mock("@/core/Project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
-vi.mock("@/core/service/Settings", () => ({
+vi.mock("@/core/project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
+vi.mock("@/core/service/settings", () => ({
   Settings: { protectingPrivacy: false, textIntegerLocationAndSizeRender: false },
 }));
 const msdf = vi.hoisted(() => ({ drawLine: vi.fn(() => false), enabled: false }));
@@ -12,7 +12,7 @@ beforeEach(() => {
   msdf.drawLine.mockReset().mockReturnValue(false);
   msdf.enabled = false;
 });
-vi.mock("./msdfTextAtlas", () => ({
+vi.mock("./msdf-text-atlas", () => ({
   MsdfTextAtlasRenderer: class {
     drawLine = msdf.drawLine;
   },
@@ -28,7 +28,7 @@ vi.mock("@/utils/font", () => ({
   },
   textToTextArray: (text: string) => text.split("\n"),
 }));
-import { TextRenderer } from "./textRenderer";
+import { TextRenderer } from "./text-renderer";
 
 function setup() {
   const ctx = {

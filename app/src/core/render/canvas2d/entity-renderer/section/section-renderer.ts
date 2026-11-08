@@ -1,7 +1,7 @@
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { Settings } from "@/core/service/Settings";
-import { Section } from "@/core/stage/stageObject/entity/Section";
+import { Settings } from "@/core/service/settings";
+import { Section } from "@/core/stage/stage-object/entity/section";
 import { getTextSize } from "@/utils/font";
 import { Color, colorInvert, mixColors, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Rectangle } from "@graphif/shapes";

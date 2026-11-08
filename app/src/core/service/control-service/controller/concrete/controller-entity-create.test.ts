@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { Vector } from "@graphif/data-structures";
-import type { Project } from "@/core/Project";
+import type { Project } from "@/core/project";
 
-vi.mock("@/core/service/Settings", () => ({ Settings: { doubleClickEmptySpaceAction: "createTextNode" } }));
-vi.mock("@/core/stage/stageObject/entity/Section", () => ({ Section: class {} }));
+vi.mock("@/core/service/settings", () => ({ Settings: { doubleClickEmptySpaceAction: "createTextNode" } }));
+vi.mock("@/core/stage/stage-object/entity/section", () => ({ Section: class {} }));
 
-import { ControllerEntityCreateClass } from "./ControllerEntityCreate";
+import { ControllerEntityCreateClass } from "./controller-entity-create";
 
 describe("double-click creation", () => {
   it("requests immediate editing for a new text node", () => {

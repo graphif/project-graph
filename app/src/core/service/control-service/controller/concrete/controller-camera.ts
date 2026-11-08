@@ -2,13 +2,13 @@
  * 存放具体的控制器实例
  */
 
-import { Settings } from "@/core/service/Settings";
-import { Camera } from "@/core/stage/Camera";
-import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
-import { ControllerCameraMac } from "@/core/service/controlService/controller/concrete/ControllerCamera/mac";
-import { MouseTipFeedbackEffect } from "@/core/service/feedbackService/effectEngine/concrete/MouseTipFeedbackEffect";
+import { Settings } from "@/core/service/settings";
+import { Camera } from "@/core/stage/camera";
+import { ControllerClass } from "@/core/service/control-service/controller/controller-class";
+import { ControllerCameraMac } from "@/core/service/control-service/controller/concrete/controller-camera/mac";
+import { MouseTipFeedbackEffect } from "@/core/service/feedback-service/effect-engine/concrete/mouse-tip-feedback-effect";
 import { CursorNameEnum } from "@/types/cursors";
-import { openBrowserOrFileByEntity } from "@/utils/externalOpen";
+import { openBrowserOrFileByEntity } from "@/utils/external-open";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 

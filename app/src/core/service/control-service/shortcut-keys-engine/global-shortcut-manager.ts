@@ -1,6 +1,6 @@
 import { register, unregisterAll, isRegistered, unregister } from "@/platform/shortcuts";
 import { getCurrentWindow } from "@/platform/window";
-import { Settings } from "../../Settings";
+import { Settings } from "../../settings";
 import { toast } from "sonner";
 
 // 定义全局快捷键类型

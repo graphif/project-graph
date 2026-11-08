@@ -1,4 +1,4 @@
-import { Settings } from "@/core/service/Settings";
+import { Settings } from "@/core/service/settings";
 
 export function applyBlackAndWhite(canvas: HTMLCanvasElement): void {
   const ctx = canvas.getContext("2d")!;

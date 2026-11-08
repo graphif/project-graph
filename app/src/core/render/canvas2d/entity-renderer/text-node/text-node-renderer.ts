@@ -1,16 +1,16 @@
 import { Random } from "@/core/algorithm/random";
-import { Project, service } from "@/core/Project";
-import { SyncAssociationRenderer } from "@/core/render/canvas2d/utilsRenderer/SyncAssociationRenderer";
-import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
+import { Project, service } from "@/core/project";
+import { SyncAssociationRenderer } from "@/core/render/canvas2d/utils-renderer/sync-association-renderer";
+import { KeyBindsUI } from "@/core/service/control-service/shortcut-keys-engine/key-binds-ui";
 import {
   getLogicNodeRenderName,
   LogicNodeNameEnum,
   LogicNodeNameToRenderNameMap,
-} from "@/core/service/dataGenerateService/autoComputeEngine/logicNodeNameEnum";
-import { Settings } from "@/core/service/Settings";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+} from "@/core/service/data-generate-service/auto-compute-engine/logic-node-name-enum";
+import { Settings } from "@/core/service/settings";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { getTextSize } from "@/utils/font";
-import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
+import { formatKeyBindSequenceToString } from "@/utils/key-display";
 import { Color, colorInvert, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import i18next from "i18next";

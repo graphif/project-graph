@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseProjectToolSettings } from "./ProjectToolSettingsSchema";
+import { parseProjectToolSettings } from "./project-tool-settings-schema";
 
 describe("Project tool Settings schema", () => {
   it("keeps valid saved values and falls back per key for stale values", () => {

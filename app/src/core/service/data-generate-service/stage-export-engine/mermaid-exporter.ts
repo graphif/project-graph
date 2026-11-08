@@ -1,10 +1,10 @@
-import type { Project } from "@/core/Project";
-import type { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { CopyEngineUtils } from "../../dataManageService/copyEngine/copyEngineUtils";
-import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
+import type { Project } from "@/core/project";
+import type { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
+import { CopyEngineUtils } from "../../data-manage-service/copy-engine/copy-engine-utils";
+import { DetailsManager } from "@/core/stage/stage-object/tools/entity-details-manager";
 
 /**
  * Mermaid 图表导出器

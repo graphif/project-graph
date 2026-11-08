@@ -1,26 +1,26 @@
 import { describe, expect, it, vi } from "vitest";
 import { Color, Vector } from "@graphif/data-structures";
 import { SymmetryCurve } from "@graphif/shapes";
-import type { Project } from "@/core/Project";
-import type { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
+import type { Project } from "@/core/project";
+import type { LineEdge } from "@/core/stage/stage-object/association/line-edge";
 
-vi.mock("@/core/Project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
-vi.mock("@/core/service/Settings", () => ({ Settings: { enableCollisionBoxAutoWidth: true } }));
-vi.mock("@/core/service/feedbackService/effectEngine/concrete/CircleFlameEffect", () => ({
+vi.mock("@/core/project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
+vi.mock("@/core/service/settings", () => ({ Settings: { enableCollisionBoxAutoWidth: true } }));
+vi.mock("@/core/service/feedback-service/effect-engine/concrete/circle-flame-effect", () => ({
   CircleFlameEffect: class {},
 }));
-vi.mock("@/core/service/feedbackService/effectEngine/concrete/LineCuttingEffect", () => ({
+vi.mock("@/core/service/feedback-service/effect-engine/concrete/line-cutting-effect", () => ({
   LineCuttingEffect: class {},
 }));
-vi.mock("@/core/render/canvas2d/entityRenderer/edge/EdgeRendererClass", () => ({ EdgeRendererClass: class {} }));
-vi.mock("@/core/render/svg/SvgUtils", () => ({ SvgUtils: {} }));
-vi.mock("@/core/stage/stageObject/association/Edge", () => ({ Edge: class {} }));
-vi.mock("@/core/stage/stageObject/entity/ConnectPoint", () => ({ ConnectPoint: class {} }));
-vi.mock("@/core/stage/stageObject/entity/Section", () => ({ Section: class {} }));
-vi.mock("@/core/stage/stageObject/entity/ImageNode", () => ({ ImageNode: class {} }));
-vi.mock("@/core/stage/stageObject/entity/TextNode", () => ({ TextNode: class {} }));
+vi.mock("@/core/render/canvas2d/entity-renderer/edge/edge-renderer-class", () => ({ EdgeRendererClass: class {} }));
+vi.mock("@/core/render/svg/svg-utils", () => ({ SvgUtils: {} }));
+vi.mock("@/core/stage/stage-object/association/edge", () => ({ Edge: class {} }));
+vi.mock("@/core/stage/stage-object/entity/connect-point", () => ({ ConnectPoint: class {} }));
+vi.mock("@/core/stage/stage-object/entity/section", () => ({ Section: class {} }));
+vi.mock("@/core/stage/stage-object/entity/image-node", () => ({ ImageNode: class {} }));
+vi.mock("@/core/stage/stage-object/entity/text-node", () => ({ TextNode: class {} }));
 
-import { SymmetryCurveEdgeRenderer } from "./SymmetryCurveEdgeRenderer";
+import { SymmetryCurveEdgeRenderer } from "./symmetry-curve-edge-renderer";
 
 describe("curve hover highlight", () => {
   it.each(

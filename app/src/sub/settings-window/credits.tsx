@@ -1,8 +1,8 @@
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { fetchDonations, type DonationData } from "@/core/service/Donations";
-import { Telemetry } from "@/core/service/Telemetry";
+import { fetchDonations, type DonationData } from "@/core/service/donations";
+import { Telemetry } from "@/core/service/telemetry";
 import { isDevAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { open } from "@/platform/shell";

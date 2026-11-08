@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { Vector } from "@graphif/data-structures";
 
-vi.mock("@/core/service/Settings", () => ({
+vi.mock("@/core/service/settings", () => ({
   Settings: {
     enableWindowsTouchPad: true,
     moveAmplitude: 2,
@@ -10,19 +10,19 @@ vi.mock("@/core/service/Settings", () => ({
     scaleCameraByMouseLocation: true,
   },
 }));
-vi.mock("@/core/Project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
-vi.mock("@/core/service/feedbackService/SoundService", () => ({ SoundService: {} }));
-vi.mock("@/core/stage/stageObject/abstract/StageEntity", () => ({ Entity: class {} }));
-vi.mock("@/core/service/feedbackService/effectEngine/concrete/MouseTipFeedbackEffect", () => ({
+vi.mock("@/core/project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
+vi.mock("@/core/service/feedback-service/sound-service", () => ({ SoundService: {} }));
+vi.mock("@/core/stage/stage-object/abstract/stage-entity", () => ({ Entity: class {} }));
+vi.mock("@/core/service/feedback-service/effect-engine/concrete/mouse-tip-feedback-effect", () => ({
   MouseTipFeedbackEffect: {},
 }));
-vi.mock("@/utils/externalOpen", () => ({ openBrowserOrFileByEntity: vi.fn() }));
+vi.mock("@/utils/external-open", () => ({ openBrowserOrFileByEntity: vi.fn() }));
 vi.mock("@/utils/platform", () => ({ isMac: false }));
 vi.stubGlobal("WheelEvent", { DOM_DELTA_PIXEL: 0 });
 
-import { ControllerCameraClass } from "./ControllerCamera";
-import type { Project } from "@/core/Project";
-import { Camera } from "@/core/stage/Camera";
+import { ControllerCameraClass } from "./controller-camera";
+import type { Project } from "@/core/project";
+import { Camera } from "@/core/stage/camera";
 
 function setup() {
   const project = {

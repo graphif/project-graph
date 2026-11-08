@@ -1,5 +1,5 @@
-import type { Project } from "@/core/Project";
-import type { AIObjectReferenceErrorCode, AIObjectReferenceRegistry } from "./AIObjectReferenceRegistry";
+import type { Project } from "@/core/project";
+import type { AIObjectReferenceErrorCode, AIObjectReferenceRegistry } from "./ai-object-reference-registry";
 import z from "zod/v4";
 
 export type BuiltInToolExecutionContext = {
@@ -134,7 +134,7 @@ function defineTool(source: DefinitionSource): BuiltInToolDefinition {
     ...source,
     output,
     loadExecutor: async () => {
-      const { loadBuiltInToolExecutor } = await import("./BuiltInToolExecutors");
+      const { loadBuiltInToolExecutor } = await import("./built-in-tool-executors");
       return loadBuiltInToolExecutor(source.name);
     },
   };

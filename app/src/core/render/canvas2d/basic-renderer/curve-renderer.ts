@@ -1,5 +1,5 @@
-import { Project, service } from "@/core/Project";
-import { PenStrokeSegment } from "@/core/stage/stageObject/entity/PenStroke";
+import { Project, service } from "@/core/project";
+import { PenStrokeSegment } from "@/core/stage/stage-object/entity/pen-stroke";
 import { Color, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, SymmetryCurve } from "@graphif/shapes";
 

@@ -3,9 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 // 渲染器会连带加载设置与宿主存储，特效注册表本身不需要它。
 vi.mock("@/core/render/canvas2d/renderer", () => ({ Renderer: { NODE_ROUNDED_RADIUS: 16 } }));
 
-import { registeredEffectClasses, registeredEffectIds } from "./effectRegistry";
+import { registeredEffectClasses, registeredEffectIds } from "./effect-registry";
 
-const concreteModules = import.meta.glob<Record<string, unknown>>("./concrete/*.tsx", { eager: true });
+const concreteModules = import.meta.glob<Record<string, unknown>>(["./concrete/*.ts", "!./concrete/*.test.ts"], {
+  eager: true,
+});
 
 describe("特效注册表", () => {
   it("每个特效都声明了非空且唯一的稳定标识", () => {

@@ -1,12 +1,13 @@
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { NodeMoveShadowEffect } from "@/core/service/feedbackService/effectEngine/concrete/NodeMoveShadowEffect";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { NodeMoveShadowEffect } from "@/core/service/feedback-service/effect-engine/concrete/node-move-shadow-effect";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { getTextSize } from "@/utils/font";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
+import type { Value } from "platejs";
 
 /**
  * 网页链接节点
@@ -101,7 +102,7 @@ export class UrlNode extends ConnectableEntity {
     {
       uuid = crypto.randomUUID() as string,
       title = "",
-      details = [],
+      details = [] as Value,
       url = "",
       collisionBox = new CollisionBox([new Rectangle(Vector.getZero(), new Vector(UrlNode.width, UrlNode.height))]),
       color = Color.Transparent,

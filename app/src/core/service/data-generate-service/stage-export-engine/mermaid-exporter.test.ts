@@ -1,31 +1,31 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Project } from "@/core/Project";
-import type { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import type { Project } from "@/core/project";
+import type { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
 import type { Value } from "platejs";
 
-vi.mock("@/core/Project", () => ({ Project: class {}, service: () => (target: unknown) => target }));
-vi.mock("@/core/service/Settings", () => ({ Settings: { exportMermaidIncludeNodeDetails: false } }));
-vi.mock("@/core/stage/stageObject/entity/TextNode", () => ({ TextNode: class {} }));
-vi.mock("@/core/stage/stageObject/entity/Section", () => ({ Section: class {} }));
-vi.mock("@/core/stage/stageObject/association/LineEdge", () => ({ LineEdge: class {} }));
-vi.mock("../../dataManageService/copyEngine/copyEngineUtils", () => ({
+vi.mock("@/core/project", () => ({ Project: class {}, service: () => (target: unknown) => target }));
+vi.mock("@/core/service/settings", () => ({ Settings: { exportMermaidIncludeNodeDetails: false } }));
+vi.mock("@/core/stage/stage-object/entity/text-node", () => ({ TextNode: class {} }));
+vi.mock("@/core/stage/stage-object/entity/section", () => ({ Section: class {} }));
+vi.mock("@/core/stage/stage-object/association/line-edge", () => ({ LineEdge: class {} }));
+vi.mock("../../data-manage-service/copy-engine/copy-engine-utils", () => ({
   CopyEngineUtils: { getAllStageObjectFromEntities: vi.fn() },
 }));
-vi.mock("@/core/stage/stageObject/tools/entityDetailsManager", () => ({
+vi.mock("@/core/stage/stage-object/tools/entity-details-manager", () => ({
   DetailsManager: { detailsToMarkdown: vi.fn() },
 }));
-vi.mock("./PlainTextExporter", () => ({ PlainTextExporter: class {} }));
-vi.mock("./MarkdownExporter", () => ({ MarkdownExporter: class {} }));
-vi.mock("./TabExporter", () => ({ TabExporter: class {} }));
+vi.mock("./plain-text-exporter", () => ({ PlainTextExporter: class {} }));
+vi.mock("./markdown-exporter", () => ({ MarkdownExporter: class {} }));
+vi.mock("./tab-exporter", () => ({ TabExporter: class {} }));
 
-import { Settings } from "@/core/service/Settings";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
-import { CopyEngineUtils } from "../../dataManageService/copyEngine/copyEngineUtils";
-import { MermaidExporter } from "./MermaidExporter";
-import { StageExport } from "./stageExportEngine";
+import { Settings } from "@/core/service/settings";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
+import { DetailsManager } from "@/core/stage/stage-object/tools/entity-details-manager";
+import { CopyEngineUtils } from "../../data-manage-service/copy-engine/copy-engine-utils";
+import { MermaidExporter } from "./mermaid-exporter";
+import { StageExport } from "./stage-export-engine";
 
 const transparent = { a: 0, toHexStringWithoutAlpha: () => "#000000" };
 const details: Value = [

@@ -2,12 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 
 const executorModule = vi.hoisted(() => ({ loaded: false }));
 
-vi.mock("./BuiltInToolExecutors", () => {
+vi.mock("./built-in-tool-executors", () => {
   executorModule.loaded = true;
   return { loadBuiltInToolExecutor: () => undefined };
 });
 
-import { builtInToolCatalog, classifyBuiltInToolProjectContext } from "./BuiltInToolRegistry";
+import { builtInToolCatalog, classifyBuiltInToolProjectContext } from "./built-in-tool-registry";
 
 const expectedToolNames = [
   "get_all_nodes",

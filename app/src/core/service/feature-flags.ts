@@ -1,4 +1,4 @@
-import { authClient } from "./AuthClient";
+import { authClient } from "./auth-client";
 
 // 账户使用官方默认服务；其他云功能仍由显式配置启用。
 const hasApiBaseUrl = (import.meta.env.LR_API_BASE_URL ?? "").trim() !== "";

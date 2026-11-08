@@ -1,4 +1,4 @@
-import type { ClientToServerMessage, ServerToClientMessage } from "./CollabProtocol";
+import type { ClientToServerMessage, ServerToClientMessage } from "./collab-protocol";
 
 export type CollabTransportHandlers = {
   onMessage: (msg: ServerToClientMessage) => void;

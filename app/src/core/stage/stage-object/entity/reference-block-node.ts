@@ -1,16 +1,17 @@
-import { Project } from "@/core/Project";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
-import { GenerateScreenshot } from "@/core/service/dataGenerateService/generateScreenshot";
-import { onOpenFile } from "@/core/service/GlobalMenu";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { ResizeAble } from "@/core/stage/stageObject/abstract/StageObjectInterface";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { PathString } from "@/utils/pathString";
+import { Project } from "@/core/project";
+import { RecentFileManager } from "@/core/service/data-file-service/recent-file-manager";
+import { GenerateScreenshot } from "@/core/service/data-generate-service/generate-screenshot";
+import { onOpenFile } from "@/core/service/global-menu";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { ResizeAble } from "@/core/stage/stage-object/abstract/stage-object-interface";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { PathString } from "@/utils/path-string";
 import { Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
-import { Section } from "./Section";
-import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
+import { Section } from "./section";
+import { RectangleLittleNoteEffect } from "@/core/service/feedback-service/effect-engine/concrete/rectangle-little-note-effect";
+import type { Value } from "platejs";
 
 /**
  * 引用块节点
@@ -60,9 +61,10 @@ export class ReferenceBlockNode extends ConnectableEntity implements ResizeAble 
       sectionName = "",
       scale = 1,
       attachmentId = "",
-      details = [],
+      details = [] as Value,
     },
     public unknown = false,
+    { deferResources = false }: { deferResources?: boolean } = {},
   ) {
     super();
     this.uuid = uuid;
@@ -73,8 +75,12 @@ export class ReferenceBlockNode extends ConnectableEntity implements ResizeAble 
     this.attachmentId = attachmentId;
     this.details = details;
 
+    if (!deferResources) this.initializeResources();
+  }
+
+  initializeResources(): void {
     // 如果已经有attachmentId，直接加载图片
-    if (attachmentId) {
+    if (this.attachmentId) {
       this.loadImageFromAttachment();
     } else {
       // 否则生成截图

@@ -1,6 +1,6 @@
-import { Project, service } from "@/core/Project";
-import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { Settings } from "@/core/service/Settings";
+import { Project, service } from "@/core/project";
+import { MouseLocation } from "@/core/service/control-service/mouse-location";
+import { Settings } from "@/core/service/settings";
 import { isMac } from "@/utils/platform";
 import { Color, Vector } from "@graphif/data-structures";
 

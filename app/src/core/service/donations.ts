@@ -1,5 +1,5 @@
 import { fetch } from "@/platform/http";
-import { accountServiceBaseUrl } from "./AuthClient";
+import { accountServiceBaseUrl } from "./auth-client";
 
 export interface DonationData {
   user: string;

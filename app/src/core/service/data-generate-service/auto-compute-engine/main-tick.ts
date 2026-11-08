@@ -1,19 +1,19 @@
-import { Project, service } from "@/core/Project";
-import { CompareFunctions } from "@/core/service/dataGenerateService/autoComputeEngine/functions/compareLogic";
-import { MathFunctions } from "@/core/service/dataGenerateService/autoComputeEngine/functions/mathLogic";
-import { NodeLogic } from "@/core/service/dataGenerateService/autoComputeEngine/functions/nodeLogic";
-import { ProgramFunctions } from "@/core/service/dataGenerateService/autoComputeEngine/functions/programLogic";
-import { StringFunctions } from "@/core/service/dataGenerateService/autoComputeEngine/functions/stringLogic";
+import { Project, service } from "@/core/project";
+import { CompareFunctions } from "@/core/service/data-generate-service/auto-compute-engine/functions/compare-logic";
+import { MathFunctions } from "@/core/service/data-generate-service/auto-compute-engine/functions/math-logic";
+import { NodeLogic } from "@/core/service/data-generate-service/auto-compute-engine/functions/node-logic";
+import { ProgramFunctions } from "@/core/service/data-generate-service/auto-compute-engine/functions/program-logic";
+import { StringFunctions } from "@/core/service/data-generate-service/auto-compute-engine/functions/string-logic";
 import {
   LogicNodeNameEnum,
   LogicNodeSimpleOperatorEnum,
-} from "@/core/service/dataGenerateService/autoComputeEngine/logicNodeNameEnum";
-import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
-import { TextRaiseEffectLocated } from "@/core/service/feedbackService/effectEngine/concrete/TextRaiseEffectLocated";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+} from "@/core/service/data-generate-service/auto-compute-engine/logic-node-name-enum";
+import { RectangleLittleNoteEffect } from "@/core/service/feedback-service/effect-engine/concrete/rectangle-little-note-effect";
+import { TextRaiseEffectLocated } from "@/core/service/feedback-service/effect-engine/concrete/text-raise-effect-located";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 
 type MathFunctionType = (args: number[]) => number[];
 type StringFunctionType = (args: string[]) => string[];

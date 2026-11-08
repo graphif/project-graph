@@ -1,4 +1,4 @@
-import { NumberFunctions } from "@/core/algorithm/numberFunctions";
+import { NumberFunctions } from "@/core/algorithm/number-functions";
 import { Random } from "@/core/algorithm/random";
 import { Decimal } from "decimal.js";
 

@@ -1,7 +1,7 @@
-import { Project, service } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { Section } from "@/core/stage/stageObject/entity/Section";
+import { Project, service } from "@/core/project";
+import { Settings } from "@/core/service/settings";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { Section } from "@/core/stage/stage-object/entity/section";
 import { Vector } from "@graphif/data-structures";
 import { Line, Rectangle } from "@graphif/shapes";
 

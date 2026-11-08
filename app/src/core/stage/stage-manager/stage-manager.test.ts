@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
-vi.mock("@/core/Project", () => ({
+vi.mock("@/core/project", () => ({
   Project: class Project {},
   ProjectState: { Saved: "saved", Unsaved: "unsaved" },
   service: (id: string) => (target: { id?: string }) => {
@@ -13,22 +13,22 @@ vi.mock("@/core/Project", () => ({
 vi.mock("@/core/render/canvas2d/renderer", () => ({
   Renderer: { FONT_SIZE: 24, NODE_PADDING: 10 },
 }));
-vi.mock("@/core/service/Settings", () => ({ Settings: { watch: vi.fn() } }));
-vi.mock("@/core/service/feedbackService/SoundService", () => ({ SoundService: {} }));
+vi.mock("@/core/service/settings", () => ({ Settings: { watch: vi.fn() } }));
+vi.mock("@/core/service/feedback-service/sound-service", () => ({ SoundService: {} }));
 vi.mock("@/utils/font", () => ({
   getMultiLineTextSize: () => new Vector(20, 20),
   getTextSize: () => new Vector(20, 20),
 }));
 vi.mock("sonner", () => ({ toast: vi.fn() }));
 
-import { StageManager } from "./StageManager";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { StageManager } from "./stage-manager";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
+import { PenStroke } from "@/core/stage/stage-object/entity/pen-stroke";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 
 function createStageManager(stage: object[]) {
   return new StageManager({ stage } as never);

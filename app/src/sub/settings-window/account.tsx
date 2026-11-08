@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { accountServiceBaseUrl, authClient } from "@/core/service/AuthClient";
-import { FeatureFlags } from "@/core/service/FeatureFlags";
-import { UserState } from "@/core/service/UserState";
+import { accountServiceBaseUrl, authClient } from "@/core/service/auth-client";
+import { FeatureFlags } from "@/core/service/feature-flags";
+import { UserState } from "@/core/service/user-state";
 import type { AuthUser } from "@/state";
 import { currentUserAtom, store } from "@/state";
-import { getAppVersion, getDeviceId } from "@/utils/otherApi";
+import { getAppVersion, getDeviceId } from "@/utils/other-api";
 import { open } from "@/platform/shell";
 import { useAtom } from "jotai";
 import { ExternalLink, LoaderCircle, LogIn, LogOut, Mail } from "lucide-react";

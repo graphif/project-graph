@@ -1,12 +1,12 @@
-import { Project, service } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
-import { allKeyBinds } from "./shortcutKeysRegister";
+import { Project, service } from "@/core/project";
+import { Settings } from "@/core/service/settings";
+import { allKeyBinds } from "./shortcut-keys-register";
 import { parseEmacsKey, parseSingleEmacsKey } from "@/utils/emacs";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 import { getTextSize } from "@/utils/font";
-import { KeyBindsUI, type UIKeyBind } from "./KeyBindsUI";
-import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
+import { KeyBindsUI, type UIKeyBind } from "./key-binds-ui";
+import { formatKeyBindSequenceToString } from "@/utils/key-display";
 import i18next from "i18next";
 
 // 根据 UI 缩放比例计算缩放后的字号

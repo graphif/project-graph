@@ -1,7 +1,7 @@
 import { Color, Vector } from "@graphif/data-structures";
 
-import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/CubicCatmullRomSplineEdge";
-import { Project } from "@/core/Project";
+import { CubicCatmullRomSplineEdge } from "@/core/stage/stage-object/association/cubic-catmull-rom-spline-edge";
+import { Project } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 
 export function renderCrEdge(

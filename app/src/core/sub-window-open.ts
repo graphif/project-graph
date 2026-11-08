@@ -1,12 +1,12 @@
-import { Settings } from "@/core/service/Settings";
+import { Settings } from "@/core/service/settings";
 import {
   DEFAULT_SUB_WINDOW_OPEN_MODES,
   type SubWindowId,
   type SubWindowOpenMode,
   type SubWindowOpenModes,
-} from "@/core/subWindowOpenModes";
-import { ComponentTab, ComponentTabOptions } from "@/core/Tab";
-import { TabWorkspace } from "@/core/TabWorkspace";
+} from "@/core/sub-window-open-modes";
+import { ComponentTab, ComponentTabOptions } from "@/core/tab";
+import { TabWorkspace } from "@/core/tab-workspace";
 
 export {
   DEFAULT_SUB_WINDOW_OPEN_MODES,
@@ -17,7 +17,7 @@ export {
   type SubWindowId,
   type SubWindowOpenMode,
   type SubWindowOpenModes,
-} from "@/core/subWindowOpenModes";
+} from "@/core/sub-window-open-modes";
 
 export function getSubWindowOpenMode(windowId: SubWindowId): SubWindowOpenMode {
   const modes = Settings.subWindowOpenModes as Partial<SubWindowOpenModes> | undefined;

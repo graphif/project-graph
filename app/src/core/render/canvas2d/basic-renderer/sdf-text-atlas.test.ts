@@ -3,7 +3,7 @@
 import { Vector } from "@graphif/data-structures";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/core/service/Settings", () => ({
+vi.mock("@/core/service/settings", () => ({
   Settings: {
     protectingPrivacy: false,
     textIntegerLocationAndSizeRender: false,
@@ -11,7 +11,7 @@ vi.mock("@/core/service/Settings", () => ({
     customFontWeight: "",
   },
 }));
-vi.mock("@/core/Project", () => ({
+vi.mock("@/core/project", () => ({
   Project: class Project {},
   service: () => (target: unknown) => target,
 }));
@@ -30,8 +30,8 @@ vi.mock("@/utils/font", () => ({
   textToTextArray: (text: string) => text.split("\n"),
 }));
 
-import { SdfTextAtlasRenderer } from "@/core/render/canvas2d/basicRenderer/sdfTextAtlas";
-import { TextRenderer } from "@/core/render/canvas2d/basicRenderer/textRenderer";
+import { SdfTextAtlasRenderer } from "@/core/render/canvas2d/basic-renderer/sdf-text-atlas";
+import { TextRenderer } from "@/core/render/canvas2d/basic-renderer/text-renderer";
 import { Color } from "@graphif/data-structures";
 import ShelfPack from "@mapbox/shelf-pack";
 import TinySDF from "@mapbox/tiny-sdf";

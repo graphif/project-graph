@@ -1,11 +1,12 @@
 import { Random } from "@/core/algorithm/random";
-import { Project } from "@/core/Project";
-import { EffectParticle } from "@/core/service/feedbackService/effectEngine/effectElements/effectParticle";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Project } from "@/core/project";
+import { EffectParticle } from "@/core/service/feedback-service/effect-engine/effect-elements/effect-particle";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 import { mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
 export class EntityDashTipEffect extends Effect {
+  static readonly effectId = "EntityDashTipEffect";
   constructor(
     public time: number,
     public rect: Rectangle,

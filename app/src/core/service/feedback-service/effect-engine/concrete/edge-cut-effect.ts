@@ -1,12 +1,13 @@
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
-import { easeOutQuint } from "@/core/service/feedbackService/effectEngine/mathTools/easings";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
+import { easeOutQuint } from "@/core/service/feedback-service/effect-engine/math-tools/easings";
 
 /**
  * 直线连线被斩断的特效
  */
 export class EdgeCutEffect extends Effect {
+  static readonly effectId = "EdgeCutEffect";
   constructor(
     timeProgress: ProgressNumber,
     delay: number,

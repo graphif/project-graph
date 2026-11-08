@@ -1,5 +1,5 @@
-import { Settings } from "@/core/service/Settings";
-import { DEFAULT_FONT_FAMILY, MAC_DEFAULT_FONT_FAMILY } from "@/core/service/ProjectToolSettingsSchema";
+import { Settings } from "@/core/service/settings";
+import { DEFAULT_FONT_FAMILY, MAC_DEFAULT_FONT_FAMILY } from "@/core/service/project-tool-settings-schema";
 import { MaxSizeCache, Vector } from "@graphif/data-structures";
 import { isMyGo } from "mygo-runtime";
 

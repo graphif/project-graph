@@ -1,10 +1,10 @@
-import { Project, service } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
-import { EntityJumpMoveEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityJumpMoveEffect";
-import { RectanglePushInEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectanglePushInEffect";
-import { SoundService } from "@/core/service/feedbackService/SoundService";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Project, service } from "@/core/project";
+import { Settings } from "@/core/service/settings";
+import { EntityJumpMoveEffect } from "@/core/service/feedback-service/effect-engine/concrete/entity-jump-move-effect";
+import { RectanglePushInEffect } from "@/core/service/feedback-service/effect-engine/concrete/rectangle-push-in-effect";
+import { SoundService } from "@/core/service/feedback-service/sound-service";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
 import { Vector } from "@graphif/data-structures";
 
 /**

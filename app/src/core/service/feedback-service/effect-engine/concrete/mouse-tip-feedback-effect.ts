@@ -1,7 +1,7 @@
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
-import { Project } from "@/core/Project";
-import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Project } from "@/core/project";
+import { MouseLocation } from "@/core/service/control-service/mouse-location";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 
 type MouseTipType =
   | "shrink"
@@ -19,6 +19,7 @@ type MouseTipType =
  * 在鼠标上释放一个小特效，用于提示
  */
 export class MouseTipFeedbackEffect extends Effect {
+  static readonly effectId = "MouseTipFeedbackEffect";
   constructor(
     public override timeProgress: ProgressNumber,
     public type: MouseTipType,

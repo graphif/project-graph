@@ -1,7 +1,7 @@
-import { Project, service } from "@/core/Project";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { Project, service } from "@/core/project";
+import { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 
 /**
  * 舞台管理器相关的工具函数

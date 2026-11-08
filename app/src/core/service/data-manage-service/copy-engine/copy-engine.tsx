@@ -1,16 +1,15 @@
-import { Project, service } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
+import { Project, service } from "@/core/project";
+import { Settings } from "@/core/service/settings";
 import { isLinux, isMac, isWindows } from "@/utils/platform";
-import { ConnectableAssociation } from "@/core/stage/stageObject/abstract/Association";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
-import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { ConnectableAssociation } from "@/core/stage/stage-object/abstract/association";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
+import { Edge } from "@/core/stage/stage-object/association/edge";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stage-object/association/muti-target-undirected-edge";
+import { ImageNode } from "@/core/stage/stage-object/entity/image-node";
+import { MediaNode } from "@/core/stage/stage-object/entity/media-node";
+import { SvgNode } from "@/core/stage/stage-object/entity/svg-node";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { Serialized } from "@/types/node";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
@@ -18,12 +17,12 @@ import { Rectangle } from "@graphif/shapes";
 import { readText, writeImage, writeText } from "@/platform/clipboard";
 import { toast } from "sonner";
 import { v4 } from "uuid";
-import { RectangleNoteEffect } from "../../feedbackService/effectEngine/concrete/RectangleNoteEffect";
-import { RectangleNoteReversedEffect } from "../../feedbackService/effectEngine/concrete/RectangleNoteReversedEffect";
-import { VirtualClipboard } from "./VirtualClipboard";
-import { CopyEngineImage } from "./copyEngineImage";
-import { CopyEngineText } from "./copyEngineText";
-import { CopyEngineUtils } from "./copyEngineUtils";
+import { RectangleNoteEffect } from "../../feedback-service/effect-engine/concrete/rectangle-note-effect";
+import { RectangleNoteReversedEffect } from "../../feedback-service/effect-engine/concrete/rectangle-note-reversed-effect";
+import { VirtualClipboard } from "./virtual-clipboard";
+import { CopyEngineImage } from "./copy-engine-image";
+import { CopyEngineText } from "./copy-engine-text";
+import { CopyEngineUtils } from "./copy-engine-utils";
 
 /**
  * 专门用来管理节点复制的引擎
@@ -165,22 +164,7 @@ export class CopyEngine {
           if (oldAttachmentId && attachmentIdMap.has(oldAttachmentId)) {
             const newAttachmentId = attachmentIdMap.get(oldAttachmentId)!;
             stageObject.attachmentId = newAttachmentId;
-            // 重新加载 SVG 附件
-            const blob = this.project.attachments.get(newAttachmentId);
-            if (blob) {
-              const url = URL.createObjectURL(blob);
-              stageObject.image = new Image();
-              stageObject.image.src = url;
-              stageObject.image.onload = () => {
-                stageObject.originalSize = new Vector(stageObject.image.naturalWidth, stageObject.image.naturalHeight);
-                stageObject.collisionBox = new CollisionBox([
-                  new Rectangle(
-                    stageObject.collisionBox.getRectangle().location,
-                    stageObject.originalSize.multiply(stageObject.scale),
-                  ),
-                ]);
-              };
-            }
+            stageObject.initializeResources();
           }
         } else if (stageObject instanceof MediaNode) {
           const oldAttachmentId = stageObject.attachmentId;

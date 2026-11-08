@@ -1,7 +1,7 @@
-import { Project } from "@/core/Project";
-import { Association } from "@/core/stage/stageObject/abstract/Association";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Project } from "@/core/project";
+import { Association } from "@/core/stage/stage-object/abstract/association";
+import { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Color } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";

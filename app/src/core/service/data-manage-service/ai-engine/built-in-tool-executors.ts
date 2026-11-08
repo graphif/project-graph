@@ -1,18 +1,18 @@
-import type { Project } from "@/core/Project";
-import type { AIObjectReferenceRegistry } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import type { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import type { Project } from "@/core/project";
+import type { AIObjectReferenceRegistry } from "@/core/service/data-manage-service/ai-engine/ai-object-reference-registry";
+import { Edge } from "@/core/stage/stage-object/association/edge";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import type { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { ImageNode } from "@/core/stage/stage-object/entity/image-node";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import type { BuiltInToolExecutor } from "./BuiltInToolRegistry";
-import { findFirstImageInChildren } from "./imageNodeFinder";
-import type { ImageOrientation, OpenverseImageCandidate } from "./OpenverseImageSearch";
+import type { BuiltInToolExecutor } from "./built-in-tool-registry";
+import { findFirstImageInChildren } from "./image-node-finder";
+import type { ImageOrientation, OpenverseImageCandidate } from "./openverse-image-search";
 import { appCacheDir, join } from "@/platform/path";
 import { mkdir, writeFile } from "@/platform/files";
 
@@ -776,10 +776,10 @@ addExecutor(
   () =>
     async (project, { query, preferredOrientation, maxDisplaySize }, references, { abortSignal }) => {
       const [imageUtils, imageNodeFactory, entityDetailsManager, openverseImageSearch] = await Promise.all([
-        import("@/core/service/dataManageService/imageUtils"),
-        import("@/core/service/dataManageService/imageNodeFactory"),
-        import("@/core/stage/stageObject/tools/entityDetailsManager"),
-        import("./OpenverseImageSearch"),
+        import("@/core/service/data-manage-service/image-utils"),
+        import("@/core/service/data-manage-service/image-node-factory"),
+        import("@/core/stage/stage-object/tools/entity-details-manager"),
+        import("./openverse-image-search"),
       ]);
       const { prepareImageBlobForImport } = imageUtils;
       const { calculateImageDisplaySize, createImageNodeFromBlob } = imageNodeFactory;

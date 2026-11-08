@@ -1,6 +1,6 @@
-import { Project } from "@/core/Project";
-import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { createSubWindow } from "@/core/subWindowOpen";
+import { Project } from "@/core/project";
+import { MouseLocation } from "@/core/service/control-service/mouse-location";
+import { createSubWindow } from "@/core/sub-window-open";
 import { activeResourceTabAtom } from "@/state";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";

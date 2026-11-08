@@ -1,5 +1,5 @@
-import type { AIObjectReferenceErrorCode } from "./AIObjectReferenceRegistry";
-import { classifyBuiltInToolException } from "./BuiltInToolRegistry";
+import type { AIObjectReferenceErrorCode } from "./ai-object-reference-registry";
+import { classifyBuiltInToolException } from "./built-in-tool-registry";
 
 const messages: Record<AIObjectReferenceErrorCode, string> = {
   invalid_ref_format: "Project Object Reference format is invalid.",

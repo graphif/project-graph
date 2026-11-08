@@ -1,5 +1,5 @@
-import { Project } from "@/core/Project";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { Project } from "@/core/project";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { Color } from "@graphif/data-structures";
 
 export namespace ColorSmartTools {

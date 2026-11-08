@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Project } from "@/core/Project";
-import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { PenStrokeDeletedEffect } from "@/core/service/feedbackService/effectEngine/concrete/PenStrokeDeletedEffect";
-import { SoundService } from "@/core/service/feedbackService/SoundService";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
-import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { Project } from "@/core/project";
+import { MouseLocation } from "@/core/service/control-service/mouse-location";
+import { PenStrokeDeletedEffect } from "@/core/service/feedback-service/effect-engine/concrete/pen-stroke-deleted-effect";
+import { SoundService } from "@/core/service/feedback-service/sound-service";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { ConnectPoint } from "@/core/stage/stage-object/entity/connect-point";
+import { PenStroke } from "@/core/stage/stage-object/entity/pen-stroke";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 

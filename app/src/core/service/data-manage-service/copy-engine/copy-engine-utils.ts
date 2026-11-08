@@ -1,14 +1,14 @@
-import { SetFunctions } from "@/core/algorithm/setFunctions";
-import { Project } from "@/core/Project";
-import { ConnectableAssociation } from "@/core/stage/stageObject/abstract/Association";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
+import { SetFunctions } from "@/core/algorithm/set-functions";
+import { Project } from "@/core/project";
+import { ConnectableAssociation } from "@/core/stage/stage-object/abstract/association";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
+import { Edge } from "@/core/stage/stage-object/association/edge";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stage-object/association/muti-target-undirected-edge";
+import { ImageNode } from "@/core/stage/stage-object/entity/image-node";
+import { MediaNode } from "@/core/stage/stage-object/entity/media-node";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { SvgNode } from "@/core/stage/stage-object/entity/svg-node";
 
 /**
  *

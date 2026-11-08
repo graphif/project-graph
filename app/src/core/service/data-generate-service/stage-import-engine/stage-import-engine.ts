@@ -1,9 +1,9 @@
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { Vector } from "@graphif/data-structures";
-import { GraphImporter } from "./GraphImporter";
-import { TreeImporter } from "./TreeImporter";
-import { MermaidImporter } from "./MermaidImporter";
-import { MarkdownImporter } from "./MarkdownImporter";
+import { GraphImporter } from "./graph-importer";
+import { TreeImporter } from "./tree-importer";
+import { MermaidImporter } from "./mermaid-importer";
+import { MarkdownImporter } from "./markdown-importer";
 
 /**
  * 专注于从各种格式导入并生成节点的引擎

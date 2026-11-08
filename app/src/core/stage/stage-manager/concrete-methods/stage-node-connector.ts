@@ -1,10 +1,10 @@
-import { Project, service } from "@/core/Project";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { ArcEdge } from "@/core/stage/stageObject/association/ArcEdge";
-import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/CubicCatmullRomSplineEdge";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
-import { Settings } from "@/core/service/Settings";
+import { Project, service } from "@/core/project";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { ArcEdge } from "@/core/stage/stage-object/association/arc-edge";
+import { CubicCatmullRomSplineEdge } from "@/core/stage/stage-object/association/cubic-catmull-rom-spline-edge";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
+import { ConnectPoint } from "@/core/stage/stage-object/entity/connect-point";
+import { Settings } from "@/core/service/settings";
 import { Vector } from "@graphif/data-structures";
 
 /**

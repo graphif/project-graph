@@ -1,8 +1,8 @@
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
-import { Project, service } from "@/core/Project";
-import { LineEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineEffect";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Settings } from "@/core/service/Settings";
+import { Project, service } from "@/core/project";
+import { LineEffect } from "@/core/service/feedback-service/effect-engine/concrete/line-effect";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { Settings } from "@/core/service/settings";
 
 /**
  * 所有和旋转相关的操作

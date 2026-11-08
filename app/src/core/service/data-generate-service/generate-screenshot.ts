@@ -1,9 +1,9 @@
-import { loadAllServicesBeforeInit } from "@/core/loadAllServices";
-import { Project } from "@/core/Project";
-import { PathString } from "@/utils/pathString";
-import { RecentFileManager } from "../dataFileService/RecentFileManager";
-import { ReferenceFileScanner } from "../dataFileService/ReferenceFileScanner";
-import { Section } from "@/core/stage/stageObject/entity/Section";
+import { loadAllServicesBeforeInit } from "@/core/load-all-services";
+import { Project } from "@/core/project";
+import { PathString } from "@/utils/path-string";
+import { RecentFileManager } from "../data-file-service/recent-file-manager";
+import { ReferenceFileScanner } from "../data-file-service/reference-file-scanner";
+import { Section } from "@/core/stage/stage-object/entity/section";
 import { URI } from "vscode-uri";
 import { sleep } from "@/utils/sleep";
 import { Rectangle } from "@graphif/shapes";

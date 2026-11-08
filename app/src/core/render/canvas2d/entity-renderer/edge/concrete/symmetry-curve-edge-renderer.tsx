@@ -1,21 +1,21 @@
-import { ConnectionPulseEffect } from "@/core/service/feedbackService/effectEngine/concrete/ConnectionPulseEffect";
-import { CircleFlameEffect } from "@/core/service/feedbackService/effectEngine/concrete/CircleFlameEffect";
-import { LineCuttingEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineCuttingEffect";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
+import { ConnectionPulseEffect } from "@/core/service/feedback-service/effect-engine/concrete/connection-pulse-effect";
+import { CircleFlameEffect } from "@/core/service/feedback-service/effect-engine/concrete/circle-flame-effect";
+import { LineCuttingEffect } from "@/core/service/feedback-service/effect-engine/concrete/line-cutting-effect";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
+import { Edge } from "@/core/stage/stage-object/association/edge";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Line, SymmetryCurve } from "@graphif/shapes";
-// import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
-import { Project, service } from "@/core/Project";
-import { EdgeRendererClass } from "@/core/render/canvas2d/entityRenderer/edge/EdgeRendererClass";
-import { SvgUtils } from "@/core/render/svg/SvgUtils";
-import { Settings } from "@/core/service/Settings";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+// import { ConnectPoint } from "@/core/stage/stage-object/entity/connect-point";
+import { Project, service } from "@/core/project";
+import { EdgeRendererClass } from "@/core/render/canvas2d/entity-renderer/edge/edge-renderer-class";
+import { SvgUtils } from "@/core/render/svg/svg-utils";
+import { Settings } from "@/core/service/settings";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { ConnectPoint } from "@/core/stage/stage-object/entity/connect-point";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { ImageNode } from "@/core/stage/stage-object/entity/image-node";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 
 /**
  * 贝塞尔曲线

@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { Button } from "./components/ui/button";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "./components/ui/card";
 import { Popover } from "./components/ui/popover";
-import { Project } from "./core/Project";
+import { Project } from "./core/project";
 import { store, tabsAtom } from "./state";
 
 export default function Fallback({ error, resetErrorBoundary }: FallbackProps) {

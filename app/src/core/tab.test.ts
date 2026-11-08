@@ -3,12 +3,12 @@
 import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./service/Settings", () => ({ Settings: { maxFps: 60, maxFpsUnfocused: 60 } }));
-vi.mock("./service/Telemetry", () => ({ Telemetry: { event: vi.fn() } }));
+vi.mock("./service/settings", () => ({ Settings: { maxFps: 60, maxFpsUnfocused: 60 } }));
+vi.mock("./service/telemetry", () => ({ Telemetry: { event: vi.fn() } }));
 vi.mock("@/components/ui/dialog", () => ({ Dialog: { buttons: vi.fn() } }));
 
-import { Tab } from "./Tab";
-import { Settings } from "./service/Settings";
+import { Tab } from "./tab";
+import { Settings } from "./service/settings";
 
 afterEach(() => {
   vi.restoreAllMocks();

@@ -1,7 +1,7 @@
 import { encode } from "@msgpack/msgpack";
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
 import { describe, expect, it } from "vitest";
-import { compareProjectVersions, parseProjectFile } from "./ProjectFile";
+import { compareProjectVersions, parseProjectFile } from "./project-file";
 import { PROJECT_ARCHIVE_LIMITS } from "./persistence/project-archive";
 
 async function archive(entries: [string, Uint8Array][], level: 0 | 6 = 0): Promise<Uint8Array> {

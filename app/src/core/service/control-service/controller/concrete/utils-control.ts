@@ -1,20 +1,20 @@
-import { Project, service } from "@/core/Project";
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { Project, service } from "@/core/project";
+import { TabWorkspace } from "@/core/tab-workspace";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { Settings } from "@/core/service/Settings";
-import { EntityCreateFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityCreateFlashEffect";
-import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
-import type { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import type { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import type { Edge } from "@/core/stage/stageObject/association/Edge";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
-import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { Settings } from "@/core/service/settings";
+import { EntityCreateFlashEffect } from "@/core/service/feedback-service/effect-engine/concrete/entity-create-flash-effect";
+import { RectangleLittleNoteEffect } from "@/core/service/feedback-service/effect-engine/concrete/rectangle-little-note-effect";
+import type { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import type { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
+import type { Edge } from "@/core/stage/stage-object/association/edge";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stage-object/association/muti-target-undirected-edge";
+import { ImageNode } from "@/core/stage/stage-object/entity/image-node";
+import { MediaNode } from "@/core/stage/stage-object/entity/media-node";
+import { ReferenceBlockNode } from "@/core/stage/stage-object/entity/reference-block-node";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { SvgNode } from "@/core/stage/stage-object/entity/svg-node";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import type { Direction } from "@/types/directions";
 import { colorInvert, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -24,7 +24,7 @@ import {
   autoChangeTextNodeToReferenceBlock,
   AutoCompleteManager,
   LatexPreviewManager,
-} from "./utilsControlTools";
+} from "./utils-control-tools";
 
 /**
  * 这里是专门存放代码相同的地方
@@ -248,7 +248,7 @@ export class ControllerUtils {
   async editNodeDetails(clickedNode: Entity) {
     // this.project.controller.isCameraLocked = true;
     // 编辑节点详细信息的视野移动锁定解除，——用户：快深频
-    const { default: NodeDetailsWindow } = await import("@/sub/NodeDetailsWindow");
+    const { default: NodeDetailsWindow } = await import("@/sub/node-details-window");
     if (!this.project.stage.includes(clickedNode)) return;
     NodeDetailsWindow.open(clickedNode.details, (value) => {
       clickedNode.details = value;

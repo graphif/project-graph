@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createSubWindow } from "@/core/subWindowOpen";
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { createSubWindow } from "@/core/sub-window-open";
+import { TabWorkspace } from "@/core/tab-workspace";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useState } from "react";

@@ -1,4 +1,4 @@
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { superellipseRect } from "@/utils/superellipse";
 import { Vector } from "@graphif/data-structures";
 

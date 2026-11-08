@@ -12,9 +12,9 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { Extension } from "@/core/extension/Extension";
-import { Settings } from "@/core/service/Settings";
-import { Themes } from "@/core/service/Themes";
+import { Extension } from "@/core/extension/extension";
+import { Settings } from "@/core/service/settings";
+import { Themes } from "@/core/service/themes";
 import { Blocks, ChevronRight, Moon, Palette, Sun } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 

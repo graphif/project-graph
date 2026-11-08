@@ -1,9 +1,9 @@
-import { Project, service } from "@/core/Project";
-import { ProgramFunctions } from "@/core/service/dataGenerateService/autoComputeEngine/functions/programLogic";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { Project, service } from "@/core/project";
+import { ProgramFunctions } from "@/core/service/data-generate-service/auto-compute-engine/functions/program-logic";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { v4 as uuidv4 } from "uuid";

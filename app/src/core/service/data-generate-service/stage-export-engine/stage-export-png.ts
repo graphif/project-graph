@@ -1,4 +1,4 @@
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { sleep } from "@/utils/sleep";
 import { Vector } from "@graphif/data-structures";
 import EventEmitter from "events";

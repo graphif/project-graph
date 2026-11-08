@@ -1,6 +1,6 @@
-import { Settings } from "@/core/service/Settings";
+import { Settings } from "@/core/service/settings";
 import { Vector } from "@graphif/data-structures";
-import { ControllerClass } from "../ControllerClass";
+import { ControllerClass } from "../controller-class";
 
 export class ControllerContextMenuClass extends ControllerClass {
   /** view */

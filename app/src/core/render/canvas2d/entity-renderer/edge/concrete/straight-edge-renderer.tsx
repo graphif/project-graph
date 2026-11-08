@@ -1,17 +1,17 @@
 import { Color, Vector } from "@graphif/data-structures";
 import { Line } from "@graphif/shapes";
-import { Project, service } from "@/core/Project";
-import { ConnectionPulseEffect } from "@/core/service/feedbackService/effectEngine/concrete/ConnectionPulseEffect";
-import { EdgeCutEffect } from "@/core/service/feedbackService/effectEngine/concrete/EdgeCutEffect";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
-import { Settings } from "@/core/service/Settings";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { SvgUtils } from "@/core/render/svg/SvgUtils";
-import { EdgeRendererClass } from "@/core/render/canvas2d/entityRenderer/edge/EdgeRendererClass";
+import { Project, service } from "@/core/project";
+import { ConnectionPulseEffect } from "@/core/service/feedback-service/effect-engine/concrete/connection-pulse-effect";
+import { EdgeCutEffect } from "@/core/service/feedback-service/effect-engine/concrete/edge-cut-effect";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
+import { Settings } from "@/core/service/settings";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
+import { Edge } from "@/core/stage/stage-object/association/edge";
+import { ConnectPoint } from "@/core/stage/stage-object/entity/connect-point";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { SvgUtils } from "@/core/render/svg/svg-utils";
+import { EdgeRendererClass } from "@/core/render/canvas2d/entity-renderer/edge/edge-renderer-class";
 
 /**
  * 直线渲染器

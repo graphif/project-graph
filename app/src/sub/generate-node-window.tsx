@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Project } from "@/core/Project";
-import { Telemetry } from "@/core/service/Telemetry";
-import { createSubWindow } from "@/core/subWindowOpen";
+import { Project } from "@/core/project";
+import { Telemetry } from "@/core/service/telemetry";
+import { createSubWindow } from "@/core/sub-window-open";
 import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";

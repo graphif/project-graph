@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Project } from "@/core/Project";
-import { TextFileImporter } from "@/core/service/dataGenerateService/TextFileImporter";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { createSubWindow } from "@/core/subWindowOpen";
+import { Project } from "@/core/project";
+import { TextFileImporter } from "@/core/service/data-generate-service/text-file-importer";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { createSubWindow } from "@/core/sub-window-open";
 import { activeResourceTabAtom } from "@/state";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";

@@ -1,4 +1,4 @@
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 import { ProgressNumber } from "@graphif/data-structures";
 
 /**
@@ -6,6 +6,12 @@ import { ProgressNumber } from "@graphif/data-structures";
  * timeProgress 0~max 表示时间进度，0表示开始，单位：帧
  */
 export abstract class Effect {
+  static readonly effectId: string = "Effect";
+
+  get effectId(): string {
+    return (this.constructor as typeof Effect).effectId;
+  }
+
   constructor(
     /**
      * 注意这个进度条初始值应该是0

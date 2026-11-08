@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { codeHighlighter, ensureCodeLanguage } from "./codeHighlight";
+import { codeHighlighter, ensureCodeLanguage } from "./code-highlight";
 
 describe("on-demand syntax highlighting", () => {
   it("keeps common languages ready and loads uncommon languages on demand", async () => {

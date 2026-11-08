@@ -1,11 +1,11 @@
 import { Vector } from "@graphif/data-structures";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
-import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
-import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { ControllerClass } from "@/core/service/control-service/controller/controller-class";
+import { ImageNode } from "@/core/stage/stage-object/entity/image-node";
+import { MediaNode } from "@/core/stage/stage-object/entity/media-node";
+import { SvgNode } from "@/core/stage/stage-object/entity/svg-node";
+import { ReferenceBlockNode } from "@/core/stage/stage-object/entity/reference-block-node";
 
 export class ControllerEntityResizeClass extends ControllerClass {
   private changeSizeEntity: Entity | null = null;

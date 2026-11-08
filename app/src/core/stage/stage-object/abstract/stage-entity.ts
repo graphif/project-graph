@@ -1,11 +1,11 @@
-import { Settings } from "@/core/service/Settings";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import type { Section } from "@/core/stage/stageObject/entity/Section";
+import { Settings } from "@/core/service/settings";
+import { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
+import type { Section } from "@/core/stage/stage-object/entity/section";
 import { Vector } from "@graphif/data-structures";
 import { serializable } from "@graphif/serializer";
 import { Circle, Rectangle } from "@graphif/shapes";
 import type { Value } from "platejs";
-import { DetailsManager } from "../tools/entityDetailsManager";
+import { DetailsManager } from "../tools/entity-details-manager";
 /**
  * 一切独立存在、能被移动的东西，且放在框里能被连带移动的东西
  * 实体

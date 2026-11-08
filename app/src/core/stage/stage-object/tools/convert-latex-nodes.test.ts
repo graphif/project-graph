@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import type { Project } from "@/core/Project";
+import type { Project } from "@/core/project";
 
-vi.mock("../abstract/Association", () => ({ Association: class {} }));
-vi.mock("../entity/Section", () => ({ Section: class {} }));
-vi.mock("../entity/TextNode", () => ({ TextNode: class {} }));
-vi.mock("../entity/LatexNode", () => ({
+vi.mock("../abstract/association", () => ({ Association: class {} }));
+vi.mock("../entity/section", () => ({ Section: class {} }));
+vi.mock("../entity/text-node", () => ({ TextNode: class {} }));
+vi.mock("../entity/latex-node", () => ({
   LatexNode: class {
     constructor(_project: unknown, options: object) {
       Object.assign(this, options);
@@ -15,12 +15,12 @@ vi.mock("../entity/LatexNode", () => ({
 }));
 vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
 
-import { Association } from "../abstract/Association";
-import { CollisionBox } from "../collisionBox/collisionBox";
-import { Section } from "../entity/Section";
-import { TextNode } from "../entity/TextNode";
-import { LatexNode } from "../entity/LatexNode";
-import { convertLatexNodes } from "./convertLatexNodes";
+import { Association } from "../abstract/association";
+import { CollisionBox } from "../collision-box/collision-box";
+import { Section } from "../entity/section";
+import { TextNode } from "../entity/text-node";
+import { LatexNode } from "../entity/latex-node";
+import { convertLatexNodes } from "./convert-latex-nodes";
 import { toast } from "sonner";
 
 const textNode = (text: string) =>

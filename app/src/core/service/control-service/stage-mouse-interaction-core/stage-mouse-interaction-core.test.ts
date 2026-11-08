@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { Vector } from "@graphif/data-structures";
-vi.mock("@/core/Project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
-vi.mock("@/core/stage/stageObject/association/MutiTargetUndirectedEdge", () => ({
+vi.mock("@/core/project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
+vi.mock("@/core/stage/stage-object/association/muti-target-undirected-edge", () => ({
   MultiTargetUndirectedEdge: class {},
 }));
-import { MouseInteraction } from "./stageMouseInteractionCore";
+import { MouseInteraction } from "./stage-mouse-interaction-core";
 
 describe("hover coalescing", () => {
   it("tests only the latest location and shares results across renderers and edit actions", () => {

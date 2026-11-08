@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { createSubWindow } from "@/core/subWindowOpen";
-import { ComponentTabContext } from "@/core/Tab";
+import { createSubWindow } from "@/core/sub-window-open";
+import { ComponentTabContext } from "@/core/tab";
 import { activeTabAtom, store } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
@@ -11,7 +11,7 @@ import { useAtomValue } from "jotai";
 import AboutTab from "./about";
 import AccountTab from "./account";
 import CreditsTab from "./credits";
-import CustomizationTab from "./customization";
+import CustomizationTab from "./customization/customization";
 import QuickSettingsTab from "./customization/quick-settings";
 import ExtensionsTab from "./extensions";
 import KeyBindsPage from "./keybinds";

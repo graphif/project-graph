@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { configureSerializer, deserialize, serializable, serialize } from "../src";
+import { configureSerializer, deserialize, serializable, serialize } from "../src/index";
 
 describe("对象序列化", () => {
   class A {

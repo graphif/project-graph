@@ -1,14 +1,14 @@
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { Vector } from "@graphif/data-structures";
-import { Section } from "../../stageObject/entity/Section";
+import { Section } from "../../stage-object/entity/section";
 import { toast } from "sonner";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
-import { PathString } from "@/utils/pathString";
-import { onOpenFile } from "@/core/service/GlobalMenu";
-import { ReferenceBlockNode } from "../../stageObject/entity/ReferenceBlockNode";
-import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
-import { SectionReferencePanel } from "@/sub/ReferencesWindow";
-import { loadAllServicesBeforeInit } from "@/core/loadAllServices";
+import { RecentFileManager } from "@/core/service/data-file-service/recent-file-manager";
+import { PathString } from "@/utils/path-string";
+import { onOpenFile } from "@/core/service/global-menu";
+import { ReferenceBlockNode } from "../../stage-object/entity/reference-block-node";
+import { RectangleLittleNoteEffect } from "@/core/service/feedback-service/effect-engine/concrete/rectangle-little-note-effect";
+import { SectionReferencePanel } from "@/sub/references-window";
+import { loadAllServicesBeforeInit } from "@/core/load-all-services";
 import { tabsAtom, store } from "@/state";
 
 interface parserResult {

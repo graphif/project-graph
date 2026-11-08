@@ -5,7 +5,7 @@ let remainingLanguages: Promise<void> | undefined;
 
 export async function ensureCodeLanguage(language?: string): Promise<boolean> {
   if (!language || language === "plaintext" || codeHighlighter.registered(language)) return false;
-  remainingLanguages ??= import("./codeHighlightLanguages")
+  remainingLanguages ??= import("./code-highlight-languages")
     .then(({ all }) => {
       codeHighlighter.register(all);
     })

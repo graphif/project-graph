@@ -1,18 +1,18 @@
-import { Project, service } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
-import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import { ArcEdge } from "@/core/stage/stageObject/association/ArcEdge";
-import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/CubicCatmullRomSplineEdge";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
+import { Project, service } from "@/core/project";
+import { Settings } from "@/core/service/settings";
+import { MouseLocation } from "@/core/service/control-service/mouse-location";
+import { KeyBindsUI } from "@/core/service/control-service/shortcut-keys-engine/key-binds-ui";
+import { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
+import { ArcEdge } from "@/core/stage/stage-object/association/arc-edge";
+import { CubicCatmullRomSplineEdge } from "@/core/stage/stage-object/association/cubic-catmull-rom-spline-edge";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stage-object/association/muti-target-undirected-edge";
 import { getTextSize } from "@/utils/font";
 import { isMac } from "@/utils/platform";
 import { Color, mixColors, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Rectangle } from "@graphif/shapes";
 import i18next from "i18next";
-import { GlobalMaskRenderer } from "./utilsRenderer/globalMaskRenderer";
+import { GlobalMaskRenderer } from "./utils-renderer/global-mask-renderer";
 
 /**
  * 渲染器

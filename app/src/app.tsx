@@ -5,14 +5,14 @@ import ThemeModeSwitch from "@/components/theme-mode-switch";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Dialog } from "@/components/ui/dialog";
-import { Project, ProjectState } from "@/core/Project";
-import { isResourceTab, Tab } from "@/core/Tab";
-import { TabWorkspace } from "@/core/TabWorkspace";
-import { GlobalMenu, onNewDraft } from "@/core/service/GlobalMenu";
-import { flushSettingsLoadErrors, Settings } from "@/core/service/Settings";
-import { Telemetry } from "@/core/service/Telemetry";
-import { Themes } from "@/core/service/Themes";
-import { globalShortcutManager } from "@/core/service/controlService/shortcutKeysEngine/GlobalShortcutManager";
+import { Project, ProjectState } from "@/core/project";
+import { isResourceTab, Tab } from "@/core/tab";
+import { TabWorkspace } from "@/core/tab-workspace";
+import { GlobalMenu, onNewDraft } from "@/core/service/global-menu";
+import { flushSettingsLoadErrors, Settings } from "@/core/service/settings";
+import { Telemetry } from "@/core/service/telemetry";
+import { Themes } from "@/core/service/themes";
+import { globalShortcutManager } from "@/core/service/control-service/shortcut-keys-engine/global-shortcut-manager";
 import {
   activeResourceTabAtom,
   activeTabAtom,
@@ -22,7 +22,7 @@ import {
   isWindowMaxsizedAtom,
   tabsAtom,
 } from "@/state";
-import WelcomeWindow from "@/sub/WelcomeWindow";
+import WelcomeWindow from "@/sub/welcome-window";
 import { getVersion } from "@/platform/app";
 import { Native } from "@/platform/desktop";
 import { getCurrentWindow } from "@/platform/window";
@@ -31,12 +31,12 @@ import { Copy, Minus, Pin, PinOff, Square, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import CommandPalette from "./CommandPalette";
-import { DropWindowCover } from "./DropWindowCover";
+import CommandPalette from "./command-palette";
+import { DropWindowCover } from "./drop-window-cover";
 import DockedArea from "./components/docked-area";
 import RenderOverlays from "./components/overlay-host";
-import { KeyBindsUI } from "./core/service/controlService/shortcutKeysEngine/KeyBindsUI";
-import { checkAndFixShortcutStorage } from "./core/service/controlService/shortcutKeysEngine/ShortcutKeyFixer";
+import { KeyBindsUI } from "./core/service/control-service/shortcut-keys-engine/key-binds-ui";
+import { checkAndFixShortcutStorage } from "./core/service/control-service/shortcut-keys-engine/shortcut-key-fixer";
 import { cn } from "./utils/cn";
 import { isMac, isWindows } from "./utils/platform";
 

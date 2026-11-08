@@ -1,9 +1,9 @@
-import { Project } from "@/core/Project";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { ResizeAble } from "@/core/stage/stageObject/abstract/StageObjectInterface";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { Settings } from "@/core/service/Settings";
-import { applyBlackAndWhite } from "@/core/service/dataManageService/imageUtils";
+import { Project } from "@/core/project";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { ResizeAble } from "@/core/stage/stage-object/abstract/stage-object-interface";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { Settings } from "@/core/service/settings";
+import { applyBlackAndWhite } from "@/core/service/data-manage-service/image-utils";
 import { toast } from "sonner";
 import { Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
@@ -84,6 +84,7 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
     }: ImageNodeOptions,
     public unknown = false,
     public onReady?: () => void,
+    { deferResources = false }: { deferResources?: boolean } = {},
   ) {
     super();
     this.uuid = uuid;
@@ -93,7 +94,13 @@ export class ImageNode extends ConnectableEntity implements ResizeAble {
     this.scale = scale;
     this.isBackground = isBackground;
 
-    const blob = project.attachments.get(attachmentId);
+    if (!project.attachments.has(attachmentId)) this.state = "notFound";
+    if (!deferResources) this.initializeResources();
+  }
+
+  initializeResources(): void {
+    if (this.disposed) return;
+    const blob = this.project.attachments.get(this.attachmentId);
     if (!blob) {
       this.state = "notFound";
       return;

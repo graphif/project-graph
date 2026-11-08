@@ -1,13 +1,14 @@
 import { Color, ProgressNumber } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
-import { LineCuttingEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineCuttingEffect";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
+import { LineCuttingEffect } from "@/core/service/feedback-service/effect-engine/concrete/line-cutting-effect";
 
 /**
  * 用于某个节点进入了某个Section内部，四个角连向了父Section矩形的四个角
  */
 export class RectanglePushInEffect extends Effect {
+  static readonly effectId = "RectanglePushInEffect";
   constructor(
     public smallRectangle: Rectangle,
     public bigRectangle: Rectangle,

@@ -1,5 +1,5 @@
-import { Settings } from "@/core/service/Settings";
-import { Themes } from "@/core/service/Themes";
+import { Settings } from "@/core/service/settings";
+import { Themes } from "@/core/service/themes";
 import { Color } from "@graphif/data-structures";
 
 export interface EffectColors {

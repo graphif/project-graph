@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Vector } from "@graphif/data-structures";
-import { ControllerInput } from "./ControllerInput";
+import { ControllerInput } from "./controller-input";
 
 beforeEach(() => {
   vi.stubGlobal("window", new EventTarget());

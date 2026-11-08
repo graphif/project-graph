@@ -1,9 +1,10 @@
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
-import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
+import { PenStroke } from "@/core/stage/stage-object/entity/pen-stroke";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 
 export class PenStrokeDeletedEffect extends Effect {
+  static readonly effectId = "PenStrokeDeletedEffect";
   private pathList: Vector[] = [];
   private color: Color = new Color(0, 0, 0);
   private width: number = 1;

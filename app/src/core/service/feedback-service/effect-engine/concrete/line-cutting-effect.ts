@@ -1,6 +1,6 @@
 import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 
 /**
  * 线段特效
@@ -14,6 +14,7 @@ import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject
  *                   ->
  */
 export class LineCuttingEffect extends Effect {
+  static readonly effectId = "LineCuttingEffect";
   constructor(
     public override timeProgress: ProgressNumber,
     public fromLocation: Vector,

@@ -2,15 +2,15 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/core/Project", () => ({ Project: class Project {} }));
-vi.mock("@/core/stage/stageObject/abstract/ConnectableEntity", () => ({
+vi.mock("@/core/project", () => ({ Project: class Project {} }));
+vi.mock("@/core/stage/stage-object/abstract/connectable-entity", () => ({
   ConnectableEntity: class ConnectableEntity {
     details = [];
     parentSection = null;
     updateFatherSectionByMove() {}
   },
 }));
-vi.mock("@/core/service/Settings", () => ({
+vi.mock("@/core/service/settings", () => ({
   Settings: {
     compressImageToBlackAndWhite: false,
     compressImageToWebp: false,
@@ -19,9 +19,9 @@ vi.mock("@/core/service/Settings", () => ({
     webpQuality: 0.8,
   },
 }));
-vi.mock("@/core/service/dataManageService/imageUtils", () => ({ applyBlackAndWhite: vi.fn() }));
+vi.mock("@/core/service/data-manage-service/image-utils", () => ({ applyBlackAndWhite: vi.fn() }));
 
-import { ImageNode } from "./ImageNode";
+import { ImageNode } from "./image-node";
 
 describe("ImageNode cleanup", () => {
   beforeEach(() => {

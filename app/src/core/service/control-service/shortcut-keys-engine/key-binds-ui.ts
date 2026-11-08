@@ -1,4 +1,4 @@
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 import { activeResourceTabAtom, activeTabAtom, store } from "@/state";
 import {
   formatEmacsKey,
@@ -14,7 +14,7 @@ import { proxy } from "comlink";
 import type { LucideProps } from "lucide-react";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 import { useEffect, useState } from "react";
-import { allKeyBinds, type KeyBindWhen } from "./shortcutKeysRegister";
+import { allKeyBinds, type KeyBindWhen } from "./shortcut-keys-register";
 
 export type KeyBindIcon = ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>;
 

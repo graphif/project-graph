@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { Vector } from "@graphif/data-structures";
-import type { Project } from "@/core/Project";
+import type { Project } from "@/core/project";
 
-vi.mock("@/core/Project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
-vi.mock("@/core/service/Settings", () => ({
+vi.mock("@/core/project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
+vi.mock("@/core/service/settings", () => ({
   Settings: {
     moveAmplitude: 2,
     moveFriction: 0.1,
@@ -12,11 +12,11 @@ vi.mock("@/core/service/Settings", () => ({
     cameraResetViewPaddingRate: 1,
   },
 }));
-vi.mock("../service/feedbackService/SoundService", () => ({
+vi.mock("../service/feedback-service/sound-service", () => ({
   SoundService: { play: { viewAdjustSoundFile: vi.fn() } },
 }));
-vi.mock("@/core/stage/stageObject/abstract/StageEntity", () => ({ Entity: class {} }));
-import { Camera } from "./Camera";
+vi.mock("@/core/stage/stage-object/abstract/stage-entity", () => ({ Entity: class {} }));
+import { Camera } from "./camera";
 
 describe("camera after direct gestures", () => {
   it("fits the project even when the canvas mounts after the first ten frames", () => {

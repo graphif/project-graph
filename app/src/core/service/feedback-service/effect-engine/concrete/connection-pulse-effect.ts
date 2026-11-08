@@ -1,8 +1,9 @@
 import { ProgressNumber, Vector } from "@graphif/data-structures";
-import type { Project } from "@/core/Project";
-import { Effect } from "../effectObject";
+import type { Project } from "@/core/project";
+import { Effect } from "../effect-object";
 
 export class ConnectionPulseEffect extends Effect {
+  static readonly effectId = "ConnectionPulseEffect";
   constructor(
     private readonly start: Vector,
     private readonly end: Vector,

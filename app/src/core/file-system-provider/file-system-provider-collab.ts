@@ -1,5 +1,5 @@
-import { FileSystemProvider } from "@/core/interfaces/Service";
-import type { Project } from "@/core/Project";
+import { FileSystemProvider } from "@/core/interfaces/service";
+import type { Project } from "@/core/project";
 import { encode } from "@msgpack/msgpack";
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
 import type { URI } from "vscode-uri";

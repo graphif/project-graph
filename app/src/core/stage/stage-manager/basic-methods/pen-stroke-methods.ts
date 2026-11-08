@@ -1,7 +1,7 @@
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-// import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
-import type { Project } from "@/core/Project";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+// import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { PenStroke } from "@/core/stage/stage-object/entity/pen-stroke";
+import type { Project } from "@/core/project";
 
 /**
  * 一切和涂鸦算法相关的内容

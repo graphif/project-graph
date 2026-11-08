@@ -1,10 +1,10 @@
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Random } from "@/core/algorithm/random";
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 
 /**
  * 实体抖动特效
@@ -12,6 +12,7 @@ import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject
  * 可以用来表示提醒效果
  */
 export class EntityShakeEffect extends Effect {
+  static readonly effectId = "EntityShakeEffect";
   constructor(
     public time: number,
     public rect: Rectangle,

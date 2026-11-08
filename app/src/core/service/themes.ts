@@ -1,4 +1,4 @@
-import type { Extension } from "@/core/extension/Extension";
+import type { Extension } from "@/core/extension/extension";
 import { camelCaseToDashCase } from "@/utils/font";
 import { parseYamlWithFrontmatter } from "@/utils/yaml";
 

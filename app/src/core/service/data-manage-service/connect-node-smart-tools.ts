@@ -1,6 +1,6 @@
-import { Project } from "@/core/Project";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
+import { Project } from "@/core/project";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
 import { Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
 

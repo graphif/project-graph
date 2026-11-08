@@ -1,5 +1,5 @@
-import { Project, service } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
+import { Project, service } from "@/core/project";
+import { Settings } from "@/core/service/settings";
 import { activeTabAtom, store } from "@/state";
 import { Vector } from "@graphif/data-structures";
 

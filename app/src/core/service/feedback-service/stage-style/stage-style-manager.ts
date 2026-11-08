@@ -1,6 +1,6 @@
-import { service } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
-import { StageStyle } from "@/core/service/feedbackService/stageStyle/stageStyle";
+import { service } from "@/core/project";
+import { Settings } from "@/core/service/settings";
+import { StageStyle } from "@/core/service/feedback-service/stage-style/stage-style";
 
 /**
  * 舞台上的颜色风格管理器

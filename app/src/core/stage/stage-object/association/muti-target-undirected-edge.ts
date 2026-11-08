@@ -1,9 +1,9 @@
-import { Project } from "@/core/Project";
-import { ConvexHull } from "@/core/algorithm/geometry/convexHull";
+import { Project } from "@/core/project";
+import { ConvexHull } from "@/core/algorithm/geometry/convex-hull";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { ConnectableAssociation } from "@/core/stage/stageObject/abstract/Association";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { ConnectableAssociation } from "@/core/stage/stage-object/abstract/association";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { getMultiLineTextSize } from "@/utils/font";
 import { Color, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";

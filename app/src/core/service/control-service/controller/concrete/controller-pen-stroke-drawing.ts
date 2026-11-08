@@ -1,8 +1,8 @@
-import { Project } from "@/core/Project";
-import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
-import { Settings } from "@/core/service/Settings";
-import { PenStroke, PenStrokeSegment } from "@/core/stage/stageObject/entity/PenStroke";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { Project } from "@/core/project";
+import { ControllerClass } from "@/core/service/control-service/controller/controller-class";
+import { Settings } from "@/core/service/settings";
+import { PenStroke, PenStrokeSegment } from "@/core/stage/stage-object/entity/pen-stroke";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { CursorNameEnum } from "@/types/cursors";
 import { isMac } from "@/utils/platform";
 import { Color, mixColors, Vector } from "@graphif/data-structures";

@@ -1,15 +1,16 @@
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Random } from "@/core/algorithm/random";
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
-import { LineEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineEffect";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
+import { LineEffect } from "@/core/service/feedback-service/effect-engine/concrete/line-effect";
 
 /**
  * 专门处理矩形水平和垂直移动效果
  * 显示渐变直线作为视觉效果
  */
 export class RectangleSlideEffect extends Effect {
+  static readonly effectId = "RectangleSlideEffect";
   constructor(
     public startRect: Rectangle,
     public endRect: Rectangle,

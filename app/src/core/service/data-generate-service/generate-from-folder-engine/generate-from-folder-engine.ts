@@ -1,21 +1,21 @@
 import { Color, Vector } from "@graphif/data-structures";
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { Files, type Folder as FolderEntry } from "@/generated/mygo";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { DetailsManager } from "@/core/stage/stage-object/tools/entity-details-manager";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Rectangle } from "@graphif/shapes";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
 import { parseSingleEmacsKey } from "@/utils/emacs";
-import { allKeyBinds } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
-import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
+import { allKeyBinds } from "@/core/service/control-service/shortcut-keys-engine/shortcut-keys-register";
+import { KeyBindsUI } from "@/core/service/control-service/shortcut-keys-engine/key-binds-ui";
 // 快捷键分组定义（从SettingsWindow/keybinds.tsx复制）
 
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { getMultiLineTextSize } from "@/utils/font";
 import i18next from "i18next";
-import { shortcutKeysGroups } from "@/sub/SettingsWindow/keybinds";
+import { shortcutKeysGroups } from "@/sub/settings-window/keybinds";
 
 @service("generateFromFolder")
 export class GenerateFromFolder {

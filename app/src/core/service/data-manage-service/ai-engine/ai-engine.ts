@@ -1,4 +1,4 @@
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { AIObjectReferenceRegistry } from "./ai-object-reference-registry";
 import { AIProjectReferenceStore } from "./ai-project-reference-store";
 

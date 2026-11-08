@@ -1,9 +1,9 @@
 import { Color, Vector } from "@graphif/data-structures";
 import { Circle, CubicCatmullRomSpline, Line, Rectangle, SymmetryCurve } from "@graphif/shapes";
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { Settings } from "@/core/service/Settings";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { Settings } from "@/core/service/settings";
 
 /**
  * 碰撞箱渲染器

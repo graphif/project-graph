@@ -1,4 +1,4 @@
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 
 export namespace ProgramFunctions {
   /**

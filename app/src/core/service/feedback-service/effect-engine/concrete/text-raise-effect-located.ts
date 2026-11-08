@@ -1,12 +1,13 @@
 import { ProgressNumber, Vector } from "@graphif/data-structures";
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 
 /**
  * 在特定的世界坐标系下渲染一个文字
  * 用途之一：给逻辑引擎渲染编号
  */
 export class TextRaiseEffectLocated extends Effect {
+  static readonly effectId = "TextRaiseEffectLocated";
   constructor(
     public text: string,
     public location: Vector,

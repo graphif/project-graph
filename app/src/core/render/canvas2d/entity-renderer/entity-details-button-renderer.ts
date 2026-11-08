@@ -1,6 +1,6 @@
-import { Project, service } from "@/core/Project";
-import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Project, service } from "@/core/project";
+import { MouseLocation } from "@/core/service/control-service/mouse-location";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 

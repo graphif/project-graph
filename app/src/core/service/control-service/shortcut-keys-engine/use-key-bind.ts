@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
-import { KeyBindsUI } from "./KeyBindsUI";
+import { formatKeyBindSequenceToString } from "@/utils/key-display";
+import { KeyBindsUI } from "./key-binds-ui";
 
 export function useKeyBind(id: string): string {
   const [keyBind, setKeyBind] = useState<string>("");

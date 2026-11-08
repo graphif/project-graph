@@ -1,4 +1,4 @@
-import type { TreeValidationResult } from "@/core/stage/stageManager/basicMethods/GraphMethods";
+import type { TreeValidationResult } from "@/core/stage/stage-manager/basic-methods/graph-methods";
 import { toast } from "sonner";
 
 /**

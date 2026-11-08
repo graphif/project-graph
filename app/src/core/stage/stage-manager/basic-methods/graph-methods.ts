@@ -1,8 +1,8 @@
-import { Project, service } from "@/core/Project";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { MultiTargetUndirectedEdge } from "../../stageObject/association/MutiTargetUndirectedEdge";
-import { TextNode } from "../../stageObject/entity/TextNode";
+import { Project, service } from "@/core/project";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { Edge } from "@/core/stage/stage-object/association/edge";
+import { MultiTargetUndirectedEdge } from "../../stage-object/association/muti-target-undirected-edge";
+import { TextNode } from "../../stage-object/entity/text-node";
 
 /**
  * 树形结构检测结果

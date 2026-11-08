@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { AIObjectReferenceError, type AIObjectReferenceErrorCode } from "./AIObjectReferenceRegistry";
-import { classifyBuiltInToolRuntimeError } from "./BuiltInToolRuntimeError";
+import { AIObjectReferenceError, type AIObjectReferenceErrorCode } from "./ai-object-reference-registry";
+import { classifyBuiltInToolRuntimeError } from "./built-in-tool-runtime-error";
 
 describe("built-in tool runtime errors", () => {
   it.each([

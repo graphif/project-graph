@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findFirstImageInChildren } from "./imageNodeFinder";
+import { findFirstImageInChildren } from "./image-node-finder";
 
 describe("findFirstImageInChildren", () => {
   it("命中第一个 image 节点时直接返回", () => {

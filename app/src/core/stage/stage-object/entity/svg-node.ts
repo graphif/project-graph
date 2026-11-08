@@ -1,10 +1,11 @@
-import { Project } from "@/core/Project";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { ResizeAble } from "@/core/stage/stageObject/abstract/StageObjectInterface";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Project } from "@/core/project";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { ResizeAble } from "@/core/stage/stage-object/abstract/stage-object-interface";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Color, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
+import type { Value } from "platejs";
 
 /**
  * Svg 节点
@@ -26,18 +27,21 @@ export class SvgNode extends ConnectableEntity implements ResizeAble {
   isHiddenBySectionCollapse: boolean = false;
 
   originalSize: Vector = Vector.getZero();
-  image: HTMLImageElement = new Image();
+  image: HTMLImageElement | undefined;
+  private resourceUrl: string | undefined;
+  private disposed = false;
 
   constructor(
     protected readonly project: Project,
     {
-      uuid = crypto.randomUUID(),
-      details = [],
+      uuid = crypto.randomUUID() as string,
+      details = [] as Value,
       attachmentId = "",
       collisionBox = new CollisionBox([new Rectangle(Vector.getZero(), Vector.getZero())]),
       scale = 1,
       color = Color.Transparent,
     },
+    { deferResources = false }: { deferResources?: boolean } = {},
   ) {
     super();
     this.uuid = uuid;
@@ -47,19 +51,43 @@ export class SvgNode extends ConnectableEntity implements ResizeAble {
     this.collisionBox = collisionBox;
     this.color = color;
 
-    const blob = project.attachments.get(attachmentId);
+    if (!deferResources) this.initializeResources();
+  }
+
+  initializeResources(): void {
+    if (this.disposed) return;
+    this.releaseImage();
+    const blob = this.project.attachments.get(this.attachmentId);
     if (!blob) {
       return;
     }
     const url = URL.createObjectURL(blob);
-    this.image = new Image();
-    this.image.src = url;
-    this.image.onload = () => {
-      this.originalSize = new Vector(this.image.naturalWidth, this.image.naturalHeight);
+    this.resourceUrl = url;
+    const image = new Image();
+    this.image = image;
+    image.onload = () => {
+      if (this.disposed || this.image !== image) return;
+      this.originalSize = new Vector(image.naturalWidth, image.naturalHeight);
       this.collisionBox = new CollisionBox([
         new Rectangle(this.collisionBox.getRectangle().location, this.originalSize.multiply(this.scale)),
       ]);
     };
+    image.src = url;
+  }
+
+  private releaseImage(): void {
+    if (this.image) {
+      this.image.onload = null;
+      this.image.onerror = null;
+    }
+    if (this.resourceUrl) URL.revokeObjectURL(this.resourceUrl);
+    this.resourceUrl = undefined;
+    this.image = undefined;
+  }
+
+  dispose(): void {
+    this.disposed = true;
+    this.releaseImage();
   }
 
   public get geometryCenter(): Vector {
@@ -102,7 +130,7 @@ export class SvgNode extends ConnectableEntity implements ResizeAble {
    */
   async changeColor(newColor: Color, mode: "fill" | "stroke" = "fill") {
     // 先释放原来的objecturl
-    URL.revokeObjectURL(this.image.src);
+    this.releaseImage();
     this.color = newColor;
     const hexColor = newColor.toHexStringWithoutAlpha();
     // 先转换回svg代码
@@ -128,6 +156,11 @@ export class SvgNode extends ConnectableEntity implements ResizeAble {
 
     // 重新创建image对象
     const newUrl = URL.createObjectURL(newBlob);
+    if (this.disposed) {
+      URL.revokeObjectURL(newUrl);
+      return;
+    }
+    this.resourceUrl = newUrl;
     this.image = new Image();
     this.image.src = newUrl;
     // 因为只是改了颜色所以不用重新计算大小

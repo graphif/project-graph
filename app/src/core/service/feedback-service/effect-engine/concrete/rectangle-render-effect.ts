@@ -1,13 +1,14 @@
 import { Color, mixColors, ProgressNumber } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 
 /**
  * 自动吸附对齐的时候闪烁一下实体矩形边框
  */
 export class RectangleRenderEffect extends Effect {
+  static readonly effectId = "RectangleRenderEffect";
   constructor(
     public override timeProgress: ProgressNumber,
     private rectangle: Rectangle,

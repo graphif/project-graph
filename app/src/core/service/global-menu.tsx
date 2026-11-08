@@ -1,15 +1,15 @@
 import { Dialog } from "@/components/ui/dialog";
 
-import { Extension } from "@/core/extension/Extension";
-import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/loadAllServices";
-import { Project, ProjectState } from "@/core/Project";
-import { loadWithProjectOwnership, ProjectOwnershipError, type ProjectOwnershipLease } from "@/core/ProjectOwnership";
-import { isResourceTab } from "@/core/Tab";
-import { TabFactory } from "@/core/TabFactory";
+import { Extension } from "@/core/extension/extension";
+import { loadAllServicesAfterInit, loadAllServicesBeforeInit } from "@/core/load-all-services";
+import { Project, ProjectState } from "@/core/project";
+import { loadWithProjectOwnership, ProjectOwnershipError, type ProjectOwnershipLease } from "@/core/project-ownership";
+import { isResourceTab } from "@/core/tab";
+import { TabFactory } from "@/core/tab-factory";
 import { activeResourceTabAtom, activeTabAtom, store, tabsAtom } from "@/state";
-import { PathString } from "@/utils/pathString";
+import { PathString } from "@/utils/path-string";
 import { isMac } from "@/utils/platform";
-import { ensurePrgThumbnailCached } from "@/utils/readPrgThumbnail";
+import { ensurePrgThumbnailCached } from "@/utils/read-prg-thumbnail";
 import { Vector } from "@graphif/data-structures";
 import { deserialize } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
@@ -20,18 +20,18 @@ import { open as shellOpen } from "@/platform/shell";
 import i18next from "i18next";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
-import { FileSystemProviderDraft } from "../fileSystemProvider/FileSystemProviderDraft";
-import { FileSystemProviderFile } from "../fileSystemProvider/FileSystemProviderFile";
-import { ProjectUpgrader } from "../stage/ProjectUpgrader";
-import { CollisionBox } from "../stage/stageObject/collisionBox/collisionBox";
-import { TextNode } from "../stage/stageObject/entity/TextNode";
-import { RecentFileManager } from "./dataFileService/RecentFileManager";
-import { FeatureFlags } from "./FeatureFlags";
-import { Settings } from "./Settings";
-import { Telemetry } from "./Telemetry";
+import { FileSystemProviderDraft } from "../file-system-provider/file-system-provider-draft";
+import { FileSystemProviderFile } from "../file-system-provider/file-system-provider-file";
+import { ProjectUpgrader } from "../stage/project-upgrader";
+import { CollisionBox } from "../stage/stage-object/collision-box/collision-box";
+import { TextNode } from "../stage/stage-object/entity/text-node";
+import { RecentFileManager } from "./data-file-service/recent-file-manager";
+import { FeatureFlags } from "./feature-flags";
+import { Settings } from "./settings";
+import { Telemetry } from "./telemetry";
 
 import GlobalMenuContent from "@/components/global-menu-content";
-import CollaborationWindow from "@/sub/CollaborationWindow";
+import CollaborationWindow from "@/sub/collaboration-window";
 
 export function GlobalMenu() {
   return <GlobalMenuContent />;
@@ -128,7 +128,7 @@ export async function onJoinCollaboration() {
     store.set(tabsAtom, [...store.get(tabsAtom), project]);
     store.set(activeTabAtom, project);
     store.set(activeResourceTabAtom, project);
-    const { default: CollaborationWindow } = await import("@/sub/CollaborationWindow");
+    const { default: CollaborationWindow } = await import("@/sub/collaboration-window");
     CollaborationWindow.open();
   } catch (e) {
     project.collaboration.dispose();
@@ -154,14 +154,14 @@ export async function onLeaveCollaboration() {
     return;
   }
   project.collaboration.leave();
-  const { default: CollaborationWindow } = await import("@/sub/CollaborationWindow");
+  const { default: CollaborationWindow } = await import("@/sub/collaboration-window");
   CollaborationWindow.closeAll();
   toast.success("已离开协作房间");
 }
 
 /** 关闭未编辑的空草稿（打开真实文件后清理启动草稿） */
 export async function closeEmptyDrafts(except?: Project) {
-  const { TabWorkspace } = await import("@/core/TabWorkspace");
+  const { TabWorkspace } = await import("@/core/tab-workspace");
   const empties = store
     .get(tabsAtom)
     .filter(

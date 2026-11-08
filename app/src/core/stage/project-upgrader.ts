@@ -4,11 +4,11 @@ import { Path } from "@/utils/path";
 import { readFile } from "@/platform/files";
 import { v4 as uuidv4 } from "uuid";
 import { URI } from "vscode-uri";
-import { PenStrokeSegment } from "./stageObject/entity/PenStroke";
+import { PenStrokeSegment } from "./stage-object/entity/pen-stroke";
 import { Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
-import { compareProjectVersions, LATEST_PROJECT_VERSION } from "../ProjectFile";
-import { DetailsManager } from "./stageObject/tools/entityDetailsManager";
+import { compareProjectVersions, LATEST_PROJECT_VERSION } from "../project-file";
+import { DetailsManager } from "./stage-object/tools/entity-details-manager";
 
 export namespace ProjectUpgrader {
   /** N系列的最新版本 */
@@ -851,6 +851,6 @@ export namespace ProjectUpgrader {
       });
     }
 
-    return { data: resultStage, attachments };
+    return { data: resultStage, attachments, tags: json.tags ?? [] };
   }
 }

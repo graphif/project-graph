@@ -1,15 +1,16 @@
 import { ProgressNumber } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { EffectColors } from "@/core/service/feedbackService/stageStyle/stageStyle";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { EffectColors } from "@/core/service/feedback-service/stage-style/stage-style";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 
 /**
  * 实体创建时闪光特效
  */
 export class EntityCreateFlashEffect extends Effect {
+  static readonly effectId = "EntityCreateFlashEffect";
   constructor(
     /**
      * 一开始为0，每tick + 1

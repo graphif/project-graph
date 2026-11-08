@@ -1,9 +1,9 @@
-import { Project, ProjectState, service } from "@/core/Project";
+import { Project, ProjectState, service } from "@/core/project";
 import { appCacheDir, join } from "@/platform/path";
 import { exists, writeFile, readDir, stat, remove, mkdir } from "@/platform/files";
-import { Settings } from "@/core/service/Settings";
+import { Settings } from "@/core/service/settings";
 import { toast } from "sonner";
-import { PathString } from "@/utils/pathString";
+import { PathString } from "@/utils/path-string";
 
 /**
  * 自动保存与备份系统

@@ -1,12 +1,13 @@
 import { mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Line, Rectangle } from "@graphif/shapes";
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 
 /**
  * 实体对齐特效
  */
 export class EntityAlignEffect extends Effect {
+  static readonly effectId = "EntityAlignEffect";
   private lines: Line[] = [];
   static fromEntity(moveRectangle: Rectangle, targetRectangle: Rectangle): EntityAlignEffect {
     return new EntityAlignEffect(new ProgressNumber(0, 20), moveRectangle, targetRectangle);

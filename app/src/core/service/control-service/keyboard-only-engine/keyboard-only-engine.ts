@@ -1,9 +1,9 @@
-import { Project, service } from "@/core/Project";
-import { EntityShakeEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityShakeEffect";
-import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
-import { Settings } from "@/core/service/Settings";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { getEnterKey } from "@/utils/keyboardFunctions";
+import { Project, service } from "@/core/project";
+import { EntityShakeEffect } from "@/core/service/feedback-service/effect-engine/concrete/entity-shake-effect";
+import { RectangleLittleNoteEffect } from "@/core/service/feedback-service/effect-engine/concrete/rectangle-little-note-effect";
+import { Settings } from "@/core/service/settings";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { getEnterKey } from "@/utils/keyboard-functions";
 import { toast } from "sonner";
 
 /**

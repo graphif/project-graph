@@ -1,5 +1,5 @@
 import { readFile } from "@/platform/files";
-import { Settings } from "../Settings";
+import { Settings } from "../settings";
 
 /**
  * 播放音效的服务

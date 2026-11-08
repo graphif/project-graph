@@ -1,11 +1,11 @@
 import { expose, Remote, wrap } from "comlink";
 import comlinkMinJs from "comlink/dist/esm/comlink.min.js?raw";
-import { Extension } from "./Extension";
+import { Extension } from "./extension";
 import { extensionHostApiFactory } from "./api/host";
 import { ExtensionRemoteApi } from "./api/remote";
 
-import { setupComlink } from "./setupComlink/host";
-import setupComlinkJs from "./setupComlink/remote?raw";
+import { setupComlink } from "./setup-comlink/host";
+import setupComlinkJs from "./setup-comlink/remote.js?raw";
 setupComlink();
 const comlinkBlob = new Blob([comlinkMinJs], { type: "application/javascript" });
 const comlinkUrl = URL.createObjectURL(comlinkBlob);

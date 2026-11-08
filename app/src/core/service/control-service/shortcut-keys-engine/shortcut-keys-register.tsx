@@ -1,55 +1,56 @@
 import { Dialog } from "@/components/ui/dialog";
-import { Project, ProjectState } from "@/core/Project";
-import { AssetsRepository } from "@/core/service/AssetsRepository";
-import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { ViewFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewFlashEffect";
-import { ViewOutlineFlashEffect } from "@/core/service/feedbackService/effectEngine/concrete/ViewOutlineFlashEffect";
-import { Settings } from "@/core/service/Settings";
-import { Themes } from "@/core/service/Themes";
-import { PenStrokeMethods } from "@/core/stage/stageManager/basicMethods/PenStrokeMethods";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
-import { TabWorkspace } from "@/core/TabWorkspace";
-import { TestTab } from "@/core/TestTab";
+import { Project, ProjectState } from "@/core/project";
+import { AssetsRepository } from "@/core/service/assets-repository";
+import { MouseLocation } from "@/core/service/control-service/mouse-location";
+import { ViewFlashEffect } from "@/core/service/feedback-service/effect-engine/concrete/view-flash-effect";
+import { ViewOutlineFlashEffect } from "@/core/service/feedback-service/effect-engine/concrete/view-outline-flash-effect";
+import { Settings } from "@/core/service/settings";
+import { Themes } from "@/core/service/themes";
+import { PenStrokeMethods } from "@/core/stage/stage-manager/basic-methods/pen-stroke-methods";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stage-object/association/muti-target-undirected-edge";
+import { ImageNode } from "@/core/stage/stage-object/entity/image-node";
+import { ReferenceBlockNode } from "@/core/stage/stage-object/entity/reference-block-node";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { UrlNode } from "@/core/stage/stage-object/entity/url-node";
+import { TabWorkspace } from "@/core/tab-workspace";
+import { TestTab } from "@/core/test-tab";
 import { activeTabAtom, commandPaletteVisibleAtom, isWindowMaxsizedAtom, store, tabsAtom } from "@/state";
 import { getCurrentWindow } from "@/platform/window";
 import { writeImage, writeText } from "@/platform/clipboard";
-// import ColorWindow from "@/sub/ColorWindow";
-import EditUrlNodeLinkWindow from "@/sub/EditUrlNodeLinkWindow";
-import FindWindow from "@/sub/FindWindow";
-// import KeyboardRecentFilesWindow from "@/sub/KeyboardRecentFilesWindow";
-import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
-import AttachmentsWindow from "@/sub/AttachmentsWindow";
-import LogicNodePanel from "@/sub/AutoComputeWindow";
-import BackgroundManagerWindow from "@/sub/BackgroundManagerWindow";
-import ColorPaletteWindow from "@/sub/ColorPaletteWindow";
-import ColorWindow, { ColorManagerPanel } from "@/sub/ColorWindow";
-import ExportPngWindow from "@/sub/ExportPngWindow";
+// import ColorWindow from "@/sub/color-window";
+import EditUrlNodeLinkWindow from "@/sub/edit-url-node-link-window";
+import FindWindow from "@/sub/find-window";
+// import KeyboardRecentFilesWindow from "@/sub/keyboard-recent-files-window";
+import { LatexNode } from "@/core/stage/stage-object/entity/latex-node";
+import AttachmentsWindow from "@/sub/attachments-window";
+import LogicNodePanel from "@/sub/auto-compute-window";
+import BackgroundManagerWindow from "@/sub/background-manager-window";
+import ColorPaletteWindow from "@/sub/color-palette-window";
+import ColorWindow, { ColorManagerPanel } from "@/sub/color-window";
+import ExportPngWindow from "@/sub/export-png-window";
 import GenerateNodeTree, {
   GenerateNodeGraph,
   GenerateNodeMermaid,
   GenerateNodeTreeByMarkdown,
-} from "@/sub/GenerateNodeWindow";
-import NewExportPngWindow from "@/sub/NewExportPngWindow";
-import OnboardingWindow from "@/sub/OnboardingWindow";
-import OutlineWindow from "@/sub/OutlineWindow";
-import RecentFilesWindow from "@/sub/RecentFilesWindow";
-import ReferencesWindow from "@/sub/ReferencesWindow";
-import SettingsWindow from "@/sub/SettingsWindow";
-import TagWindow from "@/sub/TagWindow";
-import TestWindow from "@/sub/TestWindow";
-import { openTextImportWindow } from "@/sub/TextImportWindow";
+} from "@/sub/generate-node-window";
+import NewExportPngWindow from "@/sub/new-export-png-window";
+import { loadOnboarding } from "@/features/onboarding/onboarding-state";
+import { LazyStore } from "@/platform/store";
+import OutlineWindow from "@/sub/outline-window";
+import RecentFilesWindow from "@/sub/recent-files-window";
+import ReferencesWindow from "@/sub/references-window";
+import SettingsWindow from "@/sub/settings-window/settings-window";
+import TagWindow from "@/sub/tag-window";
+import TestWindow from "@/sub/test-window";
+import { openTextImportWindow } from "@/sub/text-import-window";
 import { Direction } from "@/types/directions";
-import { openBrowserOrFile } from "@/utils/externalOpen";
-import { exportImagesToProjectDirectory } from "@/utils/imageExport";
-import { getDeviceId } from "@/utils/otherApi";
+import { openBrowserOrFile } from "@/utils/external-open";
+import { exportImagesToProjectDirectory } from "@/utils/image-export";
+import { getDeviceId } from "@/utils/other-api";
 import { isMac } from "@/utils/platform";
 import { Color, Vector } from "@graphif/data-structures";
 import { serialize } from "@graphif/serializer";
@@ -247,13 +248,13 @@ import {
   createCurrentFileDeepLink,
   createCurrentViewDeepLink,
   createSelectedEntityDeepLink,
-} from "../../dataFileService/DeepLinkHandler";
-import { RecentFileManager } from "../../dataFileService/RecentFileManager";
-import { generateKeyboardLayout } from "../../dataGenerateService/generateFromFolderEngine/GenerateFromFolderEngine";
-import { ColorSmartTools } from "../../dataManageService/colorSmartTools";
-import { ConnectNodeSmartTools } from "../../dataManageService/connectNodeSmartTools";
-import { DragFileIntoStageEngine } from "../../dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
-import { TextNodeSmartTools } from "../../dataManageService/textNodeSmartTools";
+} from "../../data-file-service/deep-link-handler";
+import { RecentFileManager } from "../../data-file-service/recent-file-manager";
+import { generateKeyboardLayout } from "../../data-generate-service/generate-from-folder-engine/generate-from-folder-engine";
+import { ColorSmartTools } from "../../data-manage-service/color-smart-tools";
+import { ConnectNodeSmartTools } from "../../data-manage-service/connect-node-smart-tools";
+import { DragFileIntoStageEngine } from "../../data-manage-service/drag-file-into-stage-engine/drag-file-into-stage-engine";
+import { TextNodeSmartTools } from "../../data-manage-service/text-node-smart-tools";
 import {
   createFileAtCurrentProjectDir,
   onJoinCollaboration,
@@ -263,8 +264,8 @@ import {
   onOpenFile,
   onUpgradeOldJson,
   openCurrentProjectFolder,
-} from "../../GlobalMenu";
-import { KeyBindsUI } from "./KeyBindsUI";
+} from "../../global-menu";
+import { KeyBindsUI } from "./key-binds-ui";
 
 export type KeyBindWhen = (project?: Project) => boolean | Promise<boolean>;
 
@@ -1569,7 +1570,7 @@ export const allKeyBinds: KeyBindItem[] = [
     icon: UsersRound,
     when: whenAlways,
     onPress: () => {
-      void import("@/sub/CollaborationWindow").then(({ default: CollaborationWindow }) => {
+      void import("@/sub/collaboration-window").then(({ default: CollaborationWindow }) => {
         CollaborationWindow.open();
       });
     },
@@ -4305,7 +4306,7 @@ export const allKeyBinds: KeyBindItem[] = [
     icon: LayoutPanelTop,
     when: whenAlways,
     onPress: async () => {
-      const { default: NodeDetailsWindow } = await import("@/sub/NodeDetailsWindow");
+      const { default: NodeDetailsWindow } = await import("@/sub/node-details-window");
       NodeDetailsWindow.open();
     },
   },
@@ -4401,8 +4402,16 @@ export const allKeyBinds: KeyBindItem[] = [
     defaultKey: "",
     icon: BookOpen,
     when: whenAlways,
-    onPress: () => {
-      OnboardingWindow.open();
+    onPress: async () => {
+      const storage = new LazyStore("onboarding.json");
+      const state = await loadOnboarding(storage, {
+        language: Settings.language,
+        theme: Settings.theme,
+        uiScalePercent: Settings.uiScalePercent,
+      });
+      await storage.set("state", { ...state, step: 0, completedAt: null });
+      await storage.save();
+      location.reload();
     },
   },
   {

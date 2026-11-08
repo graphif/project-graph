@@ -1,12 +1,13 @@
 import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 
 /**
  * 线段特效
  * 直接显示全部，随着时间推移逐渐透明
  */
 export class LineEffect extends Effect {
+  static readonly effectId = "LineEffect";
   constructor(
     public override timeProgress: ProgressNumber,
     public fromLocation: Vector,

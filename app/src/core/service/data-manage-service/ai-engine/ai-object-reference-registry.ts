@@ -1,6 +1,6 @@
-import type { Project } from "@/core/Project";
-import { Association } from "@/core/stage/stageObject/abstract/Association";
-import type { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import type { Project } from "@/core/project";
+import { Association } from "@/core/stage/stage-object/abstract/association";
+import type { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
 
 export type AINodeRef = `n${number}`;
 export type AIEdgeRef = `e${number}`;

@@ -1,6 +1,6 @@
 import { Dialog } from "@/components/ui/dialog";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { loadWithProjectOwnership, ProjectOwnershipError } from "./ProjectOwnership";
+import { loadWithProjectOwnership, ProjectOwnershipError } from "./project-ownership";
 
 const invoke = vi.hoisted(() => vi.fn<(command: string, payload?: unknown) => Promise<any>>());
 const promote = vi.hoisted(() => vi.fn(async () => undefined));
@@ -11,7 +11,7 @@ vi.mock("@/platform/desktop", () => ({
     makeConnectable: promote,
   },
 }));
-vi.mock("@/core/OpenProjectRuntimeHost", () => ({
+vi.mock("@/core/open-project-runtime-host", () => ({
   ensureOpenProjectRuntimeBridgeListener: vi.fn(async () => undefined),
 }));
 vi.mock("@/components/ui/dialog", () => ({ Dialog: { buttons: vi.fn(async () => "retry") } }));

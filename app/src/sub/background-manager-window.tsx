@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Project } from "@/core/Project";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { createSubWindow } from "@/core/subWindowOpen";
+import { Project } from "@/core/project";
+import { ImageNode } from "@/core/stage/stage-object/entity/image-node";
+import { createSubWindow } from "@/core/sub-window-open";
 import { activeResourceTabAtom } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";

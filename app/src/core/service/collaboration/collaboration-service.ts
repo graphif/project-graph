@@ -1,6 +1,6 @@
-import { Project, service } from "@/core/Project";
-import type { Service } from "@/core/interfaces/Service";
-import { UserState } from "@/core/service/UserState";
+import { Project, service } from "@/core/project";
+import type { Service } from "@/core/interfaces/service";
+import { UserState } from "@/core/service/user-state";
 import { Vector } from "@graphif/data-structures";
 import { deserialize, serialize } from "@graphif/serializer";
 import { toast } from "sonner";
@@ -10,9 +10,9 @@ import {
   joinCollabRoom,
   listCollabAttachments,
   uploadCollabAttachment,
-} from "./CollabApi";
-import type { CollabMember, CollabPresence, CollabRole, ServerToClientMessage } from "./CollabProtocol";
-import { CollabTransport } from "./CollabTransport";
+} from "./collab-api";
+import type { CollabMember, CollabPresence, CollabRole, ServerToClientMessage } from "./collab-protocol";
+import { CollabTransport } from "./collab-transport";
 import {
   cloneStageMap,
   diffStageMap,
@@ -21,7 +21,7 @@ import {
   stageArrayToMap,
   stageMapToArray,
   type StageMapDoc,
-} from "./stageMap";
+} from "./stage-map";
 
 export type CollaborationStatus = "idle" | "connecting" | "synced" | "disconnected" | "error";
 

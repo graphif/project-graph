@@ -1,5 +1,5 @@
 import { Vector } from "@graphif/data-structures";
-import { EffectColors } from "../../stageStyle/stageStyle";
+import { EffectColors } from "../../stage-style/stage-style";
 
 /**
  * 粒子类

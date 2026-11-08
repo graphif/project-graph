@@ -1,13 +1,14 @@
 import { mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Random } from "@/core/algorithm/random";
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 
 /**
  *
  */
 export class NodeMoveShadowEffect extends Effect {
+  static readonly effectId = "NodeMoveShadowEffect";
   pointList: Vector[] = [];
   pointInitSpeedList: Vector[] = [];
 

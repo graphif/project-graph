@@ -1,7 +1,7 @@
 import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Random } from "@/core/algorithm/random";
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 import { Direction } from "@/types/directions";
 
 interface SparkParticle {
@@ -21,6 +21,7 @@ interface SparkParticle {
  * 小碎片从矩形边缘迸出，以抛物线形式坠落然后淡化消失
  */
 export class SparkBurstEffect extends Effect {
+  static readonly effectId = "SparkBurstEffect";
   private particles: SparkParticle[] = [];
   private static readonly PARTICLE_COUNT = 10;
   private static readonly GRAVITY = 0.3;

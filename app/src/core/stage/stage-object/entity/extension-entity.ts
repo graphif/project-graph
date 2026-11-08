@@ -1,9 +1,10 @@
-import type { Project } from "@/core/Project";
+import type { Project } from "@/core/project";
 import { Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
-import { ConnectableEntity } from "../abstract/ConnectableEntity";
-import { CollisionBox } from "../collisionBox/collisionBox";
+import { ConnectableEntity } from "../abstract/connectable-entity";
+import { CollisionBox } from "../collision-box/collision-box";
+import type { Value } from "platejs";
 
 export interface ExtensionEntityConfig {
   initialData: any;
@@ -49,12 +50,14 @@ export class ExtensionEntity extends ConnectableEntity {
       extensionId = "",
       typeName = "",
       customData = {},
+      details = [],
       collisionBox = new CollisionBox([new Rectangle(Vector.getZero(), new Vector(100, 80))]),
     }: {
       uuid?: string;
       extensionId?: string;
       typeName?: string;
       customData?: any;
+      details?: Value;
       collisionBox?: CollisionBox;
     } = {},
   ) {
@@ -63,6 +66,7 @@ export class ExtensionEntity extends ConnectableEntity {
     this.extensionId = extensionId;
     this.typeName = typeName;
     this.customData = customData;
+    this.details = details;
     this.collisionBox = collisionBox;
   }
 

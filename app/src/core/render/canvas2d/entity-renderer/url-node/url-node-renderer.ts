@@ -1,8 +1,8 @@
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { Settings } from "@/core/service/Settings";
-import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
+import { MouseLocation } from "@/core/service/control-service/mouse-location";
+import { Settings } from "@/core/service/settings";
+import { UrlNode } from "@/core/stage/stage-object/entity/url-node";
 import { colorInvert, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 

@@ -12,7 +12,7 @@ import {
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { startTransition } from "react";
-import { ComponentTab, ComponentTabOptions, isResourceTab, Tab } from "./Tab";
+import { ComponentTab, ComponentTabOptions, isResourceTab, Tab } from "./tab";
 import {
   createTabGroup,
   findTabGroup,
@@ -28,7 +28,7 @@ import {
   type FixedSideEdge,
   type TabDropEdge,
   type TabGroupNode,
-} from "./TabGroup";
+} from "./tab-group";
 
 const outsideListeners = new Map<string, (event: PointerEvent) => void>();
 const closeTimers = new Map<string, ReturnType<typeof setTimeout>[]>();

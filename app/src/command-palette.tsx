@@ -1,8 +1,8 @@
-import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
-import { onOpenFile } from "@/core/service/GlobalMenu";
-import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
-import { PathString } from "@/utils/pathString";
+import { KeyBindsUI } from "@/core/service/control-service/shortcut-keys-engine/key-binds-ui";
+import { RecentFileManager } from "@/core/service/data-file-service/recent-file-manager";
+import { onOpenFile } from "@/core/service/global-menu";
+import { formatKeyBindSequenceToString } from "@/utils/key-display";
+import { PathString } from "@/utils/path-string";
 import { useAtom } from "jotai";
 import { File } from "lucide-react";
 import type React from "react";
@@ -18,7 +18,7 @@ import {
   CommandList,
   CommandShortcut,
 } from "./components/ui/command";
-import { Project } from "./core/Project";
+import { Project } from "./core/project";
 import { activeResourceTabAtom, commandPaletteVisibleAtom } from "./state";
 
 export default function CommandPalette({ zoomStyle }: { zoomStyle?: React.CSSProperties }) {

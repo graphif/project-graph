@@ -1,10 +1,10 @@
-import { Project, service } from "@/core/Project";
-import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
-import { EntityShakeEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityShakeEffect";
-import { RectangleLittleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleLittleNoteEffect";
-import { Settings } from "@/core/service/Settings";
+import { Project, service } from "@/core/project";
+import { KeyBindsUI } from "@/core/service/control-service/shortcut-keys-engine/key-binds-ui";
+import { EntityShakeEffect } from "@/core/service/feedback-service/effect-engine/concrete/entity-shake-effect";
+import { RectangleLittleNoteEffect } from "@/core/service/feedback-service/effect-engine/concrete/rectangle-little-note-effect";
+import { Settings } from "@/core/service/settings";
 import { matchSingleEmacsKey } from "@/utils/emacs";
-import { getEnterKey } from "@/utils/keyboardFunctions";
+import { getEnterKey } from "@/utils/keyboard-functions";
 import { isMac } from "@/utils/platform";
 import { Vector } from "@graphif/data-structures";
 import { toast } from "sonner";

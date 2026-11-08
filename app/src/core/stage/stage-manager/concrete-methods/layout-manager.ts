@@ -1,10 +1,10 @@
-import { Project, service } from "@/core/Project";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { Settings } from "@/core/service/Settings";
+import { Project, service } from "@/core/project";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { Settings } from "@/core/service/settings";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { Section } from "../../stageObject/entity/Section";
+import { Section } from "../../stage-object/entity/section";
 
 @service("layoutManager")
 export class LayoutManager {

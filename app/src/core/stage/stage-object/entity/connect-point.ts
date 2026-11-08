@@ -1,10 +1,11 @@
-import { Project } from "@/core/Project";
-// import { CircleChangeRadiusEffect } from "@/core/service/feedbackService/effectEngine/concrete/CircleChangeRadiusEffect";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Project } from "@/core/project";
+// import { CircleChangeRadiusEffect } from "@/core/service/feedback-service/effect-engine/concrete/circle-change-radius-effect";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
+import type { Value } from "platejs";
 
 /**
  * 质点不再区分膨胀状态和收缩状态
@@ -76,7 +77,7 @@ export class ConnectPoint extends ConnectableEntity {
       collisionBox = new CollisionBox([
         new Rectangle(Vector.getZero(), Vector.same(ConnectPoint.CONNECT_POINT_SHRINK_RADIUS * 2)),
       ]),
-      details = [],
+      details = [] as Value,
     },
     public unknown = false,
   ) {

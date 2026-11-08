@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { runThemeTransition } from "./themeTransition";
+import { runThemeTransition } from "./theme-transition";
 
 afterEach(() => {
   vi.unstubAllGlobals();

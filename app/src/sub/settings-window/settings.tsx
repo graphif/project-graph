@@ -13,8 +13,8 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { SoundService } from "@/core/service/feedbackService/SoundService";
-import { Settings, settingsSchema } from "@/core/service/Settings";
+import { SoundService } from "@/core/service/feedback-service/sound-service";
+import { Settings, settingsSchema } from "@/core/service/settings";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import Fuse from "fuse.js";
 import {

@@ -1,4 +1,4 @@
-import { FileSystemProvider } from "@/core/interfaces/Service";
+import { FileSystemProvider } from "@/core/interfaces/service";
 import { exists, mkdir, readDir, readFile, remove, rename, writeFile } from "@/platform/files";
 import { URI } from "vscode-uri";
 

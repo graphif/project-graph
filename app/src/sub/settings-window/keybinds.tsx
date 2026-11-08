@@ -20,13 +20,13 @@ import {
 } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
-import { allKeyBinds, getKeyBindTypeById } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
+import { KeyBindsUI } from "@/core/service/control-service/shortcut-keys-engine/key-binds-ui";
+import { allKeyBinds, getKeyBindTypeById } from "@/core/service/control-service/shortcut-keys-engine/shortcut-keys-register";
 import Fuse from "fuse.js";
 import { AlertCircle, AlignStartVertical, Focus, LineSquiggle, TextCursorInput } from "lucide-react";
 
 import { transEmacsKeyWinToMac } from "@/utils/emacs";
-import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
+import { formatKeyBindSequenceToString } from "@/utils/key-display";
 import { isMac } from "@/utils/platform";
 import { createStore } from "@/platform/store";
 import {

@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { Color, Vector } from "@graphif/data-structures";
 import { SymmetryCurve } from "@graphif/shapes";
-import type { Project } from "@/core/Project";
+import type { Project } from "@/core/project";
 
-vi.mock("@/core/Project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
-import { WorldRenderUtils } from "./WorldRenderUtils";
+vi.mock("@/core/project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
+import { WorldRenderUtils } from "./world-render-utils";
 
 describe("edge stroke scaling", () => {
   it.each([0.001, 0.1, 1, 10])("keeps subpixel widths at scale %s", (scale) => {

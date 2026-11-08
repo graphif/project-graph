@@ -132,7 +132,7 @@ export class MsdfTextAtlasRenderer {
       this.unavailable = true;
       return;
     }
-    const worker = new Worker(new URL("./msdfGlyphWorker.ts", import.meta.url), { type: "module" });
+    const worker = new Worker(new URL("./msdf-glyph-worker.ts", import.meta.url), { type: "module" });
     this.worker = worker;
     await new Promise<void>((resolve, reject) => {
       worker.addEventListener("message", (event: MessageEvent<{ type: string; error?: string }>) => {

@@ -1,8 +1,8 @@
-import { loadAllServicesBeforeInit } from "@/core/loadAllServices";
-import { Project } from "@/core/Project";
-import { PathString } from "@/utils/pathString";
-import { RecentFileManager } from "../dataFileService/RecentFileManager";
-import { Section } from "@/core/stage/stageObject/entity/Section";
+import { loadAllServicesBeforeInit } from "@/core/load-all-services";
+import { Project } from "@/core/project";
+import { PathString } from "@/utils/path-string";
+import { RecentFileManager } from "../data-file-service/recent-file-manager";
+import { Section } from "@/core/stage/stage-object/entity/section";
 
 /**
  * 跨文件内容查询服务

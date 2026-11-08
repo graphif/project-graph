@@ -1,6 +1,6 @@
-import { Project } from "@/core/Project";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { Project } from "@/core/project";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { open } from "@/platform/dialogs";

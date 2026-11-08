@@ -1,10 +1,10 @@
-import type { Project } from "@/core/Project";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import type { Project } from "@/core/project";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { MonoStack, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { BaseImporter } from "./BaseImporter";
+import { BaseImporter } from "./base-importer";
 
 /**
  * 树形结构导入器

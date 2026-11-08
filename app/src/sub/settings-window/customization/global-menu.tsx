@@ -4,9 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Settings, settingsSchema } from "@/core/service/Settings";
-import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
-import { allKeyBinds as staticKeyBinds } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
+import { Settings, settingsSchema } from "@/core/service/settings";
+import { KeyBindsUI } from "@/core/service/control-service/shortcut-keys-engine/key-binds-ui";
+import { allKeyBinds as staticKeyBinds } from "@/core/service/control-service/shortcut-keys-engine/shortcut-keys-register";
 import {
   ArrowDown,
   ArrowLeftFromLine,

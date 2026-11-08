@@ -1,13 +1,13 @@
-import { Project } from "@/core/Project";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Project } from "@/core/project";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Color, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
 import katex from "katex";
 import { toast } from "sonner";
 // 以 raw CSS 字符串形式 import katex 样式，用于嵌入 SVG foreignObject
-import { katexEmbeddedCss } from "@/utils/katexEmbeddedCss";
+import { katexEmbeddedCss } from "@/utils/katex-embedded-css";
 
 /**
  * LaTeX 公式节点
@@ -46,7 +46,7 @@ export class LatexNode extends ConnectableEntity {
 
   // ── 运行时状态（不序列化）──────────────────────────────────
   /** 渲染结果图片 */
-  image: HTMLImageElement = new Image();
+  image: HTMLImageElement | undefined;
   /** 渲染后 SVG 的原始像素尺寸 */
   svgOriginalSize: Vector = Vector.getZero();
   /** 渲染状态 */
@@ -94,6 +94,7 @@ export class LatexNode extends ConnectableEntity {
       color?: Color;
       fontScaleLevel?: number;
     },
+    { deferResources = false }: { deferResources?: boolean } = {},
   ) {
     super();
     this.uuid = uuid;
@@ -103,9 +104,12 @@ export class LatexNode extends ConnectableEntity {
     this.color = color;
     this.fontScaleLevel = fontScaleLevel;
 
-    // 异步渲染 LaTeX 公式，初始颜色：透明色→主题边框色，否则→用户自定义色
-    const initColor = color.a === 0 ? this.project.stageStyleManager.currentStyle.StageObjectBorder : color;
-    this.renderLatexToImage(latexSource, initColor.toString());
+    if (!deferResources) this.initializeResources();
+  }
+
+  initializeResources(): void {
+    const initColor = this.color.a === 0 ? this.project.stageStyleManager.currentStyle.StageObjectBorder : this.color;
+    this.renderLatexToImage(this.latexSource, initColor.toString());
   }
 
   /**

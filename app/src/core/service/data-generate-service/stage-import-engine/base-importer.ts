@@ -1,4 +1,4 @@
-import type { Project } from "@/core/Project";
+import type { Project } from "@/core/project";
 
 /**
  * 导入器基类，包含共享的工具方法

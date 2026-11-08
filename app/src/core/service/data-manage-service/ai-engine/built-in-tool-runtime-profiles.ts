@@ -1,4 +1,4 @@
-import type { BuiltInToolCapability } from "./BuiltInToolRegistry";
+import type { BuiltInToolCapability } from "./built-in-tool-registry";
 
 const closedProjectCapabilities = new Set<BuiltInToolCapability>([
   "project",

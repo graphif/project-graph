@@ -6,7 +6,7 @@ import KeyBind from "@/components/ui/key-bind";
 import Markdown from "@/components/ui/markdown";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Themes } from "@/core/service/Themes";
+import { Themes } from "@/core/service/themes";
 import { PrgMetadata } from "@/types/metadata";
 import { Decoder, Encoder } from "@msgpack/msgpack";
 import { appDataDir, join } from "@/platform/path";
@@ -25,13 +25,13 @@ import {
 import React, { useEffect, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { URI } from "vscode-uri";
-import { KeyBindsUI } from "../service/controlService/shortcutKeysEngine/KeyBindsUI";
-import { Settings } from "../service/Settings";
-import { Tutorials } from "../service/Tutorials";
-import { Tab } from "../Tab";
-import { ExtensionKeyBindManager } from "./ExtensionKeyBindManager";
-import { ExtensionManager } from "./ExtensionManager";
-import { getMimeType } from "./ExtensionUtils";
+import { KeyBindsUI } from "../service/control-service/shortcut-keys-engine/key-binds-ui";
+import { Settings } from "../service/settings";
+import { Tutorials } from "../service/tutorials";
+import { Tab } from "../tab";
+import { ExtensionKeyBindManager } from "./extension-key-bind-manager";
+import { ExtensionManager } from "./extension-manager";
+import { getMimeType } from "./extension-utils";
 
 export class Extension extends Tab {
   public metadata: PrgMetadata = { version: "2.0.0" };

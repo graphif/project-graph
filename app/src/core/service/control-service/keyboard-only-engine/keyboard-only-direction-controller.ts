@@ -1,5 +1,5 @@
 import { Vector } from "@graphif/data-structures";
-import { DirectionKeyUtilsEngine } from "@/core/service/controlService/DirectionKeyUtilsEngine/directionKeyUtilsEngine";
+import { DirectionKeyUtilsEngine } from "@/core/service/control-service/direction-key-utils-engine/direction-key-utils-engine";
 
 /**
  * 纯键盘控制引擎内部的 生成节点位置的方向控制内核

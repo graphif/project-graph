@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DetailsManager } from "./entityDetailsManager";
-import type { Entity } from "../abstract/StageEntity";
+import { DetailsManager } from "./entity-details-manager";
+import type { Entity } from "../abstract/stage-entity";
 
 afterEach(() => vi.restoreAllMocks());
 

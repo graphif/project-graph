@@ -1,6 +1,6 @@
 import { createStore } from "@/platform/store";
-import { settingsSchema } from "./Settings";
-import { settingsIcons } from "./SettingsIcons";
+import { settingsSchema } from "./settings";
+import { settingsIcons } from "./settings-icons";
 import { z } from "zod";
 
 /**

@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { Project } from "@/core/Project";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
-import { createSubWindow } from "@/core/subWindowOpen";
+import { Project } from "@/core/project";
+import { RecentFileManager } from "@/core/service/data-file-service/recent-file-manager";
+import { createSubWindow } from "@/core/sub-window-open";
 import { activeResourceTabAtom } from "@/state";
-import { PathString } from "@/utils/pathString";
+import { PathString } from "@/utils/path-string";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useAtom } from "jotai";

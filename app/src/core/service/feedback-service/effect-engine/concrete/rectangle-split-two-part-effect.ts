@@ -1,13 +1,14 @@
 import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { Random } from "@/core/algorithm/random";
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 
 /**
  * 一个矩形被一刀切成两半，两个多边形的的特效
  */
 export class RectangleSplitTwoPartEffect extends Effect {
+  static readonly effectId = "RectangleSplitTwoPartEffect";
   /**
    * 长度只有2
    */

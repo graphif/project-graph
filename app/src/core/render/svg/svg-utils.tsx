@@ -1,6 +1,6 @@
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { superellipseSvgPath } from "@/utils/superellipse";
-import { Settings } from "@/core/service/Settings";
+import { Settings } from "@/core/service/settings";
 import { getTextSize, textToTextArray } from "@/utils/font";
 import { Color, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Rectangle } from "@graphif/shapes";

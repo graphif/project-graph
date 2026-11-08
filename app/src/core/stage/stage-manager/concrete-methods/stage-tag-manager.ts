@@ -1,18 +1,18 @@
 import { Color, ProgressNumber } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { Project, service } from "@/core/Project";
-import { LineCuttingEffect } from "@/core/service/feedbackService/effectEngine/concrete/LineCuttingEffect";
-import { RectangleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleNoteEffect";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
-import { MouseLocation } from "@/core/service/controlService/MouseLocation";
+import { Project, service } from "@/core/project";
+import { LineCuttingEffect } from "@/core/service/feedback-service/effect-engine/concrete/line-cutting-effect";
+import { RectangleNoteEffect } from "@/core/service/feedback-service/effect-engine/concrete/rectangle-note-effect";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
+import { Edge } from "@/core/stage/stage-object/association/edge";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
+import { ConnectPoint } from "@/core/stage/stage-object/entity/connect-point";
+import { ImageNode } from "@/core/stage/stage-object/entity/image-node";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { UrlNode } from "@/core/stage/stage-object/entity/url-node";
+import { MouseLocation } from "@/core/service/control-service/mouse-location";
 
 /**
  * 标签管理器

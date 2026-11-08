@@ -1,6 +1,6 @@
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 
 @service("backgroundRenderer")
 export class BackgroundRenderer {

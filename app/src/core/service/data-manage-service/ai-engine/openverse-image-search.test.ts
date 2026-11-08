@@ -4,7 +4,7 @@ import {
   downloadRemoteImage,
   findDownloadableOpenverseImage,
   searchOpenverseImages,
-} from "./OpenverseImageSearch";
+} from "./openverse-image-search";
 
 describe("OpenverseImageSearch", () => {
   it("拒绝非 HTTPS 和私有网络图片地址", () => {

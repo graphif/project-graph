@@ -1,6 +1,6 @@
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
-import { easeInExpo, easeOutExpo } from "@/core/service/feedbackService/effectEngine/mathTools/easings";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
+import { easeInExpo, easeOutExpo } from "@/core/service/feedback-service/effect-engine/math-tools/easings";
 import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
@@ -10,6 +10,7 @@ import { Rectangle } from "@graphif/shapes";
  * 可以用于展示矩形的移动和变形过程
  */
 export class RectangleTransformEffect extends Effect {
+  static readonly effectId = "RectangleTransformEffect";
   constructor(
     public override timeProgress: ProgressNumber,
     public startRectangle: Rectangle,

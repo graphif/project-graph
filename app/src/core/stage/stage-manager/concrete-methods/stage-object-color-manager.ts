@@ -1,4 +1,4 @@
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { Color } from "@graphif/data-structures";
 
 /**

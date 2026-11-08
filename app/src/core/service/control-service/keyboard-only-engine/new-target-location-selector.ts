@@ -1,5 +1,5 @@
 import { Vector } from "@graphif/data-structures";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
 
 /**
  * 仅在keyboardOnlyEngine模块中使用

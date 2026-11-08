@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { createMsdfgen } from "@playcanvas/msdfgen-wasm";
-import { isMsdfCompatibleText, MsdfTextAtlasRenderer } from "./msdfTextAtlas";
+import { isMsdfCompatibleText, MsdfTextAtlasRenderer } from "./msdf-text-atlas";
 import { Color, Vector } from "@graphif/data-structures";
 import { afterEach, describe, expect, it, vi } from "vitest";
 

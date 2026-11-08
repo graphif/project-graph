@@ -1,6 +1,6 @@
-import { Project, service } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
+import { Project, service } from "@/core/project";
+import { Settings } from "@/core/service/settings";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { toast } from "sonner";

@@ -7,11 +7,11 @@ import { toast } from "sonner";
 import TabContextMenu from "./components/tab-context-menu";
 import { Button } from "./components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./components/ui/tooltip";
-import { Project, ProjectState } from "./core/Project";
-import { SoundService } from "./core/service/feedbackService/SoundService";
-import { Settings } from "./core/service/Settings";
-import { ComponentTab, Tab } from "./core/Tab";
-import { TabWorkspace } from "./core/TabWorkspace";
+import { Project, ProjectState } from "./core/project";
+import { SoundService } from "./core/service/feedback-service/sound-service";
+import { Settings } from "./core/service/settings";
+import { ComponentTab, Tab } from "./core/tab";
+import { TabWorkspace } from "./core/tab-workspace";
 import { activeResourceTabAtom } from "./state";
 import { replaceTextWhenProtect } from "./utils/font";
 

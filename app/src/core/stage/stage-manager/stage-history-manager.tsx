@@ -1,5 +1,5 @@
-import { Project, ProjectState, service } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
+import { Project, ProjectState, service } from "@/core/project";
+import { Settings } from "@/core/service/settings";
 import { deserialize, serialize } from "@graphif/serializer";
 import { cn } from "@udecode/cn";
 import { Delta, diff, patch } from "jsondiffpatch";

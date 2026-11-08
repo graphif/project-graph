@@ -1,12 +1,13 @@
 import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 
 /**
  * 屏幕边缘闪颜色效果
  */
 export class ViewOutlineFlashEffect extends Effect {
+  static readonly effectId = "ViewOutlineFlashEffect";
   constructor(
     public color: Color,
     public override timeProgress: ProgressNumber = new ProgressNumber(0, 100),

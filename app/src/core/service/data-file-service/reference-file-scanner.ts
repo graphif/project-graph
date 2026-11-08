@@ -21,7 +21,7 @@
 
 import { mkdir, readDir, exists } from "@/platform/files";
 import { join } from "@/platform/path";
-import { PathString } from "@/utils/pathString";
+import { PathString } from "@/utils/path-string";
 import { URI } from "vscode-uri";
 
 export namespace ReferenceFileScanner {

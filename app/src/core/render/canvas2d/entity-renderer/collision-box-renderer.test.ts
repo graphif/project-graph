@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import { Color, Vector } from "@graphif/data-structures";
 import { Line } from "@graphif/shapes";
-import type { Project } from "@/core/Project";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import type { Project } from "@/core/project";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 
-vi.mock("@/core/Project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
+vi.mock("@/core/project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
 vi.mock("@/core/render/canvas2d/renderer", () => ({ Renderer: { NODE_ROUNDED_RADIUS: 8 } }));
-vi.mock("@/core/service/Settings", () => ({ Settings: { enableCollisionBoxAutoWidth: true } }));
+vi.mock("@/core/service/settings", () => ({ Settings: { enableCollisionBoxAutoWidth: true } }));
 
-import { CollisionBoxRenderer } from "./CollisionBoxRenderer";
+import { CollisionBoxRenderer } from "./collision-box-renderer";
 
 describe("line collision outlines", () => {
   it("strokes a closed outline once without overlapping segment passes or bridging separate paths", () => {

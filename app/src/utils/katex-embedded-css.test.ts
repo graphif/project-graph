@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { katexEmbeddedCss } from "./katexEmbeddedCss";
+import { katexEmbeddedCss } from "./katex-embedded-css";
 
 describe("embedded KaTeX fonts", () => {
   it("embeds every font face without external font URLs", () => {

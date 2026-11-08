@@ -1,10 +1,10 @@
-import { ConnectableAssociation } from "@/core/stage/stageObject/abstract/Association";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { ConnectableAssociation } from "@/core/stage/stage-object/abstract/association";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Vector } from "@graphif/data-structures";
 import { serializable } from "@graphif/serializer";
 import { Line, Rectangle } from "@graphif/shapes";
-import { ConnectPoint } from "../entity/ConnectPoint";
+import { ConnectPoint } from "../entity/connect-point";
 
 /**
  * 连接两个实体的有向边

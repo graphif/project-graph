@@ -1,6 +1,6 @@
-import { Project, service } from "@/core/Project";
-import { MsdfTextAtlasRenderer } from "@/core/render/canvas2d/basicRenderer/msdfTextAtlas";
-import { Settings } from "@/core/service/Settings";
+import { Project, service } from "@/core/project";
+import { MsdfTextAtlasRenderer } from "@/core/render/canvas2d/basic-renderer/msdf-text-atlas";
+import { Settings } from "@/core/service/settings";
 import {
   getFontIdentity,
   getTextSize,

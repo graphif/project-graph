@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { Vector } from "@graphif/data-structures";
-import type { Project } from "@/core/Project";
-vi.mock("@/core/Project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
-import { ImageRenderer } from "./ImageRenderer";
+import type { Project } from "@/core/project";
+vi.mock("@/core/project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
+import { ImageRenderer } from "./image-renderer";
 
 describe("rounded image nodes", () => {
   it.each([0.25, 1, 2, 4])(

@@ -1,12 +1,12 @@
-import { Project, service } from "@/core/Project";
-import { RectangleTransformEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleTransformEffect";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { Section } from "@/core/stage/stageObject/entity/Section";
+import { Project, service } from "@/core/project";
+import { RectangleTransformEffect } from "@/core/service/feedback-service/effect-engine/concrete/rectangle-transform-effect";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { Edge } from "@/core/stage/stage-object/association/edge";
+import { Section } from "@/core/stage/stage-object/entity/section";
 import { Direction } from "@/types/directions";
 import { Vector } from "@graphif/data-structures";
 import { Line, Rectangle } from "@graphif/shapes";
-import { Settings } from "../../Settings";
+import { Settings } from "../../settings";
 
 /**
  * 仅在keyboardOnlyEngine中使用，用于处理select change事件

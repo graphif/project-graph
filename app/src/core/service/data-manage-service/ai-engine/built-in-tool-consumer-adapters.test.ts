@@ -8,31 +8,22 @@ const fixture = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry", () => ({
+vi.mock("@/core/service/data-manage-service/ai-engine/ai-object-reference-registry", () => ({
   AIObjectReferenceError: class AIObjectReferenceError extends Error {},
   AIObjectReferenceRegistry: class AIObjectReferenceRegistry {},
 }));
 vi.mock("@toon-format/toon", () => ({ encode: (value: unknown) => JSON.stringify(value) }));
-vi.mock("ai", () => ({ tool: (definition: unknown) => definition }));
 vi.mock("zod/v4", () => ({ default: { toJSONSchema: (schema: unknown) => ({ schema }) } }));
-vi.mock("./BuiltInToolRegistry", () => ({
+vi.mock("./built-in-tool-registry", () => ({
   builtInToolCatalog: [fixture.definition],
   createLiveProjectBuiltInToolRuntimeHost: vi.fn(() => ({})),
   invokeBuiltInTool: vi.fn(),
 }));
 
-import { createBuiltInToolAgentTools } from "./BuiltInToolAgentAdapter";
-import { getBuiltInToolCliEntries } from "./BuiltInToolCliAdapter";
-import { getBuiltInToolWindowEntries } from "./BuiltInToolWindowAdapter";
+import { getBuiltInToolCliEntries } from "./built-in-tool-cli-adapter";
+import { getBuiltInToolWindowEntries } from "./built-in-tool-window-adapter";
 
-it("makes a Registry-only fixture tool visible to the Agent, CLI, and tool-window adapters", () => {
-  const agentTools = createBuiltInToolAgentTools({} as never, {} as never) as Record<string, Record<string, unknown>>;
-
-  expect(Object.keys(agentTools)).toEqual(["fixture_tool"]);
-  expect(agentTools.fixture_tool).toMatchObject({
-    description: fixture.definition.description,
-    inputSchema: fixture.definition.inputSchema,
-  });
+it("makes a Registry-only fixture tool visible to the CLI and tool-window adapters", () => {
   expect(getBuiltInToolWindowEntries()).toEqual([
     {
       name: fixture.definition.name,

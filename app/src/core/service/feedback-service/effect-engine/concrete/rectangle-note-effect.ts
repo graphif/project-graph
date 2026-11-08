@@ -1,7 +1,7 @@
-import { Project } from "@/core/Project";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
-import { reverseAnimate } from "@/core/service/feedbackService/effectEngine/mathTools/animateFunctions";
-import { easeOutQuint } from "@/core/service/feedbackService/effectEngine/mathTools/easings";
+import { Project } from "@/core/project";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
+import { reverseAnimate } from "@/core/service/feedback-service/effect-engine/math-tools/animate-functions";
+import { easeOutQuint } from "@/core/service/feedback-service/effect-engine/math-tools/easings";
 import { Color, mixColors, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
@@ -15,6 +15,7 @@ import { Rectangle } from "@graphif/shapes";
  * 目标矩形大小是世界坐标系
  */
 export class RectangleNoteEffect extends Effect {
+  static readonly effectId = "RectangleNoteEffect";
   constructor(
     public override timeProgress: ProgressNumber,
     public targetRectangle: Rectangle,

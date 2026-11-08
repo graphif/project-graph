@@ -1,9 +1,9 @@
-import { RecentFileManager } from "./RecentFileManager";
-import { onOpenFile } from "../GlobalMenu";
+import { RecentFileManager } from "./recent-file-manager";
+import { onOpenFile } from "../global-menu";
 import { URI } from "vscode-uri";
 import { exists } from "@/platform/files";
 import { toast } from "sonner";
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 
 interface DeepLinkParams {
   path: string;

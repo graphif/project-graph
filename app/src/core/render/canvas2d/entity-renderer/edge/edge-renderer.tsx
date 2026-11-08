@@ -1,20 +1,20 @@
 import { Color, Vector } from "@graphif/data-structures";
 
-import { ArcEdge } from "@/core/stage/stageObject/association/ArcEdge";
-import { CubicCatmullRomSplineEdge } from "@/core/stage/stageObject/association/CubicCatmullRomSplineEdge";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { Section } from "@/core/stage/stageObject/entity/Section";
+import { ArcEdge } from "@/core/stage/stage-object/association/arc-edge";
+import { CubicCatmullRomSplineEdge } from "@/core/stage/stage-object/association/cubic-catmull-rom-spline-edge";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
+import { Section } from "@/core/stage/stage-object/entity/section";
 
-import { Project, service } from "@/core/Project";
-import { StraightEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/edge/concrete/StraightEdgeRenderer";
-import { SymmetryCurveEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/edge/concrete/SymmetryCurveEdgeRenderer";
-import { VerticalPolyEdgeRenderer } from "@/core/render/canvas2d/entityRenderer/edge/concrete/VerticalPolyEdgeRenderer";
-import { EdgeRendererClass } from "@/core/render/canvas2d/entityRenderer/edge/EdgeRendererClass";
-import { renderArcEdge } from "@/core/render/canvas2d/entityRenderer/edge/renderArcEdge";
-import { renderCrEdge } from "@/core/render/canvas2d/entityRenderer/edge/renderCrEdge";
-import { Settings } from "@/core/service/Settings";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
+import { Project, service } from "@/core/project";
+import { StraightEdgeRenderer } from "@/core/render/canvas2d/entity-renderer/edge/concrete/straight-edge-renderer";
+import { SymmetryCurveEdgeRenderer } from "@/core/render/canvas2d/entity-renderer/edge/concrete/symmetry-curve-edge-renderer";
+import { VerticalPolyEdgeRenderer } from "@/core/render/canvas2d/entity-renderer/edge/concrete/vertical-poly-edge-renderer";
+import { EdgeRendererClass } from "@/core/render/canvas2d/entity-renderer/edge/edge-renderer-class";
+import { renderArcEdge } from "@/core/render/canvas2d/entity-renderer/edge/render-arc-edge";
+import { renderCrEdge } from "@/core/render/canvas2d/entity-renderer/edge/render-cr-edge";
+import { Settings } from "@/core/service/settings";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { Edge } from "@/core/stage/stage-object/association/edge";
 
 /**
  * 边的总渲染器单例

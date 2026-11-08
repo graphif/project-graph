@@ -1,9 +1,10 @@
-import type { Project } from "@/core/Project";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import type { Project } from "@/core/project";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Color, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Line } from "@graphif/shapes";
+import type { Value } from "platejs";
 
 /**
  * 一笔画中的某一个小段
@@ -69,12 +70,18 @@ export class PenStroke extends Entity {
 
   constructor(
     protected readonly project: Project,
-    { uuid = crypto.randomUUID() as string, segments = [] as PenStrokeSegment[], color = Color.White },
+    {
+      uuid = crypto.randomUUID() as string,
+      segments = [] as PenStrokeSegment[],
+      color = Color.White,
+      details = [] as Value,
+    },
   ) {
     super();
     this.uuid = uuid;
     this.segments = segments;
     this.color = color;
+    this.details = details;
     this.updateCollisionBoxBySegmentList();
   }
 

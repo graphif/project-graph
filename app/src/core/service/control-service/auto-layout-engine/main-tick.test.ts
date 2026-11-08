@@ -2,20 +2,20 @@
 
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/core/service/Settings", () => ({
+vi.mock("@/core/service/settings", () => ({
   Settings: { isEnableEntityCollision: false, isEnableSectionCollision: false },
 }));
-vi.mock("@/core/Project", () => ({
+vi.mock("@/core/project", () => ({
   Project: class Project {},
   service: () => (target: unknown) => target,
 }));
 
-import type { Project } from "@/core/Project";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import type { Project } from "@/core/project";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { AutoLayout } from "./mainTick";
+import { AutoLayout } from "./main-tick";
 
 function createEntity(uuid: string, x: number, y: number, width: number, height: number): ConnectableEntity {
   return {

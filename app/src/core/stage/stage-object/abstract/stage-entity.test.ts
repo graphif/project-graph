@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/core/service/Settings", () => ({ Settings: { isEnableEntityCollision: true } }));
-vi.mock("../tools/entityDetailsManager", () => ({ DetailsManager: class {} }));
+vi.mock("@/core/service/settings", () => ({ Settings: { isEnableEntityCollision: true } }));
+vi.mock("../tools/entity-details-manager", () => ({ DetailsManager: class {} }));
 
-import { Entity } from "./StageEntity";
-import type { Section } from "../entity/Section";
+import { Entity } from "./stage-entity";
+import type { Section } from "../entity/section";
 import { Rectangle } from "@graphif/shapes";
 import { Vector } from "@graphif/data-structures";
 

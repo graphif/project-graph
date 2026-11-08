@@ -1,5 +1,5 @@
-import { isResourceTab, ResourceTab, Tab } from "@/core/Tab";
-import { findTabGroup, findTabGroupByTabId, TabDropEdge, TabGroupNode } from "@/core/TabGroup";
+import { isResourceTab, ResourceTab, Tab } from "@/core/tab";
+import { findTabGroup, findTabGroupByTabId, TabDropEdge, TabGroupNode } from "@/core/tab-group";
 import { atom, createStore } from "jotai";
 
 export const store = createStore();

@@ -1,7 +1,7 @@
 import { fetch } from "@/platform/http";
-import type { CreateRoomResponse, JoinRoomResponse } from "./CollabProtocol";
-import { resolveCollabHttpBase } from "./CollabTransport";
-import type { StageMapDoc } from "./stageMap";
+import type { CreateRoomResponse, JoinRoomResponse } from "./collab-protocol";
+import { resolveCollabHttpBase } from "./collab-transport";
+import type { StageMapDoc } from "./stage-map";
 
 async function collabFetch(path: string, token: string, init?: RequestInit) {
   const base = resolveCollabHttpBase();

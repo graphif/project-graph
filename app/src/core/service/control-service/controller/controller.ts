@@ -1,28 +1,28 @@
 import { Vector } from "@graphif/data-structures";
 // import { ControllerKeyboardOnly } from "@/core/service/controlService/controller/concrete/ControllerKeyboardOnly";
 // ...
-import { Project, service } from "@/core/Project";
-import { ControllerAssociationReshapeClass } from "@/core/service/controlService/controller/concrete/ControllerAssociationReshape";
-import { ControllerCameraClass } from "@/core/service/controlService/controller/concrete/ControllerCamera";
-import { ControllerCuttingClass } from "@/core/service/controlService/controller/concrete/ControllerCutting";
-import { ControllerEdgeEditClass } from "@/core/service/controlService/controller/concrete/ControllerEdgeEdit";
-import { ControllerEntityClickSelectAndMoveClass } from "@/core/service/controlService/controller/concrete/ControllerEntityClickSelectAndMove";
-import { ControllerEntityCreateClass } from "@/core/service/controlService/controller/concrete/ControllerEntityCreate";
-import { ControllerLayerMovingClass } from "@/core/service/controlService/controller/concrete/ControllerEntityLayerMoving";
-import { ControllerEntityResizeClass } from "@/core/service/controlService/controller/concrete/ControllerEntityResize";
-import { ControllerExtensionEntityClickClass } from "@/core/service/controlService/controller/concrete/ControllerExtensionEntityClick";
-import { ControllerImageScaleClass } from "@/core/service/controlService/controller/concrete/ControllerImageScale";
-import { ControllerNodeConnectionClass } from "@/core/service/controlService/controller/concrete/ControllerNodeConnection";
-import { ControllerNodeEditClass } from "@/core/service/controlService/controller/concrete/ControllerNodeEdit";
-import { ControllerPenStrokeControlClass } from "@/core/service/controlService/controller/concrete/ControllerPenStrokeControl";
-import { ControllerPenStrokeDrawingClass } from "@/core/service/controlService/controller/concrete/ControllerPenStrokeDrawing";
-import { ControllerRectangleSelectClass } from "@/core/service/controlService/controller/concrete/ControllerRectangleSelect";
-import { ControllerSectionEditClass } from "@/core/service/controlService/controller/concrete/ControllerSectionEdit";
+import { Project, service } from "@/core/project";
+import { ControllerAssociationReshapeClass } from "@/core/service/control-service/controller/concrete/controller-association-reshape";
+import { ControllerCameraClass } from "@/core/service/control-service/controller/concrete/controller-camera";
+import { ControllerCuttingClass } from "@/core/service/control-service/controller/concrete/controller-cutting";
+import { ControllerEdgeEditClass } from "@/core/service/control-service/controller/concrete/controller-edge-edit";
+import { ControllerEntityClickSelectAndMoveClass } from "@/core/service/control-service/controller/concrete/controller-entity-click-select-and-move";
+import { ControllerEntityCreateClass } from "@/core/service/control-service/controller/concrete/controller-entity-create";
+import { ControllerLayerMovingClass } from "@/core/service/control-service/controller/concrete/controller-entity-layer-moving";
+import { ControllerEntityResizeClass } from "@/core/service/control-service/controller/concrete/controller-entity-resize";
+import { ControllerExtensionEntityClickClass } from "@/core/service/control-service/controller/concrete/controller-extension-entity-click";
+import { ControllerImageScaleClass } from "@/core/service/control-service/controller/concrete/controller-image-scale";
+import { ControllerNodeConnectionClass } from "@/core/service/control-service/controller/concrete/controller-node-connection";
+import { ControllerNodeEditClass } from "@/core/service/control-service/controller/concrete/controller-node-edit";
+import { ControllerPenStrokeControlClass } from "@/core/service/control-service/controller/concrete/controller-pen-stroke-control";
+import { ControllerPenStrokeDrawingClass } from "@/core/service/control-service/controller/concrete/controller-pen-stroke-drawing";
+import { ControllerRectangleSelectClass } from "@/core/service/control-service/controller/concrete/controller-rectangle-select";
+import { ControllerSectionEditClass } from "@/core/service/control-service/controller/concrete/controller-section-edit";
 import { CursorNameEnum } from "@/types/cursors";
 import { isMac } from "@/utils/platform";
-import { Settings } from "../../Settings";
-import { ControllerClass } from "./ControllerClass";
-import { ControllerInput } from "./ControllerInput";
+import { Settings } from "../../settings";
+import { ControllerClass } from "./controller-class";
+import { ControllerInput } from "./controller-input";
 
 /**
  * 控制器，控制鼠标、键盘事件
@@ -130,7 +130,7 @@ export class Controller {
   constructor(private readonly project: Project) {
     // 所有的具体的功能逻辑封装成控制器对象
     // 当有新功能时新建控制器对象，并在这里初始化
-    Object.values(import.meta.glob("./concrete/*.tsx", { eager: true }))
+    Object.values(import.meta.glob(["./concrete/*.ts", "!./concrete/*.test.ts"], { eager: true }))
       .map((module) => Object.entries(module as any).find(([k]) => k.includes("Class"))!)
       .filter(Boolean)
       .map(([k, v]) => {

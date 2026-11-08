@@ -10,7 +10,7 @@ vi.mock("@/platform/desktop", () => ({
       invoke("save_project_reference_snapshot", { projectUri, references }),
   },
 }));
-import { AIProjectReferenceStore } from "./AIProjectReferenceStore";
+import { AIProjectReferenceStore } from "./ai-project-reference-store";
 
 const snapshot = {
   entries: [{ ref: "n1" as const, uuid: "11111111-1111-4111-8111-111111111111" }],

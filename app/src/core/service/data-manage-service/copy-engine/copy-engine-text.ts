@@ -1,18 +1,18 @@
-import { Project } from "@/core/Project";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
-import { PathString } from "@/utils/pathString";
+import { Project } from "@/core/project";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { SvgNode } from "@/core/stage/stage-object/entity/svg-node";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { UrlNode } from "@/core/stage/stage-object/entity/url-node";
+import { PathString } from "@/utils/path-string";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { MouseLocation } from "../../controlService/MouseLocation";
-import { RectanglePushInEffect } from "../../feedbackService/effectEngine/concrete/RectanglePushInEffect";
-import { isMermaidGraphString, isSvgString } from "./stringValidTools";
+import { MouseLocation } from "../../control-service/mouse-location";
+import { RectanglePushInEffect } from "../../feedback-service/effect-engine/concrete/rectangle-push-in-effect";
+import { isMermaidGraphString, isSvgString } from "./string-valid-tools";
 import { toast } from "sonner";
-import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
-import { Settings } from "@/core/service/Settings";
+import { DetailsManager } from "@/core/stage/stage-object/tools/entity-details-manager";
+import { Settings } from "@/core/service/settings";
 
 /**
  * 专门处理文本粘贴的服务

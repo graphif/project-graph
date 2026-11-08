@@ -1,10 +1,10 @@
-import type { Project } from "@/core/Project";
-import { RectanglePushInEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectanglePushInEffect";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
-import { MEDIA_NODE_PLACEHOLDER_SIZE } from "@/core/stage/stageObject/entity/MediaNode";
-import { MEDIA_NODE_AUDIO_PLACEHOLDER_SIZE } from "@/core/stage/stageObject/entity/MediaNode";
-import type { MediaKind } from "@/core/stage/stageObject/entity/MediaNode";
+import type { Project } from "@/core/project";
+import { RectanglePushInEffect } from "@/core/service/feedback-service/effect-engine/concrete/rectangle-push-in-effect";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { MediaNode } from "@/core/stage/stage-object/entity/media-node";
+import { MEDIA_NODE_PLACEHOLDER_SIZE } from "@/core/stage/stage-object/entity/media-node";
+import { MEDIA_NODE_AUDIO_PLACEHOLDER_SIZE } from "@/core/stage/stage-object/entity/media-node";
+import type { MediaKind } from "@/core/stage/stage-object/entity/media-node";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import type { Value } from "platejs";

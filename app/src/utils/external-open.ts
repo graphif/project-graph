@@ -1,11 +1,11 @@
-import { Project } from "@/core/Project";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { Project } from "@/core/project";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { open } from "@/platform/shell";
 import { toast } from "sonner";
-import { PathString } from "./pathString";
+import { PathString } from "./path-string";
 import { URI } from "vscode-uri";
-import { onOpenFile } from "@/core/service/GlobalMenu";
+import { onOpenFile } from "@/core/service/global-menu";
 
 export async function openBrowserOrFile(project: Project) {
   for (const node of project.stageManager.getSelectedEntities()) {

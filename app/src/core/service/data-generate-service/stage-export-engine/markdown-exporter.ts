@@ -1,6 +1,6 @@
-import type { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
-import { BaseExporter } from "./BaseExporter";
+import type { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { DetailsManager } from "@/core/stage/stage-object/tools/entity-details-manager";
+import { BaseExporter } from "./base-exporter";
 
 /**
  * Markdown 格式导出器

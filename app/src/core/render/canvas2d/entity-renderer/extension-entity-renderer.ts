@@ -1,7 +1,7 @@
-import { extensionObjectRegistry } from "@/core/extension/ExtensionObjectRegistry";
-import { Project } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
-import { ExtensionEntity } from "@/core/stage/stageObject/entity/ExtensionEntity";
+import { extensionObjectRegistry } from "@/core/extension/extension-object-registry";
+import { Project } from "@/core/project";
+import { Settings } from "@/core/service/settings";
+import { ExtensionEntity } from "@/core/stage/stage-object/entity/extension-entity";
 import { Vector } from "@graphif/data-structures";
 
 /** scale 变化超过此比例时重新渲染（避免频繁重渲） */

@@ -1,11 +1,11 @@
 import { cn } from "./utils/cn";
 import { onFileDrop } from "mygo-runtime";
 import { useEffect, useRef, useState } from "react";
-import { DragFileIntoStageEngine } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
-import { isMediaFilePath } from "./core/service/dataManageService/dragFileIntoStageEngine/dragFileIntoStageEngine";
-import type { Project } from "./core/Project";
-import { TextNode } from "./core/stage/stageObject/entity/TextNode";
-import { CollisionBox } from "./core/stage/stageObject/collisionBox/collisionBox";
+import { DragFileIntoStageEngine } from "./core/service/data-manage-service/drag-file-into-stage-engine/drag-file-into-stage-engine";
+import { isMediaFilePath } from "./core/service/data-manage-service/drag-file-into-stage-engine/drag-file-into-stage-engine";
+import type { Project } from "./core/project";
+import { TextNode } from "./core/stage/stage-object/entity/text-node";
+import { CollisionBox } from "./core/stage/stage-object/collision-box/collision-box";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 

@@ -1,8 +1,8 @@
-import { Project, service } from "@/core/Project";
-import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { SyncAssociation, SyncableKey } from "@/core/stage/stageObject/association/SyncAssociation";
+import { Project, service } from "@/core/project";
+import { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { SyncAssociation, SyncableKey } from "@/core/stage/stage-object/association/sync-association";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 

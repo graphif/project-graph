@@ -1,4 +1,4 @@
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { Vector } from "@graphif/data-structures";
 
 @service("svgRenderer")

@@ -1,6 +1,6 @@
-import type { Project } from "@/core/Project";
-import type { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import type { Project } from "@/core/project";
+import type { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 
 /**
  * 导出器基类，包含共享的工具方法

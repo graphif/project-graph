@@ -1,9 +1,9 @@
-import type { Project } from "@/core/Project";
-import { Association } from "@/core/stage/stageObject/abstract/Association";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import type { Project } from "@/core/project";
+import { Association } from "@/core/stage/stage-object/abstract/association";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { LatexNode } from "@/core/stage/stage-object/entity/latex-node";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { extractLatexSource } from "@/utils/latex";
 import katex from "katex";
 import { toast } from "sonner";

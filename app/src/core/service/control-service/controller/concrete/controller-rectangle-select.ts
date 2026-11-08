@@ -1,5 +1,5 @@
-import { Settings } from "@/core/service/Settings";
-import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
+import { Settings } from "@/core/service/settings";
+import { ControllerClass } from "@/core/service/control-service/controller/controller-class";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 

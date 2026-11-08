@@ -1,18 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-vi.mock("@/core/Project", () => ({ Project: class {} }));
+vi.mock("@/core/project", () => ({ Project: class {} }));
 vi.mock("@/core/render/canvas2d/renderer", () => ({ Renderer: { FONT_SIZE: 24, NODE_PADDING: 10 } }));
-vi.mock("@/core/service/Settings", () => ({ Settings: {} }));
-vi.mock("@/core/stage/stageObject/abstract/ConnectableEntity", () => ({ ConnectableEntity: class {} }));
-vi.mock("@/core/stage/stageObject/abstract/StageEntity", () => ({ Entity: class {} }));
-vi.mock("@/core/stage/stageObject/association/MutiTargetUndirectedEdge", () => ({
+vi.mock("@/core/service/settings", () => ({ Settings: {} }));
+vi.mock("@/core/stage/stage-object/abstract/connectable-entity", () => ({ ConnectableEntity: class {} }));
+vi.mock("@/core/stage/stage-object/abstract/stage-entity", () => ({ Entity: class {} }));
+vi.mock("@/core/stage/stage-object/association/muti-target-undirected-edge", () => ({
   MultiTargetUndirectedEdge: class {},
 }));
 vi.mock("@/utils/font", () => ({ getTextSize: () => new Vector(50, 24) }));
-import { Section } from "./Section";
-import { MultiTargetUndirectedEdge } from "../association/MutiTargetUndirectedEdge";
-import { CollisionBox } from "../collisionBox/collisionBox";
+import { Section } from "./section";
+import { MultiTargetUndirectedEdge } from "../association/muti-target-undirected-edge";
+import { CollisionBox } from "../collision-box/collision-box";
 
 describe("section enclosure bounds", () => {
   it.each(["convex", "circle"])("includes internal %s outlines but excludes crossing edges", (renderType) => {

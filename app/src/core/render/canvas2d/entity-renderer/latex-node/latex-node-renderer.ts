@@ -1,6 +1,6 @@
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
+import { LatexNode } from "@/core/stage/stage-object/entity/latex-node";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
@@ -63,7 +63,7 @@ export class LatexNodeRenderer {
         14 * scale,
         new Color(255, 80, 80),
       );
-    } else if (node.state === "success") {
+    } else if (node.state === "success" && node.image) {
       // 每帧检查颜色是否需要更新（主题切换 / 用户改色）
       const targetColorCss = this.getTargetColorCss(node);
       if (targetColorCss !== node.currentRenderedColorCss) {

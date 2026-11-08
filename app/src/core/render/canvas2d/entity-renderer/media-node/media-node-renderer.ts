@@ -1,10 +1,10 @@
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { superellipseRect } from "@/utils/superellipse";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { Settings } from "@/core/service/Settings";
-import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { MediaPlaybackManager } from "@/core/service/mediaPlaybackService/MediaPlaybackManager";
-import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
+import { Settings } from "@/core/service/settings";
+import { MouseLocation } from "@/core/service/control-service/mouse-location";
+import { MediaPlaybackManager } from "@/core/service/media-playback-service/media-playback-manager";
+import { MediaNode } from "@/core/stage/stage-object/entity/media-node";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 

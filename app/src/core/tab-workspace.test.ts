@@ -11,13 +11,13 @@ import {
 } from "@/state";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./service/Settings", () => ({ Settings: { maxFps: 60, maxFpsUnfocused: 60 } }));
-vi.mock("./service/Telemetry", () => ({ Telemetry: { event: vi.fn() } }));
+vi.mock("./service/settings", () => ({ Settings: { maxFps: 60, maxFpsUnfocused: 60 } }));
+vi.mock("./service/telemetry", () => ({ Telemetry: { event: vi.fn() } }));
 vi.mock("@/components/ui/dialog", () => ({ Dialog: { buttons: vi.fn() } }));
 
-import { Tab } from "./Tab";
-import { createTabGroup } from "./TabGroup";
-import { TabWorkspace } from "./TabWorkspace";
+import { Tab } from "./tab";
+import { createTabGroup } from "./tab-group";
+import { TabWorkspace } from "./tab-workspace";
 
 class TestTab extends Tab {
   getComponent() {

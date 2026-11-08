@@ -1,5 +1,5 @@
 import { BaseCodeBlockPlugin, BaseCodeLinePlugin, BaseCodeSyntaxPlugin } from "@platejs/code-block";
-import { codeHighlighter as lowlight } from "@/utils/codeHighlight";
+import { codeHighlighter as lowlight } from "@/utils/code-highlight";
 
 import {
   CodeBlockElementStatic,

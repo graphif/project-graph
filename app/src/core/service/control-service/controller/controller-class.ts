@@ -1,5 +1,5 @@
-import type { Project } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
+import type { Project } from "@/core/project";
+import { Settings } from "@/core/service/settings";
 import { Vector } from "@graphif/data-structures";
 
 export class ControllerClass {

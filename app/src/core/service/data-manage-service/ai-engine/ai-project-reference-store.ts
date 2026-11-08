@@ -1,5 +1,5 @@
-import type { Project } from "@/core/Project";
-import type { AIObjectReferenceSnapshot } from "@/core/service/dataManageService/aiEngine/AIObjectReferenceRegistry";
+import type { Project } from "@/core/project";
+import type { AIObjectReferenceSnapshot } from "@/core/service/data-manage-service/ai-engine/ai-object-reference-registry";
 import { References } from "@/platform/desktop";
 import { URI } from "vscode-uri";
 

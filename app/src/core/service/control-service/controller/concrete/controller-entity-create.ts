@@ -1,7 +1,7 @@
-import { Project } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
-import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
-import { Section } from "@/core/stage/stageObject/entity/Section";
+import { Project } from "@/core/project";
+import { Settings } from "@/core/service/settings";
+import { ControllerClass } from "@/core/service/control-service/controller/controller-class";
+import { Section } from "@/core/stage/stage-object/entity/section";
 import { Vector } from "@graphif/data-structures";
 
 /**

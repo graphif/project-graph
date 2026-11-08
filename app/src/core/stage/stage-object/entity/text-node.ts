@@ -1,11 +1,11 @@
-import type { Project } from "@/core/Project";
+import type { Project } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { Settings } from "@/core/service/Settings";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import type { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import type { ResizeAble } from "@/core/stage/stageObject/abstract/StageObjectInterface";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { Section } from "@/core/stage/stageObject/entity/Section";
+import { Settings } from "@/core/service/settings";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import type { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import type { ResizeAble } from "@/core/stage/stage-object/abstract/stage-object-interface";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { Section } from "@/core/stage/stage-object/entity/section";
 import { getMultiLineTextSize } from "@/utils/font";
 import { Color, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
@@ -139,6 +139,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       borderStyle?: "solid" | "dashed" | "none";
     },
     public unknown = false,
+    { deferGeometry = false }: { deferGeometry?: boolean } = {},
   ) {
     super();
     this.uuid = uuid;
@@ -156,6 +157,10 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     // if (this.text.length < TextNode.enableResizeCharCount) {
     //   this.adjustSizeByText();
     // }
+    if (!deferGeometry) this.initializeGeometry();
+  }
+
+  initializeGeometry(): void {
     if (this.sizeAdjust === "auto") {
       this.adjustSizeByText();
     } else if (this.sizeAdjust === "manual") {

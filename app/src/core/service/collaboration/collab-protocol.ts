@@ -1,4 +1,4 @@
-import type { StageMapDoc } from "./stageMap";
+import type { StageMapDoc } from "./stage-map";
 
 export type CollabRole = "owner" | "editor" | "viewer";
 

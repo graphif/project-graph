@@ -1,7 +1,7 @@
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
-import { onOpenFile } from "@/core/service/GlobalMenu";
-import { createSubWindow } from "@/core/subWindowOpen";
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { RecentFileManager } from "@/core/service/data-file-service/recent-file-manager";
+import { onOpenFile } from "@/core/service/global-menu";
+import { createSubWindow } from "@/core/sub-window-open";
+import { TabWorkspace } from "@/core/tab-workspace";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { useEffect, useState } from "react";

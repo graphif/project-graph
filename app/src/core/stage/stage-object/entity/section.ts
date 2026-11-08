@@ -1,10 +1,10 @@
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { Settings } from "@/core/service/Settings";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { MultiTargetUndirectedEdge } from "@/core/stage/stageObject/association/MutiTargetUndirectedEdge";
+import { Settings } from "@/core/service/settings";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { MultiTargetUndirectedEdge } from "@/core/stage/stage-object/association/muti-target-undirected-edge";
 import { getTextSize } from "@/utils/font";
 import { Color, Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
@@ -48,6 +48,14 @@ export class Section extends ConnectableEntity {
     } else {
       return this._collisionBoxNormal;
     }
+  }
+
+  public get expandedRectangle(): Rectangle {
+    return this._collisionBoxNormal.getRectangle();
+  }
+
+  initializeCollapsedGeometry(): void {
+    this._collisionBoxWhenCollapsed = this.collapsedCollisionBox();
   }
 
   /** 获取折叠状态下的碰撞箱 */
@@ -101,6 +109,7 @@ export class Section extends ConnectableEntity {
       borderStyle = "solid" as "solid" | "dashed" | "none",
     } = {},
     public unknown = false,
+    { deferGeometry = false }: { deferGeometry?: boolean } = {},
   ) {
     super();
     this.uuid = uuid;
@@ -124,7 +133,7 @@ export class Section extends ConnectableEntity {
     this.children = children;
     this.borderStyle = borderStyle;
     // 一定要放在最后
-    this.adjustLocationAndSize();
+    if (!deferGeometry) this.adjustLocationAndSize();
   }
 
   /**

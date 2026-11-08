@@ -1,8 +1,8 @@
-import { Project } from "@/core/Project";
-import { MediaPlaybackManager } from "@/core/service/mediaPlaybackService/MediaPlaybackManager";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { ResizeAble } from "@/core/stage/stageObject/abstract/StageObjectInterface";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Project } from "@/core/project";
+import { MediaPlaybackManager } from "@/core/service/media-playback-service/media-playback-manager";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { ResizeAble } from "@/core/stage/stage-object/abstract/stage-object-interface";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Vector } from "@graphif/data-structures";
 import { id, passExtraAtArg1, passObject, serializable } from "@graphif/serializer";
 import { Rectangle } from "@graphif/shapes";
@@ -73,6 +73,7 @@ export class MediaNode extends ConnectableEntity implements ResizeAble {
     }: MediaNodeOptions,
     public unknown = false,
     public onReady?: () => void,
+    { deferResources = false }: { deferResources?: boolean } = {},
   ) {
     super();
     this.uuid = uuid;
@@ -83,8 +84,13 @@ export class MediaNode extends ConnectableEntity implements ResizeAble {
     this.title = title;
     this.aspectRatio = mediaKind === "audio" ? 640 / 160 : 16 / 9;
 
-    const blob = project.attachments.get(attachmentId);
-    if (!blob) {
+    if (!project.attachments.has(attachmentId)) this.state = "notFound";
+    if (!deferResources) this.initializeResources();
+  }
+
+  initializeResources(): void {
+    if (this.disposed) return;
+    if (!this.project.attachments.has(this.attachmentId)) {
       this.state = "notFound";
       return;
     }

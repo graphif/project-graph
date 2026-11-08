@@ -5,7 +5,7 @@ const settings = vi.hoisted(() => ({
   watch: vi.fn(),
 }));
 
-vi.mock("@/core/Project", () => ({
+vi.mock("@/core/project", () => ({
   Project: class Project {},
   ProjectState: { Saved: "saved", Unsaved: "unsaved" },
   service: (id: string) => (target: { id?: string }) => {
@@ -13,7 +13,7 @@ vi.mock("@/core/Project", () => ({
     return target;
   },
 }));
-vi.mock("@/core/service/Settings", () => ({
+vi.mock("@/core/service/settings", () => ({
   Settings: {
     historyManagerMode: "memoryEfficient",
     historySize: 100,
@@ -23,7 +23,7 @@ vi.mock("@/core/service/Settings", () => ({
 }));
 vi.mock("@graphif/serializer", () => ({ serialize: () => [], deserialize: () => [] }));
 
-import { HistoryManager } from "./StageHistoryManager";
+import { HistoryManager } from "./stage-history-manager";
 
 describe("HistoryManager cleanup", () => {
   beforeEach(() => {

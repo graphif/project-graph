@@ -1,7 +1,7 @@
 import { encode } from "@msgpack/msgpack";
 import { Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
 import { URI } from "vscode-uri";
-import { FileSystemProvider } from "@/core/interfaces/Service";
+import { FileSystemProvider } from "@/core/interfaces/service";
 
 export class FileSystemProviderDraft implements FileSystemProvider {
   async read() {

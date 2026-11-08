@@ -1,7 +1,7 @@
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
 import { Color, ProgressNumber, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
@@ -9,6 +9,7 @@ import { Rectangle } from "@graphif/shapes";
  * 实体收缩消失特效
  */
 export class EntityShrinkEffect extends Effect {
+  static readonly effectId = "EntityShrinkEffect";
   constructor(
     public time: number,
     public rect: Rectangle,

@@ -1,6 +1,6 @@
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { Effect } from "@/core/service/feedbackService/effectEngine/effectObject";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 import { Color, mixColors, ProgressNumber } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 
@@ -9,6 +9,7 @@ import { Rectangle } from "@graphif/shapes";
  * 用于矩形区域的淡出效果，支持自定义填充色和边框色
  */
 export class RectangleFadeEffect extends Effect {
+  static readonly effectId = "RectangleFadeEffect";
   constructor(
     public override timeProgress: ProgressNumber,
     private rectangle: Rectangle,

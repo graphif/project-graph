@@ -1,18 +1,18 @@
-import { Project, service } from "@/core/Project";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
+import { Project, service } from "@/core/project";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { Edge } from "@/core/stage/stage-object/association/edge";
 import { toast } from "sonner";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
 import { Direction } from "@/types/directions";
-import { showTreeValidationErrors } from "@/utils/treeValidation";
+import { showTreeValidationErrors } from "@/utils/tree-validation";
 import { ProgressNumber, Vector } from "@graphif/data-structures";
 import { Line, Rectangle } from "@graphif/shapes";
 import { v4 } from "uuid";
-import { LineEffect } from "../../feedbackService/effectEngine/concrete/LineEffect";
-import { RectangleRenderEffect } from "../../feedbackService/effectEngine/concrete/RectangleRenderEffect";
-import { SoundService } from "../../feedbackService/SoundService";
-import { Settings } from "../../Settings";
+import { LineEffect } from "../../feedback-service/effect-engine/concrete/line-effect";
+import { RectangleRenderEffect } from "../../feedback-service/effect-engine/concrete/rectangle-render-effect";
+import { SoundService } from "../../feedback-service/sound-service";
+import { Settings } from "../../settings";
 
 /**
  * 专用于Xmind式的树形结构的键盘操作引擎

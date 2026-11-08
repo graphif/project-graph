@@ -18,7 +18,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { Fragment, useState } from "react";
-import ThemesTab from "../themes";
+import ThemesTab from "../themes/themes";
 import ContextMenuPage from "./context-menu";
 import EffectsPage from "./effects";
 import GlobalMenuPage from "./global-menu";

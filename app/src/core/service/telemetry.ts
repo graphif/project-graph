@@ -1,7 +1,7 @@
-import { FeatureFlags } from "@/core/service/FeatureFlags";
-import { getDeviceId } from "@/utils/otherApi";
+import { FeatureFlags } from "@/core/service/feature-flags";
+import { getDeviceId } from "@/utils/other-api";
 import { fetch } from "@/platform/http";
-import { Settings } from "./Settings";
+import { Settings } from "./settings";
 
 export namespace Telemetry {
   let deviceId = "";

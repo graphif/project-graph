@@ -1,5 +1,5 @@
-import { QuickSettingsManager } from "@/core/service/QuickSettingsManager";
-import { settingsIcons } from "@/core/service/SettingsIcons";
+import { QuickSettingsManager } from "@/core/service/quick-settings-manager";
+import { settingsIcons } from "@/core/service/settings-icons";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";

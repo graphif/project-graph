@@ -1,5 +1,5 @@
-import type { Project } from "@/core/Project";
-import type { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import type { Project } from "@/core/project";
+import type { StageObject } from "@/core/stage/stage-object/abstract/stage-object";
 
 /**
  * 同步关系渲染器

@@ -1,9 +1,9 @@
-import type { Project } from "@/core/Project";
-import { Settings } from "@/core/service/Settings";
-import { RectanglePushInEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectanglePushInEffect";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { Section } from "@/core/stage/stageObject/entity/Section";
+import type { Project } from "@/core/project";
+import { Settings } from "@/core/service/settings";
+import { RectanglePushInEffect } from "@/core/service/feedback-service/effect-engine/concrete/rectangle-push-in-effect";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
+import { ImageNode } from "@/core/stage/stage-object/entity/image-node";
+import { Section } from "@/core/stage/stage-object/entity/section";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import type { Value } from "platejs";

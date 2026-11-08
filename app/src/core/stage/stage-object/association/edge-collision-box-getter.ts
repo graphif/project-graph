@@ -1,10 +1,10 @@
-import { Settings } from "@/core/service/Settings";
-import { LineEdge } from "@/core/stage/stageObject/association/LineEdge";
-import { Edge } from "@/core/stage/stageObject/association/Edge";
-import { CollisionBox } from "@/core/stage/stageObject/collisionBox/collisionBox";
+import { Settings } from "@/core/service/settings";
+import { LineEdge } from "@/core/stage/stage-object/association/line-edge";
+import { Edge } from "@/core/stage/stage-object/association/edge";
+import { CollisionBox } from "@/core/stage/stage-object/collision-box/collision-box";
 import { Circle, Line, SymmetryCurve } from "@graphif/shapes";
-import { ConnectPoint } from "../entity/ConnectPoint";
-import { ImageNode } from "../entity/ImageNode";
+import { ConnectPoint } from "../entity/connect-point";
+import { ImageNode } from "../entity/image-node";
 import { Vector } from "@graphif/data-structures";
 
 export namespace EdgeCollisionBoxGetter {

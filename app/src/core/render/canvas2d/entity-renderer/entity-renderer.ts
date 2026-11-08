@@ -1,23 +1,23 @@
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { Settings } from "@/core/service/Settings";
-import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
-import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
-import { ConnectPoint } from "@/core/stage/stageObject/entity/ConnectPoint";
-import { ExtensionEntity } from "@/core/stage/stageObject/entity/ExtensionEntity";
-import { ImageNode } from "@/core/stage/stageObject/entity/ImageNode";
-import { LatexNode } from "@/core/stage/stageObject/entity/LatexNode";
-import { MediaNode } from "@/core/stage/stageObject/entity/MediaNode";
-import { PenStroke } from "@/core/stage/stageObject/entity/PenStroke";
-import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
-import { Section } from "@/core/stage/stageObject/entity/Section";
-import { SvgNode } from "@/core/stage/stageObject/entity/SvgNode";
-import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
-import { UrlNode } from "@/core/stage/stageObject/entity/UrlNode";
-import { DetailsManager } from "@/core/stage/stageObject/tools/entityDetailsManager";
+import { Settings } from "@/core/service/settings";
+import { ConnectableEntity } from "@/core/stage/stage-object/abstract/connectable-entity";
+import { Entity } from "@/core/stage/stage-object/abstract/stage-entity";
+import { ConnectPoint } from "@/core/stage/stage-object/entity/connect-point";
+import { ExtensionEntity } from "@/core/stage/stage-object/entity/extension-entity";
+import { ImageNode } from "@/core/stage/stage-object/entity/image-node";
+import { LatexNode } from "@/core/stage/stage-object/entity/latex-node";
+import { MediaNode } from "@/core/stage/stage-object/entity/media-node";
+import { PenStroke } from "@/core/stage/stage-object/entity/pen-stroke";
+import { ReferenceBlockNode } from "@/core/stage/stage-object/entity/reference-block-node";
+import { Section } from "@/core/stage/stage-object/entity/section";
+import { SvgNode } from "@/core/stage/stage-object/entity/svg-node";
+import { TextNode } from "@/core/stage/stage-object/entity/text-node";
+import { UrlNode } from "@/core/stage/stage-object/entity/url-node";
+import { DetailsManager } from "@/core/stage/stage-object/tools/entity-details-manager";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { ExtensionEntityRenderer } from "./ExtensionEntityRenderer";
+import { ExtensionEntityRenderer } from "./extension-entity-renderer";
 
 /**
  * 处理节点相关的绘制

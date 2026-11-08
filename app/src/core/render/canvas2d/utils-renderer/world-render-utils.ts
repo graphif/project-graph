@@ -1,6 +1,6 @@
 import { Color, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, CubicCatmullRomSpline, Rectangle, SymmetryCurve } from "@graphif/shapes";
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { superellipseRect } from "@/utils/superellipse";
 
 /**

@@ -1,10 +1,10 @@
-import { Project, service } from "@/core/Project";
+import { Project, service } from "@/core/project";
 import { Renderer } from "@/core/render/canvas2d/renderer";
-import { ReferenceBlockNode } from "@/core/stage/stageObject/entity/ReferenceBlockNode";
-import { Section } from "@/core/stage/stageObject/entity/Section";
+import { ReferenceBlockNode } from "@/core/stage/stage-object/entity/reference-block-node";
+import { Section } from "@/core/stage/stage-object/entity/section";
 import { Color, Vector } from "@graphif/data-structures";
 import { Rectangle, Circle } from "@graphif/shapes";
-import { MouseLocation } from "@/core/service/controlService/MouseLocation";
+import { MouseLocation } from "@/core/service/control-service/mouse-location";
 
 /**
  * 引用块节点渲染器

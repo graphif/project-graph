@@ -4,11 +4,10 @@ import { Rectangle } from "@graphif/shapes";
 import { EventEmitter } from "events";
 import React from "react";
 import { toast } from "sonner";
-import { getOriginalNameOf } from "virtual:original-class-name";
 import type { URI } from "vscode-uri";
-import { FileSystemProvider, Service } from "./interfaces/Service";
-import { Settings } from "./service/Settings";
-import { Telemetry } from "./service/Telemetry";
+import { FileSystemProvider, Service } from "./interfaces/service";
+import { Settings } from "./service/settings";
+import { Telemetry } from "./service/telemetry";
 
 export abstract class Tab extends React.Component<Record<string, never>, Record<string, never>> {
   readonly id = crypto.randomUUID();
@@ -160,7 +159,7 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
           this.tickableServices.splice(index, 1);
         }
 
-        Dialog.buttons(`${getOriginalNameOf(service.constructor)} 发生未知错误`, String(e), [
+        Dialog.buttons(`${service.constructor.name} 发生未知错误`, String(e), [
           { id: "cancel", label: "取消", variant: "ghost" },
           { id: "ok", label: "确定" },
         ]);
@@ -169,7 +168,7 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
           continue;
         }
         toast.promise(
-          Telemetry.event("服务tick方法报错", { service: getOriginalNameOf(service.constructor), error: String(e) }),
+          Telemetry.event("服务tick方法报错", { service: service.constructor.name, error: String(e) }),
           {
             loading: "正在上报错误",
             success: "错误信息已发送给开发者",

@@ -1,8 +1,8 @@
 import { Dialog } from "@/components/ui/dialog";
-import { Project } from "@/core/Project";
+import { Project } from "@/core/project";
 
-import { ControllerClass } from "@/core/service/controlService/controller/ControllerClass";
-import { Section } from "@/core/stage/stageObject/entity/Section";
+import { ControllerClass } from "@/core/service/control-service/controller/controller-class";
+import { Section } from "@/core/stage/stage-object/entity/section";
 import { Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
 
