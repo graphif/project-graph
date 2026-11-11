@@ -386,7 +386,7 @@ export default function App() {
           <>
             <div
               aria-hidden="true"
-              className="absolute top-0 right-3 left-[100px] z-20 h-[calc(0.5rem*var(--pg-ui-scale))] sm:h-[calc(1rem*var(--pg-ui-scale))]"
+              className="absolute top-0 right-3 left-[100px] z-20 h-[calc(0.5rem*var(--pg-ui-scale))] cursor-grab active:cursor-grabbing sm:h-[calc(1rem*var(--pg-ui-scale))]"
               onMouseDown={handleTitleBarMouseDown}
             />
             {/* Native traffic lights do not follow the application's UI zoom. */}
@@ -410,7 +410,7 @@ export default function App() {
           >
             <div
               className={cn(
-                "scrollbar-hide pointer-events-auto flex h-full min-w-0 items-center overflow-x-auto rounded-full",
+                "scrollbar-hide pointer-events-auto flex h-full min-w-0 cursor-grab items-center overflow-x-auto rounded-full active:cursor-grabbing",
                 isMac && "has-[[data-pg-titlebar-menu]:empty]:hidden",
               )}
               onMouseDown={(event) => {
@@ -429,12 +429,12 @@ export default function App() {
               <div data-pg-titlebar-tab-space className="h-full min-w-0 flex-1" />
               <div
                 id="pg-titlebar-navigation"
-                className="scrollbar-hide pointer-events-auto flex h-full max-w-[60%] min-w-0 shrink-0 items-center overflow-x-auto rounded-full empty:hidden"
+                className="scrollbar-hide pointer-events-auto flex h-full max-w-[60%] min-w-0 shrink-0 cursor-grab items-center overflow-x-auto rounded-full empty:hidden active:cursor-grabbing"
                 onMouseDown={handleTitleBarMouseDown}
               />
             </div>
             <div
-              className="pointer-events-auto flex h-full min-w-0 items-center justify-end"
+              className="pointer-events-auto flex h-full min-w-0 cursor-grab items-center justify-end active:cursor-grabbing"
               onMouseDown={(event) => {
                 if (event.target === event.currentTarget) handleTitleBarMouseDown(event);
               }}
