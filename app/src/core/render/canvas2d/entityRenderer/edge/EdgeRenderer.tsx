@@ -228,7 +228,7 @@ export class EdgeRenderer {
       ],
       color,
       color,
-      0,
+      (size / 8) * this.project.camera.currentScale,
     );
   }
 
@@ -394,6 +394,14 @@ export class EdgeRenderer {
       .join(" ");
 
     // 返回SVG多边形字符串
-    return <polygon points={pointsString} fill={edgeColor.toString()} stroke={edgeColor.toString()} />;
+    return (
+      <polygon
+        points={pointsString}
+        fill={edgeColor.toString()}
+        stroke={edgeColor.toString()}
+        strokeWidth={size / 8}
+        strokeLinejoin="round"
+      />
+    );
   }
 }
