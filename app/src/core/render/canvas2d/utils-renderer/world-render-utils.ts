@@ -133,10 +133,18 @@ export class WorldRenderUtils {
   }
 
   renderLaser(start: Vector, end: Vector, width: number, color: Color): void {
-    this.project.canvas.ctx.shadowColor = color.toString();
-    this.project.canvas.ctx.shadowBlur = 15;
+    const ctx = this.project.canvas.ctx;
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
 
     if (start.distance(end) === 0) {
+      for (const [extraWidth, alphaScale] of [
+        [12, 0.15],
+        [6, 0.3],
+        [2, 0.6],
+      ] as const) {
+        this.renderPrismaticBlock(start, 4, Color.Transparent, color.toNewAlpha(color.a * alphaScale), 2 + extraWidth);
+      }
       this.renderPrismaticBlock(
         start,
         4,
@@ -144,32 +152,34 @@ export class WorldRenderUtils {
         this.project.stageStyleManager.currentStyle.effects.flash,
         2,
       );
-    } else {
-      this.project.curveRenderer.renderSolidLine(
-        this.project.renderer.transformWorld2View(start),
-        this.project.renderer.transformWorld2View(end),
-        this.project.stageStyleManager.currentStyle.effects.flash,
-        width,
-      );
+      return;
     }
 
-    // debug
+    const viewStart = this.project.renderer.transformWorld2View(start);
+    const viewEnd = this.project.renderer.transformWorld2View(end);
+    const originLineCap = ctx.lineCap;
+    ctx.lineCap = "round";
 
-    // RenderUtils.renderCircle(
-    //   Renderer.transformWorld2View(start),
-    //   10 * Camera.currentScale,
-    //   Color.Transparent,
-    //   new Color(255, 0, 0),
-    //   2 * Camera.currentScale
-    // )
-    // RenderUtils.renderCircle(
-    //   Renderer.transformWorld2View(end),
-    //   10 * Camera.currentScale,
-    //   Color.Transparent,
-    //   Color.White,
-    //   2 * Camera.currentScale
-    // )
-    this.project.canvas.ctx.shadowBlur = 0;
+    for (const [extraWidth, alphaScale] of [
+      [12, 0.15],
+      [6, 0.3],
+      [2, 0.6],
+    ] as const) {
+      this.project.curveRenderer.renderSolidLine(
+        viewStart,
+        viewEnd,
+        color.toNewAlpha(color.a * alphaScale),
+        width + extraWidth,
+      );
+    }
+    this.project.curveRenderer.renderSolidLine(
+      viewStart,
+      viewEnd,
+      this.project.stageStyleManager.currentStyle.effects.flash,
+      width,
+    );
+
+    ctx.lineCap = originLineCap;
   }
 
   renderPrismaticBlock(
@@ -199,49 +209,76 @@ export class WorldRenderUtils {
   }
 
   renderRectangleFlash(rectangle: Rectangle, shadowColor: Color, shadowBlur: number, roundedRadius = 0) {
-    this.project.canvas.ctx.shadowColor = shadowColor.toString();
-    this.project.canvas.ctx.shadowBlur = shadowBlur;
-    // 绘制矩形
-    this.project.canvas.ctx.beginPath();
+    const ctx = this.project.canvas.ctx;
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
+    if (shadowBlur <= 0 || shadowColor.a <= 0) {
+      return;
+    }
+
+    const originLineJoin = ctx.lineJoin;
+    ctx.lineJoin = "round";
+    ctx.beginPath();
     superellipseRect(
-      this.project.canvas.ctx,
+      ctx,
       rectangle.location.x,
       rectangle.location.y,
       rectangle.size.x,
       rectangle.size.y,
       roundedRadius,
     );
-    this.project.canvas.ctx.fillStyle = Color.Transparent.toString();
-    this.project.canvas.ctx.fill();
-    this.project.canvas.ctx.lineWidth = 0;
-    this.project.canvas.ctx.strokeStyle = shadowColor.toString();
-    this.project.canvas.ctx.stroke();
-    // 恢复
-    this.project.canvas.ctx.shadowBlur = 0;
+
+    for (const [widthScale, alphaScale] of [
+      [0.6, 0.15],
+      [0.3, 0.3],
+      [0.12, 0.6],
+    ] as const) {
+      ctx.lineWidth = Math.max(1, shadowBlur * widthScale);
+      ctx.strokeStyle = shadowColor.toNewAlpha(shadowColor.a * alphaScale).toString();
+      ctx.stroke();
+    }
+
+    ctx.lineJoin = originLineJoin;
   }
 
   renderCuttingFlash(start: Vector, end: Vector, width: number, shadowColor: Color): void {
-    this.project.canvas.ctx.shadowColor = shadowColor.toString();
-    this.project.canvas.ctx.shadowBlur = 15;
+    const ctx = this.project.canvas.ctx;
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
     width = Math.min(width, 20);
+    if (start.distance(end) === 0 || width <= 0) {
+      return;
+    }
 
     const direction = end.subtract(start).normalize();
     const headShiftBack = end.subtract(direction.multiply(20));
     const headLeft = headShiftBack.add(direction.rotateDegrees(90).multiply(width / 2));
     const headRight = headShiftBack.add(direction.rotateDegrees(-90).multiply(width / 2));
+    const points = [
+      this.project.renderer.transformWorld2View(start),
+      this.project.renderer.transformWorld2View(headLeft),
+      this.project.renderer.transformWorld2View(end),
+      this.project.renderer.transformWorld2View(headRight),
+    ];
+
+    for (const [strokeWidth, alphaScale] of [
+      [12, 0.15],
+      [6, 0.3],
+      [2, 0.6],
+    ] as const) {
+      this.project.shapeRenderer.renderPolygonAndFill(
+        points,
+        Color.Transparent,
+        shadowColor.toNewAlpha(shadowColor.a * alphaScale),
+        strokeWidth,
+      );
+    }
 
     this.project.shapeRenderer.renderPolygonAndFill(
-      [
-        this.project.renderer.transformWorld2View(start),
-        this.project.renderer.transformWorld2View(headLeft),
-        this.project.renderer.transformWorld2View(end),
-        this.project.renderer.transformWorld2View(headRight),
-      ],
+      points,
       this.project.stageStyleManager.currentStyle.effects.flash,
       Color.Transparent,
       0,
     );
-    // 恢复
-    this.project.canvas.ctx.shadowBlur = 0;
   }
 }

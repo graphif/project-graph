@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -80,6 +81,9 @@ func TestCLILocalCommands(t *testing.T) {
 }
 
 func TestDMABufSafe(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("Linux renderer detection uses Unix sockets and sysfs driver links")
+	}
 	runtimeDir := t.TempDir()
 	listener, err := net.Listen("unix", filepath.Join(runtimeDir, "wayland-1"))
 	if err != nil {
@@ -94,6 +98,13 @@ func TestDMABufSafe(t *testing.T) {
 			t.Fatal(err)
 		}
 		if err := os.WriteFile(filepath.Join(renderDir, "renderD128"), nil, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		driverDir := filepath.Join(root, "sys/class/drm/renderD128/device")
+		if err := os.MkdirAll(driverDir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Symlink("../../../../bus/pci/drivers/i915", filepath.Join(driverDir, "driver")); err != nil {
 			t.Fatal(err)
 		}
 		for name, content := range files {
@@ -143,6 +154,24 @@ func TestDMABufSafe(t *testing.T) {
 			root := makeHost(t, tc.files)
 			if got := dmabufSafe(tc.getenv, root); got != tc.want {
 				t.Fatalf("dmabufSafe() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+	for _, driver := range []string{"i915", "xe", "amdgpu", "radeon", "nouveau", "virtio_gpu", "unknown", ""} {
+		t.Run("driver "+driver, func(t *testing.T) {
+			root := makeHost(t, nil)
+			path := filepath.Join(root, "sys/class/drm/renderD128/device/driver")
+			if err := os.Remove(path); err != nil {
+				t.Fatal(err)
+			}
+			if driver != "" {
+				if err := os.Symlink(filepath.Join("../../../../bus/pci/drivers", driver), path); err != nil {
+					t.Fatal(err)
+				}
+			}
+			want := driver == "i915" || driver == "xe" || driver == "amdgpu" || driver == "radeon"
+			if got := dmabufSafe(withEnv(), root); got != want {
+				t.Fatalf("dmabufSafe() = %v, want %v", got, want)
 			}
 		})
 	}

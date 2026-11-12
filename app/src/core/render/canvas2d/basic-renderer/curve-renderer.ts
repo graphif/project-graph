@@ -185,17 +185,35 @@ export class CurveRenderer {
     shadowColor: Color,
     shadowBlur: number,
   ): void {
-    this.project.canvas.ctx.beginPath();
-    this.project.canvas.ctx.moveTo(locations[0].x, locations[0].y);
+    if (locations.length === 0) return;
+    const ctx = this.project.canvas.ctx;
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = "transparent";
+    ctx.beginPath();
+    ctx.moveTo(locations[0].x, locations[0].y);
     for (let i = 1; i < locations.length; i++) {
-      this.project.canvas.ctx.lineTo(locations[i].x, locations[i].y);
+      ctx.lineTo(locations[i].x, locations[i].y);
     }
-    this.project.canvas.ctx.lineWidth = width;
-    this.project.canvas.ctx.strokeStyle = color.toString();
-    this.project.canvas.ctx.shadowColor = shadowColor.toString();
-    this.project.canvas.ctx.shadowBlur = shadowBlur;
-    this.project.canvas.ctx.stroke();
-    this.project.canvas.ctx.shadowBlur = 0;
+    if (shadowBlur > 0 && shadowColor.a > 0) {
+      const originLineCap = ctx.lineCap;
+      const originLineJoin = ctx.lineJoin;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      for (const [blurFactor, alphaScale] of [
+        [0.8, 0.15],
+        [0.4, 0.3],
+        [0.15, 0.6],
+      ] as const) {
+        ctx.lineWidth = width + shadowBlur * blurFactor;
+        ctx.strokeStyle = shadowColor.toNewAlpha(shadowColor.a * alphaScale).toString();
+        ctx.stroke();
+      }
+      ctx.lineCap = originLineCap;
+      ctx.lineJoin = originLineJoin;
+    }
+    ctx.lineWidth = width;
+    ctx.strokeStyle = color.toString();
+    ctx.stroke();
   }
 
   /**

@@ -1,6 +1,9 @@
 windowControls:
   alwaysOnTop: Keep window on top
 
+nodeDetailsWindow:
+  title: Details
+
 projectStatus:
   emptyCanvas: No nodes on the canvas
   noVisibleNodes: No visible nodes in this view. Click to reset.
@@ -2063,10 +2066,8 @@ effects:
       and when cutting through connections\n"
     title: Radial Light Flash
   EntityCreateFlashEffect:
-    title: Entity border glow effect
-    description: "In situations such as rotating the entity tree with Ctrl+scroll
-      wheel, zooming in on images, creating nodes, etc.\nIf the rendering performance
-      is poor, it is recommended to turn off this option\n"
+    title: Node creation outline
+    description: A subtle outline gently settles and fades out when a node is created.
   PointDashEffect:
     description: "Due to the influence of universal gravitation on performance, this
       effect has been turned off and will not appear.\n"

@@ -333,7 +333,7 @@ export default function App() {
             <div
               aria-hidden="true"
               data-pg-titlebar-drag
-              className="absolute top-0 right-3 left-[100px] z-20 h-[calc(0.5rem*var(--pg-ui-scale))] sm:h-[calc(1rem*var(--pg-ui-scale))]"
+              className="absolute top-0 right-3 left-[100px] z-20 h-[calc(0.5rem*var(--pg-ui-scale))] cursor-grab active:cursor-grabbing sm:h-[calc(1rem*var(--pg-ui-scale))]"
             />
             {/* Native traffic lights do not follow the application's UI zoom. */}
             <div className="absolute top-[2px] left-[71px] z-20 h-7">
@@ -343,40 +343,39 @@ export default function App() {
         )}
 
         {/* Zoomed UI layer - 缩放所有 DOM UI 元素，不缩放 Canvas 画布 */}
-        <div
-          style={zoomStyle}
-          className={cn(
-            "pointer-events-none relative z-10 flex h-full w-full flex-col",
-            !isMac && "*:pointer-events-auto",
-          )}
-        >
+        <div style={zoomStyle} className="pointer-events-none relative z-10 flex h-full w-full flex-col">
           {/* 菜单 | 标签页 | ...移动窗口区域... | 窗口控制按钮 */}
           <div
             data-pg-titlebar
             className={cn(
-              "z-10 grid h-8 shrink-0 grid-cols-[minmax(0,max-content)_minmax(min(30%,18rem),1fr)_max-content] items-center gap-2 px-1 py-1 transition-opacity hover:opacity-100 has-[#pg-titlebar-navigation:empty]:grid-cols-[minmax(0,max-content)_minmax(0,1fr)_max-content] sm:h-14 sm:gap-4 sm:px-3 sm:py-2",
+              "z-10 grid h-8 shrink-0 grid-cols-[minmax(0,max-content)_minmax(0,1fr)_max-content] items-center gap-2 px-1 py-1 transition-opacity hover:opacity-100 sm:h-14 sm:gap-4 sm:px-3 sm:py-2",
               isMac &&
-                "pointer-events-none grid-cols-[35%_minmax(0,1fr)_max-content] has-[#pg-titlebar-navigation:empty]:grid-cols-[35%_minmax(0,1fr)_max-content] sm:h-14 sm:pt-4 sm:pb-0",
+                "has-[[data-pg-titlebar-menu]:empty]:grid-cols-[minmax(0,1fr)_max-content] has-[[data-pg-titlebar-menu]:empty]:pl-0 sm:pt-6 sm:pb-0",
               isClassroomMode && "opacity-0",
             )}
           >
-            <div className="scrollbar-hide flex h-full min-w-0 items-center overflow-x-auto rounded-full">
+            <div
+              className={cn(
+                "scrollbar-hide pointer-events-auto flex h-full min-w-0 cursor-grab items-center overflow-x-auto rounded-full active:cursor-grabbing",
+                isMac && "has-[[data-pg-titlebar-menu]:empty]:hidden",
+              )}
+            >
               <div
+                data-pg-titlebar-menu
                 className="pointer-events-none flex h-full w-max shrink-0 items-center gap-1 *:pointer-events-auto"
                 style={isMac ? { paddingLeft: "calc(100px / var(--pg-ui-scale))" } : undefined}
               >
                 <GlobalMenu />
               </div>
             </div>
-            <div
-              id="pg-titlebar-navigation"
-              className={cn(
-                "flex h-full min-w-0 items-center justify-center",
-                isMac &&
-                  "scrollbar-hide pointer-events-auto justify-end overflow-x-auto rounded-full empty:pointer-events-none",
-              )}
-            />
-            <div className="flex h-full min-w-0 items-center justify-end">
+            <div className="flex h-full min-w-0 items-center gap-2 sm:gap-4">
+              <div data-pg-titlebar-tab-space className="h-full min-w-0 flex-1" />
+              <div
+                id="pg-titlebar-navigation"
+                className="scrollbar-hide pointer-events-auto flex h-full max-w-[60%] min-w-0 shrink-0 cursor-grab items-center overflow-x-auto rounded-full empty:hidden active:cursor-grabbing"
+              />
+            </div>
+            <div className="pointer-events-auto flex h-full min-w-0 cursor-grab items-center justify-end active:cursor-grabbing">
               <div className="bg-background pointer-events-auto flex h-full shrink-0 items-center gap-2 rounded-full px-2 shadow-xs">
                 <div className="hidden sm:block">
                   <ThemeModeSwitch />

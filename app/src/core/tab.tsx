@@ -167,14 +167,11 @@ export abstract class Tab extends React.Component<Record<string, never>, Record<
         if (e !== null && typeof e === "object" && "message" in e && e.message === "test") {
           continue;
         }
-        toast.promise(
-          Telemetry.event("服务tick方法报错", { service: service.constructor.name, error: String(e) }),
-          {
-            loading: "正在上报错误",
-            success: "错误信息已发送给开发者",
-            error: "上报失败",
-          },
-        );
+        toast.promise(Telemetry.event("服务tick方法报错", { service: service.constructor.name, error: String(e) }), {
+          loading: "正在上报错误",
+          success: "错误信息已发送给开发者",
+          error: "上报失败",
+        });
       }
     }
   }
@@ -219,7 +216,7 @@ export interface ComponentTabOptions {
   contextTarget?: "activeResourceTab";
   contextResourceTab?: ResourceTab;
   layout?: Tab["layout"];
-  /** When layout is docked, split relative to the active group after open. */
+  /** When layout is docked, open in a split on this edge. */
   splitEdge?: "left" | "right" | "top" | "bottom";
   rect?: Rectangle;
   canDock?: boolean;

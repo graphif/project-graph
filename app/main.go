@@ -166,11 +166,8 @@ func runCLI(ctx context.Context, args []string) int {
 	return 0
 }
 
-// mygo v0.6.4 disables WebKitGTK's DMA-BUF renderer everywhere on Linux to
-// avoid blank windows on NVIDIA, virtual machines, and containers, which forces
-// every frame through the CPU and drops canvas rendering to ~25fps on
-// Wayland + Mesa (Intel/AMD). Enable the DMA-BUF renderer automatically when
-// running on a safe Wayland + Mesa host unless the user set the variable.
+// MyGo v0.6.4 disables DMA-BUF by default to avoid blank windows.
+// Opt in on Wayland hosts with known Intel/AMD drivers to reduce frame copies.
 func preferDMABufRenderer() {
 	if runtime.GOOS != "linux" || os.Getenv("WEBKIT_DISABLE_DMABUF_RENDERER") != "" {
 		return
@@ -225,9 +222,17 @@ func dmabufSafe(getenv func(string) string, root string) bool {
 			}
 		}
 	}
-	renderNodes, _ := filepath.Glob(filepath.Join(root, "dev", "dri", "renderD*"))
-	if len(renderNodes) == 0 {
-		renderNodes, _ = filepath.Glob(filepath.Join(root, "sys", "class", "drm", "renderD*"))
+	renderNodes, _ := filepath.Glob(filepath.Join(root, "sys", "class", "drm", "renderD*"))
+	for _, node := range renderNodes {
+		driver, err := os.Readlink(filepath.Join(node, "device", "driver"))
+		if err != nil {
+			return false
+		}
+		switch filepath.Base(driver) {
+		case "i915", "xe", "amdgpu", "radeon":
+		default:
+			return false
+		}
 	}
 	return len(renderNodes) > 0
 }

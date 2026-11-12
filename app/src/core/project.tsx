@@ -1,4 +1,6 @@
+import RightToolbar from "@/components/right-toolbar";
 import { Dialog } from "@/components/ui/dialog";
+import { Settings } from "@/core/service/settings";
 import type { CurveRenderer } from "@/core/render/canvas2d/basic-renderer/curve-renderer";
 import type { ImageRenderer } from "@/core/render/canvas2d/basic-renderer/image-renderer";
 import type { ShapeRenderer } from "@/core/render/canvas2d/basic-renderer/shape-renderer";
@@ -239,11 +241,7 @@ export class Project extends Tab {
     }
     try {
       // 解析项目文件
-      const parsed = await parseProjectFile(
-        await this.fs.read(this.uri),
-        this.decoder,
-        this.attachments,
-      );
+      const parsed = await parseProjectFile(await this.fs.read(this.uri), this.decoder, this.attachments);
       const { tags, references, metadata, readme } = parsed;
       if (parsed.format === "json") {
         const { decodeStageGraph } = await import("@/application/read-legacy-stage");
@@ -492,21 +490,34 @@ export class Project extends Tab {
     if (this.currentComponent) return this.currentComponent;
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
-    this.currentComponent = class extends React.Component<Record<string, never>> {
+    this.currentComponent = class extends React.Component<
+      Record<string, never>,
+      { showQuickSettingsToolbar: boolean }
+    > {
       displayName = "ProjectContainer";
       private containerRef = React.createRef<HTMLDivElement>();
+      private unwatchShowQuickSettingsToolbar?: () => void;
+      state = { showQuickSettingsToolbar: Settings.showQuickSettingsToolbar };
 
       componentDidMount(): void {
         (self as any)._lastContainer = this.containerRef.current;
         if (this.containerRef.current && self.getService("canvas")) {
           self.canvas.mount(this.containerRef.current);
         }
+        this.unwatchShowQuickSettingsToolbar = Settings.watch("showQuickSettingsToolbar", (value) => {
+          this.setState({ showQuickSettingsToolbar: value });
+        });
+      }
+
+      componentWillUnmount(): void {
+        this.unwatchShowQuickSettingsToolbar?.();
       }
 
       render() {
         return (
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute inset-0 overflow-hidden" ref={this.containerRef}></div>
+            {this.state.showQuickSettingsToolbar && <RightToolbar />}
           </div>
         );
       }
@@ -518,6 +529,7 @@ export class Project extends Tab {
     return (
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden" ref={this.containerRef}></div>
+        {Settings.showQuickSettingsToolbar && <RightToolbar />}
       </div>
     );
   }
@@ -544,7 +556,7 @@ export class Project extends Tab {
   }
 }
 
-declare module "./Project" {
+declare module "./project" {
   interface Project {
     canvas: Canvas;
     inputElement: InputElement;
