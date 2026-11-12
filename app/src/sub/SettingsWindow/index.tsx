@@ -4,7 +4,7 @@ import { ComponentTabContext } from "@/core/Tab";
 import { activeTabAtom, store } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { Blocks, Brush, HandHeart, Info, Keyboard, Settings, User } from "lucide-react";
+import { Blocks, Brush, Command, HandHeart, Info, Keyboard, Settings, User } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAtomValue } from "jotai";
@@ -15,9 +15,18 @@ import CustomizationTab from "./customization";
 import QuickSettingsTab from "./customization/quick-settings";
 import ExtensionsTab from "./extensions";
 import KeyBindsPage from "./keybinds";
+import KeyBindsGlobalPage from "./keybindsGlobal";
 import SettingsTab from "./settings";
 
-type TabName = "settings" | "linuxRuntime" | "keybinds" | "customization" | "about" | "extensions" | "account";
+type TabName =
+  | "settings"
+  | "linuxRuntime"
+  | "keybinds"
+  | "keybindsGlobal"
+  | "customization"
+  | "about"
+  | "extensions"
+  | "account";
 
 export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab?: TabName }) {
   const [currentTab, setCurrentTab] = useState<TabName>(defaultTab);
@@ -41,6 +50,10 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
         <TabsTrigger value="keybinds">
           <Keyboard />
           快捷键
+        </TabsTrigger>
+        <TabsTrigger value="keybindsGlobal">
+          <Command />
+          全局快捷键
         </TabsTrigger>
         <TabsTrigger value="customization">
           <Brush />
@@ -79,6 +92,9 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
       </TabsContent>
       <TabsContent value="keybinds" className="min-h-0 overflow-hidden">
         <KeyBindsPage />
+      </TabsContent>
+      <TabsContent value="keybindsGlobal" className="overflow-auto">
+        <KeyBindsGlobalPage />
       </TabsContent>
       <TabsContent value="customization" className="overflow-auto">
         <CustomizationTab />
