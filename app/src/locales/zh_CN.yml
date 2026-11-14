@@ -4,6 +4,10 @@ windowControls:
 nodeDetailsWindow:
   title: 详细信息
 
+findWindow:
+  useRegex: 使用正则表达式
+  invalidRegex: 正则表达式无效
+
 projectStatus:
   emptyCanvas: 画布里没有节点
   noVisibleNodes: 当前视野内没有可见节点，点击按钮复位

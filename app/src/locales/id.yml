@@ -1,3 +1,7 @@
+findWindow:
+  useRegex: Gunakan ekspresi reguler
+  invalidRegex: Ekspresi reguler tidak valid
+
 projectStatus:
   nodes: "{{count}} simpul"
   edges: "{{count}} koneksi"

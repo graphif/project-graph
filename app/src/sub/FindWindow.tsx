@@ -1,3 +1,4 @@
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -15,20 +16,26 @@ import { useAtom } from "jotai";
 import {
   CaseSensitive,
   MessageCircleQuestionMark,
+  Regex,
   Square,
   SquareDashedMousePointer,
   SquareDashedTopSolid,
   Telescope,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 /**
  * 搜索内容的面板
  */
 export default function FindWindow({ tabId }: { tabId: string }) {
+  const { t } = useTranslation("findWindow");
   const [isCaseSensitive, setIsCaseSensitive] = useState(false);
+  const [isRegex, setIsRegex] = useState(false);
   const [searchString, setSearchString] = useState("");
+  const [searchError, setSearchError] = useState("");
+  const searchErrorId = useId();
   const [searchResults, setSearchResults] = useState<{ title: string; uuid: string }[]>([]);
   const [, setTick] = useState(0);
   // 是否开启快速瞭望模式
@@ -51,25 +58,28 @@ export default function FindWindow({ tabId }: { tabId: string }) {
   useEffect(() => {
     if (!project) return;
     project.contentSearch.isCaseSensitive = isCaseSensitive;
-  }, [project, isCaseSensitive]);
-
-  useEffect(() => {
-    if (!project) return;
+    project.contentSearch.isRegex = isRegex;
     project.contentSearch.searchScope = searchScope;
-  }, [project, searchScope]);
-
-  const clearSearch = () => {
-    setSearchString("");
-    setSearchResults([]);
-    project?.contentSearch.startSearch("", false);
-  };
+    setSearchError("");
+    try {
+      project.contentSearch.startSearch(searchString, false);
+    } catch (error) {
+      if (!isRegex || !(error instanceof SyntaxError)) throw error;
+      setSearchError(error.message);
+    }
+    setSearchResults(
+      project.contentSearch.searchResultNodes.map((node) => ({
+        title: project.contentSearch.getStageObjectText(node),
+        uuid: node.uuid,
+      })),
+    );
+  }, [project, isCaseSensitive, isRegex, searchScope, searchString]);
 
   useEffect(() => {
-    clearSearch();
     return () => {
-      clearSearch();
+      project?.contentSearch.startSearch("", false);
     };
-  }, []);
+  }, [project]);
 
   if (!project) return <></>;
   return (
@@ -78,15 +88,10 @@ export default function FindWindow({ tabId }: { tabId: string }) {
         placeholder="请输入要在舞台上搜索的内容"
         autoFocus
         type="search"
+        aria-invalid={!!searchError}
+        aria-describedby={searchError ? searchErrorId : undefined}
         onChange={(e) => {
           setSearchString(e.target.value);
-          project.contentSearch.startSearch(e.target.value, false);
-          setSearchResults(
-            project.contentSearch.searchResultNodes.map((node) => ({
-              title: project.contentSearch.getStageObjectText(node),
-              uuid: node.uuid,
-            })),
-          );
         }}
         onKeyDown={(e) => {
           if (e.key === "Escape") {
@@ -103,12 +108,20 @@ export default function FindWindow({ tabId }: { tabId: string }) {
         }}
         value={searchString}
       />
+      {searchError && (
+        <Alert id={searchErrorId} variant="destructive">
+          <AlertTitle>{t("invalidRegex")}</AlertTitle>
+          <AlertDescription className="break-all">{searchError}</AlertDescription>
+        </Alert>
+      )}
       <div className="my-1 flex flex-wrap gap-3">
         <Tooltip>
           <TooltipTrigger>
             <Button
               size="icon"
               variant={isCaseSensitive ? "default" : "outline"}
+              aria-label="区分大小写"
+              aria-pressed={isCaseSensitive}
               onClick={() => {
                 const currentResult = !isCaseSensitive;
                 setIsCaseSensitive(currentResult);
@@ -118,6 +131,21 @@ export default function FindWindow({ tabId }: { tabId: string }) {
             </Button>
           </TooltipTrigger>
           <TooltipContent>区分大小写</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger>
+            <Button
+              size="icon"
+              variant={isRegex ? "default" : "outline"}
+              aria-label={t("useRegex")}
+              aria-pressed={isRegex}
+              onClick={() => setIsRegex(!isRegex)}
+            >
+              <Regex data-icon="inline-start" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t("useRegex")}</TooltipContent>
         </Tooltip>
 
         {/* 搜索范围选择按钮组 */}
@@ -213,7 +241,7 @@ export default function FindWindow({ tabId }: { tabId: string }) {
       </div>
       <div className="flex flex-col gap-1 overflow-y-auto">
         {searchString === "" && <div className="text-center">请输入搜索内容</div>}
-        {searchResults.length === 0 && searchString !== "" && (
+        {searchResults.length === 0 && searchString !== "" && !searchError && (
           <div className="text-center">没有搜索结果:`{searchString}`</div>
         )}
         {searchResults.map((result, index) => (

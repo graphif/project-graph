@@ -37,9 +37,11 @@ export class ContentSearch {
   public searchResultNodes: StageObject[] = [];
 
   /**
-   * 是否忽略大小写
+   * 是否区分大小写
    */
   public isCaseSensitive = false;
+
+  public isRegex = false;
 
   /**
    * 搜索范围
@@ -121,9 +123,12 @@ export class ContentSearch {
   public startSearch(searchString: string, autoFocus = true): boolean {
     // 开始搜索
     this.searchResultNodes = [];
+    this.currentSearchResultIndex = -1;
     if (searchString === "") {
       return false;
     }
+
+    const regex = this.isRegex ? new RegExp(searchString, this.isCaseSensitive ? "" : "i") : null;
 
     // 获取要搜索的对象列表
     let objectsToSearch: StageObject[];
@@ -158,7 +163,11 @@ export class ContentSearch {
     // 执行搜索
     for (const node of objectsToSearch) {
       const text = this.getStageObjectText(node);
-      if (this.isCaseSensitive) {
+      if (regex) {
+        if (regex.test(text)) {
+          this.searchResultNodes.push(node);
+        }
+      } else if (this.isCaseSensitive) {
         if (text.includes(searchString)) {
           this.searchResultNodes.push(node);
         }
@@ -168,8 +177,6 @@ export class ContentSearch {
         }
       }
     }
-    this.currentSearchResultIndex = -1;
-
     if (this.searchResultNodes.length > 0) {
       if (autoFocus) {
         const currentNode = this.searchResultNodes[0];

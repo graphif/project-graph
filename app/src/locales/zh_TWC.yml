@@ -1,3 +1,7 @@
+findWindow:
+  useRegex: 使用正規表示式
+  invalidRegex: 正規表示式無效
+
 projectStatus:
   nodes: "{{count}} 節點"
   edges: "{{count}} 連線"
