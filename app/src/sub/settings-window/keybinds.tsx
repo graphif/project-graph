@@ -21,7 +21,10 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { KeyBindsUI } from "@/core/service/control-service/shortcut-keys-engine/key-binds-ui";
-import { allKeyBinds, getKeyBindTypeById } from "@/core/service/control-service/shortcut-keys-engine/shortcut-keys-register";
+import {
+  allKeyBinds,
+  getKeyBindTypeById,
+} from "@/core/service/control-service/shortcut-keys-engine/shortcut-keys-register";
 import Fuse from "fuse.js";
 import { AlertCircle, AlignStartVertical, Focus, LineSquiggle, TextCursorInput } from "lucide-react";
 

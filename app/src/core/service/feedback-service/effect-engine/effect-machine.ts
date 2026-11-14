@@ -37,9 +37,7 @@ export class Effects {
   }
 
   public addEffects(effects: Effect[]) {
-    this.effects.push(
-      ...effects.filter((effect) => Settings.effectsPerferences[effect.effectId] ?? true),
-    );
+    this.effects.push(...effects.filter((effect) => Settings.effectsPerferences[effect.effectId] ?? true));
   }
 
   tick() {
