@@ -738,10 +738,6 @@ settings:
     description: |
       開啟後，可以使用W S A D按鍵來上下左右移動視角
       關閉後，只能使用鼠標來移動視角，不會造成無限滾屏bug
-  allowGlobalHotKeys:
-    title: 允許使用全局熱鍵
-    description: |
-      開啟後，可以使用全局熱鍵來觸發一些操作
   cameraFollowsSelectedNodeOnArrowKeys:
     title: 通過方向鍵切換選中節點時，視野跟隨移動
     description: |

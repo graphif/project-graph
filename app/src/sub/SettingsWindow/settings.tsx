@@ -248,7 +248,6 @@ export const categories = {
   visual: {
     basic: [
       "language",
-      "allowGlobalHotKeys",
       "isClassroomMode",
       "viewerMode",
       "showQuickSettingsToolbar",

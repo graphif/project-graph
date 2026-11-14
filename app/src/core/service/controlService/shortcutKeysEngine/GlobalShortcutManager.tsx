@@ -1,100 +1,230 @@
-import { register, unregisterAll, isRegistered, unregister } from "@tauri-apps/plugin-global-shortcut";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Settings } from "../../Settings";
+import { isRegistered, register, unregister } from "@tauri-apps/plugin-global-shortcut";
+import { BringToFront, MousePointerBan } from "lucide-react";
 import { toast } from "sonner";
+import { createStore } from "@/utils/store";
+import { Settings } from "../../Settings";
+import type { KeyBindIcon } from "./KeyBindsUI";
 
-// 定义全局快捷键类型
-interface GlobalShortcut {
-  key: string;
+export interface GlobalShortcutInfo {
   id: string;
+  title: string;
   description: string;
+  icon: KeyBindIcon;
+  defaultKey: string;
+  key: string;
+  isEnabled: boolean;
+}
+
+interface GlobalShortcut extends GlobalShortcutInfo {
   onPress: () => Promise<void>;
 }
 
+interface StoredGlobalShortcut {
+  key: string;
+  isEnabled: boolean;
+}
+
+const STORE_NAME = "global-keybinds.json";
+
 export class GlobalShortcutManager {
-  private shortcuts: GlobalShortcut[] = [];
-  private isInitialized = false;
+  private shortcuts: GlobalShortcut[];
+  private initialization: Promise<void> | null = null;
+  private registeredKeys = new Set<string>();
   private isClickThroughEnabled = false;
-  private settingsUnsubscribe: (() => void) | null = null;
+  private isRecording = false;
 
   constructor() {
-    this.initializeShortcuts();
-  }
-
-  // 初始化快捷键定义
-  private initializeShortcuts() {
     this.shortcuts = [
       {
-        key: "Alt+2",
-        id: "toggle-click-through",
-        description: "开启/关闭窗口穿透点击",
-        onPress: this.handleToggleClickThrough.bind(this),
+        id: "show-window",
+        title: "呼出软件窗口",
+        description: "在软件处于后台或最小化时显示并聚焦主窗口。",
+        icon: BringToFront,
+        defaultKey: "Alt+Digit1",
+        key: "Alt+Digit1",
+        isEnabled: false,
+        onPress: this.handleShowWindow.bind(this),
       },
       {
-        key: "Alt+1",
-        id: "show-window",
-        description: "呼出软件窗口",
-        onPress: this.handleShowWindow.bind(this),
+        id: "toggle-click-through",
+        title: "切换窗口穿透点击",
+        description: "开启或关闭窗口穿透点击，并同步调整窗口透明度。",
+        icon: MousePointerBan,
+        defaultKey: "Alt+Digit2",
+        key: "Alt+Digit2",
+        isEnabled: false,
+        onPress: this.handleToggleClickThrough.bind(this),
       },
     ];
   }
 
-  // 初始化服务
-  public async init() {
-    if (this.isInitialized) {
-      return;
+  public init(): Promise<void> {
+    if (!this.initialization) {
+      this.initialization = this.initialize().catch((error) => {
+        this.initialization = null;
+        throw error;
+      });
     }
-
-    this.isInitialized = true;
-    Settings.watch("allowGlobalHotKeys", (v) => {
-      // v 是变化后的值
-      if (v) {
-        this.updateShortcuts();
-      } else {
-        unregisterAll();
-      }
-    });
+    return this.initialization;
   }
 
-  // 更新快捷键注册状态
-  public async updateShortcuts() {
-    // 先注销所有快捷键
-    await unregisterAll();
+  private async initialize() {
+    const store = await createStore(STORE_NAME);
+    let needsSave = false;
+
     for (const shortcut of this.shortcuts) {
-      await this.registerShortcut(shortcut);
+      const saved = await store.get<StoredGlobalShortcut>(shortcut.id);
+      if (saved && typeof saved.key === "string" && typeof saved.isEnabled === "boolean") {
+        shortcut.key = saved.key;
+        shortcut.isEnabled = saved.isEnabled;
+      } else {
+        await store.set(shortcut.id, this.toStoredShortcut(shortcut));
+        needsSave = true;
+      }
+    }
+
+    if (needsSave) {
+      await store.save();
+    }
+
+    for (const shortcut of this.shortcuts.filter((item) => item.isEnabled)) {
+      try {
+        await this.registerShortcut(shortcut);
+      } catch (error) {
+        shortcut.isEnabled = false;
+        await this.saveShortcut(shortcut);
+        toast.error(error instanceof Error ? error.message : String(error));
+      }
     }
   }
 
-  // 注册单个快捷键
+  public getShortcuts(): GlobalShortcutInfo[] {
+    return this.shortcuts.map((shortcut) => ({
+      id: shortcut.id,
+      title: shortcut.title,
+      description: shortcut.description,
+      icon: shortcut.icon,
+      defaultKey: shortcut.defaultKey,
+      key: shortcut.key,
+      isEnabled: shortcut.isEnabled,
+    }));
+  }
+
+  public setRecording(isRecording: boolean) {
+    this.isRecording = isRecording;
+  }
+
+  public async setShortcutKey(id: string, key: string) {
+    await this.init();
+    const shortcut = this.getShortcut(id);
+    if (shortcut.key === key) return;
+    if (this.shortcuts.some((item) => item.id !== id && item.key.toLowerCase() === key.toLowerCase())) {
+      throw new Error("该组合键已被另一个全局快捷键使用");
+    }
+
+    const oldKey = shortcut.key;
+    if (shortcut.isEnabled) {
+      await this.unregisterShortcut(oldKey);
+      try {
+        await this.registerShortcut({ ...shortcut, key });
+      } catch (error) {
+        await this.registerShortcut(shortcut);
+        throw error;
+      }
+    }
+
+    shortcut.key = key;
+    try {
+      await this.saveShortcut(shortcut);
+    } catch (error) {
+      shortcut.key = oldKey;
+      if (shortcut.isEnabled) {
+        await this.unregisterShortcut(key);
+        await this.registerShortcut(shortcut);
+      }
+      throw error;
+    }
+  }
+
+  public async setShortcutEnabled(id: string, isEnabled: boolean) {
+    await this.init();
+    const shortcut = this.getShortcut(id);
+    if (shortcut.isEnabled === isEnabled) return;
+
+    if (isEnabled) {
+      await this.registerShortcut(shortcut);
+    } else {
+      await this.unregisterShortcut(shortcut.key);
+    }
+
+    shortcut.isEnabled = isEnabled;
+    try {
+      await this.saveShortcut(shortcut);
+    } catch (error) {
+      shortcut.isEnabled = !isEnabled;
+      if (isEnabled) {
+        await this.unregisterShortcut(shortcut.key);
+      } else {
+        await this.registerShortcut(shortcut);
+      }
+      throw error;
+    }
+  }
+
+  private getShortcut(id: string) {
+    const shortcut = this.shortcuts.find((item) => item.id === id);
+    if (!shortcut) {
+      throw new Error(`不存在全局快捷键：${id}`);
+    }
+    return shortcut;
+  }
+
+  private async saveShortcut(shortcut: GlobalShortcut) {
+    const store = await createStore(STORE_NAME);
+    await store.set(shortcut.id, this.toStoredShortcut(shortcut));
+    await store.save();
+  }
+
+  private toStoredShortcut(shortcut: GlobalShortcut): StoredGlobalShortcut {
+    return { key: shortcut.key, isEnabled: shortcut.isEnabled };
+  }
+
   private async registerShortcut(shortcut: GlobalShortcut) {
     try {
-      // 检查是否已注册
-      const alreadyRegistered = await isRegistered(shortcut.key);
-      if (alreadyRegistered) {
-        await unregister(shortcut.key);
-      }
-
-      // 注册快捷键
       await register(shortcut.key, async (event) => {
-        if (event.state === "Pressed") {
+        if (event.state === "Pressed" && !this.isRecording) {
           await shortcut.onPress();
         }
       });
+      if (!(await isRegistered(shortcut.key))) {
+        await unregister(shortcut.key);
+        throw new Error("操作系统未确认注册成功");
+      }
+      this.registeredKeys.add(shortcut.key);
     } catch (error) {
-      toast.error(`注册全局快捷键 ${shortcut.key} 失败: ${error}`);
+      throw new Error(this.getRegistrationErrorMessage(shortcut.key, error), { cause: error });
     }
   }
 
-  // 处理穿透点击切换
+  private async unregisterShortcut(key: string) {
+    if (!this.registeredKeys.has(key)) return;
+    await unregister(key);
+    this.registeredKeys.delete(key);
+  }
+
+  private getRegistrationErrorMessage(key: string, error: unknown) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return `注册全局快捷键 ${key} 失败：${detail}`;
+  }
+
   private async handleToggleClickThrough() {
     const window = getCurrentWindow();
 
     if (!this.isClickThroughEnabled) {
-      // 开启了穿透点击
       Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterOpenClickThrough;
       await window.setAlwaysOnTop(true);
     } else {
-      // 关闭了穿透点击
       Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterCloseClickThrough;
       await window.setAlwaysOnTop(false);
     }
@@ -103,37 +233,21 @@ export class GlobalShortcutManager {
     await window.setIgnoreCursorEvents(this.isClickThroughEnabled);
   }
 
-  // 处理显示窗口
   private async handleShowWindow() {
-    console.log("开始呼出窗口");
     const window = getCurrentWindow();
-    // Tauri v2 中 show() 不会自动从最小化恢复，需要显式调用 unminimize
     await window.unminimize();
     await window.show();
     await window.setSkipTaskbar(false);
     await window.setFocus();
   }
 
-  // 清理资源
   public async dispose() {
-    // 注销所有快捷键
-    await unregisterAll();
-
-    // 移除设置监听器
-    if (this.settingsUnsubscribe) {
-      this.settingsUnsubscribe();
-      this.settingsUnsubscribe = null;
+    for (const key of [...this.registeredKeys]) {
+      await this.unregisterShortcut(key);
     }
-
-    this.isInitialized = false;
-    console.log("全局快捷键管理器已清理");
-  }
-
-  // 获取所有快捷键信息
-  public getShortcuts() {
-    return this.shortcuts;
+    this.isRecording = false;
+    this.initialization = null;
   }
 }
 
-// 创建单例实例
 export const globalShortcutManager = new GlobalShortcutManager();

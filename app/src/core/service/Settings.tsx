@@ -176,7 +176,6 @@ export const settingsSchema = z.object({
     .default("trackpadIntAndWheelFloat"),
   macTrackpadScaleSensitivity: z.number().min(0).max(1).multipleOf(0.001).default(0.5),
   macEnableControlToCut: z.boolean().default(false),
-  allowGlobalHotKeys: z.boolean().default(true),
   cameraFollowsSelectedNodeOnArrowKeys: z.boolean().default(false),
   arrowKeySelectOnlyInViewport: z.boolean().default(false),
   moveAmplitude: projectToolSettingSchemas.moveAmplitude,

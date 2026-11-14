@@ -711,10 +711,6 @@ settings:
     description: |
       Saat diaktifkan, dapat menggunakan tombol W S A D untuk menggerakkan tampilan atas bawah kiri kanan
       Saat dimatikan, hanya dapat menggunakan mouse untuk menggerakkan tampilan, tidak akan menyebabkan bug scroll tak terbatas
-  allowGlobalHotKeys:
-    title: Izinkan Penggunaan Hotkey Global
-    description: |
-      Saat diaktifkan, dapat menggunakan hotkey global untuk memicu beberapa operasi
   cameraFollowsSelectedNodeOnArrowKeys:
     title: Tampilan Mengikuti Saat Beralih Node yang Dipilih dengan Tombol Arah
     description: |

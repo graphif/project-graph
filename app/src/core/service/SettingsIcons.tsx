@@ -143,7 +143,6 @@ export const settingsIcons = {
   macTrackpadAndMouseWheelDifference: Hand,
   macTrackpadScaleSensitivity: HandMetal,
   macEnableControlToCut: ChevronUp,
-  allowGlobalHotKeys: Keyboard,
   enableSpaceKeyMouseLeftDrag: Space,
   cameraFollowsSelectedNodeOnArrowKeys: Crosshair,
   moveAmplitude: Move,
