@@ -9,6 +9,13 @@ export interface NodeTextRuleOptions {
   frameTitles: boolean;
   questionColor: [number, number, number];
   conclusionColor: [number, number, number];
+  questionSuffixes: string[];
+  conclusionPrefixes: string[];
+  statusPrefixes: string[];
+  conclusionShortcut: string;
+  conclusionReplacement: string;
+  questionQuery: string;
+  conclusionQuery: string;
 }
 
 type Kind = "question" | "conclusion";
@@ -28,19 +35,24 @@ export function unregisterNodeTextRules(owner: string) {
 }
 
 export function ruleKind(text: string): Kind | undefined {
-  if (/^(?:✅|❌)\s/.test(text)) return;
-  if (/^结论[:：]/.test(text)) return "conclusion";
-  if (/[?？]$/.test(text.trimEnd())) return "question";
+  const options = registration?.options;
+  if (!options || options.statusPrefixes.some((prefix) => text.startsWith(prefix))) return;
+  if (options.conclusionPrefixes.some((prefix) => text.startsWith(prefix))) return "conclusion";
+  if (options.questionSuffixes.some((suffix) => text.trimEnd().endsWith(suffix))) return "question";
 }
 
 export function normalizeRuleText(text: string): string {
-  return registration?.options.enabled && /^\/jl/i.test(text) ? `结论:${text.slice(3)}` : text;
+  const options = registration?.options;
+  return options?.enabled && text.toLowerCase().startsWith(options.conclusionShortcut.toLowerCase())
+    ? options.conclusionReplacement + text.slice(options.conclusionShortcut.length)
+    : text;
 }
 
-export function ruleDisplayColor(text: string, original: Color): Color {
+export function ruleDisplayColor(text: string, original: Color, includeConclusion = true): Color {
   const options = registration?.options;
   if (!options?.enabled) return original;
   const kind = ruleKind(text);
+  if (kind === "conclusion" && !includeConclusion) return original;
   const rgb = kind === "question" ? options.questionColor : kind === "conclusion" ? options.conclusionColor : undefined;
   return rgb ? new (original.constructor as typeof Color)(...rgb, 1) : original;
 }
@@ -138,6 +150,6 @@ export function applyRuleFrameTitles(project: Project) {
 
 export function matchRuleQuery(query: string, text: string): boolean | undefined {
   if (!registration?.options.enabled) return;
-  if (query === "/问题") return ruleKind(text) === "question";
-  if (query === "/结论") return ruleKind(text) === "conclusion";
+  if (query === registration.options.questionQuery) return ruleKind(text) === "question";
+  if (query === registration.options.conclusionQuery) return ruleKind(text) === "conclusion";
 }

@@ -1,5 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { Vector } from "@graphif/data-structures";
+import { Color, Vector } from "@graphif/data-structures";
+import { readFile } from "node:fs/promises";
+import vm from "node:vm";
 import { serialize, deserialize } from "@graphif/serializer";
 import type { Project } from "@/core/Project";
 vi.mock("@/core/Project", () => ({ Project: class {}, service: () => (value: unknown) => value }));
@@ -25,6 +27,7 @@ import {
   refreshNodeTextRules,
   registerNodeTextRules,
   ruleDisplayText,
+  ruleDisplayColor,
   unregisterNodeTextRules,
 } from "./NodeTextRules";
 
@@ -45,6 +48,13 @@ it("preserves real node metadata, raw text, manual titles and separate number se
     frameTitles: true,
     questionColor: [255, 235, 59],
     conclusionColor: [52, 103, 180],
+    questionSuffixes: ["?", "？"],
+    conclusionPrefixes: ["结论:", "结论："],
+    statusPrefixes: ["✅ ", "❌ "],
+    conclusionShortcut: "/jl",
+    conclusionReplacement: "结论:",
+    questionQuery: "/问题",
+    conclusionQuery: "/结论",
   });
   const a = new TextNode(p, { text: "甲？" }),
     b = new TextNode(p, { text: "乙？" });
@@ -76,4 +86,63 @@ it("preserves real node metadata, raw text, manual titles and separate number se
   a.rename("后续问题？");
   applyRuleFrameTitles(p);
   expect(automatic.text).toBe("甲？");
+});
+
+it.skipIf(!process.env.PG_TASK_ARRANGE_JS)("coexists with actual Task Arrange OKK and ERR callbacks", async () => {
+  const callbacks = new Map<string, () => Promise<void>>();
+  const nodes: TextNode[] = [];
+  const manager = {
+    getTextNodes: () => nodes,
+    getEdges: () => [],
+    getSelectedEntities: () => nodes,
+    clearSelectAll() {},
+    getEntitiesByUUIDs: () => nodes,
+  };
+  const p = { stageManager: manager, syncAssociationManager: { syncFrom() {} } } as unknown as Project;
+  registerNodeTextRules("integration", {
+    enabled: true,
+    numbering: true,
+    frameTitles: false,
+    questionColor: [255, 235, 59],
+    conclusionColor: [52, 103, 180],
+    questionSuffixes: ["?", "？"],
+    conclusionPrefixes: ["结论:", "结论："],
+    statusPrefixes: ["✅ ", "❌ "],
+    conclusionShortcut: "/jl",
+    conclusionReplacement: "结论:",
+    questionQuery: "/问题",
+    conclusionQuery: "/结论",
+  });
+  const node = new Proxy(new TextNode(p, { text: "需要解决吗？" }), {
+    set(target, key, value) {
+      if (key === "color" && value?._ === "Color") value = new Color(value.r, value.g, value.b, value.a ?? 1);
+      return Reflect.set(target, key, value);
+    },
+  });
+  nodes.push(node);
+  markRuleNodeCreated(node);
+  refreshNodeTextRules(p);
+  const source = await readFile(process.env.PG_TASK_ARRANGE_JS!, "utf8");
+  await new vm.Script(`(async()=>{ ${source} })()`).runInNewContext({
+    prg: {
+      settings_getOwn: async () => 6,
+      settings_setOwn: async () => {},
+      tabs_getCurrentProject: async () => p,
+      keybinds_register: async (id: string, _icon: unknown, _key: string, callback: () => Promise<void>) => {
+        callbacks.set(id, callback);
+      },
+    },
+    Comlink: { proxy: (callback: unknown) => callback },
+  });
+  await callbacks.get("smartOKK")!();
+  expect(node.text.startsWith("✅ ")).toBe(true);
+  expect(ruleDisplayColor(node.text, node.color)).toBe(node.color);
+  await callbacks.get("smartOKK")!();
+  expect(node.text).toBe("需要解决吗？");
+  expect(ruleDisplayColor(node.text, node.color).r).toBe(255);
+  await callbacks.get("smartERR")!();
+  expect(node.text.startsWith("❌ ")).toBe(true);
+  expect(ruleDisplayColor(node.text, node.color)).toBe(node.color);
+  await callbacks.get("smartERR")!();
+  expect(node.text).toBe("需要解决吗？");
 });

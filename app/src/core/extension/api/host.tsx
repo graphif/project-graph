@@ -32,6 +32,13 @@ const nodeTextRuleSchema = z
     frameTitles: z.boolean(),
     questionColor: rgbSchema,
     conclusionColor: rgbSchema,
+    questionSuffixes: z.array(z.string().min(1).max(64)).min(1).max(16),
+    conclusionPrefixes: z.array(z.string().min(1).max(64)).min(1).max(16),
+    statusPrefixes: z.array(z.string().min(1).max(64)).max(16),
+    conclusionShortcut: z.string().min(1).max(64),
+    conclusionReplacement: z.string().max(128),
+    questionQuery: z.string().min(1).max(64),
+    conclusionQuery: z.string().min(1).max(64),
   })
   .strict();
 

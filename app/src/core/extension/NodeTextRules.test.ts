@@ -21,12 +21,19 @@ const options = {
   frameTitles: true,
   questionColor: [255, 235, 59],
   conclusionColor: [52, 103, 180],
-} as const;
+  questionSuffixes: ["?", "？"],
+  conclusionPrefixes: ["结论:", "结论："],
+  statusPrefixes: ["✅ ", "❌ "],
+  conclusionShortcut: "/jl",
+  conclusionReplacement: "结论:",
+  questionQuery: "/问题",
+  conclusionQuery: "/结论",
+};
 function enable() {
   registerNodeTextRules("test", {
     ...options,
-    questionColor: [...options.questionColor],
-    conclusionColor: [...options.conclusionColor],
+    questionColor: [255, 235, 59],
+    conclusionColor: [52, 103, 180],
   });
 }
 function fixture(texts: string[]) {

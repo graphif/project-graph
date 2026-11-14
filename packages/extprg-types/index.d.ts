@@ -8700,6 +8700,13 @@ export type ExtensionHostApi = {
     frameTitles: boolean;
     questionColor: [number, number, number];
     conclusionColor: [number, number, number];
+    questionSuffixes: string[];
+    conclusionPrefixes: string[];
+    statusPrefixes: string[];
+    conclusionShortcut: string;
+    conclusionReplacement: string;
+    questionQuery: string;
+    conclusionQuery: string;
   }): Promise<void>;
   nodeTextRules_unregister(): Promise<void>;
   toast(message: string): Promise<void>;
