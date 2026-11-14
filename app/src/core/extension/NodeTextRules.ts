@@ -1,7 +1,7 @@
 import type { Project } from "@/core/Project";
 import type { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import type { Section } from "@/core/stage/stageObject/entity/Section";
-import { Color } from "@graphif/data-structures";
+import type { Color } from "@graphif/data-structures";
 
 export interface NodeTextRuleOptions {
   enabled: boolean;
@@ -42,7 +42,7 @@ export function ruleDisplayColor(text: string, original: Color): Color {
   if (!options?.enabled) return original;
   const kind = ruleKind(text);
   const rgb = kind === "question" ? options.questionColor : kind === "conclusion" ? options.conclusionColor : undefined;
-  return rgb ? new Color(...rgb, 1) : original;
+  return rgb ? new (original.constructor as typeof Color)(...rgb, 1) : original;
 }
 
 export function ruleDisplayText(project: Project, node: TextNode): string {
@@ -75,6 +75,7 @@ export function markRuleFrameTitleEdited(frame: Section) {
 }
 
 export function refreshNodeTextRules(project: Project, skipResize?: TextNode) {
+  if (!registration?.options.enabled && !caches.has(project)) return;
   const previous = caches.get(project);
   if (previous?.updating) return;
   const state: Cache = { indices: new Map(), kinds: new Map(), updating: true };
@@ -104,6 +105,7 @@ export function refreshNodeTextRules(project: Project, skipResize?: TextNode) {
     project.controller?.resetCountdownTimer?.();
   } finally {
     state.updating = false;
+    if (!registration?.options.enabled) caches.delete(project);
   }
 }
 
