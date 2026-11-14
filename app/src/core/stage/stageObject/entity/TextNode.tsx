@@ -1,4 +1,5 @@
 import type { Project } from "@/core/Project";
+import { normalizeRuleText, ruleDisplayText, ruleTextChanged } from "@/core/extension/NodeTextRules";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
@@ -29,6 +30,8 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
   uuid: string;
   @serializable
   text: string;
+  @serializable
+  nodeRuleCreatedAt?: number;
   @serializable
   public collisionBox: CollisionBox;
   @serializable
@@ -126,6 +129,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       fontFamily = "",
       fontWeight = "",
       borderStyle = "solid" as "solid" | "dashed" | "none",
+      nodeRuleCreatedAt,
     }: {
       uuid?: string;
       text?: string;
@@ -137,12 +141,15 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
       fontFamily?: string;
       fontWeight?: string;
       borderStyle?: "solid" | "dashed" | "none";
+      nodeRuleCreatedAt?: number;
     },
     public unknown = false,
   ) {
     super();
     this.uuid = uuid;
     this.text = text;
+    if (Number.isSafeInteger(nodeRuleCreatedAt) && nodeRuleCreatedAt! > 0) this.nodeRuleCreatedAt = nodeRuleCreatedAt;
+    else delete this.nodeRuleCreatedAt;
     this.details = details;
     this.collisionBox = collisionBox;
     this.color = color;
@@ -281,15 +288,20 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
   private adjustSizeByText() {
     this.collisionBox.shapes[0] = new Rectangle(
       this.rectangle.location.clone(),
-      getMultiLineTextSize(this.text, this.getFontSize(), 1.5, undefined, this.fontFamily, this.fontWeight).add(
-        Vector.same(this.getPadding()).multiply(2),
-      ),
+      getMultiLineTextSize(
+        ruleDisplayText(this.project, this),
+        this.getFontSize(),
+        1.5,
+        undefined,
+        this.fontFamily,
+        this.fontWeight,
+      ).add(Vector.same(this.getPadding()).multiply(2)),
     );
   }
   private adjustHeightByText() {
     const wrapWidth = this.rectangle.size.x - this.getPadding() * 2;
     const newTextSize = this.project.textRenderer.measureMultiLineTextSize(
-      this.text,
+      ruleDisplayText(this.project, this),
       this.getFontSize(),
       wrapWidth,
       1.5,
@@ -325,7 +337,8 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
   // }
 
   rename(text: string) {
-    this.text = text;
+    this.text = normalizeRuleText(text);
+    ruleTextChanged(this.project, this);
     // if (this.text.length < TextNode.enableResizeCharCount) {
     //   this.adjustSizeByText();
     // }
@@ -347,7 +360,7 @@ export class TextNode extends ConnectableEntity implements ResizeAble {
     const newSize = newRectangle.size.add(delta);
     newSize.x = Math.max(75, newSize.x);
     const newTextSize = this.project.textRenderer.measureMultiLineTextSize(
-      this.text,
+      ruleDisplayText(this.project, this),
       this.getFontSize(),
       newSize.x - this.getPadding() * 2,
       1.5,

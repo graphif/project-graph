@@ -18,6 +18,31 @@ import { ExtensionEntity, ExtensionEntityConfig } from "../../stage/stageObject/
 import { Extension } from "../Extension";
 import { ExtensionKeyBindManager } from "../ExtensionKeyBindManager";
 import { extensionObjectRegistry } from "../ExtensionObjectRegistry";
+import { registerNodeTextRules, unregisterNodeTextRules, refreshNodeTextRules } from "../NodeTextRules";
+
+const rgbSchema = z.tuple([
+  z.number().int().min(0).max(255),
+  z.number().int().min(0).max(255),
+  z.number().int().min(0).max(255),
+]);
+const nodeTextRuleSchema = z
+  .object({
+    enabled: z.boolean(),
+    numbering: z.boolean(),
+    frameTitles: z.boolean(),
+    questionColor: rgbSchema,
+    conclusionColor: rgbSchema,
+  })
+  .strict();
+
+function refreshRuleProjects() {
+  for (const tab of store.get(tabsAtom)) if (tab instanceof Project) refreshNodeTextRules(tab);
+}
+
+export function releaseExtensionNodeTextRules(extension: Extension) {
+  unregisterNodeTextRules(extension.metadata.extension?.id ?? "unknown");
+  refreshRuleProjects();
+}
 
 export function extensionHostApiFactory(extension: Extension) {
   const extensionName = extension.metadata.extension?.name || "未知扩展";
@@ -32,6 +57,17 @@ export function extensionHostApiFactory(extension: Extension) {
   }
 
   return {
+    async capabilities_get() {
+      return { nodeTextRules: 1 };
+    },
+    async nodeTextRules_register(options: z.input<typeof nodeTextRuleSchema>) {
+      registerNodeTextRules(extensionId, nodeTextRuleSchema.parse(options));
+      refreshRuleProjects();
+    },
+    async nodeTextRules_unregister() {
+      unregisterNodeTextRules(extensionId);
+      refreshRuleProjects();
+    },
     //region toast
     async toast(message: string): Promise<void> {
       toast(

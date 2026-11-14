@@ -1,4 +1,5 @@
 import { Project, service } from "@/core/Project";
+import { matchRuleQuery } from "@/core/extension/NodeTextRules";
 import { RectangleNoteEffect } from "@/core/service/feedbackService/effectEngine/concrete/RectangleNoteEffect";
 import { Entity } from "@/core/stage/stageObject/abstract/StageEntity";
 import { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
@@ -162,6 +163,16 @@ export class ContentSearch {
 
     // 执行搜索
     for (const node of objectsToSearch) {
+      const match = this.isRegex
+        ? undefined
+        : matchRuleQuery(
+            searchString,
+            node instanceof UrlNode ? node.title : node instanceof TextNode || node instanceof Section ? node.text : "",
+          );
+      if (match !== undefined) {
+        if (match) this.searchResultNodes.push(node);
+        continue;
+      }
       const text = this.getStageObjectText(node);
       if (regex) {
         if (regex.test(text)) {

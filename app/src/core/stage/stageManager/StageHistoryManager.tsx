@@ -1,4 +1,5 @@
 import { Project, ProjectState, service } from "@/core/Project";
+import { applyRuleFrameTitles, refreshNodeTextRules } from "@/core/extension/NodeTextRules";
 import { Settings } from "@/core/service/Settings";
 import { deserialize, serialize } from "@graphif/serializer";
 import { cn } from "@udecode/cn";
@@ -417,6 +418,8 @@ export class HistoryManager extends HistoryManagerAbs {
    * 记录一步骤
    */
   public recordStep(): void {
+    refreshNodeTextRules(this.project);
+    applyRuleFrameTitles(this.project);
     this.currentManager.recordStep();
     this.project.emit("stage-commit");
   }
