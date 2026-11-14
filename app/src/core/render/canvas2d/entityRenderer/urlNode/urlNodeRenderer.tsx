@@ -1,4 +1,5 @@
 import { Project, service } from "@/core/Project";
+import { ruleDisplayColor } from "@/core/extension/NodeTextRules";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { MouseLocation } from "@/core/service/controlService/MouseLocation";
 import { Settings } from "@/core/service/Settings";
@@ -11,6 +12,7 @@ export class UrlNodeRenderer {
   constructor(private readonly project: Project) {}
 
   render(urlNode: UrlNode): void {
+    const displayColor = ruleDisplayColor(urlNode.title, urlNode.color, false);
     if (urlNode.isSelected) {
       // 在外面增加一个框
       this.project.collisionBoxRenderer.render(
@@ -24,7 +26,7 @@ export class UrlNodeRenderer {
         this.project.renderer.transformWorld2View(urlNode.rectangle.location),
         urlNode.rectangle.size.multiply(this.project.camera.currentScale),
       ),
-      urlNode.color,
+      displayColor,
       this.project.stageStyleManager.currentStyle.StageObjectBorder,
       2 * this.project.camera.currentScale,
       Renderer.NODE_ROUNDED_RADIUS,
@@ -38,8 +40,8 @@ export class UrlNodeRenderer {
           urlNode.title,
           this.project.renderer.transformWorld2View(urlNode.rectangle.location.add(Vector.same(Renderer.NODE_PADDING))),
           titleFontSize,
-          urlNode.color.a === 1
-            ? colorInvert(urlNode.color)
+          displayColor.a === 1
+            ? colorInvert(displayColor)
             : colorInvert(this.project.stageStyleManager.currentStyle.Background),
         );
       }
@@ -49,8 +51,8 @@ export class UrlNodeRenderer {
         this.project.renderer.transformWorld2View(
           urlNode.rectangle.location.add(new Vector(urlNode.rectangle.size.x, UrlNode.titleHeight)),
         ),
-        urlNode.color.a === 1
-          ? colorInvert(urlNode.color)
+        displayColor.a === 1
+          ? colorInvert(displayColor)
           : colorInvert(this.project.stageStyleManager.currentStyle.Background),
         1 * this.project.camera.currentScale,
         4 * this.project.camera.currentScale,
@@ -64,8 +66,8 @@ export class UrlNodeRenderer {
           ),
         ),
         Renderer.FONT_SIZE * 0.5 * this.project.camera.currentScale,
-        urlNode.color.a === 1
-          ? colorInvert(urlNode.color)
+        displayColor.a === 1
+          ? colorInvert(displayColor)
           : colorInvert(this.project.stageStyleManager.currentStyle.Background),
       );
     }

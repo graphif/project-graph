@@ -1,5 +1,6 @@
 import { Random } from "@/core/algorithm/random";
 import { Project, service } from "@/core/Project";
+import { ruleDisplayColor, ruleDisplayText } from "@/core/extension/NodeTextRules";
 import { SyncAssociationRenderer } from "@/core/render/canvas2d/utilsRenderer/SyncAssociationRenderer";
 import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
 import {
@@ -25,7 +26,7 @@ export class TextNodeRenderer {
     const isLogicNode = this.project.autoComputeUtils.isNameIsLogicNode(node.text);
 
     // 节点身体矩形
-    let fillColor = node.color;
+    let fillColor = ruleDisplayColor(node.text, node.color);
     let renderedFontSize = node.getFontSize() * this.project.camera.currentScale;
     if (renderedFontSize < Settings.ignoreTextNodeTextRenderLessThanFontSize && fillColor.a === 0) {
       const color = this.project.stageStyleManager.currentStyle.StageObjectBorder.clone();
@@ -641,7 +642,7 @@ export class TextNodeRenderer {
       }
     } else {
       this.project.textRenderer.renderMultiLineText(
-        node.text,
+        ruleDisplayText(this.project, node),
         this.project.renderer.transformWorld2View(
           node.rectangle.location.add(Vector.same(node.getPadding())).add(new Vector(0, node.getFontSize() / 4)),
         ),
@@ -650,8 +651,8 @@ export class TextNodeRenderer {
         node.sizeAdjust === "manual"
           ? (node.rectangle.size.x - node.getPadding() * 2) * this.project.camera.currentScale
           : Infinity,
-        node.color.a === 1
-          ? colorInvert(node.color)
+        ruleDisplayColor(node.text, node.color).a === 1
+          ? colorInvert(ruleDisplayColor(node.text, node.color))
           : colorInvert(this.project.stageStyleManager.currentStyle.Background),
         1.5,
         undefined,

@@ -118,6 +118,13 @@ export class ControllerUtils {
           });
           // onChange
           clickedNode?.rename(text);
+          if (clickedNode && clickedNode.text !== text) {
+            const start = ele.selectionStart,
+              end = ele.selectionEnd;
+            ele.value = clickedNode.text;
+            ele.setSelectionRange(start, end);
+            text = clickedNode.text;
+          }
           if (Settings.textNodeAutoFormatTreeWhenInput) {
             relayoutTreeWhileEditing();
           }

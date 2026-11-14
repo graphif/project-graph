@@ -1,4 +1,5 @@
 import { Project } from "@/core/Project";
+import { markRuleFrameTitleEdited } from "@/core/extension/NodeTextRules";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { Settings } from "@/core/service/Settings";
 import { ConnectableEntity } from "@/core/stage/stageObject/abstract/ConnectableEntity";
@@ -68,6 +69,8 @@ export class Section extends ConnectableEntity {
   @serializable
   text: string;
   @serializable
+  nodeRuleTitleAssigned?: boolean;
+  @serializable
   children: Entity[];
 
   /** 是否是折叠状态 */
@@ -99,6 +102,7 @@ export class Section extends ConnectableEntity {
       children = [] as Entity[],
       details = [] as Value,
       borderStyle = "solid" as "solid" | "dashed" | "none",
+      nodeRuleTitleAssigned = undefined as boolean | undefined,
     } = {},
     public unknown = false,
   ) {
@@ -123,6 +127,8 @@ export class Section extends ConnectableEntity {
     this.details = details;
     this.children = children;
     this.borderStyle = borderStyle;
+    if (nodeRuleTitleAssigned !== undefined) this.nodeRuleTitleAssigned = nodeRuleTitleAssigned;
+    else delete this.nodeRuleTitleAssigned;
     // 一定要放在最后
     this.adjustLocationAndSize();
   }
@@ -142,6 +148,7 @@ export class Section extends ConnectableEntity {
   }
 
   rename(newName: string) {
+    markRuleFrameTitleEdited(this);
     this.text = newName;
     this.adjustLocationAndSize();
   }
