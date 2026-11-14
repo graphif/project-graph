@@ -17,6 +17,9 @@
 #pg-titlebar-navigation > * {
   --app-region: no-drag;
 }
+[data-pg-docked-tab-id] {
+  --app-region: no-drag;
+}
 
 @font-face {
   font-family: "Project Graph Canvas";
@@ -49,6 +52,8 @@ html[data-theme-transition="ripple"]::view-transition-new(root) {
 
 html[data-theme-transition="ripple"]::view-transition-old(root) {
   z-index: 1;
+  mask: url("#pg-theme-ripple-old-mask");
+  animation: pg-theme-ripple 1s linear infinite;
 }
 
 html[data-theme-transition="ripple"]::view-transition-new(root) {

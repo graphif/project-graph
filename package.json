@@ -30,6 +30,9 @@
     "nx",
     "sharp"
   ],
+  "overrides": {
+    "dompurify": "3.4.17"
+  },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public"

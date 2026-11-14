@@ -1,6 +1,9 @@
 windowControls:
   alwaysOnTop: 窗口置頂
 
+nodeDetailsWindow:
+  title: 詳細信息
+
 projectStatus:
   emptyCanvas: 畫布裡沒有節點
   noVisibleNodes: 當前視野內沒有可見節點，點擊按鈕復位
@@ -1280,10 +1283,9 @@ effects:
       實體創建時，實體周圍出現粉塵凝聚
       由於不夠美觀，已經廢棄，不會出現
   EntityCreateFlashEffect:
-    title: 實體邊框發光效果
+    title: 節點創建輪廓
     description: |
-      在ctrl+滾輪轉動實體樹、縮放圖片、創建節點等情況下出現
-      若渲染性能較差，建議關閉此選項
+      創建節點時，淡淡的輪廓輕輕收攏並淡出
   EntityCreateLineEffect:
     title: 實體散發電路板式線條輻射效果
     description: |

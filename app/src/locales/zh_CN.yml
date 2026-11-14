@@ -1,6 +1,9 @@
 windowControls:
   alwaysOnTop: 窗口置顶
 
+nodeDetailsWindow:
+  title: 详细信息
+
 projectStatus:
   emptyCanvas: 画布里没有节点
   noVisibleNodes: 当前视野内没有可见节点，点击按钮复位
@@ -1280,10 +1283,9 @@ effects:
       实体创建时，实体周围出现粉尘凝聚
       由于不够美观，已经废弃，不会出现
   EntityCreateFlashEffect:
-    title: 实体边框发光效果
+    title: 节点创建轮廓
     description: |
-      在ctrl+滚轮转动实体树、缩放图片、创建节点等情况下出现
-      若渲染性能较差，建议关闭此选项
+      创建节点时，淡淡的轮廓轻轻收拢并淡出
   EntityCreateLineEffect:
     title: 实体散发电路板式线条辐射效果
     description: |

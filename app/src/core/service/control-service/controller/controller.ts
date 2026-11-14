@@ -290,7 +290,7 @@ export class Controller {
   }
 }
 
-declare module "./Controller" {
+declare module "./controller" {
   interface Controller {
     associationReshape: ControllerAssociationReshapeClass;
     camera: ControllerCameraClass;

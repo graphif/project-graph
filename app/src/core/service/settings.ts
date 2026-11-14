@@ -760,6 +760,8 @@ export const settingsSchema = z.object({
           { type: "item", id: "resetAllKeyBinds", icon: "Radiation" },
           { type: "item", id: "openConfigFolder", icon: "FolderCog" },
           { type: "item", id: "openCacheFolder", icon: "FolderOpen" },
+          { type: "item", id: "openDefaultBackupFolder", icon: "FolderClock" },
+          { type: "item", id: "openCustomBackupFolder", icon: "FolderClock" },
         ],
       },
       {
@@ -1016,8 +1018,10 @@ export const Settings = new Proxy<
       throw new Error(`没有这个设置项: ${key}`);
     }
     store.set(key, value);
+    // Listener 可能联动修改其他设置，必须先更新内存，避免读到旧值后无限递归。
+    const result = Reflect.set(target, key, value, receiver);
     listeners[key]?.forEach((cb) => cb(value));
-    return Reflect.set(target, key, value, receiver);
+    return result;
   },
   get: (target, key, receiver) => {
     switch (key) {

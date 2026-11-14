@@ -18,10 +18,10 @@ export const nativeMacosMenuIds = new Set([
   "file",
   "actions",
   "view",
+  "settings",
   "ai",
   "extensions",
   "window",
-  "settings",
   "about",
 ]);
 const command = (id: string) => KeyBindsUI.getUIKeyBind(id) ?? allKeyBinds.find((item) => item.id === id);

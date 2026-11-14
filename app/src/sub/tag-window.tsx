@@ -66,7 +66,7 @@ export default function TagWindow() {
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex h-full flex-col">
       <div className="flex justify-center gap-2">
         <Tooltip>
           <TooltipTrigger>

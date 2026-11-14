@@ -175,7 +175,7 @@ func (Native) SetMenu(entries []MenuEntry) {
 		appItems := []*mygo.MenuItem{}
 		top := []*mygo.MenuItem{}
 		for _, item := range items {
-			if item.ID == "settings" || item.ID == "about" {
+			if item.ID == "about" {
 				appItems = append(appItems, item)
 				continue
 			}
@@ -186,7 +186,8 @@ func (Native) SetMenu(entries []MenuEntry) {
 			top = append(top, item)
 		}
 		appItems = append(appItems, mygo.Separator(), &mygo.MenuItem{Role: mygo.RoleServices}, mygo.Separator(), &mygo.MenuItem{Role: mygo.RoleHide}, &mygo.MenuItem{Role: mygo.RoleHideOthers}, &mygo.MenuItem{Role: mygo.RoleUnhide}, mygo.Separator(), &mygo.MenuItem{Role: mygo.RoleQuit})
-		items = append([]*mygo.MenuItem{{Label: "Project Graph", Submenu: appItems}}, top...)
+		// Native editing commands keep copy/paste shortcuts working in web text fields.
+		items = append([]*mygo.MenuItem{{Label: "Project Graph", Submenu: appItems}, {Role: mygo.RoleEditMenu}}, top...)
 	}
 	mygo.App.SetMenu(mygo.NewMenu(items))
 }

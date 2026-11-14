@@ -37,17 +37,30 @@ describe("theme ripple", () => {
       expect(parseFloat(frames.r[1])).toBeGreaterThan(Math.hypot(1100, 770));
       expect(document.documentElement.dataset.themeTransition).toBe("ripple");
       for (let i = 1; i < clicks; i++) void runThemeTransition({ x: 1100, y: 30 }, update);
-      expect(document.querySelectorAll("#pg-theme-ripple-mask circle")).toHaveLength(clicks);
+      const newCircles = document.querySelectorAll("#pg-theme-ripple-mask circle");
+      const oldCircles = document.querySelectorAll("#pg-theme-ripple-old-mask circle");
+      expect(newCircles).toHaveLength(clicks);
+      expect(oldCircles).toHaveLength(clicks);
+      expect(document.querySelectorAll("#pg-theme-ripple-old-mask rect")).toHaveLength(1);
+      newCircles.forEach((circle, i) => {
+        expect(circle.getAttribute("fill")).toBe(i % 2 === 0 ? "white" : "black");
+        expect(oldCircles[i].getAttribute("fill")).toBe(i % 2 === 0 ? "black" : "white");
+      });
       expect(document.startViewTransition).toHaveBeenCalledOnce();
       expect(update).toHaveBeenCalledOnce();
-      for (const [index, animation] of animations.entries()) {
+      const rippleAnimations = animations.filter((animation) => animation.onfinish);
+      expect(rippleAnimations).toHaveLength(clicks);
+      for (const [index, animation] of rippleAnimations.entries()) {
         animation.onfinish!();
         expect(document.querySelectorAll("#pg-theme-ripple-mask circle")).toHaveLength(clicks - index);
+        expect(document.querySelectorAll("#pg-theme-ripple-old-mask circle")).toHaveLength(clicks - index);
+        expect(document.querySelectorAll("#pg-theme-ripple-old-mask rect")).toHaveLength(1);
       }
       await task;
       expect(update).toHaveBeenCalledTimes(clicks % 2 ? 1 : 2);
       expect(document.documentElement.dataset.themeTransition).toBeUndefined();
       expect(document.getElementById("pg-theme-ripple-mask")).toBeNull();
+      expect(document.getElementById("pg-theme-ripple-old-mask")).toBeNull();
     },
   );
 
