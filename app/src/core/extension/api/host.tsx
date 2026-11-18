@@ -1,23 +1,23 @@
 import { Dialog } from "@/components/ui/dialog";
-import { Project } from "@/core/Project";
-import { KeyBindIcon } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
-import { Settings } from "@/core/service/Settings";
-import { Themes } from "@/core/service/Themes";
+import { Project } from "@/core/project";
+import { KeyBindIcon } from "@/core/service/control-service/shortcut-keys-engine/key-binds-ui";
+import { Settings } from "@/core/service/settings";
+import { Themes } from "@/core/service/themes";
 import { activeResourceTabAtom, store, tabsAtom } from "@/state";
-import { FormWindow } from "@/sub/FormWindow";
+import { FormWindow } from "@/sub/form-window";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { invoke } from "@tauri-apps/api/core";
-import { fetch } from "@tauri-apps/plugin-http";
+import { Native } from "@/platform/desktop";
+import { fetch } from "@/platform/http";
 import { proxy } from "comlink";
 import { toast } from "sonner";
 import z from "zod";
 import { JSONSchema } from "zod/v4/core";
-import { CollisionBox } from "../../stage/stageObject/collisionBox/collisionBox";
-import { ExtensionEntity, ExtensionEntityConfig } from "../../stage/stageObject/entity/ExtensionEntity";
-import { Extension } from "../Extension";
-import { ExtensionKeyBindManager } from "../ExtensionKeyBindManager";
-import { extensionObjectRegistry } from "../ExtensionObjectRegistry";
+import { CollisionBox } from "../../stage/stage-object/collision-box/collision-box";
+import { ExtensionEntity, ExtensionEntityConfig } from "../../stage/stage-object/entity/extension-entity";
+import { Extension } from "../extension";
+import { ExtensionKeyBindManager } from "../extension-key-bind-manager";
+import { extensionObjectRegistry } from "../extension-object-registry";
 
 export function extensionHostApiFactory(extension: Extension) {
   const extensionName = extension.metadata.extension?.name || "未知扩展";
@@ -111,11 +111,7 @@ export function extensionHostApiFactory(extension: Extension) {
       args?: string[],
       stdin?: string,
     ): Promise<{ code: number | null; stdout: string; stderr: string }> {
-      return invoke<{ code: number | null; stdout: string; stderr: string }>("run_command", {
-        program,
-        cmdArgs: args ?? [],
-        stdin,
-      });
+      return Native.runCommand(program, args ?? [], stdin ?? "");
     },
 
     //region 设置
@@ -133,15 +129,9 @@ export function extensionHostApiFactory(extension: Extension) {
       };
     },
     async settings_getGlobal(key: string): Promise<any> {
-      if (key === "aiApiKey") {
-        throw new Error("出于安全考虑，扩展无法访问 aiApiKey 设置项");
-      }
       return (Settings as any)[key];
     },
     async settings_setGlobal(key: string, value: unknown): Promise<any> {
-      if (key === "aiApiBaseUrl") {
-        throw new Error("出于安全考虑，扩展无法修改 aiApiBaseUrl 设置项");
-      }
       return ((Settings as any)[key] = value);
     },
 
@@ -188,7 +178,7 @@ export function extensionHostApiFactory(extension: Extension) {
     },
 
     //region Tab,Project
-    async tabs_getAll(): Promise<import("../../Tab").Tab[]> {
+    async tabs_getAll(): Promise<import("../../tab").Tab[]> {
       return store.get(tabsAtom).map((it) => proxy(it));
     },
     async tabs_getAllProjects(): Promise<Project[]> {
@@ -197,7 +187,7 @@ export function extensionHostApiFactory(extension: Extension) {
         .filter((it) => it instanceof Project)
         .map((it) => proxy(it));
     },
-    async tabs_getCurrent(): Promise<import("../../Tab").Tab | null> {
+    async tabs_getCurrent(): Promise<import("../../tab").Tab | null> {
       const activeTab = store.get(activeResourceTabAtom);
       return activeTab ? proxy(activeTab) : null;
     },
@@ -223,7 +213,7 @@ export function extensionHostApiFactory(extension: Extension) {
 
     async entity_onClick(
       typeName: string,
-      handler: (payload: import("../ExtensionObjectRegistry").ClickEventPayload) => void,
+      handler: (payload: import("../extension-object-registry").ClickEventPayload) => void,
     ): Promise<void> {
       extensionObjectRegistry.registerClickHandler(extensionId, typeName, handler);
     },

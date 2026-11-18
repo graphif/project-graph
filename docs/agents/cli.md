@@ -1,37 +1,46 @@
-# Project Graph CLI development
+# Project Graph CLI
 
-The repository-local Project Graph CLI requires Node.js 26 or newer, Corepack, pnpm 11.3, and installed workspace dependencies.
+Project Graph 的自动化入口与 GUI 是同一个应用可执行文件，统一由 `app/main.go` 处理。无参数启动 GUI，带 `tool`、`request`、`--help` 或 `--version` 时运行 CLI 分支。下文以 `project-graph` 表示安装的应用程序路径（Windows 为 `Project Graph.exe`）。CLI 不直接读写 `.prg` 文件，所有工程操作都通过本地 IPC 转发给 GUI，由 GUI 当前工程实例执行并保存。
 
-Run commands from the repository root:
-
-```sh
-pnpm cli -- --help
-pnpm cli -- --version
-pnpm cli -- tool list
-pnpm cli -- tool describe get_all_nodes
-pnpm cli -- tool invoke get_all_nodes --project /absolute/path/to/project.prg --input '{}'
-```
-
-Operational success writes exactly one JSON value to stdout and nothing to stderr. Failure writes no stdout and one JSON error object to stderr. Discovery is Project-independent and does not start the desktop application.
-
-`tool invoke` canonicalizes the explicit `.prg` Project Path. When the desktop application owns that path, the invocation uses the matching Open Project, including its live unsaved graph, selection, and viewport. Otherwise, the 19 closed-capable tools run against a one-shot Project loaded from disk; the 6 selection tools and 4 viewport tools return `PROJECT_MUST_BE_OPEN`. Closed Project mutations are saved only after successful execution, while Open Project mutations remain unsaved live state.
-
-SIGINT and SIGTERM request cooperative cancellation. A handled cancellation writes no stdout, writes one `CANCELLED` JSON error to stderr, and exits with code 130. Closed Project cancellation before persistence does not save a partial result. Effects already performed against an Open Project, the network, or a model are not rolled back.
-
-Cancellation has no invocation timeout and does not hard-kill a handler. A handler that consumes its `AbortSignal` can stop promptly; existing handlers that do not consume it may finish their current work before the CLI reports cancellation. There is no cancel subcommand, stdin cancellation message, or crash/power-loss rollback guarantee.
-
-## Production runtime materialization
-
-Build the native ownership helper for the current target, then materialize the precompiled Node runtime into an empty output directory:
+## Commands
 
 ```sh
-cargo test --manifest-path app/src-tauri/Cargo.toml --test project_ownership_helper
-PROJECT_GRAPH_CLI_VERSION=1.2.3 \
-PROJECT_GRAPH_OWNERSHIP_HELPER_PATH="$PWD/app/src-tauri/target/debug/project-graph-ownership-helper" \
-pnpm --filter @graphif/project-graph materialize:cli --outDir /absolute/path/to/empty-output
-node /absolute/path/to/empty-output/project-graph.mjs --version
+project-graph --help
+project-graph --version
+project-graph tool list
+project-graph tool describe get_all_nodes
+project-graph tool invoke get_all_nodes --project /absolute/path/to/project.prg --input '{}'
+project-graph request status <request-id>
 ```
 
-The materialized directory contains the precompiled CLI entry and chunks, production Node dependencies, and the target-native ownership helper. It does not interpret TypeScript, start Vite at runtime, download dependencies, fall back to `PATH`, or bundle a Node executable. A later integration package must add a fixed Node runtime and invoke this exact package-local entry.
+`tool list` 和 `tool describe` 不需要 GUI。`tool invoke` 会连接已经运行的 GUI；GUI 未运行时，CLI 会启动它并等待 automation bridge 就绪。目标工程没有打开时，GUI 会自动打开该工程并通过 toast 提示用户。
 
-The repository process suites validate the native helper, materialized runtime, Closed Project execution, and loopback Open Project Runtime bridge on macOS arm64. The ownership primitive is implemented for macOS and Windows, but this core candidate does not claim a validated Windows payload or Host installation; those require target-native materialization and acceptance on the designated Windows machine. Linux payloads, packaged desktop applications, signing, installation, and Host Plugin or Marketplace lifecycles remain outside this boundary.
+Windows 应用是 GUI 子系统程序。CLI 分支会在没有有效 stdout 时连接父进程控制台；已有管道或文件重定向会保留。PowerShell 直接启动 GUI 程序可能提前返回提示符，需要等待并捕获结果时使用管道，例如：
+
+```powershell
+& $path --help | Out-String
+& $path --version | Out-String
+```
+
+这些命令由当前 CLI 进程处理，与 GUI 是否已经运行无关。外部 Agent 应等待进程结束并捕获 stdout 和退出码。
+
+CLI 输出结构化 JSON。每个调用都包含请求 ID、工具结果、是否应用修改以及是否已持久化。连接中断或超时后不要重复执行修改请求，先用 `request status <request-id>` 查询结果。
+
+同一工程的请求在 GUI 内按顺序执行。修改工具执行成功后由 GUI 保存；保存失败会返回 `PROJECT_SAVE_FAILED`，这表示画布内存可能已经改变但文件没有写入成功。读取工具不会强制保存。
+
+旧工程格式升级需要显式授权：只有在调用中添加 `--allow-upgrade` 才允许升级。CLI 不会替用户确认升级或覆盖未保存的内存状态。
+
+## Image files
+
+`get_image_file` 接收 ImageNode 或包含图片的 Section 引用，把附件导出到应用缓存目录的 `ai-exports` 子目录，并返回本地 `path` 与 `mimeType`。外部 Agent 直接读取该路径；不再提供 `recognize_image` 或应用内图像识别窗口。
+
+## Development
+
+在仓库根目录执行：
+
+```sh
+go -C app test ./...
+bun run --cwd app automation:catalog
+```
+
+工具目录由前端工具定义生成到 `app/internal/automation/tools.json`。CLI 与 GUI 一起分发，不依赖 Bun、Node.js 或 MCP。GUI 冷启动使用当前同一个可执行文件加 `--automation` 参数。

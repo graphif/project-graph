@@ -3,12 +3,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { QuickSettingsManager } from "@/core/service/QuickSettingsManager";
-import { Settings, settingsSchema } from "@/core/service/Settings";
-import { settingsIcons } from "@/core/service/SettingsIcons";
-import { Telemetry } from "@/core/service/Telemetry";
+import { QuickSettingsManager } from "@/core/service/quick-settings-manager";
+import { Settings, settingsSchema } from "@/core/service/settings";
+import { settingsIcons } from "@/core/service/settings-icons";
+import { Telemetry } from "@/core/service/telemetry";
 import { cn } from "@/utils/cn";
 import _ from "lodash";
 import { ChevronRight, Pin, PinOff, RotateCw } from "lucide-react";
@@ -108,7 +107,6 @@ export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof 
   }, [value]);
 
   const postTelemetryEvent = _.debounce(() => {
-    if (settingKey === "aiApiKey") return;
     Telemetry.event("修改设置", {
       key: settingKey,
       value,
@@ -151,16 +149,7 @@ export function SettingField({ settingKey, extra = <></> }: { settingKey: keyof 
       />
       {extra}
       {innerTypeName === "string" ? (
-        settingKey === "aiCustomHeaders" ? (
-          <Textarea
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            rows={3}
-            className="w-64 font-mono text-xs"
-          />
-        ) : (
-          <Input value={value} onChange={(e) => setValue(e.target.value)} className="w-64" />
-        )
+        <Input value={value} onChange={(e) => setValue(e.target.value)} className="w-64" />
       ) : innerTypeName === "number" && bag.minimum !== undefined && bag.maximum !== undefined ? (
         <>
           <Slider

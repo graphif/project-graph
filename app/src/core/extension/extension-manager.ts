@@ -1,0 +1,85 @@
+import { appDataDir, join } from "@/platform/path";
+import { exists, mkdir, readDir } from "@/platform/files";
+import { URI } from "vscode-uri";
+import { FileSystemProviderFile } from "../file-system-provider/file-system-provider-file";
+import { Settings } from "../service/settings";
+import { Extension } from "./extension";
+import { ExtensionRuntime } from "./extension-runtime";
+
+export namespace ExtensionManager {
+  const extensions: Map<string, Extension> = new Map();
+  const runtimes: Map<string, ExtensionRuntime> = new Map();
+
+  export async function getExtensionsDir() {
+    console.log(await appDataDir());
+    return await join(await appDataDir(), "extensions");
+  }
+  export async function getExtensions() {
+    const extensionsDir = await getExtensionsDir();
+    if (!(await exists(extensionsDir))) {
+      // 首次启动时 appDataDir 本身可能还不存在（其他 service 的 store.save() 可能尚未建出父目录），
+      // 必须递归创建，否则会 ENOENT 导致整个启动链中断、窗口透明空白。
+      // https://github.com/graphif/project-graph/issues/782
+      await mkdir(extensionsDir, { recursive: true });
+    }
+    const entries = await readDir(extensionsDir);
+    return entries.map((it) => it.name);
+  }
+  export async function getExtension(name: string) {
+    if (extensions.has(name)) {
+      return extensions.get(name)!;
+    }
+    const extensionsDir = await getExtensionsDir();
+    const extensionPath = await join(extensionsDir, name);
+    const extension = new Extension(URI.file(extensionPath));
+    extension.registerFileSystemProvider("file", FileSystemProviderFile);
+    await extension.init();
+    extensions.set(name, extension);
+    return extension;
+  }
+  export async function getRuntime(name: string) {
+    if (runtimes.has(name)) {
+      return runtimes.get(name)!;
+    }
+    const extension = await getExtension(name);
+    const runtime = new ExtensionRuntime(extension);
+    runtimes.set(name, runtime);
+    return runtime;
+  }
+
+  /**
+   * 卸载单个扩展：终止 Worker 并清除缓存，使下次 getRuntime 能重新创建
+   */
+  export function unload(name: string) {
+    const runtime = runtimes.get(name);
+    if (runtime) {
+      runtime.terminate();
+      runtimes.delete(name);
+    }
+    extensions.delete(name);
+  }
+
+  /**
+   * 创建并运行所有扩展
+   */
+  export async function init() {
+    const extensionNames = await getExtensions();
+    for (const name of extensionNames) {
+      if (Settings.disabledExtensions.includes(name)) {
+        console.log(`扩展 ${name} 已被禁用，跳过加载`);
+        continue;
+      }
+      await getRuntime(name);
+    }
+  }
+
+  export async function reload() {
+    // 终止所有扩展的 Worker
+    for (const runtime of runtimes.values()) {
+      runtime.terminate();
+    }
+    runtimes.clear();
+    extensions.clear();
+    await init();
+  }
+}

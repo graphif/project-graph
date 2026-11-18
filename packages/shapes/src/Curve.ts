@@ -1,4 +1,5 @@
 import { Vector } from "@graphif/data-structures";
+import { serializableType } from "@graphif/serializer";
 import { Line } from "./Line";
 import { Rectangle } from "./Rectangle";
 import { Shape } from "./Shape";
@@ -6,6 +7,7 @@ import { Shape } from "./Shape";
 /**
  * 贝塞尔曲线
  */
+@serializableType("CubicBezierCurve", { fields: ["start", "ctrlPt1", "ctrlPt2", "end"] })
 export class CubicBezierCurve extends Shape {
   constructor(
     public start: Vector,

@@ -1,0 +1,54 @@
+import { Color, mixColors, ProgressNumber } from "@graphif/data-structures";
+import { Rectangle } from "@graphif/shapes";
+import { Project } from "@/core/project";
+import { Renderer } from "@/core/render/canvas2d/renderer";
+import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
+
+/**
+ * 自动吸附对齐的时候闪烁一下实体矩形边框
+ */
+export class RectangleRenderEffect extends Effect {
+  static readonly effectId = "RectangleRenderEffect";
+  constructor(
+    public override timeProgress: ProgressNumber,
+    private rectangle: Rectangle,
+    private fillColor: Color,
+    private strokeColor: Color,
+    private strokeWidth: number,
+    private roundedRadius: number = Renderer.NODE_ROUNDED_RADIUS,
+  ) {
+    super(timeProgress);
+  }
+
+  render(project: Project) {
+    project.shapeRenderer.renderRect(
+      project.renderer.transformWorld2View(this.rectangle),
+      this.fillColor,
+      mixColors(this.strokeColor, this.strokeColor.toTransparent(), this.timeProgress.rate),
+      this.strokeWidth * project.camera.currentScale,
+      this.roundedRadius,
+    );
+  }
+
+  static fromPreAlign(project: Project, rectangle: Rectangle): RectangleRenderEffect {
+    return new RectangleRenderEffect(
+      new ProgressNumber(0, 10),
+      rectangle,
+      Color.Transparent,
+      project.stageStyleManager.currentStyle.CollideBoxPreSelected,
+      2,
+    );
+  }
+
+  static fromShiftClickSelect(rectangle: Rectangle): RectangleRenderEffect {
+    return new RectangleRenderEffect(
+      new ProgressNumber(0, 100),
+      rectangle,
+      Color.Transparent,
+      // TODO
+      Color.White,
+      // this.project.stageStyleManager.currentStyle.CollideBoxPreSelected.toSolid(),
+      4,
+    );
+  }
+}

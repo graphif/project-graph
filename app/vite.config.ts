@@ -4,13 +4,11 @@ import ViteYaml from "@modyfi/vite-plugin-yaml";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-oxc";
 import path from "node:path";
-import operatorOverload from "unplugin-operator-overload/vite";
-import originalClassName from "unplugin-original-class-name/vite";
 import { createLogger, defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 import { i18nAutoTW } from "./vite-plugins/i18n-auto-tw";
 
-const host = process.env.TAURI_DEV_HOST ?? "localhost";
+const host = process.env.PROJECT_GRAPH_DEV_HOST ?? "localhost";
 
 export const viteLogger = createLogger("info", { prefix: "[project-graph]" });
 
@@ -18,10 +16,6 @@ export const viteLogger = createLogger("info", { prefix: "[project-graph]" });
 export default defineConfig({
   plugins: [
     tailwindcss(),
-    originalClassName({
-      staticMethodName: "className",
-    }),
-    operatorOverload(),
     // 将svg文件作为react组件导入
     // import Icon from "./icon.svg?react"
     svgr(),
@@ -36,26 +30,18 @@ export default defineConfig({
     // reactScan(),
   ],
 
-  // 不清屏，方便看rust报错
+  // Keep host diagnostics visible during development.
   clearScreen: false,
-  // tauri需要固定的端口
+  // The desktop host connects to a fixed development port.
   server: {
     host,
     port: 1420,
     // 端口冲突时直接报错，不尝试下一个可用端口
     strictPort: true,
     watch: {
-      ignored: ["**/src-tauri/**"],
+      ignored: ["**/.mygo/**", "**/build/**"],
     },
   },
-
-  // 2024年10月3日发现 pnpm build 会报错，
-  // Top-level await is not available in the configured target environment
-  // 添加下面的配置解决了
-  // 2024/10/05 main.tsx去掉了顶层await，所以不需要这个配置
-  // build: {
-  //   target: "esnext",
-  // },
 
   // 环境变量前缀
   // 只有名字以LR_开头的环境变量才会被注入到前端
@@ -73,7 +59,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, "index.html"),
-        proxy: path.resolve(__dirname, "proxy.html"),
       },
     },
   },

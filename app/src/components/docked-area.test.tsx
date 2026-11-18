@@ -1,17 +1,17 @@
 // @vitest-environment jsdom
 
-import { createTabGroup, splitTabGroup } from "@/core/TabGroup";
+import { createTabGroup, splitTabGroup } from "@/core/tab-group";
 import { store, tabGroupRootAtom } from "@/state";
 import { Provider } from "jotai";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
-vi.mock("@/core/Project", () => ({ Project: class {}, ProjectState: {} }));
-vi.mock("@/core/Tab", () => ({ isResourceTab: () => false }));
-vi.mock("@/core/TabWorkspace", () => ({ TabWorkspace: {} }));
+vi.mock("@/core/project", () => ({ Project: class {}, ProjectState: {} }));
+vi.mock("@/core/tab", () => ({ isResourceTab: () => false }));
+vi.mock("@/core/tab-workspace", () => ({ TabWorkspace: {} }));
 vi.mock("@/utils/platform", () => ({ isMac: false }));
-vi.mock("@/ProjectTabs", () => ({
+vi.mock("@/project-tabs", () => ({
   ProjectTabs: () => (
     <div data-pg-tab-bar>
       <button data-pg-docked-tab-id="test-tab">Tab</button>
@@ -27,7 +27,6 @@ let space: DOMRect;
 let groupRects: Record<string, DOMRect>;
 let updateLayout: () => void;
 const disconnect = vi.fn();
-const onTitleBarMouseDown = vi.fn();
 
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -65,12 +64,7 @@ async function render() {
   await React.act(async () =>
     root.render(
       <Provider store={store}>
-        <DockedArea
-          onTabClick={vi.fn()}
-          onTabClose={vi.fn()}
-          onTitleBarMouseDown={onTitleBarMouseDown}
-          isClassroomMode={false}
-        />
+        <DockedArea onTabClick={vi.fn()} onTabClose={vi.fn()} isClassroomMode={false} />
         <div data-pg-titlebar-tab-space />
       </Provider>,
     ),
@@ -113,15 +107,4 @@ it("only insets top groups and gives narrow splits their own row to keep tabs ac
   updateLayout();
   expect(bars[0].hasAttribute("data-pg-tabs-separate-row")).toBe(false);
   expect(bars[0].style.paddingLeft).toBe("120px");
-});
-
-it("drags the window from titlebar space while leaving tab mouse events alone", async () => {
-  await render();
-  const bar = container.querySelector<HTMLElement>("[data-pg-window-top-tabs]")!;
-  await React.act(async () =>
-    bar.querySelector("button")!.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })),
-  );
-  expect(onTitleBarMouseDown).not.toHaveBeenCalled();
-  await React.act(async () => bar.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })));
-  expect(onTitleBarMouseDown).toHaveBeenCalledOnce();
 });

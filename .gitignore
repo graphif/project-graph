@@ -11,7 +11,6 @@ docs/src/.vitepress/.temp
 # pg早期的备份文件
 *.backup
 # 自动保存导致产生的文件
-app/src-tauri/Project Graph
 backup_projectGraphTips
 *.backup.json
 # 省略文件夹
@@ -37,3 +36,7 @@ backup_*
 graphify-out
 test.prg
 
+.nx/migrate-runs
+
+app/.mygo/
+app/build/

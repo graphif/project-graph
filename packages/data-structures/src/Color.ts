@@ -1,9 +1,10 @@
-import { serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 
 /**
  * 颜色对象
  * 不透明度最大值为1，最小值为0
  */
+@serializableType("Color", { fields: ["r", "g", "b", "a"] })
 export class Color {
   static White = new Color(255, 255, 255);
   static Black = new Color(0, 0, 0);
@@ -16,13 +17,9 @@ export class Color {
   static Magenta = new Color(255, 0, 255);
   static Transparent = new Color(0, 0, 0, 0);
 
-  @serializable
   r: number;
-  @serializable
   g: number;
-  @serializable
   b: number;
-  @serializable
   a: number;
 
   constructor(r: number, g: number, b: number, a: number = 1) {

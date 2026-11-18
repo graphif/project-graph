@@ -10,15 +10,15 @@ import {
   MenubarSubTrigger,
   MenubarTrigger,
 } from "@/components/ui/menubar";
-import { Project } from "@/core/Project";
-import { KeyBindsUI } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
-import { allKeyBinds } from "@/core/service/controlService/shortcutKeysEngine/shortcutKeysRegister";
-import { RecentFileManager } from "@/core/service/dataFileService/RecentFileManager";
-import { onOpenFile } from "@/core/service/GlobalMenu";
-import { Settings } from "@/core/service/Settings";
+import { Project } from "@/core/project";
+import { KeyBindsUI } from "@/core/service/control-service/shortcut-keys-engine/key-binds-ui";
+import { allKeyBinds } from "@/core/service/control-service/shortcut-keys-engine/shortcut-keys-register";
+import { RecentFileManager } from "@/core/service/data-file-service/recent-file-manager";
+import { onOpenFile } from "@/core/service/global-menu";
+import { Settings } from "@/core/service/settings";
 import { activeResourceTabAtom } from "@/state";
-import { formatKeyBindSequenceToString } from "@/utils/keyDisplay";
-import { PathString } from "@/utils/pathString";
+import { formatKeyBindSequenceToString } from "@/utils/key-display";
+import { PathString } from "@/utils/path-string";
 import { isMac } from "@/utils/platform";
 import NativeMacosMenu, { nativeMacosMenuIds } from "./native-macos-menu";
 import { useAtom } from "jotai";

@@ -1,7 +1,7 @@
-import { Project } from "@/core/Project";
-import { MouseLocation } from "@/core/service/controlService/MouseLocation";
-import { KeyBindsUI, type UIKeyBind } from "@/core/service/controlService/shortcutKeysEngine/KeyBindsUI";
-import { Settings } from "@/core/service/Settings";
+import { Project } from "@/core/project";
+import { MouseLocation } from "@/core/service/control-service/mouse-location";
+import { KeyBindsUI, type UIKeyBind } from "@/core/service/control-service/shortcut-keys-engine/key-binds-ui";
+import { Settings } from "@/core/service/settings";
 import { activeResourceTabAtom } from "@/state";
 import { cn } from "@/utils/cn";
 import { matchEmacsKeyPress, parseSingleEmacsKey, transformedKeys } from "@/utils/emacs";

@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
+const host = vi.hoisted(() => ({ isMyGo: vi.fn(() => false) }));
+vi.mock("mygo-runtime", () => host);
 
-vi.mock("@/core/service/Settings", () => ({ Settings: { defaultFontFamily: "sans-serif" } }));
-vi.mock("@/core/service/ProjectToolSettingsSchema", () => ({
+vi.mock("@/core/service/settings", () => ({ Settings: { defaultFontFamily: "sans-serif" } }));
+vi.mock("@/core/service/project-tool-settings-schema", () => ({
   DEFAULT_FONT_FAMILY: "sans-serif",
   MAC_DEFAULT_FONT_FAMILY: "sans-serif",
 }));
@@ -71,11 +73,11 @@ describe("setCanvasFont", () => {
 });
 
 it("keeps the configured system font on desktop instead of swapping in the MSDF font", () => {
-  vi.stubGlobal("window", { __TAURI_INTERNALS__: {} });
+  host.isMyGo.mockReturnValue(true);
   try {
     expect(isBundledCanvasFont()).toBe(false);
     expect(resolveFont(32)).toBe("normal 32px sans-serif");
   } finally {
-    vi.unstubAllGlobals();
+    host.isMyGo.mockReturnValue(false);
   }
 });

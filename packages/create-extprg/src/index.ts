@@ -38,7 +38,7 @@ interface UserOptions {
   displayName: string;
   description: string;
   author: string;
-  packageManager: "pnpm" | "npm" | "yarn" | "bun";
+  packageManager: "npm" | "yarn" | "bun";
   projectDir: string;
   install: boolean;
 }
@@ -98,8 +98,7 @@ async function promptUser(defaultAuthor: string) {
   const packageManager = await select({
     message: "Package manager",
     options: [
-      { value: "pnpm", label: "pnpm", hint: "recommended" },
-      { value: "bun", label: "bun" },
+      { value: "bun", label: "bun", hint: "recommended" },
       { value: "yarn", label: "yarn" },
       { value: "npm", label: "npm" },
     ],
@@ -114,7 +113,7 @@ async function promptUser(defaultAuthor: string) {
     displayName: displayName as string,
     description: description as string,
     author: author as string,
-    packageManager: packageManager as "pnpm" | "npm" | "yarn" | "bun",
+    packageManager: packageManager as "npm" | "yarn" | "bun",
   };
 }
 
@@ -141,7 +140,7 @@ async function main() {
           displayName: "My Extension",
           description: "A Project Graph extension",
           author: defaultAuthor,
-          packageManager: "pnpm",
+          packageManager: "bun",
           projectDir: projectDir ?? "my-ext",
           install: false,
         };

@@ -32,19 +32,19 @@ function Sidebar({
           "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
           variant === "floating" || variant === "inset"
-            ? "group-data-[collapsible=icon]:w-[calc(var(3rem)+(--spacing(4)))]"
-            : "group-data-[collapsible=icon]:w-(3rem)",
+            ? "group-data-[collapsible=icon]:w-[calc(3rem+--spacing(4))]"
+            : "group-data-[collapsible=icon]:w-[3rem]",
         )}
       />
       <div
         data-slot="sidebar-container"
         className={cn(
           "inset-y-0 hidden min-h-0 w-64 md:flex",
-          "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(16rem)*-1)]",
+          "left-0 group-data-[collapsible=offcanvas]:left-[calc(16rem*-1)]",
           // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
-            ? "p-2 group-data-[collapsible=icon]:w-[calc(var(3rem)+(--spacing(4))+2px)]"
-            : "group-data-[collapsible=icon]:w-(3rem) group-data-[side=left]:border-r group-data-[side=right]:border-l",
+            ? "p-2 group-data-[collapsible=icon]:w-[calc(3rem+--spacing(4)+2px)]"
+            : "group-data-[collapsible=icon]:w-[3rem] group-data-[side=left]:border-r group-data-[side=right]:border-l",
           className,
         )}
         {...props}

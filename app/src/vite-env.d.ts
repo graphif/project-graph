@@ -1,7 +1,6 @@
 /// <reference types="vite/client" />
 /// <reference types="vite-plugin-svgr/client" />
 /// <reference types="@modyfi/vite-plugin-yaml/modules" />
-/// <reference types="unplugin-original-class-name/client" />
 
 interface ImportMetaEnv {
   LR_GITHUB_CLIENT_SECRET?: string;

@@ -1,0 +1,44 @@
+name: Desktop checks
+on:
+  pull_request:
+  push:
+    branches: [master, mygo]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  checks:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "26"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: app/go.mod
+          cache-dependency-path: app/go.sum
+      - run: bun install --frozen-lockfile
+      - run: bun run --cwd app type-check
+      - run: bun run lint
+      - run: go -C app test ./...
+      - name: Run desktop verification batch
+        run: >-
+          bunx vitest run
+          app/src/platform
+          app/src/core/persistence
+          app/src/application
+          app/src/features/onboarding
+          app/src/core/project-ownership.test.ts
+          app/src/core/open-project-runtime-host.test.ts
+          app/src/cli/ownership-helper.test.ts
+          app/src/cli/project-graph-ownership-process.test.ts
+          app/src/cli/project-graph-app-data-path.test.ts
+          app/src/cli/app-version.test.ts

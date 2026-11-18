@@ -1,0 +1,3 @@
+[install]
+# The CLI runtime needs a self-contained dependency tree for native packaging.
+linker = "hoisted"

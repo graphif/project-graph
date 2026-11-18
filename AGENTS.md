@@ -6,48 +6,60 @@ Project Graph 是一款桌面级节点图绘制工具，用于头脑风暴、知
 
 ## Tech-stack
 
-- React (TypeScript) + Tauri (Rust)
-- Vite + pnpm (monorepo) + Nx
+- React (TypeScript) + MyGo (Go)
+- Vite + Bun (monorepo) + Nx
 - Canvas 2D
 - shadcn/ui + Tailwind CSS + 自研子窗口系统
 - Jotai
 
-Rust 主要负责本地文件等系统能力；绝大部分业务逻辑在前端。
+Go 主要负责本地文件等系统能力；绝大部分业务逻辑在前端。
 
 ## Structure
 
 ### Application
 
 - Frontend Vite project: `/app`
-- Rust / Tauri: `/app/src-tauri`
+- Go / MyGo: `/app/main.go`、`/app/internal/desktop`
+- 应用装配与启动流程：`/app/src/application`
+- 首次引导与旧数据迁移：`/app/src/features/onboarding`
+- MyGo 平台适配（文件、存储、窗口、HTTP）：`/app/src/platform`
 - UI components: `/app/src/components`
 - i18n locales: `/app/src/locales`
 - React state (Jotai 等): `/app/src/state.tsx` 及附近
 
 ### `app/src/core`（核心业务）
 
-| 路径                              | 职责                                                                            |
-| --------------------------------- | ------------------------------------------------------------------------------- |
-| `Project.tsx`                     | 单个工程/项目实例的入口与生命周期                                               |
-| `Tab*.ts(x)` / `TabWorkspace.tsx` | 标签页与工作区                                                                  |
-| `loadAllServices.tsx`             | 注册/加载全部服务                                                               |
-| `algorithm/`                      | 通用算法与几何工具                                                              |
-| `stage/`                          | 舞台：`Camera`、`Canvas`、舞台对象（`stageObject`）、舞台管理（`stageManager`） |
-| `render/`                         | 渲染：`canvas2d`、`svg`、`3d`、`domElement`                                     |
-| `service/`                        | 业务服务（见下）                                                                |
-| `extension/`                      | 扩展系统运行时与 API                                                            |
-| `fileSystemProvider/`             | 文件系统抽象（草稿/本地文件等）                                                 |
-| `interfaces/`                     | 核心接口（如 `Service`）                                                        |
-| `subWindowOpen*.ts`               | 子窗口打开方式                                                                  |
+| 路径                            | 职责                                                                                      |
+| ------------------------------- | ----------------------------------------------------------------------------------------- |
+| `project.tsx`                   | 单个工程/项目实例的入口与生命周期                                                         |
+| `tab.tsx` / `tab-workspace.tsx` | 标签页与工作区                                                                            |
+| `load-all-services.tsx`         | 注册/加载全部服务                                                                         |
+| `algorithm/`                    | 通用算法与几何工具                                                                        |
+| `stage/`                        | 舞台：`camera.ts`、`canvas.ts`、舞台对象（`stage-object/`）、舞台管理（`stage-manager/`） |
+| `render/`                       | 渲染：`canvas2d`、`svg`、`3d`、`domElement`                                               |
+| `service/`                      | 业务服务（见下）                                                                          |
+| `extension/`                    | 扩展系统运行时与 API                                                                      |
+| `file-system-provider/`         | 文件系统抽象（草稿/本地文件等）                                                           |
+| `interfaces/`                   | 核心接口（如 `Service`）                                                                  |
+| `sub-window-open.ts`            | 子窗口打开方式                                                                            |
+| `persistence/`                  | 显式 codec、旧文件读取、JSON PRG writer                                                   |
 
 `service/` 主要子目录：
 
-- `controlService/` — 输入控制、快捷键、框选、自动布局等
-- `dataFileService/` — 工程文件读写
-- `dataGenerateService/` — 数据生成
-- `dataManageService/` — 内容搜索、复制、AI、节点工具等
-- `feedbackService/` — 特效、音效、舞台样式、颜色
-- `Settings.tsx` 等 — 设置、主题、菜单、教程等全局服务
+- `control-service/` — 输入控制、快捷键、框选、自动布局等
+- `data-file-service/` — 工程文件读写
+- `data-generate-service/` — 数据生成
+- `data-manage-service/` — 内容搜索、复制、AI、节点工具等
+- `feedback-service/` — 特效、音效、舞台样式、颜色
+- `settings.tsx`、`themes.tsx` 等 — 设置、主题、菜单、教程等全局服务
+
+### 命名约定
+
+- 目录与文件统一 **kebab-case**；`app/src` 内不含大写开头的文件或目录。
+- 只有包含 JSX 的文件用 `.tsx`，其余用 `.ts`。
+- 不新增 `index.tsx` barrel；显式引用实际文件。
+- TS 符号按语义惯例：组件/类/类型/接口用 PascalCase，函数/变量用 camelCase，常量用 UPPER_SNAKE_CASE。
+- 协议标识（序列化 `kind`、设置键、子窗口 ID、快捷键 ID）不随文件改名而改变。
 
 ### Packages（`/packages`）
 
@@ -92,20 +104,21 @@ Rust 主要负责本地文件等系统能力；绝大部分业务逻辑在前端
   - 需要忽略时用对话框提示用户（用户看不到控制台）
   - 错误应向上传到 DOM（如 `window`），由 `ErrorHandler` 展示友好对话框
   - 反例：`try { something() } catch (e) { console.error(e) }` → 直接 `something()`
-- 错误处理（**Rust / Tauri 命令**）：命令在运行中不能让进程因未捕获错误闪退，须在函数内妥善处理错误并返回给前端。
+- 错误处理（**Go / MyGo 绑定**）：返回 error 给前端，不因未处理错误退出宿主进程。
 - UI：优先复用 shadcn 与 `.agents/skills/ui` 中的约定（`Dialog`、`toast` 等）。
 - 快捷键 / 设置：分别遵循 `create-keybind`、`create-setting-item` skill。
 
 ## Commands
 
-包管理：`pnpm`。常用：
+包管理：Bun `1.4.4`（`.bun-version`）；Node.js 26+ 供兼容工具和独立 CLI 使用。常用：
 
-- 开发：`pnpm dev`
-- Lint：`pnpm lint` / `pnpm lint:fix`
-- 测试：`pnpm test`（vitest）
-- 类型检查：**使用 `type-check` skill**（`pnpm --filter @graphif/project-graph type-check`）
+- 安装：`bun install --frozen-lockfile`
+- 开发：`bun run dev`
+- Lint：`bun run lint` / `bun run lint:fix`
+- 测试：`bun run test`（Vitest，不是 `bun test`）
+- 类型检查：**使用 `type-check` skill**（`bun run --cwd app type-check`）
 
-**禁止** Agent 运行 `build` / `build:ci` / `build:no-tauri` / `tauri build` 等构建命令。验证改动用 type-check（及必要的 lint/test），不要 build。
+**禁止** Agent 运行 `build` / `build:ci` / `build:desktop` / `mygo build` 等构建命令。验证改动用 type-check（及必要的 lint/test），不要 build。
 
 ## Agent constraints
 

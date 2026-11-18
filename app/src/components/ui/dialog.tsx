@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/utils/cn";
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { writeText } from "@/platform/clipboard";
 import { toast } from "sonner";
 
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {

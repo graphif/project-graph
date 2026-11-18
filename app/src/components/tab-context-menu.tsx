@@ -5,8 +5,8 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Tab } from "@/core/Tab";
-import { TabWorkspace } from "@/core/TabWorkspace";
+import { Tab } from "@/core/tab";
+import { TabWorkspace } from "@/core/tab-workspace";
 import { AppWindowMac, Columns2, Dock, Rows2, X } from "lucide-react";
 import React from "react";
 

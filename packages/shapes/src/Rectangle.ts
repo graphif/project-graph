@@ -1,12 +1,11 @@
 import { Vector } from "@graphif/data-structures";
-import { serializable } from "@graphif/serializer";
+import { serializableType } from "@graphif/serializer";
 import { Line } from "./Line";
 import { Shape } from "./Shape";
 
+@serializableType("Rectangle", { fields: ["location", "size"] })
 export class Rectangle extends Shape {
-  @serializable
   location: Vector;
-  @serializable
   size: Vector;
 
   constructor(location: Vector, size: Vector) {

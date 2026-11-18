@@ -1,6 +1,6 @@
-import { Settings, settingsSchema } from "@/core/service/Settings";
-import { QuickSettingsManager } from "@/core/service/QuickSettingsManager";
-import { settingsIcons } from "@/core/service/SettingsIcons";
+import { Settings, settingsSchema } from "@/core/service/settings";
+import { QuickSettingsManager } from "@/core/service/quick-settings-manager";
+import { settingsIcons } from "@/core/service/settings-icons";
 import { Button } from "./ui/button";
 import { Switch } from "./ui/switch";
 import { Toolbar } from "./ui/toolbar";

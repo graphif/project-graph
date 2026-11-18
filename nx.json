@@ -2,7 +2,14 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "namedInputs": {
     "default": ["{projectRoot}/src/**/*", "sharedGlobals"],
-    "sharedGlobals": ["{workspaceRoot}/*.config.{js,ts,json}", "{workspaceRoot}/tsconfig.json"],
+    "sharedGlobals": [
+      "{workspaceRoot}/*.config.{js,ts,json}",
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/bun.lock",
+      "{workspaceRoot}/bunfig.toml",
+      "{workspaceRoot}/.bun-version"
+    ],
     "production": ["default"]
   },
   "targetDefaults": {
@@ -16,24 +23,18 @@
       "cache": false,
       "continuous": true
     },
-    "tauri:dev": {
-      "cache": false,
-      "continuous": true
-    },
-    "tauri:build": {
-      "dependsOn": ["build", "^build"],
-      "outputs": ["{projectRoot}/src-tauri/target/release/bundle/**"],
-      "cache": true
-    },
     "type-check": {
       "inputs": ["{projectRoot}/src/**/*.{ts,tsx}"],
       "cache": true
     },
-    "publish": {
+    "release": {
       "dependsOn": ["build"],
       "cache": false
     }
   },
   "defaultBase": "next",
-  "analytics": false
+  "analytics": false,
+  "affected": {
+    "legacy": true
+  }
 }

@@ -3,7 +3,7 @@ import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, it, vi } from "vitest";
 
-vi.mock("@/core/service/feedbackService/SoundService", () => ({ SoundService: {} }));
+vi.mock("@/core/service/feedback-service/sound-service", () => ({ SoundService: {} }));
 vi.mock("@radix-ui/react-menubar", () => ({
   Portal: ({ children }: { children: React.ReactNode }) => children,
   Content: React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>((props, ref) => (
