@@ -1,5 +1,6 @@
 import type { Project } from "@/core/Project";
 import type { StageObject } from "@/core/stage/stageObject/abstract/StageObject";
+import { TextNode } from "@/core/stage/stageObject/entity/TextNode";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
 import { describe, expect, it, vi } from "vitest";
@@ -52,6 +53,24 @@ describe("ContentSearch", () => {
     search.isRegex = false;
     search.startSearch("^alpha\\s+\\d+$", false);
     expect(search.searchResultNodes).toEqual([]);
+  });
+
+  it("matches the full title of a text node without details", () => {
+    const getBeSearchingText = vi.fn(() => "");
+    const node = Object.assign(Object.create(TextNode.prototype) as TextNode, {
+      text: "Alpha 12",
+      detailsManager: { getBeSearchingText },
+    });
+    const search = new ContentSearch({
+      stageManager: { getStageObjects: () => [node] },
+    } as unknown as Project);
+    search.isRegex = true;
+
+    expect(search.startSearch("^Alpha 12$", false)).toBe(true);
+    expect(search.searchResultNodes).toEqual([node]);
+
+    getBeSearchingText.mockReturnValue("details");
+    expect(search.startSearch("^Alpha 12　details$", false)).toBe(true);
   });
 
   it.each([
