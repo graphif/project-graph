@@ -31,7 +31,8 @@ export class GlobalShortcutManager {
   private shortcuts: GlobalShortcut[];
   private initialization: Promise<void> | null = null;
   private registeredKeys = new Set<string>();
-  private isClickThroughEnabled = false;
+  private clickThroughPreviousAlwaysOnTop: boolean | null = null;
+  private isChangingClickThrough = false;
   private isRecording = false;
 
   constructor() {
@@ -219,18 +220,38 @@ export class GlobalShortcutManager {
   }
 
   private async handleToggleClickThrough() {
-    const window = getCurrentWindow();
+    if (this.isChangingClickThrough) return;
+    this.isChangingClickThrough = true;
+    try {
+      const window = getCurrentWindow();
+      const previousAlwaysOnTop = this.clickThroughPreviousAlwaysOnTop;
+      if (previousAlwaysOnTop !== null) {
+        await window.setIgnoreCursorEvents(false);
+        this.clickThroughPreviousAlwaysOnTop = null;
+        Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterCloseClickThrough;
+        await window.setAlwaysOnTop(previousAlwaysOnTop);
+        return;
+      }
 
-    if (!this.isClickThroughEnabled) {
-      Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterOpenClickThrough;
+      const wasAlwaysOnTop = await window.isAlwaysOnTop();
       await window.setAlwaysOnTop(true);
-    } else {
-      Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterCloseClickThrough;
-      await window.setAlwaysOnTop(false);
+      try {
+        await window.setIgnoreCursorEvents(true);
+      } catch (error) {
+        try {
+          await window.setAlwaysOnTop(wasAlwaysOnTop);
+        } catch (restoreError) {
+          throw new AggregateError([error, restoreError], "开启窗口穿透失败，且无法恢复原置顶状态", {
+            cause: restoreError,
+          });
+        }
+        throw error;
+      }
+      this.clickThroughPreviousAlwaysOnTop = wasAlwaysOnTop;
+      Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterOpenClickThrough;
+    } finally {
+      this.isChangingClickThrough = false;
     }
-
-    this.isClickThroughEnabled = !this.isClickThroughEnabled;
-    await window.setIgnoreCursorEvents(this.isClickThroughEnabled);
   }
 
   private async handleShowWindow() {
