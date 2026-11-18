@@ -92,8 +92,6 @@ export class GlobalShortcutManager {
       try {
         await this.registerShortcut(shortcut);
       } catch (error) {
-        shortcut.isEnabled = false;
-        await this.saveShortcut(shortcut);
         toast.error(error instanceof Error ? error.message : String(error));
       }
     }
@@ -124,12 +122,13 @@ export class GlobalShortcutManager {
     }
 
     const oldKey = shortcut.key;
+    const wasRegistered = this.registeredKeys.has(oldKey);
     if (shortcut.isEnabled) {
       await this.unregisterShortcut(oldKey);
       try {
         await this.registerShortcut({ ...shortcut, key });
       } catch (error) {
-        await this.registerShortcut(shortcut);
+        if (wasRegistered) await this.registerShortcut(shortcut);
         throw error;
       }
     }
@@ -141,7 +140,7 @@ export class GlobalShortcutManager {
       shortcut.key = oldKey;
       if (shortcut.isEnabled) {
         await this.unregisterShortcut(key);
-        await this.registerShortcut(shortcut);
+        if (wasRegistered) await this.registerShortcut(shortcut);
       }
       throw error;
     }
@@ -152,6 +151,7 @@ export class GlobalShortcutManager {
     const shortcut = this.getShortcut(id);
     if (shortcut.isEnabled === isEnabled) return;
 
+    const wasRegistered = this.registeredKeys.has(shortcut.key);
     if (isEnabled) {
       await this.registerShortcut(shortcut);
     } else {
@@ -165,7 +165,7 @@ export class GlobalShortcutManager {
       shortcut.isEnabled = !isEnabled;
       if (isEnabled) {
         await this.unregisterShortcut(shortcut.key);
-      } else {
+      } else if (wasRegistered) {
         await this.registerShortcut(shortcut);
       }
       throw error;

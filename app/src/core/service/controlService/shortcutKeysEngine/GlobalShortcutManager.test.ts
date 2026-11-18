@@ -78,4 +78,31 @@ describe("GlobalShortcutManager", () => {
     expect(manager.getShortcuts()[0].isEnabled).toBe(false);
     expect(mocks.data.get("show-window")).toEqual({ key: "Alt+Digit1", isEnabled: false });
   });
+
+  it("启动时暂时注册失败会保留启用设置并在下次启动重试", async () => {
+    const binding = { key: "Alt+Digit1", isEnabled: true };
+    mocks.data.set("show-window", binding);
+    mocks.register.mockRejectedValueOnce(new Error("occupied"));
+
+    const manager = new GlobalShortcutManager();
+    await manager.init();
+    expect(manager.getShortcuts()[0]).toMatchObject(binding);
+    expect(mocks.data.get("show-window")).toEqual(binding);
+
+    await new GlobalShortcutManager().init();
+    expect(mocks.register.mock.calls.map(([key]) => key)).toEqual(["Alt+Digit1", "Alt+Digit1"]);
+  });
+
+  it("从未注册成功的旧绑定在换键失败后不尝试重新注册", async () => {
+    const binding = { key: "Alt+Digit1", isEnabled: true };
+    mocks.data.set("show-window", binding);
+    mocks.register.mockRejectedValueOnce(new Error("old occupied"));
+    const manager = new GlobalShortcutManager();
+    await manager.init();
+
+    mocks.register.mockRejectedValueOnce(new Error("new occupied"));
+    await expect(manager.setShortcutKey("show-window", "Control+KeyK")).rejects.toThrow("new occupied");
+    expect(mocks.register.mock.calls.map(([key]) => key)).toEqual(["Alt+Digit1", "Control+KeyK"]);
+    expect(mocks.data.get("show-window")).toEqual(binding);
+  });
 });
