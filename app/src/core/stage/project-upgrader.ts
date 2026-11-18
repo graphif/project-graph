@@ -642,7 +642,7 @@ export namespace ProjectUpgrader {
               location: { _: "Vector", x: Number(x), y: Number(y) },
               pressure: Number(pressure) / 5,
             };
-            segments.push(segment);
+            segments.push(segment as unknown as PenStrokeSegment);
           }
           data = {
             _: "PenStroke",

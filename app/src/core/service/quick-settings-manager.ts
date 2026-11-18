@@ -41,12 +41,12 @@ export namespace QuickSettingsManager {
 
   export async function init() {
     store = await createStore("quick-settings.json");
-    // 如果存储中没有数据，则使用默认值
     const existingItems = await getQuickSettings();
     if (existingItems.length === 0) {
       await setQuickSettings(DEFAULT_QUICK_SETTINGS);
+    } else {
+      await setQuickSettings(existingItems);
     }
-    await store.save();
   }
 
   /**
@@ -54,7 +54,7 @@ export namespace QuickSettingsManager {
    */
   export async function getQuickSettings(): Promise<QuickSettingItem[]> {
     const data = ((await store.get("quickSettings")) as QuickSettingItem[]) || [];
-    return data;
+    return data.filter((item) => isValidQuickSetting(item.settingKey as string));
   }
 
   /**

@@ -4,6 +4,10 @@ windowControls:
 nodeDetailsWindow:
   title: Details
 
+findWindow:
+  useRegex: Use regular expression
+  invalidRegex: Invalid regular expression
+
 projectStatus:
   emptyCanvas: No nodes on the canvas
   noVisibleNodes: No visible nodes in this view. Click to reset.

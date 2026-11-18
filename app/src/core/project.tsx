@@ -144,7 +144,6 @@ export class Project extends Tab {
    * 创建Encoder对象比直接用encode()快
    * @see https://github.com/msgpack/msgpack-javascript#reusing-encoder-and-decoder-instances
    */
-  private encoder = new Encoder();
   private decoder = new Decoder();
 
   /**
