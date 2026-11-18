@@ -9,7 +9,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appDir = path.resolve(__dirname, "..");
@@ -30,8 +30,7 @@ function isMacOS() {
  *
  * We merge them ourselves using `lipo -create`.
  *
- * If a single-arch macOS build is running, we still make sure the binary
- * is present by falling back to a plain copy of the only arch variant.
+ * Single-architecture builds already use the directory Cargo populated.
  */
 function ensureMacOSBinaries() {
   if (!isMacOS()) return;
@@ -42,81 +41,26 @@ function ensureMacOSBinaries() {
     ? path.resolve(process.env.CARGO_TARGET_DIR)
     : path.join(srcTauriDir, "target");
 
-  const EXE_SUFFIX = "";
-  const SECONDARY_BINS = ["project-graph-ownership-helper"];
+  const universal = "universal-apple-darwin";
+  const outputDir = path.join(cargoTarget, universal, profile);
+  if (targetTriple ? targetTriple !== universal : !fs.existsSync(outputDir)) return;
 
-  // Figure out which arches we need to combine.
-  // `universal-apple-darwin` -> merge both aarch64 + x86_64.
-  // A specific arch triple (or empty) -> just copy/symlink if missing.
-  const archTriples = [];
-  if (targetTriple === "universal-apple-darwin" || targetTriple === "") {
-    // Default to merging for universal when target is ambiguous (e.g. local dev
-    // calls the script without the env var set).
-    archTriples.push("aarch64-apple-darwin", "x86_64-apple-darwin");
-  } else if (targetTriple.endsWith("apple-darwin")) {
-    archTriples.push(targetTriple);
-  } else {
-    // Not a macOS target triple; nothing to do.
-    return;
-  }
-
-  const outputDir = path.join(
-    cargoTarget,
-    targetTriple === "universal-apple-darwin" || !targetTriple ? "universal-apple-darwin" : targetTriple,
-    profile,
+  const helper = "project-graph-ownership-helper";
+  const outPath = path.join(outputDir, helper);
+  const inputs = ["aarch64-apple-darwin", "x86_64-apple-darwin"].map((triple) =>
+    path.join(cargoTarget, triple, profile, helper),
   );
-
-  if (!fs.existsSync(outputDir)) {
-    // If the output dir doesn't exist yet, the build step hasn't produced
-    // the main binary either; nothing to stage. Bundler would fail later
-    // with a clearer message.
-    return;
+  const missing = inputs.filter((input) => !existsFile(input));
+  if (missing.length > 0) {
+    throw new Error(`Cannot bundle a universal helper. Missing: ${missing.join(", ")}`);
   }
-
-  for (const binName of SECONDARY_BINS) {
-    const outPath = path.join(outputDir, `${binName}${EXE_SUFFIX}`);
-    if (existsFile(outPath)) {
-      console.log(`[macos-helper-bins] ${binName}: already present at ${outPath}`);
-      continue;
-    }
-
-    // Gather input candidates that actually exist on disk.
-    const inputs = archTriples
-      .map((t) => path.join(cargoTarget, t, profile, `${binName}${EXE_SUFFIX}`))
-      .filter(existsFile);
-
-    if (inputs.length === 0) {
-      console.warn(
-        `[macos-helper-bins] ${binName}: no arch build found under:\n  - ${archTriples
-          .map((t) => path.join(cargoTarget, t, profile, binName))
-          .join("\n  - ")}\n  (may fail during bundle)`,
-      );
-      continue;
-    }
-
-    if (inputs.length === 1) {
-      // Single-arch build or only one arch compiled.
-      console.log(`[macos-helper-bins] ${binName}: copying ${inputs[0]} -> ${outPath}`);
-      fs.copyFileSync(inputs[0], outPath);
-    } else {
-      // Two arch builds available -> lipo merge.
-      console.log(
-        `[macos-helper-bins] ${binName}: lipo merging [${inputs
-          .map((p) => path.basename(path.dirname(path.dirname(p))))
-          .join(", ")}] -> ${outPath}`,
-      );
-      fs.mkdirSync(path.dirname(outPath), { recursive: true });
-      execSync(["lipo", "-create", "-output", outPath, ...inputs].map((s) => JSON.stringify(s)).join(" "), {
-        stdio: "inherit",
-      });
-    }
-
-    try {
-      fs.chmodSync(outPath, 0o755);
-    } catch {
-      // ignore
-    }
+  fs.mkdirSync(outputDir, { recursive: true });
+  execFileSync("lipo", ["-create", "-output", outPath, ...inputs], { stdio: "inherit" });
+  const architectures = execFileSync("lipo", ["-archs", outPath], { encoding: "utf8" }).trim().split(/\s+/);
+  if (!architectures.includes("arm64") || !architectures.includes("x86_64")) {
+    throw new Error(`Invalid universal helper architectures: ${architectures.join(", ")}`);
   }
+  fs.chmodSync(outPath, 0o755);
 }
 
 function existsFile(p) {
@@ -127,15 +71,4 @@ function existsFile(p) {
   }
 }
 
-function main() {
-  // Always run the macOS secondary-binary lipo step when applicable.
-  // This runs *before* bundling so Tauri sees the merged universal binary.
-  try {
-    ensureMacOSBinaries();
-  } catch (e) {
-    console.error("[macos-helper-bins] unexpected error:", e && e.stack ? e.stack : e);
-    // Don't abort the whole build here; let the bundler surface the actual error.
-  }
-}
-
-main();
+ensureMacOSBinaries();
