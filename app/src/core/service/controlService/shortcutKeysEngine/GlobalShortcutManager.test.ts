@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   register: vi.fn(),
   unregister: vi.fn(),
   isRegistered: vi.fn(),
+  settings: { legacyGlobalHotKeysEnabled: false, Settings: {} },
 }));
 
 vi.mock("@tauri-apps/plugin-global-shortcut", () => ({
@@ -15,7 +16,7 @@ vi.mock("@tauri-apps/plugin-global-shortcut", () => ({
 
 vi.mock("@tauri-apps/api/window", () => ({ getCurrentWindow: vi.fn() }));
 vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
-vi.mock("@/core/service/Settings", () => ({ Settings: {} }));
+vi.mock("@/core/service/Settings", () => mocks.settings);
 vi.mock("@/utils/store", () => ({
   createStore: vi.fn(async () => ({
     get: vi.fn(async (key: string) => mocks.data.get(key)),
@@ -32,6 +33,7 @@ describe("GlobalShortcutManager", () => {
     mocks.register.mockReset();
     mocks.unregister.mockReset();
     mocks.isRegistered.mockReset().mockResolvedValue(true);
+    mocks.settings.legacyGlobalHotKeysEnabled = false;
   });
 
   it("首次启动写入两个默认关闭的快捷键", async () => {
@@ -57,6 +59,17 @@ describe("GlobalShortcutManager", () => {
     expect(mocks.register).toHaveBeenCalledTimes(2);
     expect(mocks.unregister).toHaveBeenCalledWith("Alt+Digit1");
     expect(mocks.data.get("show-window")).toEqual({ key: "Control+KeyK", isEnabled: true });
+  });
+
+  it("迁移旧版开关且保留现有的单项绑定", async () => {
+    mocks.settings.legacyGlobalHotKeysEnabled = true;
+    mocks.data.set("show-window", { key: "Control+KeyK", isEnabled: false });
+
+    await new GlobalShortcutManager().init();
+
+    expect(mocks.data.get("show-window")).toEqual({ key: "Control+KeyK", isEnabled: false });
+    expect(mocks.data.get("toggle-click-through")).toEqual({ key: "Alt+Digit2", isEnabled: true });
+    expect(mocks.register).toHaveBeenCalledExactlyOnceWith("Alt+Digit2", expect.any(Function));
   });
 
   it("拒绝两个全局快捷键使用相同组合键", async () => {

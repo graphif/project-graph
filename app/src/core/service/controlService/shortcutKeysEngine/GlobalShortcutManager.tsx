@@ -3,7 +3,7 @@ import { isRegistered, register, unregister } from "@tauri-apps/plugin-global-sh
 import { BringToFront, MousePointerBan } from "lucide-react";
 import { toast } from "sonner";
 import { createStore } from "@/utils/store";
-import { Settings } from "../../Settings";
+import { legacyGlobalHotKeysEnabled, Settings } from "../../Settings";
 import type { KeyBindIcon } from "./KeyBindsUI";
 
 export interface GlobalShortcutInfo {
@@ -79,6 +79,7 @@ export class GlobalShortcutManager {
         shortcut.key = saved.key;
         shortcut.isEnabled = saved.isEnabled;
       } else {
+        shortcut.isEnabled = legacyGlobalHotKeysEnabled;
         await store.set(shortcut.id, this.toStoredShortcut(shortcut));
         needsSave = true;
       }
