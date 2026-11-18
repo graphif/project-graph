@@ -14,7 +14,7 @@ vi.mock("@/core/stage/stageObject/entity/UrlNode", () => ({ UrlNode: class {} })
 
 import { ContentSearch, SearchScope } from "./contentSearchEngine";
 
-function createSearch() {
+function createSearch(offset = 0) {
   const texts = ["Alpha 12", "alpha 34", "Beta 56", "alpha.\\d+"];
   const nodes = texts.map(
     (_, index) =>
@@ -22,7 +22,7 @@ function createSearch() {
         uuid: String(index),
         isSelected: index === 0 || index === 2,
         collisionBox: {
-          getRectangle: () => new Rectangle(new Vector(index * 20, 0), new Vector(10, 10)),
+          getRectangle: () => new Rectangle(new Vector(index * 20 + offset, offset), new Vector(10, 10)),
         },
       }) as StageObject,
   );
@@ -83,6 +83,14 @@ describe("ContentSearch", () => {
     search.searchScope = scope;
     search.startSearch("alpha", false);
     expect(search.searchResultNodes).toEqual(indexes.map((index) => nodes[index]));
+  });
+
+  it("excludes objects outside the selected bounds at negative coordinates", () => {
+    const { search, nodes } = createSearch(-100);
+    search.searchScope = SearchScope.SELECTED_BOUNDS;
+
+    search.startSearch("alpha", false);
+    expect(search.searchResultNodes).toEqual([nodes[0], nodes[1]]);
   });
 
   it("clears stale matches before reporting an invalid expression and can recover", () => {
