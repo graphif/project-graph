@@ -9,7 +9,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appDir = path.resolve(__dirname, "..");
@@ -53,7 +53,7 @@ function ensureMacOSBinaries() {
     // Default to merging for universal when target is ambiguous (e.g. local dev
     // calls the script without the env var set).
     archTriples.push("aarch64-apple-darwin", "x86_64-apple-darwin");
-  } else if (targetTriple.endsWith("apple-darwin")) {
+  } else if (["aarch64-apple-darwin", "x86_64-apple-darwin"].includes(targetTriple)) {
     archTriples.push(targetTriple);
   } else {
     // Not a macOS target triple; nothing to do.
@@ -106,7 +106,7 @@ function ensureMacOSBinaries() {
           .join(", ")}] -> ${outPath}`,
       );
       fs.mkdirSync(path.dirname(outPath), { recursive: true });
-      execSync(["lipo", "-create", "-output", outPath, ...inputs].map((s) => JSON.stringify(s)).join(" "), {
+      execFileSync("lipo", ["-create", "-output", outPath, ...inputs], {
         stdio: "inherit",
       });
     }

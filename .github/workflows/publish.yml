@@ -26,14 +26,9 @@ on:
         description: Whether to make the release a prerelease.
         required: false
         default: false
-      delete_release:
-        type: boolean
-        description: Whether to delete the release.
-        required: false
-        default: true
       android_key_path:
         type: string
-        description: The path to the Android key file, relative to app_root
+        description: File name of the Android keystore under the Android app directory
         required: false
         default: "upload.jks"
       aur_package_name:
@@ -89,53 +84,73 @@ on:
         required: false
 
 jobs:
-  create-release:
+  validate-inputs:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_TAG: ${{ inputs.release_tag }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-      - name: Install dependencies
-        run: npm i -g node-fetch
-      - name: Delete release
-        if: inputs.delete_release == true
-        run: |
-          gh release delete ${{ inputs.release_tag }} --yes --cleanup-tag || true
-          sleep 1
-      - name: Create release
+      - name: Validate publish inputs
         env:
-          tag: ${{ inputs.release_tag }}
-          name: ${{ inputs.release_name }}
-          branch: ${{ github.ref_name }}
+          APP_VERSION: ${{ inputs.app_version }}
+          ANDROID_VERSION: ${{ inputs.app_version_android }}
+          ANDROID_KEY_PATH: ${{ inputs.android_key_path }}
+          ANDROID_KEY_ALIAS: ${{ inputs.android_key_alias }}
+          AUR_PACKAGE: ${{ inputs.aur_package_name }}
+          AUR_ALGORITHM: ${{ inputs.aur_key_algorithm }}
+          AUR_VERSION: ${{ inputs.aur_version }}
+          BUILD_TASK: ${{ inputs.task_build }}
+          ANDROID_BUILD_TASK: ${{ inputs.task_build_android }}
         run: |
-          notes=$(GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" node ./.github/scripts/generate-changelog.mjs)
-          gh release create "$tag" --target "$branch" --title "$name" --notes "$notes" ${{ inputs.prerelease == true && '--prerelease' || '' }}
+          version_pattern='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+          [[ "$APP_VERSION" =~ $version_pattern && "$ANDROID_VERSION" =~ $version_pattern ]] ||
+            { echo "::error::Invalid app version"; exit 1; }
+          if [[ ! "$RELEASE_TAG" =~ ^[A-Za-z0-9][A-Za-z0-9._+-]*$ ]] ||
+            ! git check-ref-format "refs/tags/$RELEASE_TAG"; then
+            echo "::error::Invalid release tag"
+            exit 1
+          fi
+          [[ "$ANDROID_KEY_PATH" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*\.jks$ && "$ANDROID_KEY_ALIAS" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] ||
+            { echo "::error::Invalid Android keystore file name or alias"; exit 1; }
+          [[ "$BUILD_TASK" =~ ^[A-Za-z0-9][A-Za-z0-9:_-]*$ && "$ANDROID_BUILD_TASK" =~ ^[A-Za-z0-9][A-Za-z0-9:_-]*$ ]] ||
+            { echo "::error::Invalid pnpm task name"; exit 1; }
+          if [[ -n "$AUR_PACKAGE" ]]; then
+            if [[ ! "$AUR_PACKAGE" =~ ^[a-z0-9][a-z0-9@._+-]*$ || ! "$AUR_VERSION" =~ ^[a-zA-Z0-9][a-zA-Z0-9._+-]*$ ]] ||
+              [[ "$AUR_ALGORITHM" != ed25519 && "$AUR_ALGORITHM" != rsa && "$AUR_ALGORITHM" != ecdsa ]]; then
+              echo "::error::Invalid AUR package, version or SSH key algorithm"
+              exit 1
+            fi
+          fi
 
-  publish-tauri:
-    needs: [create-release]
+  package-tauri:
+    needs: [validate-inputs]
     permissions:
-      contents: write
+      contents: read
+    env:
+      APP_VERSION: ${{ inputs.app_version }}
+      ANDROID_VERSION: ${{ inputs.app_version_android }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - platform: "ubuntu-22.04"
-            args: "--bundles deb"
-            dist: "src-tauri/target/release/bundle/**/*.{deb,rpm,sig}"
+            android: false
+            variant: ""
+            args: '["--bundles","deb"]'
+            bundle_dir: "app/src-tauri/target/release/bundle"
           - platform: "windows-latest"
-            dist: "src-tauri/target/release/bundle/nsis"
+            android: false
+            variant: ""
+            args: "[]"
+            bundle_dir: "app/src-tauri/target/release/bundle/nsis"
           - platform: "macos-latest"
-            args: "--target universal-apple-darwin"
+            android: false
+            variant: ""
+            args: '["--target","universal-apple-darwin"]'
             rust_targets: "aarch64-apple-darwin,x86_64-apple-darwin"
-            dist: "src-tauri/target/universal-apple-darwin/release/bundle/**/*.{dmg,tar.gz,sig}"
+            bundle_dir: "app/src-tauri/target/universal-apple-darwin/release/bundle"
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -190,16 +205,14 @@ jobs:
           sysctl hw.memsize hw.ncpu hw.physicalcpu hw.logicalcpu 2>/dev/null || true
           top -l 1 | head -10 || true
 
-          # Reduce peak memory: use thin LTO instead of fat LTO.
-          echo "CARGO_PROFILE_RELEASE_LTO=thin" >> "$GITHUB_ENV"
-          # Reduce codegen units from 16 -> 8 to reduce process contention (Load Avg was 30+).
-          echo "CARGO_PROFILE_RELEASE_CODEGEN_UNITS=8" >> "$GITHUB_ENV"
-          # Aggressively limit parallel compile jobs (Load Avg on 8-core runner should be < 8).
-          echo "CARGO_BUILD_JOBS=2" >> "$GITHUB_ENV"
-          # Use sparse registry (faster, less I/O pressure)
-          echo "CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse" >> "$GITHUB_ENV"
-          # Backtraces if any Rust code panics during build
-          echo "RUST_BACKTRACE=short" >> "$GITHUB_ENV"
+          {
+            # Limit peak memory on the runner.
+            echo "CARGO_PROFILE_RELEASE_LTO=thin"
+            echo "CARGO_PROFILE_RELEASE_CODEGEN_UNITS=8"
+            echo "CARGO_BUILD_JOBS=2"
+            echo "CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse"
+            echo "RUST_BACKTRACE=short"
+          } >> "$GITHUB_ENV"
           # NOTE: Do NOT set --error-format in RUSTFLAGS; Cargo already injects
           #   `--error-format=json` and rustc refuses to accept the option twice.
 
@@ -233,41 +246,53 @@ jobs:
         run: sdkmanager "ndk;27.0.11902837"
       - name: Android - Setup Android APK Signing
         if: matrix.android
+        env:
+          ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+          ANDROID_RELEASE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ inputs.android_key_alias }}
+          ANDROID_KEY_PATH: ${{ inputs.android_key_path }}
         run: |
           cd app/src-tauri/gen/android
-          cat > keystore.properties <<EOF
-          password=${{ secrets.ANDROID_RELEASE_PASSWORD }}
-          keyAlias=${{ inputs.android_key_alias }}
-          storeFile=${{ inputs.android_key_path }}
-          EOF
-          echo "${{ secrets.ANDROID_RELEASE_KEYSTORE }}" | base64 --decode > app/${{ inputs.android_key_path }}
+          printf 'password=%s\nkeyAlias=%s\nstoreFile=%s\n' "$ANDROID_RELEASE_PASSWORD" "$ANDROID_KEY_ALIAS" "$ANDROID_KEY_PATH" > keystore.properties
+          printf '%s' "$ANDROID_KEYSTORE" | base64 --decode > "app/$ANDROID_KEY_PATH"
       #endregion
       #region Edit version
       - name: Set app version
+        shell: bash
         if: ${{ !matrix.android && !matrix.variant }}
         run: |
-          node ./.github/scripts/set-version.mjs ${{ inputs.app_version }}
+          node ./.github/scripts/set-version.mjs "$APP_VERSION"
       - name: Set app version when variant exists
+        shell: bash
+        env:
+          BUILD_VARIANT: ${{ matrix.variant }}
         if: ${{ !matrix.android && matrix.variant }}
         run: |
-          node ./.github/scripts/set-version.mjs ${{ inputs.app_version }}-${{ matrix.variant }}
+          node ./.github/scripts/set-version.mjs "$APP_VERSION-$BUILD_VARIANT"
       - name: Android - Set app version
+        shell: bash
         if: matrix.android
         run: |
-          node ./.github/scripts/set-version.mjs ${{ inputs.app_version_android }}
+          node ./.github/scripts/set-version.mjs "$ANDROID_VERSION"
       - name: Windows - Use static CRT
         if: matrix.platform == 'windows-latest'
+        shell: pwsh
         run: |
-          echo "RUSTFLAGS=-C target-feature=+crt-static" >> $env:GITHUB_ENV
-          echo "NX_DAEMON=false" >> $env:GITHUB_ENV
-          echo "NX_ISOLATE_PLUGINS=false" >> $env:GITHUB_ENV
-          echo "NX_PLUGIN_NO_TIMEOUTS=true" >> $env:GITHUB_ENV
+          @(
+            "RUSTFLAGS=-C target-feature=+crt-static"
+            "NX_DAEMON=false"
+            "NX_ISOLATE_PLUGINS=false"
+            "NX_PLUGIN_NO_TIMEOUTS=true"
+          ) >> $env:GITHUB_ENV
       #endregion
       #region Build
       - name: Write BUILD_ENV to .env file
         if: matrix.variant != 'foss'
+        shell: bash
+        env:
+          BUILD_ENV: ${{ secrets.BUILD_ENV }}
         run: |
-          echo "${{ secrets.BUILD_ENV }}" > app/.env
+          printf '%s\n' "$BUILD_ENV" > app/.env
       - name: Build (Unix)
         if: matrix.platform != 'windows-latest'
         id: build_unix
@@ -278,7 +303,7 @@ jobs:
           echo "Build log will be tee'd to: $LOG_FILE"
           # script(1) forces line-buffered stdout/stderr even when nx buffers internally.
           # Fallback: plain tee if script is unavailable (linux docker images).
-          BUILD_CMD="pnpm run ${{ matrix.android && inputs.task_build_android || inputs.task_build }}"
+          BUILD_CMD="pnpm run \"\$BUILD_TASK\""
           if command -v script >/dev/null 2>&1; then
             if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
               script -q "$LOG_FILE" bash -lc "$BUILD_CMD"
@@ -290,6 +315,7 @@ jobs:
             bash -lc "$BUILD_CMD" 2>&1 | tee "$LOG_FILE"
           fi
         env:
+          BUILD_TASK: ${{ matrix.android && inputs.task_build_android || inputs.task_build }}
           APPIMAGE_EXTRACT_AND_RUN: ${{ matrix.platform == 'ubuntu-22.04' && '1' || '' }}
           NO_STRIP: ${{ matrix.platform == 'ubuntu-22.04' && 'true' || '' }}
           TAURI_BUILD_ARGS: ${{ matrix.args }}
@@ -307,10 +333,10 @@ jobs:
         run: |
           $LogFile = Join-Path $env:RUNNER_TEMP "build.log"
           Write-Host "Build log will be tee'd to: $LogFile"
-          $TaskName = "${{ matrix.android && inputs.task_build_android || inputs.task_build }}"
-          pnpm run $TaskName 2>&1 | Tee-Object -FilePath $LogFile
+          pnpm run $env:BUILD_TASK 2>&1 | Tee-Object -FilePath $LogFile
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         env:
+          BUILD_TASK: ${{ matrix.android && inputs.task_build_android || inputs.task_build }}
           TAURI_BUILD_ARGS: ${{ matrix.args }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -387,9 +413,9 @@ jobs:
       - name: MacOS - Rename app.tar.gz
         if: matrix.platform == 'macos-latest'
         run: |
-          cd app/src-tauri/target/*/release/bundle/macos
-          mv *.app.tar.gz "Project Graph_${{ inputs.app_version }}_universal.app.tar.gz"
-          mv *.app.tar.gz.sig "Project Graph_${{ inputs.app_version }}_universal.app.tar.gz.sig"
+          cd app/src-tauri/target/universal-apple-darwin/release/bundle/macos
+          mv ./*.app.tar.gz "Project Graph_${APP_VERSION}_universal.app.tar.gz"
+          mv ./*.app.tar.gz.sig "Project Graph_${APP_VERSION}_universal.app.tar.gz.sig"
       - name: Linux - Bundle rpm
         if: matrix.platform == 'ubuntu-22.04'
         env:
@@ -406,21 +432,20 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           cd app/src-tauri/target/release/bundle/rpm
-          mv *.rpm "Project Graph_${{ inputs.app_version }}_amd64.rpm"
-          mv *.rpm.sig "Project Graph_${{ inputs.app_version }}_amd64.rpm.sig"
-      - name: Linux / MacOS - Upload
-        if: matrix.platform != 'windows-latest'
-        run: |
-          gh release upload ${{ inputs.release_tag }} app/${{ matrix.dist }} --clobber
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Windows - Rename and upload
-        if: matrix.platform == 'windows-latest'
-        run: |
-          gh release upload ${{ inputs.release_tag }} (Get-Item .\app\${{ matrix.dist }}\*.exe).FullName --clobber
-          gh release upload ${{ inputs.release_tag }} (Get-Item .\app\${{ matrix.dist }}\*.sig).FullName --clobber
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          mv ./*.rpm "Project Graph_${APP_VERSION}_amd64.rpm"
+          mv ./*.rpm.sig "Project Graph_${APP_VERSION}_amd64.rpm.sig"
+      - name: Stage release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.platform }}
+          if-no-files-found: error
+          path: |
+            ${{ matrix.bundle_dir }}/**/*.deb
+            ${{ matrix.bundle_dir }}/**/*.rpm
+            ${{ matrix.bundle_dir }}/**/*.dmg
+            ${{ matrix.bundle_dir }}/**/*.tar.gz
+            ${{ matrix.bundle_dir }}/**/*.exe
+            ${{ matrix.bundle_dir }}/**/*.sig
       #endregion
 
   # publish-tauri-linux-arm:
@@ -495,10 +520,41 @@ jobs:
   #       env:
   #         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  publish-release:
+    needs: package-tauri
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: ${{ runner.temp }}/project-graph-release
+      - name: Publish complete release
+        env:
+          ASSET_DIR: ${{ runner.temp }}/project-graph-release
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          RELEASE_NAME: ${{ inputs.release_name }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        run: bash .github/scripts/publish-complete-release.sh
+
   bump-aur-version:
-    needs: publish-tauri
+    needs: publish-release
     runs-on: ubuntu-latest
     if: inputs.aur_package_name != ''
+    env:
+      APP_VERSION: ${{ inputs.app_version }}
+      AUR_PACKAGE: ${{ inputs.aur_package_name }}
+      AUR_VERSION: ${{ inputs.aur_version }}
+      AUR_ALGORITHM: ${{ inputs.aur_key_algorithm }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
@@ -506,25 +562,28 @@ jobs:
         with:
           node-version: 24
       - name: Setup AUR private key
+        env:
+          AUR_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/id_${{ inputs.aur_key_algorithm }}
-          chmod 600 ~/.ssh/id_${{ inputs.aur_key_algorithm }}
-          ssh-keyscan -t "${{ inputs.aur_key_algorithm }}" aur.archlinux.org >> ~/.ssh/known_hosts
+          umask 077
+          mkdir -p "$HOME/.ssh"
+          printf '%s\n' "$AUR_PRIVATE_KEY" > "$HOME/.ssh/id_$AUR_ALGORITHM"
+          chmod 600 "$HOME/.ssh/id_$AUR_ALGORITHM"
+          ssh-keyscan -t "$AUR_ALGORITHM" aur.archlinux.org >> "$HOME/.ssh/known_hosts"
       - name: Clone AUR repository
-        run: git clone ssh://aur@aur.archlinux.org/${{ inputs.aur_package_name }}.git ./aurpackage
+        run: git clone -- "ssh://aur@aur.archlinux.org/$AUR_PACKAGE.git" ./aurpackage
       - name: Update version in PKGBUILD and .SRCINFO
         env:
           repo: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd aurpackage
-          node ../.github/scripts/generate-pkgbuild.mjs ${{ inputs.aur_package_name }} ${{ inputs.aur_version }}
+          node ../.github/scripts/generate-pkgbuild.mjs "$AUR_PACKAGE" "$AUR_VERSION"
       - name: Commit and push changes
         run: |
           cd aurpackage
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add PKGBUILD .SRCINFO
-          git commit -m "Bump version to ${{ inputs.app_version }}"
+          git commit -m "Bump version to $APP_VERSION"
           git push origin master

@@ -1,5 +1,7 @@
 node_modules
-dist
+/app/dist/
+/packages/*/dist/
+/dist/
 .env
 .idea
 storybook-static

@@ -1,10 +1,29 @@
 import { spawnSync } from "node:child_process";
-import { accessSync, chmodSync, constants, copyFileSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import {
+  accessSync,
+  chmodSync,
+  constants,
+  copyFileSync,
+  existsSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { join, resolve } from "node:path";
+import { parseArgs } from "node:util";
 
-const outDirIndex = process.argv.indexOf("--outDir");
-const outDirArgument = outDirIndex === -1 ? undefined : process.argv[outDirIndex + 1];
+const {
+  values: { outDir: outDirArgument },
+} = parseArgs({ options: { outDir: { type: "string" } } });
 if (!outDirArgument) throw new Error("--outDir is required");
+if (process.platform !== "win32" && /^(?:[A-Za-z]:[\\/]|\\\\)/.test(outDirArgument)) {
+  throw new Error("--outDir must be a local path on this platform");
+}
+const outDir = resolve(outDirArgument);
+if (existsSync(outDir) && (!statSync(outDir).isDirectory() || readdirSync(outDir).length !== 0)) {
+  throw new Error("--outDir must be an empty directory");
+}
 const version = process.env.PROJECT_GRAPH_CLI_VERSION;
 if (!version) throw new Error("PROJECT_GRAPH_CLI_VERSION is required");
 const ownershipHelperSource = process.env.PROJECT_GRAPH_OWNERSHIP_HELPER_PATH;
@@ -12,7 +31,6 @@ if (!ownershipHelperSource) throw new Error("PROJECT_GRAPH_OWNERSHIP_HELPER_PATH
 accessSync(ownershipHelperSource, constants.R_OK | constants.X_OK);
 
 const repositoryRoot = resolve(import.meta.dirname, "../..");
-const outDir = resolve(outDirArgument);
 const ownershipHelperFileName =
   process.platform === "win32" ? "project-graph-ownership-helper.exe" : "project-graph-ownership-helper";
 
@@ -22,6 +40,7 @@ function run(args: readonly string[]): void {
     encoding: "utf8",
     env: process.env,
   });
+  if (result.error) throw result.error;
   if (result.status === 0) return;
   process.stdout.write(result.stdout);
   process.stderr.write(result.stderr);

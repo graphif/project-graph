@@ -1,17 +1,19 @@
 /* eslint-disable */
-import { execSync } from "child_process";
+import { execFileSync } from "node:child_process";
 
 // 获取最近一次发布的标签
-const lastRelease = execSync(
-  "git for-each-ref --sort=-creatordate --format='%(refname:short)' \"refs/tags/v*\" | head -n 1",
-)
-  .toString()
-  .trim();
+const lastRelease = execFileSync(
+  "git",
+  ["for-each-ref", "--count=1", "--sort=-creatordate", "--format=%(refname)", "refs/tags/v*"],
+  { encoding: "utf8" },
+).trim();
 
 // 获取 Git 提交记录
-const rawCommits = execSync(`git log ${lastRelease}.. --pretty=format:"%s" --reverse`)
-  .toString()
-  .trim();
+const rawCommits = execFileSync(
+  "git",
+  ["log", "--pretty=format:%s", "--reverse", lastRelease ? `${lastRelease}..HEAD` : "HEAD", "--"],
+  { encoding: "utf8" },
+).trim();
 
 function filterCommitTitles(titles) {
   if (!titles || titles.trim() === "") return "";
@@ -31,7 +33,7 @@ const commits = filterCommitTitles(rawCommits);
  * @returns {string} 格式化的changelog
  */
 function generateFallbackChangelog(commits) {
-  if (!commits || commits.trim() === "") {
+  if (!commits) {
     return "## 更新内容\n\n本次更新暂无变更记录。";
   }
 
@@ -110,7 +112,7 @@ alt跳入框时，显示框会变大多少的虚线边缘
 
 // 发送请求到 API
 try {
-  if (!commits || commits.trim() === "") {
+  if (!commits || !process.env.GEMINI_API_KEY) {
     console.log(generateFallbackChangelog(commits));
     process.exit(0);
   }

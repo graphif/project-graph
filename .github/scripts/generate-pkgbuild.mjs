@@ -7,7 +7,7 @@ import { writeFileSync } from "fs";
 const pkgname = process.argv[2];
 const pkgver = process.argv[3];
 
-if (!pkgname || !pkgver) {
+if (!/^[a-z0-9][a-z0-9@._+-]*$/.test(pkgname ?? "") || !/^[a-zA-Z0-9][a-zA-Z0-9._+-]*$/.test(pkgver ?? "")) {
   console.error("Usage: node generate-pkgbuild.mjs <pkgname> <pkgver>");
   process.exit(1);
 }
@@ -18,7 +18,7 @@ const conflicts =
     : ["project-graph-nightly-bin", "project-graph-git"];
 const source =
   pkgname === "project-graph-nightly-bin"
-    ? `https://github.com/LiRenTech/project-graph/releases/download/nightly/Project.Graph_0.0.0-nightly.${pkgver.slice(1)}_amd64.deb`
+    ? `https://github.com/LiRenTech/project-graph/releases/download/nightly-${pkgver.slice(1)}/Project.Graph_0.0.0-nightly.${pkgver.slice(1)}_amd64.deb`
     : `https://github.com/LiRenTech/project-graph/releases/download/v${pkgver}/Project.Graph_${pkgver}_amd64.deb`;
 
 const PKGBUILD = `# Maintainer: zty012 <me@zty012.de>
