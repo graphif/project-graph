@@ -959,6 +959,7 @@ const pendingSettingsLoadErrorValues = new Map<string, unknown>();
 let hasFlushedSettingsLoadErrors = false;
 
 const rawSettings = Object.fromEntries(await store.entries());
+export const legacyGlobalHotKeysEnabled = rawSettings.allowGlobalHotKeys === true;
 // console.log(rawSettings);
 for (const [rawKey, rawValue] of Object.entries(rawSettings)) {
   if (!(rawKey in settingsSchema.shape)) {
