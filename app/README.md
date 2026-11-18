@@ -87,6 +87,12 @@ pnpm dev
 
 首次运行测试或修改 Rust 所有权辅助程序后，先运行 `cargo test --manifest-path app/src-tauri/Cargo.toml --test project_ownership_helper`，准备并验证 CLI 测试所需的本地辅助程序，再运行 `pnpm test`。文件锁测试使用项目自带的 Rust 实现，无需安装 `lockf`。
 
+CLI 的 `--project` 指向运行 CLI 的机器上的本地文件，路径含空格时请加引号。Linux 和 macOS 使用本机 POSIX 路径，Windows 盘符和 UNC 路径会被拒绝。`materialize:cli --outDir` 需要提供一个空的本地输出目录。CLI 用法和平台验证范围见 [CLI 开发文档](../docs/agents/cli.md)。
+
+桌面打包脚本通过 pnpm 运行。可选的 `TAURI_BUILD_ARGS` 使用 JSON 字符串数组，例如 `["--target","universal-apple-darwin"]`，每个参数和值分别占一个元素。路径须符合打包机器的格式。macOS 打包辅助脚本按当前工作目录解析相对的 `CARGO_TARGET_DIR`。
+
+发布工作流会先校验版本和标签。Android 密钥输入只接受 Android 应用目录下的单个 `.jks` 文件名。AUR 包名指定 `aur.archlinux.org` 上的仓库，检出目录和 SSH 密钥路径位于发布运行器本机。
+
 <details>
 <summary><strong>修改后界面没有更新？</strong></summary>
 

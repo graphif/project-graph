@@ -64,6 +64,12 @@ function canonicalizeProjectPath(
 ):
   | { ok: true; canonicalPath: string }
   | { ok: false; error: { code: "PROJECT_NOT_FOUND" | "PROJECT_LOAD_FAILED"; message: string } } {
+  if (process.platform !== "win32" && /^(?:[A-Za-z]:[\\/]|\\\\)/.test(projectPath)) {
+    return {
+      ok: false,
+      error: { code: "PROJECT_LOAD_FAILED", message: "Use a local path on this platform, not a Windows path." },
+    };
+  }
   try {
     const canonicalPath = realpathSync.native(projectPath);
     if (!statSync(canonicalPath).isFile() || !canonicalPath.toLowerCase().endsWith(".prg")) {

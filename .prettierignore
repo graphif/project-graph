@@ -10,7 +10,9 @@ vite-env.d.ts
 # prettier不支持mdx3.0
 # *.mdx
 
-dist
+/app/dist/
+/packages/*/dist/
+/dist/
 .next
 out
 

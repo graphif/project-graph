@@ -1,13 +1,14 @@
 /* eslint-disable */
-import { spawn } from "child_process";
+import { spawn } from "node:child_process";
 
-// 从环境变量获取参数并分割成数组
-const tauriBuildArgs = process.env.TAURI_BUILD_ARGS ? process.env.TAURI_BUILD_ARGS.split(" ") : [];
-
-// 构造完整命令参数
+const tauriBuildArgs = JSON.parse(process.env.TAURI_BUILD_ARGS || "[]");
+if (!Array.isArray(tauriBuildArgs) || !tauriBuildArgs.every((arg) => typeof arg === "string")) {
+  throw new Error("TAURI_BUILD_ARGS must be a JSON array of strings");
+}
 const args = ["tauri", "build", ...tauriBuildArgs];
 
 const pnpmBin = process.env.npm_execpath;
+if (!pnpmBin) throw new Error("Run this script through pnpm");
 
 let child;
 
@@ -23,6 +24,10 @@ if (pnpmBin.endsWith("js")) {
 }
 
 // 处理退出
+child.on("error", (error) => {
+  console.error(error.message);
+  process.exitCode = 1;
+});
 child.on("exit", (code) => {
-  process.exit(code || 0);
+  process.exitCode = code ?? 1;
 });
