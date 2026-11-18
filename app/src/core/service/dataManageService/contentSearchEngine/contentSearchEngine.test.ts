@@ -26,11 +26,14 @@ function createSearch(offset = 0) {
         },
       }) as StageObject,
   );
+  const camera = { location: Vector.getZero() };
   const search = new ContentSearch({
-    stageManager: { getStageObjects: () => nodes },
+    camera,
+    effects: { addEffect: vi.fn() },
+    stageManager: { getStageObjects: () => nodes, getTextNodes: () => nodes },
   } as unknown as Project);
   vi.spyOn(search, "getStageObjectText").mockImplementation((node) => texts[Number(node.uuid)]);
-  return { search, nodes };
+  return { search, nodes, camera };
 }
 
 describe("ContentSearch", () => {
@@ -104,6 +107,25 @@ describe("ContentSearch", () => {
     expect(search.currentSearchResultIndex).toBe(-1);
 
     expect(search.startSearch("Beta \\d+", false)).toBe(true);
+    expect(search.searchResultNodes).toEqual([nodes[2]]);
+  });
+
+  it("starts reverse navigation at the last result and keeps the selected scope intact", () => {
+    const { search, nodes, camera } = createSearch();
+    nodes[1].isSelected = true;
+    search.searchScope = SearchScope.SELECTED;
+    search.startSearch("a", false);
+
+    search.previousSearchResult();
+    expect(search.currentSearchResultIndex).toBe(2);
+    expect(camera.location).toEqual(nodes[2].collisionBox.getRectangle().center);
+    search.nextSearchResult();
+    expect(search.currentSearchResultIndex).toBe(0);
+    search.previousSearchResult();
+    expect(search.currentSearchResultIndex).toBe(2);
+    expect(nodes.map((node) => node.isSelected)).toEqual([true, true, true, false]);
+
+    search.startSearch("Beta", false);
     expect(search.searchResultNodes).toEqual([nodes[2]]);
   });
 
