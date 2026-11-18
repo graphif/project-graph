@@ -172,7 +172,7 @@ export class Renderer {
     this.renderConnectingLine();
     this.renderKeyboardOnly();
     this.rendererLayerMovingLine();
-    this.project.searchContentHighlightRenderer.render(this.frameIndex);
+    this.project.searchContentHighlightRenderer.render(this.frameIndex, viewRectangle);
     // renderViewRectangle(viewRectangle);
   }
 
