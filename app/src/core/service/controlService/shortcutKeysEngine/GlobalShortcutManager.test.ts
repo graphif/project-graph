@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  isAlwaysOnTop: vi.fn(),
+  setAlwaysOnTop: vi.fn(),
+  setIgnoreCursorEvents: vi.fn(),
   data: new Map<string, unknown>(),
   register: vi.fn(),
   unregister: vi.fn(),
@@ -13,7 +16,13 @@ vi.mock("@tauri-apps/plugin-global-shortcut", () => ({
   isRegistered: mocks.isRegistered,
 }));
 
-vi.mock("@tauri-apps/api/window", () => ({ getCurrentWindow: vi.fn() }));
+vi.mock("@tauri-apps/api/window", () => ({
+  getCurrentWindow: () => ({
+    isAlwaysOnTop: mocks.isAlwaysOnTop,
+    setAlwaysOnTop: mocks.setAlwaysOnTop,
+    setIgnoreCursorEvents: mocks.setIgnoreCursorEvents,
+  }),
+}));
 vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
 vi.mock("@/core/service/Settings", () => ({ Settings: {} }));
 vi.mock("@/utils/store", () => ({
@@ -28,6 +37,9 @@ import { GlobalShortcutManager } from "./GlobalShortcutManager";
 
 describe("GlobalShortcutManager", () => {
   beforeEach(() => {
+    mocks.isAlwaysOnTop.mockReset();
+    mocks.setAlwaysOnTop.mockReset();
+    mocks.setIgnoreCursorEvents.mockReset();
     mocks.data.clear();
     mocks.register.mockReset();
     mocks.unregister.mockReset();
@@ -77,5 +89,32 @@ describe("GlobalShortcutManager", () => {
 
     expect(manager.getShortcuts()[0].isEnabled).toBe(false);
     expect(mocks.data.get("show-window")).toEqual({ key: "Alt+Digit1", isEnabled: false });
+  });
+
+  it.each([true, false])("退出窗口穿透时恢复进入前的置顶状态 %s", async (wasAlwaysOnTop) => {
+    mocks.isAlwaysOnTop.mockResolvedValue(wasAlwaysOnTop);
+    const manager = new GlobalShortcutManager();
+    await manager.setShortcutEnabled("toggle-click-through", true);
+    const [, handler] = mocks.register.mock.calls[0];
+
+    await handler({ state: "Pressed" });
+    await handler({ state: "Pressed" });
+
+    expect(mocks.setAlwaysOnTop.mock.calls).toEqual([[true], [wasAlwaysOnTop]]);
+    expect(mocks.setIgnoreCursorEvents.mock.calls).toEqual([[true], [false]]);
+  });
+
+  it("开启穿透失败时恢复原置顶状态并允许重试", async () => {
+    mocks.isAlwaysOnTop.mockResolvedValue(false);
+    mocks.setIgnoreCursorEvents.mockRejectedValueOnce(new Error("unavailable"));
+    const manager = new GlobalShortcutManager();
+    await manager.setShortcutEnabled("toggle-click-through", true);
+    const [, handler] = mocks.register.mock.calls[0];
+
+    await expect(handler({ state: "Pressed" })).rejects.toThrow("unavailable");
+    await handler({ state: "Pressed" });
+
+    expect(mocks.setAlwaysOnTop.mock.calls).toEqual([[true], [false], [true]]);
+    expect(mocks.setIgnoreCursorEvents.mock.calls).toEqual([[true], [true]]);
   });
 });
