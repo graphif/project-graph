@@ -7,7 +7,7 @@ import { writeFileSync } from "fs";
 const pkgname = process.argv[2];
 const pkgver = process.argv[3];
 
-if (!pkgname || !pkgver) {
+if (!/^[a-z0-9][a-z0-9@._+-]*$/.test(pkgname ?? "") || !/^[a-zA-Z0-9][a-zA-Z0-9._+-]*$/.test(pkgver ?? "")) {
   console.error("Usage: node generate-pkgbuild.mjs <pkgname> <pkgver>");
   process.exit(1);
 }
