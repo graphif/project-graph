@@ -38,7 +38,6 @@ import GenerateNodeTree, {
   GenerateNodeTreeByMarkdown,
 } from "@/sub/generate-node-window";
 import NewExportPngWindow from "@/sub/new-export-png-window";
-import { loadOnboarding } from "@/features/onboarding/onboarding-state";
 import { LazyStore } from "@/platform/store";
 import OutlineWindow from "@/sub/outline-window";
 import RecentFilesWindow from "@/sub/recent-files-window";
@@ -4404,12 +4403,15 @@ export const allKeyBinds: KeyBindItem[] = [
     when: whenAlways,
     onPress: async () => {
       const storage = new LazyStore("onboarding.json");
-      const state = await loadOnboarding(storage, {
+      const existing = await storage.get<Record<string, unknown>>("state");
+      await storage.set("state", {
+        ...(existing ?? {}),
         language: Settings.language,
         theme: Settings.theme,
         uiScalePercent: Settings.uiScalePercent,
+        step: 0,
+        completedAt: null,
       });
-      await storage.set("state", { ...state, step: 0, completedAt: null });
       await storage.save();
       location.reload();
     },

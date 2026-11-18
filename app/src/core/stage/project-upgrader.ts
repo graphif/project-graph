@@ -5,7 +5,6 @@ import { readFile } from "@/platform/files";
 import { v4 as uuidv4 } from "uuid";
 import { URI } from "vscode-uri";
 import { PenStrokeSegment } from "./stage-object/entity/pen-stroke";
-import { Vector } from "@graphif/data-structures";
 import { toast } from "sonner";
 import { compareProjectVersions, LATEST_PROJECT_VERSION } from "../project-file";
 import { DetailsManager } from "./stage-object/tools/entity-details-manager";
@@ -638,7 +637,11 @@ export namespace ProjectUpgrader {
           const stringParts = entity.content.split("~");
           for (const part of stringParts) {
             const [x, y, pressure] = part.split(",");
-            const segment = new PenStrokeSegment(new Vector(Number(x), Number(y)), Number(pressure) / 5);
+            const segment = {
+              _: "PenStrokeSegment",
+              location: { _: "Vector", x: Number(x), y: Number(y) },
+              pressure: Number(pressure) / 5,
+            };
             segments.push(segment);
           }
           data = {

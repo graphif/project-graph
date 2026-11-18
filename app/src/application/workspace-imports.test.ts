@@ -177,6 +177,7 @@ describe("workspace module initialization", () => {
       ];
       const graph = parseTextGraph({ objects, order: objects.map(({ id }) => id) });
       expect(new Set(graph.objects.map(({ kind }) => kind)).size).toBe(Object.keys(graphObjectSchemas).length);
+      project.attachments.set("asset", new Blob([new Uint8Array([0, 255, 32])], { type: "image/png" }));
       project.stage = decodeStageGraph(graph, project, { initializeGeometry: false });
       const wire = JSON.parse(JSON.stringify(serialize(project.stage)));
       const before = structuredClone(wire);
@@ -191,8 +192,8 @@ describe("workspace module initialization", () => {
       expect(wire).toEqual(before);
       expect(serialize(deserialize(wire, project))).toEqual(serialize(restored));
       const saved = await parseProjectFile(await project.getFileContent({ includeThumbnail: false }), new Map());
-      if (saved.format !== "legacy") throw new Error("Expected existing MessagePack PRG format");
-      expect(createStageTextGraphCodec().encode(deserialize(saved.serializedStageObjects, project))).toEqual(graph);
+      if (saved.format !== "json") throw new Error("Expected JSON PRG");
+      expect(saved.graph).toEqual(graph);
     } finally {
       await project.dispose();
     }

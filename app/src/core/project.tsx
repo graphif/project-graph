@@ -79,10 +79,9 @@ import { nextProjectIdAtom, store, tabsAtom } from "@/state";
 import { createDefaultMetadata, PrgMetadata } from "@/types/metadata";
 import { deserialize, serialize } from "@graphif/serializer";
 import { Decoder, Encoder } from "@msgpack/msgpack";
-import { BlobReader, Uint8ArrayReader, Uint8ArrayWriter, ZipWriter } from "@zip.js/zip.js";
+import { writeProjectFile } from "@/core/persistence/write-project-file";
 import { File } from "lucide-react";
 import md5 from "md5";
-import mime from "mime";
 import React from "react";
 import { save as saveDialog } from "@/platform/dialogs";
 import { URI } from "vscode-uri";
@@ -388,40 +387,29 @@ export class Project extends Tab {
   // 备份也要用到这个
   async getFileContent(options: { includeThumbnail?: boolean } = {}) {
     const includeThumbnail = options.includeThumbnail !== false;
-    const serializedStage = serialize(this.stage);
-    const encodedStage = this.encoder.encode(serializedStage);
-    const uwriter = new Uint8ArrayWriter();
-
-    // @zip.js/zip.js 从 ^2.7.63 升到了 ^2.8.26，需要显示指定 level: 0，防止保存的时候卡顿
-    const writer = new ZipWriter(uwriter, { level: 0 });
-    await writer.add("stage.msgpack", new Uint8ArrayReader(encodedStage), { level: 0 });
-    await writer.add("tags.msgpack", new Uint8ArrayReader(this.encoder.encode(this.tags)), { level: 0 });
-    await writer.add("reference.msgpack", new Uint8ArrayReader(this.encoder.encode(this.references)), { level: 0 });
-    await writer.add("metadata.msgpack", new Uint8ArrayReader(this.encoder.encode(this.metadata)), { level: 0 });
-    if (this.readme) {
-      await writer.add("README.md", new Uint8ArrayReader(new TextEncoder().encode(this.readme)), { level: 0 });
-    }
-    // 添加附件
-    for (const [uuid, attachment] of this.attachments.entries()) {
-      await writer.add(`attachments/${uuid}.${mime.getExtension(attachment.type)}`, new BlobReader(attachment), {
-        level: 0,
-      });
-    }
-    // 添加缩略图
+    const { createStageTextGraphCodec } = await import("@/application/create-text-graph-codec");
+    const codec = createStageTextGraphCodec();
+    const graph = codec.encode(this.stage);
+    let thumbnail: Blob | undefined;
     if (includeThumbnail) {
       try {
-        const thumbnailBlob = await generateThumbnail(this);
-        if (thumbnailBlob) {
-          await writer.add("thumbnail.png", new BlobReader(thumbnailBlob), { level: 0 });
-        }
+        thumbnail = (await generateThumbnail(this)) ?? undefined;
       } catch {
         // 缩略图生成失败不阻止保存
       }
     }
-    await writer.close();
-
-    const fileContent = await uwriter.getData();
-    return fileContent;
+    return writeProjectFile(
+      {
+        format: "dev.graphif.prg",
+        version: this.metadata.version,
+        graph,
+        tags: this.tags,
+        references: this.references,
+      },
+      this.attachments,
+      this.readme || undefined,
+      thumbnail,
+    );
   }
 
   /**

@@ -277,6 +277,7 @@ export function assertBoundedData(value: unknown): void {
       }
       const descriptor = Object.getOwnPropertyDescriptor(current, key);
       if (!descriptor || !("value" in descriptor)) throw new Error("data: accessors are not supported");
+      if (!Array.isArray(current) && descriptor.value === undefined) continue;
       visit(descriptor.value, depth + 1);
     }
     ancestors.delete(current);

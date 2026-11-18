@@ -6,10 +6,10 @@ export namespace VirtualClipboard {
   let data: any = null;
 
   export function copy(newData: any) {
-    data = newData;
+    data = structuredClone(newData);
   }
   export function paste() {
-    return data;
+    return data === null ? null : structuredClone(data);
   }
   export function clear() {
     data = null;
