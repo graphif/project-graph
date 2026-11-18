@@ -56,7 +56,10 @@ function ensureMacOSBinaries() {
   }
   fs.mkdirSync(outputDir, { recursive: true });
   execFileSync("lipo", ["-create", "-output", outPath, ...inputs], { stdio: "inherit" });
-  execFileSync("lipo", [outPath, "-verify_arch", "arm64", "x86_64"], { stdio: "inherit" });
+  const architectures = execFileSync("lipo", ["-archs", outPath], { encoding: "utf8" }).trim().split(/\s+/);
+  if (!architectures.includes("arm64") || !architectures.includes("x86_64")) {
+    throw new Error(`Invalid universal helper architectures: ${architectures.join(", ")}`);
+  }
   fs.chmodSync(outPath, 0o755);
 }
 
