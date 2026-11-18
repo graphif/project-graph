@@ -1,5 +1,6 @@
 windowControls:
   alwaysOnTop: Keep window on top
+  exitClickThrough: "Press {{shortcut}} to turn off click-through"
 
 nodeDetailsWindow:
   title: Details

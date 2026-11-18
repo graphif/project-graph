@@ -2,10 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import {
+  formatGlobalShortcut as formatAccelerator,
   globalShortcutManager,
   type GlobalShortcutInfo,
 } from "@/core/service/controlService/shortcutKeysEngine/GlobalShortcutManager";
-import { isMac } from "@/utils/platform";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -18,19 +18,6 @@ function keyboardEventToAccelerator(event: KeyboardEvent) {
   if (event.altKey) modifiers.push("Alt");
   if (event.metaKey) modifiers.push("Super");
   return [...modifiers, event.code].join("+");
-}
-
-function formatAccelerator(accelerator: string) {
-  return accelerator
-    .split("+")
-    .map((part) => {
-      if (part === "Control") return "Ctrl";
-      if (part === "Super") return isMac ? "Command" : "Super";
-      if (part.startsWith("Key")) return part.slice(3);
-      if (part.startsWith("Digit")) return part.slice(5);
-      return part;
-    })
-    .join(" + ");
 }
 
 function GlobalShortcutInput({

@@ -12,12 +12,15 @@ import { GlobalMenu, onNewDraft } from "@/core/service/GlobalMenu";
 import { flushSettingsLoadErrors, Settings } from "@/core/service/Settings";
 import { Telemetry } from "@/core/service/Telemetry";
 import { Themes } from "@/core/service/Themes";
-import { globalShortcutManager } from "@/core/service/controlService/shortcutKeysEngine/GlobalShortcutManager";
 import {
+  formatGlobalShortcut,
+  globalShortcutManager,
+} from "@/core/service/controlService/shortcutKeysEngine/GlobalShortcutManager";
+import {
+  activeClickThroughShortcutAtom,
   activeResourceTabAtom,
   activeTabAtom,
   isClassroomModeAtom,
-  isClickThroughEnabledAtom,
   isWindowAlwaysOnTopAtom,
   isWindowMaxsizedAtom,
   tabsAtom,
@@ -551,7 +554,7 @@ function WindowButtons() {
   const [isWindowFocused, setIsWindowFocused] = useState(false);
   const [isNativeDark, setIsNativeDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
   const [maximized] = useAtom(isWindowMaxsizedAtom);
-  const [isClickThroughEnabled] = useAtom(isClickThroughEnabledAtom);
+  const [activeClickThroughShortcut] = useAtom(activeClickThroughShortcutAtom);
   const [isWindowAlwaysOnTop, setIsWindowAlwaysOnTop] = useAtom(isWindowAlwaysOnTopAtom);
   useEffect(() => {
     if (!isMac) return;
@@ -592,7 +595,11 @@ function WindowButtons() {
 
   return (
     <div className={cn("flex h-full items-center", !isMac && "rounded-full [&_button]:rounded-full")}>
-      {isClickThroughEnabled && <span className="text-destructive font-bold">Alt + 2关闭窗口穿透点击</span>}
+      {activeClickThroughShortcut && (
+        <span className="text-destructive font-bold">
+          {t("exitClickThrough", { shortcut: formatGlobalShortcut(activeClickThroughShortcut) })}
+        </span>
+      )}
       {isMac ? (
         <span className="flex items-center pr-1">
           <Button
