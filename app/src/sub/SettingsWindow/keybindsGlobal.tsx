@@ -44,8 +44,13 @@ function GlobalShortcutInput({
         toast.warning("无法识别这个按键，请换一个组合键");
         return;
       }
+      const accelerator = keyboardEventToAccelerator(event);
       setIsRecording(false);
-      void onChange(keyboardEventToAccelerator(event)).finally(() => onRecordingChange(false));
+      if (accelerator === "Escape") {
+        onRecordingChange(false);
+        return;
+      }
+      void onChange(accelerator).finally(() => onRecordingChange(false));
     };
 
     document.addEventListener("keydown", handleKeyDown, true);
@@ -65,7 +70,7 @@ function GlobalShortcutInput({
         onRecordingChange(true);
       }}
     >
-      {isRecording ? "请按下快捷键" : formatAccelerator(value)}
+      {isRecording ? "请按下快捷键（Esc 取消）" : formatAccelerator(value)}
     </Button>
   );
 }
