@@ -2,6 +2,8 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { isRegistered, register, unregister } from "@tauri-apps/plugin-global-shortcut";
 import { BringToFront, MousePointerBan } from "lucide-react";
 import { toast } from "sonner";
+import { activeClickThroughShortcutAtom, store as appStore } from "@/state";
+import { isMac } from "@/utils/platform";
 import { createStore } from "@/utils/store";
 import { Settings } from "../../Settings";
 import type { KeyBindIcon } from "./KeyBindsUI";
@@ -26,12 +28,26 @@ interface StoredGlobalShortcut {
 }
 
 const STORE_NAME = "global-keybinds.json";
+const CLICK_THROUGH_ID = "toggle-click-through";
+
+export function formatGlobalShortcut(accelerator: string) {
+  return accelerator
+    .split("+")
+    .map((part) => {
+      if (part === "Control") return "Ctrl";
+      if (part === "Super") return isMac ? "Command" : "Super";
+      if (part.startsWith("Key")) return part.slice(3);
+      if (part.startsWith("Digit")) return part.slice(5);
+      return part;
+    })
+    .join(" + ");
+}
 
 export class GlobalShortcutManager {
   private shortcuts: GlobalShortcut[];
   private initialization: Promise<void> | null = null;
   private registeredKeys = new Set<string>();
-  private isClickThroughEnabled = false;
+  private isTogglingClickThrough = false;
   private isRecording = false;
 
   constructor() {
@@ -47,7 +63,7 @@ export class GlobalShortcutManager {
         onPress: this.handleShowWindow.bind(this),
       },
       {
-        id: "toggle-click-through",
+        id: CLICK_THROUGH_ID,
         title: "切换窗口穿透点击",
         description: "开启或关闭窗口穿透点击，并同步调整窗口透明度。",
         icon: MousePointerBan,
@@ -145,12 +161,22 @@ export class GlobalShortcutManager {
       }
       throw error;
     }
+    if (id === CLICK_THROUGH_ID && appStore.get(activeClickThroughShortcutAtom) !== null) {
+      appStore.set(activeClickThroughShortcutAtom, key);
+    }
   }
 
   public async setShortcutEnabled(id: string, isEnabled: boolean) {
     await this.init();
     const shortcut = this.getShortcut(id);
     if (shortcut.isEnabled === isEnabled) return;
+    if (
+      id === CLICK_THROUGH_ID &&
+      !isEnabled &&
+      (this.isTogglingClickThrough || appStore.get(activeClickThroughShortcutAtom) !== null)
+    ) {
+      throw new Error("请先退出窗口穿透点击，再禁用快捷键");
+    }
 
     if (isEnabled) {
       await this.registerShortcut(shortcut);
@@ -219,18 +245,20 @@ export class GlobalShortcutManager {
   }
 
   private async handleToggleClickThrough() {
-    const window = getCurrentWindow();
-
-    if (!this.isClickThroughEnabled) {
-      Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterOpenClickThrough;
-      await window.setAlwaysOnTop(true);
-    } else {
-      Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterCloseClickThrough;
-      await window.setAlwaysOnTop(false);
+    if (this.isTogglingClickThrough) return;
+    this.isTogglingClickThrough = true;
+    try {
+      const window = getCurrentWindow();
+      const enable = appStore.get(activeClickThroughShortcutAtom) === null;
+      await window.setAlwaysOnTop(enable);
+      await window.setIgnoreCursorEvents(enable);
+      appStore.set(activeClickThroughShortcutAtom, enable ? this.getShortcut(CLICK_THROUGH_ID).key : null);
+      Settings.windowBackgroundAlpha = enable
+        ? Settings.windowBackgroundOpacityAfterOpenClickThrough
+        : Settings.windowBackgroundOpacityAfterCloseClickThrough;
+    } finally {
+      this.isTogglingClickThrough = false;
     }
-
-    this.isClickThroughEnabled = !this.isClickThroughEnabled;
-    await window.setIgnoreCursorEvents(this.isClickThroughEnabled);
   }
 
   private async handleShowWindow() {

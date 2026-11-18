@@ -49,7 +49,7 @@ export const isWindowAlwaysOnTopAtom = atom<boolean>(false);
 
 export const isWindowMaxsizedAtom = atom<boolean>(false);
 // 窗口穿透点击相关
-export const isClickThroughEnabledAtom = atom<boolean>(false);
+export const activeClickThroughShortcutAtom = atom<string | null>(null);
 
 export const isDevAtom = atom<boolean>(false);
 
