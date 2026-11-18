@@ -179,13 +179,7 @@ export class ContentSearch {
     }
     if (this.searchResultNodes.length > 0) {
       if (autoFocus) {
-        const currentNode = this.searchResultNodes[0];
-        // currentNode.isSelected = true;
-        this.project.effects.addEffect(
-          new RectangleNoteEffect(new ProgressNumber(0, 50), currentNode.collisionBox.getRectangle(), Color.Green),
-        );
-        // 摄像机对准现在的节点
-        this.project.camera.location = currentNode.collisionBox.getRectangle().center.clone();
+        this.focusResult(this.searchResultNodes[0]);
       }
 
       return true;
@@ -199,40 +193,22 @@ export class ContentSearch {
   public nextSearchResult() {
     if (this.searchResultNodes.length === 0) return;
     this.currentSearchResultIndex = (this.currentSearchResultIndex + 1) % this.searchResultNodes.length;
-    // 取消选择所有节点
-    for (const node of this.project.stageManager.getTextNodes()) {
-      node.isSelected = false;
-    }
-    // 选择当前搜索结果节点
-    const currentNode = this.searchResultNodes[this.currentSearchResultIndex];
-    if (currentNode) {
-      this.project.effects.addEffect(
-        new RectangleNoteEffect(new ProgressNumber(0, 50), currentNode.collisionBox.getRectangle(), Color.Green),
-      );
-      // 摄像机对准现在的节点
-      this.project.camera.location = currentNode.collisionBox.getRectangle().center.clone();
-    }
+    this.focusResult(this.searchResultNodes[this.currentSearchResultIndex]);
   }
 
   /**
    * 切换上一个
    */
   public previousSearchResult() {
-    if (this.searchResultNodes.length === 0) return;
-    this.currentSearchResultIndex =
-      (this.currentSearchResultIndex - 1 + this.searchResultNodes.length) % this.searchResultNodes.length;
-    // 取消选择所有节点
-    for (const node of this.project.stageManager.getTextNodes()) {
-      node.isSelected = false;
-    }
-    // 选择当前搜索结果节点
-    const currentNode = this.searchResultNodes[this.currentSearchResultIndex];
-    if (currentNode) {
-      this.project.effects.addEffect(
-        new RectangleNoteEffect(new ProgressNumber(0, 50), currentNode.collisionBox.getRectangle(), Color.Green),
-      );
-      // 摄像机对准现在的节点
-      this.project.camera.location = currentNode.collisionBox.getRectangle().center.clone();
-    }
+    const resultCount = this.searchResultNodes.length;
+    if (resultCount === 0) return;
+    this.currentSearchResultIndex = (Math.max(this.currentSearchResultIndex, 0) - 1 + resultCount) % resultCount;
+    this.focusResult(this.searchResultNodes[this.currentSearchResultIndex]);
+  }
+
+  private focusResult(node: StageObject) {
+    const rectangle = node.collisionBox.getRectangle();
+    this.project.effects.addEffect(new RectangleNoteEffect(new ProgressNumber(0, 50), rectangle, Color.Green));
+    this.project.camera.location = rectangle.center.clone();
   }
 }
