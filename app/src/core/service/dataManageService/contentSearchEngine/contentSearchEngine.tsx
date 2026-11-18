@@ -90,8 +90,8 @@ export class ContentSearch {
 
     let minX = Number.MAX_VALUE;
     let minY = Number.MAX_VALUE;
-    let maxX = Number.MIN_VALUE;
-    let maxY = Number.MIN_VALUE;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
 
     for (const obj of selectedObjects) {
       const rect = obj.collisionBox.getRectangle();
