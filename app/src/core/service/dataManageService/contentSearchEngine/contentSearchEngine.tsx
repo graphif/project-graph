@@ -59,10 +59,9 @@ export class ContentSearch {
    * @returns
    */
   public getStageObjectText(stageObject: StageObject): string {
-    if (stageObject instanceof TextNode) {
-      return stageObject.text + "　" + stageObject.detailsManager.getBeSearchingText();
-    } else if (stageObject instanceof Section) {
-      return stageObject.text + "　" + stageObject.detailsManager.getBeSearchingText();
+    if (stageObject instanceof TextNode || stageObject instanceof Section) {
+      const details = stageObject.detailsManager.getBeSearchingText();
+      return details ? stageObject.text + "　" + details : stageObject.text;
     } else if (stageObject instanceof UrlNode) {
       return stageObject.title + "　" + stageObject.detailsManager.getBeSearchingText() + "　" + stageObject.url;
     }
