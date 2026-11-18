@@ -4,12 +4,13 @@ import { ComponentTabContext } from "@/core/tab";
 import { activeTabAtom, store } from "@/state";
 import { Vector } from "@graphif/data-structures";
 import { Rectangle } from "@graphif/shapes";
-import { Blocks, Brush, Command, HandHeart, Info, Keyboard, Settings, User } from "lucide-react";
+import { Blocks, Brush, Command, HandHeart, Info, Keyboard, Settings, Terminal, User } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAtomValue } from "jotai";
 import AboutTab from "./about";
 import AccountTab from "./account";
+import AiCliTab from "./ai-cli";
 import CreditsTab from "./credits";
 import CustomizationTab from "./customization/customization";
 import QuickSettingsTab from "./customization/quick-settings";
@@ -26,6 +27,7 @@ type TabName =
   | "customization"
   | "about"
   | "extensions"
+  | "aiCli"
   | "account";
 
 export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab?: TabName }) {
@@ -67,6 +69,10 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
           <Blocks />
           扩展
         </TabsTrigger>
+        <TabsTrigger value="aiCli">
+          <Terminal />
+          AI / CLI
+        </TabsTrigger>
         <TabsTrigger value="about">
           <Info />
           关于
@@ -107,6 +113,9 @@ export default function SettingsWindow({ defaultTab = "settings" }: { defaultTab
       </TabsContent>
       <TabsContent value="extensions" className="overflow-auto">
         <ExtensionsTab />
+      </TabsContent>
+      <TabsContent value="aiCli" className="overflow-auto">
+        <AiCliTab />
       </TabsContent>
       <TabsContent value="about" className="overflow-auto">
         <AboutTab />
