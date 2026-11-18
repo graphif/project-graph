@@ -19,10 +19,9 @@ jobs:
       aur_version: r${{ github.run_number }}
       aur_key_algorithm: "ed25519"
       aur_package_name: "project-graph-nightly-bin"
-      delete_release: true
       prerelease: true
       release_name: Nightly ${{ github.run_number }}
-      release_tag: nightly
+      release_tag: nightly-${{ github.run_number }}
       task_build: build:ci
     secrets:
       ANDROID_KEYSTORE: ${{ secrets.ANDROID_RELEASE_KEYSTORE }}

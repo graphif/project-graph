@@ -93,6 +93,8 @@ CLI 的 `--project` 指向运行 CLI 的机器上的本地文件，路径含空�
 
 发布工作流会先校验版本和标签。Android 密钥输入只接受 Android 应用目录下的单个 `.jks` 文件名。AUR 包名指定 `aur.archlinux.org` 上的仓库，检出目录和 SSH 密钥路径位于发布运行器本机。
 
+各桌面平台打包成功后才进入发布。发布脚本在 Linux 的 Bash 中从本地 `ASSET_DIR` 收集下载的 Actions 产物，要求具备 Linux DEB 和 RPM、macOS DMG 和应用归档、Windows 安装包，以及 RPM、应用归档和 Windows 安装包的签名。Nightly 使用独立的 `nightly-<运行编号>` 标签，保留旧版下载。需要再次发布稳定版时，请使用新的版本和标签。
+
 <details>
 <summary><strong>修改后界面没有更新？</strong></summary>
 

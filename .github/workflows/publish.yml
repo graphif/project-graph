@@ -26,11 +26,6 @@ on:
         description: Whether to make the release a prerelease.
         required: false
         default: false
-      delete_release:
-        type: boolean
-        description: Whether to delete the release.
-        required: false
-        default: true
       android_key_path:
         type: string
         description: File name of the Android keystore under the Android app directory
@@ -89,23 +84,14 @@ on:
         required: false
 
 jobs:
-  create-release:
+  validate-inputs:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_TAG: ${{ inputs.release_tag }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-      - name: Install dependencies
-        run: npm i -g node-fetch
       - name: Validate publish inputs
         env:
           APP_VERSION: ${{ inputs.app_version }}
@@ -137,26 +123,12 @@ jobs:
               exit 1
             fi
           fi
-      - name: Delete release
-        if: inputs.delete_release == true
-        run: |
-          gh release delete "$RELEASE_TAG" --yes --cleanup-tag || true
-          sleep 1
-      - name: Create release
-        env:
-          name: ${{ inputs.release_name }}
-          branch: ${{ github.ref_name }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          notes=$(node ./.github/scripts/generate-changelog.mjs)
-          gh release create "$RELEASE_TAG" --target "$branch" --title "$name" --notes "$notes" ${{ inputs.prerelease == true && '--prerelease' || '' }}
 
-  publish-tauri:
-    needs: [create-release]
+  package-tauri:
+    needs: [validate-inputs]
     permissions:
-      contents: write
+      contents: read
     env:
-      RELEASE_TAG: ${{ inputs.release_tag }}
       APP_VERSION: ${{ inputs.app_version }}
       ANDROID_VERSION: ${{ inputs.app_version_android }}
     strategy:
@@ -462,33 +434,18 @@ jobs:
           cd app/src-tauri/target/release/bundle/rpm
           mv ./*.rpm "Project Graph_${APP_VERSION}_amd64.rpm"
           mv ./*.rpm.sig "Project Graph_${APP_VERSION}_amd64.rpm.sig"
-      - name: Linux / MacOS - Upload
-        if: matrix.platform != 'windows-latest'
-        shell: bash
-        run: |
-          shopt -s nullglob
-          if [[ "$RUNNER_OS" == macOS ]]; then
-            files=("$BUNDLE_DIR"/*/*.dmg "$BUNDLE_DIR"/*/*.tar.gz "$BUNDLE_DIR"/*/*.sig)
-          else
-            files=("$BUNDLE_DIR"/*/*.deb "$BUNDLE_DIR"/*/*.rpm "$BUNDLE_DIR"/*/*.sig)
-          fi
-          (( ${#files[@]} )) || { echo "::error::No release artifacts found"; exit 1; }
-          gh release upload "$RELEASE_TAG" "${files[@]}" --clobber
-        env:
-          BUNDLE_DIR: ${{ matrix.bundle_dir }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Windows - Rename and upload
-        if: matrix.platform == 'windows-latest'
-        shell: pwsh
-        run: |
-          $files = @(Get-ChildItem -LiteralPath $env:BUNDLE_DIR -File | Where-Object { $_.Extension -in '.exe', '.sig' })
-          if (!$files.Count) { throw "No release artifacts found" }
-          $filePaths = @($files.FullName)
-          gh release upload "$env:RELEASE_TAG" @filePaths --clobber
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        env:
-          BUNDLE_DIR: ${{ matrix.bundle_dir }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Stage release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.platform }}
+          if-no-files-found: error
+          path: |
+            ${{ matrix.bundle_dir }}/**/*.deb
+            ${{ matrix.bundle_dir }}/**/*.rpm
+            ${{ matrix.bundle_dir }}/**/*.dmg
+            ${{ matrix.bundle_dir }}/**/*.tar.gz
+            ${{ matrix.bundle_dir }}/**/*.exe
+            ${{ matrix.bundle_dir }}/**/*.sig
       #endregion
 
   # publish-tauri-linux-arm:
@@ -563,8 +520,34 @@ jobs:
   #       env:
   #         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  publish-release:
+    needs: package-tauri
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: ${{ runner.temp }}/project-graph-release
+      - name: Publish complete release
+        env:
+          ASSET_DIR: ${{ runner.temp }}/project-graph-release
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          RELEASE_NAME: ${{ inputs.release_name }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        run: bash .github/scripts/publish-complete-release.sh
+
   bump-aur-version:
-    needs: publish-tauri
+    needs: publish-release
     runs-on: ubuntu-latest
     if: inputs.aur_package_name != ''
     env:

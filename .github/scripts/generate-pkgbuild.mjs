@@ -18,7 +18,7 @@ const conflicts =
     : ["project-graph-nightly-bin", "project-graph-git"];
 const source =
   pkgname === "project-graph-nightly-bin"
-    ? `https://github.com/LiRenTech/project-graph/releases/download/nightly/Project.Graph_0.0.0-nightly.${pkgver.slice(1)}_amd64.deb`
+    ? `https://github.com/LiRenTech/project-graph/releases/download/nightly-${pkgver.slice(1)}/Project.Graph_0.0.0-nightly.${pkgver.slice(1)}_amd64.deb`
     : `https://github.com/LiRenTech/project-graph/releases/download/v${pkgver}/Project.Graph_${pkgver}_amd64.deb`;
 
 const PKGBUILD = `# Maintainer: zty012 <me@zty012.de>

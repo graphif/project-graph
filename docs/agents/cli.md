@@ -40,4 +40,6 @@ The repository process suites validate the native helper, materialized runtime, 
 
 The separate desktop packaging wrapper is run through pnpm so it receives `npm_execpath`. When set, `TAURI_BUILD_ARGS` is a JSON array of strings, for example `["--target","universal-apple-darwin"]`. Keep each flag and value in its own array element. Paths used by the build must be valid on the build runner. The macOS bundling hook resolves a relative `CARGO_TARGET_DIR` against its working directory.
 
-The release workflow checks version and tag formats before creating or deleting a release. Its Android keystore input is a single `.jks` file name under the Android app directory. The AUR package name identifies a repository on `aur.archlinux.org`, while its checkout and SSH key paths are local to the runner.
+The release workflow checks version and tag formats before packaging. Its Android keystore input is a single `.jks` file name under the Android app directory. The AUR package name identifies a repository on `aur.archlinux.org`, while its checkout and SSH key paths are local to the runner.
+
+The publish job runs on Linux with Bash after all desktop package jobs succeed. `ASSET_DIR` is the local Actions artifact download directory. Releases require Linux DEB and RPM, macOS DMG and app archive, and a Windows installer, plus the RPM, app archive and installer signatures. Nightly releases use `nightly-<run number>` and keep previous downloads available. To republish a stable version, use a new version and tag.
