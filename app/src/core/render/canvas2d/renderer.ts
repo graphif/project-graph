@@ -13,6 +13,7 @@ import { Color, mixColors, Vector } from "@graphif/data-structures";
 import { CubicBezierCurve, Rectangle } from "@graphif/shapes";
 import i18next from "i18next";
 import { GlobalMaskRenderer } from "./utils-renderer/global-mask-renderer";
+import { DirtyLayer } from "./dirty-layer";
 
 /**
  * 渲染器
@@ -50,6 +51,31 @@ export class Renderer {
   frameIndex = 0; // 无穷累加
   // 上一次记录的fps数值
   fps = 0;
+  // 按需渲染：跳过的空闲帧计数
+  skippedFrames = 0;
+
+  private dirtyLayers: DirtyLayer = DirtyLayer.All;
+  private lastCameraX = Number.NaN;
+  private lastCameraY = Number.NaN;
+  private lastCameraScale = Number.NaN;
+  private lastBgKey = "";
+  private lastStageKey = "";
+  private lastOverlayKey = "";
+
+  /**
+   * 标记指定图层需要重绘，并唤醒渲染循环
+   */
+  markDirty(layers: DirtyLayer = DirtyLayer.All) {
+    this.dirtyLayers |= layers;
+  }
+
+  getDirtyLayers(): DirtyLayer {
+    return this.dirtyLayers;
+  }
+
+  isDirty(): boolean {
+    return this.dirtyLayers !== DirtyLayer.None;
+  }
 
   /**
    * 解决Canvas模糊问题
@@ -61,11 +87,8 @@ export class Renderer {
     this.w = newW;
     this.h = newH;
     this.pixelRatio = scale;
-    this.project.canvas.element.width = newW * scale;
-    this.project.canvas.element.height = newH * scale;
-    this.project.canvas.element.style.width = `${newW}px`;
-    this.project.canvas.element.style.height = `${newH}px`;
-    this.project.canvas.ctx.scale(scale, scale);
+    this.project.canvas.resize(newW, newH, scale);
+    this.dirtyLayers |= DirtyLayer.All;
   }
 
   // 确保这个函数在软件打开的那一次调用
@@ -86,18 +109,96 @@ export class Renderer {
     }
   }
 
+  private syncDirtyFromState() {
+    const camera = this.project.camera;
+    if (
+      camera.location.x !== this.lastCameraX ||
+      camera.location.y !== this.lastCameraY ||
+      camera.currentScale !== this.lastCameraScale
+    ) {
+      this.lastCameraX = camera.location.x;
+      this.lastCameraY = camera.location.y;
+      this.lastCameraScale = camera.currentScale;
+      this.dirtyLayers |= DirtyLayer.All;
+    }
+
+    const bgKey = `${Settings.windowBackgroundAlpha}|${Settings.showBackgroundDots}|${Settings.showBackgroundHorizontalLines}|${Settings.showBackgroundVerticalLines}|${Settings.showBackgroundCartesian}|${this.project.stageStyleManager?.currentStyle?.Background?.toString() ?? ""}`;
+    if (bgKey !== this.lastBgKey) {
+      this.lastBgKey = bgKey;
+      this.dirtyLayers |= DirtyLayer.Background;
+    }
+
+    const stageHash = this.project.stageHash ?? "";
+    const stageCount = this.project.stage?.length ?? 0;
+    const stageKey = `${stageHash}|${stageCount}`;
+    if (stageKey !== this.lastStageKey) {
+      this.lastStageKey = stageKey;
+      this.dirtyLayers |= DirtyLayer.Stage | DirtyLayer.Overlay;
+    }
+
+    const mouse = MouseLocation.vector();
+    const hoverEdges = this.project.mouseInteraction?.hoverEdges?.length ?? 0;
+    const remoteCursors = this.project.collaboration?.getRemoteCursors?.()?.length ?? 0;
+    const effectsCount = this.project.effects?.effectsCount ?? 0;
+    const overlayKey = `${mouse.x},${mouse.y}|${hoverEdges}|${remoteCursors}|${effectsCount}|${Settings.showDebug}|${Settings.stealthModeReverseMask}|${Settings.isRenderCenterPointer}`;
+    if (overlayKey !== this.lastOverlayKey) {
+      this.lastOverlayKey = overlayKey;
+      this.dirtyLayers |= DirtyLayer.Overlay;
+    }
+
+    if (effectsCount > 0 || Settings.showDebug) {
+      this.dirtyLayers |= DirtyLayer.Overlay;
+    }
+  }
+
   private tick_() {
     if (this.pixelRatio !== (window.devicePixelRatio || 1)) {
       this.resizeWindow(this.w, this.h);
     }
+
+    const isLayered = this.project.canvas.isLayeredMode();
+    if (!isLayered) {
+      // 截图/缩略图导出模式：单画布全量渲染
+      this.dirtyLayers = DirtyLayer.All;
+    } else {
+      this.syncDirtyFromState();
+      if (this.dirtyLayers === DirtyLayer.None) {
+        this.skippedFrames++;
+        return;
+      }
+    }
+
+    const layersToRender = this.dirtyLayers;
+    this.dirtyLayers = DirtyLayer.None;
+
     this.updateFPS();
     const viewRectangle = this.getCoverWorldRectangle();
-    this.renderBackground();
-    this.renderMainStageElements(viewRectangle);
 
-    GlobalMaskRenderer.renderMask(this.project, MouseLocation.vector(), Settings.stealthModeReverseMask);
+    if (layersToRender & DirtyLayer.Background) {
+      this.project.canvas.withLayer("background", () => {
+        this.renderBackground();
+      });
+    }
 
-    this.renderViewElements(viewRectangle);
+    if (layersToRender & DirtyLayer.Stage) {
+      this.project.canvas.withLayer("stage", () => {
+        if (isLayered) {
+          this.project.canvas.ctx.clearRect(0, 0, this.w, this.h);
+        }
+        this.renderStageElementsWithoutReactions(viewRectangle);
+      });
+    }
+
+    if (layersToRender & DirtyLayer.Overlay) {
+      this.project.canvas.withLayer("overlay", () => {
+        if (isLayered) {
+          this.project.canvas.ctx.clearRect(0, 0, this.w, this.h);
+        }
+        this.renderStageReactions();
+        GlobalMaskRenderer.renderMask(this.project, MouseLocation.vector(), Settings.stealthModeReverseMask);
+        this.renderViewElements(viewRectangle);
+      });
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -160,10 +261,8 @@ export class Renderer {
     }
   }
 
-  private renderMainStageElements(viewRectangle: Rectangle) {
-    // 先渲染主场景
-    this.renderStageElementsWithoutReactions(viewRectangle);
-    // 交互相关的
+  private renderStageReactions() {
+    // 交互相关的覆盖层元素
     this.project.drawingControllerRenderer.renderTempDrawing();
     this.renderWarningStageObjects();
     this.renderHoverCollisionBox();
@@ -173,7 +272,6 @@ export class Renderer {
     this.renderKeyboardOnly();
     this.rendererLayerMovingLine();
     this.project.searchContentHighlightRenderer.render(this.frameIndex);
-    // renderViewRectangle(viewRectangle);
   }
 
   // 渲染一切实体相关的要素

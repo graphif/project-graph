@@ -21,15 +21,19 @@ export class AutoSaveBackupService {
 
   private lastSaveTime = 0;
   private isBackingUp = false;
+  private checkTimer?: ReturnType<typeof setInterval>;
 
   constructor(private readonly project: Project) {
     this.lastBackupTime = Date.now();
+    this.checkTimer = setInterval(() => {
+      this.check();
+    }, 1000);
   }
 
   /**
-   * 高频率调用的tick函数，内部实现降频操作
+   * 定时检查自动保存与自动备份（已从 rAF 主循环剥离）
    */
-  tick() {
+  check() {
     const now = Date.now();
 
     // 检查是否达到备份间隔时间（转换为毫秒）
@@ -44,6 +48,13 @@ export class AutoSaveBackupService {
         this.lastSaveTime = now;
         this.autoSave();
       }
+    }
+  }
+
+  dispose() {
+    if (this.checkTimer !== undefined) {
+      clearInterval(this.checkTimer);
+      this.checkTimer = undefined;
     }
   }
 

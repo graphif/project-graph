@@ -2,7 +2,7 @@ import type { DirectoryEntry } from "@/platform/files";
 import { URI } from "vscode-uri";
 
 export interface Service {
-  tick?(): void;
+  tick?(): void | boolean;
   dispose?(): void | Promise<void>;
 }
 

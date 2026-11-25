@@ -39,12 +39,13 @@ describe("automatic project persistence", () => {
     vi.spyOn(Date, "now").mockReturnValue(10000);
     const project = { uri: {}, isSaving: true, projectState: "unsaved", save: vi.fn() };
     const service = new AutoSaveBackupService(project as unknown as Project);
-    service.tick();
+    service.check();
     expect(project.save).not.toHaveBeenCalled();
     project.isSaving = false;
     Object.assign(project, { isCollab: true });
-    service.tick();
+    service.check();
     expect(project.save).not.toHaveBeenCalled();
+    service.dispose();
   });
 
   it("does not start another snapshot or autosave while a backup is pending", async () => {
@@ -65,18 +66,19 @@ describe("automatic project persistence", () => {
     };
     const service = new AutoSaveBackupService(project as unknown as Project);
     now.mockReturnValue(2000);
-    service.tick();
+    service.check();
     await vi.waitFor(() => expect(project.getFileContent).toHaveBeenCalledOnce());
     now.mockReturnValue(5000);
-    service.tick();
+    service.check();
     expect(project.getFileContent).toHaveBeenCalledOnce();
     expect(project.save).not.toHaveBeenCalled();
     finish(new Uint8Array());
     await vi.waitFor(() => expect((service as unknown as { isBackingUp: boolean }).isBackingUp).toBe(false));
     now.mockReturnValue(8000);
-    service.tick();
+    service.check();
     await Promise.resolve();
-    service.tick();
+    service.check();
     expect(project.save).toHaveBeenCalledOnce();
+    service.dispose();
   });
 });

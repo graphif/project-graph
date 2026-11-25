@@ -1,4 +1,5 @@
 import { Project, service } from "@/core/project";
+import { DirtyLayer } from "@/core/render/canvas2d/dirty-layer";
 import { Settings } from "@/core/service/settings";
 import { Effect } from "@/core/service/feedback-service/effect-engine/effect-object";
 import { NodeMoveShadowEffect } from "@/core/service/feedback-service/effect-engine/concrete/node-move-shadow-effect";
@@ -30,6 +31,7 @@ export class Effects {
       return;
     }
     this.effects.push(effect);
+    this.project.renderer?.markDirty(DirtyLayer.Overlay);
   }
 
   public get effectsCount() {
@@ -37,15 +39,29 @@ export class Effects {
   }
 
   public addEffects(effects: Effect[]) {
-    this.effects.push(...effects.filter((effect) => Settings.effectsPerferences[effect.effectId] ?? true));
+    const filtered = effects.filter((effect) => Settings.effectsPerferences[effect.effectId] ?? true);
+    if (filtered.length === 0) return;
+    this.effects.push(...filtered);
+    this.project.renderer?.markDirty(DirtyLayer.Overlay);
   }
 
   tick() {
+    const hadEffects = this.effects.length > 0;
     // 清理过时特效
     this.effects = this.effects.filter((effect) => !effect.timeProgress.isFull);
-    for (const effect of this.effects) {
-      effect.tick(this.project);
-      effect.render(this.project);
+    if (this.effects.length === 0) {
+      if (hadEffects) {
+        this.project.renderer?.markDirty(DirtyLayer.Overlay);
+      }
+      return;
     }
+    this.project.canvas.withLayer("overlay", () => {
+      for (const effect of this.effects) {
+        effect.tick(this.project);
+        effect.render(this.project);
+      }
+    });
+    // 特效仍在播放，下一帧继续刷新覆盖层
+    this.project.renderer?.markDirty(DirtyLayer.Overlay);
   }
 }
