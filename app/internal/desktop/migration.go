@@ -122,7 +122,9 @@ func (m *Migration) sourceRoot(source string) (*os.Root, error) {
 			return nil, err
 		}
 		if info.Mode()&os.ModeSymlink != 0 {
-			return nil, errors.New("migration source must not contain symlinks")
+			if !(runtime.GOOS == "darwin" && path != source && (path == "/var" || path == "/tmp" || path == "/etc")) {
+				return nil, errors.New("migration source must not contain symlinks")
+			}
 		}
 		if path == filepath.Dir(path) {
 			break
