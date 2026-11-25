@@ -192,7 +192,7 @@ export class Canvas {
 
   mount(wrapper: HTMLDivElement) {
     this.resizeObserver?.disconnect();
-    if (!wrapper.style.position || wrapper.style.position === "static") {
+    if (window.getComputedStyle(wrapper).position === "static") {
       wrapper.style.position = "relative";
     }
     wrapper.innerHTML = "";
