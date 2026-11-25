@@ -1,4 +1,5 @@
 windowControls:
+  exitClickThrough: "按 {{shortcut}} 關閉窗口穿透點擊"
   alwaysOnTop: 窗口置頂
 
 nodeDetailsWindow:

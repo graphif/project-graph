@@ -2,8 +2,10 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { isRegistered, register, unregister } from "@tauri-apps/plugin-global-shortcut";
 import { BringToFront, MousePointerBan } from "lucide-react";
 import { toast } from "sonner";
+import { activeClickThroughShortcutAtom, store as appStore } from "@/state";
+import { isMac } from "@/utils/platform";
 import { createStore } from "@/utils/store";
-import { Settings } from "../../Settings";
+import { legacyGlobalHotKeysEnabled, Settings } from "../../Settings";
 import type { KeyBindIcon } from "./KeyBindsUI";
 
 export interface GlobalShortcutInfo {
@@ -26,13 +28,27 @@ interface StoredGlobalShortcut {
 }
 
 const STORE_NAME = "global-keybinds.json";
+const CLICK_THROUGH_ID = "toggle-click-through";
+
+export function formatGlobalShortcut(accelerator: string) {
+  return accelerator
+    .split("+")
+    .map((part) => {
+      if (part === "Control") return "Ctrl";
+      if (part === "Super") return isMac ? "Command" : "Super";
+      if (part.startsWith("Key")) return part.slice(3);
+      if (part.startsWith("Digit")) return part.slice(5);
+      return part;
+    })
+    .join(" + ");
+}
 
 export class GlobalShortcutManager {
   private shortcuts: GlobalShortcut[];
   private initialization: Promise<void> | null = null;
   private registeredKeys = new Set<string>();
   private clickThroughPreviousAlwaysOnTop: boolean | null = null;
-  private isChangingClickThrough = false;
+  private isTogglingClickThrough = false;
   private isRecording = false;
 
   constructor() {
@@ -48,7 +64,7 @@ export class GlobalShortcutManager {
         onPress: this.handleShowWindow.bind(this),
       },
       {
-        id: "toggle-click-through",
+        id: CLICK_THROUGH_ID,
         title: "切换窗口穿透点击",
         description: "开启或关闭窗口穿透点击，并同步调整窗口透明度。",
         icon: MousePointerBan,
@@ -80,6 +96,7 @@ export class GlobalShortcutManager {
         shortcut.key = saved.key;
         shortcut.isEnabled = saved.isEnabled;
       } else {
+        shortcut.isEnabled = legacyGlobalHotKeysEnabled;
         await store.set(shortcut.id, this.toStoredShortcut(shortcut));
         needsSave = true;
       }
@@ -93,8 +110,6 @@ export class GlobalShortcutManager {
       try {
         await this.registerShortcut(shortcut);
       } catch (error) {
-        shortcut.isEnabled = false;
-        await this.saveShortcut(shortcut);
         toast.error(error instanceof Error ? error.message : String(error));
       }
     }
@@ -125,12 +140,13 @@ export class GlobalShortcutManager {
     }
 
     const oldKey = shortcut.key;
+    const wasRegistered = this.registeredKeys.has(oldKey);
     if (shortcut.isEnabled) {
       await this.unregisterShortcut(oldKey);
       try {
         await this.registerShortcut({ ...shortcut, key });
       } catch (error) {
-        await this.registerShortcut(shortcut);
+        if (wasRegistered) await this.registerShortcut(shortcut);
         throw error;
       }
     }
@@ -142,9 +158,12 @@ export class GlobalShortcutManager {
       shortcut.key = oldKey;
       if (shortcut.isEnabled) {
         await this.unregisterShortcut(key);
-        await this.registerShortcut(shortcut);
+        if (wasRegistered) await this.registerShortcut(shortcut);
       }
       throw error;
+    }
+    if (id === CLICK_THROUGH_ID && appStore.get(activeClickThroughShortcutAtom) !== null) {
+      appStore.set(activeClickThroughShortcutAtom, key);
     }
   }
 
@@ -152,7 +171,15 @@ export class GlobalShortcutManager {
     await this.init();
     const shortcut = this.getShortcut(id);
     if (shortcut.isEnabled === isEnabled) return;
+    if (
+      id === CLICK_THROUGH_ID &&
+      !isEnabled &&
+      (this.isTogglingClickThrough || appStore.get(activeClickThroughShortcutAtom) !== null)
+    ) {
+      throw new Error("请先退出窗口穿透点击，再禁用快捷键");
+    }
 
+    const wasRegistered = this.registeredKeys.has(shortcut.key);
     if (isEnabled) {
       await this.registerShortcut(shortcut);
     } else {
@@ -166,7 +193,7 @@ export class GlobalShortcutManager {
       shortcut.isEnabled = !isEnabled;
       if (isEnabled) {
         await this.unregisterShortcut(shortcut.key);
-      } else {
+      } else if (wasRegistered) {
         await this.registerShortcut(shortcut);
       }
       throw error;
@@ -220,14 +247,15 @@ export class GlobalShortcutManager {
   }
 
   private async handleToggleClickThrough() {
-    if (this.isChangingClickThrough) return;
-    this.isChangingClickThrough = true;
+    if (this.isTogglingClickThrough) return;
+    this.isTogglingClickThrough = true;
     try {
       const window = getCurrentWindow();
       const previousAlwaysOnTop = this.clickThroughPreviousAlwaysOnTop;
       if (previousAlwaysOnTop !== null) {
         await window.setIgnoreCursorEvents(false);
         this.clickThroughPreviousAlwaysOnTop = null;
+        appStore.set(activeClickThroughShortcutAtom, null);
         Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterCloseClickThrough;
         await window.setAlwaysOnTop(previousAlwaysOnTop);
         return;
@@ -248,9 +276,10 @@ export class GlobalShortcutManager {
         throw error;
       }
       this.clickThroughPreviousAlwaysOnTop = wasAlwaysOnTop;
+      appStore.set(activeClickThroughShortcutAtom, this.getShortcut(CLICK_THROUGH_ID).key);
       Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterOpenClickThrough;
     } finally {
-      this.isChangingClickThrough = false;
+      this.isTogglingClickThrough = false;
     }
   }
 
