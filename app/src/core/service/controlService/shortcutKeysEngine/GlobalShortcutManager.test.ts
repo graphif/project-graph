@@ -2,6 +2,7 @@ import { activeClickThroughShortcutAtom, store } from "@/state";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  isAlwaysOnTop: vi.fn(),
   setAlwaysOnTop: vi.fn(),
   setIgnoreCursorEvents: vi.fn(),
   data: new Map<string, unknown>(),
@@ -24,6 +25,7 @@ vi.mock("@/state", async () => {
 vi.mock("@/utils/platform", () => ({ isMac: false }));
 vi.mock("@tauri-apps/api/window", () => ({
   getCurrentWindow: () => ({
+    isAlwaysOnTop: mocks.isAlwaysOnTop,
     setAlwaysOnTop: mocks.setAlwaysOnTop,
     setIgnoreCursorEvents: mocks.setIgnoreCursorEvents,
   }),
@@ -42,6 +44,7 @@ import { GlobalShortcutManager } from "./GlobalShortcutManager";
 
 describe("GlobalShortcutManager", () => {
   beforeEach(() => {
+    mocks.isAlwaysOnTop.mockReset();
     mocks.setAlwaysOnTop.mockReset();
     mocks.setIgnoreCursorEvents.mockReset();
     store.set(activeClickThroughShortcutAtom, null);
@@ -151,5 +154,38 @@ describe("GlobalShortcutManager", () => {
     await expect(manager.setShortcutKey("show-window", "Control+KeyK")).rejects.toThrow("new occupied");
     expect(mocks.register.mock.calls.map(([key]) => key)).toEqual(["Alt+Digit1", "Control+KeyK"]);
     expect(mocks.data.get("show-window")).toEqual(binding);
+  });
+
+  it.each([true, false])("退出窗口穿透时恢复进入前的置顶状态 %s", async (wasAlwaysOnTop) => {
+    mocks.isAlwaysOnTop.mockResolvedValue(wasAlwaysOnTop);
+    const manager = new GlobalShortcutManager();
+    await manager.init();
+    await manager.setShortcutEnabled("toggle-click-through", true);
+    const [, handler] = mocks.register.mock.calls[0];
+
+    await handler({ state: "Pressed" });
+    expect(store.get(activeClickThroughShortcutAtom)).toBe("Alt+Digit2");
+    await handler({ state: "Pressed" });
+    expect(store.get(activeClickThroughShortcutAtom)).toBeNull();
+
+    expect(mocks.setAlwaysOnTop.mock.calls).toEqual([[true], [wasAlwaysOnTop]]);
+    expect(mocks.setIgnoreCursorEvents.mock.calls).toEqual([[true], [false]]);
+  });
+
+  it("开启穿透失败时恢复原置顶状态并允许重试", async () => {
+    mocks.isAlwaysOnTop.mockResolvedValue(false);
+    mocks.setIgnoreCursorEvents.mockRejectedValueOnce(new Error("unavailable"));
+    const manager = new GlobalShortcutManager();
+    await manager.init();
+    await manager.setShortcutEnabled("toggle-click-through", true);
+    const [, handler] = mocks.register.mock.calls[0];
+
+    await expect(handler({ state: "Pressed" })).rejects.toThrow("unavailable");
+    expect(store.get(activeClickThroughShortcutAtom)).toBeNull();
+    await handler({ state: "Pressed" });
+    expect(store.get(activeClickThroughShortcutAtom)).toBe("Alt+Digit2");
+
+    expect(mocks.setAlwaysOnTop.mock.calls).toEqual([[true], [false], [true]]);
+    expect(mocks.setIgnoreCursorEvents.mock.calls).toEqual([[true], [true]]);
   });
 });

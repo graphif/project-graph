@@ -47,6 +47,7 @@ export class GlobalShortcutManager {
   private shortcuts: GlobalShortcut[];
   private initialization: Promise<void> | null = null;
   private registeredKeys = new Set<string>();
+  private clickThroughPreviousAlwaysOnTop: boolean | null = null;
   private isTogglingClickThrough = false;
   private isRecording = false;
 
@@ -250,13 +251,33 @@ export class GlobalShortcutManager {
     this.isTogglingClickThrough = true;
     try {
       const window = getCurrentWindow();
-      const enable = appStore.get(activeClickThroughShortcutAtom) === null;
-      await window.setAlwaysOnTop(enable);
-      await window.setIgnoreCursorEvents(enable);
-      appStore.set(activeClickThroughShortcutAtom, enable ? this.getShortcut(CLICK_THROUGH_ID).key : null);
-      Settings.windowBackgroundAlpha = enable
-        ? Settings.windowBackgroundOpacityAfterOpenClickThrough
-        : Settings.windowBackgroundOpacityAfterCloseClickThrough;
+      const previousAlwaysOnTop = this.clickThroughPreviousAlwaysOnTop;
+      if (previousAlwaysOnTop !== null) {
+        await window.setIgnoreCursorEvents(false);
+        this.clickThroughPreviousAlwaysOnTop = null;
+        appStore.set(activeClickThroughShortcutAtom, null);
+        Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterCloseClickThrough;
+        await window.setAlwaysOnTop(previousAlwaysOnTop);
+        return;
+      }
+
+      const wasAlwaysOnTop = await window.isAlwaysOnTop();
+      await window.setAlwaysOnTop(true);
+      try {
+        await window.setIgnoreCursorEvents(true);
+      } catch (error) {
+        try {
+          await window.setAlwaysOnTop(wasAlwaysOnTop);
+        } catch (restoreError) {
+          throw new AggregateError([error, restoreError], "开启窗口穿透失败，且无法恢复原置顶状态", {
+            cause: restoreError,
+          });
+        }
+        throw error;
+      }
+      this.clickThroughPreviousAlwaysOnTop = wasAlwaysOnTop;
+      appStore.set(activeClickThroughShortcutAtom, this.getShortcut(CLICK_THROUGH_ID).key);
+      Settings.windowBackgroundAlpha = Settings.windowBackgroundOpacityAfterOpenClickThrough;
     } finally {
       this.isTogglingClickThrough = false;
     }
