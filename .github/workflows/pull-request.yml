@@ -1,0 +1,49 @@
+name: Pull request checks
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @graphif/project-graph type-check
+      - name: Test search and global shortcuts
+        run: >-
+          pnpm exec vitest run
+          app/src/core/service/dataManageService/contentSearchEngine/contentSearchEngine.test.ts
+          app/src/core/service/controlService/shortcutKeysEngine/GlobalShortcutManager.test.ts
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache: false
+      - name: Install actionlint
+        run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+      - name: Lint changed workflows
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        shell: bash
+        run: |
+          worklist=$(mktemp)
+          trap 'rm -f -- "$worklist"' EXIT
+          git diff --name-only -z --diff-filter=ACMR "$BASE_SHA" HEAD -- '.github/workflows/*.yml' '.github/workflows/*.yaml' > "$worklist"
+          mapfile -d '' -t workflows < "$worklist"
+          if (( ${#workflows[@]} )); then
+            actionlint "${workflows[@]}"
+          fi
