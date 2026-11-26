@@ -1,7 +1,7 @@
 import { expose, Remote, wrap } from "comlink";
 import comlinkMinJs from "comlink/dist/esm/comlink.min.js?raw";
 import { Extension } from "./Extension";
-import { extensionHostApiFactory } from "./api/host";
+import { extensionHostApiFactory, releaseExtensionNodeTextRules } from "./api/host";
 import { ExtensionRemoteApi } from "./api/remote";
 
 import { setupComlink } from "./setupComlink/host";
@@ -34,6 +34,7 @@ self.prg = Comlink.wrap(self);
   }
 
   terminate() {
+    releaseExtensionNodeTextRules(this.extension);
     this.worker.terminate();
   }
 }

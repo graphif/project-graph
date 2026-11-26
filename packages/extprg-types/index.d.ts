@@ -8693,6 +8693,22 @@ type AutoProxyMethod<T> = T extends (...args: infer Args) => infer Result ? (...
 type AutoProxy<T> = T extends object ? { [Key in keyof T]: T[Key] extends (...args: any[]) => any ? AutoProxyMethod<T[Key]> : Promise<AutoProxyValue<T[Key]>>; } & ProxyMethods : T;
 
 export type ExtensionHostApi = {
+  capabilities_get(): Promise<{ nodeTextRules: number }>;
+  nodeTextRules_register(options: {
+    enabled: boolean;
+    numbering: boolean;
+    frameTitles: boolean;
+    questionColor: [number, number, number];
+    conclusionColor: [number, number, number];
+    questionSuffixes: string[];
+    conclusionPrefixes: string[];
+    statusPrefixes: string[];
+    conclusionShortcut: string;
+    conclusionReplacement: string;
+    questionQuery: string;
+    conclusionQuery: string;
+  }): Promise<void>;
+  nodeTextRules_unregister(): Promise<void>;
   toast(message: string): Promise<void>;
   toast_success(message: string): Promise<void>;
   toast_error(message: string): Promise<void>;

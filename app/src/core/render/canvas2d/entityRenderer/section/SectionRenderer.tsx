@@ -1,4 +1,5 @@
 import { Project, service } from "@/core/Project";
+import { ruleDisplayColor } from "@/core/extension/NodeTextRules";
 import { Renderer } from "@/core/render/canvas2d/renderer";
 import { Settings } from "@/core/service/Settings";
 import { Section } from "@/core/stage/stageObject/entity/Section";
@@ -20,7 +21,11 @@ export class SectionRenderer {
     this.project.shapeRenderer.renderRect(
       renderRectangle,
       section.color,
-      mixColors(this.project.stageStyleManager.currentStyle.StageObjectBorder, Color.Black, 0.5),
+      ruleDisplayColor(
+        section.text,
+        mixColors(this.project.stageStyleManager.currentStyle.StageObjectBorder, Color.Black, 0.5),
+        false,
+      ),
       Math.max(section.parentSection ? 0 : 1, 2 * this.project.camera.currentScale),
       Renderer.NODE_ROUNDED_RADIUS,
     );
@@ -31,7 +36,7 @@ export class SectionRenderer {
         section.rectangle.size.add(Vector.same(4 * 2)).multiply(this.project.camera.currentScale),
       ),
       section.color,
-      this.project.stageStyleManager.currentStyle.StageObjectBorder,
+      ruleDisplayColor(section.text, this.project.stageStyleManager.currentStyle.StageObjectBorder, false),
       Math.max(section.parentSection ? 0 : 1, 2 * this.project.camera.currentScale),
       Renderer.NODE_ROUNDED_RADIUS + 4 * this.project.camera.currentScale,
     );
@@ -79,7 +84,7 @@ export class SectionRenderer {
           section.rectangle.size.multiply(this.project.camera.currentScale),
         ),
         Color.Transparent,
-        this.project.stageStyleManager.currentStyle.StageObjectBorder,
+        ruleDisplayColor(section.text, this.project.stageStyleManager.currentStyle.StageObjectBorder, false),
         borderWidth,
         Renderer.NODE_ROUNDED_RADIUS,
         dashLength,
@@ -92,7 +97,7 @@ export class SectionRenderer {
           section.rectangle.size.multiply(this.project.camera.currentScale),
         ),
         Color.Transparent,
-        this.project.stageStyleManager.currentStyle.StageObjectBorder,
+        ruleDisplayColor(section.text, this.project.stageStyleManager.currentStyle.StageObjectBorder, false),
         borderWidth,
         Renderer.NODE_ROUNDED_RADIUS,
       );
@@ -215,7 +220,7 @@ export class SectionRenderer {
     this.project.shapeRenderer.renderRect(
       new Rectangle(leftTopFontViewLocation, textSize).expandFromCenter(2),
       bgColor,
-      this.project.stageStyleManager.currentStyle.StageObjectBorder,
+      ruleDisplayColor(section.text, this.project.stageStyleManager.currentStyle.StageObjectBorder, false),
       2 * this.project.camera.currentScale,
       2,
     );

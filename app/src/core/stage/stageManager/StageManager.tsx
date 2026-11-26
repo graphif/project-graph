@@ -1,4 +1,5 @@
 import { Project, service } from "@/core/Project";
+import { markRuleNodeCreated, refreshNodeTextRules } from "@/core/extension/NodeTextRules";
 import { EntityShrinkEffect } from "@/core/service/feedbackService/effectEngine/concrete/EntityShrinkEffect";
 import { PenStrokeDeletedEffect } from "@/core/service/feedbackService/effectEngine/concrete/PenStrokeDeletedEffect";
 import { SoundService } from "@/core/service/feedbackService/SoundService";
@@ -181,6 +182,7 @@ export class StageManager {
   }
 
   add(stageObject: StageObject, skipUpdateReferences = false) {
+    if (stageObject instanceof TextNode) markRuleNodeCreated(stageObject);
     this.project.stage.push(stageObject);
     if (!skipUpdateReferences) {
       this.updateReferences();
@@ -348,6 +350,7 @@ export class StageManager {
     for (const rootSection of this.rootSections) {
       rootSection.adjustChildrenStateByCollapse(false);
     }
+    refreshNodeTextRules(this.project);
   }
 
   private pickDirectParentSection(entity: Entity, candidates: Section[]): Section | null {
